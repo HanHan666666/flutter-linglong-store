@@ -377,10 +377,10 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
     try {
       AppLogger.info('[LinglongCli] 卸载应用: $appId@$version');
 
+      // ll-cli uninstall 只接受 APP 参数，不接受 version 参数
       final output = await CliExecutor.execute([
         'uninstall',
         appId,
-        version,
       ], timeout: const Duration(minutes: 5));
 
       if (output.success) {

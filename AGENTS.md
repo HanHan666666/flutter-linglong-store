@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 
 ## 重点（极其重要）
+- 当前项目要求绝对的高性能，高UI响应速度。
 - 每开发一个功能点就进行一次commit
 - 在接到用户的任务的时候，先不要着急开始修改代码，要先分析需求，分析代码，列举解决方案，
 - 详细的向用户说明你的思路，和你打算如何实现这个需求。
@@ -36,7 +37,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
     - 合成/聚合复用原则（Composite/Aggregate Reuse Principle，CARP）
     - 最少知识原则（Least Knowledge Principle，LKP）或者迪米特法则（Law of  Demeter，LOD）
 
+## 八荣八耻
+1.以暗猜接口为耻，以认真查阅为荣
+2.以模糊执行为耻，以寻求确认为荣
+3.以盲想业务为耻，以人类确认为荣
+4.以创造接口为耻，以复用现有为荣
+5.以跳过验证为耻，以主动测试为荣
+6.以破坏架构为耻，以遵循规范为荣
+7.以假装理解为耻，以诚实无知为菜
+8.以盲目修改为耻，以谨慎重构为荣
 
+Shame in guessing APIs, Honor in careful research.
+Shame in vague execution, Honor in seeking confirmation.
+Shame in assuming business logic, Honor in human verification.
+Shame in creating interfaces, Honor in reusing existing ones.
+Shame in skipping validation, Honor in proactive testing.
+Shame in breaking architecture, Honor in following specifications.
+Shame in pretending to understand, Honor in honest ignorance.
+Shame in blind modification, Honor in careful refactoring.
 
 ## 项目概览
 - 本仓库是玲珑应用商店从旧版 Tauri/React 迁移到 Flutter 的实现，目标是 **UI 像素级一致** 与 **业务逻辑等价**。

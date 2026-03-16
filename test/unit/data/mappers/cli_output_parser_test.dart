@@ -301,14 +301,14 @@ Name:Test App
         final info = CliOutputParser.parseInstallProgress('downloading... 50%');
 
         expect(info.phase, equals(InstallPhase.downloading));
-        expect(info.progress, equals(50.0));
+        expect(info.progress, equals(0.5)); // 50% 归一化为 0.5
       });
 
       test('should detect installing phase', () {
         final info = CliOutputParser.parseInstallProgress('installing... 80%');
 
         expect(info.phase, equals(InstallPhase.installing));
-        expect(info.progress, equals(80.0));
+        expect(info.progress, equals(0.8)); // 80% 归一化为 0.8
       });
 
       test('should detect completed phase', () {
@@ -328,7 +328,7 @@ Name:Test App
             equals(InstallPhase.completed),
             reason: 'Failed for: $phrase',
           );
-          expect(info.progress, equals(100.0));
+          expect(info.progress, equals(1.0)); // 完成时归一化为 1.0
         }
       });
 
@@ -354,10 +354,10 @@ Name:Test App
         final info1 = CliOutputParser.parseInstallProgress(
           'downloading... 75.5%',
         );
-        expect(info1.progress, equals(75.5));
+        expect(info1.progress, equals(0.755)); // 75.5% 归一化为 0.755
 
         final info2 = CliOutputParser.parseInstallProgress('Downloading 30%');
-        expect(info2.progress, equals(30.0));
+        expect(info2.progress, equals(0.3)); // 30% 归一化为 0.3
       });
 
       test('should parse size progress correctly', () {
@@ -366,7 +366,7 @@ Name:Test App
         );
 
         expect(info.phase, equals(InstallPhase.downloading));
-        expect(info.progress, equals(50.0));
+        expect(info.progress, equals(0.5)); // 50/100 = 0.5 归一化
       });
 
       test('should detect unpacking as installing', () {
@@ -656,7 +656,7 @@ com.example.app2          2.0.0
       );
 
       expect(info.phase, equals(InstallPhase.downloading));
-      expect(info.progress, equals(45.5));
+      expect(info.progress, equals(0.455)); // 45.5% 归一化为 0.455
     });
 
     test('should parse JSON error event', () {
@@ -672,7 +672,7 @@ com.example.app2          2.0.0
       final info = CliOutputParser.parseInstallProgressEx('downloading... 50%');
 
       expect(info.phase, equals(InstallPhase.downloading));
-      expect(info.progress, equals(50.0));
+      expect(info.progress, equals(0.5)); // 50% 归一化为 0.5
     });
 
     test('should handle JSON success message', () {
@@ -681,7 +681,7 @@ com.example.app2          2.0.0
       );
 
       expect(info.phase, equals(InstallPhase.completed));
-      expect(info.progress, equals(100.0));
+      expect(info.progress, equals(1.0)); // 完成归一化为 1.0
     });
 
     test('should preserve raw line from JSON input', () {

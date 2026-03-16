@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../core/logging/app_logger.dart';
 import '../../../domain/models/installed_app.dart';
 import '../../../domain/models/install_task.dart';
 import '../../../domain/models/install_progress.dart';
@@ -120,7 +121,8 @@ class AppDetail extends _$AppDetail {
 
       state = state.copyWith(versions: versions, isLoadingVersions: false);
     } catch (e) {
-      // 版本列表加载失败不阻塞页面显示
+      // 版本列表加载失败不阻塞页面显示，但记录错误信息
+      AppLogger.warning('[AppDetail] 版本历史加载失败: $appId - $e');
       state = state.copyWith(isLoadingVersions: false);
     }
   }
@@ -172,20 +174,13 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       appBar: AppBar(
         title: Text(detailState.app?.name ?? '应用详情'),
         actions: [
-          // 更多操作按钮
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) => _handleMenuAction(value, detailState.app),
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'shortcut',
-                child: ListTile(
-                  leading: Icon(Icons.shortcut),
-                  title: Text('创建快捷方式'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
+          // 更多操作菜单（PC-native MenuAnchor 风格）
+          _MoreMenuButton(
+            app: detailState.app,
+            onAction: (action) => _handleMenuAction(action, detailState.app),
+            onUninstall: detailState.app != null
+                ? () => _showUninstallDialog(detailState.app!)
+                : null,
           ),
         ],
       ),
@@ -735,27 +730,91 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         );
   }
 
-  /// 显示卸载确认对话框
+  /// 显示卸载确认对话框（PC-native 风格）
   void _showUninstallDialog(InstalledApp app) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('卸载应用'),
-        content: Text('确定要卸载 ${app.name} 吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+      barrierDismissible: true,
+      builder: (ctx) {
+        final colorScheme = Theme.of(ctx).colorScheme;
+        final textTheme = Theme.of(ctx).textTheme;
+
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _uninstallApp(app);
-            },
-            child: const Text('卸载'),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 警告图标 + 标题行
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.delete_outline_rounded,
+                        color: colorScheme.error,
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        '卸载应用',
+                        style: textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // 描述信息
+                  RichText(
+                    text: TextSpan(
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        height: 1.5,
+                      ),
+                      children: [
+                        const TextSpan(text: '确定要卸载 '),
+                        TextSpan(
+                          text: app.name,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        const TextSpan(text: ' 吗？\n卸载后应用数据将被删除，此操作不可恢复。'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // 操作按钮行，取消在左，危险卸载按钮在右
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('取消'),
+                      ),
+                      const SizedBox(width: 8),
+                      FilledButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _uninstallApp(app);
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: colorScheme.error,
+                          foregroundColor: colorScheme.onError,
+                        ),
+                        child: const Text('卸载'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -900,6 +959,75 @@ class _ScreenshotPreviewPageState extends State<_ScreenshotPreviewPage> {
           );
         },
       ),
+    );
+  }
+}
+
+/// 应用详情页右上角"更多操作"菜单（PC-native MenuAnchor 风格）
+class _MoreMenuButton extends StatelessWidget {
+  const _MoreMenuButton({
+    required this.app,
+    required this.onAction,
+    this.onUninstall,
+  });
+
+  final InstalledApp? app;
+  final void Function(String action) onAction;
+
+  /// 只有已安装的应用才有卸载操作
+  final VoidCallback? onUninstall;
+
+  @override
+  Widget build(BuildContext context) {
+    final isInstalled = app != null;
+
+    return MenuAnchor(
+      builder: (context, controller, child) {
+        return IconButton(
+          icon: const Icon(Icons.more_vert),
+          tooltip: '更多操作',
+          onPressed: () {
+            if (controller.isOpen) {
+              controller.close();
+            } else {
+              controller.open();
+            }
+          },
+        );
+      },
+      menuChildren: [
+        // 创建快捷方式（仅已安装时启用）
+        MenuItemButton(
+          leadingIcon: Icon(
+            Icons.shortcut_outlined,
+            size: 18,
+            color: isInstalled ? null : Theme.of(context).disabledColor,
+          ),
+          onPressed: isInstalled ? () => onAction('shortcut') : null,
+          child: Text(
+            '创建快捷方式',
+            style: isInstalled
+                ? null
+                : TextStyle(color: Theme.of(context).disabledColor),
+          ),
+        ),
+        // 卸载（仅已安装时显示）
+        if (onUninstall != null) ...[
+          const Divider(height: 1),
+          MenuItemButton(
+            leadingIcon: Icon(
+              Icons.delete_outline_rounded,
+              size: 18,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: onUninstall,
+            child: Text(
+              '卸载',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

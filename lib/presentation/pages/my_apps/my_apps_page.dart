@@ -106,11 +106,9 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
           // 后台重新检查更新列表（不 await，不阻塞 UI）
           ref.read(updateAppsProvider.notifier).checkUpdates();
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${app.name} 已卸载'),
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('${app.name} 已卸载')));
         }
       }
     } catch (e) {
@@ -136,9 +134,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
         _buildSearchBar(context),
 
         // 内容区域
-        Expanded(
-          child: _buildContent(context, state, filteredApps),
-        ),
+        Expanded(child: _buildContent(context, state, filteredApps)),
       ],
     );
   }
@@ -168,9 +164,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
                   },
                 )
               : null,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
           fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
         ),
@@ -186,9 +180,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
   ) {
     // 加载中状态
     if (state.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     // 错误状态
@@ -290,8 +282,8 @@ class _AppListItem extends StatelessWidget {
                   Text(
                     app.name,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
+                      fontWeight: FontWeight.w500,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -304,15 +296,18 @@ class _AppListItem extends StatelessWidget {
                       Text(
                         'v${app.version}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).textTheme.bodySmall?.color,
-                            ),
+                          color: Theme.of(context).textTheme.bodySmall?.color,
+                        ),
                       ),
                       if (app.size != null) ...[
                         const SizedBox(width: 8),
                         Text(
                           app.size!,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).textTheme.bodySmall?.color,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodySmall?.color,
                               ),
                         ),
                       ],

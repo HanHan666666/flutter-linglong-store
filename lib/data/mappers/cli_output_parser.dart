@@ -292,10 +292,10 @@ class CliOutputParser {
     if (lowerLine.contains('download')) {
       info.phase = InstallPhase.downloading;
 
-      // 尝试解析百分比
+      // 尝试解析百分比 (CLI 输出 0-100 范围，归一化为 0.0-1.0)
       final percentMatch = RegExp(r'(\d+(?:\.\d+)?)\s*%').firstMatch(line);
       if (percentMatch != null) {
-        info.progress = double.tryParse(percentMatch.group(1)!) ?? 0.0;
+        info.progress = (double.tryParse(percentMatch.group(1)!) ?? 0.0) / 100;
       }
 
       // 尝试解析已下载/总大小
@@ -306,7 +306,8 @@ class CliOutputParser {
         final downloaded = double.tryParse(sizeMatch.group(1)!) ?? 0;
         final total = double.tryParse(sizeMatch.group(2)!) ?? 1;
         if (total > 0) {
-          info.progress = (downloaded / total) * 100;
+          // downloaded/total 已经是 0-1 范围
+          info.progress = downloaded / total;
         }
       }
 
@@ -316,7 +317,7 @@ class CliOutputParser {
         caseSensitive: false,
       ).firstMatch(line);
       if (downloadingMatch != null) {
-        info.progress = double.tryParse(downloadingMatch.group(1)!) ?? 0.0;
+        info.progress = (double.tryParse(downloadingMatch.group(1)!) ?? 0.0) / 100;
       }
     }
 
@@ -332,7 +333,7 @@ class CliOutputParser {
         caseSensitive: false,
       ).firstMatch(line);
       if (installingMatch != null) {
-        info.progress = double.tryParse(installingMatch.group(1)!) ?? 0.0;
+        info.progress = (double.tryParse(installingMatch.group(1)!) ?? 0.0) / 100;
       }
     }
 
@@ -344,7 +345,7 @@ class CliOutputParser {
         lowerLine == 'done' ||
         lowerLine == 'ok') {
       info.phase = InstallPhase.completed;
-      info.progress = 100;
+      info.progress = 1.0;
     }
 
     // 检测错误
@@ -471,8 +472,8 @@ class CliOutputParser {
 
     switch (event.eventType) {
       case JsonEventType.progress:
-        // 进度事件
-        info.progress = event.percentage ?? 0.0;
+        // 进度事件 (CLI 输出 percentage 0-100，归一化为 0.0-1.0)
+        info.progress = (event.percentage ?? 0.0) / 100;
         if (InstallErrorCode.isDownloading(event.message)) {
           info.phase = InstallPhase.downloading;
         } else if (InstallErrorCode.isInstalling(event.message)) {
@@ -480,10 +481,9 @@ class CliOutputParser {
         } else if (event.percentage != null && event.percentage! >= 100) {
           info.phase = InstallPhase.completed;
         } else {
-          // 根据进度百分比推断阶段
-          // 0-70% 通常为下载阶段
-          // 70-100% 通常为安装阶段
-          if (info.progress < 70) {
+          // 根据进度百分比推断阶段 (0.7 = 70%)
+          // 0-70% 通常为下载阶段，70-100% 通常为安装阶段
+          if (info.progress < 0.7) {
             info.phase = InstallPhase.downloading;
           } else {
             info.phase = InstallPhase.installing;
@@ -506,7 +506,7 @@ class CliOutputParser {
             lowerMsg.contains('completed') ||
             lowerMsg.contains('finished')) {
           info.phase = InstallPhase.completed;
-          info.progress = 100;
+          info.progress = 1.0;
         } else if (lowerMsg.contains('error') ||
             lowerMsg.contains('failed') ||
             lowerMsg.contains('failure')) {

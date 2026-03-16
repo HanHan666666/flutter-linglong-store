@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import '../../domain/models/installed_app.dart';
@@ -89,11 +90,9 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
 
     try {
       // 构建安装参数
-      // 注意：ll-cli install 支持 --json 参数输出 JSON 格式进度
-      final args = ['install', '--json', appId];
-      if (version != null) {
-        args.addAll(['--version', version]);
-      }
+      // ll-cli install 指定版本格式：appId/version（不支持 --version 参数）
+      final installTarget = version != null ? '$appId/$version' : appId;
+      final args = ['install', '--json', installTarget];
       if (force) {
         args.add('--force');
       }
@@ -161,9 +160,10 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         }
       }
 
-      // 流结束但未检测到完成状态，检查是否成功
+      // 流结束但未检测到完成状态，用 info 命令验证安装结果
+      // ll-cli info 返回 exit 0 表示应用已安装，非 0 表示未安装
       final output = await CliExecutor.execute([
-        'query',
+        'info',
         appId,
       ], timeout: kQueryTimeout);
 
@@ -255,12 +255,10 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
     );
 
     try {
-      // 构建更新参数（update 命令实际上是 install 的别名，但会更新到最新版本）
-      // 添加 --json 参数支持 JSON 格式输出
-      final args = ['install', '--json', appId];
-      if (version != null) {
-        args.addAll(['--version', version]);
-      }
+      // 构建更新参数
+      // ll-cli install 指定版本格式：appId/version（不支持 --version 参数）
+      final installTarget = version != null ? '$appId/$version' : appId;
+      final args = ['install', '--json', installTarget];
 
       AppLogger.info('[LinglongCli] 开始更新: ll-cli ${args.join(' ')}');
 
@@ -325,9 +323,9 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         }
       }
 
-      // 流结束但未检测到完成状态，检查是否成功
+      // 流结束但未检测到完成状态，用 info 命令验证更新结果
       final output = await CliExecutor.execute([
-        'query',
+        'info',
         appId,
       ], timeout: kQueryTimeout);
 
@@ -522,9 +520,9 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
   /// 手动创建桌面快捷方式
   Future<String> _createDesktopShortcutManually(String appId) async {
     try {
-      // 获取应用信息
+      // 用 ll-cli info 获取应用信息（输出 JSON 格式）
       final queryOutput = await CliExecutor.execute([
-        'query',
+        'info',
         appId,
       ], timeout: kQueryTimeout);
 
@@ -532,7 +530,16 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         return '无法获取应用信息';
       }
 
-      final info = CliOutputParser.parseAppInfo(queryOutput.stdout);
+      // ll-cli info 输出 JSON，直接解析
+      String appName = appId;
+      String appDescription = '';
+      try {
+        final json = jsonDecode(queryOutput.stdout) as Map<String, dynamic>;
+        appName = (json['name'] as String?) ?? appId;
+        appDescription = (json['description'] as String?) ?? '';
+      } catch (_) {
+        // 解析失败时使用默认值
+      }
 
       // 创建 .desktop 文件
       final desktopContent =
@@ -540,8 +547,8 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=${info['name'] ?? appId}
-Comment=${info['description'] ?? ''}
+Name=$appName
+Comment=$appDescription
 Exec=ll-cli run $appId
 Icon=$appId
 Terminal=false

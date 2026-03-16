@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../application/providers/installed_apps_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
+import '../../../application/providers/update_apps_provider.dart';
 import '../../../domain/models/installed_app.dart';
 import '../../widgets/app_icon.dart';
 import '../../widgets/confirm_dialog.dart';
@@ -100,8 +101,10 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
             ),
           );
         } else {
-          // 从列表中移除
+          // 乐观更新：从已安装列表中移除
           ref.read(installedAppsProvider.notifier).removeApp(app.appId);
+          // 后台重新检查更新列表（不 await，不阻塞 UI）
+          ref.read(updateAppsProvider.notifier).checkUpdates();
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

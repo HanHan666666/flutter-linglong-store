@@ -8,6 +8,7 @@ import 'global_provider.dart';
 import 'install_queue_provider.dart';
 import 'installed_apps_provider.dart';
 import 'linglong_env_provider.dart';
+import 'update_apps_provider.dart';
 
 part 'launch_provider.g.dart';
 
@@ -384,20 +385,19 @@ class LaunchSequence extends _$LaunchSequence {
         return;
       }
 
-      // 调用更新检查
-      // 这里可以调用 updateAppsProvider 进行更新检查
-      // 暂时简化处理
-      await Future.delayed(const Duration(milliseconds: 500));
+      // 调用更新检查：从远程获取最新版本信息与已安装版本对比
+      await ref.read(updateAppsProvider.notifier).checkUpdates();
 
+      final updateCount = ref.read(updateAppsProvider).count;
       state = state.copyWith(
         progress: 1.0,
-        stepInfo: const LaunchStepInfo(
+        stepInfo: LaunchStepInfo(
           step: LaunchStep.updateCheck,
-          message: '更新检查完成',
+          message: updateCount > 0 ? '发现 $updateCount 个可用更新' : '已是最新版本',
         ),
       );
 
-      AppLogger.info('Update check completed');
+      AppLogger.info('Update check completed: $updateCount updates found');
     } catch (e) {
       AppLogger.warning('Failed to check updates: $e');
       // 不抛出异常，允许继续

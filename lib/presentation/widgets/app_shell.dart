@@ -4,9 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../application/providers/install_queue_provider.dart';
+import '../../application/providers/installed_apps_provider.dart';
 import '../../application/providers/menu_badge_provider.dart';
+import '../../application/providers/update_apps_provider.dart';
 import '../../core/config/theme.dart';
 import '../../core/platform/window_service.dart';
+import '../../domain/models/install_progress.dart';
 import 'sidebar.dart';
 import 'title_bar.dart';
 
@@ -119,6 +122,20 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     final currentPath = GoRouterState.of(context).matchedLocation;
     // 从 Provider 获取更新数量
     final updateCount = ref.watch(menuUpdateBadgeCountProvider);
+
+    // 监听安装队列：安装成功后自动同步已安装列表和更新列表
+    // 对标旧版 useGlobalInstallProgress + syncAfterAppChange 的组合
+    ref.listen<InstallQueueState>(installQueueProvider, (previous, next) {
+      if (previous?.currentTask != null && next.currentTask == null) {
+        final completedTask = next.history.firstOrNull;
+        if (completedTask?.status == InstallStatus.success) {
+          // 后台刷新已安装列表（不 await，不阻塞 UI）
+          ref.read(installedAppsProvider.notifier).refresh();
+          // 重新检查更新列表
+          ref.read(updateAppsProvider.notifier).checkUpdates();
+        }
+      }
+    });
 
     return Scaffold(
       body: Column(

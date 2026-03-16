@@ -195,44 +195,6 @@ class InstallQueue extends _$InstallQueue {
     }
   }
 
-  /// 加载持久化数据
-  Future<void> _loadPersistedData() async {
-    final prefs = _prefs ?? _readSharedPreferences();
-    if (prefs == null) {
-      return;
-    }
-
-    _prefs = prefs;
-
-    try {
-      // 加载当前任务
-      final currentTaskJson = prefs.getString(_kCurrentTaskKey);
-      if (currentTaskJson != null) {
-        final task = InstallTask.fromJson(
-          jsonDecode(currentTaskJson) as Map<String, dynamic>,
-        );
-        state = state.copyWith(currentTask: task);
-        AppLogger.info('Loaded persisted current task: ${task.appId}');
-      }
-
-      // 加载队列
-      final queueJson = prefs.getString(_kQueueKey);
-      if (queueJson != null) {
-        final queueList = jsonDecode(queueJson) as List<dynamic>;
-        final tasks = queueList
-            .map((e) => InstallTask.fromJson(e as Map<String, dynamic>))
-            .toList();
-        state = state.copyWith(queue: tasks);
-        AppLogger.info('Loaded persisted queue: ${tasks.length} tasks');
-      }
-    } catch (e, s) {
-      AppLogger.error('Failed to load persisted data', e, s);
-      // 清理损坏的数据
-      await prefs.remove(_kCurrentTaskKey);
-      await prefs.remove(_kQueueKey);
-    }
-  }
-
   /// 入队安装任务
   ///
   /// 返回任务ID，如果应用已在队列中则返回空字符串
@@ -629,10 +591,9 @@ class InstallQueue extends _$InstallQueue {
 
   /// 从 SharedPreferences 恢复队列
   ///
-  /// 从本地存储恢复之前未完成的任务
-  Future<void> restoreQueue() async {
-    await _loadPersistedData();
-  }
+  /// 队列已在 build() 阶段通过 _restorePersistedState() 同步恢复，
+  /// 此方法保留为兼容接口，无需重复执行。
+  Future<void> restoreQueue() async {}
 
   /// 崩溃恢复检查
   ///

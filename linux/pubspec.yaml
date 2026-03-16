@@ -1,0 +1,12 @@
+name: linglong_store
+description: 玲珑应用商店社区版 - Flutter 版
+
+publish_to: none
+version: 3.0.0+1
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+  flutter: '>=3.24.0'
+
+flutter:
+  uses-material-design: true

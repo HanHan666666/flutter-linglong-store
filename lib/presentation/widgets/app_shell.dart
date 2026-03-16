@@ -1,0 +1,163 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:window_manager/window_manager.dart';
+
+import '../../application/providers/install_queue_provider.dart';
+import '../../application/providers/menu_badge_provider.dart';
+import '../../core/config/theme.dart';
+import '../../core/platform/window_service.dart';
+import 'sidebar.dart';
+import 'title_bar.dart';
+
+/// 应用外壳 - 主布局框架
+///
+/// 包含：TitleBar（顶部）+ Sidebar（左侧）+ Content（右侧）
+/// 支持响应式布局和窗口控制
+class AppShell extends ConsumerStatefulWidget {
+  const AppShell({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> with WindowListener {
+  /// 窗口是否最大化
+  bool _isMaximized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    windowManager.addListener(this);
+    _checkMaximized();
+  }
+
+  @override
+  void dispose() {
+    windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  /// WindowListener 回调 - 窗口最大化
+  @override
+  void onWindowMaximize() {
+    if (mounted && !_isMaximized) {
+      setState(() => _isMaximized = true);
+    }
+  }
+
+  /// WindowListener 回调 - 窗口取消最大化
+  @override
+  void onWindowUnmaximize() {
+    if (mounted && _isMaximized) {
+      setState(() => _isMaximized = false);
+    }
+  }
+
+  /// 检查窗口最大化状态
+  Future<void> _checkMaximized() async {
+    final isMaximized = await WindowService.isMaximized();
+    if (mounted && _isMaximized != isMaximized) {
+      setState(() {
+        _isMaximized = isMaximized;
+      });
+    }
+  }
+
+  /// 处理窗口最小化
+  void _onMinimize() {
+    WindowService.minimize();
+  }
+
+  /// 处理窗口最大化/还原
+  void _onMaximize() {
+    WindowService.toggleMaximize();
+    // 延迟检查状态，确保窗口动画完成
+    Future.delayed(const Duration(milliseconds: 100), _checkMaximized);
+  }
+
+  /// 处理窗口关闭
+  void _onClose() {
+    // 检查是否有正在进行的安装任务
+    final hasActiveTasks = ref.read(hasActiveInstallTasksProvider);
+    if (hasActiveTasks) {
+      // 如果有任务，显示确认对话框
+      _showCloseConfirmDialog();
+    } else {
+      WindowService.close();
+    }
+  }
+
+  /// 显示关闭确认对话框
+  void _showCloseConfirmDialog() {
+    showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('确认退出'),
+        content: const Text('有正在进行的安装任务，确定要退出吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(true);
+              WindowService.close();
+            },
+            child: const Text('退出'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentPath = GoRouterState.of(context).matchedLocation;
+    // 从 Provider 获取更新数量
+    final updateCount = ref.watch(menuUpdateBadgeCountProvider);
+
+    return Scaffold(
+      body: Column(
+        children: [
+          // 自定义标题栏
+          CustomTitleBar(
+            isMaximized: _isMaximized,
+            onMinimize: _onMinimize,
+            onMaximize: _onMaximize,
+            onClose: _onClose,
+          ),
+          // 主内容区域
+          Expanded(
+            child: Row(
+              children: [
+                // 左侧导航栏
+                Sidebar(currentPath: currentPath, updateCount: updateCount),
+                // 右侧内容区域，背景跟随主题
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: context.appColors.surfaceContainerLow,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(AppRadius.sm),
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(AppRadius.sm),
+                      ),
+                      child: widget.child,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

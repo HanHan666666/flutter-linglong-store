@@ -1,0 +1,28 @@
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Generated
+*.g.dart
+*.freezed.dart
+
+# Coverage
+coverage/
+
+# macOS
+.DS_Store
+
+# Linux
+*.deb
+*.rpm
+*.AppImage
+
+# Debug
+*.log

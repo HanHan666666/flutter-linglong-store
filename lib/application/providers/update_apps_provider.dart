@@ -1,0 +1,236 @@
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../core/logging/app_logger.dart';
+import '../../core/network/api_exceptions.dart';
+import '../../data/models/api_dto.dart';
+import '../../domain/models/installed_app.dart';
+import 'global_provider.dart';
+import 'install_queue_provider.dart';
+import 'installed_apps_provider.dart';
+import 'api_provider.dart';
+
+part 'update_apps_provider.g.dart';
+
+/// 可更新应用信息
+class UpdatableApp {
+  const UpdatableApp({
+    required this.installedApp,
+    required this.latestVersion,
+    this.latestVersionDescription,
+    this.latestVersionSize,
+  });
+
+  /// 已安装的应用信息
+  final InstalledApp installedApp;
+
+  /// 最新版本号
+  final String latestVersion;
+
+  /// 最新版本更新说明
+  final String? latestVersionDescription;
+
+  /// 最新版本大小
+  final String? latestVersionSize;
+
+  /// 应用ID
+  String get appId => installedApp.appId;
+
+  /// 应用名称
+  String get name => installedApp.name;
+
+  /// 当前版本
+  String get currentVersion => installedApp.version;
+
+  /// 应用图标
+  String? get icon => installedApp.icon;
+}
+
+/// 可更新应用状态
+class UpdateAppsState {
+  const UpdateAppsState({
+    this.apps = const [],
+    this.isLoading = false,
+    this.error,
+  });
+
+  /// 可更新应用列表
+  final List<UpdatableApp> apps;
+
+  /// 是否正在加载
+  final bool isLoading;
+
+  /// 错误信息
+  final String? error;
+
+  /// 可更新应用数量
+  int get count => apps.length;
+
+  /// 是否为空
+  bool get isEmpty => apps.isEmpty;
+
+  /// 复制并更新
+  UpdateAppsState copyWith({
+    List<UpdatableApp>? apps,
+    bool? isLoading,
+    String? error,
+    bool clearError = false,
+  }) {
+    return UpdateAppsState(
+      apps: apps ?? this.apps,
+      isLoading: isLoading ?? this.isLoading,
+      error: clearError ? null : (error ?? this.error),
+    );
+  }
+}
+
+/// 可更新应用 Provider
+///
+/// 管理可更新应用列表的状态
+@riverpod
+class UpdateApps extends _$UpdateApps {
+  @override
+  UpdateAppsState build() {
+    return const UpdateAppsState();
+  }
+
+  /// 获取当前架构
+  String get _arch => ref.read(globalAppProvider).arch ?? 'x86_64';
+
+  /// 检查更新
+  ///
+  /// 比较已安装应用与远程最新版本，返回可更新列表
+  Future<void> checkUpdates() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    try {
+      // 获取已安装应用列表
+      var installedApps = ref.read(installedAppsProvider).apps;
+
+      if (installedApps.isEmpty) {
+        // 如果没有已安装应用，先刷新
+        await ref.read(installedAppsProvider.notifier).refresh();
+        installedApps = ref.read(installedAppsProvider).apps;
+      }
+
+      // 从远程 API 获取最新版本信息
+      final updatableApps = await _checkUpdatesFromRemote(installedApps);
+
+      state = UpdateAppsState(apps: updatableApps, isLoading: false);
+    } catch (e, s) {
+      AppLogger.error('检查更新失败', e, s);
+      state = state.copyWith(isLoading: false, error: presentAppError(e));
+    }
+  }
+
+  /// 从远程检查更新
+  Future<List<UpdatableApp>> _checkUpdatesFromRemote(
+    List<InstalledApp> installedApps,
+  ) async {
+    if (installedApps.isEmpty) return [];
+
+    final apiService = ref.read(appApiServiceProvider);
+    final updatableApps = <UpdatableApp>[];
+
+    // 构建批量检查更新请求
+    final checkList = installedApps
+        .map(
+          (app) => AppCheckVersionBO(
+            appId: app.appId,
+            arch: app.arch ?? _arch,
+            version: app.version,
+          ),
+        )
+        .toList();
+
+    // 调用检查更新接口 - 后端期望数组格式
+    final response = await apiService.appCheckUpdate(checkList);
+
+    // 解析响应 - 后端返回 List<AppDetailDTO>
+    final updateInfoList = response.data.data;
+
+    for (final appDetail in updateInfoList) {
+      // 找到对应的已安装应用
+      final installedApp = installedApps.firstWhere(
+        (app) => app.appId == appDetail.appId,
+        orElse: () => installedApps.first,
+      );
+
+      // 如果版本不同，说明有更新
+      if (appDetail.appVersion != installedApp.version) {
+        updatableApps.add(
+          UpdatableApp(
+            installedApp: installedApp,
+            latestVersion: appDetail.appVersion,
+            latestVersionDescription: appDetail.releaseNote ?? appDetail.detailDescription,
+            latestVersionSize: appDetail.packageSize,
+          ),
+        );
+      }
+    }
+
+    return updatableApps;
+  }
+
+  /// 全部更新
+  ///
+  /// 将所有可更新应用添加到安装队列
+  void updateAll() {
+    final queue = ref.read(installQueueProvider.notifier);
+
+    for (final app in state.apps) {
+      queue.enqueueInstall(
+        appId: app.appId,
+        appName: app.name,
+        icon: app.icon,
+        version: app.latestVersion,
+      );
+    }
+  }
+
+  /// 更新单个应用
+  void updateApp(String appId) {
+    final app = state.apps.where((a) => a.appId == appId).firstOrNull;
+    if (app == null) return;
+
+    ref
+        .read(installQueueProvider.notifier)
+        .enqueueInstall(
+          appId: app.appId,
+          appName: app.name,
+          icon: app.icon,
+          version: app.latestVersion,
+        );
+  }
+
+  /// 从列表中移除已更新的应用
+  void removeUpdatedApp(String appId) {
+    state = state.copyWith(
+      apps: state.apps.where((a) => a.appId != appId).toList(),
+    );
+  }
+
+  /// 刷新更新列表
+  Future<void> refresh() async {
+    await checkUpdates();
+  }
+}
+
+/// 便捷访问 Provider
+
+/// 可更新应用列表
+@riverpod
+List<UpdatableApp> updatableAppsList(Ref ref) {
+  return ref.watch(updateAppsProvider).apps;
+}
+
+/// 可更新应用数量
+@riverpod
+int updatableAppsCount(Ref ref) {
+  return ref.watch(updateAppsProvider).count;
+}
+
+/// 是否有可更新应用
+@riverpod
+bool hasUpdatableApps(Ref ref) {
+  return ref.watch(updateAppsProvider).count > 0;
+}

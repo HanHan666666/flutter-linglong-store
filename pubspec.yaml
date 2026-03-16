@@ -1,0 +1,82 @@
+name: linglong_store
+description: 玲珑应用商店社区版
+publish_to: none
+version: 3.0.0+1
+
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # 状态管理
+  flutter_riverpod: ^3.3.1
+  riverpod_annotation: ^4.0.2
+
+  # 路由
+  go_router: ^14.6.2
+
+  # 网络
+  dio: ^5.7.0
+  retrofit: ^4.4.1
+
+  # 序列化
+  freezed_annotation: ^3.0.0
+  json_annotation: ^4.9.0
+
+  # 窗口管理
+  window_manager: ^0.4.3
+
+  # 本地存储
+  shared_preferences: ^2.3.4
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # UI
+  cached_network_image: ^3.4.1
+  flutter_svg: ^2.0.16
+  shimmer: ^3.0.0
+
+  # 工具
+  url_launcher: ^6.3.1
+  device_info_plus: ^10.1.2
+  package_info_plus: ^8.1.3
+  uuid: ^4.5.1
+  logger: ^2.5.0
+  intl: ^0.20.2
+  path_provider: ^2.1.5
+  path: ^1.9.1
+
+  # 系统托盘 (暂时禁用 - system_tray 不支持 Dart 3.x)
+  # system_tray: ^2.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.13
+  freezed: ^3.2.5
+  json_serializable: ^6.8.0
+  retrofit_generator: ^10.2.3
+  riverpod_generator: ^4.0.3
+  mockito: ^5.4.4
+  # build_verify: ^3.1.0  # 暂时禁用 - 与 freezed/flutter_test 冲突
+  alchemist: ^0.10.0
+
+  # 集成测试
+  patrol: ^3.11.0
+  patrol_finders: ^2.1.2
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icons/
+    - assets/seeds/
+
+  generate: true  # 启用 flutter_localizations 代码生成

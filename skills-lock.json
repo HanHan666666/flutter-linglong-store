@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "skills": {
+    "adapt": {
+      "source": "pbakaus/impeccable",
+      "sourceType": "github",
+      "computedHash": "1b1db5d2fb133511785345f0fcb0c9d12a805b04a2789028d8890ebe448aad12"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "computedHash": "d31e234f0c90694a670222cdd1dafa853e051d7066beda389f1097c22dadd461"
+    },
+    "flutter-adding-home-screen-widgets": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "63269a90f565bc2e4956be9fd4368caffe269c6cda7f543503994f1bf1d297a1"
+    },
+    "flutter-animating-apps": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "fcec8d5e69f914e94ad8ac999b42793fd616af044665feb4af5daa21ca7988d7"
+    },
+    "flutter-architecting-apps": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "ac8212aa825c75d468c216ffada34302d0ab6e8ffc8e99d789848aba4acd30ed"
+    },
+    "flutter-building-forms": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "4f1881cab15932c34fed9d7e4bc9f2d23364f2c9f64837306d145f0ab80d026b"
+    },
+    "flutter-building-layouts": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "f25c57e933fa78f5e26057be20b8a2edbd9783c654be03198a7cb6c5c2432d12"
+    },
+    "flutter-building-plugins": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "19cd63fbf955c95cb4dbdbf801241deb680d6fd3ae247d425c683f8b9661b9eb"
+    },
+    "flutter-caching-data": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "bc9d63c2000ea783643e36ec5f56151d93407ef3b8758a352e164b139a4d97c3"
+    },
+    "flutter-embedding-native-views": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "23a0ac274268916b43fc1af8f61caffb0e4a2517ac75621ba85feb86e262d07f"
+    },
+    "flutter-handling-concurrency": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "dbc91150d14278fea8ff17d530138ffe9de144be7fb2b9346f19d6434e921081"
+    },
+    "flutter-handling-http-and-json": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "8a2fd6a4594a2959fb60727b558f71856282bc480530ff298040be2d449e23e6"
+    },
+    "flutter-implementing-navigation-and-routing": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "d599cf2bb7fe94d164fb3ce856dcd2701e66674e8f750b72c9c22c4af52fd57b"
+    },
+    "flutter-improving-accessibility": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "30eb673f24b23a9da2d688508fe9fb4d217a5093dd60488a6e3c9d6f0defd23a"
+    },
+    "flutter-interoperating-with-native-apis": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "7d30a02f07a61f318ba61a457bcb31bbb1aeaf40a287fd63a6bf7e43646e92dc"
+    },
+    "flutter-localizing-apps": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "624ad6e13012fda0f9e7f35a12b22d0c637b68b8924c064bd81f2f4428da31c9"
+    },
+    "flutter-managing-state": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "7a0f1741895403c42db43d66b535099ce1c0c06126765b1bd5d649f96b16d0bd"
+    },
+    "flutter-reducing-app-size": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "76c9c03c5a086de17bf1b3e41becd6695bdca42562ef351fa1de8d2bddd2b096"
+    },
+    "flutter-setting-up-on-linux": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "1adb716646b3800898bcf6a975b6dea77e5df8921269f488f87470b668ef269b"
+    },
+    "flutter-setting-up-on-macos": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "72e11b005d3182a5a47ed5147b37b19e07b7d06950cd1ff0fe31f3903e46db79"
+    },
+    "flutter-setting-up-on-windows": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "29fd83a27614f7345788bee6bb6c8675e87436b7be235fa1b26a8d7752666ee2"
+    },
+    "flutter-testing-apps": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "c3bc3a540534e97cf391710fb8dcdb49b9f4c8a5385597cb56ef9094e56af776"
+    },
+    "flutter-theming-apps": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "df83d4bcd1e98b684eff8fc6ed30c40f6165a377e9733f42a42e496da58bacd4"
+    },
+    "flutter-working-with-databases": {
+      "source": "flutter/skills",
+      "sourceType": "github",
+      "computedHash": "202626bef016eb0b31aa6ef99d5ba2af8b0722d94a19d0a628a8dc627aa373cd"
+    },
+    "frontend-design": {
+      "source": "pbakaus/impeccable",
+      "sourceType": "github",
+      "computedHash": "b7146ef043e1d612023eadc58f0984cbb76f2beabba787d3189e53810b96ccc9"
+    },
+    "pua": {
+      "source": "tanweai/pua",
+      "sourceType": "github",
+      "computedHash": "1670bd7b6dbf4ca62f709d28c51af7f726503e6fec5c37c7f077b17d2cc317d0"
+    }
+  }
+}

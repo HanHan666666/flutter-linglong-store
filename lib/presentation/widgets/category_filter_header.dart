@@ -198,8 +198,11 @@ class _CategoryChipState extends State<_CategoryChip> {
                         maxLines: 1,
                         overflow: TextOverflow.visible,
                         softWrap: false,
+                        textAlign: TextAlign.center,
                         style: AppTextStyles.body.copyWith(
                           fontSize: 13,
+                          // 分类胶囊按钮使用紧凑行高，避免中文在按钮内视觉偏上。
+                          height: 1,
                           fontWeight: isSelected
                               ? FontWeight.w600
                               : FontWeight.w500,

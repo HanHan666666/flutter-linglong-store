@@ -157,3 +157,4 @@ time ./build/package-deb.sh
 - 2026-03-17：Linux 原生右键菜单深色模式通过 Flutter -> runner 的轻量 MethodChannel 同步当前实际亮度；不要修改第三方菜单插件源码，也不要在 Dart 层伪造一套自绘菜单替代原生菜单。
 - 2026-03-17：进程列表右键菜单弹出位置固定为鼠标点击点右下方 `4px`，这是当前与桌面视觉校准后的约定，后续不要随意改回零偏移。
 - 2026-03-17：应用图标的远端富化结果统一在 `AppRepositoryImpl.enrichInstalledAppsWithDetails()` 做 TTL 缓存，缓存 key 必须包含 `locale + appId + version + arch + channel + module`；不要在 Provider 刷新链路里每次重新打应用详情接口补图标。
+- 2026-03-17：分类筛选胶囊按钮的标签文字需要显式使用紧凑行高并居中对齐，避免中文在 `36px` 高按钮内出现视觉偏上；后续不要直接复用正文默认 `height: 1.5`。

@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:linglong_store/core/config/app_config.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/core/network/api_client.dart';
+import 'package:linglong_store/core/storage/cache_service.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
 
 import '../../domain/models/installed_app.dart';
@@ -13,6 +15,8 @@ import '../datasources/remote/app_api_service.dart';
 ///
 /// 负责调用 API 服务并处理数据转换
 class AppRepositoryImpl implements AppRepository {
+  static const _detailsCachePrefix = 'app_details';
+
   /// 默认构造函数，使用 ApiClient 创建 AppApiService
   AppRepositoryImpl() : _apiService = AppApiService(ApiClient.instance);
 
@@ -248,49 +252,50 @@ class AppRepositoryImpl implements AppRepository {
   ) async {
     if (apps.isEmpty) return apps;
 
+    final locale = ApiClient.getLocale?.call() ?? AppConfig.defaultLocale;
+    final detailsMap = <String, AppListItemDTO>{};
+    final missingApps = <InstalledApp>[];
+
+    for (final app in apps) {
+      final cacheKey = _buildDetailsCacheKey(app, locale);
+      final cachedDetail = _readCachedAppDetail(cacheKey);
+      if (cachedDetail != null) {
+        detailsMap[cacheKey] = cachedDetail;
+      } else {
+        missingApps.add(app);
+      }
+    }
+
     try {
-      // 构建 API 请求参数
-      final request = apps
-          .map(
-            (app) => AppDetailsBO(
-              appId: app.appId,
-              name: app.name,
-              version: app.version,
-              channel: app.channel,
-              module: app.module,
-              arch: app.arch ?? _currentArch,
-            ),
-          )
-          .toList();
+      if (missingApps.isNotEmpty) {
+        final request = missingApps.map(_buildAppDetailsRequest).toList();
 
-      // 调用批量获取应用详情接口
-      final response = await _apiService.getAppDetails(request);
+        final response = await _apiService.getAppDetails(request);
+        final responseData = response.data.data;
+        final remoteDetailsByAppId = <String, AppListItemDTO>{
+          for (final dto in responseData) dto.appId: dto,
+        };
 
-      // 解析响应
-      final responseData = response.data.data;
-      if (responseData.isEmpty) {
-        AppLogger.warning('批量获取应用详情返回空数据');
-        return apps;
-      }
+        for (final app in missingApps) {
+          final detail = remoteDetailsByAppId[app.appId];
+          if (detail == null) {
+            continue;
+          }
 
-      // 构建详情 Map，便于快速查找
-      final detailsMap = <String, AppListItemDTO>{};
-      for (final dto in responseData) {
-        detailsMap[dto.appId] = dto;
-      }
-
-      // 合并详情到已安装应用列表
-      return apps.map((app) {
-        final detail = detailsMap[app.appId];
-        if (detail != null) {
-          return app.copyWith(
-            // 优先使用 API 返回的图标，其次保留原值
-            icon: detail.appIcon ?? app.icon,
-            name: detail.appName.isNotEmpty ? detail.appName : app.name,
-            description: detail.appDesc ?? app.description,
-            kind: detail.appKind ?? app.kind,
-            size: detail.packageSize ?? app.size,
+          final cacheKey = _buildDetailsCacheKey(app, locale);
+          detailsMap[cacheKey] = detail;
+          await CacheService.set<Map<String, dynamic>>(
+            cacheKey,
+            detail.toJson(),
+            ttl: const Duration(minutes: AppConfig.cacheExpirationMinutes),
           );
+        }
+      }
+
+      return apps.map((app) {
+        final detail = detailsMap[_buildDetailsCacheKey(app, locale)];
+        if (detail != null) {
+          return _mergeDetailIntoInstalledApp(app, detail);
         }
         return app;
       }).toList();
@@ -298,6 +303,61 @@ class AppRepositoryImpl implements AppRepository {
       // 富化失败不应影响已安装列表的正常显示
       AppLogger.warning('批量获取应用详情失败，使用原始数据', e, s);
       return apps;
+    }
+  }
+
+  AppDetailsBO _buildAppDetailsRequest(InstalledApp app) {
+    return AppDetailsBO(
+      appId: app.appId,
+      name: app.name,
+      version: app.version,
+      channel: app.channel,
+      module: app.module,
+      arch: app.arch ?? _currentArch,
+    );
+  }
+
+  InstalledApp _mergeDetailIntoInstalledApp(
+    InstalledApp app,
+    AppListItemDTO detail,
+  ) {
+    return app.copyWith(
+      // 优先使用 API 返回的图标，其次保留原值
+      icon: detail.appIcon ?? app.icon,
+      name: detail.appName.isNotEmpty ? detail.appName : app.name,
+      description: detail.appDesc ?? app.description,
+      kind: detail.appKind ?? app.kind,
+      size: detail.packageSize ?? app.size,
+    );
+  }
+
+  String _buildDetailsCacheKey(InstalledApp app, String locale) {
+    final normalizedArch = app.arch ?? _currentArch;
+    final normalizedChannel = app.channel ?? '';
+    final normalizedModule = app.module ?? '';
+
+    return [
+      _detailsCachePrefix,
+      locale,
+      app.appId,
+      app.version,
+      normalizedArch,
+      normalizedChannel,
+      normalizedModule,
+    ].join('|');
+  }
+
+  AppListItemDTO? _readCachedAppDetail(String cacheKey) {
+    final cached = CacheService.get<Map>(cacheKey);
+    if (cached == null) {
+      return null;
+    }
+
+    try {
+      return AppListItemDTO.fromJson(Map<String, dynamic>.from(cached));
+    } catch (e, s) {
+      AppLogger.warning('解析应用详情缓存失败: $cacheKey', e, s);
+      return null;
     }
   }
 }

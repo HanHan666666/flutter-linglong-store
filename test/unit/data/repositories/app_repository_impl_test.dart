@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive/hive.dart';
+import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:mockito/mockito.dart';
 import 'package:retrofit/retrofit.dart';
 import 'package:linglong_store/data/repositories/app_repository_impl.dart';
@@ -12,15 +16,33 @@ import '../../../mocks/mock_classes.mocks.dart';
 void main() {
   late AppRepositoryImpl repository;
   late MockAppApiService mockApiService;
+  late String hiveTestPath;
 
   setUpAll(() async {
     // 初始化日志
     await AppLogger.init();
+    final tempDir = await Directory.systemTemp.createTemp(
+      'app_repo_cache_test',
+    );
+    hiveTestPath = tempDir.path;
+    Hive.init(hiveTestPath);
+    await Hive.openBox('cache');
   });
 
   setUp(() {
     mockApiService = MockAppApiService();
     repository = AppRepositoryImpl.withService(mockApiService);
+  });
+
+  tearDown(() async {
+    if (Hive.isBoxOpen('cache')) {
+      await Hive.box('cache').clear();
+    }
+  });
+
+  tearDownAll(() async {
+    await Hive.close();
+    await Directory(hiveTestPath).delete(recursive: true);
   });
 
   group('AppRepositoryImpl', () {
@@ -603,6 +625,147 @@ void main() {
         expect(result.description, isNull);
         expect(result.arch, equals('x86_64')); // Uses default
         expect(result.channel, equals('stable')); // Uses default
+      });
+    });
+
+    group('enrichInstalledAppsWithDetails', () {
+      test(
+        'should cache detail enrichment and skip remote request on repeated calls',
+        () async {
+          final apps = [
+            const InstalledApp(
+              appId: 'org.deepin.calculator',
+              name: 'deepin-calculator',
+              version: '6.5.31.1',
+              arch: 'x86_64',
+              channel: 'main',
+              module: 'binary',
+            ),
+          ];
+
+          final mockResponse = HttpResponse(
+            AppListArrayResponse(
+              code: 200,
+              data: const [
+                AppListItemDTO(
+                  appId: 'org.deepin.calculator',
+                  appName: '计算器',
+                  appVersion: '6.5.31.1',
+                  appIcon: 'https://example.com/calculator.png',
+                  appDesc: '计算器应用',
+                ),
+              ],
+            ),
+            Response(
+              requestOptions: RequestOptions(path: '/app/getAppDetails'),
+            ),
+          );
+
+          when(
+            mockApiService.getAppDetails(any),
+          ).thenAnswer((_) async => mockResponse);
+
+          final firstResult = await repository.enrichInstalledAppsWithDetails(
+            apps,
+          );
+          final secondResult = await repository.enrichInstalledAppsWithDetails(
+            apps,
+          );
+
+          expect(
+            firstResult.single.icon,
+            equals('https://example.com/calculator.png'),
+          );
+          expect(
+            secondResult.single.icon,
+            equals('https://example.com/calculator.png'),
+          );
+          expect(secondResult.single.name, equals('计算器'));
+          verify(mockApiService.getAppDetails(any)).called(1);
+        },
+      );
+
+      test('should only request uncached app details', () async {
+        final cachedApps = [
+          const InstalledApp(
+            appId: 'org.deepin.calculator',
+            name: 'deepin-calculator',
+            version: '6.5.31.1',
+            arch: 'x86_64',
+            channel: 'main',
+            module: 'binary',
+          ),
+        ];
+        final mixedApps = [
+          ...cachedApps,
+          const InstalledApp(
+            appId: 'org.deepin.camera',
+            name: 'deepin-camera',
+            version: '6.5.36.1',
+            arch: 'x86_64',
+            channel: 'main',
+            module: 'binary',
+          ),
+        ];
+
+        when(mockApiService.getAppDetails(any)).thenAnswer((invocation) async {
+          final request =
+              invocation.positionalArguments.single as List<AppDetailsBO>;
+          final appIds = request.map((item) => item.appId).toList();
+
+          if (appIds.length == 1 && appIds.single == 'org.deepin.calculator') {
+            return HttpResponse(
+              AppListArrayResponse(
+                code: 200,
+                data: const [
+                  AppListItemDTO(
+                    appId: 'org.deepin.calculator',
+                    appName: '计算器',
+                    appVersion: '6.5.31.1',
+                    appIcon: 'https://example.com/calculator.png',
+                  ),
+                ],
+              ),
+              Response(
+                requestOptions: RequestOptions(path: '/app/getAppDetails'),
+              ),
+            );
+          }
+
+          return HttpResponse(
+            AppListArrayResponse(
+              code: 200,
+              data: const [
+                AppListItemDTO(
+                  appId: 'org.deepin.camera',
+                  appName: '相机',
+                  appVersion: '6.5.36.1',
+                  appIcon: 'https://example.com/camera.png',
+                ),
+              ],
+            ),
+            Response(
+              requestOptions: RequestOptions(path: '/app/getAppDetails'),
+            ),
+          );
+        });
+
+        await repository.enrichInstalledAppsWithDetails(cachedApps);
+        final result = await repository.enrichInstalledAppsWithDetails(
+          mixedApps,
+        );
+
+        expect(result, hasLength(2));
+        expect(result.first.name, equals('计算器'));
+        expect(result.last.name, equals('相机'));
+
+        final capturedRequests = verify(
+          mockApiService.getAppDetails(captureAny),
+        ).captured.cast<List<AppDetailsBO>>();
+        expect(capturedRequests, hasLength(2));
+        expect(capturedRequests.last.map((item) => item.appId), [
+          'org.deepin.camera',
+        ]);
       });
     });
   });

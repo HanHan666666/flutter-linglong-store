@@ -158,3 +158,5 @@ time ./build/package-deb.sh
 - 2026-03-17：进程列表右键菜单弹出位置固定为鼠标点击点右下方 `4px`，这是当前与桌面视觉校准后的约定，后续不要随意改回零偏移。
 - 2026-03-17：应用图标的远端富化结果统一在 `AppRepositoryImpl.enrichInstalledAppsWithDetails()` 做 TTL 缓存，缓存 key 必须包含 `locale + appId + version + arch + channel + module`；不要在 Provider 刷新链路里每次重新打应用详情接口补图标。
 - 2026-03-17：分类筛选胶囊按钮的标签文字需要显式使用紧凑行高并居中对齐，避免中文在 `36px` 高按钮内出现视觉偏上；后续不要直接复用正文默认 `height: 1.5`。
+- 2026-03-17：应用安装队列显式区分 `InstallTaskKind.install/update`；更新页、卡片按钮和批量更新入口必须统一走 `app_operation_queue_provider.dart`，不要在页面里直接循环 `enqueueInstall()` 或手写“更新即安装”的入队逻辑。
+- 2026-03-17：安装/更新成功后的 installed apps 与 updates 刷新统一走 `app_collection_sync_provider.dart`；不要在页面 build 期监听里分散刷新，也不要在按钮点击回调里各自补写 refresh。

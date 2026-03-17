@@ -825,7 +825,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       await cliRepo.uninstallApp(app.appId, app.version);
 
       // 乐观更新：从已安装列表中移除
-      ref.read(installedAppsProvider.notifier).removeApp(app.appId);
+      ref
+          .read(installedAppsProvider.notifier)
+          .removeApp(app.appId, app.version);
       // 后台重新检查更新列表（不 await，不阻塞 UI）
       ref.read(updateAppsProvider.notifier).checkUpdates();
 

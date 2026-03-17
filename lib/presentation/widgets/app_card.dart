@@ -1,307 +1,150 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../application/providers/install_queue_provider.dart';
-import '../../domain/models/install_progress.dart';
-import '../../domain/models/install_task.dart';
+import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import 'app_icon.dart';
 import 'install_button.dart';
 
-/// 应用卡片组件
-///
-/// 显示应用的基本信息，包括图标、名称、描述和安装按钮
-class AppCard extends ConsumerWidget {
-  /// 应用ID
-  final String? appId;
+enum AppCardType { default_, recommend, list, grid }
 
-  /// 应用名称
-  final String? name;
-
-  /// 应用描述
-  final String? description;
-
-  /// 应用图标URL
-  final String? iconUrl;
-
-  /// 应用版本
-  final String? version;
-
-  /// 是否已安装
-  final bool isInstalled;
-
-  /// 是否有更新
-  final bool hasUpdate;
-
-  /// 是否正在安装
-  final bool isInstalling;
-
-  /// 安装进度 (0.0 - 1.0)
-  final double installProgress;
-
-  /// 卡片点击回调
-  final VoidCallback? onTap;
-
-  /// 安装按钮点击回调
-  final VoidCallback? onInstall;
-
-  /// 打开按钮点击回调
-  final VoidCallback? onOpen;
-
-  /// 卸载按钮点击回调
-  final VoidCallback? onUninstall;
-
-  /// 取消安装回调
-  final VoidCallback? onCancelInstall;
-
-  /// 卡片类型
-  final AppCardType type;
-
-  /// 是否显示骨架屏
-  final bool isLoading;
-
-  const AppCard({
-    super.key,
-    this.appId,
-    this.name,
-    this.description,
-    this.iconUrl,
-    this.version,
-    this.isInstalled = false,
-    this.hasUpdate = false,
-    this.isInstalling = false,
-    this.installProgress = 0.0,
-    this.onTap,
-    this.onInstall,
-    this.onOpen,
-    this.onUninstall,
-    this.onCancelInstall,
-    this.type = AppCardType.default_,
-    this.isLoading = false,
+/// 列表卡片的更多菜单动作。
+class AppCardMenuAction {
+  const AppCardMenuAction({
+    required this.value,
+    required this.label,
+    required this.icon,
+    required this.onSelected,
   });
 
-  /// 创建骨架屏卡片
-  const AppCard.skeleton({
+  final String value;
+  final String label;
+  final IconData icon;
+  final VoidCallback onSelected;
+}
+
+/// 通用应用卡片。
+///
+/// 页面层负责聚合状态并传入轻量 props，这里只负责展示与交互分发。
+class AppCard extends StatefulWidget {
+  const AppCard({
+    required this.appId,
+    required this.name,
+    required this.buttonState,
     super.key,
+    this.description,
+    this.iconUrl,
+    this.progress = 0.0,
+    this.isInstalling = false,
+    this.rank,
     this.type = AppCardType.default_,
-  })  : appId = null,
-        name = null,
-        description = null,
-        iconUrl = null,
-        version = null,
-        isInstalled = false,
-        hasUpdate = false,
-        isInstalling = false,
-        installProgress = 0.0,
-        onTap = null,
-        onInstall = null,
-        onOpen = null,
-        onUninstall = null,
-        onCancelInstall = null,
-        isLoading = true;
+    this.isLoading = false,
+    this.onTap,
+    this.onPrimaryPressed,
+    this.menuActions = const [],
+  });
+
+  const AppCard.skeleton({super.key, this.type = AppCardType.default_})
+    : appId = '',
+      name = '',
+      description = null,
+      iconUrl = null,
+      buttonState = InstallButtonState.notInstalled,
+      progress = 0.0,
+      isInstalling = false,
+      rank = null,
+      isLoading = true,
+      onTap = null,
+      onPrimaryPressed = null,
+      menuActions = const [];
+
+  final String appId;
+  final String name;
+  final String? description;
+  final String? iconUrl;
+  final InstallButtonState buttonState;
+  final double progress;
+  final bool isInstalling;
+  final int? rank;
+  final AppCardType type;
+  final bool isLoading;
+  final VoidCallback? onTap;
+  final VoidCallback? onPrimaryPressed;
+  final List<AppCardMenuAction> menuActions;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (isLoading) {
+  State<AppCard> createState() => _AppCardState();
+}
+
+class _AppCardState extends State<AppCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.isLoading) {
       return _buildSkeletonCard(context);
     }
 
-    return _buildCard(context, ref);
-  }
-
-  /// 构建卡片主体
-  Widget _buildCard(BuildContext context, WidgetRef ref) {
-    // 从 Provider 获取安装状态（如果提供了 appId）
-    InstallButtonState installState;
-    double progress = installProgress;
-
-    if (appId != null) {
-      // 检查应用是否在安装队列中
-      final installQueue = ref.watch(installQueueProvider);
-      final task = installQueue.getAppInstallStatus(appId!);
-
-      if (task != null) {
-        // 使用队列中的状态
-        installState = _getInstallButtonStateFromTask(task);
-        progress = task.progress;
-      } else {
-        // 使用传入的状态
-        installState = _getInstallButtonState();
-      }
-    } else {
-      installState = _getInstallButtonState();
-    }
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // 应用图标 - 使用 AppIcon 组件
-              AppIcon(
-                iconUrl: iconUrl,
-                size: 64,
-                borderRadius: 12,
-                appName: name,
-              ),
-              const SizedBox(width: 12),
-
-              // 应用信息
-              Expanded(child: _buildContent(context)),
-
-              const SizedBox(width: 12),
-
-              // 操作按钮 - 使用 InstallButton 组件
-              InstallButton(
-                state: installState,
-                progress: progress,
-                onPressed: () => _handleButtonPress(installState),
-                onCancel: onCancelInstall,
-                size: ButtonSize.medium,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// 构建内容区域
-  Widget _buildContent(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // 应用名称
-        Text(
-          name ?? (l10n?.noApps ?? '未知应用'),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-
-        const SizedBox(height: 4),
-
-        // 应用描述
-        if (description != null)
-          Text(
-            description!,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-
-        // 推荐类型显示版本号
-        if (type == AppCardType.recommend && version != null) ...[
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Text(
-                'v$version',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).textTheme.bodySmall?.color,
-                    ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                decoration: BoxDecoration(
-                  color: Colors.amber.shade100,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  l10n?.linglongRecommend ?? '推荐',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.amber.shade800,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: AppRadius.smRadius,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            decoration: BoxDecoration(
+              color: context.appColors.surface,
+              borderRadius: AppRadius.smRadius,
+              boxShadow: _isHovered
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              child: Row(
+                children: [
+                  if (widget.rank != null) ...[
+                    _RankBadge(rank: widget.rank!),
+                    const SizedBox(width: AppSpacing.sm),
+                  ],
+                  AppIcon(
+                    iconUrl: widget.iconUrl,
+                    size: 48,
+                    borderRadius: 8,
+                    appName: widget.name,
                   ),
-                ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(child: _buildInfo(context)),
+                  const SizedBox(width: AppSpacing.sm),
+                  _buildPrimaryButton(context),
+                  if (widget.menuActions.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    _buildOverflowMenu(),
+                  ],
+                ],
               ),
-            ],
+            ),
           ),
-        ],
-      ],
+        ),
+      ),
     );
   }
 
-  /// 获取安装按钮状态（基于传入参数）
-  InstallButtonState _getInstallButtonState() {
-    if (isInstalling) {
-      return InstallButtonState.installing;
-    }
-    if (!isInstalled) {
-      return InstallButtonState.notInstalled;
-    }
-    if (hasUpdate) {
-      return InstallButtonState.update;
-    }
-    return InstallButtonState.open;
-  }
-
-  /// 从安装任务获取安装按钮状态
-  InstallButtonState _getInstallButtonStateFromTask(InstallTask task) {
-    switch (task.status) {
-      case InstallStatus.pending:
-      case InstallStatus.downloading:
-      case InstallStatus.installing:
-        return InstallButtonState.installing;
-      case InstallStatus.success:
-        return InstallButtonState.open;
-      case InstallStatus.failed:
-      case InstallStatus.cancelled:
-        return InstallButtonState.notInstalled;
-    }
-  }
-
-  /// 处理按钮点击
-  void _handleButtonPress(InstallButtonState state) {
-    switch (state) {
-      case InstallButtonState.notInstalled:
-      case InstallButtonState.update:
-        onInstall?.call();
-        break;
-      case InstallButtonState.open:
-        onOpen?.call();
-        break;
-      case InstallButtonState.uninstall:
-        onUninstall?.call();
-        break;
-      case InstallButtonState.installing:
-        // 安装中，不做处理或显示进度详情
-        break;
-      case InstallButtonState.installed:
-        onOpen?.call();
-        break;
-    }
-  }
-
-  /// 构建骨架屏卡片（使用 shimmer 动画）
   Widget _buildSkeletonCard(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
     final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Shimmer.fromColors(
@@ -309,33 +152,32 @@ class AppCard extends ConsumerWidget {
           highlightColor: highlightColor,
           child: Row(
             children: [
-              // 图标占位
               Container(
-                width: 64,
-                height: 64,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: baseColor,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              const SizedBox(width: 12),
-              // 内容占位
+              const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      height: 16,
+                      height: 14,
                       width: double.infinity,
                       decoration: BoxDecoration(
                         color: baseColor,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Container(
                       height: 12,
-                      width: 200,
+                      width: 160,
                       decoration: BoxDecoration(
                         color: baseColor,
                         borderRadius: BorderRadius.circular(4),
@@ -344,14 +186,13 @@ class AppCard extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
-              // 按钮占位
+              const SizedBox(width: 8),
               Container(
-                width: 60,
-                height: 32,
+                width: 56,
+                height: 28,
                 decoration: BoxDecoration(
                   color: baseColor,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
             ],
@@ -360,19 +201,182 @@ class AppCard extends ConsumerWidget {
       ),
     );
   }
+
+  Widget _buildInfo(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          widget.name,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: context.appColors.textPrimary,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 2),
+        Text(
+          widget.description ?? '',
+          style: TextStyle(fontSize: 12, color: context.appColors.textTertiary),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPrimaryButton(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final isLoading =
+        widget.isInstalling &&
+        (widget.buttonState == InstallButtonState.notInstalled ||
+            widget.buttonState == InstallButtonState.update);
+    final label = _resolveLabel(l10n, widget.buttonState, isLoading);
+
+    if (widget.buttonState == InstallButtonState.open ||
+        widget.buttonState == InstallButtonState.installed) {
+      return SizedBox(
+        height: 28,
+        child: OutlinedButton(
+          onPressed: widget.onPrimaryPressed,
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(56, 28),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            backgroundColor: context.appColors.openButtonBackground,
+            foregroundColor: context.appColors.openButtonText,
+            side: BorderSide(color: context.appColors.openButtonBorder),
+            shape: const StadiumBorder(),
+          ),
+          child: Text(label),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 28,
+      child: FilledButton(
+        onPressed: isLoading ? null : widget.onPrimaryPressed,
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(56, 28),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+          shape: const StadiumBorder(),
+          backgroundColor: AppColors.primary,
+          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.65),
+          disabledForegroundColor: Colors.white,
+        ),
+        child: isLoading
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(
+                      value: widget.progress > 0 ? widget.progress : null,
+                      strokeWidth: 2,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(label),
+                ],
+              )
+            : Text(label),
+      ),
+    );
+  }
+
+  Widget _buildOverflowMenu() {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert),
+      onSelected: (value) {
+        for (final action in widget.menuActions) {
+          if (action.value == value) {
+            action.onSelected();
+            return;
+          }
+        }
+      },
+      itemBuilder: (context) => widget.menuActions
+          .map(
+            (action) => PopupMenuItem<String>(
+              value: action.value,
+              child: Row(
+                children: [
+                  Icon(action.icon, size: 20),
+                  const SizedBox(width: 12),
+                  Text(action.label),
+                ],
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  String _resolveLabel(
+    AppLocalizations? l10n,
+    InstallButtonState state,
+    bool isLoading,
+  ) {
+    if (isLoading) {
+      final progressPercent = (widget.progress * 100).round();
+      return progressPercent > 0
+          ? '$progressPercent%'
+          : (l10n?.installing ?? '安装中');
+    }
+
+    return switch (state) {
+      InstallButtonState.notInstalled => l10n?.install ?? '安装',
+      InstallButtonState.update => l10n?.update_action ?? '更新',
+      InstallButtonState.installed => l10n?.open ?? '打开',
+      InstallButtonState.open => l10n?.open ?? '打开',
+      InstallButtonState.installing => l10n?.installing ?? '安装中',
+      InstallButtonState.uninstall => l10n?.uninstall ?? '卸载',
+    };
+  }
 }
 
-/// 应用卡片类型枚举
-enum AppCardType {
-  /// 默认类型
-  default_,
+class _RankBadge extends StatelessWidget {
+  const _RankBadge({required this.rank});
 
-  /// 推荐类型（显示版本号和推荐标签）
-  recommend,
+  final int rank;
 
-  /// 列表类型
-  list,
+  @override
+  Widget build(BuildContext context) {
+    final (bgColor, textColor) = switch (rank) {
+      1 => (const Color(0xFFFFD700), Colors.white),
+      2 => (const Color(0xFFC0C0C0), Colors.white),
+      3 => (const Color(0xFFCD7F32), Colors.white),
+      _ => (context.appColors.cardBackground, context.appColors.textTertiary),
+    };
 
-  /// 网格类型
-  grid,
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: AppRadius.xsRadius,
+      ),
+      child: Center(
+        child: Text(
+          '$rank',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: textColor,
+          ),
+        ),
+      ),
+    );
+  }
 }

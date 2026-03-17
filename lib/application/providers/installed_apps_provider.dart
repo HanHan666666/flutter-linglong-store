@@ -66,10 +66,14 @@ class InstalledApps extends _$InstalledApps {
     }
   }
 
-  /// 从列表中移除应用（卸载后调用）
-  void removeApp(String appId) {
+  /// 从列表中移除应用（卸载后调用）。
+  ///
+  /// 同一应用可能存在多个版本，只移除当前被卸载的版本。
+  void removeApp(String appId, String version) {
     state = state.copyWith(
-      apps: state.apps.where((app) => app.appId != appId).toList(),
+      apps: state.apps
+          .where((app) => !(app.appId == appId && app.version == version))
+          .toList(),
     );
   }
 }

@@ -132,3 +132,8 @@ time ./build/package-deb.sh
 ## 迁移对照与限制
 - 功能与 UI 需与旧版对齐，避免引入新功能或改动行为语义。
 - 对应关系与风险评估见：`/home/han/linglong-store/flutter-linglong-store/docs/01-migration-plan.md`。
+
+## 变更记录
+- 2026-03-17：应用列表卡片状态统一迁移到页面级索引 `application_card_state_provider.dart`，由公共 `AppCard` 渲染；列表页禁止再各自复制 `_AppCard` 并手写“安装/更新/打开”判断。
+- 2026-03-17：卡片主按钮统一采用三态规则：未安装显示“安装”，已安装且可更新显示“更新”，已安装且无更新显示“打开”；安装队列仅作为 loading/progress 来源，不改变三态决策。
+- 2026-03-17：`我的应用` 页按 `appId` 合并多版本，仅展示最高版本；卸载乐观更新必须按 `appId + version` 精确移除，不能整包删除同应用的其他已安装版本。

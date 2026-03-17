@@ -6,11 +6,13 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../application/providers/application_card_state_provider.dart';
 import '../../../application/providers/recommend_provider.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/config/page_visibility.dart';
 import '../../../core/config/visibility_aware_mixin.dart';
 import '../../../domain/models/recommend_models.dart';
+import '../../widgets/app_card_actions.dart';
 import '../../widgets/widgets.dart';
 
 /// 推荐页
@@ -569,7 +571,7 @@ class _BannerIndicators extends StatelessWidget {
 }
 
 /// 应用网格
-class _AppsGrid extends StatelessWidget {
+class _AppsGrid extends ConsumerWidget {
   const _AppsGrid({
     required this.apps,
     required this.isLoadingMore,
@@ -581,12 +583,14 @@ class _AppsGrid extends StatelessWidget {
   final bool hasMore;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (apps.isEmpty) {
       return const SliverToBoxAdapter(
         child: EmptyState.noData(title: '暂无应用', description: '该分类下暂无应用'),
       );
     }
+
+    final cardStateIndex = ref.watch(applicationCardStateIndexProvider);
 
     return SliverLayoutBuilder(
       builder: (context, constraints) {
@@ -606,7 +610,30 @@ class _AppsGrid extends StatelessWidget {
           ),
           delegate: SliverChildBuilderDelegate((context, index) {
             if (index < apps.length) {
-              return _AppCard(app: apps[index]);
+              final app = apps[index];
+              final cardState = cardStateIndex.resolve(
+                appId: app.appId,
+                latestVersion: app.version,
+              );
+              return AppCard(
+                appId: app.appId,
+                name: app.name,
+                description: app.description,
+                iconUrl: app.icon,
+                buttonState: cardState.buttonState,
+                progress: cardState.progress,
+                isInstalling: cardState.isInstalling,
+                onTap: () => context.push('/app/${app.appId}'),
+                onPrimaryPressed: () => handleAppCardPrimaryAction(
+                  context: context,
+                  ref: ref,
+                  buttonState: cardState.buttonState,
+                  appId: app.appId,
+                  appName: app.name,
+                  icon: app.icon,
+                  version: app.version,
+                ),
+              );
             }
             // 加载更多指示器
             if (isLoadingMore) {
@@ -635,158 +662,6 @@ class _AppsGrid extends StatelessWidget {
     return (width - (crossAxisCount - 1) * AppSpacing.sm) /
         crossAxisCount /
         80; // 80 是卡片高度
-  }
-}
-
-/// 应用卡片
-class _AppCard extends StatefulWidget {
-  const _AppCard({required this.app});
-
-  final RecommendAppInfo app;
-
-  @override
-  State<_AppCard> createState() => _AppCardState();
-}
-
-class _AppCardState extends State<_AppCard> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: () => context.push('/app/${widget.app.appId}'),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          decoration: BoxDecoration(
-            // 卡片背景跟随主题
-            color: context.appColors.surface,
-            borderRadius: AppRadius.smRadius,
-            boxShadow: _isHovered
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            child: Row(
-              children: [
-                // 应用图标
-                _buildIcon(),
-                const SizedBox(width: AppSpacing.sm),
-
-                // 应用信息
-                Expanded(child: _buildInfo()),
-
-                const SizedBox(width: AppSpacing.sm),
-
-                // 操作按钮
-                _buildActionButton(),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// 构建应用图标
-  ///
-  /// 使用 AppIcon 组件统一处理图标加载、缓存和错误处理
-  Widget _buildIcon() {
-    return AppIcon(
-      iconUrl: widget.app.icon,
-      size: 48,
-      borderRadius: 8,
-      appName: widget.app.name,
-    );
-  }
-
-  Widget _buildInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // 应用名称
-        Text(
-          widget.app.name,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: context.appColors.textPrimary,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-
-        const SizedBox(height: 2),
-
-        // 描述
-        Text(
-          widget.app.description ?? '',
-          style: TextStyle(fontSize: 12, color: context.appColors.textTertiary),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionButton() {
-    String label;
-    Color bgColor;
-    Color textColor;
-    bool showBorder = false;
-
-    if (widget.app.isInstalled) {
-      if (widget.app.hasUpdate) {
-        label = '更新';
-        bgColor = AppColors.primary;
-        textColor = Colors.white;
-      } else {
-        label = '打开';
-        // 打开按钒跟随主题
-        bgColor = context.appColors.openButtonBackground;
-        textColor = context.appColors.openButtonText;
-        showBorder = true;
-      }
-    } else {
-      label = '安装';
-      bgColor = AppColors.primary;
-      textColor = Colors.white;
-    }
-
-    return Container(
-      height: 28,
-      constraints: const BoxConstraints(minWidth: 56),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: AppRadius.fullRadius,
-        border: showBorder
-            ? Border.all(color: context.appColors.openButtonBorder)
-            : null,
-      ),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: textColor,
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 

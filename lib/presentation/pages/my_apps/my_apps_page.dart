@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../application/providers/installed_apps_provider.dart';
+import '../../../application/providers/application_card_state_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
+import '../../../application/providers/installed_apps_provider.dart';
 import '../../../application/providers/update_apps_provider.dart';
+import '../../../core/utils/version_compare.dart';
 import '../../../domain/models/installed_app.dart';
-import '../../widgets/app_icon.dart';
-import '../../widgets/confirm_dialog.dart';
-import '../../widgets/empty_state.dart';
+import '../../widgets/app_card_actions.dart';
+import '../../widgets/widgets.dart';
 
 /// 我的应用页
 class MyAppsPage extends ConsumerStatefulWidget {
@@ -53,30 +54,19 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
     }).toList();
   }
 
-  /// 打开应用
-  Future<void> _openApp(InstalledApp app) async {
-    try {
-      final repo = ref.read(linglongCliRepositoryProvider);
-      await repo.runApp(app.appId);
+  /// 合并同 appId 的多版本安装记录，只保留最高版本用于卡片展示。
+  List<InstalledApp> _mergeApps(List<InstalledApp> apps) {
+    final merged = <String, InstalledApp>{};
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('正在启动 ${app.name}...'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('启动失败: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+    for (final app in apps) {
+      final current = merged[app.appId];
+      if (current == null ||
+          VersionCompare.greaterThan(app.version, current.version)) {
+        merged[app.appId] = app;
       }
     }
+
+    return merged.values.toList();
   }
 
   /// 卸载应用
@@ -102,7 +92,9 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
           );
         } else {
           // 乐观更新：从已安装列表中移除
-          ref.read(installedAppsProvider.notifier).removeApp(app.appId);
+          ref
+              .read(installedAppsProvider.notifier)
+              .removeApp(app.appId, app.version);
           // 后台重新检查更新列表（不 await，不阻塞 UI）
           ref.read(updateAppsProvider.notifier).checkUpdates();
 
@@ -126,7 +118,8 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(installedAppsProvider);
-    final filteredApps = _filterApps(state.apps);
+    final cardStateIndex = ref.watch(applicationCardStateIndexProvider);
+    final filteredApps = _filterApps(_mergeApps(state.apps));
 
     return Column(
       children: [
@@ -134,7 +127,9 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
         _buildSearchBar(context),
 
         // 内容区域
-        Expanded(child: _buildContent(context, state, filteredApps)),
+        Expanded(
+          child: _buildContent(context, state, filteredApps, cardStateIndex),
+        ),
       ],
     );
   }
@@ -177,6 +172,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
     BuildContext context,
     InstalledAppsState state,
     List<InstalledApp> filteredApps,
+    ApplicationCardStateIndex cardStateIndex,
   ) {
     // 加载中状态
     if (state.isLoading) {
@@ -229,154 +225,38 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
         itemCount: filteredApps.length,
         itemBuilder: (context, index) {
           final app = filteredApps[index];
-          return _AppListItem(
-            app: app,
-            onOpen: () => _openApp(app),
-            onUninstall: () => _uninstallApp(app),
+          final cardState = cardStateIndex.resolve(
+            appId: app.appId,
+            latestVersion: app.version,
+          );
+          return AppCard(
+            appId: app.appId,
+            name: app.name,
+            description: app.description ?? 'v${app.version}',
+            iconUrl: app.icon,
+            buttonState: cardState.buttonState,
+            progress: cardState.progress,
+            isInstalling: cardState.isInstalling,
+            onPrimaryPressed: () => handleAppCardPrimaryAction(
+              context: context,
+              ref: ref,
+              buttonState: cardState.buttonState,
+              appId: app.appId,
+              appName: app.name,
+              icon: app.icon,
+              version: app.version,
+            ),
+            menuActions: [
+              AppCardMenuAction(
+                value: 'uninstall',
+                label: '卸载',
+                icon: Icons.delete_outline,
+                onSelected: () => _uninstallApp(app),
+              ),
+            ],
           );
         },
       ),
-    );
-  }
-}
-
-/// 应用列表项
-class _AppListItem extends StatelessWidget {
-  const _AppListItem({
-    required this.app,
-    required this.onOpen,
-    required this.onUninstall,
-  });
-
-  final InstalledApp app;
-  final VoidCallback onOpen;
-  final VoidCallback onUninstall;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.outlineVariant,
-          width: 1,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            // 应用图标
-            _buildIcon(context),
-
-            const SizedBox(width: 12),
-
-            // 应用信息
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 应用名称
-                  Text(
-                    app.name,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  // 版本号和大小
-                  Row(
-                    children: [
-                      Text(
-                        'v${app.version}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).textTheme.bodySmall?.color,
-                        ),
-                      ),
-                      if (app.size != null) ...[
-                        const SizedBox(width: 8),
-                        Text(
-                          app.size!,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).textTheme.bodySmall?.color,
-                              ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(width: 12),
-
-            // 操作按钮
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 打开按钮
-                ElevatedButton(
-                  onPressed: onOpen,
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                  ),
-                  child: const Text('打开'),
-                ),
-
-                const SizedBox(width: 8),
-
-                // 更多菜单
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert),
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'uninstall':
-                        onUninstall();
-                        break;
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'uninstall',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete_outline, size: 20),
-                          SizedBox(width: 12),
-                          Text('卸载'),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 构建应用图标
-  ///
-  /// 使用 AppIcon 组件统一处理图标加载、缓存和错误处理
-  Widget _buildIcon(BuildContext context) {
-    return AppIcon(
-      iconUrl: app.icon,
-      size: 48,
-      borderRadius: 8,
-      appName: app.name,
     );
   }
 }

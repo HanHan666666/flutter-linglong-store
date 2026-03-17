@@ -161,7 +161,8 @@ class UpdateApps extends _$UpdateApps {
           UpdatableApp(
             installedApp: installedApp,
             latestVersion: appDetail.appVersion,
-            latestVersionDescription: appDetail.releaseNote ?? appDetail.detailDescription,
+            latestVersionDescription:
+                appDetail.releaseNote ?? appDetail.detailDescription,
             latestVersionSize: appDetail.packageSize,
           ),
         );
@@ -188,9 +189,27 @@ class UpdateApps extends _$UpdateApps {
   }
 
   /// 更新单个应用
-  void updateApp(String appId) {
+  void updateApp(
+    String appId, {
+    String? fallbackName,
+    String? fallbackIcon,
+    String? fallbackVersion,
+  }) {
     final app = state.apps.where((a) => a.appId == appId).firstOrNull;
-    if (app == null) return;
+    if (app == null) {
+      if (fallbackVersion == null || fallbackVersion.isEmpty) {
+        return;
+      }
+      ref
+          .read(installQueueProvider.notifier)
+          .enqueueInstall(
+            appId: appId,
+            appName: fallbackName ?? appId,
+            icon: fallbackIcon,
+            version: fallbackVersion,
+          );
+      return;
+    }
 
     ref
         .read(installQueueProvider.notifier)

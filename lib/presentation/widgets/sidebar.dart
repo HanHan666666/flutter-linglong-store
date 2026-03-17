@@ -232,22 +232,27 @@ class _Badge extends StatelessWidget {
   const _Badge({required this.count});
 
   final int count;
+  static const double _badgeSize = 20;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minWidth: 19.2, minHeight: 19.2),
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      decoration: BoxDecoration(
-        color: AppColors.error,
-        borderRadius: AppRadius.fullRadius,
-      ),
+      width: _badgeSize,
+      height: _badgeSize,
+      decoration: BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
       child: Center(
-        child: Text(
-          count > 99 ? '99+' : count.toString(),
-          style: AppTextStyles.tiny.copyWith(
-            color: AppColors.textLight,
-            fontWeight: FontWeight.w500,
+        // 固定直径并缩放文字，确保 1 位和 2 位数字都保持圆形徽章。
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Text(
+              count > 99 ? '99+' : count.toString(),
+              style: AppTextStyles.tiny.copyWith(
+                color: AppColors.textLight,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ),
       ),

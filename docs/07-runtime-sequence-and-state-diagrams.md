@@ -216,6 +216,161 @@ sequenceDiagram
 
 ---
 
+## 五-A、取消安装流程时序图
+
+> 本节记录取消安装功能的设计，迁移自 Rust 版本的 `InstallSlot` 模式。
+
+### 5-A.1 取消安装时序图
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant User as 用户
+    participant UI as 安装进度UI
+    participant Queue as InstallQueueProvider
+    participant Repo as LinglongCliRepository
+    participant CLI as CliExecutor
+    participant System as pkexec/killall
+    participant Process as ll-cli/ll-package-manager
+
+    User->>UI: 点击"取消安装"
+    UI->>Queue: cancelInstall(appId)
+    Queue->>Repo: cancelInstall(appId)
+    Repo->>Repo: 设置取消标志 _cancelFlags[processId] = true
+
+    Note over Repo,CLI: 第一阶段：内部进程终止
+
+    Repo->>CLI: cancelWithSystemKill(processId)
+    CLI->>CLI: 查找 _activeProcesses[processId]
+    CLI->>CLI: 发送取消信号 _cancelSignals[processId].complete()
+    CLI->>Process: process.kill(SIGTERM)
+
+    Note over CLI,System: 第二阶段：系统级进程终止
+
+    CLI->>System: pkexec killall -15 ll-cli ll-package-manager
+    System->>Process: SIGTERM 优雅终止
+    Process-->>CLI: 进程退出
+    CLI-->>Repo: cancelWithSystemKill 完成
+
+    Repo->>Repo: 清理 PID 记录 _activeProcessPids.remove(processId)
+    Repo-->>Queue: 取消完成
+    Queue->>UI: 状态更新为 Cancelled
+    UI->>User: 显示"安装已取消"
+```
+
+### 5-A.2 为什么需要系统级终止
+
+Flutter 通过 `Process.start` 启动的子进程存在以下问题：
+
+1. **进程树隔离**：`ll-cli` 会启动 `ll-package-manager` 作为子进程，Dart 的 `process.kill()` 只能终止直接子进程，无法终止孙子进程
+2. **权限问题**：`ll-package-manager` 可能需要 root 权限运行，普通用户无法直接终止
+3. **僵尸进程风险**：如果只终止 Dart 层面的进程引用，系统进程可能继续运行，导致资源泄露
+
+**解决方案**（参考 Rust 版本）：
+- 使用 `pkexec` 获取管理员权限
+- 通过 `killall -15` 同时终止 `ll-cli` 和 `ll-package-manager`
+- SIGTERM（信号 15）允许进程优雅退出，而非强制终止
+
+### 5-A.3 取消状态管理
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> CancelRequested: 用户点击取消
+    CancelRequested --> InternalCancel: 设置取消标志
+    InternalCancel --> SystemKill: pkexec killall
+    SystemKill --> CleaningUp: 进程已终止
+    CleaningUp --> Cancelled: 清理 PID/标志
+    Cancelled --> [*]
+
+    note right of CancelRequested: _cancelFlags[processId] = true
+    note right of SystemKill: pkexec killall -15 ll-cli ll-package-manager
+```
+
+### 5-A.4 关键实现约束
+
+1. **PID 记录时机**：必须在 `onProcessCreated` 回调中记录 PID，而非事后获取
+   ```dart
+   await for (final event in CliExecutor.executeWithProgressAndProcess(
+     args,
+     processId: processId,
+     onProcessCreated: (process) {
+       _activeProcessPids[processId] = process.pid;
+     },
+   )) { ... }
+   ```
+
+2. **双重取消机制**：
+   - **标志位检查**：在流式处理循环中检查 `_cancelFlags[processId]`，实现快速响应
+   - **系统级终止**：通过 `pkexec killall` 确保所有相关进程被终止
+
+3. **取消与失败的区分**：
+   - `InstallStatus.cancelled`：用户主动取消
+   - `InstallStatus.failed`：安装过程出错
+   - 两者不可混淆，UI 需要展示不同的提示信息
+
+4. **资源清理顺序**：
+   ```dart
+   // 1. 设置取消标志
+   _cancelFlags[processId] = true;
+   // 2. 系统级终止
+   await CliExecutor.cancelWithSystemKill(processId, ...);
+   // 3. 清理 PID 记录
+   _activeProcessPids.remove(processId);
+   ```
+
+### 5-A.5 从 Rust 迁移的设计要点
+
+| Rust 设计 | Flutter 实现 | 说明 |
+|-----------|-------------|------|
+| `InstallSlot` 全局单例 | `CliExecutor._activeProcesses` 静态 Map | 管理活跃安装进程 |
+| `is_cancelled` 标志 | `_cancelFlags` Map + `_isUserCancelled` | 区分取消与失败 |
+| `pkexec killall -15` | `CliExecutor.cancelWithSystemKill()` | 系统级进程终止 |
+| PID 记录 | `onProcessCreated` 回调 | 确保可靠获取进程 ID |
+| `emit_cancelled()` 事件 | `_handleCancelledProgress()` | 处理取消状态传播 |
+
+### 5-A.6 取消流程的关键实现细节
+
+**1. 取消标志的双重同步**
+
+为确保取消状态正确传播，Flutter 版本维护了两层取消标志：
+
+```dart
+// LinglongCliRepositoryImpl 中
+final Map<String, bool> _cancelFlags = {}; // 进程级取消标志
+
+// InstallQueue 中
+bool _isUserCancelled = false; // 用户取消标志
+```
+
+当用户点击取消时：
+1. `InstallQueue.cancelTask()` 调用 `markUserCancelled()` 设置用户取消标志
+2. `LinglongCliRepositoryImpl.cancelInstall()` 设置 `_cancelFlags[processId] = true`
+3. 安装流检测到 `_cancelFlags[processId] == true`，发送 `cancelled` 状态
+4. `_handleProgress()` 检测到 `cancelled` 状态，调用 `_handleCancelledProgress()`
+
+**2. 系统级终止的返回值处理**
+
+`cancelWithSystemKill()` 返回值的判断逻辑：
+
+```dart
+// killall 返回码含义：
+// 0 - 成功找到并终止进程
+// 1 - 没有找到匹配的进程（进程可能已结束）
+// 其他 - 权限问题或其他错误
+if (result.exitCode == 0 || result.exitCode == 1) {
+  systemKillSuccess = true;
+}
+```
+
+**3. 取消与失败的区分**
+
+- `InstallStatus.cancelled`：用户主动取消，由 `markUserCancelled()` 标记
+- `InstallStatus.failed`：安装过程出错，由 `markFailed()` 处理
+- 在 `markFailed()` 中检查 `isUserCancelled()` 决定最终状态
+
+---
+
 ## 六、卸载流程时序图
 
 ```mermaid

@@ -33,7 +33,16 @@ abstract class LinglongCliRepository {
   });
 
   /// 取消安装
-  Future<void> cancelInstall(String appId);
+  ///
+  /// 返回：
+  /// - `true` - 取消成功
+  /// - `false` - 没有正在进行的安装或取消失败
+  ///
+  /// 参考 Rust 版本的 `cancel_linglong_install` 实现：
+  /// 1. 标记取消状态
+  /// 2. 通过 pkexec killall 终止 ll-cli 和 ll-package-manager
+  /// 3. 发送取消事件
+  Future<bool> cancelInstall(String appId);
 
   /// 卸载应用
   Future<String> uninstallApp(String appId, String version);

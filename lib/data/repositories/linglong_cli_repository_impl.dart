@@ -216,17 +216,17 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
   }
 
   @override
-  Future<void> cancelInstall(String appId) async {
+  Future<bool> cancelInstall(String appId) async {
     final processId = 'install_$appId';
 
     AppLogger.info('[LinglongCli] 开始取消安装: $appId');
 
-    // 1. 设置取消标志
+    // 1. 设置取消标志（区分"用户取消"和"真正失败"）
     _cancelFlags[processId] = true;
 
     // 2. 使用增强版取消方法（参考 Rust 版本实现）
     // 通过 pkexec killall 终止 ll-cli 和 ll-package-manager
-    await CliExecutor.cancelWithSystemKill(
+    final success = await CliExecutor.cancelWithSystemKill(
       processId,
       force: true,
       killPackageMananger: true,
@@ -235,7 +235,13 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
     // 3. 清理本地 PID 记录
     _activeProcessPids.remove(processId);
 
-    AppLogger.info('[LinglongCli] 取消安装完成: $appId');
+    if (success) {
+      AppLogger.info('[LinglongCli] 取消安装成功: $appId');
+    } else {
+      AppLogger.warning('[LinglongCli] 取消安装返回 false（可能无活跃进程）: $appId');
+    }
+
+    return success;
   }
 
   @override

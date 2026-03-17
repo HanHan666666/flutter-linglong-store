@@ -375,9 +375,11 @@ class InstallQueue extends _$InstallQueue {
       }
 
       // 注意：安装成功的标记可能由进度流中的 success 状态触发
-      // 如果流正常结束但没有标记成功，这里手动标记
+      // 如果流正常结束但没有标记成功/取消/失败，这里手动检查
       if (state.currentTask?.appId == task.appId &&
-          state.currentTask?.status != InstallStatus.success) {
+          state.currentTask?.status != InstallStatus.success &&
+          state.currentTask?.status != InstallStatus.cancelled &&
+          state.currentTask?.status != InstallStatus.failed) {
         // 检查状态机状态
         if (_stateMachine?.state == InstallStateMachineState.succeeded) {
           markSuccess(task.appId);
@@ -403,6 +405,9 @@ class InstallQueue extends _$InstallQueue {
       _stateMachine?.onSuccess();
     } else if (progress.status == InstallStatus.failed) {
       _stateMachine?.onFailure();
+    } else if (progress.status == InstallStatus.cancelled) {
+      // 取消状态不需要更新状态机，由 cancelTask 方法处理
+      AppLogger.info('[InstallQueue] 收到取消状态: $appId');
     } else if (progress.progress > 0) {
       // 有进度百分比，调用 onProgress
       _stateMachine?.onProgress(progress.progress);
@@ -431,7 +436,38 @@ class InstallQueue extends _$InstallQueue {
         progress.error ?? '安装失败',
         errorCode: progress.errorCode,
       );
+    } else if (progress.status == InstallStatus.cancelled) {
+      // 取消状态：停止超时检查，更新历史记录
+      _handleCancelledProgress(appId);
     }
+  }
+
+  /// 处理取消状态（从安装流中收到 cancelled 状态）
+  void _handleCancelledProgress(String appId) {
+    if (state.currentTask?.appId != appId) return;
+
+    // 停止超时检查和清理状态机
+    _stopTimeoutCheck();
+    _stateMachine?.dispose();
+    _stateMachine = null;
+
+    final cancelledTask = state.currentTask!.copyWith(
+      status: InstallStatus.cancelled,
+      message: '安装已取消',
+      finishedAt: DateTime.now().millisecondsSinceEpoch,
+    );
+
+    state = state.copyWith(
+      clearCurrentTask: true,
+      isProcessing: false,
+      history: [cancelledTask, ...state.history].take(_maxHistorySize).toList(),
+    );
+
+    _clearPersistedCurrentTask();
+    AppLogger.info('[InstallQueue] 任务已从流中标记取消: $appId');
+
+    // 处理下一个任务
+    Future.delayed(const Duration(milliseconds: 100), () => startProcessing());
   }
 
   /// 更新进度
@@ -541,9 +577,14 @@ class InstallQueue extends _$InstallQueue {
   /// 取消任务
   ///
   /// 取消当前正在执行的任务或从队列中移除
-  Future<void> cancelTask(String appId) async {
+  ///
+  /// 参考 Rust 版本 `cancel_linglong_install` 的流程：
+  /// 1. 标记取消状态（`markUserCancelled`）
+  /// 2. 调用 CLI 取消方法（`pkexec killall`）
+  /// 3. 更新任务状态为 `cancelled`
+  Future<bool> cancelTask(String appId) async {
     if (state.currentTask?.appId == appId) {
-      // 标记为用户取消（参考 Rust 版本）
+      // 标记为用户取消（参考 Rust 版本 InstallSlot.mark_cancelled）
       markUserCancelled();
 
       // 停止超时检查和清理状态机
@@ -552,12 +593,15 @@ class InstallQueue extends _$InstallQueue {
       _stateMachine = null;
 
       // 取消当前任务
+      bool cancelSuccess = false;
       try {
-        await ref.read(linglongCliRepositoryProvider).cancelInstall(appId);
+        cancelSuccess = await ref.read(linglongCliRepositoryProvider).cancelInstall(appId);
       } catch (e) {
-        AppLogger.error('Failed to cancel install for $appId', e);
+        AppLogger.error('[InstallQueue] 取消安装失败: $appId', e);
       }
 
+      // 无论取消是否成功，都更新任务状态
+      // 因为用户已明确要求取消，即使进程终止失败也应标记为取消
       final cancelledTask = state.currentTask!.copyWith(
         status: InstallStatus.cancelled,
         message: '安装已取消',
@@ -574,23 +618,31 @@ class InstallQueue extends _$InstallQueue {
       );
 
       _clearPersistedCurrentTask();
-      AppLogger.info('Task cancelled: $appId');
+
+      if (cancelSuccess) {
+        AppLogger.info('[InstallQueue] 任务已取消: $appId');
+      } else {
+        AppLogger.warning('[InstallQueue] 任务已标记取消（但进程终止可能失败）: $appId');
+      }
 
       // 处理下一个任务
       Future.delayed(
         const Duration(milliseconds: 100),
         () => startProcessing(),
       );
+
+      return cancelSuccess;
     } else {
       // 从队列中移除
       removeFromQueue(appId);
+      return true;
     }
   }
 
   /// 取消安装（兼容旧接口）
   @Deprecated('Use cancelTask instead')
-  Future<void> cancelInstall(String appId) async {
-    await cancelTask(appId);
+  Future<bool> cancelInstall(String appId) async {
+    return await cancelTask(appId);
   }
 
   /// 从队列中移除任务

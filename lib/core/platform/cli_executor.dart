@@ -418,6 +418,10 @@ class CliExecutor {
   /// [processId] 进程标识
   /// [force] 是否强制终止（SIGKILL）
   /// [killPackageMananger] 是否同时终止 ll-package-manager（默认 true）
+  ///
+  /// 返回：
+  /// - `true` - 内部进程终止成功 或 系统级 killall 执行成功
+  /// - `false` - 没有找到活跃进程且系统级终止也失败
   static Future<bool> cancelWithSystemKill(
     String processId, {
     bool force = false,
@@ -430,6 +434,7 @@ class CliExecutor {
 
     // 2. 使用 pkexec killall 终止 ll-cli 和 ll-package-manager
     // 参考 Rust 版本: pkexec killall -15 ll-cli ll-package-manager
+    bool systemKillSuccess = false;
     try {
       final args = <String>['killall', '-15']; // SIGTERM 优雅终止
       args.add('ll-cli');
@@ -441,24 +446,31 @@ class CliExecutor {
 
       final result = await Process.run('pkexec', args);
 
-      if (result.exitCode == 0) {
-        AppLogger.info('[CLI] 系统级进程终止成功');
+      // killall 返回 0 表示成功找到并终止进程
+      // 返回 1 表示没有找到匹配的进程（进程可能已结束）
+      // 我们认为这两种情况都是"成功"的，因为目标（终止进程）已达成
+      if (result.exitCode == 0 || result.exitCode == 1) {
+        systemKillSuccess = true;
+        AppLogger.info('[CLI] 系统级进程终止完成: exitCode=${result.exitCode}');
       } else {
-        // pkexec 可能返回非 0（如无匹配进程），记录但不视为错误
-        AppLogger.debug(
-          '[CLI] 系统级进程终止返回: exitCode=${result.exitCode}, '
+        // 其他错误码（如权限问题）
+        AppLogger.warning(
+          '[CLI] 系统级进程终止返回错误: exitCode=${result.exitCode}, '
           'stdout=${result.stdout}, stderr=${result.stderr}',
         );
       }
     } on ProcessException catch (e) {
-      // pkexec 不存在或执行失败，记录警告但不阻断
+      // pkexec 不存在或执行失败
       AppLogger.warning('[CLI] pkexec killall 执行失败: $e');
     } catch (e, stack) {
       AppLogger.error('[CLI] 系统级进程终止异常', e, stack);
     }
 
-    AppLogger.info('[CLI] 系统级取消完成: $processId (内部取消: $internalCancelled)');
-    return internalCancelled;
+    // 只要内部取消或系统级终止任一成功，就认为取消成功
+    final success = internalCancelled || systemKillSuccess;
+    AppLogger.info('[CLI] 系统级取消完成: $processId (内部: $internalCancelled, 系统: $systemKillSuccess, 结果: $success)');
+
+    return success;
   }
 
   /// 检查进程是否正在运行

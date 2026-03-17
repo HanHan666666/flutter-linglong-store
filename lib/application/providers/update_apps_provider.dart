@@ -5,7 +5,6 @@ import '../../core/network/api_exceptions.dart';
 import '../../data/models/api_dto.dart';
 import '../../domain/models/installed_app.dart';
 import 'global_provider.dart';
-import 'install_queue_provider.dart';
 import 'installed_apps_provider.dart';
 import 'api_provider.dart';
 
@@ -170,62 +169,6 @@ class UpdateApps extends _$UpdateApps {
     }
 
     return updatableApps;
-  }
-
-  /// 全部更新
-  ///
-  /// 将所有可更新应用添加到安装队列
-  void updateAll() {
-    final queue = ref.read(installQueueProvider.notifier);
-
-    for (final app in state.apps) {
-      queue.enqueueInstall(
-        appId: app.appId,
-        appName: app.name,
-        icon: app.icon,
-        version: app.latestVersion,
-      );
-    }
-  }
-
-  /// 更新单个应用
-  void updateApp(
-    String appId, {
-    String? fallbackName,
-    String? fallbackIcon,
-    String? fallbackVersion,
-  }) {
-    final app = state.apps.where((a) => a.appId == appId).firstOrNull;
-    if (app == null) {
-      if (fallbackVersion == null || fallbackVersion.isEmpty) {
-        return;
-      }
-      ref
-          .read(installQueueProvider.notifier)
-          .enqueueInstall(
-            appId: appId,
-            appName: fallbackName ?? appId,
-            icon: fallbackIcon,
-            version: fallbackVersion,
-          );
-      return;
-    }
-
-    ref
-        .read(installQueueProvider.notifier)
-        .enqueueInstall(
-          appId: app.appId,
-          appName: app.name,
-          icon: app.icon,
-          version: app.latestVersion,
-        );
-  }
-
-  /// 从列表中移除已更新的应用
-  void removeUpdatedApp(String appId) {
-    state = state.copyWith(
-      apps: state.apps.where((a) => a.appId != appId).toList(),
-    );
   }
 
   /// 刷新更新列表

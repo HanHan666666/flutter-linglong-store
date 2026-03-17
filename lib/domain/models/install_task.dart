@@ -5,6 +5,15 @@ import 'install_progress.dart';
 part 'install_task.freezed.dart';
 part 'install_task.g.dart';
 
+/// 队列任务类型。
+///
+/// `install` 和 `update` 共用同一套串行状态机，但在执行命令、
+/// 取消文案和成功文案上需要显式区分，避免继续依赖调用方猜测。
+enum InstallTaskKind {
+  install,
+  update,
+}
+
 /// 安装任务状态机
 ///
 /// 状态流转：
@@ -26,6 +35,9 @@ sealed class InstallTask with _$InstallTask {
 
     /// 应用图标URL
     String? icon,
+
+    /// 队列任务类型
+    @Default(InstallTaskKind.install) InstallTaskKind kind,
 
     /// 目标版本
     String? version,
@@ -67,6 +79,9 @@ sealed class InstallTask with _$InstallTask {
 
 /// InstallTask 扩展方法
 extension InstallTaskX on InstallTask {
+  /// 是否为更新任务。
+  bool get isUpdateTask => kind == InstallTaskKind.update;
+
   /// 是否正在处理中
   bool get isProcessing => status == InstallStatus.installing;
 
@@ -81,6 +96,18 @@ extension InstallTaskX on InstallTask {
 
   /// 是否成功
   bool get isSuccess => status == InstallStatus.success;
+
+  /// 待处理文案。
+  String get waitingMessage => isUpdateTask ? '等待更新...' : '等待安装...';
+
+  /// 开始执行文案。
+  String get preparingMessage => isUpdateTask ? '准备更新...' : '准备安装...';
+
+  /// 成功完成文案。
+  String get successMessage => isUpdateTask ? '更新完成' : '安装完成';
+
+  /// 用户取消文案。
+  String get cancelledMessage => isUpdateTask ? '更新已取消' : '安装已取消';
 
   /// 转换为 JSON 字符串（用于持久化）
   String toJsonString() => toJson().toString();

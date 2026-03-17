@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../application/providers/app_operation_queue_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/update_apps_provider.dart';
 import '../../../domain/models/install_task.dart';
@@ -29,12 +30,38 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
 
   /// 全部更新
   void _updateAll() {
-    ref.read(updateAppsProvider.notifier).updateAll();
+    final apps = ref.read(updateAppsProvider).apps;
+    if (apps.isEmpty) {
+      return;
+    }
+
+    final operations = apps
+        .map(
+          (app) => EnqueueAppOperationParams(
+            kind: InstallTaskKind.update,
+            appId: app.appId,
+            appName: app.name,
+            icon: app.icon,
+            version: app.latestVersion,
+          ),
+        )
+        .toList();
+    ref
+        .read(appOperationQueueControllerProvider)
+        .enqueueBatchOperations(operations);
   }
 
   /// 更新单个应用
-  void _updateApp(String appId) {
-    ref.read(updateAppsProvider.notifier).updateApp(appId);
+  void _updateApp(UpdatableApp app) {
+    ref.read(appOperationQueueControllerProvider).enqueueAppOperation(
+          EnqueueAppOperationParams(
+            kind: InstallTaskKind.update,
+            appId: app.appId,
+            appName: app.name,
+            icon: app.icon,
+            version: app.latestVersion,
+          ),
+        );
   }
 
   @override
@@ -45,7 +72,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
     return Column(
       children: [
         // 头部区域：更新按钮
-        _buildHeader(context, state),
+        _buildHeader(context, state, installState),
 
         // 内容区域
         Expanded(
@@ -56,11 +83,16 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
   }
 
   /// 构建头部区域
-  Widget _buildHeader(BuildContext context, UpdateAppsState state) {
+  Widget _buildHeader(
+    BuildContext context,
+    UpdateAppsState state,
+    InstallQueueState installState,
+  ) {
     // 如果没有可更新应用，不显示头部
     if (state.apps.isEmpty || state.isLoading) {
       return const SizedBox.shrink();
     }
+    final isUpdating = installState.hasActiveTasks();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -87,9 +119,15 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
 
           // 全部更新按钮
           FilledButton.icon(
-            onPressed: _updateAll,
-            icon: const Icon(Icons.system_update, size: 18),
-            label: const Text('全部更新'),
+            onPressed: isUpdating ? null : _updateAll,
+            icon: isUpdating
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.system_update, size: 18),
+            label: Text(isUpdating ? '正在更新...' : '全部更新'),
           ),
         ],
       ),
@@ -141,9 +179,10 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
           final app = state.apps[index];
           final installTask = installState.getAppInstallStatus(app.appId);
           return _UpdatableAppItem(
+            key: ValueKey(app.appId),
             app: app,
             installTask: installTask,
-            onUpdate: () => _updateApp(app.appId),
+            onUpdate: () => _updateApp(app),
           );
         },
       ),
@@ -154,6 +193,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
 /// 可更新应用列表项
 class _UpdatableAppItem extends StatelessWidget {
   const _UpdatableAppItem({
+    super.key,
     required this.app,
     required this.installTask,
     required this.onUpdate,

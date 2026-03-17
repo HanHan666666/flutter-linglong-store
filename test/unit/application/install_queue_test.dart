@@ -131,6 +131,7 @@ void main() {
 
     test('EnqueueTaskParams should create correctly', () {
       const params = EnqueueTaskParams(
+        kind: InstallTaskKind.install,
         appId: 'com.example.app',
         appName: 'Test App',
         icon: 'https://example.com/icon.png',
@@ -139,6 +140,7 @@ void main() {
       );
 
       expect(params.appId, 'com.example.app');
+      expect(params.kind, InstallTaskKind.install);
       expect(params.appName, 'Test App');
       expect(params.icon, 'https://example.com/icon.png');
       expect(params.version, '1.0.0');

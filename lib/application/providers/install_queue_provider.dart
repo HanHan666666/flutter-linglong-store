@@ -234,22 +234,55 @@ class InstallQueue extends _$InstallQueue {
     String? version,
     bool force = false,
   }) {
+    return enqueueOperation(
+      kind: InstallTaskKind.install,
+      appId: appId,
+      appName: appName,
+      icon: icon,
+      version: version,
+      force: force,
+    );
+  }
+
+  /// 入队安装/更新任务。
+  ///
+  /// 统一入口保证 Presentation 层不需要直接关心底层队列状态写入细节。
+  String enqueueOperation({
+    required InstallTaskKind kind,
+    required String appId,
+    required String appName,
+    String? icon,
+    String? version,
+    bool force = false,
+  }) {
     // 检查是否已在队列中
     if (state.isAppInQueue(appId)) {
       AppLogger.warning('App $appId is already in queue, skipping');
       return '';
     }
 
-    final task = InstallTask(
+    final kindTask = InstallTask(
       id: _generateTaskId(),
       appId: appId,
       appName: appName,
       icon: icon,
+      kind: kind,
       version: version,
       force: force,
       status: InstallStatus.pending,
       createdAt: DateTime.now().millisecondsSinceEpoch,
-      message: '等待安装...',
+    );
+    final task = InstallTask(
+      id: kindTask.id,
+      appId: kindTask.appId,
+      appName: kindTask.appName,
+      icon: kindTask.icon,
+      kind: kindTask.kind,
+      version: kindTask.version,
+      force: kindTask.force,
+      status: kindTask.status,
+      createdAt: kindTask.createdAt,
+      message: kindTask.waitingMessage,
     );
 
     state = state.copyWith(queue: [...state.queue, task]);
@@ -267,6 +300,11 @@ class InstallQueue extends _$InstallQueue {
 
   /// 批量入队
   List<String> enqueueBatch(List<EnqueueTaskParams> tasksParams) {
+    return enqueueBatchOperations(tasksParams);
+  }
+
+  /// 批量入队安装/更新任务。
+  List<String> enqueueBatchOperations(List<EnqueueTaskParams> tasksParams) {
     final taskIds = <String>[];
     final newTasks = <InstallTask>[];
 
@@ -280,15 +318,15 @@ class InstallQueue extends _$InstallQueue {
         appId: params.appId,
         appName: params.appName,
         icon: params.icon,
+        kind: params.kind,
         version: params.version,
         force: params.force,
         status: InstallStatus.pending,
         createdAt: DateTime.now().millisecondsSinceEpoch,
-        message: '等待安装...',
       );
 
       taskIds.add(task.id);
-      newTasks.add(task);
+      newTasks.add(task.copyWith(message: task.waitingMessage));
     }
 
     if (newTasks.isNotEmpty) {
@@ -329,7 +367,7 @@ class InstallQueue extends _$InstallQueue {
     await processInstallTask(nextTask);
   }
 
-  /// 执行单个安装任务
+  /// 执行单个队列任务
   ///
   /// 从队列中取出任务并执行，更新进度状态
   Future<void> processInstallTask(InstallTask task) async {
@@ -341,7 +379,7 @@ class InstallQueue extends _$InstallQueue {
     // 更新状态为安装中
     final installingTask = task.copyWith(
       status: InstallStatus.installing,
-      message: '准备安装...',
+      message: task.preparingMessage,
       startedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
@@ -366,11 +404,14 @@ class InstallQueue extends _$InstallQueue {
       final cliRepo = ref.read(linglongCliRepositoryProvider);
 
       // 监听安装进度流
-      await for (final progress in cliRepo.installApp(
-        task.appId,
-        version: task.version,
-        force: task.force,
-      )) {
+      final progressStream = task.kind == InstallTaskKind.update
+          ? cliRepo.updateApp(task.appId, version: task.version)
+          : cliRepo.installApp(
+              task.appId,
+              version: task.version,
+              force: task.force,
+            );
+      await for (final progress in progressStream) {
         _handleProgress(task.appId, progress);
       }
 
@@ -453,7 +494,7 @@ class InstallQueue extends _$InstallQueue {
 
     final cancelledTask = state.currentTask!.copyWith(
       status: InstallStatus.cancelled,
-      message: '安装已取消',
+      message: state.currentTask!.cancelledMessage,
       finishedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
@@ -504,7 +545,7 @@ class InstallQueue extends _$InstallQueue {
     final completedTask = state.currentTask!.copyWith(
       status: InstallStatus.success,
       progress: 100,
-      message: '安装完成',
+      message: state.currentTask!.successMessage,
       finishedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
@@ -549,10 +590,10 @@ class InstallQueue extends _$InstallQueue {
     // 根据取消状态决定任务状态
     final failedTask = state.currentTask!.copyWith(
       status: wasCancelled ? InstallStatus.cancelled : InstallStatus.failed,
-      errorMessage: wasCancelled ? '安装已取消' : error,
+      errorMessage: wasCancelled ? state.currentTask!.cancelledMessage : error,
       errorCode: wasCancelled ? null : errorCode,
       errorDetail: wasCancelled ? null : errorDetail,
-      message: wasCancelled ? '安装已取消' : error,
+      message: wasCancelled ? state.currentTask!.cancelledMessage : error,
       finishedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
@@ -595,7 +636,12 @@ class InstallQueue extends _$InstallQueue {
       // 取消当前任务
       bool cancelSuccess = false;
       try {
-        cancelSuccess = await ref.read(linglongCliRepositoryProvider).cancelInstall(appId);
+        cancelSuccess = await ref
+            .read(linglongCliRepositoryProvider)
+            .cancelOperation(
+              appId,
+              kind: state.currentTask!.kind,
+            );
       } catch (e) {
         AppLogger.error('[InstallQueue] 取消安装失败: $appId', e);
       }
@@ -604,7 +650,7 @@ class InstallQueue extends _$InstallQueue {
       // 因为用户已明确要求取消，即使进程终止失败也应标记为取消
       final cancelledTask = state.currentTask!.copyWith(
         status: InstallStatus.cancelled,
-        message: '安装已取消',
+        message: state.currentTask!.cancelledMessage,
         finishedAt: DateTime.now().millisecondsSinceEpoch,
       );
 
@@ -704,7 +750,8 @@ class InstallQueue extends _$InstallQueue {
 
     AppLogger.info('Recovering task for app: ${persistedTask.appId}');
 
-    // 检查应用是否已安装
+    // 当前恢复链路只拿到 appId 集合，因此仍按 appId 粗略判断。
+    // 后续若启动阶段改为传入 appId + version，可继续向多版本精确恢复收敛。
     final isInstalled = installedAppIds.contains(persistedTask.appId);
 
     if (isInstalled) {
@@ -716,7 +763,7 @@ class InstallQueue extends _$InstallQueue {
       final successTask = persistedTask.copyWith(
         status: InstallStatus.success,
         progress: 100,
-        message: '安装完成',
+        message: persistedTask.successMessage,
         finishedAt: DateTime.now().millisecondsSinceEpoch,
       );
 
@@ -732,8 +779,8 @@ class InstallQueue extends _$InstallQueue {
 
       final failedTask = persistedTask.copyWith(
         status: InstallStatus.failed,
-        message: '应用崩溃，安装中断',
-        errorMessage: '应用在安装过程中崩溃，请重试',
+        message: '应用崩溃，任务中断',
+        errorMessage: '应用在执行过程中崩溃，请重试',
         finishedAt: DateTime.now().millisecondsSinceEpoch,
       );
 
@@ -811,6 +858,7 @@ class InstallQueue extends _$InstallQueue {
 /// 入队任务参数
 class EnqueueTaskParams {
   const EnqueueTaskParams({
+    required this.kind,
     required this.appId,
     required this.appName,
     this.icon,
@@ -818,6 +866,7 @@ class EnqueueTaskParams {
     this.force = false,
   });
 
+  final InstallTaskKind kind;
   final String appId;
   final String appName;
   final String? icon;

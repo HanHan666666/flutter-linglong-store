@@ -5,17 +5,18 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
 
-import 'package:linglong_store/core/network/api_client.dart' as _i12;
-import 'package:linglong_store/core/storage/cache_service.dart' as _i14;
-import 'package:linglong_store/core/storage/preferences_service.dart' as _i13;
+import 'package:linglong_store/core/network/api_client.dart' as _i13;
+import 'package:linglong_store/core/storage/cache_service.dart' as _i15;
+import 'package:linglong_store/core/storage/preferences_service.dart' as _i14;
 import 'package:linglong_store/data/datasources/remote/app_api_service.dart'
-    as _i15;
+    as _i16;
 import 'package:linglong_store/data/models/api_dto.dart' as _i6;
 import 'package:linglong_store/domain/models/install_progress.dart' as _i10;
+import 'package:linglong_store/domain/models/install_task.dart' as _i11;
 import 'package:linglong_store/domain/models/installed_app.dart' as _i5;
 import 'package:linglong_store/domain/models/running_app.dart' as _i9;
 import 'package:linglong_store/domain/repositories/analytics_repository.dart'
-    as _i11;
+    as _i12;
 import 'package:linglong_store/domain/repositories/app_repository.dart' as _i3;
 import 'package:linglong_store/domain/repositories/linglong_cli_repository.dart'
     as _i8;
@@ -222,6 +223,17 @@ class MockLinglongCliRepository extends _i1.Mock
           as _i4.Stream<_i10.InstallProgress>);
 
   @override
+  _i4.Future<bool> cancelOperation(
+    String? appId, {
+    required _i11.InstallTaskKind? kind,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#cancelOperation, [appId], {#kind: kind}),
+            returnValue: _i4.Future<bool>.value(false),
+          )
+          as _i4.Future<bool>);
+
+  @override
   _i4.Future<bool> cancelInstall(String? appId) =>
       (super.noSuchMethod(
             Invocation.method(#cancelInstall, [appId]),
@@ -315,7 +327,7 @@ class MockLinglongCliRepository extends _i1.Mock
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockAnalyticsRepository extends _i1.Mock
-    implements _i11.AnalyticsRepository {
+    implements _i12.AnalyticsRepository {
   MockAnalyticsRepository() {
     _i1.throwOnMissingStub(this);
   }
@@ -369,7 +381,7 @@ class MockAnalyticsRepository extends _i1.Mock
 /// A class which mocks [ApiClient].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockApiClient extends _i1.Mock implements _i12.ApiClient {
+class MockApiClient extends _i1.Mock implements _i13.ApiClient {
   MockApiClient() {
     _i1.throwOnMissingStub(this);
   }
@@ -379,7 +391,7 @@ class MockApiClient extends _i1.Mock implements _i12.ApiClient {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockPreferencesService extends _i1.Mock
-    implements _i13.PreferencesService {
+    implements _i14.PreferencesService {
   MockPreferencesService() {
     _i1.throwOnMissingStub(this);
   }
@@ -388,7 +400,7 @@ class MockPreferencesService extends _i1.Mock
 /// A class which mocks [CacheService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockCacheService extends _i1.Mock implements _i14.CacheService {
+class MockCacheService extends _i1.Mock implements _i15.CacheService {
   MockCacheService() {
     _i1.throwOnMissingStub(this);
   }
@@ -397,7 +409,7 @@ class MockCacheService extends _i1.Mock implements _i14.CacheService {
 /// A class which mocks [AppApiService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockAppApiService extends _i1.Mock implements _i15.AppApiService {
+class MockAppApiService extends _i1.Mock implements _i16.AppApiService {
   MockAppApiService() {
     _i1.throwOnMissingStub(this);
   }

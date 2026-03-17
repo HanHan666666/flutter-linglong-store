@@ -5,6 +5,7 @@ import 'dart:io';
 import '../../domain/models/installed_app.dart';
 import '../../domain/models/running_app.dart';
 import '../../domain/models/install_progress.dart';
+import '../../domain/models/install_task.dart';
 import '../../domain/repositories/linglong_cli_repository.dart';
 import '../../core/platform/cli_executor.dart';
 import '../../core/logging/app_logger.dart';
@@ -19,6 +20,161 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
 
   /// 取消标志
   final Map<String, bool> _cancelFlags = {};
+
+  String _operationProcessId(String appId, InstallTaskKind kind) {
+    return '${kind.name}_$appId';
+  }
+
+  void _setOperationCancelled(String appId, {InstallTaskKind? kind}) {
+    if (kind == null) {
+      _cancelFlags[_operationProcessId(appId, InstallTaskKind.install)] = true;
+      _cancelFlags[_operationProcessId(appId, InstallTaskKind.update)] = true;
+      return;
+    }
+    _cancelFlags[_operationProcessId(appId, kind)] = true;
+  }
+
+  String _operationLabel(InstallTaskKind kind) {
+    return kind == InstallTaskKind.update ? '更新' : '安装';
+  }
+
+  Stream<InstallProgress> _runInstallLikeOperation(
+    String appId, {
+    required InstallTaskKind kind,
+    String? version,
+    bool force = false,
+  }) async* {
+    final processId = _operationProcessId(appId, kind);
+    final operationLabel = _operationLabel(kind);
+
+    // 每次开始新任务前重置该任务的取消标志。
+    _cancelFlags[processId] = false;
+
+    yield InstallProgress(
+      appId: appId,
+      status: InstallStatus.pending,
+      message: '准备$operationLabel $appId...',
+    );
+
+    try {
+      // ll-cli install 指定版本格式为 appId/version。
+      final installTarget = version != null ? '$appId/$version' : appId;
+      final args = ['install', '--json', installTarget];
+      if (force && kind == InstallTaskKind.install) {
+        args.add('--force');
+      }
+
+      AppLogger.info('[LinglongCli] 开始$operationLabel: ll-cli ${args.join(' ')}');
+
+      await for (final event in CliExecutor.executeWithProgressAndProcess(
+        args,
+        processId: processId,
+        onProcessCreated: (process) {
+          _activeProcessPids[processId] = process.pid;
+          AppLogger.debug(
+            '[LinglongCli] 记录$operationLabel进程 PID: ${process.pid}',
+          );
+        },
+      )) {
+        if (_cancelFlags[processId] == true) {
+          yield InstallProgress(
+            appId: appId,
+            status: InstallStatus.cancelled,
+            message: '$operationLabel已取消',
+          );
+          return;
+        }
+
+        final progressInfo = CliOutputParser.parseInstallProgressEx(event.line);
+
+        if (progressInfo.phase == InstallPhase.downloading) {
+          yield InstallProgress(
+            appId: appId,
+            status: InstallStatus.downloading,
+            progress: progressInfo.progress,
+            message: InstallErrorCode.getStatusFromMessage(event.line),
+          );
+        } else if (progressInfo.phase == InstallPhase.installing) {
+          yield InstallProgress(
+            appId: appId,
+            status: InstallStatus.installing,
+            progress: progressInfo.progress,
+            message: InstallErrorCode.getStatusFromMessage(event.line),
+          );
+        } else if (progressInfo.phase == InstallPhase.completed) {
+          yield InstallProgress(
+            appId: appId,
+            status: InstallStatus.success,
+            progress: 100,
+            message: '$operationLabel完成',
+          );
+          return;
+        } else if (progressInfo.phase == InstallPhase.failed) {
+          final jsonEvent = CliOutputParser.parseJsonLine(event.line);
+          final errorCode =
+              jsonEvent?.code ?? CliOutputParser.extractErrorCode(event.line);
+          final errorMessage = progressInfo.errorMessage ?? event.line;
+
+          yield InstallProgress(
+            appId: appId,
+            status: InstallStatus.failed,
+            message: errorMessage,
+            error: errorCode != null
+                ? InstallErrorCode.getStatusFromCode(errorCode)
+                : errorMessage,
+            errorCode: errorCode,
+          );
+          return;
+        }
+      }
+
+      final output = await CliExecutor.execute(
+        ['info', appId],
+        timeout: kQueryTimeout,
+      );
+
+      if (output.success) {
+        yield InstallProgress(
+          appId: appId,
+          status: InstallStatus.success,
+          progress: 100,
+          message: '$operationLabel完成',
+        );
+      } else {
+        yield InstallProgress(
+          appId: appId,
+          status: InstallStatus.failed,
+          message: '$operationLabel状态未知',
+          error: '无法确认$operationLabel结果',
+        );
+      }
+    } on CliTimeoutException catch (e) {
+      yield InstallProgress(
+        appId: appId,
+        status: InstallStatus.failed,
+        message: '$operationLabel超时',
+        error: e.message,
+        errorCode: -2,
+      );
+    } on CliCancelledException {
+      yield InstallProgress(
+        appId: appId,
+        status: InstallStatus.cancelled,
+        message: '$operationLabel已取消',
+      );
+    } catch (e, stack) {
+      AppLogger.error('[LinglongCli] $operationLabel异常: $appId', e, stack);
+      yield InstallProgress(
+        appId: appId,
+        status: InstallStatus.failed,
+        message: '$operationLabel失败',
+        error: e.toString(),
+      );
+    } finally {
+      _cancelFlags.remove(processId);
+      _activeProcessPids.remove(processId);
+    }
+  }
 
   @override
   Future<List<InstalledApp>> getInstalledApps({
@@ -101,309 +257,59 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
     String? version,
     bool force = false,
   }) async* {
-    final processId = 'install_$appId';
-
-    // 重置取消标志
-    _cancelFlags[processId] = false;
-
-    // 发送开始事件
-    yield InstallProgress(
-      appId: appId,
-      status: InstallStatus.pending,
-      message: '准备安装 $appId...',
+    yield* _runInstallLikeOperation(
+      appId,
+      kind: InstallTaskKind.install,
+      version: version,
+      force: force,
     );
-
-    try {
-      // 构建安装参数
-      // ll-cli install 指定版本格式：appId/version（不支持 --version 参数）
-      final installTarget = version != null ? '$appId/$version' : appId;
-      final args = ['install', '--json', installTarget];
-      if (force) {
-        args.add('--force');
-      }
-
-      AppLogger.info('[LinglongCli] 开始安装: ll-cli ${args.join(' ')}');
-
-      // 执行安装命令（流式），并记录进程 PID
-      await for (final event in CliExecutor.executeWithProgressAndProcess(
-        args,
-        processId: processId,
-        onProcessCreated: (process) {
-          // 记录 PID 用于后续取消
-          _activeProcessPids[processId] = process.pid;
-          AppLogger.debug('[LinglongCli] 记录安装进程 PID: ${process.pid}');
-        },
-      )) {
-        // 检查是否已取消
-        if (_cancelFlags[processId] == true) {
-          yield InstallProgress(
-            appId: appId,
-            status: InstallStatus.cancelled,
-            message: '安装已取消',
-          );
-          return;
-        }
-
-        // 使用增强版解析器（支持 JSON 和纯文本）
-        final progressInfo = CliOutputParser.parseInstallProgressEx(event.line);
-
-        // 根据解析结果发送进度事件
-        if (progressInfo.phase == InstallPhase.downloading) {
-          yield InstallProgress(
-            appId: appId,
-            status: InstallStatus.downloading,
-            progress: progressInfo.progress,
-            message: InstallErrorCode.getStatusFromMessage(event.line),
-          );
-        } else if (progressInfo.phase == InstallPhase.installing) {
-          yield InstallProgress(
-            appId: appId,
-            status: InstallStatus.installing,
-            progress: progressInfo.progress,
-            message: InstallErrorCode.getStatusFromMessage(event.line),
-          );
-        } else if (progressInfo.phase == InstallPhase.completed) {
-          yield InstallProgress(
-            appId: appId,
-            status: InstallStatus.success,
-            progress: 100,
-            message: '安装完成',
-          );
-          return;
-        } else if (progressInfo.phase == InstallPhase.failed) {
-          // 尝试从 JSON 或文本中提取错误码
-          final jsonEvent = CliOutputParser.parseJsonLine(event.line);
-          final errorCode =
-              jsonEvent?.code ?? CliOutputParser.extractErrorCode(event.line);
-          final errorMessage = progressInfo.errorMessage ?? event.line;
-
-          yield InstallProgress(
-            appId: appId,
-            status: InstallStatus.failed,
-            message: errorMessage,
-            error: errorCode != null
-                ? InstallErrorCode.getStatusFromCode(errorCode)
-                : errorMessage,
-            errorCode: errorCode,
-          );
-          return;
-        }
-      }
-
-      // 流结束但未检测到完成状态，用 info 命令验证安装结果
-      // ll-cli info 返回 exit 0 表示应用已安装，非 0 表示未安装
-      final output = await CliExecutor.execute([
-        'info',
-        appId,
-      ], timeout: kQueryTimeout);
-
-      if (output.success) {
-        yield InstallProgress(
-          appId: appId,
-          status: InstallStatus.success,
-          progress: 100,
-          message: '安装完成',
-        );
-      } else {
-        yield InstallProgress(
-          appId: appId,
-          status: InstallStatus.failed,
-          message: '安装状态未知',
-          error: '无法确认安装结果',
-        );
-      }
-    } on CliTimeoutException catch (e) {
-      yield InstallProgress(
-        appId: appId,
-        status: InstallStatus.failed,
-        message: '安装超时',
-        error: e.message,
-        errorCode: -2,
-      );
-    } on CliCancelledException {
-      yield InstallProgress(
-        appId: appId,
-        status: InstallStatus.cancelled,
-        message: '安装已取消',
-      );
-    } catch (e, stack) {
-      AppLogger.error('[LinglongCli] 安装异常: $appId', e, stack);
-      yield InstallProgress(
-        appId: appId,
-        status: InstallStatus.failed,
-        message: '安装失败',
-        error: e.toString(),
-      );
-    } finally {
-      _cancelFlags.remove(processId);
-      _activeProcessPids.remove(processId);
-    }
   }
 
   @override
-  Future<bool> cancelInstall(String appId) async {
-    final processId = 'install_$appId';
+  Future<bool> cancelOperation(
+    String appId, {
+    required InstallTaskKind kind,
+  }) async {
+    final processId = _operationProcessId(appId, kind);
+    final operationLabel = _operationLabel(kind);
 
-    AppLogger.info('[LinglongCli] 开始取消安装: $appId');
+    AppLogger.info('[LinglongCli] 开始取消$operationLabel: $appId');
 
-    // 1. 设置取消标志（区分"用户取消"和"真正失败"）
-    _cancelFlags[processId] = true;
+    // Rust 版本本质是杀掉当前 ll-cli / ll-package-manager，
+    // 这里同时标记 install / update 两类流为已取消，避免流结束前继续上报。
+    _setOperationCancelled(appId);
 
-    // 2. 使用增强版取消方法（参考 Rust 版本实现）
-    // 通过 pkexec killall 终止 ll-cli 和 ll-package-manager
     final success = await CliExecutor.cancelWithSystemKill(
       processId,
       force: true,
       killPackageMananger: true,
     );
 
-    // 3. 清理本地 PID 记录
     _activeProcessPids.remove(processId);
 
     if (success) {
-      AppLogger.info('[LinglongCli] 取消安装成功: $appId');
+      AppLogger.info('[LinglongCli] 取消$operationLabel成功: $appId');
     } else {
-      AppLogger.warning('[LinglongCli] 取消安装返回 false（可能无活跃进程）: $appId');
+      AppLogger.warning(
+        '[LinglongCli] 取消$operationLabel返回 false（可能无活跃进程）: $appId',
+      );
     }
 
     return success;
   }
 
   @override
+  Future<bool> cancelInstall(String appId) {
+    return cancelOperation(appId, kind: InstallTaskKind.install);
+  }
+
+  @override
   Stream<InstallProgress> updateApp(String appId, {String? version}) async* {
-    final processId = 'update_$appId';
-
-    // 重置取消标志
-    _cancelFlags[processId] = false;
-
-    // 发送开始事件
-    yield InstallProgress(
-      appId: appId,
-      status: InstallStatus.pending,
-      message: '准备更新 $appId...',
+    yield* _runInstallLikeOperation(
+      appId,
+      kind: InstallTaskKind.update,
+      version: version,
     );
-
-    try {
-      // 构建更新参数
-      // ll-cli install 指定版本格式：appId/version（不支持 --version 参数）
-      final installTarget = version != null ? '$appId/$version' : appId;
-      final args = ['install', '--json', installTarget];
-
-      AppLogger.info('[LinglongCli] 开始更新: ll-cli ${args.join(' ')}');
-
-      // 执行安装命令（流式），并记录进程 PID
-      await for (final event in CliExecutor.executeWithProgressAndProcess(
-        args,
-        processId: processId,
-        onProcessCreated: (process) {
-          // 记录 PID 用于后续取消
-          _activeProcessPids[processId] = process.pid;
-          AppLogger.debug('[LinglongCli] 记录更新进程 PID: ${process.pid}');
-        },
-      )) {
-        // 检查是否已取消
-        if (_cancelFlags[processId] == true) {
-          yield InstallProgress(
-            appId: appId,
-            status: InstallStatus.cancelled,
-            message: '更新已取消',
-          );
-          return;
-        }
-
-        // 使用增强版解析器（支持 JSON 和纯文本）
-        final progressInfo = CliOutputParser.parseInstallProgressEx(event.line);
-
-        // 根据解析结果发送进度事件
-        if (progressInfo.phase == InstallPhase.downloading) {
-          yield InstallProgress(
-            appId: appId,
-            status: InstallStatus.downloading,
-            progress: progressInfo.progress,
-            message: InstallErrorCode.getStatusFromMessage(event.line),
-          );
-        } else if (progressInfo.phase == InstallPhase.installing) {
-          yield InstallProgress(
-            appId: appId,
-            status: InstallStatus.installing,
-            progress: progressInfo.progress,
-            message: InstallErrorCode.getStatusFromMessage(event.line),
-          );
-        } else if (progressInfo.phase == InstallPhase.completed) {
-          yield InstallProgress(
-            appId: appId,
-            status: InstallStatus.success,
-            progress: 100,
-            message: '更新完成',
-          );
-          return;
-        } else if (progressInfo.phase == InstallPhase.failed) {
-          // 尝试从 JSON 或文本中提取错误码
-          final jsonEvent = CliOutputParser.parseJsonLine(event.line);
-          final errorCode =
-              jsonEvent?.code ?? CliOutputParser.extractErrorCode(event.line);
-          final errorMessage = progressInfo.errorMessage ?? event.line;
-
-          yield InstallProgress(
-            appId: appId,
-            status: InstallStatus.failed,
-            message: errorMessage,
-            error: errorCode != null
-                ? InstallErrorCode.getStatusFromCode(errorCode)
-                : errorMessage,
-            errorCode: errorCode,
-          );
-          return;
-        }
-      }
-
-      // 流结束但未检测到完成状态，用 info 命令验证更新结果
-      final output = await CliExecutor.execute([
-        'info',
-        appId,
-      ], timeout: kQueryTimeout);
-
-      if (output.success) {
-        yield InstallProgress(
-          appId: appId,
-          status: InstallStatus.success,
-          progress: 100,
-          message: '更新完成',
-        );
-      } else {
-        yield InstallProgress(
-          appId: appId,
-          status: InstallStatus.failed,
-          message: '更新状态未知',
-          error: '无法确认更新结果',
-        );
-      }
-    } on CliTimeoutException catch (e) {
-      yield InstallProgress(
-        appId: appId,
-        status: InstallStatus.failed,
-        message: '更新超时',
-        error: e.message,
-        errorCode: -2,
-      );
-    } on CliCancelledException {
-      yield InstallProgress(
-        appId: appId,
-        status: InstallStatus.cancelled,
-        message: '更新已取消',
-      );
-    } catch (e, stack) {
-      AppLogger.error('[LinglongCli] 更新异常: $appId', e, stack);
-      yield InstallProgress(
-        appId: appId,
-        status: InstallStatus.failed,
-        message: '更新失败',
-        error: e.toString(),
-      );
-    } finally {
-      _cancelFlags.remove(processId);
-      _activeProcessPids.remove(processId);
-    }
   }
 
   @override

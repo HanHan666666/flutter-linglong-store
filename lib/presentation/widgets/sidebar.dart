@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/config/routes.dart';
@@ -29,17 +27,11 @@ enum SidebarMenuItem {
   final String route;
 }
 
-/// 侧边栏宽度 Provider
-final sidebarWidthProvider = StateProvider<double>((ref) => 160.0);
-
-/// 侧边栏是否折叠 Provider
-final sidebarCollapsedProvider = StateProvider<bool>((ref) => false);
-
 /// 侧边栏
 ///
 /// 包含：导航菜单 + 动态菜单区域 + 底部图标
 /// 支持响应式折叠（≤768px）
-class Sidebar extends ConsumerWidget {
+class Sidebar extends StatelessWidget {
   const Sidebar({required this.currentPath, this.updateCount = 0, super.key});
 
   /// 当前路由路径
@@ -55,14 +47,9 @@ class Sidebar extends ConsumerWidget {
   static const double collapsedWidth = 56.0;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isCollapsed = screenWidth <= 768;
-
-    // 更新折叠状态
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(sidebarCollapsedProvider.notifier).state = isCollapsed;
-    });
 
     // decoration 需要读取 context 颜色，不能使用 const
     return AnimatedContainer(
@@ -239,7 +226,10 @@ class _Badge extends StatelessWidget {
     return Container(
       width: _badgeSize,
       height: _badgeSize,
-      decoration: BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
+      decoration: const BoxDecoration(
+        color: AppColors.error,
+        shape: BoxShape.circle,
+      ),
       child: Center(
         // 固定直径并缩放文字，确保 1 位和 2 位数字都保持圆形徽章。
         child: FittedBox(

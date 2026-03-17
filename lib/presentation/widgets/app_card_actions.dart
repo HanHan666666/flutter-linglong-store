@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../application/providers/app_operation_queue_provider.dart';
 import '../../application/providers/install_queue_provider.dart';
-import '../../application/providers/update_apps_provider.dart';
+import '../../domain/models/install_task.dart';
 import 'install_button.dart';
 
 /// 统一处理列表卡片主按钮动作，保证各列表页行为一致。
@@ -18,22 +19,28 @@ Future<void> handleAppCardPrimaryAction({
   switch (buttonState) {
     case InstallButtonState.notInstalled:
       ref
-          .read(installQueueProvider.notifier)
-          .enqueueInstall(
-            appId: appId,
-            appName: appName,
-            icon: icon,
-            version: _normalizeVersion(version),
+          .read(appOperationQueueControllerProvider)
+          .enqueueAppOperation(
+            EnqueueAppOperationParams(
+              kind: InstallTaskKind.install,
+              appId: appId,
+              appName: appName,
+              icon: icon,
+              version: _normalizeVersion(version),
+            ),
           );
       return;
     case InstallButtonState.update:
       ref
-          .read(updateAppsProvider.notifier)
-          .updateApp(
-            appId,
-            fallbackName: appName,
-            fallbackIcon: icon,
-            fallbackVersion: _normalizeVersion(version),
+          .read(appOperationQueueControllerProvider)
+          .enqueueAppOperation(
+            EnqueueAppOperationParams(
+              kind: InstallTaskKind.update,
+              appId: appId,
+              appName: appName,
+              icon: icon,
+              version: _normalizeVersion(version),
+            ),
           );
       return;
     case InstallButtonState.installed:

@@ -168,25 +168,23 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
       children: [
         _buildHeader(context),
         Expanded(
-          child: IndexedStack(
-            index: _activeTab.index,
-            children: [
-              Column(
-                children: [
-                  _buildSearchBar(context),
-                  Expanded(
-                    child: _buildAppsContent(
-                      context,
-                      state,
-                      filteredApps,
-                      cardStateIndex,
+          child: _activeTab == _MyAppsTab.app
+              ? Column(
+                  children: [
+                    // 只渲染当前激活的 Tab，避免两个复杂子树同时挂载时触发
+                    // 重复 GlobalKey 和生命周期断言。
+                    _buildSearchBar(context),
+                    Expanded(
+                      child: _buildAppsContent(
+                        context,
+                        state,
+                        filteredApps,
+                        cardStateIndex,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const LinglongProcessPanel(),
-            ],
-          ),
+                  ],
+                )
+              : const LinglongProcessPanel(),
         ),
       ],
     );
@@ -356,11 +354,11 @@ class _TabTitle extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: isActive
-                      ? context.appColors.textPrimary
-                      : context.appColors.textSecondary,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                ),
+              color: isActive
+                  ? context.appColors.textPrimary
+                  : context.appColors.textSecondary,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+            ),
           ),
           const SizedBox(height: 6),
           AnimatedContainer(

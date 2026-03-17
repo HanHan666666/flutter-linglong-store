@@ -6,6 +6,7 @@ import 'application/providers/global_provider.dart';
 import 'core/config/routes.dart';
 import 'core/config/theme.dart';
 import 'core/i18n/l10n/app_localizations.dart';
+import 'core/platform/native_menu_theme_sync.dart';
 import 'main.dart';
 
 /// 玲珑应用商店 MaterialApp 配置
@@ -40,6 +41,20 @@ class LinglongStoreApp extends ConsumerWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
+        builder: (context, child) {
+          final systemIsDark =
+              MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+          final effectiveIsDark = switch (themeMode) {
+            ThemeMode.system => systemIsDark,
+            ThemeMode.light => false,
+            ThemeMode.dark => true,
+          };
+
+          return NativeMenuThemeSync(
+            isDark: effectiveIsDark,
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
 
         // 路由配置
         routerConfig: router,

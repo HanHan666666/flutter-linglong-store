@@ -1,5 +1,7 @@
 #include "my_application.h"
 
+#include <cstring>
+
 #include <flutter_linux/flutter_linux.h>
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
@@ -10,9 +12,75 @@
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  FlMethodChannel* native_theme_channel;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
+
+namespace {
+
+constexpr char kNativeThemeChannel[] = "org.linglong_store/native_theme";
+constexpr char kSetContextMenuDarkThemeMethod[] = "setContextMenuDarkTheme";
+
+void set_context_menu_dark_theme(gboolean prefer_dark) {
+  GtkSettings* settings = gtk_settings_get_default();
+  if (settings == nullptr) {
+    return;
+  }
+
+  // 原生右键菜单由 GTK 渲染，直接同步应用偏好的深色模式即可。
+  g_object_set(settings, "gtk-application-prefer-dark-theme", prefer_dark,
+               nullptr);
+}
+
+FlMethodResponse* handle_native_theme_method_call(FlMethodCall* method_call) {
+  const gchar* method = fl_method_call_get_name(method_call);
+  if (strcmp(method, kSetContextMenuDarkThemeMethod) != 0) {
+    return FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
+  }
+
+  FlValue* args = fl_method_call_get_args(method_call);
+  if (args == nullptr || fl_value_get_type(args) != FL_VALUE_TYPE_MAP) {
+    return FL_METHOD_RESPONSE(fl_method_error_response_new(
+        "bad-args", "Expected a map containing isDark.", nullptr));
+  }
+
+  FlValue* is_dark_value = fl_value_lookup_string(args, "isDark");
+  if (is_dark_value == nullptr ||
+      fl_value_get_type(is_dark_value) != FL_VALUE_TYPE_BOOL) {
+    return FL_METHOD_RESPONSE(fl_method_error_response_new(
+        "bad-args", "Expected bool field isDark.", nullptr));
+  }
+
+  set_context_menu_dark_theme(fl_value_get_bool(is_dark_value));
+  return FL_METHOD_RESPONSE(
+      fl_method_success_response_new(fl_value_new_bool(true)));
+}
+
+void native_theme_method_call_cb(FlMethodChannel* channel,
+                                 FlMethodCall* method_call,
+                                 gpointer user_data) {
+  (void)channel;
+  (void)user_data;
+  g_autoptr(FlMethodResponse) response =
+      handle_native_theme_method_call(method_call);
+
+  fl_method_call_respond(method_call, response, nullptr);
+}
+
+void setup_native_theme_channel(MyApplication* self, FlView* view) {
+  FlBinaryMessenger* messenger =
+      fl_engine_get_binary_messenger(fl_view_get_engine(view));
+  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
+
+  self->native_theme_channel = fl_method_channel_new(
+      messenger, kNativeThemeChannel, FL_METHOD_CODEC(codec));
+  fl_method_channel_set_method_call_handler(self->native_theme_channel,
+                                            native_theme_method_call_cb,
+                                            self, nullptr);
+}
+
+}  // namespace
 
 // Called when first Flutter frame received.
 static void first_frame_cb(MyApplication* self, FlView* view) {
@@ -72,6 +140,7 @@ static void my_application_activate(GApplication* application) {
   g_signal_connect_swapped(view, "first-frame", G_CALLBACK(first_frame_cb),
                            self);
   gtk_widget_realize(GTK_WIDGET(view));
+  setup_native_theme_channel(self, view);
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
 
@@ -121,6 +190,7 @@ static void my_application_shutdown(GApplication* application) {
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
+  g_clear_object(&self->native_theme_channel);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }
 

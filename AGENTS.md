@@ -156,3 +156,4 @@ time ./build/package-deb.sh
 - 2026-03-17：桌面端右键菜单统一使用 `flutter_desktop_context_menu`；进程列表右键菜单与“更多”按钮必须复用同一套菜单动作和同一套行级 loading 状态，避免双份逻辑漂移。
 - 2026-03-17：Linux 原生右键菜单深色模式通过 Flutter -> runner 的轻量 MethodChannel 同步当前实际亮度；不要修改第三方菜单插件源码，也不要在 Dart 层伪造一套自绘菜单替代原生菜单。
 - 2026-03-17：进程列表右键菜单弹出位置固定为鼠标点击点右下方 `4px`，这是当前与桌面视觉校准后的约定，后续不要随意改回零偏移。
+- 2026-03-17：应用图标的远端富化结果统一在 `AppRepositoryImpl.enrichInstalledAppsWithDetails()` 做 TTL 缓存，缓存 key 必须包含 `locale + appId + version + arch + channel + module`；不要在 Provider 刷新链路里每次重新打应用详情接口补图标。

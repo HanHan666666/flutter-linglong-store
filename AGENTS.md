@@ -10,6 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 重点（极其重要）
 - 当前项目要求绝对的高性能，高UI响应速度。
 - 每开发一个功能点就进行一次commit
+- Git commit 必须遵循 Conventional Commits，统一使用 `type: 简短描述`，不要再写无类型前缀的自然语句提交信息。
 - 在接到用户的任务的时候，先不要着急开始修改代码，要先分析需求，分析代码，列举解决方案，
 - 详细的向用户说明你的思路，和你打算如何实现这个需求。
 - 要分析整个项目的架构，一切都要从整个项目的角度入手，不能直接看完一个文件就写代码。
@@ -95,6 +96,20 @@ time ./build/package-deb.sh
 ./build/package-rpm.sh
 ./build/package-appimage.sh
 ```
+
+## Git Commit 规范
+- 每个功能点、修复点、文档点各自单独提交，不要把无关改动混在一个 commit 里。
+- 提交信息统一使用 `type: 描述`，`type` 小写，后面跟英文冒号和一个空格。
+- 描述优先写中文，要求简短、明确、可直接看出本次变更目的，不写空泛语句。
+- 推荐类型：`feat:` 新功能，`fix:` 缺陷修复，`refactor:` 重构，`docs:` 文档，`test:` 测试，`chore:` 杂项维护。
+- 单个 commit 只表达一个主目的；如果同时改代码和文档，且文档不是代码变更的必要组成部分，拆成两个 commit。
+- 提交信息不要带无意义前缀或编号，不要写成长段说明，不要把多件事并列塞进同一标题。
+- 与仓库现有历史对齐，优先使用 `feat: ...`、`fix: ...`、`refactor: ...` 这种格式；像 `add memory optimization documentation`、`fix app card primary button text color` 这类无类型前缀写法后续不再使用。
+- 示例：
+  - `feat: 完善取消安装功能，迁移 Rust 版本实现`
+  - `fix: 修复安装按钮文字颜色错误`
+  - `refactor: 统一应用列表卡片状态逻辑`
+  - `docs: 补充内存优化设计文档`
 
 ## 架构与模块（高层）
 整体为分层架构（依赖方向：Presentation → Application → Domain ← Data ← Platform）：

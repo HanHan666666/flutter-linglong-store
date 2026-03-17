@@ -24,10 +24,7 @@ class LinglongProcessPanel extends ConsumerStatefulWidget {
 class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
   String? _contextMenuRowId;
 
-  Future<void> _showProcessContextMenu(
-    RunningApp app,
-    Offset position,
-  ) async {
+  Future<void> _showProcessContextMenu(RunningApp app, Offset position) async {
     final isKilling = ref
         .read(runningProcessProvider)
         .killLoadingIds
@@ -37,10 +34,8 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
       items: [
         MenuItem(
           label: '复制进入容器命令',
-          onClick: (_) => _copyText(
-            'll-cli enter ${app.appId}',
-            '命令已复制到剪贴板，请粘贴到终端中执行',
-          ),
+          onClick: (_) =>
+              _copyText('ll-cli enter ${app.appId}', '命令已复制到剪贴板，请粘贴到终端中执行'),
         ),
         MenuItem(
           label: '复制应用 ID',
@@ -91,11 +86,15 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
     await Clipboard.setData(ClipboardData(text: value));
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _stopProcess(RunningApp app) async {
-    final success = await ref.read(runningProcessProvider.notifier).killApp(app);
+    final success = await ref
+        .read(runningProcessProvider.notifier)
+        .killApp(app);
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -126,22 +125,24 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.warning_amber_rounded, size: 18, color: Color(0xFFD48806)),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 18,
+                  color: Color(0xFFD48806),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     '进程列表刷新失败，当前显示的是上次成功获取的数据',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF8C5A00),
-                        ),
+                      color: const Color(0xFF8C5A00),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-        Expanded(
-          child: _buildContent(context, state, l10n),
-        ),
+        Expanded(child: _buildContent(context, state, l10n)),
       ],
     );
   }
@@ -223,9 +224,9 @@ class _ProcessToolbar extends ConsumerWidget {
         children: [
           Text(
             l10n?.linglongProcess ?? '玲珑进程',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(width: 8),
           Container(
@@ -237,8 +238,8 @@ class _ProcessToolbar extends ConsumerWidget {
             child: Text(
               '${state.apps.length}',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
             ),
           ),
           const Spacer(),
@@ -246,8 +247,8 @@ class _ProcessToolbar extends ConsumerWidget {
             Text(
               '刷新中',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
+                color: Theme.of(context).colorScheme.outline,
+              ),
             ),
             const SizedBox(width: 6),
             SizedBox(
@@ -263,12 +264,13 @@ class _ProcessToolbar extends ConsumerWidget {
           Text(
             lastRefreshedText,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+              color: Theme.of(context).colorScheme.outline,
+            ),
           ),
           const SizedBox(width: 8),
           IconButton(
-            onPressed: () => ref.read(runningProcessProvider.notifier).refresh(),
+            onPressed: () =>
+                ref.read(runningProcessProvider.notifier).refresh(),
             icon: const Icon(Icons.refresh),
             tooltip: l10n?.refresh ?? '刷新',
           ),
@@ -334,9 +336,9 @@ class _ProcessHeaderCell extends StatelessWidget {
         label,
         textAlign: centered ? TextAlign.center : TextAlign.start,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+          fontWeight: FontWeight.w600,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }
@@ -369,7 +371,9 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
   Widget build(BuildContext context) {
     final rowColor = widget.isMenuSelected
         ? context.appColors.primaryLight
-        : (_isHovered ? context.appColors.surfaceContainerLow : Colors.transparent);
+        : (_isHovered
+              ? context.appColors.surfaceContainerLow
+              : Colors.transparent);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -377,7 +381,10 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: GestureDetector(
-          onSecondaryTapDown: (details) => widget.onShowMenu(details.globalPosition),
+          // 必须等右键抬起后再弹菜单，否则 GTK 会把同一次抬起事件当成
+          // 一次“点空白处关闭菜单”，表现就是菜单闪一下立即消失。
+          onSecondaryTapUp: (details) =>
+              widget.onShowMenu(details.globalPosition),
           child: AnimatedContainer(
             duration: AppAnimation.fast,
             height: 72,
@@ -413,17 +420,19 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
                               widget.app.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.w500),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               widget.app.appId,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.outline,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.outline,
                                   ),
                             ),
                           ],
@@ -432,10 +441,26 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
                     ],
                   ),
                 ),
-                _ProcessValueCell(value: widget.app.version, width: 120, centered: true),
-                _ProcessValueCell(value: widget.app.arch, width: 100, centered: true),
-                _ProcessValueCell(value: widget.app.channel, width: 90, centered: true),
-                _ProcessValueCell(value: widget.app.source, width: 110, centered: true),
+                _ProcessValueCell(
+                  value: widget.app.version,
+                  width: 120,
+                  centered: true,
+                ),
+                _ProcessValueCell(
+                  value: widget.app.arch,
+                  width: 100,
+                  centered: true,
+                ),
+                _ProcessValueCell(
+                  value: widget.app.channel,
+                  width: 90,
+                  centered: true,
+                ),
+                _ProcessValueCell(
+                  value: widget.app.source,
+                  width: 110,
+                  centered: true,
+                ),
                 _ProcessValueCell(
                   value: widget.app.pid.toString(),
                   width: 90,
@@ -450,7 +475,8 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
                 SizedBox(
                   width: 48,
                   child: GestureDetector(
-                    onTapDown: (details) => _lastTapPosition = details.globalPosition,
+                    onTapDown: (details) =>
+                        _lastTapPosition = details.globalPosition,
                     child: IconButton(
                       onPressed: widget.isKilling
                           ? null
@@ -503,9 +529,9 @@ class _ProcessValueCell extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         textAlign: centered ? TextAlign.center : TextAlign.start,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontFamily: monospace ? 'monospace' : null,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+          fontFamily: monospace ? 'monospace' : null,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

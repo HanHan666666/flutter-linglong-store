@@ -222,13 +222,12 @@ class MockLinglongCliRepository extends _i1.Mock
           as _i4.Stream<_i10.InstallProgress>);
 
   @override
-  _i4.Future<void> cancelInstall(String? appId) =>
+  _i4.Future<bool> cancelInstall(String? appId) =>
       (super.noSuchMethod(
             Invocation.method(#cancelInstall, [appId]),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
+            returnValue: _i4.Future<bool>.value(false),
           )
-          as _i4.Future<void>);
+          as _i4.Future<bool>);
 
   @override
   _i4.Future<String> uninstallApp(String? appId, String? version) =>

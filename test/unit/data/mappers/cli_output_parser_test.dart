@@ -164,60 +164,60 @@ cn.wps.wps-office                          WPS Office                       12.1
 
       test('should parse single running app correctly', () {
         const output = '''
-NAME                      PID     APPID
-wechat                    12345   com.tencent.wechat
+App              ContainerID   Pid
+com.tencent.wechat  abcdef123456  12345
 ''';
         final apps = CliOutputParser.parseRunningApps(output);
 
         expect(apps.length, equals(1));
-        expect(apps[0].name, equals('wechat'));
+        expect(apps[0].id, equals('abcdef123456'));
+        expect(apps[0].name, equals('com.tencent.wechat'));
         expect(apps[0].pid, equals(12345));
         expect(apps[0].appId, equals('com.tencent.wechat'));
+        expect(apps[0].containerId, equals('abcdef123456'));
       });
 
       test('should parse multiple running apps correctly', () {
         const output = '''
-NAME                      PID     APPID
-wechat                    12345   com.tencent.wechat
-wps-office                12346   cn.wps.wps-office
-netdisk                   12347   com.baidu.netdisk
+App              ContainerID   Pid
+com.tencent.wechat  abcdef123456  12345
+cn.wps.wps-office  bcdefa234567  12346
+com.baidu.netdisk  cdefab345678  12347
 ''';
         final apps = CliOutputParser.parseRunningApps(output);
 
         expect(apps.length, equals(3));
-        expect(apps[0].name, equals('wechat'));
-        expect(apps[1].name, equals('wps-office'));
-        expect(apps[2].name, equals('netdisk'));
+        expect(apps[0].appId, equals('com.tencent.wechat'));
+        expect(apps[1].appId, equals('cn.wps.wps-office'));
+        expect(apps[2].appId, equals('com.baidu.netdisk'));
       });
 
-      test('should skip header line with NAME', () {
+      test('should skip header line with container id columns', () {
         const output = '''
-NAME                      PID     APPID
-wechat                    12345   com.tencent.wechat
+App              ContainerID   Pid
+com.tencent.wechat  abcdef123456  12345
 ''';
         final apps = CliOutputParser.parseRunningApps(output);
 
         expect(apps.length, equals(1));
       });
 
-      test('should skip header line with PID', () {
+      test('should ignore invalid header layouts', () {
         const output = '''
-PID                       NAME    APPID
-12345                     wechat  com.tencent.wechat
+PID                       APP     ContainerID
+12345                     com.tencent.wechat abcdef123456
 ''';
         final apps = CliOutputParser.parseRunningApps(output);
 
-        // This header doesn't match NAME pattern, so the first line is parsed
-        // The parser expects NAME in the header, not PID as first column
         expect(apps.length, equals(0));
       });
 
       test('should skip invalid lines', () {
         const output = '''
-NAME                      PID     APPID
-wechat                    12345   com.tencent.wechat
+App              ContainerID   Pid
+com.tencent.wechat  abcdef123456  12345
 invalid line
-wps-office                12346   cn.wps.wps-office
+cn.wps.wps-office  bcdefa234567  12346
 ''';
         final apps = CliOutputParser.parseRunningApps(output);
 
@@ -226,15 +226,27 @@ wps-office                12346   cn.wps.wps-office
 
       test('should skip lines with invalid PID', () {
         const output = '''
-NAME                      PID     APPID
-wechat                    invalid   com.tencent.wechat
-wps-office                12346   cn.wps.wps-office
+App              ContainerID   Pid
+com.tencent.wechat  abcdef123456  invalid
+cn.wps.wps-office  bcdefa234567  12346
 ''';
         final apps = CliOutputParser.parseRunningApps(output);
 
-        // PID 解析为 0，但 0 > 0 为 false，所以被跳过
         expect(apps.length, equals(1));
-        expect(apps[0].name, equals('wps-office'));
+        expect(apps[0].appId, equals('cn.wps.wps-office'));
+      });
+
+      test('should strip ansi color codes from output', () {
+        const output =
+            '\u001B[38;5;214mApp              ContainerID   Pid     \u001B[0m\n'
+            'org.deepin.calculator  f327f606eadc  213845\n';
+
+        final apps = CliOutputParser.parseRunningApps(output);
+
+        expect(apps.length, equals(1));
+        expect(apps[0].appId, equals('org.deepin.calculator'));
+        expect(apps[0].containerId, equals('f327f606eadc'));
+        expect(apps[0].pid, equals(213845));
       });
     });
 

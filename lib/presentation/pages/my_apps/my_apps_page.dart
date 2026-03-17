@@ -4,11 +4,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../application/providers/application_card_state_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/installed_apps_provider.dart';
+import '../../../application/providers/running_process_provider.dart';
 import '../../../application/providers/update_apps_provider.dart';
+import '../../../core/config/page_visibility.dart';
+import '../../../core/config/routes.dart';
+import '../../../core/config/theme.dart';
+import '../../../core/config/visibility_aware_mixin.dart';
 import '../../../core/utils/version_compare.dart';
 import '../../../domain/models/installed_app.dart';
 import '../../widgets/app_card_actions.dart';
+import '../../widgets/linglong_process_panel.dart';
 import '../../widgets/widgets.dart';
+
+enum _MyAppsTab { app, process }
 
 /// 我的应用页
 class MyAppsPage extends ConsumerStatefulWidget {
@@ -18,17 +26,25 @@ class MyAppsPage extends ConsumerStatefulWidget {
   ConsumerState<MyAppsPage> createState() => _MyAppsPageState();
 }
 
-class _MyAppsPageState extends ConsumerState<MyAppsPage> {
+class _MyAppsPageState extends ConsumerState<MyAppsPage>
+    with AutomaticKeepAliveClientMixin, VisibilityAwareMixin {
   /// 搜索关键词
   String _searchQuery = '';
 
   /// 搜索控制器
   final _searchController = TextEditingController();
 
+  _MyAppsTab _activeTab = _MyAppsTab.app;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  String get routePath => AppRoutes.myApps;
+
   @override
   void initState() {
     super.initState();
-    // 页面加载时获取已安装应用列表
     Future.microtask(() {
       ref.read(installedAppsProvider.notifier).refresh();
     });
@@ -36,8 +52,21 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
 
   @override
   void dispose() {
+    ref.read(runningProcessProvider.notifier).setProcessTabActive(false);
     _searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void onVisibilityChanged(PageVisibilityEvent event) {
+    if (event.becameVisible) {
+      ref.read(runningProcessProvider.notifier).setPageVisible(true);
+      return;
+    }
+
+    if (event.becameHidden) {
+      ref.read(runningProcessProvider.notifier).setPageVisible(false);
+    }
   }
 
   /// 过滤应用列表
@@ -69,6 +98,20 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
     return merged.values.toList();
   }
 
+  void _setActiveTab(_MyAppsTab tab) {
+    if (_activeTab == tab) {
+      return;
+    }
+
+    setState(() {
+      _activeTab = tab;
+    });
+
+    ref
+        .read(runningProcessProvider.notifier)
+        .setProcessTabActive(tab == _MyAppsTab.process);
+  }
+
   /// 卸载应用
   Future<void> _uninstallApp(InstalledApp app) async {
     final confirmed = await ConfirmDialog.showUninstall(
@@ -91,11 +134,9 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
             ),
           );
         } else {
-          // 乐观更新：从已安装列表中移除
           ref
               .read(installedAppsProvider.notifier)
               .removeApp(app.appId, app.version);
-          // 后台重新检查更新列表（不 await，不阻塞 UI）
           ref.read(updateAppsProvider.notifier).checkUpdates();
 
           ScaffoldMessenger.of(
@@ -117,20 +158,59 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     final state = ref.watch(installedAppsProvider);
     final cardStateIndex = ref.watch(applicationCardStateIndexProvider);
     final filteredApps = _filterApps(_mergeApps(state.apps));
 
     return Column(
       children: [
-        // 搜索框
-        _buildSearchBar(context),
-
-        // 内容区域
+        _buildHeader(context),
         Expanded(
-          child: _buildContent(context, state, filteredApps, cardStateIndex),
+          child: IndexedStack(
+            index: _activeTab.index,
+            children: [
+              Column(
+                children: [
+                  _buildSearchBar(context),
+                  Expanded(
+                    child: _buildAppsContent(
+                      context,
+                      state,
+                      filteredApps,
+                      cardStateIndex,
+                    ),
+                  ),
+                ],
+              ),
+              const LinglongProcessPanel(),
+            ],
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      alignment: Alignment.centerLeft,
+      child: Row(
+        children: [
+          _TabTitle(
+            label: '我的应用',
+            isActive: _activeTab == _MyAppsTab.app,
+            onTap: () => _setActiveTab(_MyAppsTab.app),
+          ),
+          const SizedBox(width: 24),
+          _TabTitle(
+            label: '玲珑进程',
+            isActive: _activeTab == _MyAppsTab.process,
+            onTap: () => _setActiveTab(_MyAppsTab.process),
+          ),
+        ],
+      ),
     );
   }
 
@@ -167,19 +247,16 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
     );
   }
 
-  /// 构建内容区域
-  Widget _buildContent(
+  Widget _buildAppsContent(
     BuildContext context,
     InstalledAppsState state,
     List<InstalledApp> filteredApps,
     ApplicationCardStateIndex cardStateIndex,
   ) {
-    // 加载中状态
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    // 错误状态
     if (state.error != null) {
       return EmptyState(
         icon: Icons.error_outline,
@@ -192,7 +269,6 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
       );
     }
 
-    // 空状态
     if (state.apps.isEmpty) {
       return const EmptyState(
         icon: Icons.apps_outage,
@@ -201,7 +277,6 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
       );
     }
 
-    // 搜索无结果
     if (filteredApps.isEmpty) {
       return EmptyState(
         icon: Icons.search_off,
@@ -217,7 +292,6 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
       );
     }
 
-    // 应用列表
     return RefreshIndicator(
       onRefresh: () => ref.read(installedAppsProvider.notifier).refresh(),
       child: ListView.builder(
@@ -256,6 +330,49 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _TabTitle extends StatelessWidget {
+  const _TabTitle({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: isActive
+                      ? context.appColors.textPrimary
+                      : context.appColors.textSecondary,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                ),
+          ),
+          const SizedBox(height: 6),
+          AnimatedContainer(
+            duration: AppAnimation.fast,
+            width: isActive ? 56 : 0,
+            height: 3,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+        ],
       ),
     );
   }

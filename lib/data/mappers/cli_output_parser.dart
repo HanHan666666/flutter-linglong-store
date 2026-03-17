@@ -204,9 +204,8 @@ class CliOutputParser {
   ///
   /// ll-cli ps 输出格式示例：
   /// ```
-  /// NAME                      PID     APPID
-  /// wechat                    12345   com.tencent.wechat
-  /// wps-office                12346   cn.wps.wps-office
+  /// App              ContainerID   Pid
+  /// org.deepin.calculator  abcdef123456  12345
   /// ```
   static List<RunningApp> parseRunningApps(String output) {
     final List<RunningApp> apps = [];
@@ -214,27 +213,40 @@ class CliOutputParser {
 
     bool headerFound = false;
     for (final line in lines) {
-      final trimmed = line.trim();
+      final trimmed = _stripAnsi(line).trim();
       if (trimmed.isEmpty) continue;
 
       // 跳过表头
       if (!headerFound) {
-        if (trimmed.contains('NAME') || trimmed.contains('PID')) {
+        final lowerHeader = trimmed.toLowerCase();
+        if (lowerHeader.contains('container') && lowerHeader.contains('pid')) {
           headerFound = true;
         }
         continue;
       }
 
-      // 解析行数据
-      final match = RegExp(r'^(\S+)\s+(\d+)\s+(\S+)').firstMatch(trimmed);
+      // 解析行数据: APPID CONTAINER_ID PID
+      final match = RegExp(r'^(\S+)\s+(\S+)\s+(\d+)$').firstMatch(trimmed);
 
       if (match != null) {
-        final name = match.group(1)!;
-        final pid = int.tryParse(match.group(2)!) ?? 0;
-        final appId = match.group(3)!;
+        final appId = match.group(1)!;
+        final containerId = match.group(2)!;
+        final pid = int.tryParse(match.group(3)!) ?? 0;
 
-        if (pid > 0 && appId.isNotEmpty) {
-          apps.add(RunningApp(appId: appId, name: name, pid: pid));
+        if (pid > 0 && appId.isNotEmpty && containerId.isNotEmpty) {
+          apps.add(
+            RunningApp(
+              id: containerId,
+              appId: appId,
+              name: appId,
+              version: '',
+              arch: '',
+              channel: '',
+              source: '',
+              pid: pid,
+              containerId: containerId,
+            ),
+          );
         }
       }
     }

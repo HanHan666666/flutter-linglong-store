@@ -8,125 +8,223 @@ import 'install_queue_provider.dart';
 
 part 'running_process_provider.g.dart';
 
+/// Rust 版本的失败退避表：1 次失败 3s，2 次失败 6s，3 次及以上 10s。
+const _refreshBackoffTable = <Duration>[
+  Duration(seconds: 3),
+  Duration(seconds: 6),
+  Duration(seconds: 10),
+];
+
 /// 运行中进程状态
 class RunningProcessState {
   const RunningProcessState({
     this.apps = const [],
-    this.isLoading = false,
+    this.isInitialLoading = false,
+    this.isRefreshing = false,
     this.error,
+    this.lastRefreshedAt,
+    this.killLoadingIds = const <String>{},
   });
 
   /// 运行中应用列表
   final List<RunningApp> apps;
 
-  /// 是否正在加载
-  final bool isLoading;
+  /// 首次加载中
+  final bool isInitialLoading;
 
-  /// 错误信息
+  /// 静默刷新中
+  final bool isRefreshing;
+
+  /// 最近一次错误
   final String? error;
+
+  /// 最近一次成功刷新时间
+  final DateTime? lastRefreshedAt;
+
+  /// 正在执行停止操作的行 id 集合
+  final Set<String> killLoadingIds;
+
+  bool get hasData => apps.isNotEmpty;
 
   /// 复制并更新
   RunningProcessState copyWith({
     List<RunningApp>? apps,
-    bool? isLoading,
+    bool? isInitialLoading,
+    bool? isRefreshing,
     String? error,
     bool clearError = false,
+    DateTime? lastRefreshedAt,
+    Set<String>? killLoadingIds,
   }) {
     return RunningProcessState(
       apps: apps ?? this.apps,
-      isLoading: isLoading ?? this.isLoading,
+      isInitialLoading: isInitialLoading ?? this.isInitialLoading,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
       error: clearError ? null : (error ?? this.error),
+      lastRefreshedAt: lastRefreshedAt ?? this.lastRefreshedAt,
+      killLoadingIds: killLoadingIds ?? this.killLoadingIds,
     );
   }
 }
 
 /// 运行中进程 Provider
 ///
-/// 管理运行中进程列表的状态，支持自动刷新
+/// 对齐 Rust 版本的行为：
+/// - 仅在“玲珑进程”标签激活且页面可见时轮询
+/// - 并发保护
+/// - 失败退避
+/// - 恢复可见时立即补刷新
+/// - 行级停止 loading
 @Riverpod(keepAlive: true)
 class RunningProcess extends _$RunningProcess {
-  /// 自动刷新定时器
   Timer? _refreshTimer;
+  bool _isFetching = false;
+  int _failureCount = 0;
+  bool _isProcessTabActive = false;
+  bool _isPageVisible = true;
 
-  /// 默认刷新间隔（3秒）
+  /// 默认刷新间隔（3 秒）
   static const Duration defaultRefreshInterval = Duration(seconds: 3);
 
   @override
   RunningProcessState build() {
-    // 组件销毁时取消定时器
     ref.onDispose(() {
       _refreshTimer?.cancel();
     });
+
     return const RunningProcessState();
   }
 
-  /// 刷新运行中进程列表
+  bool get _shouldPoll => _isProcessTabActive && _isPageVisible;
+
+  /// 当前是否正在自动刷新
+  bool get isAutoRefreshing => _refreshTimer != null;
+
+  /// 当前是否处于进程 Tab。
+  void setProcessTabActive(bool isActive) {
+    _isProcessTabActive = isActive;
+    _syncPolling(immediateRefresh: isActive);
+  }
+
+  /// 当前页面可见性变化。
+  void setPageVisible(bool isVisible) {
+    _isPageVisible = isVisible;
+    _syncPolling(immediateRefresh: isVisible);
+  }
+
+  /// 手动刷新运行中进程列表。
   Future<void> refresh() async {
-    state = state.copyWith(isLoading: true, clearError: true);
+    _cancelTimer();
+    await _fetchOnce(silent: state.hasData);
+    _scheduleNext();
+  }
+
+  Future<void> _fetchOnce({required bool silent}) async {
+    if (_isFetching) {
+      return;
+    }
+
+    _isFetching = true;
+    final hasData = state.hasData;
+
+    state = state.copyWith(
+      isInitialLoading: !silent && !hasData,
+      isRefreshing: silent || hasData,
+      clearError: true,
+    );
 
     try {
       final repo = ref.read(linglongCliRepositoryProvider);
       final apps = await repo.getRunningApps();
 
-      state = RunningProcessState(apps: apps, isLoading: false);
+      _failureCount = 0;
+      state = state.copyWith(
+        apps: apps,
+        isInitialLoading: false,
+        isRefreshing: false,
+        clearError: true,
+        lastRefreshedAt: DateTime.now(),
+      );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: presentAppError(e));
+      _failureCount += 1;
+      state = state.copyWith(
+        isInitialLoading: false,
+        isRefreshing: false,
+        error: presentAppError(e),
+      );
+    } finally {
+      _isFetching = false;
     }
   }
 
-  /// 停止应用
-  Future<bool> killApp(String appName) async {
-    try {
-      final repo = ref.read(linglongCliRepositoryProvider);
-      final result = await repo.killApp(appName);
+  void _syncPolling({required bool immediateRefresh}) {
+    if (!_shouldPoll) {
+      _cancelTimer();
+      return;
+    }
 
-      // 如果停止成功，从列表中移除
-      if (!result.contains('失败')) {
-        state = state.copyWith(
-          apps: state.apps.where((app) => app.name != appName).toList(),
-        );
-        return true;
+    _cancelTimer();
+
+    if (immediateRefresh) {
+      unawaited(_fetchOnce(silent: state.hasData).whenComplete(_scheduleNext));
+      return;
+    }
+
+    _scheduleNext();
+  }
+
+  void _scheduleNext() {
+    _cancelTimer();
+    if (!_shouldPoll) {
+      return;
+    }
+
+    final interval = _failureCount > 0
+        ? _refreshBackoffTable[
+            (_failureCount - 1).clamp(0, _refreshBackoffTable.length - 1)
+          ]
+        : defaultRefreshInterval;
+
+    _refreshTimer = Timer(interval, () async {
+      if (!_shouldPoll) {
+        _scheduleNext();
+        return;
       }
-      return false;
-    } catch (e) {
-      return false;
-    }
+
+      await _fetchOnce(silent: true);
+      _scheduleNext();
+    });
   }
 
-  /// 启动自动刷新
-  void startAutoRefresh([Duration? interval]) {
-    _refreshTimer?.cancel();
-
-    // 立即刷新一次
-    refresh();
-
-    // 设置定时器
-    _refreshTimer = Timer.periodic(
-      interval ?? defaultRefreshInterval,
-      (_) => refresh(),
-    );
-  }
-
-  /// 停止自动刷新
-  void stopAutoRefresh() {
+  void _cancelTimer() {
     _refreshTimer?.cancel();
     _refreshTimer = null;
   }
 
-  /// 切换自动刷新状态
-  void toggleAutoRefresh([Duration? interval]) {
-    if (_refreshTimer != null) {
-      stopAutoRefresh();
-    } else {
-      startAutoRefresh(interval);
+  /// 停止指定应用。
+  Future<bool> killApp(RunningApp app) async {
+    final nextLoadingIds = Set<String>.from(state.killLoadingIds)..add(app.id);
+    state = state.copyWith(killLoadingIds: nextLoadingIds);
+
+    try {
+      final repo = ref.read(linglongCliRepositoryProvider);
+      final result = await repo.killApp(app.appId);
+      final success = !result.contains('失败') && !result.contains('异常');
+
+      if (success) {
+        await _fetchOnce(silent: true);
+      }
+
+      return success;
+    } catch (_) {
+      return false;
+    } finally {
+      final updatedIds = Set<String>.from(state.killLoadingIds)..remove(app.id);
+      state = state.copyWith(killLoadingIds: updatedIds);
+      _scheduleNext();
     }
   }
-
-  /// 是否正在自动刷新
-  bool get isAutoRefreshing => _refreshTimer != null;
 }
-
-/// 便捷访问 Provider
 
 /// 运行中应用列表
 @riverpod
@@ -138,18 +236,4 @@ List<RunningApp> runningAppsList(Ref ref) {
 @riverpod
 int runningAppsCount(Ref ref) {
   return ref.watch(runningProcessProvider).apps.length;
-}
-
-/// 是否正在加载运行中应用
-@riverpod
-bool isLoadingRunningApps(Ref ref) {
-  return ref.watch(runningProcessProvider).isLoading;
-}
-
-/// 是否正在自动刷新
-@riverpod
-bool isAutoRefreshing(Ref ref) {
-  // 由于 isAutoRefreshing 是实例方法，我们需要通过另一种方式暴露
-  // 这里直接返回 false，实际使用时需要通过 notifier 访问
-  return false;
 }

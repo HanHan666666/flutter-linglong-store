@@ -56,17 +56,42 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
   @override
   Future<List<RunningApp>> getRunningApps() async {
     try {
-      final output = await CliExecutor.execute(['ps'], timeout: kQueryTimeout);
+      final psOutput = await CliExecutor.execute(['ps'], timeout: kQueryTimeout);
 
-      if (!output.success) {
-        AppLogger.warning('[LinglongCli] 获取运行中进程失败: ${output.stderr}');
-        return [];
+      if (!psOutput.success) {
+        AppLogger.warning('[LinglongCli] 获取运行中进程失败: ${psOutput.stderr}');
+        throw Exception('获取运行中进程失败: ${psOutput.stderr}');
       }
 
-      return CliOutputParser.parseRunningApps(output.stdout);
+      final runningApps = CliOutputParser.parseRunningApps(psOutput.stdout);
+      if (runningApps.isEmpty) {
+        return const [];
+      }
+
+      // 与 Rust 版本保持一致：使用 list --json --type=all 的批量详情补齐
+      // 版本、架构、渠道和来源，避免为每个进程额外执行一次外部命令。
+      final installedApps = await getInstalledApps(includeBaseService: true);
+      final installedByAppId = {
+        for (final app in installedApps) app.appId: app,
+      };
+
+      return runningApps.map((app) {
+        final installed = installedByAppId[app.appId];
+        final source = _extractSource(installed?.runtime);
+        return app.copyWith(
+          name: installed != null && installed.name.isNotEmpty
+              ? installed.name
+              : app.appId,
+          version: installed?.version ?? '',
+          arch: installed?.arch ?? '',
+          channel: installed?.channel ?? '',
+          source: source,
+          icon: installed?.icon,
+        );
+      }).toList();
     } catch (e, stack) {
       AppLogger.error('[LinglongCli] 获取运行中进程异常', e, stack);
-      return [];
+      rethrow;
     }
   }
 
@@ -431,20 +456,42 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
     try {
       AppLogger.info('[LinglongCli] 终止应用: $appName');
 
-      final output = await CliExecutor.execute([
-        'kill',
-        appName,
-      ], timeout: const Duration(seconds: 10));
+      for (var attempt = 1; attempt <= 5; attempt++) {
+        final runningApps = await getRunningApps();
+        final isStillRunning = runningApps.any((app) => app.appId == appName);
+        if (!isStillRunning) {
+          return 'Successfully stopped $appName';
+        }
 
-      if (output.success) {
-        return output.stdout;
-      } else {
-        return '终止失败: ${output.stderr}';
+        final output = await CliExecutor.execute([
+          'kill',
+          '-s',
+          '9',
+          appName,
+        ], timeout: const Duration(seconds: 10));
+
+        if (!output.success && attempt == 5) {
+          return '终止失败: ${output.stderr}';
+        }
+
+        if (attempt < 5) {
+          await Future<void>.delayed(const Duration(seconds: 1));
+        }
       }
+
+      return 'Successfully stopped $appName';
     } catch (e, stack) {
       AppLogger.error('[LinglongCli] 终止应用异常: $appName', e, stack);
       return '终止异常: $e';
     }
+  }
+
+  String _extractSource(String? runtime) {
+    if (runtime == null || runtime.isEmpty) {
+      return '';
+    }
+
+    return runtime.split(':').first;
   }
 
   @override

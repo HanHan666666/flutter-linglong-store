@@ -202,10 +202,21 @@ class InstalledAppBuilder {
 
 /// 测试数据构建器 - RunningApp
 class RunningAppBuilder {
+  String _id = 'container-1';
   String _appId = 'com.example.test';
   String _name = 'Test App';
+  String _version = '1.0.0';
+  String _arch = 'x86_64';
+  String _channel = 'main';
+  String _source = 'main';
   int _pid = 12345;
+  String _containerId = 'container-1';
   String? _icon;
+
+  RunningAppBuilder withId(String id) {
+    _id = id;
+    return this;
+  }
 
   RunningAppBuilder withAppId(String appId) {
     _appId = appId;
@@ -217,8 +228,33 @@ class RunningAppBuilder {
     return this;
   }
 
+  RunningAppBuilder withVersion(String version) {
+    _version = version;
+    return this;
+  }
+
+  RunningAppBuilder withArch(String arch) {
+    _arch = arch;
+    return this;
+  }
+
+  RunningAppBuilder withChannel(String channel) {
+    _channel = channel;
+    return this;
+  }
+
+  RunningAppBuilder withSource(String source) {
+    _source = source;
+    return this;
+  }
+
   RunningAppBuilder withPid(int pid) {
     _pid = pid;
+    return this;
+  }
+
+  RunningAppBuilder withContainerId(String containerId) {
+    _containerId = containerId;
     return this;
   }
 
@@ -229,9 +265,15 @@ class RunningAppBuilder {
 
   RunningApp build() {
     return RunningApp(
+      id: _id,
       appId: _appId,
       name: _name,
+      version: _version,
+      arch: _arch,
+      channel: _channel,
+      source: _source,
       pid: _pid,
+      containerId: _containerId,
       icon: _icon,
     );
   }

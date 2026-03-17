@@ -373,12 +373,12 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
     final rowColor = widget.isMenuSelected
         ? context.appColors.primaryLight
         : (_isHovered
-              ? theme.colorScheme.primary.withValues(alpha: 0.035)
+              ? context.appColors.surfaceContainerLow
               : Colors.transparent);
     final borderColor = widget.isMenuSelected
         ? AppColors.primary
         : (_isHovered
-              ? theme.colorScheme.primary.withValues(alpha: 0.18)
+              ? theme.colorScheme.outline
               : theme.colorScheme.outlineVariant);
 
     return Padding(
@@ -392,8 +392,7 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
           // 一次“点空白处关闭菜单”，表现就是菜单闪一下立即消失。
           onSecondaryTapUp: (details) =>
               widget.onShowMenu(details.globalPosition),
-          child: AnimatedContainer(
-            duration: AppAnimation.fast,
+          child: Container(
             height: 72,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(

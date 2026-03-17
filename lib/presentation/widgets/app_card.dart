@@ -268,6 +268,7 @@ class _AppCardState extends State<AppCard> {
           visualDensity: VisualDensity.compact,
           shape: const StadiumBorder(),
           backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
           disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.65),
           disabledForegroundColor: Colors.white,
         ),

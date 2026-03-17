@@ -373,22 +373,13 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
     final rowColor = widget.isMenuSelected
         ? context.appColors.primaryLight
         : (_isHovered
-              ? context.appColors.surfaceContainerLow
+              ? theme.colorScheme.primary.withValues(alpha: 0.035)
               : Colors.transparent);
     final borderColor = widget.isMenuSelected
         ? AppColors.primary
         : (_isHovered
               ? theme.colorScheme.primary.withValues(alpha: 0.18)
               : theme.colorScheme.outlineVariant);
-    final rowShadow = _isHovered && !widget.isMenuSelected
-        ? [
-            BoxShadow(
-              color: AppColors.modalShadow.withValues(alpha: 0.08),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ]
-        : const <BoxShadow>[];
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -409,7 +400,6 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
               color: rowColor,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: borderColor),
-              boxShadow: rowShadow,
             ),
             child: Row(
               children: [

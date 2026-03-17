@@ -236,6 +236,28 @@ class CliExecutor {
     String? processId,
     String? locale,
   }) async* {
+    yield* executeWithProgressAndProcess(
+      args,
+      processId: processId,
+      locale: locale,
+    );
+  }
+
+  /// 执行 ll-cli 命令（流式输出，带进程回调）
+  ///
+  /// 返回进度事件流，适合长时间运行的操作（如安装）
+  /// 通过 [onProcessCreated] 回调可获取进程引用，用于记录 PID 等
+  ///
+  /// [args] 命令参数
+  /// [processId] 进程标识（用于取消）
+  /// [locale] 语言环境
+  /// [onProcessCreated] 进程创建后的回调，可用于获取 PID
+  static Stream<ProgressEvent> executeWithProgressAndProcess(
+    List<String> args, {
+    String? processId,
+    String? locale,
+    void Function(Process process)? onProcessCreated,
+  }) async* {
     final commandStr = 'll-cli ${args.join(' ')}';
     AppLogger.debug('[CLI] 执行命令(流式): $commandStr');
 
@@ -247,6 +269,9 @@ class CliExecutor {
         args,
         environment: _englishLocaleEnv,
       );
+
+      // 回调通知进程已创建（可用于记录 PID）
+      onProcessCreated?.call(process);
 
       // 注册活跃进程
       if (processId != null) {
@@ -383,6 +408,59 @@ class CliExecutor {
     }
   }
 
+  /// 取消正在执行的进程（增强版，参考 Rust 版本实现）
+  ///
+  /// 1. 先通过内部机制终止 Dart 进程
+  /// 2. 使用 pkexec killall 终止 ll-cli 和 ll-package-manager 进程
+  ///
+  /// 这样可以确保安装相关的所有进程都被正确终止。
+  ///
+  /// [processId] 进程标识
+  /// [force] 是否强制终止（SIGKILL）
+  /// [killPackageMananger] 是否同时终止 ll-package-manager（默认 true）
+  static Future<bool> cancelWithSystemKill(
+    String processId, {
+    bool force = false,
+    bool killPackageMananger = true,
+  }) async {
+    AppLogger.info('[CLI] 开始系统级取消: $processId');
+
+    // 1. 先通过内部机制终止 Dart 进程
+    final internalCancelled = cancel(processId, force: force);
+
+    // 2. 使用 pkexec killall 终止 ll-cli 和 ll-package-manager
+    // 参考 Rust 版本: pkexec killall -15 ll-cli ll-package-manager
+    try {
+      final args = <String>['killall', '-15']; // SIGTERM 优雅终止
+      args.add('ll-cli');
+      if (killPackageMananger) {
+        args.add('ll-package-manager');
+      }
+
+      AppLogger.info('[CLI] 执行系统级进程终止: pkexec ${args.join(' ')}');
+
+      final result = await Process.run('pkexec', args);
+
+      if (result.exitCode == 0) {
+        AppLogger.info('[CLI] 系统级进程终止成功');
+      } else {
+        // pkexec 可能返回非 0（如无匹配进程），记录但不视为错误
+        AppLogger.debug(
+          '[CLI] 系统级进程终止返回: exitCode=${result.exitCode}, '
+          'stdout=${result.stdout}, stderr=${result.stderr}',
+        );
+      }
+    } on ProcessException catch (e) {
+      // pkexec 不存在或执行失败，记录警告但不阻断
+      AppLogger.warning('[CLI] pkexec killall 执行失败: $e');
+    } catch (e, stack) {
+      AppLogger.error('[CLI] 系统级进程终止异常', e, stack);
+    }
+
+    AppLogger.info('[CLI] 系统级取消完成: $processId (内部取消: $internalCancelled)');
+    return internalCancelled;
+  }
+
   /// 检查进程是否正在运行
   static bool isRunning(String processId) {
     return _activeProcesses.containsKey(processId);
@@ -423,7 +501,7 @@ class CliExecutor {
     // 处理取消
     if (result == -2) {
       process.kill(ProcessSignal.sigterm);
-      throw CliCancelledException('命令已取消');
+      throw const CliCancelledException('命令已取消');
     }
 
     // 等待输出收集完成

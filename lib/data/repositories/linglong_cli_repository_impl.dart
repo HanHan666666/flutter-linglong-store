@@ -99,10 +99,15 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
 
       AppLogger.info('[LinglongCli] 开始安装: ll-cli ${args.join(' ')}');
 
-      // 执行安装命令（流式）
-      await for (final event in CliExecutor.executeWithProgress(
+      // 执行安装命令（流式），并记录进程 PID
+      await for (final event in CliExecutor.executeWithProgressAndProcess(
         args,
         processId: processId,
+        onProcessCreated: (process) {
+          // 记录 PID 用于后续取消
+          _activeProcessPids[processId] = process.pid;
+          AppLogger.debug('[LinglongCli] 记录安装进程 PID: ${process.pid}');
+        },
       )) {
         // 检查是否已取消
         if (_cancelFlags[processId] == true) {
@@ -214,30 +219,23 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
   Future<void> cancelInstall(String appId) async {
     final processId = 'install_$appId';
 
-    // 设置取消标志
+    AppLogger.info('[LinglongCli] 开始取消安装: $appId');
+
+    // 1. 设置取消标志
     _cancelFlags[processId] = true;
 
-    // 通过 CliExecutor 取消进程
-    final cancelled = CliExecutor.cancel(processId, force: true);
+    // 2. 使用增强版取消方法（参考 Rust 版本实现）
+    // 通过 pkexec killall 终止 ll-cli 和 ll-package-manager
+    await CliExecutor.cancelWithSystemKill(
+      processId,
+      force: true,
+      killPackageMananger: true,
+    );
 
-    // 如果有记录的 PID，也尝试通过系统命令终止
-    final pid = _activeProcessPids[processId];
-    if (pid != null) {
-      try {
-        // 发送 SIGTERM 信号
-        Process.killPid(pid, ProcessSignal.sigterm);
+    // 3. 清理本地 PID 记录
+    _activeProcessPids.remove(processId);
 
-        // 等待一小段时间后检查进程是否还存在
-        await Future.delayed(const Duration(milliseconds: 500));
-
-        // 如果进程还在运行，强制终止
-        Process.killPid(pid, ProcessSignal.sigkill);
-      } catch (e) {
-        AppLogger.warning('[LinglongCli] 终止进程失败 (PID: $pid): $e');
-      }
-    }
-
-    AppLogger.info('[LinglongCli] 已请求取消安装: $appId (cancelled: $cancelled)');
+    AppLogger.info('[LinglongCli] 取消安装完成: $appId');
   }
 
   @override
@@ -262,10 +260,15 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
 
       AppLogger.info('[LinglongCli] 开始更新: ll-cli ${args.join(' ')}');
 
-      // 执行安装命令（流式）
-      await for (final event in CliExecutor.executeWithProgress(
+      // 执行安装命令（流式），并记录进程 PID
+      await for (final event in CliExecutor.executeWithProgressAndProcess(
         args,
         processId: processId,
+        onProcessCreated: (process) {
+          // 记录 PID 用于后续取消
+          _activeProcessPids[processId] = process.pid;
+          AppLogger.debug('[LinglongCli] 记录更新进程 PID: ${process.pid}');
+        },
       )) {
         // 检查是否已取消
         if (_cancelFlags[processId] == true) {

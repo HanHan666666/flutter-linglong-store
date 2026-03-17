@@ -99,6 +99,7 @@ class InstallQueueState {
 /// 2. 持久化存储：应用崩溃后可恢复队列
 /// 3. 状态持久：保存到 SharedPreferences
 /// 4. 错误恢复：重试机制
+/// 5. 取消状态管理：区分"用户取消"和"真正失败"
 @Riverpod(keepAlive: true)
 class InstallQueue extends _$InstallQueue {
   @override
@@ -118,6 +119,10 @@ class InstallQueue extends _$InstallQueue {
 
   /// 超时检查定时器
   Timer? _timeoutCheckTimer;
+
+  /// 用户取消标志（区分"用户取消"和"真正失败"）
+  /// 参考 Rust 版本 InstallSlot.is_cancelled
+  bool _isUserCancelled = false;
 
   /// 启动超时检查定时器
   void _startTimeoutCheck(String appId) {
@@ -143,6 +148,30 @@ class InstallQueue extends _$InstallQueue {
   void _stopTimeoutCheck() {
     _timeoutCheckTimer?.cancel();
     _timeoutCheckTimer = null;
+  }
+
+  /// 标记当前安装为用户取消
+  ///
+  /// 参考 Rust 版本 InstallSlot.mark_cancelled()
+  /// 在用户主动取消安装时调用
+  void markUserCancelled() {
+    _isUserCancelled = true;
+    AppLogger.info('[InstallQueue] 已标记用户取消');
+  }
+
+  /// 检查当前安装是否被用户取消
+  ///
+  /// 参考 Rust 版本 InstallSlot.is_cancelled()
+  /// 读取后会重置标志
+  bool isUserCancelled() {
+    final result = _isUserCancelled;
+    _isUserCancelled = false;
+    return result;
+  }
+
+  /// 重置取消标志
+  void _resetCancelFlag() {
+    _isUserCancelled = false;
   }
 
   /// 初始化（需要在应用启动时调用）
@@ -306,6 +335,9 @@ class InstallQueue extends _$InstallQueue {
   Future<void> processInstallTask(InstallTask task) async {
     final remainingQueue = state.queue.where((t) => t.id != task.id).toList();
 
+    // 重置取消标志（确保每次安装都是干净的状态）
+    _resetCancelFlag();
+
     // 更新状态为安装中
     final installingTask = task.copyWith(
       status: InstallStatus.installing,
@@ -456,6 +488,7 @@ class InstallQueue extends _$InstallQueue {
   /// 标记失败
   ///
   /// 将当前任务标记为失败，记录错误信息，继续处理下一个任务
+  /// 会自动检测是否为用户取消，并设置正确的状态
   void markFailed(
     String appId,
     String error, {
@@ -474,12 +507,16 @@ class InstallQueue extends _$InstallQueue {
     _stateMachine?.dispose();
     _stateMachine = null;
 
+    // 检查是否为用户取消（参考 Rust 版本 InstallSlot.is_cancelled）
+    final wasCancelled = isUserCancelled();
+
+    // 根据取消状态决定任务状态
     final failedTask = state.currentTask!.copyWith(
-      status: InstallStatus.failed,
-      errorMessage: error,
-      errorCode: errorCode,
-      errorDetail: errorDetail,
-      message: error,
+      status: wasCancelled ? InstallStatus.cancelled : InstallStatus.failed,
+      errorMessage: wasCancelled ? '安装已取消' : error,
+      errorCode: wasCancelled ? null : errorCode,
+      errorDetail: wasCancelled ? null : errorDetail,
+      message: wasCancelled ? '安装已取消' : error,
       finishedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
@@ -490,7 +527,12 @@ class InstallQueue extends _$InstallQueue {
     );
 
     _clearPersistedCurrentTask();
-    AppLogger.error('Task failed: $appId, error: $error, code: $errorCode');
+
+    if (wasCancelled) {
+      AppLogger.info('Task cancelled by user: $appId');
+    } else {
+      AppLogger.error('Task failed: $appId, error: $error, code: $errorCode');
+    }
 
     // 继续处理下一个任务（失败不阻塞队列）
     Future.delayed(const Duration(milliseconds: 100), () => startProcessing());
@@ -501,6 +543,9 @@ class InstallQueue extends _$InstallQueue {
   /// 取消当前正在执行的任务或从队列中移除
   Future<void> cancelTask(String appId) async {
     if (state.currentTask?.appId == appId) {
+      // 标记为用户取消（参考 Rust 版本）
+      markUserCancelled();
+
       // 停止超时检查和清理状态机
       _stopTimeoutCheck();
       _stateMachine?.dispose();

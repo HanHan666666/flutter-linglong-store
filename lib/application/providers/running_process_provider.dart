@@ -1,9 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/di/repository_provider.dart';
 import '../../core/network/api_exceptions.dart';
+import '../../domain/models/installed_app.dart';
 import '../../domain/models/running_app.dart';
+import '../../domain/repositories/app_repository.dart';
 import 'install_queue_provider.dart';
 
 part 'running_process_provider.g.dart';
@@ -14,6 +18,46 @@ const _refreshBackoffTable = <Duration>[
   Duration(seconds: 6),
   Duration(seconds: 10),
 ];
+
+@visibleForTesting
+Future<List<RunningApp>> enrichRunningAppsWithDetails({
+  required AppRepository appRepository,
+  required List<RunningApp> apps,
+}) async {
+  if (apps.isEmpty) {
+    return const [];
+  }
+
+  final installedLikeApps = apps
+      .map(
+        (app) => InstalledApp(
+          appId: app.appId,
+          name: app.name,
+          version: app.version,
+          arch: app.arch,
+          channel: app.channel,
+          icon: app.icon,
+        ),
+      )
+      .toList();
+
+  final enrichedApps = await appRepository.enrichInstalledAppsWithDetails(
+    installedLikeApps,
+  );
+  final enrichedByAppId = {for (final app in enrichedApps) app.appId: app};
+
+  return apps.map((app) {
+    final enriched = enrichedByAppId[app.appId];
+    if (enriched == null) {
+      return app;
+    }
+
+    return app.copyWith(
+      name: enriched.name.isNotEmpty ? enriched.name : app.name,
+      icon: enriched.icon ?? app.icon,
+    );
+  }).toList();
+}
 
 /// 运行中进程状态
 class RunningProcessState {
@@ -135,7 +179,12 @@ class RunningProcess extends _$RunningProcess {
 
     try {
       final repo = ref.read(linglongCliRepositoryProvider);
-      final apps = await repo.getRunningApps();
+      final rawApps = await repo.getRunningApps();
+      final appRepository = ref.read(appRepositoryProvider);
+      final apps = await enrichRunningAppsWithDetails(
+        appRepository: appRepository,
+        apps: rawApps,
+      );
 
       _failureCount = 0;
       state = state.copyWith(
@@ -180,9 +229,10 @@ class RunningProcess extends _$RunningProcess {
     }
 
     final interval = _failureCount > 0
-        ? _refreshBackoffTable[
-            (_failureCount - 1).clamp(0, _refreshBackoffTable.length - 1)
-          ]
+        ? _refreshBackoffTable[(_failureCount - 1).clamp(
+            0,
+            _refreshBackoffTable.length - 1,
+          )]
         : defaultRefreshInterval;
 
     _refreshTimer = Timer(interval, () async {

@@ -47,16 +47,23 @@ class CustomTitleBar extends StatelessWidget {
       onDoubleTap: onMaximize,
       child: Container(
         height: height,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         // decoration 需要读取 context 颜色，不能使用 const
         decoration: BoxDecoration(color: context.appColors.background),
         child: Row(
           children: [
-            // 左侧：Logo + 应用名
-            _buildLogoSection(context),
-            // 中间：搜索框
-            if (showSearch) _buildSearchSection(context),
-            const Spacer(),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: AppSpacing.lg),
+                child: Row(
+                  children: [
+                    // 左中内容保留设计稿内边距，右侧窗口控制区独立贴齐边缘。
+                    _buildLogoSection(context),
+                    if (showSearch) _buildSearchSection(context),
+                    const Spacer(),
+                  ],
+                ),
+              ),
+            ),
             // 右侧：窗口控制按钮
             _WindowControls(
               isMaximized: isMaximized,

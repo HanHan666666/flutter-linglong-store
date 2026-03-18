@@ -17,7 +17,8 @@
 | 属性 | 值 | Flutter |
 |------|-----|---------|
 | 总高度 | 3.6rem = 57.6px | `PreferredSize(preferredSize: Size.fromHeight(57.6))` |
-| 水平内边距 | 0 1rem = 0 16px | `EdgeInsets.symmetric(horizontal: 16)` |
+| 左侧内容内边距 | 0 1rem = 0 16px | 左侧 Logo/标题/搜索区保留 `16px` 起始边距 |
+| 右侧窗口控制区 | 贴齐窗口右边缘 | 不额外保留右侧容器留白，保持桌面端系统按钮观感 |
 | 背景色 | 透明（继承布局背景） | 无 |
 | 可拖拽 | 整个区域 | `GestureDetector` + `windowManager.startDragging()` |
 
@@ -52,6 +53,10 @@
 | 最小化 | Minus (线性) | 18px | `windowManager.minimize()` |
 | 最大化/还原 | Square(未最大化) / Copy(已最大化) | 18px | `windowManager.maximize()` / `windowManager.unmaximize()` |
 | 关闭 | Close (线性) | 18px | 检查安装队列 → 有任务弹确认 → `windowManager.close()` |
+
+补充约定：
+- 窗口控制按钮组独立于左侧内容区布局，整体贴齐窗口右边缘，避免关闭按钮右侧出现额外留白。
+- 单个按钮点击热区保持完整矩形，不为了贴边而缩小 hover/点击范围。
 
 ```dart
 // Flutter 实现参考

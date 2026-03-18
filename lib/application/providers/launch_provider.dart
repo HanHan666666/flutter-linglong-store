@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging/app_logger.dart';
 import 'global_provider.dart';
@@ -106,7 +105,7 @@ class LaunchState {
     if (hasError) return progress;
 
     double total = 0.0;
-    final steps = LaunchStep.values;
+    const steps = LaunchStep.values;
 
     for (int i = 0; i < steps.length; i++) {
       if (steps[i] == currentStep) {
@@ -157,9 +156,6 @@ class LaunchSequence extends _$LaunchSequence {
   LaunchState build() {
     return const LaunchState();
   }
-
-  /// 初始化
-  Future<void> init(SharedPreferences prefs) async {}
 
   /// 环境检测状态
   LinglongEnvCheckState _envCheckState = LinglongEnvCheckState.initial;

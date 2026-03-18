@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging/app_logger.dart';
+import 'install_queue_provider.dart';
 
 part 'global_provider.freezed.dart';
 part 'global_provider.g.dart';
@@ -168,43 +169,57 @@ class GlobalApp extends _$GlobalApp {
 
   @override
   GlobalAppState build() {
-    return const GlobalAppState();
+    _prefs = _readSharedPreferences();
+    return _restorePersistedSettings();
   }
 
-  /// 初始化（需要在应用启动时调用）
-  Future<void> init(SharedPreferences prefs) async {
-    _prefs = prefs;
-    await _loadPersistedSettings();
-    state = state.copyWith(isInitialized: true);
-  }
-
-  /// 加载持久化设置
-  Future<void> _loadPersistedSettings() async {
+  /// 从 ProviderScope 注入的 SharedPreferences 中恢复首帧配置。
+  ///
+  /// 这里直接在 build 阶段同步读取，确保 MaterialApp 首帧就使用用户上次保存
+  /// 的语言和主题，而不是先展示默认值再切换。
+  GlobalAppState _restorePersistedSettings() {
     try {
+      var restoredState = const GlobalAppState(isInitialized: true);
+
       // 加载语言设置
       final languageCode = _prefs.getString(_kLanguageKey);
       if (languageCode != null) {
-        state = state.copyWith(locale: Locale(languageCode));
+        restoredState = restoredState.copyWith(locale: Locale(languageCode));
       }
 
       // 加载主题模式
       final themeModeIndex = _prefs.getInt(_kThemeModeKey);
-      if (themeModeIndex != null) {
-        state = state.copyWith(themeMode: ThemeMode.values[themeModeIndex]);
+      if (themeModeIndex != null && themeModeIndex < ThemeMode.values.length) {
+        restoredState = restoredState.copyWith(
+          themeMode: ThemeMode.values[themeModeIndex],
+        );
       }
 
       // 加载用户偏好
       final prefsJson = _prefs.getString(_kUserPreferencesKey);
       if (prefsJson != null) {
-        final prefs = UserPreferences.fromJson(
+        final userPreferences = UserPreferences.fromJson(
           jsonDecode(prefsJson) as Map<String, dynamic>,
         );
-        state = state.copyWith(userPreferences: prefs);
+        restoredState = restoredState.copyWith(
+          userPreferences: userPreferences,
+        );
       }
 
       AppLogger.info('Loaded persisted settings');
+      return restoredState;
     } catch (e, s) {
       AppLogger.error('Failed to load persisted settings', e, s);
+      return const GlobalAppState(isInitialized: true);
+    }
+  }
+
+  SharedPreferences _readSharedPreferences() {
+    try {
+      return ref.read(sharedPreferencesProvider);
+    } catch (e, s) {
+      AppLogger.error('SharedPreferences is not available for GlobalApp', e, s);
+      rethrow;
     }
   }
 

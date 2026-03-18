@@ -7,6 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging/app_logger.dart';
+import 'install_queue_provider.dart';
 
 part 'setting_provider.freezed.dart';
 part 'setting_provider.g.dart';
@@ -42,40 +43,49 @@ class Setting extends _$Setting {
 
   @override
   SettingState build() {
-    return const SettingState();
+    _prefs = _readSharedPreferences();
+    return _restorePersistedSettings();
   }
 
-  /// 初始化设置
-  Future<void> init(SharedPreferences prefs) async {
-    _prefs = prefs;
-    await _loadSettings();
-    await _calculateCacheSize();
-  }
-
-  /// 加载设置
-  Future<void> _loadSettings() async {
+  /// 首帧同步恢复设置，避免启动页出现语言和主题闪烁。
+  SettingState _restorePersistedSettings() {
     try {
+      var restoredState = const SettingState();
+
       // 加载语言设置
       final languageCode = _prefs.getString('linglong-store-language');
       if (languageCode != null) {
-        state = state.copyWith(locale: Locale(languageCode));
+        restoredState = restoredState.copyWith(locale: Locale(languageCode));
       }
 
       // 加载主题模式
       final themeModeIndex = _prefs.getInt('linglong-store-theme-mode');
       if (themeModeIndex != null && themeModeIndex < ThemeMode.values.length) {
-        state = state.copyWith(themeMode: ThemeMode.values[themeModeIndex]);
+        restoredState = restoredState.copyWith(
+          themeMode: ThemeMode.values[themeModeIndex],
+        );
       }
 
       // 加载仓库名称
       final repoName = _prefs.getString('repo_name');
       if (repoName != null && repoName.isNotEmpty) {
-        state = state.copyWith(repoName: repoName);
+        restoredState = restoredState.copyWith(repoName: repoName);
       }
 
       AppLogger.info('Settings loaded');
+      return restoredState;
     } catch (e, s) {
       AppLogger.error('Failed to load settings', e, s);
+      return const SettingState();
+    }
+  }
+
+  SharedPreferences _readSharedPreferences() {
+    try {
+      return ref.read(sharedPreferencesProvider);
+    } catch (e, s) {
+      AppLogger.error('SharedPreferences is not available for Setting', e, s);
+      rethrow;
     }
   }
 
@@ -111,7 +121,10 @@ class Setting extends _$Setting {
   Future<int> _calculateDirectorySize(Directory dir) async {
     int size = 0;
     try {
-      await for (final entity in dir.list(recursive: true, followLinks: false)) {
+      await for (final entity in dir.list(
+        recursive: true,
+        followLinks: false,
+      )) {
         if (entity is File) {
           size += await entity.length();
         }
@@ -206,19 +219,10 @@ String formatBytes(int bytes) {
 }
 
 /// 支持的语言列表
-const List<Locale> supportedLocales = [
-  Locale('zh'),
-  Locale('en'),
-];
+const List<Locale> supportedLocales = [Locale('zh'), Locale('en')];
 
 /// 语言名称映射
-const Map<String, String> languageNames = {
-  'zh': '中文',
-  'en': 'English',
-};
+const Map<String, String> languageNames = {'zh': '中文', 'en': 'English'};
 
 /// 默认仓库列表
-const List<String> defaultRepos = [
-  'repo:linglong',
-  'repo:deepin',
-];
+const List<String> defaultRepos = ['repo:linglong', 'repo:deepin'];

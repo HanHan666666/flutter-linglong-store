@@ -43,6 +43,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     } catch (e) {
       notifier.setAppVersion(AppConfig.appVersion);
     }
+
+    // 缓存体积属于非启动关键路径，进入设置页后再异步刷新即可。
+    await notifier.refreshCacheSize();
   }
 
   @override
@@ -94,9 +97,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -244,8 +247,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             Text(
               '当前仓库源',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 8),
             Row(
@@ -267,8 +270,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             Text(
               '可选仓库',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -284,8 +287,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                       _updateRepo(repo);
                     }
                   },
-                  selectedColor:
-                      Theme.of(context).colorScheme.primaryContainer,
+                  selectedColor: Theme.of(context).colorScheme.primaryContainer,
                   checkmarkColor: Theme.of(context).colorScheme.primary,
                 );
               }).toList(),
@@ -312,7 +314,10 @@ class _SettingPageState extends ConsumerState<SettingPage> {
   }
 
   /// 显示仓库编辑对话框
-  Future<void> _showRepoEditDialog(BuildContext context, SettingState state) async {
+  Future<void> _showRepoEditDialog(
+    BuildContext context,
+    SettingState state,
+  ) async {
     _repoController.text = state.repoName;
 
     final result = await showDialog<String>(
@@ -374,14 +379,12 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '缓存大小',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
+                    Text('缓存大小', style: Theme.of(context).textTheme.bodyMedium),
                     const SizedBox(height: 4),
                     Text(
                       cacheSizeText,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).colorScheme.primary,
                           ),
@@ -401,8 +404,12 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                       : const Icon(Icons.cleaning_services, size: 18),
                   label: Text(state.isClearingCache ? '清除中...' : '清除缓存'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                    foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.errorContainer,
+                    foregroundColor: Theme.of(
+                      context,
+                    ).colorScheme.onErrorContainer,
                   ),
                 ),
               ],
@@ -411,8 +418,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             Text(
               '清除缓存可以释放存储空间，但可能会导致应用需要重新加载数据。',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -434,16 +441,16 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
     final success = await ref.read(settingProvider.notifier).clearCache();
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success ? '缓存已清除' : '清除缓存失败'),
-          backgroundColor: success
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.error,
-        ),
-      );
-    }
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success ? '缓存已清除' : '清除缓存失败'),
+        backgroundColor: success
+            ? Theme.of(context).colorScheme.primary
+            : Theme.of(context).colorScheme.error,
+      ),
+    );
   }
 
   /// 构建关于部分
@@ -486,8 +493,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   Text(
                     AppConfig.appName,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -504,11 +511,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             _buildDivider(context),
 
             // 开发者信息
-            _buildInfoRow(
-              context,
-              label: '开发者',
-              value: '玲珑社区',
-            ),
+            _buildInfoRow(context, label: '开发者', value: '玲珑社区'),
             _buildDivider(context),
 
             // 系统架构
@@ -573,14 +576,14 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           Text(
             value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
           ),
         ],
       ),

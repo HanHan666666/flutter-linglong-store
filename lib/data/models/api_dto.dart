@@ -61,6 +61,12 @@ Object? _readDownloadCount(Map json, String _) =>
 Object? _readPackageSize(Map json, String _) =>
     _readFirstNonNull(json, ['size', 'packageSize']);
 
+Object? _readVersionReleaseTime(Map json, String _) =>
+    _readFirstNonNull(json, ['createTime', 'updateTime']);
+
+Object? _readVersionInstallCount(Map json, String _) =>
+    _toIntValue(_readFirstNonNull(json, ['installCount']));
+
 Object? _readBannerId(Map json, String _) =>
     _readFirstNonNull(json, ['appId', 'carouselId']);
 
@@ -429,6 +435,10 @@ sealed class CarouselListResponse with _$CarouselListResponse {
 sealed class AppVersionListRequest with _$AppVersionListRequest {
   const factory AppVersionListRequest({
     @JsonKey(name: 'appId') required String appId,
+    @JsonKey(name: 'repoName')
+    @Default(AppConfig.defaultStoreRepoName)
+    String repoName,
+    String? arch,
     @JsonKey(name: 'pageNo') @Default(1) int pageNo,
     @JsonKey(name: 'pageSize') @Default(20) int pageSize,
   }) = _AppVersionListRequest;
@@ -448,7 +458,7 @@ sealed class AppVersionDTO with _$AppVersionDTO {
     @JsonKey(name: 'version') required String versionNo,
     @JsonKey(name: 'zhName') String? versionName,
     String? description,
-    @JsonKey(name: 'updateTime') String? releaseTime,
+    @JsonKey(readValue: _readVersionReleaseTime) String? releaseTime,
     @JsonKey(name: 'size') String? packageSize,
     String? appId,
     String? icon,
@@ -456,6 +466,8 @@ sealed class AppVersionDTO with _$AppVersionDTO {
     String? module,
     String? channel,
     String? arch,
+    @JsonKey(name: 'repoName') String? repoName,
+    @JsonKey(readValue: _readVersionInstallCount) int? installCount,
   }) = _AppVersionDTO;
 
   factory AppVersionDTO.fromJson(Map<String, dynamic> json) =>

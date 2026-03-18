@@ -121,6 +121,8 @@ class MockAppRepository extends _i1.Mock implements _i3.AppRepository {
   @override
   _i4.Future<List<_i6.AppVersionDTO>> getVersions(
     String? appId, {
+    String? repoName,
+    String? arch,
     int? page = 1,
     int? pageSize = 20,
   }) =>
@@ -128,7 +130,12 @@ class MockAppRepository extends _i1.Mock implements _i3.AppRepository {
             Invocation.method(
               #getVersions,
               [appId],
-              {#page: page, #pageSize: pageSize},
+              {
+                #repoName: repoName,
+                #arch: arch,
+                #page: page,
+                #pageSize: pageSize,
+              },
             ),
             returnValue: _i4.Future<List<_i6.AppVersionDTO>>.value(
               <_i6.AppVersionDTO>[],

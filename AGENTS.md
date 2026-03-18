@@ -164,3 +164,4 @@ time ./build/package-deb.sh
 - 2026-03-18：缓存系统必须由 `CacheService.init()` 统一初始化，并在 `main()` 中于 `runApp()` 前执行；`CacheService.init()` 不仅要 `Hive.initFlutter()`，还要预先打开 `cache` box，避免业务侧同步 `Hive.box('cache')` 读取时崩溃。
 - 2026-03-18：启动流程只保留一个正式 `LaunchPage/LaunchSequence`；`MaterialApp` 首帧依赖的语言、主题和基础设置必须在 Provider `build()` 阶段同步从 `SharedPreferences` 恢复，禁止再增加路由外的“正在初始化”占位页。
 - 2026-03-18：修改 Riverpod 注解或 Mockito `@GenerateMocks` 后，必须同步重新执行代码生成并核对生成产物已更新；不要出现源码已改、`*.g.dart`/`*.mocks.dart` 仍保留旧生命周期或旧接口的假修复。
+- 2026-03-18：应用详情页版本列表必须统一走 `AppRepository.getVersions()`，并显式传递 `appId + repoName + arch`；仓储层负责“同版本优先保留 binary + 语义版本倒序排序”，页面层只消费规范化结果。版本列表失败时只能显示轻量错误态与重试入口，不能伪装成空列表。

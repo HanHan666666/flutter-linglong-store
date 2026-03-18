@@ -169,6 +169,8 @@ class AppRepositoryImpl implements AppRepository {
   @override
   Future<List<AppVersionDTO>> getVersions(
     String appId, {
+    String? repoName,
+    String? arch,
     int page = 1,
     int pageSize = 20,
   }) async {
@@ -176,11 +178,17 @@ class AppRepositoryImpl implements AppRepository {
       AppLogger.info('获取应用版本列表: $appId');
 
       final response = await _apiService.getSearchAppVersionList(
-        AppVersionListRequest(appId: appId, pageNo: page, pageSize: pageSize),
+        AppVersionListRequest(
+          appId: appId,
+          repoName: repoName ?? AppConfig.defaultStoreRepoName,
+          arch: arch ?? _currentArch,
+          pageNo: page,
+          pageSize: pageSize,
+        ),
       );
 
-      // 后端返回的是直接的数组，不是分页对象
-      return response.data.data;
+      // 统一在仓储层对齐 Rust 版：同版本优先保留 binary，再做语义版本倒序排序。
+      return _normalizeVersionList(response.data.data, fallbackAppId: appId);
     } catch (e, s) {
       AppLogger.error('获取应用版本列表失败: $appId', e, s);
       rethrow;
@@ -359,5 +367,69 @@ class AppRepositoryImpl implements AppRepository {
       AppLogger.warning('解析应用详情缓存失败: $cacheKey', e, s);
       return null;
     }
+  }
+
+  List<AppVersionDTO> _normalizeVersionList(
+    List<AppVersionDTO> versions, {
+    required String fallbackAppId,
+  }) {
+    final normalized = <String, AppVersionDTO>{};
+
+    for (final version in versions) {
+      final versionKey =
+          '${version.appId ?? fallbackAppId}|${version.versionNo}';
+      final existing = normalized[versionKey];
+
+      // 同版本存在 runtime/binary 多条记录时，统一保留 binary 版本。
+      if (existing == null ||
+          (version.module == 'binary' && existing.module != 'binary')) {
+        normalized[versionKey] = version;
+      }
+    }
+
+    final result = normalized.values.toList();
+    result.sort(
+      (left, right) => _compareVersions(right.versionNo, left.versionNo),
+    );
+    return result;
+  }
+
+  int _compareVersions(String left, String right) {
+    final leftParts = _splitVersionParts(left);
+    final rightParts = _splitVersionParts(right);
+    final maxLength = leftParts.length > rightParts.length
+        ? leftParts.length
+        : rightParts.length;
+
+    for (var index = 0; index < maxLength; index++) {
+      final leftPart = index < leftParts.length ? leftParts[index] : 0;
+      final rightPart = index < rightParts.length ? rightParts[index] : 0;
+
+      if (leftPart is int && rightPart is int) {
+        if (leftPart != rightPart) {
+          return leftPart.compareTo(rightPart);
+        }
+        continue;
+      }
+
+      final leftValue = leftPart.toString();
+      final rightValue = rightPart.toString();
+      if (leftValue != rightValue) {
+        return leftValue.compareTo(rightValue);
+      }
+    }
+
+    return 0;
+  }
+
+  List<Object> _splitVersionParts(String version) {
+    return version.split(RegExp(r'[._-]')).map((part) {
+      if (part.isEmpty) {
+        return 0;
+      }
+
+      final numericValue = int.tryParse(part);
+      return numericValue ?? part;
+    }).toList();
   }
 }

@@ -363,24 +363,10 @@ void main() {
     });
 
     group('getVersions', () {
-      test('should return list of versions', () async {
+      test('should request versions with explicit repoName and arch', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          VersionListResponse(
-            code: 200,
-            data: [
-              AppVersionDTO(
-                versionId: 'v1',
-                versionNo: '1.0.0',
-                description: 'Initial release',
-              ),
-              AppVersionDTO(
-                versionId: 'v2',
-                versionNo: '2.0.0',
-                description: 'Major update',
-              ),
-            ],
-          ),
+          VersionListResponse(code: 200, data: const []),
           Response(
             requestOptions: RequestOptions(
               path: '/visit/getSearchAppVersionList',
@@ -393,13 +379,79 @@ void main() {
         ).thenAnswer((_) async => mockResponse);
 
         // Act
-        final result = await repository.getVersions('com.example.app');
+        await repository.getVersions(
+          'com.example.app',
+          repoName: 'stable',
+          arch: 'aarch64',
+        );
 
         // Assert
-        expect(result.length, equals(2));
-        expect(result[0].versionNo, equals('1.0.0'));
-        expect(result[1].versionNo, equals('2.0.0'));
+        final captured =
+            verify(
+                  mockApiService.getSearchAppVersionList(captureAny),
+                ).captured.single
+                as AppVersionListRequest;
+        expect(captured.appId, equals('com.example.app'));
+        expect(captured.repoName, equals('stable'));
+        expect(captured.arch, equals('aarch64'));
       });
+
+      test(
+        'should normalize duplicate modules and sort versions descending',
+        () async {
+          // Arrange
+          final mockResponse = HttpResponse(
+            VersionListResponse(
+              code: 200,
+              data: const [
+                AppVersionDTO(
+                  versionId: 'runtime-2',
+                  appId: 'com.example.app',
+                  versionNo: '1.9.0',
+                  module: 'runtime',
+                ),
+                AppVersionDTO(
+                  versionId: 'binary-2',
+                  appId: 'com.example.app',
+                  versionNo: '1.9.0',
+                  module: 'binary',
+                ),
+                AppVersionDTO(
+                  versionId: 'binary-3',
+                  appId: 'com.example.app',
+                  versionNo: '2.0.0',
+                  module: 'binary',
+                ),
+                AppVersionDTO(
+                  versionId: 'binary-1',
+                  appId: 'com.example.app',
+                  versionNo: '1.0.0',
+                  module: 'binary',
+                ),
+              ],
+            ),
+            Response(
+              requestOptions: RequestOptions(
+                path: '/visit/getSearchAppVersionList',
+              ),
+            ),
+          );
+
+          when(
+            mockApiService.getSearchAppVersionList(any),
+          ).thenAnswer((_) async => mockResponse);
+
+          // Act
+          final result = await repository.getVersions('com.example.app');
+
+          // Assert
+          expect(result.length, equals(3));
+          expect(result[0].versionNo, equals('2.0.0'));
+          expect(result[1].versionNo, equals('1.9.0'));
+          expect(result[1].module, equals('binary'));
+          expect(result[2].versionNo, equals('1.0.0'));
+        },
+      );
 
       test('should return empty list when no versions', () async {
         // Arrange

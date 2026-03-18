@@ -29,15 +29,14 @@ abstract class AppRepository {
   /// 获取应用历史版本列表
   Future<List<AppVersionDTO>> getVersions(
     String appId, {
+    String? repoName,
+    String? arch,
     int page = 1,
     int pageSize = 20,
   });
 
   /// 获取排行榜
-  Future<List<InstalledApp>> getRanking({
-    String type = 'new',
-    int limit = 100,
-  });
+  Future<List<InstalledApp>> getRanking({String type = 'new', int limit = 100});
 
   /// 批量获取应用详情，用于富化已安装应用列表
   ///

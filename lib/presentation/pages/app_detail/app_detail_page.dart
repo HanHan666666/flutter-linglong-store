@@ -24,6 +24,7 @@ class AppDetailState {
     this.versions = const [],
     this.isLoading = false,
     this.isLoadingVersions = false,
+    this.versionsError,
     this.error,
     this.isDescriptionExpanded = false,
   });
@@ -34,6 +35,7 @@ class AppDetailState {
   final List<AppVersionDTO> versions;
   final bool isLoading;
   final bool isLoadingVersions;
+  final String? versionsError;
   final String? error;
   final bool isDescriptionExpanded;
 
@@ -48,9 +50,11 @@ class AppDetailState {
     List<AppVersionDTO>? versions,
     bool? isLoading,
     bool? isLoadingVersions,
+    String? versionsError,
     String? error,
     bool? isDescriptionExpanded,
     bool clearError = false,
+    bool clearVersionsError = false,
     bool clearAppDetail = false,
   }) {
     return AppDetailState(
@@ -60,6 +64,9 @@ class AppDetailState {
       versions: versions ?? this.versions,
       isLoading: isLoading ?? this.isLoading,
       isLoadingVersions: isLoadingVersions ?? this.isLoadingVersions,
+      versionsError: clearVersionsError
+          ? null
+          : (versionsError ?? this.versionsError),
       error: clearError ? null : (error ?? this.error),
       isDescriptionExpanded:
           isDescriptionExpanded ?? this.isDescriptionExpanded,
@@ -102,6 +109,7 @@ class AppDetail extends _$AppDetail {
         appDetail: appDetail,
         screenshots: appDetail.screenshotList ?? [],
         isLoading: false,
+        clearVersionsError: true,
       );
 
       // 异步加载版本列表
@@ -113,23 +121,40 @@ class AppDetail extends _$AppDetail {
 
   /// 加载版本历史列表
   Future<void> _loadVersions() async {
-    state = state.copyWith(isLoadingVersions: true);
+    state = state.copyWith(isLoadingVersions: true, clearVersionsError: true);
 
     try {
       final repository = ref.read(appRepositoryProvider);
-      final versions = await repository.getVersions(appId);
+      final versions = await repository.getVersions(
+        appId,
+        // 版本列表接口必须沿用详情页当前应用的仓库与架构，避免后端默认值查到错误仓库。
+        repoName: state.appDetail?.repoName ?? state.app?.repoName,
+        arch: state.appDetail?.arch ?? state.app?.arch,
+      );
 
-      state = state.copyWith(versions: versions, isLoadingVersions: false);
+      state = state.copyWith(
+        versions: versions,
+        isLoadingVersions: false,
+        clearVersionsError: true,
+      );
     } catch (e) {
-      // 版本列表加载失败不阻塞页面显示，但记录错误信息
+      // 版本列表失败不阻塞详情页主体，但要保留轻量错误态供用户重试和排查。
       AppLogger.warning('[AppDetail] 版本历史加载失败: $appId - $e');
-      state = state.copyWith(isLoadingVersions: false);
+      state = state.copyWith(
+        isLoadingVersions: false,
+        versionsError: e.toString(),
+      );
     }
   }
 
   /// 刷新详情
   Future<void> refresh() async {
     await loadDetail(null);
+  }
+
+  /// 仅重试版本列表，避免因为局部失败重置整个详情页主体。
+  Future<void> retryVersions() async {
+    await _loadVersions();
   }
 
   /// 切换描述展开状态
@@ -169,6 +194,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     final detailState = ref.watch(appDetailProvider(widget.appId));
     final installState = ref.watch(installQueueProvider);
     final installTask = installState.getAppInstallStatus(widget.appId);
+    final installedVersions = ref
+        .watch(installedAppsProvider)
+        .apps
+        .where((app) => app.appId == widget.appId)
+        .map((app) => app.version)
+        .toSet();
 
     return Scaffold(
       appBar: AppBar(
@@ -184,7 +215,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           ),
         ],
       ),
-      body: _buildBody(context, detailState, installTask),
+      body: _buildBody(context, detailState, installTask, installedVersions),
     );
   }
 
@@ -192,6 +223,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     BuildContext context,
     AppDetailState detailState,
     InstallTask? installTask,
+    Set<String> installedVersions,
   ) {
     // 加载中
     if (detailState.isLoading && detailState.app == null) {
@@ -235,7 +267,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           const Divider(height: 1),
 
           // 版本列表
-          _buildVersionList(context, detailState, installTask),
+          _buildVersionList(
+            context,
+            detailState,
+            installTask,
+            installedVersions,
+          ),
 
           const SizedBox(height: 24),
         ],
@@ -514,9 +551,11 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     BuildContext context,
     AppDetailState detailState,
     InstallTask? currentInstallTask,
+    Set<String> installedVersions,
   ) {
     final versions = detailState.versions;
     final isLoading = detailState.isLoadingVersions;
+    final versionsError = detailState.versionsError;
     final currentApp = detailState.app;
 
     return Padding(
@@ -543,6 +582,37 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             ],
           ),
           const SizedBox(height: 12),
+          if (versionsError != null && versions.isEmpty)
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '版本列表加载失败，请重试',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    ref
+                        .read(appDetailProvider(widget.appId).notifier)
+                        .retryVersions();
+                  },
+                  child: const Text('重试'),
+                ),
+              ],
+            )
+          else if (versionsError != null)
+            Text(
+              '版本列表更新失败，显示最近一次结果',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
+            )
+          else
+            const SizedBox.shrink(),
+          if (versionsError != null) const SizedBox(height: 12),
           if (versions.isEmpty && !isLoading)
             const Text('暂无版本历史')
           else
@@ -552,23 +622,28 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               itemCount: versions.length,
               itemBuilder: (context, index) {
                 final version = versions[index];
-                final isCurrentVersion =
-                    version.versionNo == currentApp?.version;
+                final isInstalledVersion = installedVersions.contains(
+                  version.versionNo,
+                );
+                final subtitleParts = [
+                  version.releaseTime,
+                  version.packageSize,
+                ].whereType<String>().where((item) => item.isNotEmpty).toList();
 
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(
-                    isCurrentVersion ? Icons.check_circle : Icons.history,
-                    color: isCurrentVersion
+                    isInstalledVersion ? Icons.check_circle : Icons.history,
+                    color: isInstalledVersion
                         ? Theme.of(context).colorScheme.primary
                         : Colors.grey,
                   ),
                   title: Text('v${version.versionNo}'),
                   subtitle: Text(
-                    '${version.releaseTime ?? ''} · ${version.packageSize ?? ''}',
+                    subtitleParts.isEmpty ? '--' : subtitleParts.join(' · '),
                   ),
-                  trailing: isCurrentVersion
-                      ? const Text('当前版本')
+                  trailing: isInstalledVersion
+                      ? const Text('已安装')
                       : TextButton(
                           onPressed: () =>
                               _installVersion(currentApp!, version.versionNo),

@@ -1,12 +1,7 @@
-/// 全局 Provider 定义汇总
-///
-/// 此文件导出所有应用级别的 Provider，
-/// 便于在需要时统一导入。
-///
-/// 使用方式：
-/// ```dart
-/// import 'package:linglong_store/core/di/providers.dart';
-/// ```
+// 全局 Provider 定义汇总
+//
+// 此文件导出所有应用级别的 Provider，便于在需要时统一导入。
+// 使用方式：import 'package:linglong_store/core/di/providers.dart';
 
 // ==================== 基础设施 Provider ====================
 

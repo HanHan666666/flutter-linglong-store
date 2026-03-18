@@ -4,13 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../application/providers/app_collection_sync_provider.dart';
-import '../../application/providers/global_provider.dart';
-import '../../application/providers/install_queue_provider.dart';
 import '../../application/providers/menu_badge_provider.dart';
 import '../../core/config/theme.dart';
+import '../../core/di/providers.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/platform/window_service.dart';
-import '../../core/di/providers.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_task.dart';
 import 'sidebar.dart';

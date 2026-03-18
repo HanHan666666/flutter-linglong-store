@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/providers/install_queue_provider.dart';
+import '../../application/providers/network_speed_provider.dart';
 import '../../core/config/theme.dart';
+import '../../core/di/providers.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_task.dart';
 
@@ -150,9 +152,12 @@ class DownloadManagerDialog extends ConsumerWidget {
     WidgetRef ref,
     InstallTask task,
   ) {
+    final downloadSpeed = ref.watch(networkSpeedProvider).formatted;
+
     return _TaskCard(
       task: task,
       showProgress: true,
+      downloadSpeed: downloadSpeed,
       onCancel: () async {
         await ref.read(installQueueProvider.notifier).cancelTask(task.appId);
       },
@@ -181,6 +186,11 @@ class DownloadManagerDialog extends ConsumerWidget {
   ) {
     return _TaskCard(
       task: task,
+      onOpen: task.status == InstallStatus.success
+          ? () async {
+              await ref.read(linglongCliRepositoryProvider).runApp(task.appId);
+            }
+          : null,
       onRetry: task.isFailed
           ? () {
               ref.read(installQueueProvider.notifier).retryFailed(task.appId);
@@ -198,14 +208,18 @@ class _TaskCard extends StatelessWidget {
   const _TaskCard({
     required this.task,
     this.showProgress = false,
+    this.downloadSpeed,
     this.onCancel,
+    this.onOpen,
     this.onRetry,
     this.onRemove,
   });
 
   final InstallTask task;
   final bool showProgress;
+  final String? downloadSpeed;
   final VoidCallback? onCancel;
+  final VoidCallback? onOpen;
   final VoidCallback? onRetry;
   final VoidCallback? onRemove;
 
@@ -297,6 +311,10 @@ class _TaskCard extends StatelessWidget {
 
   /// 构建进度条
   Widget _buildProgressBar(BuildContext context) {
+    final progressText = '${task.progress.toStringAsFixed(0)}%';
+    final message = task.message?.trim();
+    final speed = downloadSpeed?.trim();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -307,7 +325,13 @@ class _TaskCard extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          task.message ?? '${task.progress.toStringAsFixed(0)}%',
+          [
+            if (message != null && message.isNotEmpty) message,
+            if (speed != null && speed.isNotEmpty) speed,
+            if ((message == null || message.isEmpty) &&
+                (speed == null || speed.isEmpty))
+              progressText,
+          ].join(' · '),
           style: AppTextStyles.caption,
         ),
       ],
@@ -336,6 +360,25 @@ class _TaskCard extends StatelessWidget {
             icon: const Icon(Icons.refresh, size: 18),
             onPressed: onRetry,
             tooltip: '重试',
+          ),
+          if (onRemove != null)
+            IconButton(
+              icon: const Icon(Icons.close, size: 18),
+              onPressed: onRemove,
+              tooltip: '移除',
+            ),
+        ],
+      );
+    }
+
+    if (task.status == InstallStatus.success && onOpen != null) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.open_in_new, size: 18),
+            onPressed: onOpen,
+            tooltip: '打开',
           ),
           if (onRemove != null)
             IconButton(

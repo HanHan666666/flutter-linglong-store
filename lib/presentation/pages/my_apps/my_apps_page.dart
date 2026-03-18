@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../application/providers/application_card_state_provider.dart';
-import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/installed_apps_provider.dart';
 import '../../../core/di/providers.dart'
     show linglongCliRepositoryProvider, analyticsRepositoryProvider;

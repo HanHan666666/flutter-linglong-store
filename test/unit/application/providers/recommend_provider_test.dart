@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:linglong_store/application/providers/recommend_provider.dart';
 import 'package:linglong_store/domain/models/recommend_models.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 

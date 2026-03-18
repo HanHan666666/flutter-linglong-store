@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../application/providers/sidebar_config_provider.dart';
 import '../../core/config/routes.dart';
 import '../../core/config/theme.dart';
 import 'download_manager_dialog.dart';
@@ -29,9 +31,9 @@ enum SidebarMenuItem {
 
 /// 侧边栏
 ///
-/// 包含：导航菜单 + 动态菜单区域 + 底部图标
+/// 包含：静态导航菜单 + 服务端动态菜单区域 + 底部图标
 /// 支持响应式折叠（≤768px）
-class Sidebar extends StatelessWidget {
+class Sidebar extends ConsumerWidget {
   const Sidebar({required this.currentPath, this.updateCount = 0, super.key});
 
   /// 当前路由路径
@@ -47,9 +49,15 @@ class Sidebar extends StatelessWidget {
   static const double collapsedWidth = 56.0;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isCollapsed = screenWidth <= 768;
+
+    // 读取服务端下发的动态菜单（失败时默认返回空列表，不影响静态菜单）
+    final dynamicMenus = ref.watch(sidebarConfigProvider).maybeWhen(
+      data: (menus) => menus,
+      orElse: () => [],
+    );
 
     // decoration 需要读取 context 颜色，不能使用 const
     return AnimatedContainer(
@@ -64,6 +72,7 @@ class Sidebar extends StatelessWidget {
               currentPath: currentPath,
               updateCount: updateCount,
               isCollapsed: isCollapsed,
+              dynamicMenus: dynamicMenus,
             ),
           ),
           // 底部图标区域
@@ -80,11 +89,26 @@ class _MenuSection extends StatelessWidget {
     required this.currentPath,
     required this.updateCount,
     required this.isCollapsed,
+    required this.dynamicMenus,
   });
 
   final String currentPath;
   final int updateCount;
   final bool isCollapsed;
+  /// 服务端下发的动态菜单列表
+  final List dynamicMenus;
+
+  /// 将9秤宽的分隔带（在静态菜单和动态菜单之间）
+  Widget _buildDivider(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(
+      horizontal: AppSpacing.sm,
+      vertical: AppSpacing.xs,
+    ),
+    child: Divider(
+      height: 1,
+      color: context.appColors.border.withAlpha(80),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +122,17 @@ class _MenuSection extends StatelessWidget {
               item: item,
               isSelected: currentPath == item.route,
               updateCount: item == SidebarMenuItem.update ? updateCount : 0,
+              isCollapsed: isCollapsed,
+            );
+          }),
+          // 动态菜单分隔线（有动态菜单时才显示）
+          if (dynamicMenus.isNotEmpty) _buildDivider(context),
+          // 服务端下发动态菜单项
+          ...dynamicMenus.map((menu) {
+            final route = '/custom_category/${menu.menuCode}';
+            return _DynamicMenuItemTile(
+              menu: menu,
+              isSelected: currentPath == route,
               isCollapsed: isCollapsed,
             );
           }),
@@ -310,6 +345,112 @@ class _BottomSection extends StatelessWidget {
           onTap: () => context.go(AppRoutes.setting),
         ),
       ],
+    );
+  }
+}
+
+/// 服务端下发的动态菜单项
+///
+/// 点击后导航至对应的自定义专题页 `/custom_category/:code`。
+class _DynamicMenuItemTile extends StatefulWidget {
+  const _DynamicMenuItemTile({
+    required this.menu,
+    required this.isSelected,
+    required this.isCollapsed,
+  });
+
+  final dynamic menu;
+  final bool isSelected;
+  final bool isCollapsed;
+
+  @override
+  State<_DynamicMenuItemTile> createState() => _DynamicMenuItemTileState();
+}
+
+class _DynamicMenuItemTileState extends State<_DynamicMenuItemTile> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final route = '/custom_category/${widget.menu.menuCode}';
+    final label = widget.menu.menuName as String;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs / 2,
+      ),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          onTap: () => context.go(route),
+          child: AnimatedContainer(
+            duration: AppAnimation.fast,
+            height: 36,
+            padding: EdgeInsets.symmetric(
+              horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
+            ),
+            decoration: BoxDecoration(
+              color: widget.isSelected
+                  ? context.appColors.primaryLight
+                  : (_isHovered
+                        ? context.appColors.surfaceContainerLow
+                        : Colors.transparent),
+              borderRadius: AppRadius.xsRadius,
+            ),
+            child: Row(
+              mainAxisAlignment: widget.isCollapsed
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.start,
+              children: [
+                if (!widget.isCollapsed) ...[
+                  AnimatedContainer(
+                    duration: AppAnimation.fast,
+                    width: widget.isSelected ? 3 : 0,
+                    height: widget.isSelected ? 16 : 0,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  SizedBox(
+                    width: widget.isSelected
+                        ? AppSpacing.sm
+                        : AppSpacing.sm + 3,
+                  ),
+                ],
+                // 图标：优先使用 menuIcon 资源名，不可用时显示默认图标
+                Icon(
+                  Icons.category_outlined,
+                  size: 20,
+                  color: widget.isSelected
+                      ? AppColors.primary
+                      : context.appColors.textSecondary,
+                ),
+                if (!widget.isCollapsed) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.menuActive.copyWith(
+                        color: widget.isSelected
+                            ? AppColors.primary
+                            : context.appColors.textPrimary,
+                        fontWeight: widget.isSelected
+                            ? FontWeight.w500
+                            : FontWeight.w400,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

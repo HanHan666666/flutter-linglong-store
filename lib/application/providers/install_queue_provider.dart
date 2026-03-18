@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/logging/app_logger.dart';
+import '../../core/di/providers.dart' show analyticsRepositoryProvider;
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_state_machine.dart';
 import '../../domain/models/install_task.dart';
@@ -558,6 +559,15 @@ class InstallQueue extends _$InstallQueue {
     _clearPersistedCurrentTask();
     AppLogger.info('Task completed successfully: $appId');
 
+    // 上报安装/更新统计记录（fire-and-forget）
+    ref
+        .read(analyticsRepositoryProvider)
+        .reportInstall(
+          completedTask.appId,
+          completedTask.version ?? 'unknown',
+          appName: completedTask.appName,
+        );
+
     // 处理下一个任务
     Future.delayed(const Duration(milliseconds: 100), () => startProcessing());
   }
@@ -638,10 +648,7 @@ class InstallQueue extends _$InstallQueue {
       try {
         cancelSuccess = await ref
             .read(linglongCliRepositoryProvider)
-            .cancelOperation(
-              appId,
-              kind: state.currentTask!.kind,
-            );
+            .cancelOperation(appId, kind: state.currentTask!.kind);
       } catch (e) {
         AppLogger.error('[InstallQueue] 取消安装失败: $appId', e);
       }

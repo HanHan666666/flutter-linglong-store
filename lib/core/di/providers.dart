@@ -19,7 +19,8 @@ export '../../application/providers/install_queue_provider.dart'
 export '../../application/providers/install_queue_provider.dart'
     show linglongCliRepositoryProvider;
 
-export 'repository_provider.dart' show appRepositoryProvider;
+export 'repository_provider.dart'
+    show appRepositoryProvider, analyticsRepositoryProvider;
 
 // ==================== 状态管理 Provider ====================
 

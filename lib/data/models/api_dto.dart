@@ -663,3 +663,65 @@ sealed class AppsByCategoryRequest with _$AppsByCategoryRequest {
   factory AppsByCategoryRequest.fromJson(Map<String, dynamic> json) =>
       _$AppsByCategoryRequestFromJson(json);
 }
+
+// ============================================================
+// 匿名统计上报相关 DTO
+// ============================================================
+
+/// 启动访问记录请求体
+///
+/// POST /app/saveVisitRecord
+@freezed
+sealed class SaveVisitRecordRequest with _$SaveVisitRecordRequest {
+  const factory SaveVisitRecordRequest({
+    @JsonKey(name: 'visitorId') String? visitorId,
+    @JsonKey(name: 'clientIp') String? clientIp,
+    @JsonKey(name: 'arch') String? arch,
+    @JsonKey(name: 'llVersion') String? llVersion,
+    @JsonKey(name: 'llBinVersion') String? llBinVersion,
+    @JsonKey(name: 'detailMsg') String? detailMsg,
+    @JsonKey(name: 'osVersion') String? osVersion,
+    @JsonKey(name: 'repoName') String? repoName,
+    @JsonKey(name: 'appVersion') String? appVersion,
+  }) = _SaveVisitRecordRequest;
+
+  factory SaveVisitRecordRequest.fromJson(Map<String, dynamic> json) =>
+      _$SaveVisitRecordRequestFromJson(json);
+}
+
+/// 安装/卸载记录中的单条应用信息
+@freezed
+sealed class InstalledRecordItemDTO with _$InstalledRecordItemDTO {
+  const factory InstalledRecordItemDTO({
+    @JsonKey(name: 'appId') String? appId,
+    @JsonKey(name: 'name') String? name,
+    @JsonKey(name: 'version') String? version,
+    @JsonKey(name: 'arch') String? arch,
+    @JsonKey(name: 'module') String? module,
+    @JsonKey(name: 'channel') String? channel,
+  }) = _InstalledRecordItemDTO;
+
+  factory InstalledRecordItemDTO.fromJson(Map<String, dynamic> json) =>
+      _$InstalledRecordItemDTOFromJson(json);
+}
+
+/// 安装/卸载记录请求体
+///
+/// POST /app/saveInstalledRecord
+/// addedItems: 新装应用；removedItems: 卸载应用
+@freezed
+sealed class SaveInstalledRecordRequest with _$SaveInstalledRecordRequest {
+  const factory SaveInstalledRecordRequest({
+    @JsonKey(name: 'visitorId') String? visitorId,
+    @JsonKey(name: 'clientIp') String? clientIp,
+    @JsonKey(name: 'addedItems')
+    @Default([])
+    List<InstalledRecordItemDTO> addedItems,
+    @JsonKey(name: 'removedItems')
+    @Default([])
+    List<InstalledRecordItemDTO> removedItems,
+  }) = _SaveInstalledRecordRequest;
+
+  factory SaveInstalledRecordRequest.fromJson(Map<String, dynamic> json) =>
+      _$SaveInstalledRecordRequestFromJson(json);
+}

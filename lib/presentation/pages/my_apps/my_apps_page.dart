@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../application/providers/application_card_state_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/installed_apps_provider.dart';
+import '../../../core/di/providers.dart'
+    show linglongCliRepositoryProvider, analyticsRepositoryProvider;
 import '../../../application/providers/running_process_provider.dart';
 import '../../../application/providers/update_apps_provider.dart';
 import '../../../core/config/page_visibility.dart';
@@ -119,8 +121,9 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
   Future<void> _uninstallApp(InstalledApp app) async {
     // 检查应用是否正在运行
     final runningApps = ref.read(runningAppsListProvider);
-    final runningInstances =
-        runningApps.where((r) => r.appId == app.appId).toList();
+    final runningInstances = runningApps
+        .where((r) => r.appId == app.appId)
+        .toList();
 
     bool? confirmed;
     if (runningInstances.isNotEmpty) {
@@ -130,10 +133,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
         appName: app.name,
       );
     } else {
-      confirmed = await ConfirmDialog.showUninstall(
-        context,
-        appName: app.name,
-      );
+      confirmed = await ConfirmDialog.showUninstall(context, appName: app.name);
     }
 
     if (confirmed != true || !mounted) return;
@@ -162,6 +162,11 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
               .read(installedAppsProvider.notifier)
               .removeApp(app.appId, app.version);
           ref.read(updateAppsProvider.notifier).checkUpdates();
+
+          // 上报卸载统计记录（fire-and-forget）
+          ref
+              .read(analyticsRepositoryProvider)
+              .reportUninstall(app.appId, app.version, appName: app.name);
 
           ScaffoldMessenger.of(
             context,

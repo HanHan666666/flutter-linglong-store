@@ -126,4 +126,20 @@ abstract class AppApiService {
   Future<HttpResponse<AppListResponse>> getSidebarApps(
     @Body() SidebarAppsRequest request,
   );
+
+  // ============== 统计上报接口 ==============
+
+  /// 保存启动访问记录（设备信息+环境信息）
+  /// POST /app/saveVisitRecord
+  @POST('/app/saveVisitRecord')
+  Future<HttpResponse<dynamic>> saveVisitRecord(
+    @Body() SaveVisitRecordRequest request,
+  );
+
+  /// 保存安装/卸载记录
+  /// POST /app/saveInstalledRecord
+  @POST('/app/saveInstalledRecord')
+  Future<HttpResponse<dynamic>> saveInstalledRecord(
+    @Body() SaveInstalledRecordRequest request,
+  );
 }

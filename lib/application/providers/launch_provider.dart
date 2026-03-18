@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/logging/app_logger.dart';
+import '../../core/di/providers.dart';
 import 'global_provider.dart';
 import 'install_queue_provider.dart';
 import 'installed_apps_provider.dart';
@@ -455,6 +456,24 @@ class LaunchSequence extends _$LaunchSequence {
     );
 
     AppLogger.info('Launch sequence completed');
+
+    // 异步上报启动访问记录（fire-and-forget，失败不影响应用）
+    _reportStartupVisit();
+  }
+
+  /// 上报启动访问记录（携带设备/环境信息）
+  void _reportStartupVisit() {
+    final globalApp = ref.read(globalAppProvider);
+    ref
+        .read(analyticsRepositoryProvider)
+        .reportVisit(
+          arch: globalApp.arch,
+          llVersion: globalApp.llVersion,
+          llBinVersion: globalApp.llBinVersion,
+          osVersion: globalApp.osVersion,
+          repoName: globalApp.repoName,
+          appVersion: globalApp.appVersion,
+        );
   }
 
   /// 设置错误

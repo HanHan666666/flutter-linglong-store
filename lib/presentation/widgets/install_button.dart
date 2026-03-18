@@ -280,8 +280,4 @@ class InstallButton extends StatelessWidget {
 }
 
 /// 按钮大小枚举
-enum ButtonSize {
-  small,
-  medium,
-  large,
-}
+enum ButtonSize { small, medium, large }

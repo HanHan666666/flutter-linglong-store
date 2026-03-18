@@ -359,10 +359,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                       state: buttonState,
                       progress: progress,
                       // 下载中显示实时网络速度
-                      downloadSpeed: buttonState == InstallButtonState.installing
-                          ? ref
-                              .watch(networkSpeedProvider)
-                              .formatted
+                      downloadSpeed:
+                          buttonState == InstallButtonState.installing
+                          ? ref.watch(networkSpeedProvider).formatted
                           : null,
                       onPressed: () => _handleInstallAction(app, buttonState),
                       onCancel: () => _handleCancelInstall(app),
@@ -538,7 +537,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           Table(
             columnWidths: const {0: FixedColumnWidth(80), 1: FlexColumnWidth()},
             children: [
-            _buildCopyableTableRow(context, '包名', app.appId),
+              _buildCopyableTableRow(context, '包名', app.appId),
               _buildTableRow('版本', app.version),
               if (app.arch != null) _buildTableRow('架构', app.arch!),
               if (app.channel != null) _buildTableRow('渠道', app.channel!),
@@ -931,8 +930,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   Future<void> _showUninstallDialog(InstalledApp app) async {
     // 检查应用是否正在运行
     final runningApps = ref.read(runningAppsListProvider);
-    final runningInstances =
-        runningApps.where((r) => r.appId == app.appId).toList();
+    final runningInstances = runningApps
+        .where((r) => r.appId == app.appId)
+        .toList();
 
     if (runningInstances.isNotEmpty) {
       // 应用运行中，显示强制关闭确认弹窗

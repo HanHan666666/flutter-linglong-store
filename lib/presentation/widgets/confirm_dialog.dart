@@ -124,10 +124,7 @@ class ConfirmDialog extends StatelessWidget {
   }
 
   /// 显示卸载确认对话框
-  static Future<bool?> showUninstall(
-    BuildContext context, {
-    String? appName,
-  }) {
+  static Future<bool?> showUninstall(BuildContext context, {String? appName}) {
     final l10n = AppLocalizations.of(context);
     return showDialog<bool>(
       context: context,
@@ -173,7 +170,8 @@ class ConfirmDialog extends StatelessWidget {
       barrierDismissible: true,
       builder: (context) => ConfirmDialog(
         title: '确认降级',
-        message: '当前已安装 $appName v$currentVersion，'
+        message:
+            '当前已安装 $appName v$currentVersion，'
             '您尝试安装较低的版本 v$targetVersion。\n'
             '降级安装可能导致功能异常，是否继续？',
         confirmText: '确认降级',

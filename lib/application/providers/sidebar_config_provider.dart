@@ -20,9 +20,7 @@ Future<List<SidebarMenuDTO>> sidebarConfig(Ref ref) async {
     final menus = response.data.data?.menus ?? [];
 
     // 过滤禁用菜单，并按 sortOrder 升序排列（null 排末尾）
-    final enabled = menus
-        .where((m) => m.enabled)
-        .toList()
+    final enabled = menus.where((m) => m.enabled).toList()
       ..sort((a, b) {
         final oa = a.sortOrder ?? 9999;
         final ob = b.sortOrder ?? 9999;

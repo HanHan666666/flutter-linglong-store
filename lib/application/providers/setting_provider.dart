@@ -88,16 +88,19 @@ class Setting extends _$Setting {
       // 加载启动时检查版本更新开关
       final checkVersion = _prefs.getBool('setting_check_version_on_startup');
       if (checkVersion != null) {
-        restoredState =
-            restoredState.copyWith(checkVersionOnStartup: checkVersion);
+        restoredState = restoredState.copyWith(
+          checkVersionOnStartup: checkVersion,
+        );
       }
 
       // 加载容器内自动更新开关
-      final autoUpdate =
-          _prefs.getBool('setting_auto_update_store_in_container');
+      final autoUpdate = _prefs.getBool(
+        'setting_auto_update_store_in_container',
+      );
       if (autoUpdate != null) {
-        restoredState =
-            restoredState.copyWith(autoUpdateStoreInContainer: autoUpdate);
+        restoredState = restoredState.copyWith(
+          autoUpdateStoreInContainer: autoUpdate,
+        );
       }
 
       // 加载显示基础运行服务开关

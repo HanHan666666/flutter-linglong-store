@@ -340,45 +340,57 @@ class MockAnalyticsRepository extends _i1.Mock
   }
 
   @override
-  _i4.Future<void> reportInstall(String? appId, String? version) =>
+  _i4.Future<void> reportVisit({
+    String? arch,
+    String? llVersion,
+    String? llBinVersion,
+    String? osVersion,
+    String? repoName,
+    String? appVersion,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#reportInstall, [appId, version]),
+            Invocation.method(#reportVisit, [], {
+              #arch: arch,
+              #llVersion: llVersion,
+              #llBinVersion: llBinVersion,
+              #osVersion: osVersion,
+              #repoName: repoName,
+              #appVersion: appVersion,
+            }),
             returnValue: _i4.Future<void>.value(),
             returnValueForMissingStub: _i4.Future<void>.value(),
           )
           as _i4.Future<void>);
 
   @override
-  _i4.Future<void> reportUninstall(String? appId, String? version) =>
+  _i4.Future<void> reportInstall(
+    String? appId,
+    String? version, {
+    String? appName,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#reportUninstall, [appId, version]),
+            Invocation.method(
+              #reportInstall,
+              [appId, version],
+              {#appName: appName},
+            ),
             returnValue: _i4.Future<void>.value(),
             returnValueForMissingStub: _i4.Future<void>.value(),
           )
           as _i4.Future<void>);
 
   @override
-  _i4.Future<void> reportLaunch(String? appId) =>
+  _i4.Future<void> reportUninstall(
+    String? appId,
+    String? version, {
+    String? appName,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#reportLaunch, [appId]),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
-
-  @override
-  _i4.Future<void> reportSearch(String? keyword, int? resultCount) =>
-      (super.noSuchMethod(
-            Invocation.method(#reportSearch, [keyword, resultCount]),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
-          )
-          as _i4.Future<void>);
-
-  @override
-  _i4.Future<void> reportPageView(String? pageName) =>
-      (super.noSuchMethod(
-            Invocation.method(#reportPageView, [pageName]),
+            Invocation.method(
+              #reportUninstall,
+              [appId, version],
+              {#appName: appName},
+            ),
             returnValue: _i4.Future<void>.value(),
             returnValueForMissingStub: _i4.Future<void>.value(),
           )
@@ -608,4 +620,34 @@ class MockAppApiService extends _i1.Mock implements _i16.AppApiService {
                 ),
           )
           as _i4.Future<_i2.HttpResponse<_i6.AppListResponse>>);
+
+  @override
+  _i4.Future<_i2.HttpResponse<dynamic>> saveVisitRecord(
+    _i6.SaveVisitRecordRequest? request,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveVisitRecord, [request]),
+            returnValue: _i4.Future<_i2.HttpResponse<dynamic>>.value(
+              _FakeHttpResponse_0<dynamic>(
+                this,
+                Invocation.method(#saveVisitRecord, [request]),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.HttpResponse<dynamic>>);
+
+  @override
+  _i4.Future<_i2.HttpResponse<dynamic>> saveInstalledRecord(
+    _i6.SaveInstalledRecordRequest? request,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveInstalledRecord, [request]),
+            returnValue: _i4.Future<_i2.HttpResponse<dynamic>>.value(
+              _FakeHttpResponse_0<dynamic>(
+                this,
+                Invocation.method(#saveInstalledRecord, [request]),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.HttpResponse<dynamic>>);
 }

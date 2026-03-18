@@ -114,9 +114,8 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
                 title: const Text('同时上传日志文件'),
                 subtitle: const Text('日志中不包含个人隐私信息'),
                 value: _uploadLogFile,
-                onChanged:
-                    (value) =>
-                        setState(() => _uploadLogFile = value ?? false),
+                onChanged: (value) =>
+                    setState(() => _uploadLogFile = value ?? false),
               ),
             ],
           ),
@@ -129,14 +128,13 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
         ),
         FilledButton(
           onPressed: _isSubmitting ? null : _submit,
-          child:
-              _isSubmitting
-                  ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                  : const Text('提交'),
+          child: _isSubmitting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('提交'),
         ),
       ],
     );
@@ -148,9 +146,9 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
     final description = _descriptionController.text.trim();
 
     if (overview.isEmpty && description.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请填写问题概述或描述')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请填写问题概述或描述')));
       return;
     }
 
@@ -165,10 +163,9 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
       }
 
       // 构建消息体（与旧版格式保持一致）
-      final categories =
-          _selectedCategories.isEmpty
-              ? '无'
-              : _selectedCategories.join(', ');
+      final categories = _selectedCategories.isEmpty
+          ? '无'
+          : _selectedCategories.join(', ');
       final message =
           '分类: $categories\n'
           '概述: ${overview.isEmpty ? "无" : overview}\n'
@@ -190,16 +187,16 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('感谢您的反馈！')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('感谢您的反馈！')));
       }
     } catch (e, s) {
       AppLogger.error('提交反馈失败', e, s);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('反馈提交失败，请稍后重试')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('反馈提交失败，请稍后重试')));
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);

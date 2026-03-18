@@ -49,7 +49,10 @@ class NetworkSpeedNotifier extends _$NetworkSpeedNotifier {
     // 先读取一次初始值
     _readNetDevBytes();
     // 每秒更新一次
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _readNetDevBytes());
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _readNetDevBytes(),
+    );
   }
 
   void _stopTimer() {
@@ -65,8 +68,7 @@ class NetworkSpeedNotifier extends _$NetworkSpeedNotifier {
       final now = DateTime.now();
 
       if (_lastReadTime != null && _lastRxBytes > 0) {
-        final elapsed =
-            now.difference(_lastReadTime!).inMilliseconds / 1000.0;
+        final elapsed = now.difference(_lastReadTime!).inMilliseconds / 1000.0;
         if (elapsed > 0) {
           final diff = rxBytes - _lastRxBytes;
           // diff 可能为负（系统重置），忽略
@@ -97,7 +99,10 @@ class NetworkSpeedNotifier extends _$NetworkSpeedNotifier {
       // 格式：  eth0: 12345 ...
       final colonIdx = trimmed.indexOf(':');
       if (colonIdx < 0) continue;
-      final fields = trimmed.substring(colonIdx + 1).trim().split(RegExp(r'\s+'));
+      final fields = trimmed
+          .substring(colonIdx + 1)
+          .trim()
+          .split(RegExp(r'\s+'));
       if (fields.isNotEmpty) {
         total += int.tryParse(fields[0]) ?? 0;
       }

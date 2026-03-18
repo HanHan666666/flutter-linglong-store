@@ -112,30 +112,28 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       if (!mounted) return;
       showDialog(
         context: context,
-        builder:
-            (ctx) => AlertDialog(
-              title: const Text('检查更新'),
-              content:
-                  isNewer
-                      ? Text('发现新版本 $tagName！\n当前版本：$currentVersion')
-                      : Text('当前已是最新版本 ($currentVersion)'),
-              actions: [
-                if (isNewer)
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(ctx).pop();
-                      _openUrl(
-                        'https://gitee.com/Shirosu/linglong-store/releases/latest',
-                      );
-                    },
-                    child: const Text('前往下载'),
-                  ),
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('确定'),
-                ),
-              ],
+        builder: (ctx) => AlertDialog(
+          title: const Text('检查更新'),
+          content: isNewer
+              ? Text('发现新版本 $tagName！\n当前版本：$currentVersion')
+              : Text('当前已是最新版本 ($currentVersion)'),
+          actions: [
+            if (isNewer)
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  _openUrl(
+                    'https://gitee.com/Shirosu/linglong-store/releases/latest',
+                  );
+                },
+                child: const Text('前往下载'),
+              ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('确定'),
             ),
+          ],
+        ),
       );
     } catch (e) {
       if (mounted) _showSnackBar('检查更新失败，请检查网络连接');
@@ -166,7 +164,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -658,15 +658,15 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     final confirmed = await ConfirmDialog.show(
       context,
       title: '清理废弃基础服务',
-      message: '将执行 ll-cli prune 命令，移除所有已不再被任何应用依赖的基础运行服务。\n\n清理后可节省磁盘空间，但如进行中有其他操作可能需要重新下载。',
+      message:
+          '将执行 ll-cli prune 命令，移除所有已不再被任何应用依赖的基础运行服务。\n\n清理后可节省磁盘空间，但如进行中有其他操作可能需要重新下载。',
       confirmText: '清理',
       cancelText: '取消',
     );
 
     if (confirmed != true) return;
 
-    final success =
-        await ref.read(settingProvider.notifier).pruneBaseService();
+    final success = await ref.read(settingProvider.notifier).pruneBaseService();
 
     if (!context.mounted) return;
 
@@ -780,14 +780,13 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               children: [
                 OutlinedButton.icon(
                   onPressed: _isCheckingUpdate ? null : _checkForUpdate,
-                  icon:
-                      _isCheckingUpdate
-                          ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                          : const Icon(Icons.system_update_alt, size: 18),
+                  icon: _isCheckingUpdate
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.system_update_alt, size: 18),
                   label: const Text('检查新版本'),
                 ),
                 const SizedBox(width: 12),

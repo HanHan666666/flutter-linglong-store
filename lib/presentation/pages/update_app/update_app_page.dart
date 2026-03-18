@@ -54,7 +54,9 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
 
   /// 更新单个应用
   void _updateApp(UpdatableApp app) {
-    ref.read(appOperationQueueControllerProvider).enqueueAppOperation(
+    ref
+        .read(appOperationQueueControllerProvider)
+        .enqueueAppOperation(
           EnqueueAppOperationParams(
             kind: InstallTaskKind.update,
             appId: app.appId,
@@ -76,9 +78,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
         _buildHeader(context, state, installState),
 
         // 内容区域
-        Expanded(
-          child: _buildContent(context, state, installState),
-        ),
+        Expanded(child: _buildContent(context, state, installState)),
       ],
     );
   }
@@ -113,8 +113,8 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
             child: Text(
               '共 ${state.count} 个应用可更新',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
 
@@ -143,9 +143,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
   ) {
     // 加载中状态
     if (state.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     // 错误状态
@@ -216,10 +214,7 @@ class _UpdatableAppItem extends ConsumerWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: theme.colorScheme.outlineVariant,
-          width: 1,
-        ),
+        side: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),

@@ -80,10 +80,7 @@ class CustomCategory extends _$CustomCategory {
   }
 
   /// 从配置中查找分类信息
-  CategoryInfo _findCategoryInfo(
-    List<SidebarMenuDTO> menus,
-    String code,
-  ) {
+  CategoryInfo _findCategoryInfo(List<SidebarMenuDTO> menus, String code) {
     for (final menu in menus) {
       if (menu.menuCode == code) {
         return CategoryInfo(

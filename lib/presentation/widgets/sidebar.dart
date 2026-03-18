@@ -54,10 +54,9 @@ class Sidebar extends ConsumerWidget {
     final isCollapsed = screenWidth <= 768;
 
     // 读取服务端下发的动态菜单（失败时默认返回空列表，不影响静态菜单）
-    final dynamicMenus = ref.watch(sidebarConfigProvider).maybeWhen(
-      data: (menus) => menus,
-      orElse: () => [],
-    );
+    final dynamicMenus = ref
+        .watch(sidebarConfigProvider)
+        .maybeWhen(data: (menus) => menus, orElse: () => []);
 
     // decoration 需要读取 context 颜色，不能使用 const
     return AnimatedContainer(
@@ -95,6 +94,7 @@ class _MenuSection extends StatelessWidget {
   final String currentPath;
   final int updateCount;
   final bool isCollapsed;
+
   /// 服务端下发的动态菜单列表
   final List dynamicMenus;
 
@@ -104,10 +104,7 @@ class _MenuSection extends StatelessWidget {
       horizontal: AppSpacing.sm,
       vertical: AppSpacing.xs,
     ),
-    child: Divider(
-      height: 1,
-      color: context.appColors.border.withAlpha(80),
-    ),
+    child: Divider(height: 1, color: context.appColors.border.withAlpha(80)),
   );
 
   @override

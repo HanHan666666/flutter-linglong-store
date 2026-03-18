@@ -46,7 +46,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 4.以创造接口为耻，以复用现有为荣
 5.以跳过验证为耻，以主动测试为荣
 6.以破坏架构为耻，以遵循规范为荣
-7.以假装理解为耻，以诚实无知为菜
+7.以假装理解为耻，以诚实无知为荣
 8.以盲目修改为耻，以谨慎重构为荣
 
 Shame in guessing APIs, Honor in careful research.

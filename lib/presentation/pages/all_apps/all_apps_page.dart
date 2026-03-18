@@ -21,6 +21,7 @@ class AllAppsPage extends ConsumerStatefulWidget {
 class _AllAppsPageState extends ConsumerState<AllAppsPage>
     with AutomaticKeepAliveClientMixin {
   final ScrollController _scrollController = ScrollController();
+  bool _isCategoryExpanded = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -90,6 +91,10 @@ class _AllAppsPageState extends ConsumerState<AllAppsPage>
               ref.read(allAppsProvider.notifier).selectCategory(index);
             },
             showCount: true,
+            isExpanded: _isCategoryExpanded,
+            onToggleExpand: () => setState(() {
+              _isCategoryExpanded = !_isCategoryExpanded;
+            }),
           ),
         ),
 

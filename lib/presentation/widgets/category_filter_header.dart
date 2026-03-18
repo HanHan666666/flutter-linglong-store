@@ -10,6 +10,8 @@ class CategoryFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.selectedIndex,
     required this.onSelected,
     this.showCount = false,
+    this.isExpanded = false,
+    this.onToggleExpand,
   });
 
   final List<CategoryInfo> categories;
@@ -17,11 +19,18 @@ class CategoryFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
   final ValueChanged<int> onSelected;
   final bool showCount;
 
+  /// 分类栏是否展开（多行 Wrap 展示所有分类）
+  final bool isExpanded;
+
+  /// 切换展开/折叠回调
+  final VoidCallback? onToggleExpand;
+
   @override
   double get minExtent => 64;
 
+  /// 展开时高度足够容纳多行分类，折叠时固定单行高度
   @override
-  double get maxExtent => 64;
+  double get maxExtent => isExpanded ? 136 : 64;
 
   @override
   Widget build(
@@ -65,6 +74,8 @@ class CategoryFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
             selectedIndex: selectedIndex,
             onSelected: onSelected,
             showCount: showCount,
+            isExpanded: isExpanded,
+            onToggleExpand: onToggleExpand,
           ),
         ),
       ),
@@ -75,7 +86,8 @@ class CategoryFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(covariant CategoryFilterHeaderDelegate oldDelegate) {
     return categories != oldDelegate.categories ||
         selectedIndex != oldDelegate.selectedIndex ||
-        showCount != oldDelegate.showCount;
+        showCount != oldDelegate.showCount ||
+        isExpanded != oldDelegate.isExpanded;
   }
 }
 
@@ -85,37 +97,120 @@ class _CategoryFilterBar extends StatelessWidget {
     required this.selectedIndex,
     required this.onSelected,
     required this.showCount,
+    required this.isExpanded,
+    this.onToggleExpand,
   });
 
   final List<CategoryInfo> categories;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
   final bool showCount;
+  final bool isExpanded;
+  final VoidCallback? onToggleExpand;
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      scrollDirection: Axis.horizontal,
+    if (isExpanded) {
+      return _buildExpandedLayout(context);
+    }
+    return _buildCollapsedLayout(context);
+  }
+
+  /// 折叠态：横向滚动 + 末尾展开按钮
+  Widget _buildCollapsedLayout(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.sm,
+            ),
+            itemCount: categories.length,
+            separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+            itemBuilder: (context, index) {
+              final category = categories[index];
+              return Tooltip(
+                message: category.name,
+                waitDuration: const Duration(milliseconds: 300),
+                child: _CategoryChip(
+                  label: category.name,
+                  count: showCount ? category.appCount : null,
+                  isSelected: index == selectedIndex,
+                  onTap: () => onSelected(index),
+                ),
+              );
+            },
+          ),
+        ),
+        // 展开按钮
+        if (onToggleExpand != null)
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.sm),
+            child: Tooltip(
+              message: '展开分类',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: onToggleExpand,
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Icon(
+                    Icons.expand_more,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// 展开态：Wrap 多行 + 收起按钮
+  Widget _buildExpandedLayout(BuildContext context) {
+    return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.sm,
       ),
-      itemCount: categories.length,
-      separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-      itemBuilder: (context, index) {
-        final category = categories[index];
-
-        return Tooltip(
-          message: category.name,
-          waitDuration: const Duration(milliseconds: 300),
-          child: _CategoryChip(
-            label: category.name,
-            count: showCount ? category.appCount : null,
-            isSelected: index == selectedIndex,
-            onTap: () => onSelected(index),
-          ),
-        );
-      },
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: [
+          ...List.generate(categories.length, (index) {
+            final category = categories[index];
+            return Tooltip(
+              message: category.name,
+              waitDuration: const Duration(milliseconds: 300),
+              child: _CategoryChip(
+                label: category.name,
+                count: showCount ? category.appCount : null,
+                isSelected: index == selectedIndex,
+                onTap: () => onSelected(index),
+              ),
+            );
+          }),
+          // 收起按钮
+          if (onToggleExpand != null)
+            Tooltip(
+              message: '收起分类',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: onToggleExpand,
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Icon(
+                    Icons.expand_less,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

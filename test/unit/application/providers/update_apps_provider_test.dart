@@ -1,19 +1,35 @@
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart';
+import 'package:retrofit/retrofit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:linglong_store/application/providers/api_provider.dart';
+import 'package:linglong_store/application/providers/install_queue_provider.dart';
+import 'package:linglong_store/application/providers/installed_apps_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
+import 'package:linglong_store/core/logging/app_logger.dart';
+import 'package:linglong_store/data/models/api_dto.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
 
+import '../../../mocks/mock_classes.mocks.dart';
+
 void main() {
+  setUpAll(() async {
+    await AppLogger.init();
+  });
+
   group('UpdatableApp', () {
     test('should create UpdatableApp with correct properties', () {
-      final installedApp = InstalledApp(
+      const installedApp = InstalledApp(
         appId: 'com.example.app',
         name: 'Test App',
         version: '1.0.0',
         icon: 'https://example.com/icon.png',
       );
 
-      final updatableApp = UpdatableApp(
+      const updatableApp = UpdatableApp(
         installedApp: installedApp,
         latestVersion: '2.0.0',
         latestVersionDescription: 'Bug fixes and improvements',
@@ -30,13 +46,13 @@ void main() {
     });
 
     test('should handle null optional fields', () {
-      final installedApp = InstalledApp(
+      const installedApp = InstalledApp(
         appId: 'com.example.app',
         name: 'Test App',
         version: '1.0.0',
       );
 
-      final updatableApp = UpdatableApp(
+      const updatableApp = UpdatableApp(
         installedApp: installedApp,
         latestVersion: '2.0.0',
       );
@@ -59,18 +75,18 @@ void main() {
     });
 
     test('should create state with custom values', () {
-      final installedApp = InstalledApp(
+      const installedApp = InstalledApp(
         appId: 'com.example.app',
         name: 'Test App',
         version: '1.0.0',
       );
 
-      final updatableApp = UpdatableApp(
+      const updatableApp = UpdatableApp(
         installedApp: installedApp,
         latestVersion: '2.0.0',
       );
 
-      final state = UpdateAppsState(
+      const state = UpdateAppsState(
         apps: [updatableApp],
         isLoading: true,
         error: 'Test error',
@@ -96,7 +112,7 @@ void main() {
     });
 
     test('should clear error when clearError is true', () {
-      final state = UpdateAppsState(
+      const state = UpdateAppsState(
         error: 'Test error',
       );
 
@@ -110,7 +126,7 @@ void main() {
     });
 
     test('should preserve error when not clearing', () {
-      final state = UpdateAppsState(
+      const state = UpdateAppsState(
         error: 'Test error',
       );
 
@@ -125,13 +141,13 @@ void main() {
     test('should update apps list', () {
       const state = UpdateAppsState();
 
-      final installedApp = InstalledApp(
+      const installedApp = InstalledApp(
         appId: 'com.example.app',
         name: 'Test App',
         version: '1.0.0',
       );
 
-      final updatableApp = UpdatableApp(
+      const updatableApp = UpdatableApp(
         installedApp: installedApp,
         latestVersion: '2.0.0',
       );
@@ -162,5 +178,74 @@ void main() {
 
       expect(state.count, equals(5));
     });
+  });
+
+  group('UpdateApps provider lifecycle', () {
+    test(
+      'keeps startup update results after listeners are removed',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final mockApiService = MockAppApiService();
+        const installedApp = InstalledApp(
+          appId: 'com.example.app',
+          name: 'Test App',
+          version: '1.0.0',
+          arch: 'x86_64',
+        );
+
+        when(mockApiService.appCheckUpdate(any)).thenAnswer(
+          (_) async => HttpResponse(
+            const AppDetailListResponse(
+              code: 200,
+              data: [
+                AppDetailDTO(
+                  appId: 'com.example.app',
+                  appName: 'Test App',
+                  appVersion: '2.0.0',
+                ),
+              ],
+            ),
+            Response(
+              requestOptions: RequestOptions(path: '/app/appCheckUpdate'),
+            ),
+          ),
+        );
+
+        final container = ProviderContainer(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            appApiServiceProvider.overrideWithValue(mockApiService),
+            installedAppsProvider.overrideWithValue(
+              const InstalledAppsState(apps: [installedApp]),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final subscription = container.listen<UpdateAppsState>(
+          updateAppsProvider,
+          (_, __) {},
+          fireImmediately: true,
+        );
+
+        await container.read(updateAppsProvider.notifier).checkUpdates();
+
+        expect(container.read(updateAppsProvider).count, 1);
+        expect(
+          container.read(updateAppsProvider).apps.single.latestVersion,
+          '2.0.0',
+        );
+
+        subscription.close();
+        await Future<void>.delayed(Duration.zero);
+
+        final retainedState = container.read(updateAppsProvider);
+
+        expect(retainedState.count, 1);
+        expect(retainedState.apps.single.latestVersion, '2.0.0');
+        verify(mockApiService.appCheckUpdate(any)).called(1);
+      },
+    );
   });
 }

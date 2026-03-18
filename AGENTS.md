@@ -163,3 +163,4 @@ time ./build/package-deb.sh
 - 2026-03-18：`updateAppsProvider` 必须保持 `keepAlive`；启动页的首次 `_checkUpdates()` 结果要直接供侧边栏红点和更新页复用，不能依赖“进入更新页后再查一次”来驱动红点出现。
 - 2026-03-18：缓存系统必须由 `CacheService.init()` 统一初始化，并在 `main()` 中于 `runApp()` 前执行；`CacheService.init()` 不仅要 `Hive.initFlutter()`，还要预先打开 `cache` box，避免业务侧同步 `Hive.box('cache')` 读取时崩溃。
 - 2026-03-18：启动流程只保留一个正式 `LaunchPage/LaunchSequence`；`MaterialApp` 首帧依赖的语言、主题和基础设置必须在 Provider `build()` 阶段同步从 `SharedPreferences` 恢复，禁止再增加路由外的“正在初始化”占位页。
+- 2026-03-18：修改 Riverpod 注解或 Mockito `@GenerateMocks` 后，必须同步重新执行代码生成并核对生成产物已更新；不要出现源码已改、`*.g.dart`/`*.mocks.dart` 仍保留旧生命周期或旧接口的假修复。

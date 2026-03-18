@@ -85,7 +85,7 @@ class UpdateAppsState {
 /// 可更新应用 Provider
 ///
 /// 管理可更新应用列表的状态
-@riverpod
+@Riverpod(keepAlive: true)
 class UpdateApps extends _$UpdateApps {
   @override
   UpdateAppsState build() {

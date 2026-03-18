@@ -4,11 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../application/providers/app_collection_sync_provider.dart';
+import '../../application/providers/global_provider.dart';
 import '../../application/providers/install_queue_provider.dart';
 import '../../application/providers/menu_badge_provider.dart';
 import '../../core/config/theme.dart';
+import '../../core/logging/app_logger.dart';
 import '../../core/platform/window_service.dart';
+import '../../core/di/providers.dart';
 import '../../domain/models/install_progress.dart';
+import '../../domain/models/install_task.dart';
 import 'sidebar.dart';
 import 'title_bar.dart';
 
@@ -44,6 +48,13 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
             ref
                 .read(appCollectionSyncServiceProvider)
                 .syncAfterSuccessfulOperation();
+
+            // 如果开启了『安装后自动打开』，且是安装任务（不是更新），自动启动应用
+            final prefs = ref.read(globalAppProvider).userPreferences;
+            if (prefs.autoRunAfterInstall &&
+                completedTask!.kind == InstallTaskKind.install) {
+              _tryRunApp(completedTask.appId);
+            }
           }
         }
       },
@@ -80,6 +91,15 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
       setState(() {
         _isMaximized = isMaximized;
       });
+    }
+  }
+
+  /// 安装成功后自动启动应用（autoRunAfterInstall=true 时触发）
+  Future<void> _tryRunApp(String appId) async {
+    try {
+      await ref.read(linglongCliRepositoryProvider).runApp(appId);
+    } catch (e) {
+      AppLogger.warning('自动启动应用失败: $appId, 错误: $e');
     }
   }
 

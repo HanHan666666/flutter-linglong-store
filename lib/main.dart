@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
@@ -11,6 +10,7 @@ import 'core/network/api_client.dart';
 import 'core/logging/app_logger.dart';
 import 'core/platform/single_instance.dart';
 import 'core/platform/window_service.dart';
+import 'core/storage/cache_service.dart';
 import 'core/storage/preferences_service.dart';
 
 void main() async {
@@ -40,8 +40,9 @@ void main() async {
         sharedPreferences.getString('linglong-store-language') ?? 'zh',
   );
 
-  // 初始化 Hive（用于缓存）
-  await Hive.initFlutter();
+  // 初始化缓存系统；这里需要同步完成 cache box 打开，
+  // 这样后续同步读取缓存时不会触发 “Box not found”。
+  await CacheService.init();
 
   // 显示窗口
   await WindowService.show();

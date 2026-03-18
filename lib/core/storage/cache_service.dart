@@ -4,19 +4,22 @@ import 'package:hive_flutter/hive_flutter.dart';
 class CacheService {
   CacheService._();
 
+  static const String _cacheBoxName = 'cache';
   static bool _initialized = false;
 
   /// 初始化
   static Future<void> init() async {
     if (_initialized) return;
 
+    // 缓存读取路径包含同步的 Hive.box() 调用，因此启动阶段必须先完成 box 打开。
     await Hive.initFlutter();
+    await Hive.openBox(_cacheBoxName);
     _initialized = true;
   }
 
   /// 获取缓存
   static T? get<T>(String key) {
-    final box = Hive.box('cache');
+    final box = Hive.box(_cacheBoxName);
 
     // 检查 TTL 过期
     final ttlKey = '${key}_ttl';
@@ -33,7 +36,7 @@ class CacheService {
 
   /// 设置缓存
   static Future<void> set<T>(String key, T value, {Duration? ttl}) async {
-    final box = await Hive.openBox('cache');
+    final box = await Hive.openBox(_cacheBoxName);
     await box.put(key, value);
 
     // 存储 TTL 过期时间戳
@@ -49,7 +52,7 @@ class CacheService {
 
   /// 删除缓存
   static Future<void> delete(String key) async {
-    final box = await Hive.openBox('cache');
+    final box = await Hive.openBox(_cacheBoxName);
     await box.delete(key);
     // 同时删除 TTL 记录
     await box.delete('${key}_ttl');
@@ -57,7 +60,7 @@ class CacheService {
 
   /// 清空缓存
   static Future<void> clear() async {
-    final box = await Hive.openBox('cache');
+    final box = await Hive.openBox(_cacheBoxName);
     await box.clear();
   }
 }

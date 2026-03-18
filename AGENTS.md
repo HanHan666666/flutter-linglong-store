@@ -161,4 +161,5 @@ time ./build/package-deb.sh
 - 2026-03-17：应用安装队列显式区分 `InstallTaskKind.install/update`；更新页、卡片按钮和批量更新入口必须统一走 `app_operation_queue_provider.dart`，不要在页面里直接循环 `enqueueInstall()` 或手写“更新即安装”的入队逻辑。
 - 2026-03-17：安装/更新成功后的 installed apps 与 updates 刷新统一走 `app_collection_sync_provider.dart`；不要在页面 build 期监听里分散刷新，也不要在按钮点击回调里各自补写 refresh。
 - 2026-03-18：`updateAppsProvider` 必须保持 `keepAlive`；启动页的首次 `_checkUpdates()` 结果要直接供侧边栏红点和更新页复用，不能依赖“进入更新页后再查一次”来驱动红点出现。
+- 2026-03-18：缓存系统必须由 `CacheService.init()` 统一初始化，并在 `main()` 中于 `runApp()` 前执行；`CacheService.init()` 不仅要 `Hive.initFlutter()`，还要预先打开 `cache` box，避免业务侧同步 `Hive.box('cache')` 读取时崩溃。
 - 2026-03-18：启动流程只保留一个正式 `LaunchPage/LaunchSequence`；`MaterialApp` 首帧依赖的语言、主题和基础设置必须在 Provider `build()` 阶段同步从 `SharedPreferences` 恢复，禁止再增加路由外的“正在初始化”占位页。

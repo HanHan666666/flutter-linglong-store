@@ -141,6 +141,69 @@ class ConfirmDialog extends StatelessWidget {
     );
   }
 
+  /// 显示「应用正在运行中」强制关闭并卸载的确认对话框
+  static Future<bool?> showUninstallRunning(
+    BuildContext context, {
+    String? appName,
+  }) {
+    final name = appName != null ? ' $appName' : '该应用';
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => ConfirmDialog.delete(
+        title: '应用正在运行',
+        message: '$name 当前正在运行中，卸载前需要强制关闭所有运行实例。\n是否强制关闭并卸载？',
+        confirmText: '强制关闭并卸载',
+        cancelText: '取消',
+      ),
+    );
+  }
+
+  /// 显示降级安装确认对话框
+  ///
+  /// 当用户尝试安装一个低于当前已安装版本的版本时调用。
+  static Future<bool?> showDowngradeConfirm(
+    BuildContext context, {
+    required String appName,
+    required String currentVersion,
+    required String targetVersion,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => ConfirmDialog(
+        title: '确认降级',
+        message: '当前已安装 $appName v$currentVersion，'
+            '您尝试安装较低的版本 v$targetVersion。\n'
+            '降级安装可能导致功能异常，是否继续？',
+        confirmText: '确认降级',
+        cancelText: '取消',
+        confirmStyle: ConfirmButtonStyle.warning,
+      ),
+    );
+  }
+
+  /// 显示强制重装确认对话框
+  ///
+  /// 当用户尝试安装一个已安装版本时调用。
+  static Future<bool?> showReinstallConfirm(
+    BuildContext context, {
+    required String appName,
+    required String version,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => ConfirmDialog(
+        title: '已安装此版本',
+        message: '$appName v$version 已安装。\n是否重新安装（将覆盖现有安装）？',
+        confirmText: '强制重装',
+        cancelText: '取消',
+        confirmStyle: ConfirmButtonStyle.primary,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);

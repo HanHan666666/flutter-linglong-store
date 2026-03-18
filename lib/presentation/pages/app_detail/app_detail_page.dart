@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/logging/app_logger.dart';
+import '../../../core/utils/version_compare.dart';
 import '../../../domain/models/installed_app.dart';
 import '../../../domain/models/install_task.dart';
 import '../../../domain/models/install_progress.dart';
@@ -11,8 +12,10 @@ import '../../../data/repositories/app_repository_impl.dart';
 import '../../widgets/app_icon.dart';
 import '../../widgets/app_detail_secondary_actions.dart';
 import '../../widgets/install_button.dart';
+import '../../widgets/confirm_dialog.dart';
 import '../../../core/di/providers.dart';
 import '../../../application/providers/installed_apps_provider.dart';
+import '../../../application/providers/running_process_provider.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 
 part 'app_detail_page.g.dart';
@@ -815,8 +818,48 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     }
   }
 
-  /// 安装指定版本
-  void _installVersion(InstalledApp app, String version) {
+  /// 安装指定版本（含降级确认和强制重装确认）
+  ///
+  /// - 已安装相同版本 → 役 [showReinstallConfirm]
+  /// - 目标版本低于已安装版本 → 役 [showDowngradeConfirm]
+  /// - 其余情况 → 直接入队
+  Future<void> _installVersion(InstalledApp app, String version) async {
+    // 检查当前已安装的此应用的所有版本
+    final installedList = ref.read(installedAppsListProvider);
+    final installedVersions = installedList
+        .where((a) => a.appId == app.appId)
+        .map((a) => a.version)
+        .toList();
+
+    final isSameVersionInstalled = installedVersions.contains(version);
+    if (isSameVersionInstalled) {
+      // 安装版本已存在，弹出强制重装确认
+      final confirmed = await ConfirmDialog.showReinstallConfirm(
+        context,
+        appName: app.name,
+        version: version,
+      );
+      if (confirmed != true || !mounted) return;
+    } else {
+      // 检查是否为降级（目标版本低于已安装的最高版本）
+      if (installedVersions.isNotEmpty) {
+        final highestInstalled = installedVersions.reduce(
+          (a, b) => VersionCompare.greaterThan(a, b) ? a : b,
+        );
+        final isDowngrade = VersionCompare.lessThan(version, highestInstalled);
+        if (isDowngrade) {
+          final confirmed = await ConfirmDialog.showDowngradeConfirm(
+            context,
+            appName: app.name,
+            currentVersion: highestInstalled,
+            targetVersion: version,
+          );
+          if (confirmed != true || !mounted) return;
+        }
+      }
+    }
+
+    // 入安装队列
     ref
         .read(installQueueProvider.notifier)
         .enqueueInstall(
@@ -828,7 +871,32 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   }
 
   /// 显示卸载确认对话框（PC-native 风格）
-  void _showUninstallDialog(InstalledApp app) {
+  ///
+  /// 若应用正在运行中，会先弹出「强制关闭并卸载」警告；
+  /// 否则显示常规 PC-native 卸载确认对话框。
+  Future<void> _showUninstallDialog(InstalledApp app) async {
+    // 检查应用是否正在运行
+    final runningApps = ref.read(runningAppsListProvider);
+    final runningInstances =
+        runningApps.where((r) => r.appId == app.appId).toList();
+
+    if (runningInstances.isNotEmpty) {
+      // 应用运行中，显示强制关闭确认弹窗
+      final confirmed = await ConfirmDialog.showUninstallRunning(
+        context,
+        appName: app.name,
+      );
+      if (confirmed != true || !mounted) return;
+      // 先强制关闭所有运行实例
+      for (final running in runningInstances) {
+        await ref.read(runningProcessProvider.notifier).killApp(running);
+      }
+      _uninstallApp(app);
+      return;
+    }
+
+    // 正常卸载：显示 PC-native 风格确认对话框
+    if (!mounted) return;
     showDialog(
       context: context,
       barrierDismissible: true,

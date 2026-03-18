@@ -112,14 +112,38 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
         .setProcessTabActive(tab == _MyAppsTab.process);
   }
 
-  /// 卸载应用
+  /// 卸载应用（含运行中检测）
+  ///
+  /// 若应用正在运行，先弹出「强制关闭并卸载」确认弹窗，
+  /// 用户确认后依次 kill 所有运行实例再执行卸载。
   Future<void> _uninstallApp(InstalledApp app) async {
-    final confirmed = await ConfirmDialog.showUninstall(
-      context,
-      appName: app.name,
-    );
+    // 检查应用是否正在运行
+    final runningApps = ref.read(runningAppsListProvider);
+    final runningInstances =
+        runningApps.where((r) => r.appId == app.appId).toList();
+
+    bool? confirmed;
+    if (runningInstances.isNotEmpty) {
+      // 应用运行中，显示强制关闭确认弹窗
+      confirmed = await ConfirmDialog.showUninstallRunning(
+        context,
+        appName: app.name,
+      );
+    } else {
+      confirmed = await ConfirmDialog.showUninstall(
+        context,
+        appName: app.name,
+      );
+    }
 
     if (confirmed != true || !mounted) return;
+
+    // 若运行中，先强制关闭所有运行实例
+    if (runningInstances.isNotEmpty) {
+      for (final running in runningInstances) {
+        await ref.read(runningProcessProvider.notifier).killApp(running);
+      }
+    }
 
     try {
       final repo = ref.read(linglongCliRepositoryProvider);

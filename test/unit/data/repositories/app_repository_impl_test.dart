@@ -6,6 +6,7 @@ import 'package:hive/hive.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:mockito/mockito.dart';
 import 'package:retrofit/retrofit.dart';
+import 'package:linglong_store/core/network/api_client.dart';
 import 'package:linglong_store/data/repositories/app_repository_impl.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
 import 'package:linglong_store/core/network/api_exceptions.dart';
@@ -275,6 +276,10 @@ void main() {
     });
 
     group('getAppDetail', () {
+      tearDown(() {
+        ApiClient.getLocale = null;
+      });
+
       test('should return app detail on success', () async {
         // Arrange
         final mockResponse = HttpResponse(
@@ -359,6 +364,40 @@ void main() {
             verify(mockApiService.getAppDetail(captureAny)).captured.single
                 as List<AppDetailSearchBO>;
         expect(captured.single.arch, equals('aarch64'));
+        expect(captured.single.lang, equals('zh_CN'));
+      });
+
+      test('should map English locale to en_US for detail request', () async {
+        // Arrange
+        ApiClient.getLocale = () => 'en';
+        final mockResponse = HttpResponse(
+          AppDetailResponse(
+            code: 200,
+            data: {
+              'com.example.app': [
+                {
+                  'appId': 'com.example.app',
+                  'zhName': 'Test App',
+                  'version': '1.0.0',
+                },
+              ],
+            },
+          ),
+          Response(requestOptions: RequestOptions(path: '/app/getAppDetail')),
+        );
+
+        when(
+          mockApiService.getAppDetail(any),
+        ).thenAnswer((_) async => mockResponse);
+
+        // Act
+        await repository.getAppDetail('com.example.app');
+
+        // Assert
+        final captured =
+            verify(mockApiService.getAppDetail(captureAny)).captured.single
+                as List<AppDetailSearchBO>;
+        expect(captured.single.lang, equals('en_US'));
       });
     });
 

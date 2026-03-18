@@ -13,6 +13,7 @@ import '../../widgets/app_detail_secondary_actions.dart';
 import '../../widgets/install_button.dart';
 import '../../../core/di/providers.dart';
 import '../../../application/providers/installed_apps_provider.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
 
 part 'app_detail_page.g.dart';
 
@@ -385,6 +386,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
   /// 构建截图轮播区（使用真实截图数据）
   Widget _buildScreenshots(BuildContext context, AppDetailState detailState) {
+    final l10n = AppLocalizations.of(context);
     final screenshots = detailState.screenshots;
 
     if (screenshots.isEmpty) {
@@ -399,7 +401,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
-              '应用截图',
+              l10n?.screenShots ?? '屏幕截图',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),

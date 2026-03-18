@@ -16,6 +16,7 @@ import '../datasources/remote/app_api_service.dart';
 /// 负责调用 API 服务并处理数据转换
 class AppRepositoryImpl implements AppRepository {
   static const _detailsCachePrefix = 'app_details';
+  static const _detailDefaultLang = 'zh_CN';
 
   /// 默认构造函数，使用 ApiClient 创建 AppApiService
   AppRepositoryImpl() : _apiService = AppApiService(ApiClient.instance);
@@ -139,10 +140,15 @@ class AppRepositoryImpl implements AppRepository {
   Future<AppDetailDTO> getAppDetail(String appId, {String? arch}) async {
     try {
       AppLogger.info('获取应用详情: $appId');
+      final detailLang = _resolveDetailLang(ApiClient.getLocale?.call());
 
-      // 后端期望请求体是数组格式
+      // /app/getAppDetail 需要显式 lang 才会按语言过滤截图和标签。
       final response = await _apiService.getAppDetail([
-        AppDetailSearchBO(appId: appId, arch: arch ?? _currentArch),
+        AppDetailSearchBO(
+          appId: appId,
+          arch: arch ?? _currentArch,
+          lang: detailLang,
+        ),
       ]);
 
       // 后端返回 Map<String, List<AppDetailDTO>> 格式
@@ -164,6 +170,18 @@ class AppRepositoryImpl implements AppRepository {
       AppLogger.error('获取应用详情失败: $appId', e, s);
       rethrow;
     }
+  }
+
+  /// 将 Flutter locale 归一成后端 /app/getAppDetail 约定的语言值。
+  String _resolveDetailLang(String? locale) {
+    final normalized = locale?.trim().replaceAll('-', '_').toLowerCase();
+    if (normalized == null || normalized.isEmpty) {
+      return _detailDefaultLang;
+    }
+    if (normalized.startsWith('en')) {
+      return 'en_US';
+    }
+    return _detailDefaultLang;
   }
 
   @override

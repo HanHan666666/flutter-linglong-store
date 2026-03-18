@@ -158,6 +158,8 @@ sealed class AppDetailSearchBO with _$AppDetailSearchBO {
   const factory AppDetailSearchBO({
     required String appId,
     required String arch,
+    // /app/getAppDetail 会按语言精确过滤截图和标签，必须显式传入 lang。
+    String? lang,
   }) = _AppDetailSearchBO;
 
   factory AppDetailSearchBO.fromJson(Map<String, dynamic> json) =>

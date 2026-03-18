@@ -9,6 +9,7 @@ import '../../../domain/models/install_progress.dart';
 import '../../../data/models/api_dto.dart';
 import '../../../data/repositories/app_repository_impl.dart';
 import '../../widgets/app_icon.dart';
+import '../../widgets/app_detail_secondary_actions.dart';
 import '../../widgets/install_button.dart';
 import '../../../core/di/providers.dart';
 import '../../../application/providers/installed_apps_provider.dart';
@@ -200,22 +201,17 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         .where((app) => app.appId == widget.appId)
         .map((app) => app.version)
         .toSet();
+    final hasInstalledInstance = installedVersions.isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(detailState.app?.name ?? '应用详情'),
-        actions: [
-          // 更多操作菜单（PC-native MenuAnchor 风格）
-          _MoreMenuButton(
-            app: detailState.app,
-            onAction: (action) => _handleMenuAction(action, detailState.app),
-            onUninstall: detailState.app != null
-                ? () => _showUninstallDialog(detailState.app!)
-                : null,
-          ),
-        ],
+      appBar: AppBar(title: Text(detailState.app?.name ?? '应用详情')),
+      body: _buildBody(
+        context,
+        detailState,
+        installTask,
+        installedVersions,
+        hasInstalledInstance: hasInstalledInstance,
       ),
-      body: _buildBody(context, detailState, installTask, installedVersions),
     );
   }
 
@@ -223,8 +219,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     BuildContext context,
     AppDetailState detailState,
     InstallTask? installTask,
-    Set<String> installedVersions,
-  ) {
+    Set<String> installedVersions, {
+    required bool hasInstalledInstance,
+  }) {
     // 加载中
     if (detailState.isLoading && detailState.app == null) {
       return const Center(child: CircularProgressIndicator());
@@ -247,7 +244,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 头部信息区
-          _buildHeader(context, app, installTask),
+          _buildHeader(
+            context,
+            app,
+            installTask,
+            hasInstalledInstance: hasInstalledInstance,
+          ),
 
           const Divider(height: 1),
 
@@ -284,12 +286,16 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   Widget _buildHeader(
     BuildContext context,
     InstalledApp app,
-    InstallTask? installTask,
-  ) {
+    InstallTask? installTask, {
+    required bool hasInstalledInstance,
+  }) {
     final theme = Theme.of(context);
 
     // 确定安装按钮状态
-    final buttonState = _getInstallButtonState(installTask);
+    final buttonState = _getInstallButtonState(
+      installTask,
+      hasInstalledInstance: hasInstalledInstance,
+    );
     final progress = installTask?.progress ?? 0.0;
 
     return Padding(
@@ -345,6 +351,15 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                   onCancel: () => _handleCancelInstall(app),
                   size: ButtonSize.large,
                 ),
+                // 次级动作只依赖本地安装态，避免未安装时显示无效入口。
+                if (hasInstalledInstance) ...[
+                  const SizedBox(height: 8),
+                  AppDetailSecondaryActions(
+                    isVisible: true,
+                    onCreateShortcut: () => _createShortcut(app),
+                    onUninstall: () => _showUninstallDialog(app),
+                  ),
+                ],
                 // 安装状态消息
                 if (installTask != null && installTask.message != null) ...[
                   const SizedBox(height: 8),
@@ -693,7 +708,10 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   }
 
   /// 获取安装按钮状态
-  InstallButtonState _getInstallButtonState(InstallTask? installTask) {
+  InstallButtonState _getInstallButtonState(
+    InstallTask? installTask, {
+    required bool hasInstalledInstance,
+  }) {
     // 如果有安装任务，根据任务状态返回
     if (installTask != null) {
       switch (installTask.status) {
@@ -710,9 +728,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       }
     }
 
-    // 检查应用是否已安装
-    final isInstalled = ref.read(isAppInstalledProvider(widget.appId));
-    if (isInstalled) {
+    // 主按钮与次级操作共用同一份本地安装态判断，避免页面内规则漂移。
+    if (hasInstalledInstance) {
       return InstallButtonState.open;
     }
 
@@ -939,17 +956,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     );
   }
 
-  /// 处理菜单操作
-  void _handleMenuAction(String action, InstalledApp? app) {
-    if (app == null) return;
-
-    switch (action) {
-      case 'shortcut':
-        _createShortcut(app);
-        break;
-    }
-  }
-
   /// 创建快捷方式
   Future<void> _createShortcut(InstalledApp app) async {
     try {
@@ -1036,75 +1042,6 @@ class _ScreenshotPreviewPageState extends State<_ScreenshotPreviewPage> {
           );
         },
       ),
-    );
-  }
-}
-
-/// 应用详情页右上角"更多操作"菜单（PC-native MenuAnchor 风格）
-class _MoreMenuButton extends StatelessWidget {
-  const _MoreMenuButton({
-    required this.app,
-    required this.onAction,
-    this.onUninstall,
-  });
-
-  final InstalledApp? app;
-  final void Function(String action) onAction;
-
-  /// 只有已安装的应用才有卸载操作
-  final VoidCallback? onUninstall;
-
-  @override
-  Widget build(BuildContext context) {
-    final isInstalled = app != null;
-
-    return MenuAnchor(
-      builder: (context, controller, child) {
-        return IconButton(
-          icon: const Icon(Icons.more_vert),
-          tooltip: '更多操作',
-          onPressed: () {
-            if (controller.isOpen) {
-              controller.close();
-            } else {
-              controller.open();
-            }
-          },
-        );
-      },
-      menuChildren: [
-        // 创建快捷方式（仅已安装时启用）
-        MenuItemButton(
-          leadingIcon: Icon(
-            Icons.shortcut_outlined,
-            size: 18,
-            color: isInstalled ? null : Theme.of(context).disabledColor,
-          ),
-          onPressed: isInstalled ? () => onAction('shortcut') : null,
-          child: Text(
-            '创建快捷方式',
-            style: isInstalled
-                ? null
-                : TextStyle(color: Theme.of(context).disabledColor),
-          ),
-        ),
-        // 卸载（仅已安装时显示）
-        if (onUninstall != null) ...[
-          const Divider(height: 1),
-          MenuItemButton(
-            leadingIcon: Icon(
-              Icons.delete_outline_rounded,
-              size: 18,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: onUninstall,
-            child: Text(
-              '卸载',
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          ),
-        ],
-      ],
     );
   }
 }

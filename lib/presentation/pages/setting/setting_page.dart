@@ -1,12 +1,18 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../application/providers/api_provider.dart';
 import '../../../application/providers/global_provider.dart';
 import '../../../application/providers/setting_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
+import '../../../core/logging/app_logger.dart';
+import '../../../data/models/api_dto.dart';
 import '../../widgets/confirm_dialog.dart';
+import '../../widgets/feedback_dialog.dart';
 
 /// 设置页
 class SettingPage extends ConsumerStatefulWidget {
@@ -16,9 +22,19 @@ class SettingPage extends ConsumerStatefulWidget {
   ConsumerState<SettingPage> createState() => _SettingPageState();
 }
 
+/// Gitee Latest Release API
+const _kGiteeLatestApi =
+    'https://gitee.com/api/v5/repos/Shirosu/linglong-store/releases/latest';
+
 class _SettingPageState extends ConsumerState<SettingPage> {
   /// 仓库输入控制器
   final _repoController = TextEditingController();
+
+  /// 已收录应用数量（-1 表示加载中）
+  int _appTotalCount = -1;
+
+  /// 是否正在检查商店自身的新版本
+  bool _isCheckingUpdate = false;
 
   @override
   void initState() {
@@ -46,6 +62,111 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
     // 缓存体积属于非启动关键路径，进入设置页后再异步刷新即可。
     await notifier.refreshCacheSize();
+
+    // 异步获取已收录应用总数
+    _fetchAppTotalCount();
+  }
+
+  /// 获取已收录应用总数（空关键词搜索，取 total 字段）
+  Future<void> _fetchAppTotalCount() async {
+    try {
+      final apiService = ref.read(appApiServiceProvider);
+      final settingState = ref.read(settingProvider);
+      final response = await apiService.getSearchAppList(
+        SearchAppListRequest(
+          keyword: '',
+          pageNo: 1,
+          pageSize: 1,
+          repoName: settingState.repoName,
+        ),
+      );
+      final total = response.data.data?.total;
+      if (mounted && total != null) setState(() => _appTotalCount = total);
+    } catch (e) {
+      AppLogger.warning('[SettingPage] 获取应用总数失败: $e');
+    }
+  }
+
+  /// 检查商店自身的新版本（调用 Gitee Release API）
+  Future<void> _checkForUpdate() async {
+    if (_isCheckingUpdate) return;
+    setState(() => _isCheckingUpdate = true);
+    try {
+      final dio = Dio();
+      final response = await dio.get(
+        _kGiteeLatestApi,
+        options: Options(
+          receiveTimeout: const Duration(seconds: 10),
+          sendTimeout: const Duration(seconds: 10),
+        ),
+      );
+      final tagName = response.data['tag_name'] as String?;
+      if (!mounted) return;
+      if (tagName == null) {
+        _showSnackBar('无法获取版本信息');
+        return;
+      }
+      final currentVersion =
+          ref.read(settingProvider).appVersion ?? AppConfig.appVersion;
+      final isNewer = _isVersionNewer(currentVersion, tagName);
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder:
+            (ctx) => AlertDialog(
+              title: const Text('检查更新'),
+              content:
+                  isNewer
+                      ? Text('发现新版本 $tagName！\n当前版本：$currentVersion')
+                      : Text('当前已是最新版本 ($currentVersion)'),
+              actions: [
+                if (isNewer)
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      _openUrl(
+                        'https://gitee.com/Shirosu/linglong-store/releases/latest',
+                      );
+                    },
+                    child: const Text('前往下载'),
+                  ),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('确定'),
+                ),
+              ],
+            ),
+      );
+    } catch (e) {
+      if (mounted) _showSnackBar('检查更新失败，请检查网络连接');
+    } finally {
+      if (mounted) setState(() => _isCheckingUpdate = false);
+    }
+  }
+
+  /// 简单 semver 比较，返回 latest 是否比 current 新
+  bool _isVersionNewer(String current, String latest) {
+    (int, int, int)? parse(String s) {
+      s = s.replaceAll(RegExp(r'^v'), '');
+      final parts = s.split('.');
+      if (parts.length < 3) return null;
+      final major = int.tryParse(parts[0]);
+      final minor = int.tryParse(parts[1]);
+      final patch = int.tryParse(parts[2].split(RegExp(r'[^0-9]')).first);
+      if (major == null || minor == null || patch == null) return null;
+      return (major, minor, patch);
+    }
+
+    final c = parse(current);
+    final l = parse(latest);
+    if (c == null || l == null) return false;
+    if (l.$1 != c.$1) return l.$1 > c.$1;
+    if (l.$2 != c.$2) return l.$2 > c.$2;
+    return l.$3 > c.$3;
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -620,6 +741,14 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             _buildInfoRow(context, label: '开发者', value: '玲珑社区'),
             _buildDivider(context),
 
+            // 已收录应用数量
+            _buildInfoRow(
+              context,
+              label: '已收录应用数量',
+              value: _appTotalCount < 0 ? '加载中...' : '$_appTotalCount 个',
+            ),
+            _buildDivider(context),
+
             // 系统架构
             _buildInfoRow(
               context,
@@ -644,6 +773,36 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             ),
 
             const SizedBox(height: 16),
+
+            // 检查更新 + 意见反馈
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _isCheckingUpdate ? null : _checkForUpdate,
+                  icon:
+                      _isCheckingUpdate
+                          ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                          : const Icon(Icons.system_update_alt, size: 18),
+                  label: const Text('检查新版本'),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: () => showDialog(
+                    context: context,
+                    builder: (_) => const FeedbackDialog(),
+                  ),
+                  icon: const Icon(Icons.feedback_outlined, size: 18),
+                  label: const Text('意见反馈'),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 8),
 
             // 项目链接
             Row(
@@ -705,15 +864,13 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     );
   }
 
-  /// 打开链接
-  void _openUrl(String url) {
-    // 使用 url_launcher 打开链接
-    // 这里简化处理，实际需要导入 url_launcher
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('打开链接: $url'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+  /// 打开外部链接
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else if (mounted) {
+      _showSnackBar('无法打开链接: $url');
+    }
   }
 }

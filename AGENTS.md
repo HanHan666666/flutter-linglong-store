@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 
 ## 重点（极其重要）
+- 所有的业务细节都要落实到文档里面去，详细的细节文档，docs目录
 - 当前项目要求绝对的高性能，高UI响应速度。
 - 每开发一个功能点就进行一次commit
 - Git commit 必须遵循 Conventional Commits，统一使用 `type: 简短描述`，不要再写无类型前缀的自然语句提交信息。
@@ -18,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 每一处代码修改都要有必要的注释
 - 先方案后编码：先梳理背景/现状 → 列备选方案（含改动面、影响范围、取舍理由）→ 让用户确认 → 再动手。**只有在用户确认你的方案后，才开始动手写代码, 不然你很快就会被关机，更换下一个AI，一定要小心。**
 - 统一入口：能收敛的业务逻辑要集中封装（如卸载流程用 `useAppUninstall`），避免在多个页面/组件里写重复弹窗或副作用。
-- 变更记录：完成功能后，将关键经验和约定同步到本指南，方便后续遵循。
+- 完成功能后，将关键经验和约定同步到本指南，方便后续遵循。
 - 在编写代码前先**明确用户需求并确认方案**；优先**复用已有的 hooks/store**，避免新增零散的 `invoke` 或 `ll-cli` 调用。
 - 保持 ll-cli 的使用**最小化且可预测**：优先使用现有的 **Rust 命令与 IPC 事件**，而不是新增 Shell 调用。
 
@@ -165,6 +166,6 @@ time ./build/package-deb.sh
 - 2026-03-18：启动流程只保留一个正式 `LaunchPage/LaunchSequence`；`MaterialApp` 首帧依赖的语言、主题和基础设置必须在 Provider `build()` 阶段同步从 `SharedPreferences` 恢复，禁止再增加路由外的“正在初始化”占位页。
 - 2026-03-18：修改 Riverpod 注解或 Mockito `@GenerateMocks` 后，必须同步重新执行代码生成并核对生成产物已更新；不要出现源码已改、`*.g.dart`/`*.mocks.dart` 仍保留旧生命周期或旧接口的假修复。
 - 2026-03-18：应用详情页版本列表必须统一走 `AppRepository.getVersions()`，并显式传递 `appId + repoName + arch`；仓储层负责“同版本优先保留 binary + 语义版本倒序排序”，页面层只消费规范化结果。版本列表失败时只能显示轻量错误态与重试入口，不能伪装成空列表。
+- 2026-03-18：自定义标题栏的 `16px` 水平留白只用于左侧 Logo/标题/搜索内容区；右侧窗口控制按钮组必须贴齐窗口右边缘，且不能通过缩小按钮热区来消除留白。
 - 2026-03-18：应用详情页的“创建桌面快捷方式”“卸载”必须直接放在头部主按钮右侧，与主按钮同一行展示；只有 `installedAppsProvider` 确认当前 `appId` 存在本地安装实例时才显示，不能继续藏在更多菜单里，也不能在未安装态展示禁用入口。
 - 2026-03-18：应用详情页截图列表必须显式随 `/app/getAppDetail` 请求传 `lang`，并在仓储层把前台 locale 归一成后端约定值（`zh* -> zh_CN`、`en* -> en_US`）；截图可见性以后端按语言精确过滤结果为准，Flutter 页面不做本地回退筛选。
-- 2026-03-18：自定义标题栏的 `16px` 水平留白只用于左侧 Logo/标题/搜索内容区；右侧窗口控制按钮组必须贴齐窗口右边缘，且不能通过缩小按钮热区来消除留白。

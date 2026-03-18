@@ -281,52 +281,67 @@ linux/                                     # Linux 平台配置
 
 ## 三、核心模块详细设计
 
+> 启动链路已在 2026-03-18 收敛为“单一 `LaunchPage / LaunchSequence` + 首帧同步状态恢复”。
+> 详细约束与业务细节见：[`11-startup-flow-and-first-frame-restore.md`](./11-startup-flow-and-first-frame-restore.md)。
+
 ### 3.1 应用入口 (main.dart)
 
 ```dart
 import 'dart:io';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:window_manager/window_manager.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // 1. 单实例检测
-  await SingleInstance.ensure();
-  
-  // 2. NVIDIA workaround
-  NvidiaWorkaround.apply();
-  
-  // 3. 初始化窗口管理器
-  await windowManager.ensureInitialized();
-  const windowOptions = WindowOptions(
-    size: Size(1200, 800),
-    minimumSize: Size(600, 400),
-    center: true,
-    titleBarStyle: TitleBarStyle.hidden,  // 隐藏系统标题栏
-    title: '玲珑应用商店社区版',
-  );
-  await windowManager.waitUntilReadyToShow(windowOptions);
-  
-  // 4. 初始化日志
+
+  // 1. 初始化日志
   await AppLogger.init();
-  
-  // 5. 初始化本地存储
+
+  // 2. 单实例检测
+  final isFirstInstance = await SingleInstance.ensure();
+  if (!isFirstInstance) {
+    exit(0);
+  }
+
+  // 3. 初始化窗口管理器
+  await WindowService.init();
+
+  // 4. 初始化本地存储
   await PreferencesService.init();
-  await CacheService.init();
-  
-  // 6. 初始化国际化
-  final languagePreference = PreferencesService.getLanguagePreference();
-  LocaleProvider.initialize(languagePreference);
-  
-  // 7. 启动
-  runApp(const ProviderScope(child: LinglongStoreApp()));
-  
-  await windowManager.show();
-  await windowManager.focus();
+  final sharedPreferences = await SharedPreferences.getInstance();
+
+  // 5. 初始化网络客户端
+  ApiClient.init(
+    localeGetter: () =>
+        sharedPreferences.getString('linglong-store-language') ?? 'zh',
+  );
+
+  // 6. 初始化缓存
+  await Hive.initFlutter();
+
+  // 7. 显示窗口
+  await WindowService.show();
+
+  // 8. 启动
+  runApp(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+      ],
+      child: const LinglongStoreApp(),
+    ),
+  );
 }
 ```
+
+当前实现约束：
+
+- `main()` 只负责系统级引导，不再承载业务启动流程
+- `SharedPreferences` 必须在 `runApp()` 前准备好，并通过 `ProviderScope` 注入
+- `MaterialApp` 首帧依赖的语言、主题、基础设置，必须由 Provider 在 `build()` 阶段同步恢复
+- 路由外不得再增加第二个“正在初始化”占位页
 
 ### 3.2 路由配置 (routes.dart)
 
@@ -335,6 +350,7 @@ import 'package:go_router/go_router.dart';
 
 // 路由路径常量
 abstract class AppRoutes {
+  static const launch = '/launch';
   static const recommend = '/';
   static const allApps = '/allapps';
   static const appDetail = '/app_detail';
@@ -357,8 +373,12 @@ const keepAliveRoutes = {
 // 路由配置
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: AppRoutes.recommend,
+    initialLocation: AppRoutes.launch,
     routes: [
+      GoRoute(
+        path: AppRoutes.launch,
+        builder: (_, __) => const LaunchPage(),
+      ),
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [
@@ -377,11 +397,69 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
     ],
+    redirect: (context, state) {
+      final launchState = ref.read(launchSequenceProvider);
+      final currentPath = state.matchedLocation;
+
+      if (!launchState.isCompleted && currentPath != AppRoutes.launch) {
+        return AppRoutes.launch;
+      }
+
+      if (launchState.isCompleted && currentPath == AppRoutes.launch) {
+        return AppRoutes.recommend;
+      }
+
+      return null;
+    },
   );
 });
 ```
 
-### 3.3 主题系统 (theme.dart)
+当前实现约束：
+
+- 初始路由必须进入 `LaunchPage`
+- 首页是否可进入，由 `launchSequenceProvider` 的完成态控制
+- 启动失败、重试、跳过、环境弹窗，都收口在正式启动页内处理
+
+### 3.3 首帧状态恢复
+
+以下 Provider 需要在 `build()` 同步恢复本地状态：
+
+- `globalAppProvider`
+  - 当前语言
+  - 当前主题模式
+  - 用户偏好
+- `settingProvider`
+  - 当前语言
+  - 当前主题模式
+  - 当前仓库名
+- `installQueueProvider`
+  - 当前任务
+  - 队列快照
+
+这样做的目的：
+
+- 避免 `MaterialApp` 首帧主题、语言闪烁
+- 避免依赖异步 `init()` 再写状态触发二次重建
+- 把本地快照恢复与正式启动业务流程分层
+
+### 3.4 正式启动流程
+
+`LaunchSequence` 负责正式业务启动步骤：
+
+1. 环境检测
+2. 已安装应用初始化
+3. 更新检查
+4. 安装队列恢复与纠偏
+5. 完成后跳转首页
+
+其中：
+
+- 首帧主题/语言恢复不属于 `LaunchSequence`
+- 设置页缓存大小统计不属于启动关键路径
+- 非关键路径工作必须延后到相应页面再异步执行
+
+### 3.5 主题系统 (theme.dart)
 
 ```dart
 import 'package:flutter/material.dart';

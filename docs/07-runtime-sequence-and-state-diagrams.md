@@ -30,6 +30,9 @@
 
 ## 二、启动流程时序图
 
+> 启动链路的设计说明、首帧主题/语言恢复策略、启动关键路径与延后策略，
+> 见：[`11-startup-flow-and-first-frame-restore.md`](./11-startup-flow-and-first-frame-restore.md)。
+
 ### 2.1 冷启动主流程
 
 ```mermaid
@@ -40,21 +43,23 @@ sequenceDiagram
     participant Main as main.dart
     participant Window as WindowManager
     participant Store as Local Storage
-    participant Launch as LaunchController
+    participant Providers as Riverpod Providers
+    participant Launch as LaunchPage / LaunchSequence
     participant CLI as LinglongCliRepository
     participant HTTP as AppRepository
-    participant Providers as Riverpod Providers
     participant Home as RecommendPage
 
     User->>App: 启动应用
     App->>Main: 执行 main()
     Main->>Main: WidgetsFlutterBinding.ensureInitialized()
+    Main->>Main: AppLogger.init()
     Main->>Main: SingleInstance.ensure()
-    Main->>Main: NvidiaWorkaround.apply()
     Main->>Window: 初始化窗口参数
-    Main->>Store: 初始化 Preferences / Cache
+    Main->>Store: 初始化 Preferences / Hive
+    Main->>Main: ApiClient.init()
     Main->>Providers: 初始化全局 Provider 容器
     Main->>App: runApp()
+    App->>Providers: build 阶段同步恢复 locale/theme/settings/installQueue
     App->>Launch: 进入 LaunchPage
     Launch->>CLI: checkLinglongEnv()
     CLI-->>Launch: env result
@@ -69,7 +74,6 @@ sequenceDiagram
         HTTP-->>Launch: updates
         Launch->>Providers: 更新 updatesProvider
         Launch->>Providers: 恢复 installQueue 状态
-        Launch->>HTTP: sendVisitRecord()
         Launch->>Home: 跳转 RecommendPage
     end
 ```
@@ -77,10 +81,14 @@ sequenceDiagram
 ### 2.2 启动阶段约束
 
 启动流程必须满足：
-- 环境检测先于主内容渲染
+- 首帧只允许出现一个正式 `LaunchPage`
+- 首帧主题和语言必须与用户上次保存的值一致
+- `MaterialApp` 依赖的主题、语言、基础设置必须在 Provider `build()` 阶段同步恢复
 - 已安装列表先于更新检查
 - 更新检查先于菜单红点展示
 - install queue 恢复必须在首页交互前完成
+- 安装队列本地快照可在 Provider `build()` 恢复，但业务级纠偏仍必须在 `queueRecovery` 完成
+- 设置页缓存大小等非关键路径逻辑不得阻塞启动
 - 任何一步失败都要可诊断，不能静默吞掉
 
 ---

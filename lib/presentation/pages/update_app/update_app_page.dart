@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../application/providers/app_operation_queue_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
+import '../../../application/providers/network_speed_provider.dart';
 import '../../../application/providers/update_apps_provider.dart';
 import '../../../domain/models/install_task.dart';
 import '../../../domain/models/install_progress.dart';
@@ -191,7 +192,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
 }
 
 /// 可更新应用列表项
-class _UpdatableAppItem extends StatelessWidget {
+class _UpdatableAppItem extends ConsumerWidget {
   const _UpdatableAppItem({
     super.key,
     required this.app,
@@ -204,7 +205,7 @@ class _UpdatableAppItem extends StatelessWidget {
   final VoidCallback onUpdate;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     // 确定按钮状态
@@ -212,7 +213,6 @@ class _UpdatableAppItem extends StatelessWidget {
     final progress = installTask?.progress ?? 0.0;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -269,10 +269,14 @@ class _UpdatableAppItem extends StatelessWidget {
 
                 const SizedBox(width: 12),
 
-                // 更新按钮
+                // 更新按鈕
                 InstallButton(
                   state: buttonState,
                   progress: progress,
+                  // 正在安装/更新时显示实时网络速度
+                  downloadSpeed: buttonState == InstallButtonState.installing
+                      ? ref.watch(networkSpeedProvider).formatted
+                      : null,
                   onPressed: onUpdate,
                   onCancel: installTask != null
                       ? () {

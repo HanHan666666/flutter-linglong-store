@@ -16,6 +16,7 @@ import '../../widgets/install_button.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../../core/di/providers.dart';
 import '../../../application/providers/installed_apps_provider.dart';
+import '../../../application/providers/network_speed_provider.dart';
 import '../../../application/providers/running_process_provider.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 
@@ -357,6 +358,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     InstallButton(
                       state: buttonState,
                       progress: progress,
+                      // 下载中显示实时网络速度
+                      downloadSpeed: buttonState == InstallButtonState.installing
+                          ? ref
+                              .watch(networkSpeedProvider)
+                              .formatted
+                          : null,
                       onPressed: () => _handleInstallAction(app, buttonState),
                       onCancel: () => _handleCancelInstall(app),
                       size: ButtonSize.large,

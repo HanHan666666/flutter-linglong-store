@@ -38,6 +38,9 @@ class InstallButton extends StatelessWidget {
   /// 取消安装回调
   final VoidCallback? onCancel;
 
+  /// 下载速度文本（如 "2.5 MB/s"），为空时不显示
+  final String? downloadSpeed;
+
   /// 是否禁用
   final bool disabled;
 
@@ -50,6 +53,7 @@ class InstallButton extends StatelessWidget {
     this.progress = 0.0,
     this.onPressed,
     this.onCancel,
+    this.downloadSpeed,
     this.disabled = false,
     this.size = ButtonSize.medium,
   });
@@ -207,7 +211,10 @@ class InstallButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '$progressPercent%',
+                  // 有速度时显示 "xx% · 2.5 MB/s"，否则仅显示进度
+                  downloadSpeed != null && downloadSpeed!.isNotEmpty
+                      ? '$progressPercent% · $downloadSpeed'
+                      : '$progressPercent%',
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     color: Theme.of(context).colorScheme.primary,

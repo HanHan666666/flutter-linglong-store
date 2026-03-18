@@ -343,23 +343,26 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     ),
                   ),
                 const SizedBox(height: 12),
-                // 安装按钮
-                InstallButton(
-                  state: buttonState,
-                  progress: progress,
-                  onPressed: () => _handleInstallAction(app, buttonState),
-                  onCancel: () => _handleCancelInstall(app),
-                  size: ButtonSize.large,
+                // 主动作与次级动作统一编排，优先同一行展示，不足时再整体换行。
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    InstallButton(
+                      state: buttonState,
+                      progress: progress,
+                      onPressed: () => _handleInstallAction(app, buttonState),
+                      onCancel: () => _handleCancelInstall(app),
+                      size: ButtonSize.large,
+                    ),
+                    AppDetailSecondaryActions(
+                      isVisible: hasInstalledInstance,
+                      onCreateShortcut: () => _createShortcut(app),
+                      onUninstall: () => _showUninstallDialog(app),
+                    ),
+                  ],
                 ),
-                // 次级动作只依赖本地安装态，避免未安装时显示无效入口。
-                if (hasInstalledInstance) ...[
-                  const SizedBox(height: 8),
-                  AppDetailSecondaryActions(
-                    isVisible: true,
-                    onCreateShortcut: () => _createShortcut(app),
-                    onUninstall: () => _showUninstallDialog(app),
-                  ),
-                ],
                 // 安装状态消息
                 if (installTask != null && installTask.message != null) ...[
                   const SizedBox(height: 8),

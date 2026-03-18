@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/i18n/l10n/app_localizations.dart';
 
-/// 详情页主操作下方的次级操作区。
+/// 详情页主操作右侧的次级操作区。
 ///
 /// 只在当前应用存在本地安装实例时展示，避免未安装态暴露无效入口。
 class AppDetailSecondaryActions extends StatelessWidget {
@@ -27,15 +27,16 @@ class AppDetailSecondaryActions extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final errorColor = theme.colorScheme.error;
 
-    return Wrap(
-      spacing: 12,
-      runSpacing: 8,
+    // 次级动作保持紧凑横向排布，由外层决定何时整体换行。
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         OutlinedButton.icon(
           onPressed: onCreateShortcut,
           icon: const Icon(Icons.shortcut_outlined, size: 18),
           label: const Text('创建桌面快捷方式'),
         ),
+        const SizedBox(width: 12),
         OutlinedButton.icon(
           onPressed: onUninstall,
           icon: Icon(Icons.delete_outline_rounded, size: 18, color: errorColor),

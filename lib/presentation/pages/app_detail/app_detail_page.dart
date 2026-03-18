@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -530,7 +531,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           Table(
             columnWidths: const {0: FixedColumnWidth(80), 1: FlexColumnWidth()},
             children: [
-              _buildTableRow('包名', app.appId),
+            _buildCopyableTableRow(context, '包名', app.appId),
               _buildTableRow('版本', app.version),
               if (app.arch != null) _buildTableRow('架构', app.arch!),
               if (app.channel != null) _buildTableRow('渠道', app.channel!),
@@ -550,6 +551,52 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           ),
         ],
       ),
+    );
+  }
+
+  /// 构建带复制按鈕的表格行（用于包名等可复制字段）
+  TableRow _buildCopyableTableRow(
+    BuildContext context,
+    String label,
+    String value,
+  ) {
+    return TableRow(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Text(label, style: TextStyle(color: Colors.grey[600])),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Row(
+            children: [
+              Expanded(child: Text(value)),
+              // 复制图标按鈕
+              SizedBox(
+                width: 28,
+                height: 28,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  iconSize: 16,
+                  tooltip: '复制',
+                  icon: const Icon(Icons.copy_outlined),
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: value));
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('已复制：$value'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

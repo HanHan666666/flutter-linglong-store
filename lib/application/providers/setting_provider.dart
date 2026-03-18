@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging/app_logger.dart';
 import 'install_queue_provider.dart';
+import 'installed_apps_provider.dart';
 
 part 'setting_provider.freezed.dart';
 part 'setting_provider.g.dart';
@@ -33,6 +34,18 @@ sealed class SettingState with _$SettingState {
 
     /// 是否正在清除缓存
     @Default(false) isClearingCache,
+
+    /// 启动时检履商店版本更新
+    @Default(true) bool checkVersionOnStartup,
+
+    /// 容器内自动更新商店本体
+    @Default(false) bool autoUpdateStoreInContainer,
+
+    /// 已安装列表中显示基础运行服务
+    @Default(false) bool showBaseService,
+
+    /// 是否正在清理基础服务
+    @Default(false) bool isPruningBaseService,
   }) = _SettingState;
 }
 
@@ -70,6 +83,27 @@ class Setting extends _$Setting {
       final repoName = _prefs.getString('repo_name');
       if (repoName != null && repoName.isNotEmpty) {
         restoredState = restoredState.copyWith(repoName: repoName);
+      }
+
+      // 加载启动时检查版本更新开关
+      final checkVersion = _prefs.getBool('setting_check_version_on_startup');
+      if (checkVersion != null) {
+        restoredState =
+            restoredState.copyWith(checkVersionOnStartup: checkVersion);
+      }
+
+      // 加载容器内自动更新开关
+      final autoUpdate =
+          _prefs.getBool('setting_auto_update_store_in_container');
+      if (autoUpdate != null) {
+        restoredState =
+            restoredState.copyWith(autoUpdateStoreInContainer: autoUpdate);
+      }
+
+      // 加载显示基础运行服务开关
+      final showBase = _prefs.getBool('setting_show_base_service');
+      if (showBase != null) {
+        restoredState = restoredState.copyWith(showBaseService: showBase);
       }
 
       AppLogger.info('Settings loaded');
@@ -159,6 +193,46 @@ class Setting extends _$Setting {
   /// 设置应用版本
   void setAppVersion(String version) {
     state = state.copyWith(appVersion: version);
+  }
+
+  /// 设置「启动时检查商店版本更新」开关
+  Future<void> setCheckVersionOnStartup(bool value) async {
+    state = state.copyWith(checkVersionOnStartup: value);
+    await _prefs.setBool('setting_check_version_on_startup', value);
+  }
+
+  /// 设置「容器内自动更新商店本体」开关
+  Future<void> setAutoUpdateStoreInContainer(bool value) async {
+    state = state.copyWith(autoUpdateStoreInContainer: value);
+    await _prefs.setBool('setting_auto_update_store_in_container', value);
+  }
+
+  /// 设置「已安装列表显示基础运行服务」开关
+  ///
+  /// 切换后立即刷新已安装列表，使过滤结果即时生效。
+  Future<void> setShowBaseService(bool value) async {
+    state = state.copyWith(showBaseService: value);
+    await _prefs.setBool('setting_show_base_service', value);
+    // 切换后刷新已安装列表
+    await ref.read(installedAppsProvider.notifier).refresh();
+  }
+
+  /// 清理废弃基础服务
+  ///
+  /// 调用 `ll-cli prune` 移除已不再使用的基础运行时。
+  Future<bool> pruneBaseService() async {
+    state = state.copyWith(isPruningBaseService: true);
+    try {
+      final cliRepo = ref.read(linglongCliRepositoryProvider);
+      await cliRepo.pruneApps();
+      state = state.copyWith(isPruningBaseService: false);
+      AppLogger.info('Base service pruned');
+      return true;
+    } catch (e, s) {
+      AppLogger.error('Failed to prune base service', e, s);
+      state = state.copyWith(isPruningBaseService: false);
+      return false;
+    }
   }
 
   /// 清除缓存

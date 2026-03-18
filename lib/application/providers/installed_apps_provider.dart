@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../core/network/api_exceptions.dart';
 import '../../domain/models/installed_app.dart';
 import '../../core/di/providers.dart';
+import 'setting_provider.dart';
 
 part 'installed_apps_provider.g.dart';
 
@@ -54,7 +55,9 @@ class InstalledApps extends _$InstalledApps {
 
     try {
       final repo = ref.read(linglongCliRepositoryProvider);
-      final apps = await repo.getInstalledApps();
+      // 根据设置决定是否在列表中包含基础运行服务
+      final showBase = ref.read(settingProvider).showBaseService;
+      final apps = await repo.getInstalledApps(includeBaseService: showBase);
 
       // 通过 API 获取应用详情（图标、中文名等），富化已安装应用列表
       final appRepo = ref.read(appRepositoryProvider);

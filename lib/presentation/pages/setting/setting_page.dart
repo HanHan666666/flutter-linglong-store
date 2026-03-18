@@ -83,6 +83,12 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
           const SizedBox(height: 24),
 
+          // 商店选项
+          _buildSectionTitle(context, '商店选项'),
+          _buildStoreOptionsSection(context, state),
+
+          const SizedBox(height: 24),
+
           // 关于
           _buildSectionTitle(context, l10n?.about ?? '关于'),
           _buildAboutSection(context, state, globalState),
@@ -446,6 +452,106 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(success ? '缓存已清除' : '清除缓存失败'),
+        backgroundColor: success
+            ? Theme.of(context).colorScheme.primary
+            : Theme.of(context).colorScheme.error,
+      ),
+    );
+  }
+
+  /// 构建商店选项部分
+  ///
+  /// 包含三个行为开关和一个清理废弃基础服务的操作按钮。
+  Widget _buildStoreOptionsSection(BuildContext context, SettingState state) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          // 启动时检查商店版本更新
+          SwitchListTile(
+            title: const Text('启动时检查商店版本更新'),
+            subtitle: const Text('每次启动时检测是否有新版本可用'),
+            value: state.checkVersionOnStartup,
+            onChanged: (value) {
+              ref
+                  .read(settingProvider.notifier)
+                  .setCheckVersionOnStartup(value);
+            },
+          ),
+          _buildDivider(context),
+          // 容器内自动更新商店本体
+          SwitchListTile(
+            title: const Text('容器内自动更新商店本体'),
+            subtitle: const Text('在玲珑容器内运行时自动更新商店应用'),
+            value: state.autoUpdateStoreInContainer,
+            onChanged: (value) {
+              ref
+                  .read(settingProvider.notifier)
+                  .setAutoUpdateStoreInContainer(value);
+            },
+          ),
+          _buildDivider(context),
+          // 已安装列表中显示基础运行服务
+          SwitchListTile(
+            title: const Text('显示基础运行服务'),
+            subtitle: const Text('在已安装列表中显示底层基础运行服务'),
+            value: state.showBaseService,
+            onChanged: (value) {
+              ref.read(settingProvider.notifier).setShowBaseService(value);
+            },
+          ),
+          _buildDivider(context),
+          // 清理废弃基础服务
+          ListTile(
+            leading: Icon(
+              Icons.cleaning_services_outlined,
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+            title: const Text('清理废弃基础服务'),
+            subtitle: const Text('移除已不再使用的基础运行服务，释放磁盘空间'),
+            trailing: state.isPruningBaseService
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : null,
+            onTap: state.isPruningBaseService
+                ? null
+                : () => _pruneBaseService(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 执行清理废弃基础服务
+  Future<void> _pruneBaseService(BuildContext context) async {
+    final confirmed = await ConfirmDialog.show(
+      context,
+      title: '清理废弃基础服务',
+      message: '将执行 ll-cli prune 命令，移除所有已不再被任何应用依赖的基础运行服务。\n\n清理后可节省磁盘空间，但如进行中有其他操作可能需要重新下载。',
+      confirmText: '清理',
+      cancelText: '取消',
+    );
+
+    if (confirmed != true) return;
+
+    final success =
+        await ref.read(settingProvider.notifier).pruneBaseService();
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success ? '废弃基础服务已清理' : '清理失败，请稍后重试'),
         backgroundColor: success
             ? Theme.of(context).colorScheme.primary
             : Theme.of(context).colorScheme.error,

@@ -14,6 +14,9 @@ part 'custom_category_provider.g.dart';
 @riverpod
 class CustomCategory extends _$CustomCategory {
   String _categoryCode = '';
+  // 来自侧边栏菜单 rule 的排序/过滤规则，在 loadData 时提取并复用
+  String? _sortType;
+  bool? _filter;
 
   @override
   CustomCategoryState build() {
@@ -43,12 +46,22 @@ class CustomCategory extends _$CustomCategory {
         _categoryCode,
       );
 
+      // 提取排序/过滤规则，在 loadMore 时复用
+      final menu = (menuResponse.data.data?.menus ?? [])
+          .where((m) => m.menuCode == _categoryCode)
+          .firstOrNull;
+      _sortType = menu?.rule?.sortBy;
+      final minScore = menu?.rule?.filterMinScore ?? 0;
+      _filter = minScore > 0 ? true : null;
+
       // 使用侧边栏应用接口获取应用
       final appsResponse = await apiService.getSidebarApps(
         SidebarAppsRequest(
           menuCode: _categoryCode,
           pageNo: 1,
           pageSize: 20,
+          sortType: _sortType,
+          filter: _filter,
         ),
       );
 
@@ -108,6 +121,8 @@ class CustomCategory extends _$CustomCategory {
           menuCode: _categoryCode,
           pageNo: nextPage,
           pageSize: 20,
+          sortType: _sortType,
+          filter: _filter,
         ),
       );
 

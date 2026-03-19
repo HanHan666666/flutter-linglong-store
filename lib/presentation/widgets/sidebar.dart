@@ -179,11 +179,13 @@ class _MenuItemTileState extends State<_MenuItemTile> {
               horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
             ),
             decoration: BoxDecoration(
+              // 默认态使用目标色的透明版本，避免 Colors.transparent（透明黑）
+              // 在动画插值时产生深色闪烁
               color: widget.isSelected
                   ? context.appColors.primaryLight
                   : (_isHovered
                         ? context.appColors.surfaceContainerLow
-                        : Colors.transparent),
+                        : context.appColors.surfaceContainerLow.withAlpha(0)),
               borderRadius: AppRadius.xsRadius,
             ),
             child: Row(
@@ -393,7 +395,9 @@ class _DynamicMenuItemTileState extends State<_DynamicMenuItemTile> {
                   ? context.appColors.primaryLight
                   : (_isHovered
                         ? context.appColors.surfaceContainerLow
-                        : Colors.transparent),
+                        // 默认态使用目标色的透明版本，避免 Colors.transparent（透明黑）
+                        // 在动画插值时产生深色闪烁
+                        : context.appColors.surfaceContainerLow.withAlpha(0)),
               borderRadius: AppRadius.xsRadius,
             ),
             child: Row(

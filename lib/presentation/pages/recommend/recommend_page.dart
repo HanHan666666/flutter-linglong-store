@@ -11,6 +11,7 @@ import '../../../application/providers/recommend_provider.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/config/page_visibility.dart';
 import '../../../core/config/visibility_aware_mixin.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/recommend_models.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/widgets.dart';
@@ -148,30 +149,34 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
     return CustomScrollView(
       controller: _scrollController,
       slivers: [
-        // 轮播区
         SliverToBoxAdapter(
           child: _BannerSection(
             banners: state.data!.banners,
             isPageVisible: _isPageVisible,
           ),
         ),
-
-        // 筛选栏
-        CategoryFilterSection(
-          categories: state.data!.categories,
-          selectedIndex: state.selectedCategoryIndex,
-          onSelected: (index) {
-            ref.read(recommendProvider.notifier).selectCategory(index);
-          },
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: Text(
+              AppLocalizations.of(context)!.linglongRecommend,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+                color: context.appColors.textPrimary,
+              ),
+            ),
+          ),
         ),
-
-        // 应用卡片网格
         SliverPadding(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          sliver: _AppsGrid(
-            apps: state.data!.apps.items,
+          sliver: _AppsGrid(apps: state.data!.apps.items),
+        ),
+        SliverToBoxAdapter(
+          child: _RecommendListFooter(
             isLoadingMore: state.isLoadingMore,
             hasMore: state.data!.apps.hasMore,
+            hasItems: state.data!.apps.items.isNotEmpty,
           ),
         ),
       ],
@@ -183,13 +188,10 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
       physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
         children: [
-          // 轮播骨架屏
           _buildBannerSkeleton(),
           const SizedBox(height: AppSpacing.lg),
-          // 分类骨架屏
-          const CategoryFilterSkeleton(),
-          const SizedBox(height: AppSpacing.lg),
-          // 应用网格骨架屏
+          _buildTitleSkeleton(),
+          const SizedBox(height: AppSpacing.md),
           _buildAppsSkeleton(),
         ],
       ),
@@ -199,10 +201,27 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
   Widget _buildBannerSkeleton() {
     return Container(
       margin: const EdgeInsets.all(AppSpacing.lg),
-      height: 180,
+      height: 220,
       decoration: BoxDecoration(
         color: context.appColors.skeletonBackground,
         borderRadius: AppRadius.smRadius,
+      ),
+    );
+  }
+
+  Widget _buildTitleSkeleton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          width: 112,
+          height: 20,
+          decoration: BoxDecoration(
+            color: context.appColors.skeletonBackground,
+            borderRadius: AppRadius.smRadius,
+          ),
+        ),
       ),
     );
   }
@@ -338,58 +357,54 @@ class _BannerSectionState extends State<_BannerSection> {
     }
 
     return Container(
+      height: 220,
       margin: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        children: [
-          // 轮播图
-          AspectRatio(
-            aspectRatio: 16 / 6,
-            child: ClipRRect(
-              borderRadius: AppRadius.smRadius,
-              child: GestureDetector(
-                onHorizontalDragStart: (_) {
-                  _stopAutoPlay();
-                  _autoPlayEnabled = false;
+      decoration: BoxDecoration(
+        color: context.appColors.surface,
+        borderRadius: AppRadius.smRadius,
+      ),
+      child: ClipRRect(
+        borderRadius: AppRadius.smRadius,
+        child: GestureDetector(
+          onHorizontalDragStart: (_) {
+            _stopAutoPlay();
+            _autoPlayEnabled = false;
+          },
+          child: Stack(
+            children: [
+              PageView.builder(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() => _currentIndex = index);
                 },
-                child: Stack(
-                  children: [
-                    PageView.builder(
-                      controller: _pageController,
-                      onPageChanged: (index) {
-                        setState(() => _currentIndex = index);
-                      },
-                      itemCount: widget.banners.length,
-                      itemBuilder: (context, index) {
-                        return _BannerItem(
-                          banner: widget.banners[index],
-                          onTap: () => _onBannerTap(widget.banners[index]),
-                        );
-                      },
-                    ),
-                    // 指示器
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 12,
-                      child: _BannerIndicators(
-                        count: widget.banners.length,
-                        currentIndex: _currentIndex,
-                        onTap: (index) {
-                          if (_disposed || !_pageController.hasClients) return;
-                          _pageController.animateToPage(
-                            index,
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                itemCount: widget.banners.length,
+                itemBuilder: (context, index) {
+                  return _BannerItem(
+                    banner: widget.banners[index],
+                    onTap: () => _onBannerTap(widget.banners[index]),
+                  );
+                },
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 12,
+                child: _BannerIndicators(
+                  count: widget.banners.length,
+                  currentIndex: _currentIndex,
+                  onTap: (index) {
+                    if (_disposed || !_pageController.hasClients) return;
+                    _pageController.animateToPage(
+                      index,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  },
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -429,69 +444,74 @@ class _BannerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Stack(
-        fit: StackFit.expand,
+    final l10n = AppLocalizations.of(context)!;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // 背景图
-          Image.network(
-            banner.imageUrl,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
-              color: AppColors.primary,
-              child: Center(
-                child: Icon(
-                  Icons.image,
-                  size: 48,
-                  color: Colors.white.withValues(alpha: 0.5),
-                ),
-              ),
-            ),
+          AppIcon(
+            iconUrl: banner.imageUrl,
+            size: 128,
+            borderRadius: 12,
+            appName: banner.title,
           ),
-          // 渐变遮罩
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withValues(alpha: 0.6),
-                ],
-              ),
-            ),
-          ),
-          // 文字内容
-          Positioned(
-            left: 24,
-            right: 24,
-            bottom: 40,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  banner.title,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                if (banner.description != null) ...[
-                  const SizedBox(height: 4),
+          const SizedBox(width: AppSpacing.xl),
+          Expanded(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 192),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    banner.description!,
+                    banner.title,
                     style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.9),
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      color: context.appColors.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    '描述：${banner.description?.trim().isNotEmpty == true ? banner.description! : '应用描述'}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: context.appColors.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    '版本：-',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: context.appColors.textSecondary,
+                    ),
+                  ),
+                  Text(
+                    '分类：-',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: context.appColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  FilledButton(
+                    onPressed: onTap,
+                    style: FilledButton.styleFrom(
+                      shape: const StadiumBorder(),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
+                    ),
+                    child: Text(l10n.viewDetail),
+                  ),
                 ],
-              ],
+              ),
             ),
           ),
         ],
@@ -540,21 +560,15 @@ class _BannerIndicators extends StatelessWidget {
 
 /// 应用网格
 class _AppsGrid extends ConsumerWidget {
-  const _AppsGrid({
-    required this.apps,
-    required this.isLoadingMore,
-    required this.hasMore,
-  });
+  const _AppsGrid({required this.apps});
 
   final List<RecommendAppInfo> apps;
-  final bool isLoadingMore;
-  final bool hasMore;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (apps.isEmpty) {
       return const SliverToBoxAdapter(
-        child: EmptyState.noData(title: '暂无应用', description: '该分类下暂无应用'),
+        child: EmptyState.noData(title: '暂无应用', description: '暂无推荐应用'),
       );
     }
 
@@ -583,7 +597,7 @@ class _AppsGrid extends ConsumerWidget {
                 appId: app.appId,
                 latestVersion: app.version,
               );
-              return AppCard(
+            return AppCard(
                 appId: app.appId,
                 name: app.name,
                 description: app.description,
@@ -603,16 +617,8 @@ class _AppsGrid extends ConsumerWidget {
                 ),
               );
             }
-            // 加载更多指示器
-            if (isLoadingMore) {
-              return const _LoadingMoreItem();
-            }
-            // 没有更多数据提示
-            if (!hasMore && apps.isNotEmpty) {
-              return const _NoMoreDataItem();
-            }
             return null;
-          }, childCount: apps.length + (isLoadingMore || !hasMore ? 1 : 0)),
+          }, childCount: apps.length),
         );
       },
     );
@@ -633,37 +639,51 @@ class _AppsGrid extends ConsumerWidget {
   }
 }
 
-/// 加载更多指示器
-class _LoadingMoreItem extends StatelessWidget {
-  const _LoadingMoreItem();
+class _RecommendListFooter extends StatelessWidget {
+  const _RecommendListFooter({
+    required this.isLoadingMore,
+    required this.hasMore,
+    required this.hasItems,
+  });
+
+  final bool isLoadingMore;
+  final bool hasMore;
+  final bool hasItems;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: const Center(
-        child: SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
+    if (!hasItems) {
+      return const SizedBox.shrink();
+    }
+
+    if (isLoadingMore) {
+      return Container(
+        padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+        child: Center(
+          child: Text(
+            '加载中...',
+            style: TextStyle(
+              fontSize: 14,
+              color: context.appColors.textSecondary,
+            ),
+          ),
         ),
-      ),
-    );
-  }
-}
+      );
+    }
 
-/// 没有更多数据提示
-class _NoMoreDataItem extends StatelessWidget {
-  const _NoMoreDataItem();
+    if (hasMore) {
+      return const SizedBox.shrink();
+    }
 
-  @override
-  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.only(bottom: AppSpacing.xl),
       child: Center(
         child: Text(
-          '没有更多了',
-          style: TextStyle(fontSize: 12, color: context.appColors.textTertiary),
+          '没有更多数据了',
+          style: TextStyle(
+            fontSize: 14,
+            color: context.appColors.textTertiary,
+          ),
         ),
       ),
     );

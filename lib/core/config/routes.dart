@@ -158,8 +158,11 @@ List<RouteBase> _buildShellRoutes() {
           path: AppRoutes.searchList,
           name: 'searchList',
           builder: (context, state) {
-            final query = state.uri.queryParameters['q'] ?? '';
-            return SearchListPage(initialQuery: query);
+            final query = state.uri.queryParameters['q']?.trim() ?? '';
+            return SearchListPage(
+              key: ValueKey('searchList:$query'),
+              initialQuery: query,
+            );
           },
         ),
         GoRoute(
@@ -612,8 +615,11 @@ extension ContextRouterExtension on BuildContext {
 
   /// 导航到搜索页
   void goToSearch([String? query]) {
-    if (query != null && query.isNotEmpty) {
-      go('${AppRoutes.searchList}?q=${Uri.encodeQueryComponent(query)}');
+    final normalizedQuery = query?.trim() ?? '';
+    if (normalizedQuery.isNotEmpty) {
+      go(
+        '${AppRoutes.searchList}?q=${Uri.encodeQueryComponent(normalizedQuery)}',
+      );
     } else {
       go(AppRoutes.searchList);
     }

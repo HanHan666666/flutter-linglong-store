@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../core/config/routes.dart';
@@ -16,6 +15,7 @@ class CustomTitleBar extends StatelessWidget {
     required this.onMinimize,
     required this.onMaximize,
     required this.onClose,
+    this.currentSearchQuery = '',
     this.showSearch = true,
     super.key,
   });
@@ -32,6 +32,9 @@ class CustomTitleBar extends StatelessWidget {
   /// 关闭回调
   final VoidCallback onClose;
 
+  /// 当前搜索关键词
+  final String currentSearchQuery;
+
   /// 是否显示搜索框
   final bool showSearch;
 
@@ -40,39 +43,36 @@ class CustomTitleBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      // 拖拽移动窗口
-      onPanStart: (_) => windowManager.startDragging(),
-      // 双击最大化/还原
-      onDoubleTap: onMaximize,
-      child: Container(
-        height: height,
-        // decoration 需要读取 context 颜色，不能使用 const
-        decoration: BoxDecoration(color: context.appColors.background),
-        child: Row(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(left: AppSpacing.lg),
-                child: Row(
-                  children: [
-                    // 左中内容保留设计稿内边距，右侧窗口控制区独立贴齐边缘。
-                    _buildLogoSection(context),
-                    if (showSearch) _buildSearchSection(context),
-                    const Spacer(),
-                  ],
-                ),
+    return Container(
+      height: height,
+      // decoration 需要读取 context 颜色，不能使用 const
+      decoration: BoxDecoration(color: context.appColors.background),
+      child: Row(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: AppSpacing.lg),
+              child: Row(
+                children: [
+                  // 搜索框改为真实输入后，拖拽区域需要避开输入控件。
+                  _WindowDragHandle(
+                    onDoubleTap: onMaximize,
+                    child: _buildLogoSection(context),
+                  ),
+                  if (showSearch) _buildSearchSection(context),
+                  Expanded(child: _WindowDragSpacer(onDoubleTap: onMaximize)),
+                ],
               ),
             ),
-            // 右侧：窗口控制按钮
-            _WindowControls(
-              isMaximized: isMaximized,
-              onMinimize: onMinimize,
-              onMaximize: onMaximize,
-              onClose: onClose,
-            ),
-          ],
-        ),
+          ),
+          // 右侧：窗口控制按钮
+          _WindowControls(
+            isMaximized: isMaximized,
+            onMinimize: onMinimize,
+            onMaximize: onMaximize,
+            onClose: onClose,
+          ),
+        ],
       ),
     );
   }
@@ -107,7 +107,10 @@ class CustomTitleBar extends StatelessWidget {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-        child: _TitleSearchBox(onTap: () => context.go(AppRoutes.searchList)),
+        child: _TitleSearchBox(
+          currentQuery: currentSearchQuery,
+          onSearch: context.goToSearch,
+        ),
       ),
     );
   }
@@ -115,9 +118,10 @@ class CustomTitleBar extends StatelessWidget {
 
 /// 标题栏搜索框
 class _TitleSearchBox extends StatefulWidget {
-  const _TitleSearchBox({required this.onTap});
+  const _TitleSearchBox({required this.currentQuery, required this.onSearch});
 
-  final VoidCallback onTap;
+  final String currentQuery;
+  final ValueChanged<String> onSearch;
 
   @override
   State<_TitleSearchBox> createState() => _TitleSearchBoxState();
@@ -126,18 +130,40 @@ class _TitleSearchBox extends StatefulWidget {
 class _TitleSearchBoxState extends State<_TitleSearchBox> {
   bool _isFocused = false;
   final FocusNode _focusNode = FocusNode();
+  late final TextEditingController _controller;
 
   @override
   void initState() {
     super.initState();
+    _controller = TextEditingController(text: widget.currentQuery);
+    _controller.addListener(_onTextChanged);
     _focusNode.addListener(_onFocusChange);
   }
 
   @override
+  void didUpdateWidget(covariant _TitleSearchBox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentQuery == widget.currentQuery ||
+        _controller.text == widget.currentQuery) {
+      return;
+    }
+    _controller.value = TextEditingValue(
+      text: widget.currentQuery,
+      selection: TextSelection.collapsed(offset: widget.currentQuery.length),
+    );
+  }
+
+  @override
   void dispose() {
+    _controller.removeListener(_onTextChanged);
+    _controller.dispose();
     _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _onTextChanged() {
+    setState(() {});
   }
 
   void _onFocusChange() {
@@ -146,57 +172,120 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
     });
   }
 
+  void _submitSearch() {
+    final query = _controller.text.trim();
+    if (query.isEmpty) {
+      return;
+    }
+    widget.onSearch(query);
+    _focusNode.unfocus();
+  }
+
+  void _clearSearch() {
+    _controller.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 534),
-          height: 32,
-          decoration: BoxDecoration(
-            color: _isFocused
-                ? context.appColors.surface
-                : context.appColors.surfaceContainerLow,
-            borderRadius: AppRadius.lgRadius,
-            border: Border.all(
-              color: _isFocused
-                  ? AppColors.primary
-                  : context.appColors.borderSecondary,
-              width: _isFocused ? 1.5 : 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              // 搜索图标区域
-              Container(
-                width: 48,
-                height: 24,
-                margin: const EdgeInsets.only(left: AppSpacing.sm),
-                alignment: Alignment.center,
-                child: Icon(
-                  Icons.search,
-                  size: 18,
-                  color: _isFocused
-                      ? AppColors.primary
-                      : context.appColors.textTertiary,
-                ),
-              ),
-              // 占位文字
-              Expanded(
-                child: Text(
-                  '在这里搜索你想搜索的应用',
-                  style: AppTextStyles.caption.copyWith(
-                    color: context.appColors.textTertiary,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 534),
+      height: 32,
+      decoration: BoxDecoration(
+        color: _isFocused
+            ? context.appColors.surface
+            : context.appColors.surfaceContainerLow,
+        borderRadius: AppRadius.lgRadius,
+        border: Border.all(
+          color: _isFocused
+              ? AppColors.primary
+              : context.appColors.borderSecondary,
+          width: _isFocused ? 1.5 : 1,
         ),
       ),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: _submitSearch,
+            borderRadius: AppRadius.lgRadius,
+            child: SizedBox(
+              width: 48,
+              height: 32,
+              child: Icon(
+                Icons.search,
+                size: 18,
+                color: _isFocused
+                    ? AppColors.primary
+                    : context.appColors.textTertiary,
+              ),
+            ),
+          ),
+          Expanded(
+            child: TextField(
+              controller: _controller,
+              focusNode: _focusNode,
+              decoration: InputDecoration(
+                hintText: '在这里搜索你想搜索的应用',
+                hintStyle: AppTextStyles.caption.copyWith(
+                  color: context.appColors.textTertiary,
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                suffixIcon: _controller.text.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(
+                          Icons.close,
+                          size: 16,
+                          color: context.appColors.textTertiary,
+                        ),
+                        onPressed: _clearSearch,
+                        splashRadius: 16,
+                        tooltip: '清除搜索词',
+                      )
+                    : null,
+              ),
+              style: AppTextStyles.caption.copyWith(
+                color: context.appColors.textPrimary,
+              ),
+              textInputAction: TextInputAction.search,
+              onSubmitted: (_) => _submitSearch(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WindowDragHandle extends StatelessWidget {
+  const _WindowDragHandle({required this.onDoubleTap, required this.child});
+
+  final VoidCallback onDoubleTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onPanStart: (_) => windowManager.startDragging(),
+      onDoubleTap: onDoubleTap,
+      behavior: HitTestBehavior.opaque,
+      child: child,
+    );
+  }
+}
+
+class _WindowDragSpacer extends StatelessWidget {
+  const _WindowDragSpacer({required this.onDoubleTap});
+
+  final VoidCallback onDoubleTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onPanStart: (_) => windowManager.startDragging(),
+      onDoubleTap: onDoubleTap,
+      behavior: HitTestBehavior.opaque,
+      child: const SizedBox.expand(),
     );
   }
 }

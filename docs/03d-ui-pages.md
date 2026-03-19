@@ -330,7 +330,7 @@ Seed 数据：构建期预生成 `allapps_default` 的前 3 页。
 
 ## 七、搜索列表页（SearchListPage）
 
-路由：`/search_list?keyword=xxx`
+路由：`/search_list?q=xxx`
 
 ### 7.1 结构
 
@@ -349,15 +349,16 @@ Seed 数据：构建期预生成 `allapps_default` 的前 3 页。
 
 ### 7.2 交互
 
-- 从 TitleBar 搜索框提交后路由跳转
-- URL query 保持 keyword
+- TitleBar 搜索框是唯一搜索输入入口，用户输入后按 Enter 或点击搜索图标进入结果页
+- 搜索结果页不再自带第二个搜索框
+- URL query 保持 `q`
 - 支持无限滚动分页
 - 搜索切换时重置到第 1 页
 
 ### 7.3 缓存
 
-按 keyword 做运行时缓存，无 seed：
-- Cache key: `search_{keyword}`
+按 query 做运行时缓存，无 seed：
+- Cache key: `search_{query}`
 
 ---
 

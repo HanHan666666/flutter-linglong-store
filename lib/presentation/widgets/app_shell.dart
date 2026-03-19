@@ -151,7 +151,11 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    final currentPath = GoRouterState.of(context).matchedLocation;
+    final routerState = GoRouterState.of(context);
+    final currentPath = routerState.matchedLocation;
+    final currentSearchQuery = currentPath == '/search_list'
+        ? (routerState.uri.queryParameters['q'] ?? '')
+        : '';
 
     return Scaffold(
       body: Stack(
@@ -164,6 +168,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
                 onMinimize: _onMinimize,
                 onMaximize: _onMaximize,
                 onClose: _onClose,
+                currentSearchQuery: currentSearchQuery,
               ),
               // 主内容区域
               Expanded(

@@ -23,7 +23,6 @@ class SearchListPage extends ConsumerStatefulWidget {
 
 class _SearchListPageState extends ConsumerState<SearchListPage>
     with AutomaticKeepAliveClientMixin {
-  late final TextEditingController _searchController;
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -32,23 +31,41 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
   @override
   void initState() {
     super.initState();
-    _searchController = TextEditingController(text: widget.initialQuery ?? '');
     _scrollController.addListener(_onScroll);
+    _syncSearchQuery();
+  }
 
-    // 如果有初始查询，自动触发搜索
-    if (widget.initialQuery != null && widget.initialQuery!.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(searchProvider.notifier).search(widget.initialQuery!);
-      });
+  @override
+  void didUpdateWidget(covariant SearchListPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialQuery != widget.initialQuery) {
+      _syncSearchQuery();
     }
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _syncSearchQuery() {
+    final query = widget.initialQuery?.trim() ?? '';
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      final notifier = ref.read(searchProvider.notifier);
+      if (query.isEmpty) {
+        notifier.clear();
+        return;
+      }
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(0);
+      }
+      notifier.search(query);
+    });
   }
 
   void _onScroll() {
@@ -58,60 +75,13 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
     }
   }
 
-  void _onSearch() {
-    final query = _searchController.text.trim();
-    if (query.isNotEmpty) {
-      ref.read(searchProvider.notifier).search(query);
-    }
-  }
-
-  void _clearSearch() {
-    _searchController.clear();
-    ref.read(searchProvider.notifier).clear();
-  }
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
     final state = ref.watch(searchProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: _buildSearchField(),
-        actions: [
-          if (_searchController.text.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: _clearSearch,
-              tooltip: '清除搜索',
-            ),
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: _onSearch,
-            tooltip: '搜索',
-          ),
-        ],
-      ),
-      body: _buildBody(state),
-    );
-  }
-
-  Widget _buildSearchField() {
-    return TextField(
-      controller: _searchController,
-      decoration: InputDecoration(
-        hintText: '搜索应用...',
-        border: InputBorder.none,
-        hintStyle: TextStyle(
-          color: context.appColors.textTertiary,
-          fontSize: 14,
-        ),
-      ),
-      style: TextStyle(fontSize: 14, color: context.appColors.textPrimary),
-      onSubmitted: (_) => _onSearch(),
-      textInputAction: TextInputAction.search,
-    );
+    return Scaffold(body: _buildBody(state));
   }
 
   Widget _buildBody(SearchState state) {
@@ -127,7 +97,10 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
 
     // 错误状态
     if (state.error != null && state.results.isEmpty) {
-      return ErrorState.generic(description: state.error, onRetry: _onSearch);
+      return ErrorState.generic(
+        description: state.error,
+        onRetry: _syncSearchQuery,
+      );
     }
 
     // 无结果状态
@@ -174,7 +147,7 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
           ),
           const SizedBox(height: 16),
           Text(
-            '输入关键词搜索应用',
+            '在顶部搜索框输入关键词',
             style: TextStyle(
               fontSize: 16,
               color: context.appColors.textSecondary,
@@ -182,7 +155,7 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
           ),
           const SizedBox(height: 8),
           Text(
-            '支持按名称、描述、开发者搜索',
+            '按 Enter 开始搜索应用',
             style: TextStyle(
               fontSize: 14,
               color: context.appColors.textTertiary,

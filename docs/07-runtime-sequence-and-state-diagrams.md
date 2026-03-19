@@ -555,10 +555,10 @@ sequenceDiagram
 
     User->>TitleBar: 输入关键词
     User->>TitleBar: Enter
-    TitleBar->>Router: go(/search_list?keyword=xxx)
+    TitleBar->>Router: go(/search_list?q=xxx)
     Router->>Page: build SearchListPage
-    Page->>Notifier: reset + loadPage(1)
-    Notifier->>API: getSearchAppList(keyword)
+    Page->>Notifier: search(xxx)
+    Notifier->>API: getSearchAppList(xxx)
     API-->>Notifier: search results
     Notifier-->>Page: render cards
 ```

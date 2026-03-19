@@ -70,4 +70,38 @@ void main() {
 
     expect(find.text('route:/search_list?q=firefox'), findsOneWidget);
   });
+
+  testWidgets('header search uses single-layer pill styling by default', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.lightTheme,
+        home: Scaffold(
+          body: CustomTitleBar(
+            isMaximized: false,
+            onMinimize: () {},
+            onMaximize: () {},
+            onClose: () {},
+          ),
+        ),
+      ),
+    );
+
+    final textField = tester.widget<TextField>(find.byType(TextField));
+    final decoration = textField.decoration!;
+    final searchContainerFinder = find.byWidgetPredicate(
+      (widget) => widget is Container && widget.constraints?.maxWidth == 534,
+    );
+    final searchContainer = tester.widget<Container>(searchContainerFinder);
+    final boxDecoration = searchContainer.decoration! as BoxDecoration;
+    final searchSize = tester.getSize(searchContainerFinder);
+
+    expect(decoration.filled, isFalse);
+    expect(decoration.enabledBorder, InputBorder.none);
+    expect(decoration.focusedBorder, InputBorder.none);
+    expect(boxDecoration.border, isNull);
+    expect(boxDecoration.color, AppColors.surfaceContainerHighest);
+    expect(searchSize.height, 36);
+  });
 }

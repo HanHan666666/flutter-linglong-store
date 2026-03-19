@@ -189,27 +189,33 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
   Widget build(BuildContext context) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 534),
-      height: 32,
+      height: 36,
       decoration: BoxDecoration(
-        color: _isFocused
-            ? context.appColors.surface
-            : context.appColors.surfaceContainerLow,
+        color: context.appColors.surfaceContainerHighest,
         borderRadius: AppRadius.lgRadius,
-        border: Border.all(
-          color: _isFocused
-              ? AppColors.primary
-              : context.appColors.borderSecondary,
-          width: _isFocused ? 1.5 : 1,
-        ),
+        border: _isFocused
+            ? Border.all(
+                color: AppColors.primary.withValues(alpha: 0.24),
+                width: 1,
+              )
+            : null,
+        boxShadow: _isFocused
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 1),
+                ),
+              ]
+            : null,
       ),
-      child: Row(
-        children: [
-          InkWell(
-            onTap: _submitSearch,
-            borderRadius: AppRadius.lgRadius,
-            child: SizedBox(
-              width: 48,
-              height: 32,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: _submitSearch,
+              behavior: HitTestBehavior.opaque,
               child: Icon(
                 Icons.search,
                 size: 18,
@@ -218,40 +224,57 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
                     : context.appColors.textTertiary,
               ),
             ),
-          ),
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              focusNode: _focusNode,
-              decoration: InputDecoration(
-                hintText: '在这里搜索你想搜索的应用',
-                hintStyle: AppTextStyles.caption.copyWith(
-                  color: context.appColors.textTertiary,
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                decoration: InputDecoration(
+                  hintText: '在这里搜索你想搜索的应用',
+                  hintStyle: AppTextStyles.caption.copyWith(
+                    fontSize: 13,
+                    height: 1.2,
+                    color: context.appColors.textTertiary,
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  focusedErrorBorder: InputBorder.none,
+                  filled: false,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                  suffixIconConstraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
+                  suffixIcon: _controller.text.isNotEmpty
+                      ? IconButton(
+                          icon: Icon(
+                            Icons.close,
+                            size: 16,
+                            color: context.appColors.textTertiary,
+                          ),
+                          onPressed: _clearSearch,
+                          splashRadius: 14,
+                          padding: EdgeInsets.zero,
+                          tooltip: '清除搜索词',
+                        )
+                      : null,
                 ),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                suffixIcon: _controller.text.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(
-                          Icons.close,
-                          size: 16,
-                          color: context.appColors.textTertiary,
-                        ),
-                        onPressed: _clearSearch,
-                        splashRadius: 16,
-                        tooltip: '清除搜索词',
-                      )
-                    : null,
+                style: AppTextStyles.caption.copyWith(
+                  fontSize: 13,
+                  height: 1.2,
+                  color: context.appColors.textPrimary,
+                ),
+                textAlignVertical: TextAlignVertical.center,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _submitSearch(),
               ),
-              style: AppTextStyles.caption.copyWith(
-                color: context.appColors.textPrimary,
-              ),
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _submitSearch(),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

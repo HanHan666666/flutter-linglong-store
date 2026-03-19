@@ -76,8 +76,8 @@ void main() {
       final carouselCompleter = Completer<HttpResponse<AppListArrayResponse>>();
       final listCompleter = Completer<HttpResponse<AppListResponse>>();
 
-      cacheStore.snapshot = RecommendPageCacheSnapshot(
-        banners: const [
+      cacheStore.snapshot = const RecommendPageCacheSnapshot(
+        banners: [
           BannerInfo(
             id: 'cached-banner',
             title: 'Cached Banner',
@@ -85,7 +85,7 @@ void main() {
             targetAppId: 'cached.app',
           ),
         ],
-        apps: const PaginatedResponse<RecommendAppInfo>(
+        apps: PaginatedResponse<RecommendAppInfo>(
           items: [
             RecommendAppInfo(
               appId: 'cached.app',

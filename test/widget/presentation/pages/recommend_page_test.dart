@@ -88,11 +88,11 @@ void main() {
 Widget _buildTestApp(RecommendState state) {
   return ProviderScope(
     overrides: [recommendProvider.overrideWithValue(state)],
-    child: MaterialApp(
-      locale: const Locale('zh'),
+    child: const MaterialApp(
+      locale: Locale('zh'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const Scaffold(body: RecommendPage()),
+      home: Scaffold(body: RecommendPage()),
     ),
   );
 }

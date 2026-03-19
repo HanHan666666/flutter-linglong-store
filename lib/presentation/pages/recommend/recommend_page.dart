@@ -157,15 +157,12 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
         ),
 
         // 筛选栏
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: CategoryFilterHeaderDelegate(
-            categories: state.data!.categories,
-            selectedIndex: state.selectedCategoryIndex,
-            onSelected: (index) {
-              ref.read(recommendProvider.notifier).selectCategory(index);
-            },
-          ),
+        CategoryFilterSection(
+          categories: state.data!.categories,
+          selectedIndex: state.selectedCategoryIndex,
+          onSelected: (index) {
+            ref.read(recommendProvider.notifier).selectCategory(index);
+          },
         ),
 
         // 应用卡片网格
@@ -190,7 +187,7 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
           _buildBannerSkeleton(),
           const SizedBox(height: AppSpacing.lg),
           // 分类骨架屏
-          _buildCategorySkeleton(),
+          const CategoryFilterSkeleton(),
           const SizedBox(height: AppSpacing.lg),
           // 应用网格骨架屏
           _buildAppsSkeleton(),
@@ -206,35 +203,6 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
       decoration: BoxDecoration(
         color: context.appColors.skeletonBackground,
         borderRadius: AppRadius.smRadius,
-      ),
-    );
-  }
-
-  Widget _buildCategorySkeleton() {
-    return Shimmer.fromColors(
-      baseColor: context.appColors.skeletonBackground,
-      highlightColor: context.appColors.skeletonHighlight,
-      child: Container(
-        height: 56,
-        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: 6,
-          separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-          itemBuilder: (_, __) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-              child: Container(
-                width: 88,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: AppRadius.fullRadius,
-                ),
-              ),
-            );
-          },
-        ),
       ),
     );
   }

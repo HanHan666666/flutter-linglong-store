@@ -28,9 +28,9 @@ class CategoryFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   double get minExtent => 64;
 
-  /// 展开时高度足够容纳多行分类，折叠时固定单行高度
+  /// 头部始终保持单行固定高度；展开内容由外层 sliver 承载。
   @override
-  double get maxExtent => isExpanded ? 136 : 64;
+  double get maxExtent => 64;
 
   @override
   Widget build(
@@ -110,9 +110,6 @@ class _CategoryFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isExpanded) {
-      return _buildExpandedLayout(context);
-    }
     return _buildCollapsedLayout(context);
   }
 
@@ -144,19 +141,19 @@ class _CategoryFilterBar extends StatelessWidget {
             },
           ),
         ),
-        // 展开按钮
+        // 展开按钮仅切换外层面板，头部本身保持固定高度。
         if (onToggleExpand != null)
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.sm),
             child: Tooltip(
-              message: '展开分类',
+              message: isExpanded ? '收起分类' : '展开分类',
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
                 onTap: onToggleExpand,
                 child: Padding(
                   padding: const EdgeInsets.all(6),
                   child: Icon(
-                    Icons.expand_more,
+                    isExpanded ? Icons.expand_less : Icons.expand_more,
                     size: 20,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -167,49 +164,65 @@ class _CategoryFilterBar extends StatelessWidget {
       ],
     );
   }
+}
 
-  /// 展开态：Wrap 多行 + 收起按钮
-  Widget _buildExpandedLayout(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.sm,
+/// 展开态分类面板。
+///
+/// 该面板交给页面主滚动容器承载，避免在分类区域内再次出现滚动条。
+class CategoryFilterExpandedPanel extends StatelessWidget {
+  const CategoryFilterExpandedPanel({
+    required this.categories,
+    required this.selectedIndex,
+    required this.onSelected,
+    this.showCount = false,
+    super.key,
+  });
+
+  final List<CategoryInfo> categories;
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+  final bool showCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        0,
+        AppSpacing.lg,
+        AppSpacing.sm,
       ),
-      child: Wrap(
-        spacing: AppSpacing.sm,
-        runSpacing: AppSpacing.sm,
-        children: [
-          ...List.generate(categories.length, (index) {
-            final category = categories[index];
-            return Tooltip(
-              message: category.name,
-              waitDuration: const Duration(milliseconds: 300),
-              child: _CategoryChip(
-                label: category.name,
-                count: showCount ? category.appCount : null,
-                isSelected: index == selectedIndex,
-                onTap: () => onSelected(index),
-              ),
-            );
-          }),
-          // 收起按钮
-          if (onToggleExpand != null)
-            Tooltip(
-              message: '收起分类',
-              child: InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: onToggleExpand,
-                child: Padding(
-                  padding: const EdgeInsets.all(6),
-                  child: Icon(
-                    Icons.expand_less,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF8F9FB),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3A3A3A) : const Color(0xFFE7EBF0),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          child: Wrap(
+            key: const ValueKey('category-filter-expanded-panel'),
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: List.generate(categories.length, (index) {
+              final category = categories[index];
+              return Tooltip(
+                message: category.name,
+                waitDuration: const Duration(milliseconds: 300),
+                child: _CategoryChip(
+                  label: category.name,
+                  count: showCount ? category.appCount : null,
+                  isSelected: index == selectedIndex,
+                  onTap: () => onSelected(index),
                 ),
-              ),
-            ),
-        ],
+              );
+            }),
+          ),
+        ),
       ),
     );
   }

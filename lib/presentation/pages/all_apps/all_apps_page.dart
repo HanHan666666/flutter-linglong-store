@@ -82,20 +82,17 @@ class _AllAppsPageState extends ConsumerState<AllAppsPage>
       controller: _scrollController,
       slivers: [
         // 分类筛选栏
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: CategoryFilterHeaderDelegate(
-            categories: state.data!.categories,
-            selectedIndex: state.selectedCategoryIndex,
-            onSelected: (index) {
-              ref.read(allAppsProvider.notifier).selectCategory(index);
-            },
-            showCount: true,
-            isExpanded: _isCategoryExpanded,
-            onToggleExpand: () => setState(() {
-              _isCategoryExpanded = !_isCategoryExpanded;
-            }),
-          ),
+        CategoryFilterSection(
+          categories: state.data!.categories,
+          selectedIndex: state.selectedCategoryIndex,
+          onSelected: (index) {
+            ref.read(allAppsProvider.notifier).selectCategory(index);
+          },
+          showCount: true,
+          isExpanded: _isCategoryExpanded,
+          onToggleExpand: () => setState(() {
+            _isCategoryExpanded = !_isCategoryExpanded;
+          }),
         ),
 
         // 应用卡片网格
@@ -117,40 +114,11 @@ class _AllAppsPageState extends ConsumerState<AllAppsPage>
       child: Column(
         children: [
           // 分类骨架屏
-          _buildCategorySkeleton(),
+          const CategoryFilterSkeleton(itemCount: 8, chipWidth: 96),
           const SizedBox(height: AppSpacing.lg),
           // 应用网格骨架屏
           _buildAppsSkeleton(),
         ],
-      ),
-    );
-  }
-
-  Widget _buildCategorySkeleton() {
-    return Shimmer.fromColors(
-      baseColor: context.appColors.skeletonBackground,
-      highlightColor: context.appColors.skeletonHighlight,
-      child: Container(
-        height: 56,
-        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: 8,
-          separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-          itemBuilder: (_, __) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-              child: Container(
-                width: 96,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: AppRadius.fullRadius,
-                ),
-              ),
-            );
-          },
-        ),
       ),
     );
   }

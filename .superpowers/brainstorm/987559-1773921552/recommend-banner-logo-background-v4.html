@@ -1,0 +1,294 @@
+<style>
+  .logo-bg-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .logo-bg-option {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .logo-bg-option:hover {
+    border-color: var(--accent);
+  }
+
+  .logo-bg-option.selected {
+    background: var(--selected-bg);
+    border-color: var(--selected-border);
+  }
+
+  .logo-bg-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .logo-bg-title {
+    font-size: 1.02rem;
+    font-weight: 700;
+  }
+
+  .logo-bg-tag {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+  }
+
+  .logo-banner {
+    position: relative;
+    overflow: hidden;
+    min-height: 252px;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+    background: #f6f6f6;
+  }
+
+  .logo-banner-content {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    bottom: 26px;
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    z-index: 2;
+  }
+
+  .logo-banner-icon {
+    width: 84px;
+    height: 84px;
+    border-radius: 20px;
+    background: #025bff;
+    flex: 0 0 auto;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.03);
+  }
+
+  .logo-banner-copy {
+    min-width: 0;
+    max-width: 430px;
+  }
+
+  .logo-banner-copy h3 {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.1;
+    color: #383838;
+  }
+
+  .logo-banner-copy p {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #666666;
+  }
+
+  .logo-banner-cta {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: #016ffd;
+    color: white;
+    font-size: 12px;
+  }
+
+  .logo-banner-dots {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 10px;
+    text-align: center;
+    color: #b3b3b3;
+    letter-spacing: 0.14rem;
+    font-size: 12px;
+    z-index: 2;
+  }
+
+  .logo-banner-desc {
+    margin-top: 0.85rem;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+  }
+
+  .ghost-svg {
+    position: absolute;
+    pointer-events: none;
+    z-index: 1;
+  }
+</style>
+
+<h2>推荐页轮播视觉方向</h2>
+<p class="subtitle">用你给的 <code>logo.svg</code> 做背景示范。这次不靠光影和玻璃，只看 logo 被“风格化到背景层”之后，哪种更适合当前商店 UI。</p>
+
+<div class="logo-bg-options">
+  <div class="logo-bg-option" data-choice="logo-watermark" onclick="toggleSelect(this)">
+    <div class="logo-bg-head">
+      <div class="logo-bg-title">A. 单个大 Logo 水印版</div>
+      <div class="logo-bg-tag">最稳，我推荐先走这个</div>
+    </div>
+    <div class="logo-banner">
+      <svg class="ghost-svg" viewBox="0 0 128 128" style="right:-18px; top:-18px; width:250px; height:250px; opacity:0.12;">
+        <rect fill="#025BFF" x="0" y="0" width="128" height="128" rx="32"></rect>
+        <g transform="translate(24,17)">
+          <polygon fill="#8BAFF5" points="80 25.0811618 60 34 60 58 40 67.2940338 40 92 80 74"></polygon>
+          <polygon fill="#FFFFFF" points="60 58 40 49 40 25.0811618 60 34"></polygon>
+          <polygon fill="#467FEF" points="80 25.0811618 60 15 40 25.0811618 60 34"></polygon>
+          <polygon fill="#FFFFFF" points="40 92 20 82 20 58 40 67.2940338"></polygon>
+          <polygon fill="#467FEF" points="20 58 40 49 60 58 40 67.2940338"></polygon>
+          <polygon fill="#FFFFFF" points="0 19 20 28 20 77 0 67"></polygon>
+          <polygon fill="#467FEF" points="20 28 60 9 40 0 0 19"></polygon>
+          <polygon fill="#8BAFF5" points="20 28 20 77 40 67.2940338 40 43 60 34 60 9"></polygon>
+        </g>
+      </svg>
+      <div style="position:absolute; inset:0; background:
+        linear-gradient(90deg, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.08) 100%); z-index:1;"></div>
+      <div class="logo-banner-content">
+        <svg class="logo-banner-icon" viewBox="0 0 128 128">
+          <rect fill="#025BFF" x="0" y="0" width="128" height="128" rx="32"></rect>
+          <g transform="translate(24,17)">
+            <polygon fill="#8BAFF5" points="80 25.0811618 60 34 60 58 40 67.2940338 40 92 80 74"></polygon>
+            <polygon fill="#FFFFFF" points="60 58 40 49 40 25.0811618 60 34"></polygon>
+            <polygon fill="#467FEF" points="80 25.0811618 60 15 40 25.0811618 60 34"></polygon>
+            <polygon fill="#FFFFFF" points="40 92 20 82 20 58 40 67.2940338"></polygon>
+            <polygon fill="#467FEF" points="20 58 40 49 60 58 40 67.2940338"></polygon>
+            <polygon fill="#FFFFFF" points="0 19 20 28 20 77 0 67"></polygon>
+            <polygon fill="#467FEF" points="20 28 60 9 40 0 0 19"></polygon>
+            <polygon fill="#8BAFF5" points="20 28 20 77 40 67.2940338 40 43 60 34 60 9"></polygon>
+          </g>
+        </svg>
+        <div class="logo-banner-copy">
+          <h3>玲珑应用商店</h3>
+          <p>更快发现精选应用，保持当前商店界面的简洁与响应速度</p>
+          <span class="logo-banner-cta">查看详情</span>
+        </div>
+      </div>
+      <div class="logo-banner-dots">● ○ ○</div>
+    </div>
+    <div class="logo-banner-desc">一个大 logo 退到右上背景层，透明度压低，只负责制造识别度。优点是简单、稳定、不容易破坏现有页面秩序。</div>
+  </div>
+
+  <div class="logo-bg-option" data-choice="logo-cropped-shapes" onclick="toggleSelect(this)">
+    <div class="logo-bg-head">
+      <div class="logo-bg-title">B. Logo 形块裁切版</div>
+      <div class="logo-bg-tag">更像“设计过”的 Banner</div>
+    </div>
+    <div class="logo-banner">
+      <div style="position:absolute; inset:0; z-index:1;">
+        <svg viewBox="0 0 128 128" style="position:absolute; right:-56px; top:-38px; width:280px; height:280px; opacity:0.18;">
+          <rect fill="#025BFF" x="0" y="0" width="128" height="128" rx="32"></rect>
+          <g transform="translate(24,17)">
+            <polygon fill="#8BAFF5" points="80 25.0811618 60 34 60 58 40 67.2940338 40 92 80 74"></polygon>
+            <polygon fill="#FFFFFF" points="60 58 40 49 40 25.0811618 60 34"></polygon>
+            <polygon fill="#467FEF" points="80 25.0811618 60 15 40 25.0811618 60 34"></polygon>
+            <polygon fill="#FFFFFF" points="40 92 20 82 20 58 40 67.2940338"></polygon>
+            <polygon fill="#467FEF" points="20 58 40 49 60 58 40 67.2940338"></polygon>
+            <polygon fill="#FFFFFF" points="0 19 20 28 20 77 0 67"></polygon>
+            <polygon fill="#467FEF" points="20 28 60 9 40 0 0 19"></polygon>
+            <polygon fill="#8BAFF5" points="20 28 20 77 40 67.2940338 40 43 60 34 60 9"></polygon>
+          </g>
+        </svg>
+        <div style="position:absolute; right:44px; top:32px; width:150px; height:88px; border-radius:8px; background:rgba(255,255,255,0.9); border:1px solid #e6eefc;"></div>
+        <div style="position:absolute; right:60px; top:48px; width:112px; height:10px; border-radius:999px; background:#dfeeff;"></div>
+        <div style="position:absolute; right:60px; top:68px; width:96px; height:10px; border-radius:999px; background:#edf4ff;"></div>
+      </div>
+      <div class="logo-banner-content">
+        <svg class="logo-banner-icon" viewBox="0 0 128 128">
+          <rect fill="#025BFF" x="0" y="0" width="128" height="128" rx="32"></rect>
+          <g transform="translate(24,17)">
+            <polygon fill="#8BAFF5" points="80 25.0811618 60 34 60 58 40 67.2940338 40 92 80 74"></polygon>
+            <polygon fill="#FFFFFF" points="60 58 40 49 40 25.0811618 60 34"></polygon>
+            <polygon fill="#467FEF" points="80 25.0811618 60 15 40 25.0811618 60 34"></polygon>
+            <polygon fill="#FFFFFF" points="40 92 20 82 20 58 40 67.2940338"></polygon>
+            <polygon fill="#467FEF" points="20 58 40 49 60 58 40 67.2940338"></polygon>
+            <polygon fill="#FFFFFF" points="0 19 20 28 20 77 0 67"></polygon>
+            <polygon fill="#467FEF" points="20 28 60 9 40 0 0 19"></polygon>
+            <polygon fill="#8BAFF5" points="20 28 20 77 40 67.2940338 40 43 60 34 60 9"></polygon>
+          </g>
+        </svg>
+        <div class="logo-banner-copy">
+          <h3>玲珑应用商店</h3>
+          <p>用品牌 logo 的几何层次，把背景做得更有设计感，但仍然保持平面和克制</p>
+          <span class="logo-banner-cta">查看详情</span>
+        </div>
+      </div>
+      <div class="logo-banner-dots">○ ● ○</div>
+    </div>
+    <div class="logo-banner-desc">不是把整个 logo 原样放大，而是利用它的几何块面做裁切背景。会更像首页主视觉，但风险是处理不好容易显得“装饰味太重”。</div>
+  </div>
+
+  <div class="logo-bg-option" data-choice="logo-pattern-grid" onclick="toggleSelect(this)">
+    <div class="logo-bg-head">
+      <div class="logo-bg-title">C. Logo 阵列纹样版</div>
+      <div class="logo-bg-tag">更像品牌专区</div>
+    </div>
+    <div class="logo-banner">
+      <svg viewBox="0 0 128 128" style="position:absolute; right:36px; top:28px; width:94px; height:94px; opacity:0.08; z-index:1;">
+        <rect fill="#025BFF" x="0" y="0" width="128" height="128" rx="32"></rect>
+        <g transform="translate(24,17)">
+          <polygon fill="#8BAFF5" points="80 25.0811618 60 34 60 58 40 67.2940338 40 92 80 74"></polygon>
+          <polygon fill="#FFFFFF" points="60 58 40 49 40 25.0811618 60 34"></polygon>
+          <polygon fill="#467FEF" points="80 25.0811618 60 15 40 25.0811618 60 34"></polygon>
+          <polygon fill="#FFFFFF" points="40 92 20 82 20 58 40 67.2940338"></polygon>
+          <polygon fill="#467FEF" points="20 58 40 49 60 58 40 67.2940338"></polygon>
+          <polygon fill="#FFFFFF" points="0 19 20 28 20 77 0 67"></polygon>
+          <polygon fill="#467FEF" points="20 28 60 9 40 0 0 19"></polygon>
+          <polygon fill="#8BAFF5" points="20 28 20 77 40 67.2940338 40 43 60 34 60 9"></polygon>
+        </g>
+      </svg>
+      <svg viewBox="0 0 128 128" style="position:absolute; right:118px; top:68px; width:72px; height:72px; opacity:0.06; z-index:1;">
+        <rect fill="#025BFF" x="0" y="0" width="128" height="128" rx="32"></rect>
+        <g transform="translate(24,17)">
+          <polygon fill="#8BAFF5" points="80 25.0811618 60 34 60 58 40 67.2940338 40 92 80 74"></polygon>
+          <polygon fill="#FFFFFF" points="60 58 40 49 40 25.0811618 60 34"></polygon>
+          <polygon fill="#467FEF" points="80 25.0811618 60 15 40 25.0811618 60 34"></polygon>
+          <polygon fill="#FFFFFF" points="40 92 20 82 20 58 40 67.2940338"></polygon>
+          <polygon fill="#467FEF" points="20 58 40 49 60 58 40 67.2940338"></polygon>
+          <polygon fill="#FFFFFF" points="0 19 20 28 20 77 0 67"></polygon>
+          <polygon fill="#467FEF" points="20 28 60 9 40 0 0 19"></polygon>
+          <polygon fill="#8BAFF5" points="20 28 20 77 40 67.2940338 40 43 60 34 60 9"></polygon>
+        </g>
+      </svg>
+      <svg viewBox="0 0 128 128" style="position:absolute; right:16px; top:116px; width:62px; height:62px; opacity:0.05; z-index:1;">
+        <rect fill="#025BFF" x="0" y="0" width="128" height="128" rx="32"></rect>
+        <g transform="translate(24,17)">
+          <polygon fill="#8BAFF5" points="80 25.0811618 60 34 60 58 40 67.2940338 40 92 80 74"></polygon>
+          <polygon fill="#FFFFFF" points="60 58 40 49 40 25.0811618 60 34"></polygon>
+          <polygon fill="#467FEF" points="80 25.0811618 60 15 40 25.0811618 60 34"></polygon>
+          <polygon fill="#FFFFFF" points="40 92 20 82 20 58 40 67.2940338"></polygon>
+          <polygon fill="#467FEF" points="20 58 40 49 60 58 40 67.2940338"></polygon>
+          <polygon fill="#FFFFFF" points="0 19 20 28 20 77 0 67"></polygon>
+          <polygon fill="#467FEF" points="20 28 60 9 40 0 0 19"></polygon>
+          <polygon fill="#8BAFF5" points="20 28 20 77 40 67.2940338 40 43 60 34 60 9"></polygon>
+        </g>
+      </svg>
+      <div class="logo-banner-content">
+        <svg class="logo-banner-icon" viewBox="0 0 128 128">
+          <rect fill="#025BFF" x="0" y="0" width="128" height="128" rx="32"></rect>
+          <g transform="translate(24,17)">
+            <polygon fill="#8BAFF5" points="80 25.0811618 60 34 60 58 40 67.2940338 40 92 80 74"></polygon>
+            <polygon fill="#FFFFFF" points="60 58 40 49 40 25.0811618 60 34"></polygon>
+            <polygon fill="#467FEF" points="80 25.0811618 60 15 40 25.0811618 60 34"></polygon>
+            <polygon fill="#FFFFFF" points="40 92 20 82 20 58 40 67.2940338"></polygon>
+            <polygon fill="#467FEF" points="20 58 40 49 60 58 40 67.2940338"></polygon>
+            <polygon fill="#FFFFFF" points="0 19 20 28 20 77 0 67"></polygon>
+            <polygon fill="#467FEF" points="20 28 60 9 40 0 0 19"></polygon>
+            <polygon fill="#8BAFF5" points="20 28 20 77 40 67.2940338 40 43 60 34 60 9"></polygon>
+          </g>
+        </svg>
+        <div class="logo-banner-copy">
+          <h3>玲珑应用商店</h3>
+          <p>把品牌 logo 做成稀疏纹样，整体会更有“品牌专区”感</p>
+          <span class="logo-banner-cta">查看详情</span>
+        </div>
+      </div>
+      <div class="logo-banner-dots">○ ○ ●</div>
+    </div>
+    <div class="logo-banner-desc">记忆点会有，但它更像专题页或活动页语言，不一定适合推荐页这种长期常驻入口。</div>
+  </div>
+</div>

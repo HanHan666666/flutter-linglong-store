@@ -1,0 +1,255 @@
+<style>
+  .banner-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .banner-option {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .banner-option:hover {
+    border-color: var(--accent);
+  }
+
+  .banner-option.selected {
+    background: var(--selected-bg);
+    border-color: var(--selected-border);
+  }
+
+  .banner-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .banner-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .banner-tag {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+  }
+
+  .banner-preview {
+    position: relative;
+    overflow: hidden;
+    min-height: 290px;
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  .banner-noise {
+    position: absolute;
+    inset: 0;
+    opacity: 0.18;
+    background:
+      repeating-linear-gradient(
+        120deg,
+        rgba(255,255,255,0.06),
+        rgba(255,255,255,0.06) 1px,
+        transparent 1px,
+        transparent 9px
+      );
+    pointer-events: none;
+  }
+
+  .banner-shot {
+    position: absolute;
+    right: 28px;
+    top: 28px;
+    width: 220px;
+    height: 140px;
+    border-radius: 28px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04));
+    box-shadow: 0 24px 48px rgba(0,0,0,0.18);
+    transform: rotate(-7deg);
+  }
+
+  .banner-shot::before {
+    content: "";
+    position: absolute;
+    inset: 14px;
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04));
+  }
+
+  .banner-shot::after {
+    content: "";
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    bottom: 24px;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.18);
+  }
+
+  .banner-dock {
+    position: absolute;
+    left: 22px;
+    right: 180px;
+    bottom: 22px;
+    display: flex;
+    align-items: flex-end;
+    gap: 18px;
+    padding: 18px 20px 20px;
+    border-radius: 26px;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.08));
+    backdrop-filter: blur(18px);
+    box-shadow: 0 20px 42px rgba(0,0,0,0.2);
+  }
+
+  .logo-box {
+    width: 86px;
+    height: 86px;
+    border-radius: 24px;
+    flex: 0 0 auto;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.72);
+  }
+
+  .banner-copy {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .banner-copy h3 {
+    margin: 0;
+    font-size: 1.8rem;
+    line-height: 1.05;
+    color: white;
+  }
+
+  .banner-copy p {
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.86);
+  }
+
+  .banner-cta {
+    margin-top: 0.8rem;
+    display: inline-block;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.16);
+    color: white;
+    font-size: 0.82rem;
+    border: 1px solid rgba(255,255,255,0.14);
+  }
+
+  .banner-dots {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 12px;
+    text-align: center;
+    color: rgba(255,255,255,0.84);
+    letter-spacing: 0.15rem;
+  }
+
+  .banner-desc {
+    margin-top: 0.85rem;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+  }
+</style>
+
+<h2>推荐页轮播视觉方向</h2>
+<p class="subtitle">这次改成真正的桌面横幅预览。共同点是：海报式背景、左下角 Logo 信息底座、氛围光影和轻玻璃层。</p>
+
+<div class="banner-options">
+  <div class="banner-option" data-choice="aurora-poster-v2" onclick="toggleSelect(this)">
+    <div class="banner-head">
+      <div class="banner-title">A. Aurora Poster</div>
+      <div class="banner-tag">海报感最强，我推荐</div>
+    </div>
+    <div class="banner-preview" style="background:
+      radial-gradient(circle at 14% 24%, rgba(255,176,92,0.92), transparent 22%),
+      radial-gradient(circle at 82% 22%, rgba(124,214,255,0.48), transparent 28%),
+      radial-gradient(circle at 58% 82%, rgba(150,110,255,0.28), transparent 34%),
+      linear-gradient(135deg, #1a2032 0%, #202b48 46%, #12192c 100%);">
+      <div class="banner-noise"></div>
+      <div class="banner-shot"></div>
+      <div class="banner-dock">
+        <div class="logo-box" style="background: linear-gradient(180deg, #fff2c8, #ff9951); box-shadow: 0 18px 32px rgba(255,154,82,0.34), inset 0 1px 0 rgba(255,255,255,0.74);"></div>
+        <div class="banner-copy">
+          <div class="label" style="color: rgba(255,255,255,0.72); margin-bottom: 0.4rem;">海报氛围 / 光影更丰富</div>
+          <h3>DeepSeek</h3>
+          <p>AI 助手，快速搜索、问答与内容生成</p>
+          <span class="banner-cta">查看详情</span>
+        </div>
+      </div>
+      <div class="banner-dots">● ○ ○</div>
+    </div>
+    <div class="banner-desc">背景有明显色团和柔和辉光，左下玻璃底座像主视觉锚点，更接近“应用专题卡”而不是普通广告位。</div>
+  </div>
+
+  <div class="banner-option" data-choice="gallery-spotlight-v2" onclick="toggleSelect(this)">
+    <div class="banner-head">
+      <div class="banner-title">B. Gallery Spotlight</div>
+      <div class="banner-tag">更克制、更干净</div>
+    </div>
+    <div class="banner-preview" style="background:
+      radial-gradient(circle at 12% 30%, rgba(126,216,255,0.34), transparent 18%),
+      radial-gradient(circle at 84% 18%, rgba(255,255,255,0.12), transparent 22%),
+      linear-gradient(135deg, #111827 0%, #1a2134 42%, #0b111d 100%);">
+      <div class="banner-noise" style="opacity:0.1;"></div>
+      <div class="banner-shot" style="background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03));"></div>
+      <div class="banner-dock" style="background: linear-gradient(135deg, rgba(14,20,32,0.42), rgba(255,255,255,0.08));">
+        <div class="logo-box" style="background: linear-gradient(180deg, #8fe7ff, #2e79ff); box-shadow: 0 18px 32px rgba(46,121,255,0.3), inset 0 1px 0 rgba(255,255,255,0.62);"></div>
+        <div class="banner-copy">
+          <div class="label" style="color: rgba(255,255,255,0.72); margin-bottom: 0.4rem;">展陈感 / 更稳</div>
+          <h3>UOS AI</h3>
+          <p>办公与系统协作助手，聚焦生产效率</p>
+          <span class="banner-cta">查看详情</span>
+        </div>
+      </div>
+      <div class="banner-dots">○ ● ○</div>
+    </div>
+    <div class="banner-desc">保留氛围感，但把光影和色彩压低，整体更像精品商店首页。优点是安全，高级感稳定。</div>
+  </div>
+
+  <div class="banner-option" data-choice="prism-dream-v2" onclick="toggleSelect(this)">
+    <div class="banner-head">
+      <div class="banner-title">C. Prism Dream</div>
+      <div class="banner-tag">更梦幻，也更冒险</div>
+    </div>
+    <div class="banner-preview" style="background:
+      radial-gradient(circle at 14% 20%, rgba(255,122,122,0.42), transparent 20%),
+      radial-gradient(circle at 74% 18%, rgba(255,235,138,0.28), transparent 18%),
+      radial-gradient(circle at 76% 80%, rgba(104,255,204,0.22), transparent 26%),
+      linear-gradient(135deg, #26152f 0%, #182537 48%, #111926 100%);">
+      <div class="banner-noise"></div>
+      <div class="banner-shot" style="border-radius: 999px; width: 180px; height: 180px; top: 26px;"></div>
+      <div class="banner-dock">
+        <div class="logo-box" style="background: linear-gradient(180deg, #f7d7ff, #9a6dff); box-shadow: 0 18px 32px rgba(154,109,255,0.32), inset 0 1px 0 rgba(255,255,255,0.64);"></div>
+        <div class="banner-copy">
+          <div class="label" style="color: rgba(255,255,255,0.72); margin-bottom: 0.4rem;">情绪更满 / 艺术化</div>
+          <h3>LibreOffice</h3>
+          <p>办公套件，文档、表格与演示一体协作</p>
+          <span class="banner-cta">查看详情</span>
+        </div>
+      </div>
+      <div class="banner-dots">○ ○ ●</div>
+    </div>
+    <div class="banner-desc">颜色更跳、形态更秀，吸睛是有的，但如果首页整体偏克制，它可能会稍微抢戏。</div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 1.5rem;">
+  <h3>共同结构</h3>
+  <p class="subtitle">不再把 Logo 本身当整张图放大。Logo 进入左下角玻璃底座，作为信息区主角；背景只负责制造氛围和品牌感。</p>
+</div>

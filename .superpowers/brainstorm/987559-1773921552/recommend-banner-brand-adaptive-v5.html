@@ -1,0 +1,400 @@
+<style>
+  .brand-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .brand-option {
+    background: var(--bg-secondary);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .brand-option:hover {
+    border-color: var(--accent);
+  }
+
+  .brand-option.selected {
+    background: var(--selected-bg);
+    border-color: var(--selected-border);
+  }
+
+  .brand-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .brand-title {
+    font-size: 1.04rem;
+    font-weight: 700;
+  }
+
+  .brand-tag {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+  }
+
+  .brand-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+  }
+
+  @media (max-width: 900px) {
+    .brand-pair {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .brand-preview-wrap {
+    min-width: 0;
+  }
+
+  .brand-label {
+    margin-bottom: 0.45rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .brand-banner {
+    position: relative;
+    overflow: hidden;
+    min-height: 216px;
+    border-radius: 12px;
+  }
+
+  .brand-bg-logo {
+    position: absolute;
+    right: -14px;
+    top: -10px;
+    width: 200px;
+    height: 200px;
+    pointer-events: none;
+  }
+
+  .brand-shot {
+    position: absolute;
+    right: 34px;
+    top: 28px;
+    width: 170px;
+    height: 102px;
+    border-radius: 12px;
+  }
+
+  .brand-shot::before {
+    content: "";
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    top: 20px;
+    height: 10px;
+    border-radius: 999px;
+  }
+
+  .brand-shot::after {
+    content: "";
+    position: absolute;
+    left: 18px;
+    width: 76px;
+    top: 44px;
+    height: 10px;
+    border-radius: 999px;
+  }
+
+  .brand-dock {
+    position: absolute;
+    left: 18px;
+    right: 148px;
+    bottom: 18px;
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    padding: 14px 16px 16px;
+    border-radius: 16px;
+  }
+
+  .brand-icon {
+    width: 66px;
+    height: 66px;
+    border-radius: 18px;
+    flex: 0 0 auto;
+    overflow: hidden;
+  }
+
+  .brand-copy {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .brand-copy h3 {
+    margin: 0;
+    font-size: 22px;
+    line-height: 1.08;
+  }
+
+  .brand-copy p {
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .brand-cta {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+  }
+
+  .brand-dots {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 7px;
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 0.12rem;
+  }
+
+  .brand-desc {
+    margin-top: 0.8rem;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+  }
+</style>
+
+<h2>推荐页轮播视觉方向</h2>
+<p class="subtitle">跟随应用品牌色，保留一点点光影和薄玻璃，但同时给出浅色 / 深色观感。共同点：背景仍然来自应用品牌色和 logo 轮廓，不做重广告风。</p>
+
+<div class="brand-options">
+  <div class="brand-option" data-choice="brand-soft-glass" onclick="toggleSelect(this)">
+    <div class="brand-head">
+      <div class="brand-title">A. Soft Brand Glass</div>
+      <div class="brand-tag">最平衡，我推荐</div>
+    </div>
+    <div class="brand-pair">
+      <div class="brand-preview-wrap">
+        <div class="brand-label">Light</div>
+        <div class="brand-banner" style="background:
+          radial-gradient(circle at 16% 22%, rgba(255,255,255,0.12), transparent 22%),
+          linear-gradient(135deg, #57c77d 0%, #25b562 48%, #149d50 100%);">
+          <svg class="brand-bg-logo" viewBox="0 0 128 128" style="opacity:0.12;">
+            <rect fill="#FFFFFF" x="0" y="0" width="128" height="128" rx="32"></rect>
+            <g transform="translate(24,17)">
+              <polygon fill="#FFFFFF" opacity="0.58" points="80 25.0811618 60 34 60 58 40 67.2940338 40 92 80 74"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="60 58 40 49 40 25.0811618 60 34"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="80 25.0811618 60 15 40 25.0811618 60 34"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="40 92 20 82 20 58 40 67.2940338"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="20 58 40 49 60 58 40 67.2940338"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="0 19 20 28 20 77 0 67"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="20 28 60 9 40 0 0 19"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.58" points="20 28 20 77 40 67.2940338 40 43 60 34 60 9"></polygon>
+            </g>
+          </svg>
+          <div class="brand-shot" style="background: rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.18); box-shadow: 0 10px 28px rgba(11,87,42,0.14);">
+          </div>
+          <div class="brand-dock" style="background: linear-gradient(135deg, rgba(255,255,255,0.24), rgba(255,255,255,0.12)); border:1px solid rgba(255,255,255,0.16); box-shadow: 0 10px 24px rgba(11,87,42,0.12);">
+            <svg class="brand-icon" viewBox="0 0 128 128">
+              <rect fill="#22C55E" x="0" y="0" width="128" height="128" rx="32"></rect>
+              <circle fill="#FFFFFF" cx="45" cy="44" r="15"></circle>
+              <circle fill="#FFFFFF" cx="80" cy="44" r="12"></circle>
+              <ellipse fill="#FFFFFF" cx="53" cy="79" rx="34" ry="22"></ellipse>
+            </svg>
+            <div class="brand-copy">
+              <h3 style="color:#ffffff;">微信</h3>
+              <p style="color:rgba(255,255,255,0.88);">全方位的通讯应用</p>
+              <span class="brand-cta" style="background: rgba(255,255,255,0.16); color:#ffffff; border:1px solid rgba(255,255,255,0.14);">查看详情</span>
+            </div>
+          </div>
+          <div class="brand-dots" style="color:rgba(255,255,255,0.82);">● ○ ○</div>
+        </div>
+      </div>
+
+      <div class="brand-preview-wrap">
+        <div class="brand-label">Dark</div>
+        <div class="brand-banner" style="background:
+          radial-gradient(circle at 16% 22%, rgba(255,255,255,0.06), transparent 22%),
+          linear-gradient(135deg, #1f7a43 0%, #155f33 42%, #114928 100%);">
+          <svg class="brand-bg-logo" viewBox="0 0 128 128" style="opacity:0.14;">
+            <rect fill="#FFFFFF" x="0" y="0" width="128" height="128" rx="32"></rect>
+            <g transform="translate(24,17)">
+              <polygon fill="#FFFFFF" opacity="0.58" points="80 25.0811618 60 34 60 58 40 67.2940338 40 92 80 74"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="60 58 40 49 40 25.0811618 60 34"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="80 25.0811618 60 15 40 25.0811618 60 34"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="40 92 20 82 20 58 40 67.2940338"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="20 58 40 49 60 58 40 67.2940338"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="0 19 20 28 20 77 0 67"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="20 28 60 9 40 0 0 19"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.58" points="20 28 20 77 40 67.2940338 40 43 60 34 60 9"></polygon>
+            </g>
+          </svg>
+          <div class="brand-shot" style="background: rgba(17,17,17,0.18); border:1px solid rgba(255,255,255,0.10); box-shadow: 0 10px 28px rgba(0,0,0,0.14);"></div>
+          <div class="brand-dock" style="background: linear-gradient(135deg, rgba(17,17,17,0.22), rgba(255,255,255,0.08)); border:1px solid rgba(255,255,255,0.10); box-shadow: 0 10px 24px rgba(0,0,0,0.12);">
+            <svg class="brand-icon" viewBox="0 0 128 128">
+              <rect fill="#22C55E" x="0" y="0" width="128" height="128" rx="32"></rect>
+              <circle fill="#FFFFFF" cx="45" cy="44" r="15"></circle>
+              <circle fill="#FFFFFF" cx="80" cy="44" r="12"></circle>
+              <ellipse fill="#FFFFFF" cx="53" cy="79" rx="34" ry="22"></ellipse>
+            </svg>
+            <div class="brand-copy">
+              <h3 style="color:#ffffff;">微信</h3>
+              <p style="color:rgba(255,255,255,0.84);">全方位的通讯应用</p>
+              <span class="brand-cta" style="background: rgba(255,255,255,0.12); color:#ffffff; border:1px solid rgba(255,255,255,0.10);">查看详情</span>
+            </div>
+          </div>
+          <div class="brand-dots" style="color:rgba(255,255,255,0.74);">● ○ ○</div>
+        </div>
+      </div>
+    </div>
+    <div class="brand-desc">品牌色主导背景，但透明层很薄，仍然保留当前商店的克制感。浅色靠亮雾层，深色靠暗雾层，结构不变，只调材质强度。</div>
+  </div>
+
+  <div class="brand-option" data-choice="brand-color-stage" onclick="toggleSelect(this)">
+    <div class="brand-head">
+      <div class="brand-title">B. Color Stage</div>
+      <div class="brand-tag">更有 Banner 感</div>
+    </div>
+    <div class="brand-pair">
+      <div class="brand-preview-wrap">
+        <div class="brand-label">Light</div>
+        <div class="brand-banner" style="background:
+          radial-gradient(circle at 76% 20%, rgba(255,255,255,0.14), transparent 18%),
+          linear-gradient(135deg, #4aa3ff 0%, #247dff 46%, #0d62e8 100%);">
+          <svg class="brand-bg-logo" viewBox="0 0 128 128" style="opacity:0.13; width:220px; height:220px;">
+            <rect fill="#FFFFFF" x="0" y="0" width="128" height="128" rx="32"></rect>
+            <g transform="translate(24,17)">
+              <polygon fill="#FFFFFF" opacity="0.58" points="80 25.0811618 60 34 60 58 40 67.2940338 40 92 80 74"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="60 58 40 49 40 25.0811618 60 34"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="80 25.0811618 60 15 40 25.0811618 60 34"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="40 92 20 82 20 58 40 67.2940338"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="20 58 40 49 60 58 40 67.2940338"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="0 19 20 28 20 77 0 67"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="20 28 60 9 40 0 0 19"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.58" points="20 28 20 77 40 67.2940338 40 43 60 34 60 9"></polygon>
+            </g>
+          </svg>
+          <div class="brand-shot" style="background: rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.18); box-shadow: 0 12px 28px rgba(13,70,153,0.18);"></div>
+          <div class="brand-dock" style="background: linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.10)); border:1px solid rgba(255,255,255,0.18);">
+            <div class="brand-icon" style="background: linear-gradient(180deg, #a6d2ff, #1d74ff);"></div>
+            <div class="brand-copy">
+              <h3 style="color:#ffffff;">UOS AI</h3>
+              <p style="color:rgba(255,255,255,0.88);">办公与系统协作助手，聚焦生产效率</p>
+              <span class="brand-cta" style="background: rgba(255,255,255,0.14); color:#ffffff; border:1px solid rgba(255,255,255,0.12);">查看详情</span>
+            </div>
+          </div>
+          <div class="brand-dots" style="color:rgba(255,255,255,0.82);">○ ● ○</div>
+        </div>
+      </div>
+
+      <div class="brand-preview-wrap">
+        <div class="brand-label">Dark</div>
+        <div class="brand-banner" style="background:
+          radial-gradient(circle at 76% 20%, rgba(255,255,255,0.08), transparent 18%),
+          linear-gradient(135deg, #1b4f94 0%, #173d73 44%, #122b50 100%);">
+          <svg class="brand-bg-logo" viewBox="0 0 128 128" style="opacity:0.16; width:220px; height:220px;">
+            <rect fill="#FFFFFF" x="0" y="0" width="128" height="128" rx="32"></rect>
+            <g transform="translate(24,17)">
+              <polygon fill="#FFFFFF" opacity="0.58" points="80 25.0811618 60 34 60 58 40 67.2940338 40 92 80 74"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="60 58 40 49 40 25.0811618 60 34"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="80 25.0811618 60 15 40 25.0811618 60 34"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="40 92 20 82 20 58 40 67.2940338"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="20 58 40 49 60 58 40 67.2940338"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="0 19 20 28 20 77 0 67"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="20 28 60 9 40 0 0 19"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.58" points="20 28 20 77 40 67.2940338 40 43 60 34 60 9"></polygon>
+            </g>
+          </svg>
+          <div class="brand-shot" style="background: rgba(17,17,17,0.20); border:1px solid rgba(255,255,255,0.10);"></div>
+          <div class="brand-dock" style="background: linear-gradient(135deg, rgba(17,17,17,0.24), rgba(255,255,255,0.06)); border:1px solid rgba(255,255,255,0.10);">
+            <div class="brand-icon" style="background: linear-gradient(180deg, #8ab9ff, #1d74ff);"></div>
+            <div class="brand-copy">
+              <h3 style="color:#ffffff;">UOS AI</h3>
+              <p style="color:rgba(255,255,255,0.84);">办公与系统协作助手，聚焦生产效率</p>
+              <span class="brand-cta" style="background: rgba(255,255,255,0.12); color:#ffffff; border:1px solid rgba(255,255,255,0.10);">查看详情</span>
+            </div>
+          </div>
+          <div class="brand-dots" style="color:rgba(255,255,255,0.74);">○ ● ○</div>
+        </div>
+      </div>
+    </div>
+    <div class="brand-desc">颜色更饱和，首页第一眼会更抓人，像真正的主视觉 Banner。但如果列表区和顶部都偏素，这版有一定抢戏风险。</div>
+  </div>
+
+  <div class="brand-option" data-choice="brand-dark-ink" onclick="toggleSelect(this)">
+    <div class="brand-head">
+      <div class="brand-title">C. Dark Ink Overlay</div>
+      <div class="brand-tag">深色适配最稳，但浅色会偏重</div>
+    </div>
+    <div class="brand-pair">
+      <div class="brand-preview-wrap">
+        <div class="brand-label">Light</div>
+        <div class="brand-banner" style="background:
+          linear-gradient(135deg, #ffb450 0%, #f48f26 44%, #d96d0f 100%);">
+          <svg class="brand-bg-logo" viewBox="0 0 128 128" style="opacity:0.14;">
+            <rect fill="#FFFFFF" x="0" y="0" width="128" height="128" rx="32"></rect>
+            <g transform="translate(24,17)">
+              <polygon fill="#FFFFFF" opacity="0.58" points="80 25.0811618 60 34 60 58 40 67.2940338 40 92 80 74"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="60 58 40 49 40 25.0811618 60 34"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="80 25.0811618 60 15 40 25.0811618 60 34"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="40 92 20 82 20 58 40 67.2940338"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="20 58 40 49 60 58 40 67.2940338"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="0 19 20 28 20 77 0 67"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="20 28 60 9 40 0 0 19"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.58" points="20 28 20 77 40 67.2940338 40 43 60 34 60 9"></polygon>
+            </g>
+          </svg>
+          <div style="position:absolute; inset:0; background: linear-gradient(90deg, rgba(0,0,0,0.16), rgba(0,0,0,0.05) 55%, rgba(0,0,0,0));"></div>
+          <div class="brand-dock" style="background: rgba(17,17,17,0.16); border:1px solid rgba(255,255,255,0.14);">
+            <div class="brand-icon" style="background: linear-gradient(180deg, #ffe0a8, #ff8f1f);"></div>
+            <div class="brand-copy">
+              <h3 style="color:#ffffff;">QQ 音乐</h3>
+              <p style="color:rgba(255,255,255,0.88);">发现好音乐，听见更大的世界</p>
+              <span class="brand-cta" style="background: rgba(255,255,255,0.14); color:#ffffff; border:1px solid rgba(255,255,255,0.12);">查看详情</span>
+            </div>
+          </div>
+          <div class="brand-dots" style="color:rgba(255,255,255,0.82);">○ ○ ●</div>
+        </div>
+      </div>
+
+      <div class="brand-preview-wrap">
+        <div class="brand-label">Dark</div>
+        <div class="brand-banner" style="background:
+          linear-gradient(135deg, #8a4f0d 0%, #6e3d09 42%, #4a2704 100%);">
+          <svg class="brand-bg-logo" viewBox="0 0 128 128" style="opacity:0.16;">
+            <rect fill="#FFFFFF" x="0" y="0" width="128" height="128" rx="32"></rect>
+            <g transform="translate(24,17)">
+              <polygon fill="#FFFFFF" opacity="0.58" points="80 25.0811618 60 34 60 58 40 67.2940338 40 92 80 74"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="60 58 40 49 40 25.0811618 60 34"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="80 25.0811618 60 15 40 25.0811618 60 34"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="40 92 20 82 20 58 40 67.2940338"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="20 58 40 49 60 58 40 67.2940338"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.96" points="0 19 20 28 20 77 0 67"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.72" points="20 28 60 9 40 0 0 19"></polygon>
+              <polygon fill="#FFFFFF" opacity="0.58" points="20 28 20 77 40 67.2940338 40 43 60 34 60 9"></polygon>
+            </g>
+          </svg>
+          <div style="position:absolute; inset:0; background: linear-gradient(90deg, rgba(0,0,0,0.22), rgba(0,0,0,0.08) 55%, rgba(0,0,0,0));"></div>
+          <div class="brand-dock" style="background: rgba(17,17,17,0.22); border:1px solid rgba(255,255,255,0.10);">
+            <div class="brand-icon" style="background: linear-gradient(180deg, #ffd48e, #ff8f1f);"></div>
+            <div class="brand-copy">
+              <h3 style="color:#ffffff;">QQ 音乐</h3>
+              <p style="color:rgba(255,255,255,0.84);">发现好音乐，听见更大的世界</p>
+              <span class="brand-cta" style="background: rgba(255,255,255,0.12); color:#ffffff; border:1px solid rgba(255,255,255,0.10);">查看详情</span>
+            </div>
+          </div>
+          <div class="brand-dots" style="color:rgba(255,255,255,0.74);">○ ○ ●</div>
+        </div>
+      </div>
+    </div>
+    <div class="brand-desc">靠一层深墨色覆盖兜住任何品牌色，深色模式里最好控，但浅色模式会显得稍微重了一点，没有 A 那么轻。</div>
+  </div>
+</div>

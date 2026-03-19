@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -12,6 +11,7 @@ import '../../../data/models/api_dto.dart';
 import '../../../data/repositories/app_repository_impl.dart';
 import '../../widgets/app_icon.dart';
 import '../../widgets/app_detail_secondary_actions.dart';
+import '../../widgets/app_detail_info_section.dart';
 import '../../widgets/install_button.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../../core/di/providers.dart';
@@ -526,6 +526,45 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
     if (app == null) return const SizedBox.shrink();
 
+    // 长字段独占整行，短字段按三列栅格排布，避免继续把所有信息竖着堆成表格。
+    final entries = <AppDetailInfoEntry>[
+      AppDetailInfoEntry(
+        label: '包名',
+        value: app.appId,
+        span: AppDetailInfoSpan.full,
+        isCopyable: true,
+      ),
+      AppDetailInfoEntry(label: '版本', value: app.version),
+      if (app.arch != null) AppDetailInfoEntry(label: '架构', value: app.arch!),
+      if (app.channel != null)
+        AppDetailInfoEntry(label: '渠道', value: app.channel!),
+      if (formattedAppSize != null)
+        AppDetailInfoEntry(label: '大小', value: formattedAppSize),
+      if (app.kind != null) AppDetailInfoEntry(label: '类型', value: app.kind!),
+      if (detail?.developerName != null)
+        AppDetailInfoEntry(label: '开发者', value: detail!.developerName!),
+      if (detail?.categoryName != null)
+        AppDetailInfoEntry(label: '分类', value: detail!.categoryName!),
+      if (app.runtime != null)
+        AppDetailInfoEntry(
+          label: '运行时',
+          value: app.runtime!,
+          span: AppDetailInfoSpan.full,
+        ),
+      if (detail?.license != null)
+        AppDetailInfoEntry(
+          label: '许可证',
+          value: detail!.license!,
+          span: AppDetailInfoSpan.full,
+        ),
+      if (detail?.homePage != null)
+        AppDetailInfoEntry(
+          label: '主页',
+          value: detail!.homePage!,
+          span: AppDetailInfoSpan.full,
+        ),
+    ];
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -538,92 +577,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          Table(
-            columnWidths: const {0: FixedColumnWidth(80), 1: FlexColumnWidth()},
-            children: [
-              _buildCopyableTableRow(context, '包名', app.appId),
-              _buildTableRow('版本', app.version),
-              if (app.arch != null) _buildTableRow('架构', app.arch!),
-              if (app.channel != null) _buildTableRow('渠道', app.channel!),
-              if (formattedAppSize != null)
-                _buildTableRow('大小', formattedAppSize),
-              if (app.kind != null) _buildTableRow('类型', app.kind!),
-              if (app.runtime != null) _buildTableRow('运行时', app.runtime!),
-              // 从详情获取的额外信息
-              if (detail?.developerName != null)
-                _buildTableRow('开发者', detail!.developerName!),
-              if (detail?.categoryName != null)
-                _buildTableRow('分类', detail!.categoryName!),
-              if (detail?.license != null)
-                _buildTableRow('许可证', detail!.license!),
-              if (detail?.homePage != null)
-                _buildTableRow('主页', detail!.homePage!),
-            ],
-          ),
+          AppDetailInfoSection(entries: entries),
         ],
       ),
-    );
-  }
-
-  /// 构建带复制按鈕的表格行（用于包名等可复制字段）
-  TableRow _buildCopyableTableRow(
-    BuildContext context,
-    String label,
-    String value,
-  ) {
-    return TableRow(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Text(label, style: TextStyle(color: Colors.grey[600])),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Row(
-            children: [
-              Expanded(child: Text(value)),
-              // 复制图标按鈕
-              SizedBox(
-                width: 28,
-                height: 28,
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  iconSize: 16,
-                  tooltip: '复制',
-                  icon: const Icon(Icons.copy_outlined),
-                  onPressed: () async {
-                    await Clipboard.setData(ClipboardData(text: value));
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('已复制：$value'),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// 构建表格行
-  TableRow _buildTableRow(String label, String value) {
-    return TableRow(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Text(label, style: TextStyle(color: Colors.grey[600])),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Text(value),
-        ),
-      ],
     );
   }
 

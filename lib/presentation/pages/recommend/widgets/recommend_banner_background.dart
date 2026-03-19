@@ -4,12 +4,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../domain/models/recommend_models.dart';
+import 'recommend_banner_palette_resolver.dart';
 
 /// 推荐页轮播背景层。
 ///
 /// 职责仅限于渲染品牌色背景与风格化背景元素，
 /// 后续替换为图片背景或其他风格时，只需要替换这个组件。
-class RecommendBannerBackground extends StatelessWidget {
+class RecommendBannerBackground extends StatefulWidget {
   const RecommendBannerBackground({
     required this.banner,
     required this.child,
@@ -20,9 +21,55 @@ class RecommendBannerBackground extends StatelessWidget {
   final Widget child;
 
   @override
+  State<RecommendBannerBackground> createState() =>
+      _RecommendBannerBackgroundState();
+}
+
+class _RecommendBannerBackgroundState extends State<RecommendBannerBackground> {
+  RecommendBannerPalette? _resolvedPalette;
+  Brightness? _lastBrightness;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final brightness = Theme.of(context).brightness;
+    if (_lastBrightness != brightness) {
+      _lastBrightness = brightness;
+      _resolvedPalette = null;
+      _loadPalette();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant RecommendBannerBackground oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.banner.imageUrl != widget.banner.imageUrl ||
+        oldWidget.banner.title != widget.banner.title) {
+      _resolvedPalette = null;
+      _loadPalette();
+    }
+  }
+
+  Future<void> _loadPalette() async {
+    final palette = await RecommendBannerPaletteResolver.resolve(
+      seed: widget.banner.title,
+      imageUrl: widget.banner.imageUrl,
+      isDark: Theme.of(context).brightness == Brightness.dark,
+    );
+    if (!mounted) return;
+    setState(() => _resolvedPalette = palette);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final palette = _BannerPalette.resolve(banner.title, isDark: isDark);
+    final banner = widget.banner;
+    final palette =
+        _resolvedPalette ??
+        RecommendBannerPaletteResolver.buildPaletteFromBaseColor(
+          const Color(0xFF1D74FF),
+          isDark: isDark,
+        );
 
     return DecoratedBox(
       key: const Key('recommend-banner-background'),
@@ -119,7 +166,7 @@ class RecommendBannerBackground extends StatelessWidget {
                 ),
               ),
             ),
-            child,
+            widget.child,
           ],
         ),
       ),
@@ -130,7 +177,7 @@ class RecommendBannerBackground extends StatelessWidget {
 class _FallbackBrandShape extends StatelessWidget {
   const _FallbackBrandShape({required this.palette});
 
-  final _BannerPalette palette;
+  final RecommendBannerPalette palette;
 
   @override
   Widget build(BuildContext context) {
@@ -226,37 +273,5 @@ class _PreviewPlate extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _BannerPalette {
-  const _BannerPalette({
-    required this.start,
-    required this.end,
-    required this.accent,
-  });
-
-  final Color start;
-  final Color end;
-  final Color accent;
-
-  static _BannerPalette resolve(String seed, {required bool isDark}) {
-    const bases = <Color>[
-      Color(0xFF22C55E),
-      Color(0xFF1D74FF),
-      Color(0xFFFF8F1F),
-      Color(0xFF14B8A6),
-      Color(0xFF8B5CF6),
-      Color(0xFFF43F5E),
-    ];
-    final base = bases[seed.hashCode.abs() % bases.length];
-    final start = Color.lerp(
-      base,
-      isDark ? Colors.black : Colors.white,
-      isDark ? 0.38 : 0.18,
-    )!;
-    final end = Color.lerp(base, Colors.black, isDark ? 0.56 : 0.16)!;
-    final accent = Color.lerp(base, Colors.white, isDark ? 0.18 : 0.34)!;
-    return _BannerPalette(start: start, end: end, accent: accent);
   }
 }

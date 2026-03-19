@@ -19,6 +19,7 @@ import '../../../application/providers/installed_apps_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
 import '../../../application/providers/running_process_provider.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
+import '../../../core/utils/format_utils.dart';
 
 part 'app_detail_page.g.dart';
 
@@ -519,6 +520,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   Widget _buildAppInfoTable(BuildContext context, AppDetailState detailState) {
     final app = detailState.app;
     final detail = detailState.appDetail;
+    final formattedAppSize = app?.size == null
+        ? null
+        : FormatUtils.formatFileSizeValue(app!.size);
 
     if (app == null) return const SizedBox.shrink();
 
@@ -541,7 +545,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               _buildTableRow('版本', app.version),
               if (app.arch != null) _buildTableRow('架构', app.arch!),
               if (app.channel != null) _buildTableRow('渠道', app.channel!),
-              if (app.size != null) _buildTableRow('大小', app.size!),
+              if (formattedAppSize != null)
+                _buildTableRow('大小', formattedAppSize),
               if (app.kind != null) _buildTableRow('类型', app.kind!),
               if (app.runtime != null) _buildTableRow('运行时', app.runtime!),
               // 从详情获取的额外信息
@@ -701,10 +706,14 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 final isInstalledVersion = installedVersions.contains(
                   version.versionNo,
                 );
-                final subtitleParts = [
-                  version.releaseTime,
+                final formattedPackageSize = FormatUtils.formatFileSizeValue(
                   version.packageSize,
-                ].whereType<String>().where((item) => item.isNotEmpty).toList();
+                );
+                final subtitleParts = <String>[
+                  if (version.releaseTime?.isNotEmpty ?? false)
+                    version.releaseTime!,
+                  if (formattedPackageSize != '--') formattedPackageSize,
+                ];
 
                 return ListTile(
                   contentPadding: EdgeInsets.zero,

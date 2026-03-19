@@ -189,51 +189,49 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
   Widget build(BuildContext context) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 534),
-      height: 36,
+      height: 32,
       decoration: BoxDecoration(
         color: context.appColors.surfaceContainerHighest,
         borderRadius: AppRadius.lgRadius,
-        border: _isFocused
-            ? Border.all(
-                color: AppColors.primary.withValues(alpha: 0.24),
-                width: 1,
-              )
-            : null,
-        boxShadow: _isFocused
-            ? [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  blurRadius: 10,
-                  offset: const Offset(0, 1),
-                ),
-              ]
-            : null,
+        border: Border.all(
+          color: _isFocused
+              ? AppColors.primary
+              : context.appColors.borderSecondary,
+          width: 1,
+        ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             GestureDetector(
               onTap: _submitSearch,
               behavior: HitTestBehavior.opaque,
               child: Icon(
                 Icons.search,
-                size: 18,
+                size: 16,
                 color: _isFocused
                     ? AppColors.primary
                     : context.appColors.textTertiary,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Expanded(
               child: TextField(
                 controller: _controller,
                 focusNode: _focusNode,
+                strutStyle: const StrutStyle(
+                  fontSize: 13,
+                  height: 1,
+                  forceStrutHeight: true,
+                ),
+                maxLines: 1,
                 decoration: InputDecoration(
                   hintText: '在这里搜索你想搜索的应用',
                   hintStyle: AppTextStyles.caption.copyWith(
                     fontSize: 13,
-                    height: 1.2,
+                    height: 1,
                     color: context.appColors.textTertiary,
                   ),
                   border: InputBorder.none,
@@ -246,8 +244,8 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
                   suffixIconConstraints: const BoxConstraints(
-                    minWidth: 28,
-                    minHeight: 28,
+                    minWidth: 24,
+                    minHeight: 24,
                   ),
                   suffixIcon: _controller.text.isNotEmpty
                       ? IconButton(
@@ -265,7 +263,7 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
                 ),
                 style: AppTextStyles.caption.copyWith(
                   fontSize: 13,
-                  height: 1.2,
+                  height: 1,
                   color: context.appColors.textPrimary,
                 ),
                 textAlignVertical: TextAlignVertical.center,

@@ -94,9 +94,9 @@ sealed class RecommendState with _$RecommendState {
   const factory RecommendState({
     @Default(false) bool isLoading,
     @Default(false) bool isLoadingMore,
+    @Default(false) bool hasHydratedFromCache,
     String? error,
     RecommendData? data,
-    @Default(0) int selectedCategoryIndex,
     @Default(1) int currentPage,
   }) = _RecommendState;
 }

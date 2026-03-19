@@ -12,6 +12,7 @@
   - 只有切到“玲珑进程”Tab 时才允许开启轮询
   - 页面隐藏时必须暂停轮询
   - 页面重新可见时立即补一次刷新
+  - 页面可见性必须由 Shell 当前路由显式驱动，不能只依赖 KeepAlive widget 的 `activate/deactivate`
 
 ## 进程数据来源
 统一由 [linglong_cli_repository_impl.dart](/home/han/linglong-store/flutter-linglong-store/lib/data/repositories/linglong_cli_repository_impl.dart) 获取。
@@ -55,6 +56,7 @@
 - 切到进程 Tab：立即刷新一次，再进入轮询
 - 页面恢复可见：立即刷新一次，再进入轮询
 - 离开进程 Tab 或页面隐藏：立刻停止计时器
+- 当用户切换到 `推荐 / 全部 / 排行 / 设置 / 更新` 等其他页面时，必须立即把 `我的应用` 路由标记为 hidden，后台不允许继续保留 3 秒轮询
 
 ### 并发保护
 - `_isFetching` 防止同一时刻重复拉取

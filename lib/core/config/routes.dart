@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../presentation/widgets/app_shell.dart';
 import '../../presentation/pages/all_apps/all_apps_page.dart';
@@ -16,6 +17,7 @@ import '../../presentation/pages/setting/setting_page.dart';
 import '../../presentation/pages/update_app/update_app_page.dart';
 import '../../domain/models/installed_app.dart';
 import '../../application/providers/launch_provider.dart';
+import 'keepalive_visibility_sync.dart';
 import 'page_visibility.dart';
 
 /// 页面变为可见通知
@@ -263,6 +265,12 @@ class KeepAlivePageWrapperState extends State<KeepAlivePageWrapper>
   /// 当前是否可见
   bool _isVisible = true;
   bool? _pendingVisibility;
+  late final KeepAliveVisibilityBinding _visibilityBinding =
+      KeepAliveVisibilityBinding(
+        show: setAsVisible,
+        hide: setAsHidden,
+        isMounted: () => mounted,
+      );
 
   @override
   bool get wantKeepAlive => keepAliveRoutes.contains(widget.routePath);
@@ -273,6 +281,10 @@ class KeepAlivePageWrapperState extends State<KeepAlivePageWrapper>
   @override
   void initState() {
     super.initState();
+    KeepAlivePageRegistry.register(
+      routePath: widget.routePath,
+      binding: _visibilityBinding,
+    );
     // 页面首次创建时，通知管理器
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -283,59 +295,98 @@ class KeepAlivePageWrapperState extends State<KeepAlivePageWrapper>
   @override
   void didUpdateWidget(KeepAlivePageWrapper oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 如果路由路径变化，更新可见性状态
     if (oldWidget.routePath != widget.routePath) {
+      KeepAlivePageRegistry.unregister(
+        routePath: oldWidget.routePath,
+        binding: _visibilityBinding,
+      );
+      KeepAlivePageRegistry.register(
+        routePath: widget.routePath,
+        binding: _visibilityBinding,
+      );
       _updateVisibility(true);
     }
   }
 
   @override
-  void deactivate() {
-    // 页面从树中移除时，标记为隐藏
-    _updateVisibility(false);
-    super.deactivate();
-  }
-
-  @override
-  void activate() {
-    // 页面重新激活时，标记为可见
-    super.activate();
-    _updateVisibility(true);
+  void dispose() {
+    KeepAlivePageRegistry.unregister(
+      routePath: widget.routePath,
+      binding: _visibilityBinding,
+    );
+    super.dispose();
   }
 
   /// 更新可见性状态
   void _updateVisibility(bool visible) {
+    final manager = PageVisibilityManager.instance;
+    final managerStatus = manager.getVisibilityStatus(widget.routePath);
+    final managerMatches = visible
+        ? managerStatus == PageVisibilityStatus.mountedVisible
+        : managerStatus == PageVisibilityStatus.mountedHidden;
+
     if (_pendingVisibility == visible ||
-        (_pendingVisibility == null && _isVisible == visible)) {
+        (_pendingVisibility == null &&
+            _isVisible == visible &&
+            managerMatches)) {
       return;
     }
 
     _pendingVisibility = visible;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        _pendingVisibility = null;
-        return;
-      }
+    final schedulerPhase = SchedulerBinding.instance.schedulerPhase;
+    final shouldDefer =
+        schedulerPhase == SchedulerPhase.transientCallbacks ||
+        schedulerPhase == SchedulerPhase.midFrameMicrotasks ||
+        schedulerPhase == SchedulerPhase.persistentCallbacks;
 
-      final nextVisibility = _pendingVisibility;
+    if (shouldDefer) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _flushPendingVisibility();
+      });
+      return;
+    }
+
+    _flushPendingVisibility();
+  }
+
+  void _flushPendingVisibility() {
+    if (!mounted) {
       _pendingVisibility = null;
-      if (nextVisibility == null || _isVisible == nextVisibility) {
-        return;
-      }
+      return;
+    }
 
+    final nextVisibility = _pendingVisibility;
+    _pendingVisibility = null;
+    if (nextVisibility == null) {
+      return;
+    }
+
+    final manager = PageVisibilityManager.instance;
+    final managerStatus = manager.getVisibilityStatus(widget.routePath);
+    final managerMatches = nextVisibility
+        ? managerStatus == PageVisibilityStatus.mountedVisible
+        : managerStatus == PageVisibilityStatus.mountedHidden;
+
+    final shouldUpdateWidgetState = _isVisible != nextVisibility;
+    if (!shouldUpdateWidgetState && managerMatches) {
+      return;
+    }
+
+    if (shouldUpdateWidgetState) {
       setState(() {
         _isVisible = nextVisibility;
       });
+    }
 
-      final manager = PageVisibilityManager.instance;
-      if (nextVisibility) {
-        manager.notifyPageVisible(widget.routePath);
-      } else {
-        manager.notifyPageHidden(widget.routePath);
-      }
+    if (nextVisibility) {
+      manager.notifyPageVisible(widget.routePath);
+    } else {
+      manager.notifyPageHidden(widget.routePath);
+    }
 
+    if (shouldUpdateWidgetState) {
       _notifyChildVisibilityChanged();
-    });
+    }
   }
 
   /// 通知子组件可见性变化

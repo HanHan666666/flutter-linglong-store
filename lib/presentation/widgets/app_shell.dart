@@ -5,6 +5,7 @@ import 'package:window_manager/window_manager.dart';
 
 import '../../application/providers/app_collection_sync_provider.dart';
 import '../../application/providers/menu_badge_provider.dart';
+import '../../core/config/keepalive_visibility_sync.dart';
 import '../../core/config/theme.dart';
 import '../../core/di/providers.dart';
 import '../../core/logging/app_logger.dart';
@@ -156,41 +157,46 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     final updateCount = ref.watch(menuUpdateBadgeCountProvider);
 
     return Scaffold(
-      body: Column(
+      body: Stack(
         children: [
-          // 自定义标题栏
-          CustomTitleBar(
-            isMaximized: _isMaximized,
-            onMinimize: _onMinimize,
-            onMaximize: _onMaximize,
-            onClose: _onClose,
-          ),
-          // 主内容区域
-          Expanded(
-            child: Row(
-              children: [
-                // 左侧导航栏
-                Sidebar(currentPath: currentPath, updateCount: updateCount),
-                // 右侧内容区域，背景跟随主题
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: context.appColors.surfaceContainerLow,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(AppRadius.sm),
+          Column(
+            children: [
+              // 自定义标题栏
+              CustomTitleBar(
+                isMaximized: _isMaximized,
+                onMinimize: _onMinimize,
+                onMaximize: _onMaximize,
+                onClose: _onClose,
+              ),
+              // 主内容区域
+              Expanded(
+                child: Row(
+                  children: [
+                    // 左侧导航栏
+                    Sidebar(currentPath: currentPath, updateCount: updateCount),
+                    // 右侧内容区域，背景跟随主题
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: context.appColors.surfaceContainerLow,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(AppRadius.sm),
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(AppRadius.sm),
+                          ),
+                          child: widget.child,
+                        ),
                       ),
                     ),
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(AppRadius.sm),
-                      ),
-                      child: widget.child,
-                    ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+          KeepAliveVisibilitySync(currentPath: currentPath),
         ],
       ),
     );

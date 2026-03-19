@@ -1133,6 +1133,8 @@ MCP 不是替代单元测试，而是发布前的 **UI 回归与验收驾驶层*
 
 - 默认保活页数量建议 **6**，硬上限 **10**
 - 隐藏页面必须暂停：定时器、自动补页、滚动监听、网络轮询、尺寸观察
+- Shell 当前路由必须显式驱动 KeepAlive 页面 `visible/hidden`，不能只依赖 `activate/deactivate` 猜生命周期
+- `KeepAlivePageWrapper` 的本地可见状态与 `PageVisibilityManager` 必须保持一致，禁止出现“Widget 仍可见但全局状态已 hidden”的分裂状态
 - 页面恢复可见时仅允许一次轻量刷新，禁止重建首屏骨架
 
 #### 缓存约束

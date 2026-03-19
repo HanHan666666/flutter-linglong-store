@@ -3,15 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:linglong_store/application/providers/recommend_provider.dart';
+import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/domain/models/recommend_models.dart';
 import 'package:linglong_store/presentation/pages/recommend/recommend_page.dart';
 import 'package:linglong_store/presentation/widgets/category_filter_section.dart';
 
 void main() {
-  group('RecommendPage rust parity', () {
+  group('RecommendPage banner refresh', () {
     testWidgets(
-      'renders carousel title and list without category filter',
+      'renders brand banner with extracted background and simplified copy',
       (tester) async {
         await tester.pumpWidget(
           _buildTestApp(
@@ -23,11 +24,10 @@ void main() {
                     title: 'Banner App',
                     imageUrl: '',
                     targetAppId: 'banner.app',
+                    description: 'Banner description',
                   ),
                 ],
-                categories: [
-                  CategoryInfo(code: 'all', name: '全部'),
-                ],
+                categories: [CategoryInfo(code: 'all', name: '全部')],
                 apps: PaginatedResponse<RecommendAppInfo>(
                   items: [
                     RecommendAppInfo(
@@ -50,6 +50,17 @@ void main() {
         expect(find.text('玲珑推荐'), findsOneWidget);
         expect(find.text('App One'), findsOneWidget);
         expect(find.text('Banner App'), findsOneWidget);
+        expect(find.text('Banner description'), findsOneWidget);
+        expect(
+          find.byKey(const Key('recommend-banner-background')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('recommend-banner-info-dock')),
+          findsOneWidget,
+        );
+        expect(find.text('版本：-'), findsNothing);
+        expect(find.text('分类：-'), findsNothing);
         expect(find.byType(CategoryFilterSection), findsNothing);
       },
     );
@@ -82,17 +93,64 @@ void main() {
 
       expect(find.text('没有更多数据了'), findsOneWidget);
     });
+
+    testWidgets('renders banner refresh structure in dark mode', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildTestApp(
+          const RecommendState(
+            data: RecommendData(
+              banners: [
+                BannerInfo(
+                  id: 'banner-1',
+                  title: 'Banner App',
+                  imageUrl: '',
+                  description: 'Banner description',
+                ),
+              ],
+              categories: [CategoryInfo(code: 'all', name: '全部')],
+              apps: PaginatedResponse<RecommendAppInfo>(
+                items: [],
+                total: 0,
+                page: 1,
+                pageSize: 10,
+                hasMore: false,
+              ),
+            ),
+          ),
+          themeMode: ThemeMode.dark,
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Banner App'), findsOneWidget);
+      expect(
+        find.byKey(const Key('recommend-banner-background')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('recommend-banner-info-dock')),
+        findsOneWidget,
+      );
+    });
   });
 }
 
-Widget _buildTestApp(RecommendState state) {
+Widget _buildTestApp(
+  RecommendState state, {
+  ThemeMode themeMode = ThemeMode.light,
+}) {
   return ProviderScope(
     overrides: [recommendProvider.overrideWithValue(state)],
-    child: const MaterialApp(
-      locale: Locale('zh'),
+    child: MaterialApp(
+      locale: const Locale('zh'),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(body: RecommendPage()),
+      home: const Scaffold(body: RecommendPage()),
     ),
   );
 }

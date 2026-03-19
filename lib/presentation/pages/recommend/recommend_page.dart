@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,7 @@ import '../../../core/config/page_visibility.dart';
 import '../../../core/config/visibility_aware_mixin.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/recommend_models.dart';
+import 'widgets/recommend_banner_background.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/widgets.dart';
 
@@ -445,76 +447,121 @@ class _BannerItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dockBackground = isDark
+        ? Colors.black.withValues(alpha: 0.18)
+        : Colors.white.withValues(alpha: 0.16);
+    final dockBorder = Colors.white.withValues(alpha: isDark ? 0.10 : 0.18);
 
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AppIcon(
-            iconUrl: banner.imageUrl,
-            size: 128,
-            borderRadius: 12,
-            appName: banner.title,
-          ),
-          const SizedBox(width: AppSpacing.xl),
-          Expanded(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 192),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    banner.title,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600,
-                      color: context.appColors.textPrimary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    '描述：${banner.description?.trim().isNotEmpty == true ? banner.description! : '应用描述'}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: context.appColors.textSecondary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    '版本：-',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: context.appColors.textSecondary,
-                    ),
-                  ),
-                  Text(
-                    '分类：-',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: context.appColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  FilledButton(
-                    onPressed: onTap,
-                    style: FilledButton.styleFrom(
-                      shape: const StadiumBorder(),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
+    return RecommendBannerBackground(
+      banner: banner,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Align(
+          alignment: Alignment.bottomLeft,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+              child: Container(
+                key: const Key('recommend-banner-info-dock'),
+                constraints: const BoxConstraints(maxWidth: 460),
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  color: dockBackground,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: dockBorder),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    AppIcon(
+                      iconUrl: banner.imageUrl,
+                      size: 72,
+                      borderRadius: 18,
+                      appName: banner.title,
+                      placeholderColor: Colors.white.withValues(
+                        alpha: isDark ? 0.20 : 0.24,
+                      ),
+                      errorColor: Colors.white.withValues(
+                        alpha: isDark ? 0.16 : 0.20,
                       ),
                     ),
-                    child: Text(l10n.viewDetail),
-                  ),
-                ],
+                    const SizedBox(width: AppSpacing.lg),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            banner.title,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              height: 1.1,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            banner.description?.trim().isNotEmpty == true
+                                ? banner.description!
+                                : '应用描述',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.white.withValues(alpha: 0.86),
+                              height: 1.35,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          _BannerDetailButton(
+                            label: l10n.viewDetail,
+                            onPressed: onTap,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BannerDetailButton extends StatelessWidget {
+  const _BannerDetailButton({required this.label, this.onPressed});
+
+  final String label;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 30,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.16)),
+          backgroundColor: Colors.white.withValues(alpha: 0.12),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          shape: const StadiumBorder(),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        ),
       ),
     );
   }
@@ -597,7 +644,7 @@ class _AppsGrid extends ConsumerWidget {
                 appId: app.appId,
                 latestVersion: app.version,
               );
-            return AppCard(
+              return AppCard(
                 appId: app.appId,
                 name: app.name,
                 description: app.description,
@@ -680,10 +727,7 @@ class _RecommendListFooter extends StatelessWidget {
       child: Center(
         child: Text(
           '没有更多数据了',
-          style: TextStyle(
-            fontSize: 14,
-            color: context.appColors.textTertiary,
-          ),
+          style: TextStyle(fontSize: 14, color: context.appColors.textTertiary),
         ),
       ),
     );

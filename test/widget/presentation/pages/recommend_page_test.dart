@@ -65,6 +65,64 @@ void main() {
       },
     );
 
+    testWidgets('keeps banner taller and indicator below info dock', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildTestApp(
+          const RecommendState(
+            data: RecommendData(
+              banners: [
+                BannerInfo(
+                  id: 'banner-1',
+                  title: 'Banner App',
+                  imageUrl: '',
+                  targetAppId: 'banner.app',
+                  description: 'Banner description',
+                ),
+              ],
+              categories: [CategoryInfo(code: 'all', name: '全部')],
+              apps: PaginatedResponse<RecommendAppInfo>(
+                items: [
+                  RecommendAppInfo(
+                    appId: 'app.one',
+                    name: 'App One',
+                    version: '1.0.0',
+                  ),
+                ],
+                total: 1,
+                page: 1,
+                pageSize: 10,
+                hasMore: false,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final backgroundRect = tester.getRect(
+        find.byKey(const Key('recommend-banner-background')),
+      );
+      final infoDockRect = tester.getRect(
+        find.byKey(const Key('recommend-banner-info-dock')),
+      );
+      final activeIndicatorRect = tester.getRect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is AnimatedContainer &&
+              widget.constraints ==
+                  const BoxConstraints.tightFor(width: 20, height: 8),
+        ),
+      );
+
+      expect(backgroundRect.height, 236);
+      expect(
+        activeIndicatorRect.top,
+        greaterThanOrEqualTo(infoDockRect.bottom + 4),
+      );
+    });
+
     testWidgets('shows rust no-more copy', (tester) async {
       await tester.pumpWidget(
         _buildTestApp(

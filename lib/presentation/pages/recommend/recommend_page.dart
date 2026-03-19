@@ -18,6 +18,10 @@ import 'widgets/recommend_banner_background.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/widgets.dart';
 
+// 推荐页轮播保持略高于当前信息卡内容，给底部指示器预留稳定安全区。
+const double _recommendBannerHeight = 236;
+const double _recommendBannerIndicatorBottom = 4;
+
 /// 推荐页
 ///
 /// 实现了可见性感知，在页面隐藏时自动暂停副作用：
@@ -359,7 +363,7 @@ class _BannerSectionState extends State<_BannerSection> {
     }
 
     return Container(
-      height: 220,
+      height: _recommendBannerHeight,
       margin: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: context.appColors.surface,
@@ -390,7 +394,7 @@ class _BannerSectionState extends State<_BannerSection> {
               Positioned(
                 left: 0,
                 right: 0,
-                bottom: 12,
+                bottom: _recommendBannerIndicatorBottom,
                 child: _BannerIndicators(
                   count: widget.banners.length,
                   currentIndex: _currentIndex,

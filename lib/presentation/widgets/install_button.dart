@@ -188,19 +188,20 @@ class InstallButton extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // 进度背景
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(buttonHeight / 2),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(buttonHeight / 2),
-              child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: Colors.transparent,
-                minHeight: buttonHeight,
+          // 让前景文本决定按钮宽度，避免在 Row 的无界宽度约束中请求 double.infinity。
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(buttonHeight / 2),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(buttonHeight / 2),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  backgroundColor: Colors.transparent,
+                  minHeight: buttonHeight,
+                ),
               ),
             ),
           ),

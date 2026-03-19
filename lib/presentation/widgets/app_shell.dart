@@ -6,6 +6,7 @@ import 'package:window_manager/window_manager.dart';
 import '../../application/providers/app_collection_sync_provider.dart';
 import '../../application/providers/menu_badge_provider.dart';
 import '../../core/config/keepalive_visibility_sync.dart';
+import '../../core/config/routes.dart';
 import '../../core/config/theme.dart';
 import '../../core/di/providers.dart';
 import '../../core/logging/app_logger.dart';

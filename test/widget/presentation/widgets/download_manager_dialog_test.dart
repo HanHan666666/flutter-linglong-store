@@ -1,0 +1,180 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:linglong_store/application/providers/install_queue_provider.dart';
+import 'package:linglong_store/application/providers/network_speed_provider.dart';
+import 'package:linglong_store/application/providers/sidebar_config_provider.dart';
+import 'package:linglong_store/application/providers/update_apps_provider.dart';
+import 'package:linglong_store/domain/models/installed_app.dart';
+import 'package:linglong_store/domain/models/install_progress.dart';
+import 'package:linglong_store/domain/models/install_task.dart';
+import 'package:linglong_store/presentation/pages/update_app/update_app_page.dart';
+import 'package:linglong_store/presentation/widgets/download_manager_dialog.dart';
+import 'package:linglong_store/presentation/widgets/sidebar.dart';
+
+void main() {
+  group('DownloadManagerDialog', () {
+    testWidgets('closing dialog detaches install queue updates', (
+      tester,
+    ) async {
+      final installQueue = TestInstallQueue();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            installQueueProvider.overrideWith(() => installQueue),
+            networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: Center(
+                    child: FilledButton(
+                      onPressed: () => showDownloadManagerDialog(context),
+                      child: const Text('open'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('下载管理'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.close));
+      await tester.pumpAndSettle();
+
+      expect(find.text('下载管理'), findsNothing);
+
+      for (var i = 0; i < 12; i++) {
+        installQueue.emit(
+          InstallQueueState(
+            currentTask: InstallTask(
+              id: 'task-1',
+              appId: 'org.example.demo',
+              appName: 'Demo',
+              kind: InstallTaskKind.update,
+              status: InstallStatus.installing,
+              progress: 10.0 + i,
+              message: 'Downloading files',
+              createdAt: DateTime.now().millisecondsSinceEpoch,
+            ),
+            isProcessing: true,
+          ),
+        );
+
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+      }
+    });
+
+    testWidgets(
+      'closing dialog from sidebar does not throw during update page progress refreshes',
+      (tester) async {
+        final installQueue = TestInstallQueue();
+        final updateApps = TestUpdateApps();
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              installQueueProvider.overrideWith(() => installQueue),
+              updateAppsProvider.overrideWith(() => updateApps),
+              sidebarConfigProvider.overrideWith((ref) async => []),
+              networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+            ],
+            child: const MaterialApp(
+              home: Scaffold(
+                body: Row(
+                  children: [
+                    Sidebar(currentPath: '/update_apps'),
+                    Expanded(child: UpdateAppPage()),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byTooltip('下载管理'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('下载管理'), findsOneWidget);
+
+        await tester.tap(find.byIcon(Icons.close).first);
+        await tester.pump();
+
+        for (var i = 0; i < 12; i++) {
+          installQueue.emit(
+            InstallQueueState(
+              currentTask: InstallTask(
+                id: 'task-1',
+                appId: 'org.example.demo',
+                appName: 'Demo',
+                kind: InstallTaskKind.update,
+                status: InstallStatus.installing,
+                progress: 10.0 + i,
+                message: 'Downloading files',
+                createdAt: DateTime.now().millisecondsSinceEpoch,
+              ),
+              isProcessing: true,
+            ),
+          );
+
+          await tester.pump();
+          expect(tester.takeException(), isNull);
+        }
+
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(find.text('下载管理'), findsNothing);
+      },
+    );
+  });
+}
+
+class TestInstallQueue extends InstallQueue {
+  TestInstallQueue({InstallQueueState? initialState})
+    : _initialState = initialState ?? const InstallQueueState();
+
+  final InstallQueueState _initialState;
+
+  @override
+  InstallQueueState build() => _initialState;
+
+  void emit(InstallQueueState nextState) {
+    state = nextState;
+  }
+}
+
+class TestUpdateApps extends UpdateApps {
+  @override
+  UpdateAppsState build() {
+    return UpdateAppsState(
+      apps: const [
+        UpdatableApp(
+          installedApp: InstalledApp(
+            appId: 'org.example.demo',
+            name: 'Demo',
+            version: '1.0.0',
+          ),
+          latestVersion: '1.1.0',
+          latestVersionDescription: 'Bug fixes',
+        ),
+      ],
+    );
+  }
+
+  @override
+  Future<void> checkUpdates() async {}
+
+  @override
+  Future<void> refresh() async {}
+}

@@ -221,17 +221,11 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
               child: TextField(
                 controller: _controller,
                 focusNode: _focusNode,
-                strutStyle: const StrutStyle(
-                  fontSize: 13,
-                  height: 1,
-                  forceStrutHeight: true,
-                ),
                 maxLines: 1,
                 decoration: InputDecoration(
                   hintText: '在这里搜索你想搜索的应用',
                   hintStyle: AppTextStyles.caption.copyWith(
                     fontSize: 13,
-                    height: 1,
                     color: context.appColors.textTertiary,
                   ),
                   border: InputBorder.none,
@@ -242,7 +236,8 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
                   focusedErrorBorder: InputBorder.none,
                   filled: false,
                   isDense: true,
-                  contentPadding: EdgeInsets.zero,
+                  // 上下 8px padding 使文字在 32px 容器内垂直居中
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
                   suffixIconConstraints: const BoxConstraints(
                     minWidth: 24,
                     minHeight: 24,
@@ -263,7 +258,6 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
                 ),
                 style: AppTextStyles.caption.copyWith(
                   fontSize: 13,
-                  height: 1,
                   color: context.appColors.textPrimary,
                 ),
                 textAlignVertical: TextAlignVertical.center,

@@ -20,7 +20,7 @@ import '../../widgets/widgets.dart';
 
 // 推荐页轮播保持略高于当前信息卡内容，给底部指示器预留稳定安全区。
 const double _recommendBannerHeight = 236;
-const double _recommendBannerIndicatorBottom = 4;
+const double _recommendBannerIndicatorBottom = 0;
 
 /// 推荐页
 ///

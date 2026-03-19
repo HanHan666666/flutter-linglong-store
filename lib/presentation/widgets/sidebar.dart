@@ -273,17 +273,31 @@ class _BottomSection extends StatelessWidget {
         AppSpacing.sm,
         AppSpacing.sm,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final item in _BottomSidebarItem.values)
-            _BottomMenuItemTile(
-              item: item,
-              isCollapsed: isCollapsed,
-              isSelected: item.route != null && currentPath == item.route,
+      child: isCollapsed
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final item in _BottomSidebarItem.values)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.xs / 2),
+                    child: _BottomIconButton(
+                      item: item,
+                      isSelected:
+                          item.route != null && currentPath == item.route,
+                    ),
+                  ),
+              ],
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                for (final item in _BottomSidebarItem.values)
+                  _BottomIconButton(
+                    item: item,
+                    isSelected: item.route != null && currentPath == item.route,
+                  ),
+              ],
             ),
-        ],
-      ),
     );
   }
 }
@@ -396,23 +410,18 @@ class _DynamicMenuItemTileState extends State<_DynamicMenuItemTile> {
   }
 }
 
-/// 底部纵向动作菜单项
-class _BottomMenuItemTile extends StatefulWidget {
-  const _BottomMenuItemTile({
-    required this.item,
-    required this.isSelected,
-    required this.isCollapsed,
-  });
+/// 底部动作图标按钮
+class _BottomIconButton extends StatefulWidget {
+  const _BottomIconButton({required this.item, required this.isSelected});
 
   final _BottomSidebarItem item;
   final bool isSelected;
-  final bool isCollapsed;
 
   @override
-  State<_BottomMenuItemTile> createState() => _BottomMenuItemTileState();
+  State<_BottomIconButton> createState() => _BottomIconButtonState();
 }
 
-class _BottomMenuItemTileState extends State<_BottomMenuItemTile> {
+class _BottomIconButtonState extends State<_BottomIconButton> {
   bool _isHovered = false;
 
   void _handleTap(BuildContext context) {
@@ -436,13 +445,9 @@ class _BottomMenuItemTileState extends State<_BottomMenuItemTile> {
         onExit: (_) => setState(() => _isHovered = false),
         child: GestureDetector(
           onTap: () => _handleTap(context),
-          child: AnimatedContainer(
-            duration: AppAnimation.fast,
-            margin: const EdgeInsets.only(top: AppSpacing.xs / 2),
-            height: 36,
-            padding: EdgeInsets.symmetric(
-              horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
-            ),
+          child: Container(
+            width: AppSpacing.x2l,
+            height: AppSpacing.x2l,
             decoration: BoxDecoration(
               color: widget.isSelected
                   ? context.appColors.primaryLight
@@ -451,53 +456,14 @@ class _BottomMenuItemTileState extends State<_BottomMenuItemTile> {
                         : context.appColors.surfaceContainerLow.withAlpha(0)),
               borderRadius: AppRadius.xsRadius,
             ),
-            child: Row(
-              mainAxisAlignment: widget.isCollapsed
-                  ? MainAxisAlignment.center
-                  : MainAxisAlignment.start,
-              children: [
-                if (!widget.isCollapsed) ...[
-                  AnimatedContainer(
-                    duration: AppAnimation.fast,
-                    width: widget.isSelected ? 3 : 0,
-                    height: widget.isSelected ? 16 : 0,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  SizedBox(
-                    width: widget.isSelected
-                        ? AppSpacing.sm
-                        : AppSpacing.sm + 3,
-                  ),
-                ],
-                Icon(
-                  widget.isSelected
-                      ? widget.item.selectedIcon
-                      : widget.item.icon,
-                  size: 20,
-                  color: widget.isSelected
-                      ? AppColors.primary
-                      : context.appColors.textSecondary,
-                ),
-                if (!widget.isCollapsed) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      widget.item.label,
-                      style: AppTextStyles.menuActive.copyWith(
-                        color: widget.isSelected
-                            ? AppColors.primary
-                            : context.appColors.textPrimary,
-                        fontWeight: widget.isSelected
-                            ? FontWeight.w500
-                            : FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+            child: Icon(
+              widget.isSelected ? widget.item.selectedIcon : widget.item.icon,
+              size: 20,
+              color: widget.isSelected
+                  ? AppColors.primary
+                  : (_isHovered
+                        ? AppColors.primary
+                        : context.appColors.textSecondary),
             ),
           ),
         ),

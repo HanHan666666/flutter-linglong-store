@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 将侧边栏底部三项改成固定纵向菜单，并把顶部导航收敛为推荐、全部、排行与动态菜单。
+**Goal:** 将侧边栏底部三项调整为展开态横排图标按钮、折叠态竖排图标按钮，并把顶部导航收敛为推荐、全部、排行与动态菜单。
 
-**Architecture:** 维持现有 `Sidebar` 的“上部滚动 + 下部固定”结构，只调整静态菜单数据源与底部渲染方式。底部区域复用主菜单的视觉结构，`下载管理` 继续保留动作为弹窗，其余项保持路由高亮。
+**Architecture:** 维持现有 `Sidebar` 的“上部滚动 + 下部固定”结构，只调整静态菜单数据源与底部渲染方式。底部区域在展开态使用横向图标按钮，在折叠态切换为纵向图标按钮；`下载管理` 继续保留动作为弹窗，其余项保持路由高亮。
 
 **Tech Stack:** Flutter, Riverpod, go_router, flutter_test
 
@@ -17,7 +17,7 @@
 
 - [x] **Step 1: 写失败测试**
 - [x] **Step 2: 运行测试确认因旧侧边栏结构失败**
-- [x] **Step 3: 断言顶部菜单、动态菜单和底部菜单顺序**
+- [x] **Step 3: 断言顶部菜单、动态菜单和展开态底部横排按钮顺序**
 
 ### Task 2: 调整 Sidebar 结构
 
@@ -26,7 +26,7 @@
 - Modify: `lib/presentation/widgets/app_shell.dart`
 
 - [x] **Step 1: 收敛顶部静态菜单为推荐/全部/排行**
-- [x] **Step 2: 将底部区域改为固定纵向菜单**
+- [x] **Step 2: 将底部区域改为展开态横排、折叠态竖排的图标按钮**
 - [x] **Step 3: 保留自动折叠与下载管理弹窗行为**
 - [x] **Step 4: 移除无用的更新红点订阅，减少侧边栏重建**
 

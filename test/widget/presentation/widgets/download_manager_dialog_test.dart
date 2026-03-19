@@ -107,7 +107,10 @@ void main() {
         await tester.tap(find.byTooltip('下载管理'));
         await tester.pumpAndSettle();
 
-        expect(find.text('下载管理'), findsOneWidget);
+        expect(
+          find.descendant(of: find.byType(Dialog), matching: find.text('下载管理')),
+          findsOneWidget,
+        );
 
         await tester.tap(find.byIcon(Icons.close).first);
         await tester.pump();
@@ -134,7 +137,7 @@ void main() {
         }
 
         await tester.pump(const Duration(milliseconds: 300));
-        expect(find.text('下载管理'), findsNothing);
+        expect(find.byType(Dialog), findsNothing);
       },
     );
   });

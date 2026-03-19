@@ -16,10 +16,7 @@ enum SidebarMenuItem {
     Icons.leaderboard_outlined,
     Icons.leaderboard,
     AppRoutes.ranking,
-  ),
-  myApps('我 的', Icons.folder_outlined, Icons.folder, AppRoutes.myApps),
-  update('更 新', Icons.refresh, Icons.refresh, AppRoutes.updateApps),
-  setting('设 置', Icons.settings_outlined, Icons.settings, AppRoutes.setting);
+  );
 
   const SidebarMenuItem(this.label, this.icon, this.selectedIcon, this.route);
 
@@ -31,16 +28,13 @@ enum SidebarMenuItem {
 
 /// 侧边栏
 ///
-/// 包含：静态导航菜单 + 服务端动态菜单区域 + 底部图标
+/// 包含：静态导航菜单 + 服务端动态菜单区域 + 底部固定动作菜单
 /// 支持响应式折叠（≤768px）
 class Sidebar extends ConsumerWidget {
-  const Sidebar({required this.currentPath, this.updateCount = 0, super.key});
+  const Sidebar({required this.currentPath, super.key});
 
   /// 当前路由路径
   final String currentPath;
-
-  /// 更新数量（用于红点显示）
-  final int updateCount;
 
   /// 侧边栏默认宽度 - 160px (10rem)
   static const double defaultWidth = 160.0;
@@ -69,13 +63,12 @@ class Sidebar extends ConsumerWidget {
           Expanded(
             child: _MenuSection(
               currentPath: currentPath,
-              updateCount: updateCount,
               isCollapsed: isCollapsed,
               dynamicMenus: dynamicMenus,
             ),
           ),
-          // 底部图标区域
-          _BottomSection(isCollapsed: isCollapsed),
+          // 底部固定入口使用和主菜单一致的纵向结构，避免额外的横向布局层级。
+          _BottomSection(currentPath: currentPath, isCollapsed: isCollapsed),
         ],
       ),
     );
@@ -86,13 +79,11 @@ class Sidebar extends ConsumerWidget {
 class _MenuSection extends StatelessWidget {
   const _MenuSection({
     required this.currentPath,
-    required this.updateCount,
     required this.isCollapsed,
     required this.dynamicMenus,
   });
 
   final String currentPath;
-  final int updateCount;
   final bool isCollapsed;
 
   /// 服务端下发的动态菜单列表
@@ -118,7 +109,6 @@ class _MenuSection extends StatelessWidget {
             return _MenuItemTile(
               item: item,
               isSelected: currentPath == item.route,
-              updateCount: item == SidebarMenuItem.update ? updateCount : 0,
               isCollapsed: isCollapsed,
             );
           }),
@@ -145,13 +135,11 @@ class _MenuItemTile extends StatefulWidget {
     required this.item,
     required this.isSelected,
     required this.isCollapsed,
-    this.updateCount = 0,
   });
 
   final SidebarMenuItem item;
   final bool isSelected;
   final bool isCollapsed;
-  final int updateCount;
 
   @override
   State<_MenuItemTile> createState() => _MenuItemTileState();
@@ -236,8 +224,6 @@ class _MenuItemTileState extends State<_MenuItemTile> {
                       ),
                     ),
                   ),
-                  // 红点
-                  if (widget.updateCount > 0) _Badge(count: widget.updateCount),
                 ],
               ],
             ),
@@ -248,102 +234,56 @@ class _MenuItemTileState extends State<_MenuItemTile> {
   }
 }
 
-/// 红点/徽章组件
-class _Badge extends StatelessWidget {
-  const _Badge({required this.count});
+enum _BottomSidebarItem {
+  myApps('我的应用', Icons.folder_outlined, Icons.folder, AppRoutes.myApps),
+  downloadManager(
+    '下载管理',
+    Icons.download_outlined,
+    Icons.download_outlined,
+    null,
+  ),
+  setting('设置', Icons.settings_outlined, Icons.settings, AppRoutes.setting);
 
-  final int count;
-  static const double _badgeSize = 20;
+  const _BottomSidebarItem(
+    this.label,
+    this.icon,
+    this.selectedIcon,
+    this.route,
+  );
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: _badgeSize,
-      height: _badgeSize,
-      decoration: const BoxDecoration(
-        color: AppColors.error,
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        // 固定直径并缩放文字，确保 1 位和 2 位数字都保持圆形徽章。
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Text(
-              count > 99 ? '99+' : count.toString(),
-              style: AppTextStyles.tiny.copyWith(
-                color: AppColors.textLight,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  final String label;
+  final IconData icon;
+  final IconData selectedIcon;
+  final String? route;
 }
 
-/// 底部图标区域
+/// 底部固定动作区域
 class _BottomSection extends StatelessWidget {
-  const _BottomSection({required this.isCollapsed});
+  const _BottomSection({required this.currentPath, required this.isCollapsed});
 
+  final String currentPath;
   final bool isCollapsed;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: isCollapsed
-          ? _buildVerticalLayout(context)
-          : _buildHorizontalLayout(context),
-    );
-  }
-
-  /// 水平布局（展开状态）
-  Widget _buildHorizontalLayout(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _BottomIconButton(
-          icon: Icons.folder_outlined,
-          tooltip: '我的应用',
-          onTap: () => context.go(AppRoutes.myApps),
-        ),
-        _BottomIconButton(
-          icon: Icons.download_outlined,
-          tooltip: '下载管理',
-          onTap: () => showDownloadManagerDialog(context),
-        ),
-        _BottomIconButton(
-          icon: Icons.settings_outlined,
-          tooltip: '设置',
-          onTap: () => context.go(AppRoutes.setting),
-        ),
-      ],
-    );
-  }
-
-  /// 垂直布局（折叠状态）
-  Widget _buildVerticalLayout(BuildContext context) {
-    return Column(
-      children: [
-        _BottomIconButton(
-          icon: Icons.folder_outlined,
-          tooltip: '我的应用',
-          onTap: () => context.go(AppRoutes.myApps),
-        ),
-        _BottomIconButton(
-          icon: Icons.download_outlined,
-          tooltip: '下载管理',
-          onTap: () => showDownloadManagerDialog(context),
-        ),
-        _BottomIconButton(
-          icon: Icons.settings_outlined,
-          tooltip: '设置',
-          onTap: () => context.go(AppRoutes.setting),
-        ),
-      ],
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm,
+        0,
+        AppSpacing.sm,
+        AppSpacing.sm,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final item in _BottomSidebarItem.values)
+            _BottomMenuItemTile(
+              item: item,
+              isCollapsed: isCollapsed,
+              isSelected: item.route != null && currentPath == item.route,
+            ),
+        ],
+      ),
     );
   }
 }
@@ -456,49 +396,108 @@ class _DynamicMenuItemTileState extends State<_DynamicMenuItemTile> {
   }
 }
 
-/// 底部图标按钮
-class _BottomIconButton extends StatefulWidget {
-  const _BottomIconButton({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
+/// 底部纵向动作菜单项
+class _BottomMenuItemTile extends StatefulWidget {
+  const _BottomMenuItemTile({
+    required this.item,
+    required this.isSelected,
+    required this.isCollapsed,
   });
 
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
+  final _BottomSidebarItem item;
+  final bool isSelected;
+  final bool isCollapsed;
 
   @override
-  State<_BottomIconButton> createState() => _BottomIconButtonState();
+  State<_BottomMenuItemTile> createState() => _BottomMenuItemTileState();
 }
 
-class _BottomIconButtonState extends State<_BottomIconButton> {
+class _BottomMenuItemTileState extends State<_BottomMenuItemTile> {
   bool _isHovered = false;
+
+  void _handleTap(BuildContext context) {
+    if (widget.item == _BottomSidebarItem.downloadManager) {
+      showDownloadManagerDialog(context);
+      return;
+    }
+
+    final route = widget.item.route;
+    if (route != null) {
+      context.go(route);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: widget.tooltip,
+      message: widget.item.label,
       child: MouseRegion(
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: GestureDetector(
-          onTap: widget.onTap,
-          child: Container(
-            width: AppSpacing.x2l,
-            height: AppSpacing.x2l,
+          onTap: () => _handleTap(context),
+          child: AnimatedContainer(
+            duration: AppAnimation.fast,
+            margin: const EdgeInsets.only(top: AppSpacing.xs / 2),
+            height: 36,
+            padding: EdgeInsets.symmetric(
+              horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
+            ),
             decoration: BoxDecoration(
-              color: _isHovered
-                  ? context.appColors.surfaceContainerLow
-                  : Colors.transparent,
+              color: widget.isSelected
+                  ? context.appColors.primaryLight
+                  : (_isHovered
+                        ? context.appColors.surfaceContainerLow
+                        : context.appColors.surfaceContainerLow.withAlpha(0)),
               borderRadius: AppRadius.xsRadius,
             ),
-            child: Icon(
-              widget.icon,
-              size: 20,
-              color: _isHovered
-                  ? AppColors.primary
-                  : context.appColors.textSecondary,
+            child: Row(
+              mainAxisAlignment: widget.isCollapsed
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.start,
+              children: [
+                if (!widget.isCollapsed) ...[
+                  AnimatedContainer(
+                    duration: AppAnimation.fast,
+                    width: widget.isSelected ? 3 : 0,
+                    height: widget.isSelected ? 16 : 0,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  SizedBox(
+                    width: widget.isSelected
+                        ? AppSpacing.sm
+                        : AppSpacing.sm + 3,
+                  ),
+                ],
+                Icon(
+                  widget.isSelected
+                      ? widget.item.selectedIcon
+                      : widget.item.icon,
+                  size: 20,
+                  color: widget.isSelected
+                      ? AppColors.primary
+                      : context.appColors.textSecondary,
+                ),
+                if (!widget.isCollapsed) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      widget.item.label,
+                      style: AppTextStyles.menuActive.copyWith(
+                        color: widget.isSelected
+                            ? AppColors.primary
+                            : context.appColors.textPrimary,
+                        fontWeight: widget.isSelected
+                            ? FontWeight.w500
+                            : FontWeight.w400,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),

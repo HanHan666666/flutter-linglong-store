@@ -4,9 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../application/providers/app_collection_sync_provider.dart';
-import '../../application/providers/menu_badge_provider.dart';
 import '../../core/config/keepalive_visibility_sync.dart';
-import '../../core/config/routes.dart';
 import '../../core/config/theme.dart';
 import '../../core/di/providers.dart';
 import '../../core/logging/app_logger.dart';
@@ -154,8 +152,6 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   @override
   Widget build(BuildContext context) {
     final currentPath = GoRouterState.of(context).matchedLocation;
-    // 从 Provider 获取更新数量
-    final updateCount = ref.watch(menuUpdateBadgeCountProvider);
 
     return Scaffold(
       body: Stack(
@@ -174,7 +170,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
                 child: Row(
                   children: [
                     // 左侧导航栏
-                    Sidebar(currentPath: currentPath, updateCount: updateCount),
+                    Sidebar(currentPath: currentPath),
                     // 右侧内容区域，背景跟随主题
                     Expanded(
                       child: Container(

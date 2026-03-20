@@ -15,8 +15,7 @@ void main() {
 
       expect(
         updatedPubspec,
-        equals('''
-name: linglong_store
+        equals('''name: linglong_store
 description: 玲珑应用商店社区版
 publish_to: none
 version: 3.0.7+1
@@ -27,8 +26,7 @@ environment:
       );
       expect(
         updatedLinuxPubspec,
-        equals('''
-name: linglong_store
+        equals('''name: linglong_store
 description: 玲珑应用商店社区版 - Flutter 版
 publish_to: none
 version: 3.0.7+1
@@ -52,8 +50,7 @@ flutter:
 
       expect(
         updatedAppConfig,
-        equals('''
-/// 应用配置
+        equals('''/// 应用配置
 class AppConfig {
   AppConfig._();
 
@@ -67,8 +64,7 @@ class AppConfig {
       );
       expect(
         updatedAppConstants,
-        equals('''
-/// 应用常量
+        equals('''/// 应用常量
 class AppConstants {
   AppConstants._();
 

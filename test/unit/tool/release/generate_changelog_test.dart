@@ -13,8 +13,7 @@ void main() {
 
       expect(
         firstReleaseBody,
-        equals('''
-## Release Notes
+        equals('''## Release Notes
 
 首个 GitHub Release，后续版本将从上一版 tag 自动生成变更日志。
 '''),
@@ -36,8 +35,7 @@ void main() {
 
       expect(
         changelogBody,
-        equals('''
-## Release Notes
+        equals('''## Release Notes
 
 ## feat
 - add release tooling baseline

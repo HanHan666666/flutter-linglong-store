@@ -132,7 +132,7 @@ Flutter Linux 桌面首版不依赖“单机交叉编译出另一架构桌面产
 
 规则如下：
 - 如果传入 `version`，直接使用该版本
-- 如果未传入 `version`，自动读取仓库中最新 `v3.0.*` tag，并递增 patch
+- 如果未传入 `version`，自动从仓库中筛选所有 `v3.0.*` tag，并按语义化版本取 **semver 最大值** 后递增 patch，而不是按 tag 创建时间取最近一个
 - 若仓库不存在任何 `v3.0.*` tag，则自动从 `3.0.0` 开始
 
 版本确定后，统一更新以下文件：
@@ -155,7 +155,9 @@ Flutter Linux 桌面首版不依赖“单机交叉编译出另一架构桌面产
 
 changelog 生成范围固定为：
 - 从上一个 release tag
-- 到当前 release commit
+- 到创建 release commit 之前的当前业务提交 `HEAD`
+
+release commit 本身只承载版本号同步，不应计入本次 release notes，避免 changelog 中出现自引用的 `chore: release <version>` 条目。
 
 changelog 只汇总 Conventional Commits，并按类型分组展示，至少包含：
 - `feat`
@@ -202,7 +204,10 @@ CI 与 Release 的架构策略不同：
 - `release.yml`
   - 固定跑 `amd64` 与 `arm64`
   - `arm64` 首选原生 ARM runner
-  - 当原生 ARM runner 不可用时，允许 workflow 回退到 QEMU 容器路线
+  - `arm64` 采用固定的两阶段策略：
+    1. 先跑原生 ARM runner 构建
+    2. 仅当原生 ARM job 进入 `failure` 或 `cancelled` 状态时，自动触发一次 QEMU 容器重试
+  - 若原生 ARM 与 QEMU 两条路径都失败，则整个 Release 失败，不发布半套资产
 
 ### Packaging Strategy
 
@@ -291,9 +296,11 @@ Release 页面需包含：
 
 - 当手动输入版本号不符合语义化版本时，release workflow 直接失败
 - 当自动解析版本号时，若发现最新 tag 不属于 `v3.0.*` 范围，不应错误递增其他主版本
+- 当自动解析版本号时，必须按 `v3.0.*` 的 semver 最大值取基线，而不是按 tag 创建时间或 git 遍历顺序取值
 - 当版本源文件更新后存在未提交改动，workflow 必须显式 commit，而不是依赖脏工作区继续打 tag
 - 当 changelog 为空时，workflow 不自动填充模糊文案，应仍然展示“本次版本无符合 Conventional Commits 的提交”
-- 当 `arm64` 原生 runner 构建失败且 QEMU 后备也失败时，Release 不应发布半套资产
+- 当生成 changelog 时，必须固定基于 release commit 之前的 `HEAD`，不得把 `chore: release <version>` 自身写进 release notes
+- 当 `arm64` 原生 runner 构建失败或取消时，只允许自动回退一次 QEMU；若 QEMU 后备也失败，Release 不应发布半套资产
 - 任一架构缺少 `.deb` / `.rpm` / `.AppImage` / `bundle` 任一必需产物时，Release 创建必须失败
 - Release 一律以完整双架构资产为成功标准，避免出现用户下载页面只存在部分文件的半成品版本
 

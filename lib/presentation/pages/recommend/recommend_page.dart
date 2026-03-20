@@ -381,8 +381,8 @@ class _BannerSectionState extends State<_BannerSection> {
     // 取消已有的定时器
     _autoPlayTimer?.cancel();
 
-    // 创建新的定时器
-    _autoPlayTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+    // 创建新的定时器，每30秒自动切换一次轮播图
+    _autoPlayTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       _autoPlay();
     });
   }

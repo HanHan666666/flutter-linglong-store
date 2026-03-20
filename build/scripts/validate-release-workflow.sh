@@ -19,6 +19,7 @@ require_grep "contents: write" .github/workflows/release.yml
 require_grep "ubuntu-24.04-arm" .github/workflows/release.yml
 require_grep "pull_request" .github/workflows/ci.yml
 require_grep "amd64" .github/workflows/ci.yml
+require_grep "release-cli-smoke-test.sh" .github/workflows/ci.yml
 require_grep "package-smoke-test.sh" .github/workflows/ci.yml
 
 echo "Release workflow validation passed."

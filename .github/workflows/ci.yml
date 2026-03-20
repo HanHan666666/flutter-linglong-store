@@ -41,6 +41,9 @@ jobs:
       - name: Run tests
         run: flutter test
 
+      - name: Run release CLI smoke test
+        run: bash build/scripts/release-cli-smoke-test.sh
+
       - name: Run Debian 10 packaging smoke test
         run: bash build/scripts/package-smoke-test.sh
         env:

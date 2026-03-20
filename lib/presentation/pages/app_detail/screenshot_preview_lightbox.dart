@@ -117,53 +117,69 @@ class _ScreenshotPreviewLightboxState extends State<ScreenshotPreviewLightbox> {
             _goTo(_currentIndex + 1);
           }
         },
-        child: Center(
-          child: Container(
-            width: (size.width * 0.84).clamp(560.0, 1200.0),
-            height: (size.height * 0.82).clamp(400.0, 900.0),
-            decoration: BoxDecoration(
-              color: panelColor,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.52 : 0.22),
-                  blurRadius: 48,
-                  offset: const Offset(0, 20),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Column(
-                children: [
-                  _TitleBar(
-                    containerKey: const Key('screenshotPreviewTitleBar'),
-                    currentIndex: _currentIndex,
-                    totalCount: widget.screenshots.length,
-                    onClose: _close,
-                  ),
-                  Expanded(
-                    child: _ImageStage(
-                      screenshots: widget.screenshots,
-                      currentIndex: _currentIndex,
-                      pageController: _pageController,
-                      onPageChanged: (index) {
-                        setState(() => _currentIndex = index);
-                      },
-                      onGoTo: _goTo,
-                    ),
-                  ),
-                  if (widget.screenshots.length > 1)
-                    _ThumbnailBar(
-                      containerKey: const Key('screenshotPreviewThumbnailBar'),
-                      screenshots: widget.screenshots,
-                      currentIndex: _currentIndex,
-                      onTapThumbnail: _goTo,
-                    ),
-                ],
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                key: const Key('screenshotPreviewBackdrop'),
+                behavior: HitTestBehavior.opaque,
+                onTap: _close,
+                child: const SizedBox.expand(),
               ),
             ),
-          ),
+            Center(
+              child: Container(
+                width: (size.width * 0.84).clamp(560.0, 1200.0),
+                height: (size.height * 0.82).clamp(400.0, 900.0),
+                decoration: BoxDecoration(
+                  color: panelColor,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.52 : 0.22,
+                      ),
+                      blurRadius: 48,
+                      offset: const Offset(0, 20),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Column(
+                    children: [
+                      _TitleBar(
+                        containerKey: const Key('screenshotPreviewTitleBar'),
+                        currentIndex: _currentIndex,
+                        totalCount: widget.screenshots.length,
+                        onClose: _close,
+                      ),
+                      Expanded(
+                        child: _ImageStage(
+                          screenshots: widget.screenshots,
+                          currentIndex: _currentIndex,
+                          pageController: _pageController,
+                          onPageChanged: (index) {
+                            setState(() => _currentIndex = index);
+                          },
+                          onGoTo: _goTo,
+                        ),
+                      ),
+                      if (widget.screenshots.length > 1)
+                        _ThumbnailBar(
+                          containerKey: const Key(
+                            'screenshotPreviewThumbnailBar',
+                          ),
+                          screenshots: widget.screenshots,
+                          currentIndex: _currentIndex,
+                          onTapThumbnail: _goTo,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

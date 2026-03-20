@@ -56,6 +56,20 @@ void main() {
       expect(find.text('Host Page'), findsOneWidget);
     });
 
+    testWidgets('tap on backdrop dismisses the dialog', (tester) async {
+      await _pumpHost(tester, themeMode: ThemeMode.dark);
+
+      await tester.tap(find.text('Open Preview'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ScreenshotPreviewLightbox), findsOneWidget);
+
+      expect(find.byKey(const Key('screenshotPreviewBackdrop')), findsOneWidget);
+      await tester.tapAt(const Offset(24, 24));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ScreenshotPreviewLightbox), findsNothing);
+    });
+
     testWidgets('next arrow updates screenshot index', (tester) async {
       await _pumpHost(tester, themeMode: ThemeMode.dark, initialIndex: 0);
 

@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 
 ## 重点（极其重要）
+- 每个需求的开发必须开git worktree
 - 所有的业务细节都要落实到文档里面去，详细的细节文档，docs目录
 - 当前项目要求绝对的高性能，高UI响应速度。
 - 每开发一个功能点就进行一次commit

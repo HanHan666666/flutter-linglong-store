@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/widgets.dart';
+import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'app.dart';
 import 'application/providers/install_queue_provider.dart';
@@ -13,6 +16,7 @@ import 'core/platform/window_service.dart';
 import 'core/config/app_config.dart';
 import 'core/storage/cache_service.dart';
 import 'core/storage/preferences_service.dart';
+import 'presentation/pages/app_detail/screenshot_preview_app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +28,22 @@ void main() async {
 
   // 初始化日志（同步执行）
   await AppLogger.init();
+
+  // window_manager 必须在所有窗口路径（主窗口和子窗口）分支之前初始化，
+  // 否则子窗口 Flutter 引擎找不到 channel 实现会抛 MissingPluginException
+  await windowManager.ensureInitialized();
+
+  // 子窗口检测：在单实例检测和主窗口初始化之前执行
+  // desktop_multi_window 通过 arguments 区分主窗口与子窗口
+  final windowController = await WindowController.fromCurrentEngine();
+  if (windowController.arguments.isNotEmpty) {
+    final argMap =
+        jsonDecode(windowController.arguments) as Map<String, dynamic>;
+    if (argMap['type'] == 'screenshot_preview') {
+      await _runScreenshotPreviewWindow(argMap);
+      return;
+    }
+  }
 
   // 单实例检测：必须在窗口初始化之前执行
   // 如果已有实例运行，激活其窗口并退出当前实例
@@ -65,6 +85,33 @@ void main() async {
       child: const LinglongStoreApp(),
     ),
   );
+}
+
+/// 初始化并运行截图预览子窗口
+Future<void> _runScreenshotPreviewWindow(Map<String, dynamic> args) async {
+  final screenshots = List<String>.from(args['screenshots'] as List);
+  final initialIndex = args['initial_index'] as int? ?? 0;
+
+  // 注意：windowManager.ensureInitialized() 已在 main() 顶部统一调用，此处不重复
+  // 子窗口：隐藏系统标题栏，使用自定义标题栏
+  const windowOptions = WindowOptions(
+    size: Size(1100, 700),
+    minimumSize: Size(640, 400),
+    center: true,
+    title: '截图预览',
+    backgroundColor: Color(0xFF1C1C28),
+    titleBarStyle: TitleBarStyle.hidden,
+    windowButtonVisibility: false,
+  );
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
+
+  runApp(ScreenshotPreviewApp(
+    screenshots: screenshots,
+    initialIndex: initialIndex,
+  ));
 }
 
 /// 注册退出时的清理回调

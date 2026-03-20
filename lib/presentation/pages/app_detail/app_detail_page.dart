@@ -1,5 +1,7 @@
+import 'dart:convert';
+
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -446,8 +448,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                         height: 180,
                         fit: BoxFit.cover,
                         // 限制解码尺寸，避免原图 1920x1080 全量解码到内存
-                        cacheWidth: (280 * MediaQuery.devicePixelRatioOf(context)).toInt(),
-                        cacheHeight: (180 * MediaQuery.devicePixelRatioOf(context)).toInt(),
+                        cacheWidth:
+                            (280 * MediaQuery.devicePixelRatioOf(context))
+                                .toInt(),
+                        cacheHeight:
+                            (180 * MediaQuery.devicePixelRatioOf(context))
+                                .toInt(),
                         errorBuilder: (_, __, ___) => Container(
                           width: 280,
                           height: 180,
@@ -479,7 +485,10 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     final theme = Theme.of(context);
     // 优先使用详情中的完整描述
     final description =
-        detailState.appDetail?.appDesc ?? app.description ?? AppLocalizations.of(context)?.noDescription ?? '暂无描述';
+        detailState.appDetail?.appDesc ??
+        app.description ??
+        AppLocalizations.of(context)?.noDescription ??
+        '暂无描述';
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -515,9 +524,11 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     .read(appDetailProvider(widget.appId).notifier)
                     .toggleDescription();
               },
-              child: Text(detailState.isDescriptionExpanded
-                  ? (AppLocalizations.of(context)?.collapse ?? '收起')
-                  : (AppLocalizations.of(context)?.expandAll ?? '展开全部')),
+              child: Text(
+                detailState.isDescriptionExpanded
+                    ? (AppLocalizations.of(context)?.collapse ?? '收起')
+                    : (AppLocalizations.of(context)?.expandAll ?? '展开全部'),
+              ),
             ),
         ],
       ),
@@ -1010,8 +1021,10 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                       ),
                       children: [
                         TextSpan(
-                          text: AppLocalizations.of(context)
-                                  ?.uninstallConfirmMessage(app.name) ??
+                          text:
+                              AppLocalizations.of(
+                                context,
+                              )?.uninstallConfirmMessage(app.name) ??
                               '确定要卸载 ${app.name} 吗？\n卸载后应用数据将被删除，此操作不可恢复。',
                         ),
                       ],
@@ -1024,7 +1037,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     children: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx),
-                        child: Text(AppLocalizations.of(context)?.cancel ?? '取消'),
+                        child: Text(
+                          AppLocalizations.of(context)?.cancel ?? '取消',
+                        ),
                       ),
                       const SizedBox(width: 8),
                       FilledButton(
@@ -1036,7 +1051,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                           backgroundColor: colorScheme.error,
                           foregroundColor: colorScheme.onError,
                         ),
-                        child: Text(AppLocalizations.of(context)?.uninstall ?? '卸载'),
+                        child: Text(
+                          AppLocalizations.of(context)?.uninstall ?? '卸载',
+                        ),
                       ),
                     ],
                   ),
@@ -1063,9 +1080,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       ref.read(updateAppsProvider.notifier).checkUpdates();
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               AppLocalizations.of(context)?.uninstallSuccess(app.name) ??
@@ -1089,32 +1104,21 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     }
   }
 
-  /// 显示截图预览（独立浮动窗口）
+  /// 在独立的 Flutter Desktop 窗口中预览截图
   void _showScreenshotPreview(
     BuildContext context,
     List<String> screenshots,
     int initialIndex,
   ) {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: 'screenshot_preview',
-      barrierColor: Colors.black.withValues(alpha: 0.72),
-      transitionDuration: const Duration(milliseconds: 220),
-      transitionBuilder: (ctx, animation, _, child) {
-        return FadeTransition(
-          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.93, end: 1.0).animate(
-              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-            ),
-            child: child,
-          ),
-        );
-      },
-      pageBuilder: (ctx, _, __) => _ScreenshotPreviewWindow(
-        screenshots: screenshots,
-        initialIndex: initialIndex,
+    // 通过 desktop_multi_window 创建子窗口，传入截图列表和初始索引
+    WindowController.create(
+      WindowConfiguration(
+        hiddenAtLaunch: true,
+        arguments: jsonEncode({
+          'type': 'screenshot_preview',
+          'screenshots': screenshots,
+          'initial_index': initialIndex,
+        }),
       ),
     );
   }
@@ -1126,9 +1130,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       await cliRepo.createDesktopShortcut(app.appId);
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               AppLocalizations.of(context)?.shortcutCreated ?? '快捷方式已创建',
@@ -1141,7 +1143,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context)?.shortcutCreateFailed(e.toString()) ??
+              AppLocalizations.of(
+                    context,
+                  )?.shortcutCreateFailed(e.toString()) ??
                   '创建失败: $e',
             ),
             backgroundColor: Theme.of(context).colorScheme.error,
@@ -1149,384 +1153,5 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         );
       }
     }
-  }
-}
-
-/// 截图预览浮动窗口
-///
-/// 通过 [showGeneralDialog] 展示，覆盖于主界面之上，形态类似独立窗口：
-/// - 标题栏含截图计数和关闭按钮
-/// - 内容区支持缩放和翻页
-/// - 底部缩略图导航（多张时显示）
-/// - 键盘：ESC 关闭，←→ 切换图片
-class _ScreenshotPreviewWindow extends StatefulWidget {
-  const _ScreenshotPreviewWindow({
-    required this.screenshots,
-    required this.initialIndex,
-  });
-
-  final List<String> screenshots;
-  final int initialIndex;
-
-  @override
-  State<_ScreenshotPreviewWindow> createState() =>
-      _ScreenshotPreviewWindowState();
-}
-
-class _ScreenshotPreviewWindowState extends State<_ScreenshotPreviewWindow> {
-  late final PageController _pageController;
-  late int _currentIndex;
-  final FocusNode _focusNode = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.initialIndex;
-    _pageController = PageController(initialPage: widget.initialIndex);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _focusNode.requestFocus());
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    _focusNode.dispose();
-    super.dispose();
-  }
-
-  void _goTo(int index) {
-    if (index < 0 || index >= widget.screenshots.length) return;
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 240),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
-
-    return Material(
-      color: Colors.transparent,
-      child: KeyboardListener(
-        focusNode: _focusNode,
-        onKeyEvent: (event) {
-          if (event is! KeyDownEvent) return;
-          if (event.logicalKey == LogicalKeyboardKey.escape) {
-            Navigator.of(context).pop();
-          } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-            _goTo(_currentIndex - 1);
-          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-            _goTo(_currentIndex + 1);
-          }
-        },
-        child: Center(
-          child: Container(
-            width: (size.width * 0.84).clamp(560.0, 1200.0),
-            height: (size.height * 0.82).clamp(400.0, 900.0),
-            decoration: BoxDecoration(
-              // 深色窗口背景，独立于应用主题
-              color: const Color(0xFF1C1C28),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  blurRadius: 48,
-                  spreadRadius: 0,
-                  offset: const Offset(0, 20),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Column(
-                children: [
-                  _buildTitleBar(context),
-                  Expanded(child: _buildImageArea()),
-                  if (widget.screenshots.length > 1) _buildThumbnailBar(),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// 标题栏：图标 + 标题 + 计数器 + 关闭按钮
-  Widget _buildTitleBar(BuildContext context) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: const BoxDecoration(
-        color: Color(0xFF15151F),
-        border: Border(bottom: BorderSide(color: Colors.white10)),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.photo_library_outlined,
-            color: Colors.white54,
-            size: 17,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            AppLocalizations.of(context)?.screenShots ?? '截图预览',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const Spacer(),
-          // 快捷键提示
-          const _KeyHint(label: 'ESC'),
-          const SizedBox(width: 4),
-          const _KeyHint(label: '←  →'),
-          const SizedBox(width: 16),
-          // 计数器
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '${_currentIndex + 1} / ${widget.screenshots.length}',
-              style: const TextStyle(color: Colors.white60, fontSize: 12),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // 关闭按钮
-          _CloseButton(onTap: () => Navigator.of(context).pop()),
-        ],
-      ),
-    );
-  }
-
-  /// 图片区：PageView + InteractiveViewer + 左右箭头
-  Widget _buildImageArea() {
-    return Stack(
-      children: [
-        PageView.builder(
-          controller: _pageController,
-          itemCount: widget.screenshots.length,
-          onPageChanged: (i) => setState(() => _currentIndex = i),
-          itemBuilder: (context, index) {
-            return InteractiveViewer(
-              minScale: 0.5,
-              maxScale: 5.0,
-              child: Center(
-                child: Image.network(
-                  widget.screenshots[index],
-                  fit: BoxFit.contain,
-                  // 限制解码宽度避免超大图撑爆内存
-                  cacheWidth: (MediaQuery.sizeOf(context).width *
-                          MediaQuery.devicePixelRatioOf(context) *
-                          0.84)
-                      .toInt(),
-                  errorBuilder: (_, __, ___) => const Center(
-                    child: Icon(
-                      Icons.broken_image_outlined,
-                      color: Colors.white24,
-                      size: 64,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-        // 左侧箭头
-        if (_currentIndex > 0)
-          Positioned(
-            left: 12,
-            top: 0,
-            bottom: 0,
-            child: Center(
-              child: _NavArrow(
-                icon: Icons.chevron_left_rounded,
-                onTap: () => _goTo(_currentIndex - 1),
-              ),
-            ),
-          ),
-        // 右侧箭头
-        if (_currentIndex < widget.screenshots.length - 1)
-          Positioned(
-            right: 12,
-            top: 0,
-            bottom: 0,
-            child: Center(
-              child: _NavArrow(
-                icon: Icons.chevron_right_rounded,
-                onTap: () => _goTo(_currentIndex + 1),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  /// 底部缩略图导航栏
-  Widget _buildThumbnailBar() {
-    return Container(
-      height: 76,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: const BoxDecoration(
-        color: Color(0xFF15151F),
-        border: Border(top: BorderSide(color: Colors.white10)),
-      ),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: widget.screenshots.length,
-        itemBuilder: (context, index) {
-          final selected = index == _currentIndex;
-          return GestureDetector(
-            onTap: () => _goTo(index),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              margin: const EdgeInsets.only(right: 6),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
-                border: Border.all(
-                  color: selected
-                      ? Colors.white.withValues(alpha: 0.75)
-                      : Colors.transparent,
-                  width: 2,
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: Image.network(
-                  widget.screenshots[index],
-                  width: 82,
-                  height: 60,
-                  fit: BoxFit.cover,
-                  cacheWidth: 164,
-                  cacheHeight: 120,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: 82,
-                    height: 60,
-                    color: Colors.white10,
-                    child: const Icon(
-                      Icons.image_outlined,
-                      color: Colors.white24,
-                      size: 24,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// 左右导航箭头按钮（悬停高亮）
-class _NavArrow extends StatefulWidget {
-  const _NavArrow({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  State<_NavArrow> createState() => _NavArrowState();
-}
-
-class _NavArrowState extends State<_NavArrow> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white
-                .withValues(alpha: _hovered ? 0.22 : 0.10),
-          ),
-          child: Icon(widget.icon, color: Colors.white, size: 24),
-        ),
-      ),
-    );
-  }
-}
-
-/// 键盘快捷键提示标签
-class _KeyHint extends StatelessWidget {
-  const _KeyHint({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Colors.white12),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white38,
-          fontSize: 10,
-          fontFamily: 'monospace',
-        ),
-      ),
-    );
-  }
-}
-
-/// 关闭按钮（悬停时高亮）
-class _CloseButton extends StatefulWidget {
-  const _CloseButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  State<_CloseButton> createState() => _CloseButtonState();
-}
-
-class _CloseButtonState extends State<_CloseButton> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 120),
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6),
-            color: _hovered
-                ? const Color(0xFFE5534B).withValues(alpha: 0.85)
-                : Colors.white.withValues(alpha: 0.08),
-          ),
-          child: Icon(
-            Icons.close_rounded,
-            color: _hovered ? Colors.white : Colors.white54,
-            size: 16,
-          ),
-        ),
-      ),
-    );
   }
 }

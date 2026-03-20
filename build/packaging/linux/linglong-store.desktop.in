@@ -1,0 +1,15 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=@DISPLAY_NAME@
+Name[zh_CN]=@DISPLAY_NAME@
+GenericName=Application Store
+GenericName[zh_CN]=应用商店
+Comment=@SUMMARY@
+Comment[zh_CN]=玲珑应用商店社区版
+Exec=@EXECUTABLE_NAME@
+Icon=@ICON_NAME@
+StartupWMClass=@WM_CLASS@
+Terminal=false
+Categories=System;PackageManager;
+Keywords=linglong;store;app;package;

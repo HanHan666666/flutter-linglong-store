@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>@APP_ID@</id>
+  <name>@DISPLAY_NAME@</name>
+  <summary>@SUMMARY@</summary>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <launchable type="desktop-id">linglong-store.desktop</launchable>
+  <description>
+    <p>@DESCRIPTION@</p>
+  </description>
+  <url type="homepage">@PROJECT_URL@</url>
+  <categories>
+    <category>System</category>
+    <category>PackageManager</category>
+  </categories>
+  <content_rating type="oars-1.1" />
+</component>

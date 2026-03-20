@@ -172,7 +172,10 @@ bootstrap_flutter_dart_sdk
 run_with_retries 5 flutter --disable-analytics
 run_with_retries 5 dart --disable-analytics
 run_with_retries 5 flutter config --enable-linux-desktop
-dart run tool/release/update_version_files.dart "$release_version"
+LINGLONG_RELEASE_TOOL_ROOT="$source_copy_dir" \
+  bash "$ROOT_DIR/build/scripts/run-release-dart-tool.sh" \
+  tool/release/update_version_files.dart \
+  "$release_version"
 run_with_retries 5 flutter pub get
 run_with_retries 5 dart run build_runner build --delete-conflicting-outputs
 run_with_retries 3 flutter build linux --release

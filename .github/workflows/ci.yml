@@ -54,6 +54,9 @@ jobs:
           cache-from: type=gha,scope=debian10-release
           cache-to: type=gha,mode=max,scope=debian10-release
 
+      - name: Run release CLI smoke test
+        run: bash build/scripts/release-cli-smoke-test.sh
+
       - name: Run Debian 10 packaging smoke test
         run: bash build/scripts/package-smoke-test.sh
         env:

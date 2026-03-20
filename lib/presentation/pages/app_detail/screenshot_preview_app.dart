@@ -8,10 +8,6 @@ import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import 'screenshot_preview_window_payload.dart';
 
-const MethodChannel _previewWindowChannel = MethodChannel(
-  'org.linglong_store/preview_window',
-);
-
 /// 截图预览独立窗口 App。
 ///
 /// 子窗口只承载截图预览 UI，不启动主应用的路由和业务 Provider。
@@ -41,7 +37,6 @@ class _ScreenshotPreviewAppState extends State<ScreenshotPreviewApp> {
 
   @override
   void dispose() {
-    widget.windowBinding.registerMethodHandler(null);
     super.dispose();
   }
 
@@ -147,8 +142,11 @@ class ScreenshotPreviewLaunchErrorApp extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       FilledButton(
-                        onPressed: () => _previewWindowChannel
-                            .invokeMethod<void>('hideWindow'),
+                        onPressed: () async {
+                          final controller =
+                              await WindowController.fromCurrentEngine();
+                          await controller.hide();
+                        },
                         child: Text(l10n?.close ?? '关闭'),
                       ),
                     ],
@@ -184,12 +182,12 @@ class DesktopScreenshotPreviewWindowBinding
 
   @override
   Future<void> closeWindow() async {
-    await _previewWindowChannel.invokeMethod<void>('hideWindow');
+    await _controller.hide();
   }
 
   @override
   Future<void> focusWindow() async {
-    await _previewWindowChannel.invokeMethod<void>('focusWindow');
+    await windowManager.focus();
   }
 
   @override

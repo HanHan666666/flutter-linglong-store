@@ -13,7 +13,7 @@
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
-  GPtrArray* method_channels;
+  FlMethodChannel* native_theme_channel;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
@@ -22,9 +22,6 @@ namespace {
 
 constexpr char kNativeThemeChannel[] = "org.linglong_store/native_theme";
 constexpr char kSetContextMenuDarkThemeMethod[] = "setContextMenuDarkTheme";
-constexpr char kPreviewWindowChannel[] = "org.linglong_store/preview_window";
-constexpr char kHideWindowMethod[] = "hideWindow";
-constexpr char kFocusWindowMethod[] = "focusWindow";
 
 void set_context_menu_dark_theme(gboolean prefer_dark) {
   GtkSettings* settings = gtk_settings_get_default();
@@ -72,67 +69,16 @@ void native_theme_method_call_cb(FlMethodChannel* channel,
   fl_method_call_respond(method_call, response, nullptr);
 }
 
-FlMethodChannel* create_method_channel(FlBinaryMessenger* messenger,
-                                       const gchar* channel_name) {
+void setup_native_theme_channel(MyApplication* self, FlView* view) {
+  FlBinaryMessenger* messenger =
+      fl_engine_get_binary_messenger(fl_view_get_engine(view));
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
-  return fl_method_channel_new(messenger, channel_name, FL_METHOD_CODEC(codec));
-}
 
-void keep_method_channel(MyApplication* self, FlMethodChannel* channel) {
-  g_ptr_array_add(self->method_channels, channel);
-}
-
-void setup_native_theme_channel(MyApplication* self, FlPluginRegistry* registry) {
-  g_autoptr(FlPluginRegistrar) registrar =
-      fl_plugin_registry_get_registrar_for_plugin(registry,
-                                                  "LinglongNativeThemeChannel");
-  FlMethodChannel* channel = create_method_channel(
-      fl_plugin_registrar_get_messenger(registrar), kNativeThemeChannel);
-  keep_method_channel(self, channel);
-  fl_method_channel_set_method_call_handler(channel, native_theme_method_call_cb,
+  self->native_theme_channel = fl_method_channel_new(
+      messenger, kNativeThemeChannel, FL_METHOD_CODEC(codec));
+  fl_method_channel_set_method_call_handler(self->native_theme_channel,
+                                            native_theme_method_call_cb,
                                             self, nullptr);
-}
-
-FlMethodResponse* handle_preview_window_method_call(GtkWindow* window,
-                                                    FlMethodCall* method_call) {
-  const gchar* method = fl_method_call_get_name(method_call);
-  if (strcmp(method, kHideWindowMethod) == 0) {
-    gtk_widget_hide(GTK_WIDGET(window));
-    return FL_METHOD_RESPONSE(
-        fl_method_success_response_new(fl_value_new_bool(true)));
-  }
-
-  if (strcmp(method, kFocusWindowMethod) == 0) {
-    gtk_window_present(window);
-    return FL_METHOD_RESPONSE(
-        fl_method_success_response_new(fl_value_new_bool(true)));
-  }
-
-  return FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
-}
-
-void preview_window_method_call_cb(FlMethodChannel* channel,
-                                   FlMethodCall* method_call,
-                                   gpointer user_data) {
-  (void)channel;
-  auto* view = FL_VIEW(user_data);
-  auto* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(view)));
-  g_autoptr(FlMethodResponse) response =
-      handle_preview_window_method_call(window, method_call);
-  fl_method_call_respond(method_call, response, nullptr);
-}
-
-void setup_preview_window_channel(MyApplication* self, FlPluginRegistry* registry) {
-  g_autoptr(FlPluginRegistrar) registrar =
-      fl_plugin_registry_get_registrar_for_plugin(registry,
-                                                  "LinglongPreviewWindowChannel");
-  FlMethodChannel* channel = create_method_channel(
-      fl_plugin_registrar_get_messenger(registrar), kPreviewWindowChannel);
-  keep_method_channel(self, channel);
-  fl_method_channel_set_method_call_handler(
-      channel, preview_window_method_call_cb,
-      g_object_ref(fl_plugin_registrar_get_view(registrar)),
-      g_object_unref);
 }
 
 }  // namespace
@@ -195,8 +141,7 @@ static void my_application_activate(GApplication* application) {
   g_signal_connect_swapped(view, "first-frame", G_CALLBACK(first_frame_cb),
                            self);
   gtk_widget_realize(GTK_WIDGET(view));
-  setup_native_theme_channel(self, FL_PLUGIN_REGISTRY(view));
-  setup_preview_window_channel(self, FL_PLUGIN_REGISTRY(view));
+  setup_native_theme_channel(self, view);
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
 
@@ -205,9 +150,6 @@ static void my_application_activate(GApplication* application) {
   desktop_multi_window_plugin_set_window_created_callback(
       [](FlPluginRegistry* registry) {
         fl_register_plugins(registry);
-        auto* app = MY_APPLICATION(g_application_get_default());
-        setup_native_theme_channel(app, registry);
-        setup_preview_window_channel(app, registry);
       });
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
@@ -256,7 +198,7 @@ static void my_application_shutdown(GApplication* application) {
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
-  g_clear_pointer(&self->method_channels, g_ptr_array_unref);
+  g_clear_object(&self->native_theme_channel);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }
 
@@ -269,9 +211,7 @@ static void my_application_class_init(MyApplicationClass* klass) {
   G_OBJECT_CLASS(klass)->dispose = my_application_dispose;
 }
 
-static void my_application_init(MyApplication* self) {
-  self->method_channels = g_ptr_array_new_with_free_func(g_object_unref);
-}
+static void my_application_init(MyApplication* self) {}
 
 MyApplication* my_application_new() {
   // Set the program name to the application ID, which helps various systems

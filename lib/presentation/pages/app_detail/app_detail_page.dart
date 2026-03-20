@@ -20,8 +20,7 @@ import '../../../application/providers/network_speed_provider.dart';
 import '../../../application/providers/running_process_provider.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/utils/format_utils.dart';
-import 'screenshot_preview_window_coordinator.dart';
-import 'screenshot_preview_window_payload.dart';
+import 'screenshot_preview_lightbox.dart';
 
 part 'app_detail_page.g.dart';
 
@@ -1103,39 +1102,32 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     }
   }
 
-  /// 在独立的 Flutter Desktop 窗口中预览截图
+  /// 在主窗口内以灯箱形式预览截图
   Future<void> _showScreenshotPreview(
     BuildContext context,
     List<String> screenshots,
     int initialIndex,
   ) async {
-    final localeTag = Localizations.localeOf(context).languageCode;
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final messenger = ScaffoldMessenger.of(context);
-    final loadFailedText = AppLocalizations.of(context)?.loadFailed ?? '加载失败';
-    final errorColor = Theme.of(context).colorScheme.error;
-    final payload = ScreenshotPreviewWindowPayload(
-      screenshots: screenshots,
-      initialIndex: initialIndex,
-      localeTag: localeTag,
-      isDarkMode: isDarkMode,
-    );
-
     try {
-      await ref
-          .read(screenshotPreviewWindowCoordinatorProvider)
-          .showPreview(payload);
+      await showScreenshotPreviewLightbox(
+        context,
+        screenshots: screenshots,
+        initialIndex: initialIndex,
+      );
     } catch (error, stackTrace) {
       AppLogger.error(
-        'Failed to open screenshot preview window',
+        'Failed to open screenshot preview lightbox',
         error,
         stackTrace,
       );
       if (!mounted) {
         return;
       }
-      messenger.showSnackBar(
-        SnackBar(content: Text(loadFailedText), backgroundColor: errorColor),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)?.loadFailed ?? '加载失败'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
       );
     }
   }

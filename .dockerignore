@@ -1,0 +1,26 @@
+# Release docker image only needs the Dockerfile and helper scripts.
+# Exclude generated artifacts and caches so repeated package builds do not
+# balloon the Docker build context and exhaust disk space.
+*
+!build/
+build/*
+!build/docker/
+!build/docker/**
+!build/scripts/
+build/scripts/*
+!build/scripts/configure-debian10-apt.sh
+
+# Keep local release caches and packaging outputs out of the Docker context.
+build/.release-home/
+build/.release-pub-cache/
+build/.release-flutter-cache/
+build/out/
+build/tmp/
+build/native_assets/
+build/test_cache/
+build/c59a3595662134d9b8fe1f2b0219c3f5/
+
+# Standard local build state is mounted at runtime, not copied into the image.
+.dart_tool/
+.git/
+linux/build/

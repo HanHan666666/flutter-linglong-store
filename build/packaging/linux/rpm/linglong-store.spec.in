@@ -1,0 +1,33 @@
+Name: @PACKAGE_NAME@
+Version: @VERSION@
+Release: @RELEASE@
+Summary: @SUMMARY@
+License: MIT
+URL: @PROJECT_URL@
+BuildArch: @RPM_ARCH@
+AutoReqProv: no
+Requires: gtk3, xz-libs, libstdc++
+
+%description
+@DESCRIPTION@
+
+%prep
+
+%build
+
+%install
+rm -rf %{buildroot}
+mkdir -p %{buildroot}
+mkdir -p %{buildroot}/opt %{buildroot}/usr/bin %{buildroot}/usr/share/applications %{buildroot}/usr/share/icons/hicolor/256x256/apps %{buildroot}/usr/share/metainfo
+cp -a "@PAYLOAD_DIR@/opt/." "%{buildroot}/opt/"
+cp -a "@PAYLOAD_DIR@/usr/bin/." "%{buildroot}/usr/bin/"
+cp -a "@PAYLOAD_DIR@/usr/share/applications/." "%{buildroot}/usr/share/applications/"
+cp -a "@PAYLOAD_DIR@/usr/share/icons/hicolor/256x256/apps/." "%{buildroot}/usr/share/icons/hicolor/256x256/apps/"
+cp -a "@PAYLOAD_DIR@/usr/share/metainfo/." "%{buildroot}/usr/share/metainfo/"
+
+%files
+/opt/@PACKAGE_NAME@
+/usr/bin/@PACKAGE_NAME@
+/usr/share/applications/@PACKAGE_NAME@.desktop
+/usr/share/icons/hicolor/256x256/apps/@PACKAGE_NAME@.png
+/usr/share/metainfo/@PACKAGE_NAME@.appdata.xml

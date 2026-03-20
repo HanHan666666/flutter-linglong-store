@@ -52,7 +52,7 @@ void main() {
     );
 
     test(
-      'setting provider restores locale, theme and repo name on first build',
+      'setting provider restores locale and theme without reviving repo preference',
       () async {
         SharedPreferences.setMockInitialValues({
           'linglong-store-language': 'en',
@@ -69,7 +69,8 @@ void main() {
 
         expect(state.locale, const Locale('en'));
         expect(state.themeMode, ThemeMode.light);
-        expect(state.repoName, 'repo:test');
+        // 仓库配置能力已移除，旧偏好键不应再污染设置状态。
+        expect(state.toString(), isNot(contains('repo:test')));
         expect(state.cacheSize, 0);
       },
     );

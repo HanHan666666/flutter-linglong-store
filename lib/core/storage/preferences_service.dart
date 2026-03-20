@@ -41,18 +41,6 @@ class PreferencesService {
     await _prefs.setString('language', locale);
   }
 
-  // ==================== 仓库配置 ====================
-
-  /// 获取仓库配置
-  static String? getRepoName() {
-    return _prefs.getString('repo_name');
-  }
-
-  /// 设置仓库配置
-  static Future<void> setRepoName(String repoName) async {
-    await _prefs.setString('repo_name', repoName);
-  }
-
   // ==================== 主题配置 ====================
 
   /// 获取主题模式 (0: system, 1: light, 2: dark)

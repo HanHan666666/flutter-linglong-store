@@ -662,7 +662,6 @@ class GlobalState with _$GlobalState {
   const factory GlobalState({
     @Default(false) bool isInited,
     String? arch,
-    String? repoName,
     String? appVersion,
     @Default(false) bool checking,
     @Default(false) bool installing,
@@ -675,7 +674,6 @@ class GlobalState with _$GlobalState {
     String? llVersion,
     String? llBinVersion,
     String? detailMsg,
-    @Default([]) List<LinglongRepo> repos,
     @Default(false) bool isContainer,
     String? visitorId,
     String? clientIp,
@@ -688,7 +686,6 @@ class GlobalNotifier extends StateNotifier<GlobalState> {
   
   void onInited() => state = state.copyWith(isInited: true);
   void setArch(String arch) => state = state.copyWith(arch: arch);
-  void setRepoName(String name) => state = state.copyWith(repoName: name);
   // ... 其他方法保持不可变更新模式
 }
 

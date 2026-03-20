@@ -423,10 +423,6 @@ Seed 数据：构建期预生成 `allapps_default` 的前 3 页。
 │  语言设置                                │
 │  ├── [中文/English]  ← Radio 或 Select  │
 │                                         │
-│  仓库源设置                              │
-│  ├── 当前源: xxx                         │
-│  ├── [修改源]                            │
-│                                         │
 │  关于                                    │
 │  ├── 版本: 2.0.0                         │
 │  ├── 开源协议: GPL-3.0                   │
@@ -444,12 +440,6 @@ Seed 数据：构建期预生成 `allapps_default` 的前 3 页。
 2. 更新 `ConfigProvider.locale`
 3. 更新 `dayjs.locale`
 4. 无需刷新页面
-
-### 9.3 仓库源设置
-
-- 读取当前 Linglong 仓库配置
-- 支持修改仓库 URL
-- 修改后需重启应用
 
 ---
 

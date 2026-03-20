@@ -233,4 +233,180 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchApps => 'Search apps...';
+
+  @override
+  String get languageSettings => 'Language Settings';
+
+  @override
+  String get themeSettings => 'Theme Settings';
+
+  @override
+  String get cacheManagement => 'Cache Management';
+
+  @override
+  String get storeOptions => 'Store Options';
+
+  @override
+  String get checkUpdate => 'Check for Updates';
+
+  @override
+  String currentVersion(String version) {
+    return 'Current version: $version';
+  }
+
+  @override
+  String newVersionFound(String tagName, String currentVersion) {
+    return 'New version $tagName found, current version $currentVersion';
+  }
+
+  @override
+  String alreadyLatest(String version) {
+    return 'Already the latest version $version';
+  }
+
+  @override
+  String get checkingUpdate => 'Checking for updates...';
+
+  @override
+  String get goDownload => 'Go to Download';
+
+  @override
+  String get cacheSize => 'Cache Size';
+
+  @override
+  String get startupCheckUpdate => 'Check for store updates at launch';
+
+  @override
+  String get startupCheckUpdateDesc =>
+      'Check if a new version is available on each startup';
+
+  @override
+  String get autoUpdateInContainer => 'Auto-update store in container';
+
+  @override
+  String get autoUpdateInContainerDesc =>
+      'Automatically update the store app when running in Linglong container';
+
+  @override
+  String get showBaseServices => 'Show base runtime services';
+
+  @override
+  String get showBaseServicesDesc =>
+      'Show underlying base runtime services in the installed list';
+
+  @override
+  String get cleanDeprecatedServices => 'Clean up deprecated base services';
+
+  @override
+  String get cleanDeprecatedServicesDesc =>
+      'Remove unused base runtime services to free up disk space';
+
+  @override
+  String get checkNewVersion => 'Check New Version';
+
+  @override
+  String get feedbackMenu => 'Feedback';
+
+  @override
+  String get officialWebsite => 'Official Website';
+
+  @override
+  String get feedbackTitle => 'Feedback';
+
+  @override
+  String get uploadLog => 'Also upload log file';
+
+  @override
+  String get noPrivacyInfo => 'Logs contain no personal privacy information';
+
+  @override
+  String get submitFeedback => 'Submit';
+
+  @override
+  String get feedbackHint => 'Please describe the issue';
+
+  @override
+  String get feedbackSuccess => 'Thank you for your feedback!';
+
+  @override
+  String get feedbackFailed =>
+      'Feedback submission failed, please try again later';
+
+  @override
+  String get confirmExit => 'Confirm Exit';
+
+  @override
+  String get exitWithInstalling =>
+      'There are ongoing installation tasks. Are you sure you want to exit?';
+
+  @override
+  String get exitBtn => 'Exit';
+
+  @override
+  String get downloadManager => 'Download Manager';
+
+  @override
+  String get clearRecords => 'Clear Records';
+
+  @override
+  String get noDownloadTasks => 'No download tasks';
+
+  @override
+  String cannotOpenLink(String url) {
+    return 'Cannot open link: $url';
+  }
+
+  @override
+  String get envCheckPassed =>
+      'Installation complete, environment check passed';
+
+  @override
+  String get envCheckFailed =>
+      'Installation complete, but environment is still abnormal, please check';
+
+  @override
+  String launching(String appName) {
+    return 'Launching $appName...';
+  }
+
+  @override
+  String launchFailed(String error) {
+    return 'Launch failed: $error';
+  }
+
+  @override
+  String copied(String value) {
+    return 'Copied: $value';
+  }
+
+  @override
+  String get createDesktopShortcut => 'Create Desktop Shortcut';
+
+  @override
+  String get appNotFound => 'App information not found';
+
+  @override
+  String get noVersionHistory => 'No version history';
+
+  @override
+  String get installedBadge => 'Installed';
+
+  @override
+  String uninstallFailed(String result) {
+    return 'Uninstall failed: $result';
+  }
+
+  @override
+  String uninstallSuccess(String name) {
+    return '$name has been uninstalled';
+  }
+
+  @override
+  String uninstallError(String error) {
+    return 'Uninstall error: $error';
+  }
+
+  @override
+  String get commandCopied =>
+      'Command copied to clipboard, paste and run in terminal';
 }

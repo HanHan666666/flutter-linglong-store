@@ -27,9 +27,6 @@ const _kGiteeLatestApi =
     'https://gitee.com/api/v5/repos/Shirosu/linglong-store/releases/latest';
 
 class _SettingPageState extends ConsumerState<SettingPage> {
-  /// 仓库输入控制器
-  final _repoController = TextEditingController();
-
   /// 已收录应用数量（-1 表示加载中）
   int _appTotalCount = -1;
 
@@ -40,12 +37,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
   void initState() {
     super.initState();
     _initSettings();
-  }
-
-  @override
-  void dispose() {
-    _repoController.dispose();
-    super.dispose();
   }
 
   /// 初始化设置
@@ -71,13 +62,13 @@ class _SettingPageState extends ConsumerState<SettingPage> {
   Future<void> _fetchAppTotalCount() async {
     try {
       final apiService = ref.read(appApiServiceProvider);
-      final settingState = ref.read(settingProvider);
       final response = await apiService.getSearchAppList(
         SearchAppListRequest(
           keyword: '',
           pageNo: 1,
           pageSize: 1,
-          repoName: settingState.repoName,
+          // 设置页不再暴露仓库切换，统计统一读取默认仓库视图。
+          repoName: AppConfig.defaultStoreRepoName,
         ),
       );
       final total = response.data.data?.total;
@@ -190,12 +181,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           // 主题设置
           _buildSectionTitle(context, l10n?.themeSettings ?? '主题设置'),
           _buildThemeSection(context, state),
-
-          const SizedBox(height: 24),
-
-          // 仓库配置
-          _buildSectionTitle(context, l10n?.repoConfig ?? '仓库配置'),
-          _buildRepoSection(context, state),
 
           const SizedBox(height: 24),
 
@@ -354,137 +339,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         ref.read(globalAppProvider.notifier).setThemeMode(mode);
       },
     );
-  }
-
-  /// 构建仓库配置部分
-  Widget _buildRepoSection(BuildContext context, SettingState state) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.outlineVariant,
-          width: 1,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '当前仓库源',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    state.repoName,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: () => _showRepoEditDialog(context, state),
-                  icon: const Icon(Icons.edit, size: 18),
-                  label: Text(AppLocalizations.of(context)?.modifyBtn ?? '修改'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '可选仓库',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: defaultRepos.map((repo) {
-                final isSelected = repo == state.repoName;
-                return FilterChip(
-                  label: Text(repo),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    if (selected) {
-                      _updateRepo(repo);
-                    }
-                  },
-                  selectedColor: Theme.of(context).colorScheme.primaryContainer,
-                  checkmarkColor: Theme.of(context).colorScheme.primary,
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 更新仓库
-  void _updateRepo(String repoName) {
-    ref.read(settingProvider.notifier).setRepoName(repoName);
-    ref.read(globalAppProvider.notifier).setRepoName(repoName);
-
-    if (mounted) {
-      final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n?.repoSwitched(repoName) ?? '仓库已切换为: $repoName'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
-  }
-
-  /// 显示仓库编辑对话框
-  Future<void> _showRepoEditDialog(
-    BuildContext context,
-    SettingState state,
-  ) async {
-    _repoController.text = state.repoName;
-
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        final l10n = AppLocalizations.of(context);
-        return AlertDialog(
-          title: Text(l10n?.editRepo ?? '修改仓库源'),
-          content: TextField(
-            controller: _repoController,
-            decoration: const InputDecoration(
-              labelText: '仓库名称',
-              hintText: '例如: repo:linglong',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(l10n?.cancel ?? '取消'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final value = _repoController.text.trim();
-                if (value.isNotEmpty) {
-                  Navigator.of(context).pop(value);
-                }
-              },
-              child: Text(l10n?.confirm ?? '确定'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (result != null && result.isNotEmpty) {
-      _updateRepo(result);
-    }
   }
 
   /// 构建缓存管理部分

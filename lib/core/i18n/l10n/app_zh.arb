@@ -76,7 +76,6 @@
   "searchApps": "搜索应用...",
   "languageSettings": "语言设置",
   "themeSettings": "主题设置",
-  "repoConfig": "仓库配置",
   "cacheManagement": "缓存管理",
   "storeOptions": "商店选项",
   "checkUpdate": "检查更新",
@@ -109,16 +108,6 @@
   },
   "checkingUpdate": "检查更新中...",
   "goDownload": "前往下载",
-  "editRepo": "修改仓库源",
-  "repoSwitched": "仓库已切换为: {repoName}",
-  "@repoSwitched": {
-    "placeholders": {
-      "repoName": {
-        "type": "String"
-      }
-    }
-  },
-  "modifyBtn": "修改",
   "cacheSize": "缓存大小",
   "startupCheckUpdate": "启动时检查商店版本更新",
   "startupCheckUpdateDesc": "每次启动时检测是否有新版本可用",

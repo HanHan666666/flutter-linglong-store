@@ -70,5 +70,4 @@ export '../../application/providers/setting_provider.dart'
         Setting,
         formatBytes,
         supportedLocales,
-        languageNames,
-        defaultRepos;
+        languageNames;

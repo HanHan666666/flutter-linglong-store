@@ -76,7 +76,6 @@
   "searchApps": "Search apps...",
   "languageSettings": "Language Settings",
   "themeSettings": "Theme Settings",
-  "repoConfig": "Repository Config",
   "cacheManagement": "Cache Management",
   "storeOptions": "Store Options",
   "checkUpdate": "Check for Updates",
@@ -109,16 +108,6 @@
   },
   "checkingUpdate": "Checking for updates...",
   "goDownload": "Go to Download",
-  "editRepo": "Edit Repository",
-  "repoSwitched": "Repository switched to: {repoName}",
-  "@repoSwitched": {
-    "placeholders": {
-      "repoName": {
-        "type": "String"
-      }
-    }
-  },
-  "modifyBtn": "Modify",
   "cacheSize": "Cache Size",
   "startupCheckUpdate": "Check for store updates at launch",
   "startupCheckUpdateDesc": "Check if a new version is available on each startup",

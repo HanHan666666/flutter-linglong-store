@@ -1,0 +1,188 @@
+name: Nightly
+run-name: Nightly build (${{ github.event_name == 'workflow_dispatch' && 'manual' || 'scheduled' }})
+
+on:
+  schedule:
+    - cron: '0 19 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-nightly:
+    name: Prepare nightly metadata
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.decide.outputs.should_publish }}
+      base_version: ${{ steps.metadata.outputs.base_version }}
+      nightly_label: ${{ steps.metadata.outputs.nightly_label }}
+      short_sha: ${{ steps.metadata.outputs.short_sha }}
+      nightly_date: ${{ steps.metadata.outputs.nightly_date }}
+      source_commit: ${{ steps.decide.outputs.source_commit }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve nightly metadata
+        id: metadata
+        run: |
+          eval "$(bash build/scripts/resolve-nightly-metadata.sh)"
+          echo "base_version=$base_version" >> "$GITHUB_OUTPUT"
+          echo "nightly_label=$nightly_label" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$short_sha" >> "$GITHUB_OUTPUT"
+          echo "nightly_date=$nightly_date" >> "$GITHUB_OUTPUT"
+
+      - name: Read existing nightly prerelease
+        id: existing
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              const { data } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: 'nightly',
+              });
+              const body = data.body || '';
+              const shaMatch = body.match(/^Nightly source commit:\s*(.+)$/m);
+              core.setOutput('published_sha', shaMatch ? shaMatch[1].trim() : '');
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+              core.setOutput('published_sha', '');
+            }
+
+      - name: Decide whether nightly should publish
+        id: decide
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          PUBLISHED_SHA: ${{ steps.existing.outputs.published_sha }}
+        run: |
+          source_commit="$(git rev-parse HEAD)"
+          reason="changes detected"
+          should_publish="true"
+
+          if [[ "${GITHUB_REF_NAME}" != "${DEFAULT_BRANCH}" ]]; then
+            should_publish="false"
+            reason="nightly only publishes from ${DEFAULT_BRANCH}"
+          elif [[ -n "$PUBLISHED_SHA" && "$PUBLISHED_SHA" == "$source_commit" ]]; then
+            should_publish="false"
+            reason="HEAD ${source_commit} already published to nightly"
+          fi
+
+          echo "source_commit=$source_commit" >> "$GITHUB_OUTPUT"
+          echo "should_publish=$should_publish" >> "$GITHUB_OUTPUT"
+          echo "Nightly publish decision: $reason"
+          echo "Nightly publish decision: $reason" >> "$GITHUB_STEP_SUMMARY"
+
+  build-nightly-amd64:
+    name: Build nightly amd64 ${{ needs.prepare-nightly.outputs.nightly_label }}
+    needs: prepare-nightly
+    if: ${{ needs.prepare-nightly.outputs.should_publish == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      TARGET_ARCH: amd64
+      RELEASE_VERSION: ${{ needs.prepare-nightly.outputs.base_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and cache Debian 10 release image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: build/docker/debian10-release.Dockerfile
+          load: true
+          tags: linglong-store/debian10-release:local
+          cache-from: type=gha,scope=debian10-release
+          cache-to: type=gha,mode=max,scope=debian10-release
+
+      # Nightly keeps the full packaging smoke test that CI no longer runs.
+      - name: Run Debian 10 packaging smoke test
+        run: bash build/scripts/package-smoke-test.sh
+
+      - name: Stage nightly assets
+        run: |
+          bash build/scripts/prepare-nightly-assets.sh \
+            --base-version "${RELEASE_VERSION}" \
+            --nightly-label "${{ needs.prepare-nightly.outputs.nightly_label }}" \
+            --arch "${TARGET_ARCH}" \
+            --source-dir "build/out/linux/${RELEASE_VERSION}/${TARGET_ARCH}" \
+            --output-dir "build/out/nightly/${{ needs.prepare-nightly.outputs.nightly_label }}/${TARGET_ARCH}"
+
+      - name: Upload nightly assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-assets-amd64
+          path: build/out/nightly/${{ needs.prepare-nightly.outputs.nightly_label }}/amd64
+          if-no-files-found: error
+
+  publish-nightly:
+    name: Publish nightly ${{ needs.prepare-nightly.outputs.nightly_label }}
+    needs: [prepare-nightly, build-nightly-amd64]
+    if: ${{ needs.prepare-nightly.outputs.should_publish == 'true' && needs.build-nightly-amd64.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Download nightly assets
+        uses: actions/download-artifact@v4
+        with:
+          name: nightly-assets-amd64
+          path: nightly-artifacts
+
+      - name: Update nightly tag
+        run: |
+          git tag -f nightly "${{ needs.prepare-nightly.outputs.source_commit }}"
+          git push origin refs/tags/nightly --force
+
+      - name: Render nightly release notes
+        run: |
+          cat > nightly-release-notes.md <<EOF
+          ## Nightly Build
+
+          - Version label: ${{ needs.prepare-nightly.outputs.nightly_label }}
+          - Architecture: amd64
+          - Trigger: ${{ github.event_name }}
+
+          ## Download
+          - amd64: bundle / deb / rpm / AppImage
+
+          ## Requirements
+          - Linux
+          - GTK 3
+          - 玲珑运行环境
+
+          Nightly source commit: ${{ needs.prepare-nightly.outputs.source_commit }}
+          Nightly source date: ${{ needs.prepare-nightly.outputs.nightly_date }}
+          Nightly version label: ${{ needs.prepare-nightly.outputs.nightly_label }}
+          EOF
+
+      - name: Publish nightly prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          target_commitish: ${{ needs.prepare-nightly.outputs.source_commit }}
+          name: Nightly Build ${{ needs.prepare-nightly.outputs.nightly_label }}
+          body_path: nightly-release-notes.md
+          prerelease: true
+          make_latest: false
+          overwrite_files: true
+          fail_on_unmatched_files: true
+          files: |
+            nightly-artifacts/*

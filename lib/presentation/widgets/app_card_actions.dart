@@ -51,16 +51,24 @@ Future<void> handleAppCardPrimaryAction({
         if (!context.mounted) {
           return;
         }
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.launching(appName) ?? '正在启动 $appName...')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)?.launching(appName) ??
+                  '正在启动 $appName...',
+            ),
+          ),
+        );
       } catch (error) {
         if (!context.mounted) {
           return;
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)?.launchFailed(error.toString()) ?? '启动失败: $error'),
+            content: Text(
+              AppLocalizations.of(context)?.launchFailed(error.toString()) ??
+                  '启动失败: $error',
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

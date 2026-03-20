@@ -372,7 +372,10 @@ class LinglongEnvDialog extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)?.cannotOpenLink(url) ?? '无法打开链接: $url'),
+            content: Text(
+              AppLocalizations.of(context)?.cannotOpenLink(url) ??
+                  '无法打开链接: $url',
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -394,7 +397,9 @@ class LinglongEnvDialog extends ConsumerWidget {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)?.envCheckPassed ?? '安装完成，环境检测通过'),
+            content: Text(
+              AppLocalizations.of(context)?.envCheckPassed ?? '安装完成，环境检测通过',
+            ),
             backgroundColor: AppColors.success,
           ),
         );
@@ -402,7 +407,9 @@ class LinglongEnvDialog extends ConsumerWidget {
         // 环境仍异常，提示用户
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)?.envCheckFailed ?? '安装完成，但环境仍异常，请检查'),
+            content: Text(
+              AppLocalizations.of(context)?.envCheckFailed ?? '安装完成，但环境仍异常，请检查',
+            ),
             backgroundColor: AppColors.warning,
           ),
         );

@@ -109,8 +109,7 @@ void main() {
         const req = AppWelcomeSearchRequest();
         final json = req.toJson();
         // 关键：lan 应为 null 而非硬编码的 'zh'
-        expect(json['lan'], isNull,
-            reason: 'lan 不应再硬编码为 zh，应由调用处动态注入');
+        expect(json['lan'], isNull, reason: 'lan 不应再硬编码为 zh，应由调用处动态注入');
       });
 
       test('传入 zh_CN 时正确序列化', () {

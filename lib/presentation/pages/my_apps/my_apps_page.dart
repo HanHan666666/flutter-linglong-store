@@ -153,7 +153,10 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
         if (result.contains('失败')) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context)?.uninstallFailed(result) ?? '卸载失败: $result'),
+              content: Text(
+                AppLocalizations.of(context)?.uninstallFailed(result) ??
+                    '卸载失败: $result',
+              ),
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
@@ -168,16 +171,24 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
               .read(analyticsRepositoryProvider)
               .reportUninstall(app.appId, app.version, appName: app.name);
 
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.uninstallSuccess(app.name) ?? '${app.name} 已卸载')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)?.uninstallSuccess(app.name) ??
+                    '${app.name} 已卸载',
+              ),
+            ),
+          );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)?.uninstallError(e.toString()) ?? '卸载异常: $e'),
+            content: Text(
+              AppLocalizations.of(context)?.uninstallError(e.toString()) ??
+                  '卸载异常: $e',
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

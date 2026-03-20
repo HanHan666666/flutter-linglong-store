@@ -541,6 +541,324 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'搜索应用...'**
   String get searchApps;
+
+  /// No description provided for @languageSettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'语言设置'**
+  String get languageSettings;
+
+  /// No description provided for @themeSettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'主题设置'**
+  String get themeSettings;
+
+  /// No description provided for @repoConfig.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库配置'**
+  String get repoConfig;
+
+  /// No description provided for @cacheManagement.
+  ///
+  /// In zh, this message translates to:
+  /// **'缓存管理'**
+  String get cacheManagement;
+
+  /// No description provided for @storeOptions.
+  ///
+  /// In zh, this message translates to:
+  /// **'商店选项'**
+  String get storeOptions;
+
+  /// No description provided for @checkUpdate.
+  ///
+  /// In zh, this message translates to:
+  /// **'检查更新'**
+  String get checkUpdate;
+
+  /// No description provided for @currentVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前版本: {version}'**
+  String currentVersion(String version);
+
+  /// No description provided for @newVersionFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'发现新版本 {tagName}，当前版本 {currentVersion}'**
+  String newVersionFound(String tagName, String currentVersion);
+
+  /// No description provided for @alreadyLatest.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前已是最新版本 {version}'**
+  String alreadyLatest(String version);
+
+  /// No description provided for @checkingUpdate.
+  ///
+  /// In zh, this message translates to:
+  /// **'检查更新中...'**
+  String get checkingUpdate;
+
+  /// No description provided for @goDownload.
+  ///
+  /// In zh, this message translates to:
+  /// **'前往下载'**
+  String get goDownload;
+
+  /// No description provided for @editRepo.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改仓库源'**
+  String get editRepo;
+
+  /// No description provided for @repoSwitched.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库已切换为: {repoName}'**
+  String repoSwitched(String repoName);
+
+  /// No description provided for @modifyBtn.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改'**
+  String get modifyBtn;
+
+  /// No description provided for @cacheSize.
+  ///
+  /// In zh, this message translates to:
+  /// **'缓存大小'**
+  String get cacheSize;
+
+  /// No description provided for @startupCheckUpdate.
+  ///
+  /// In zh, this message translates to:
+  /// **'启动时检查商店版本更新'**
+  String get startupCheckUpdate;
+
+  /// No description provided for @startupCheckUpdateDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'每次启动时检测是否有新版本可用'**
+  String get startupCheckUpdateDesc;
+
+  /// No description provided for @autoUpdateInContainer.
+  ///
+  /// In zh, this message translates to:
+  /// **'容器内自动更新商店本体'**
+  String get autoUpdateInContainer;
+
+  /// No description provided for @autoUpdateInContainerDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'在玲珑容器内运行时自动更新商店应用'**
+  String get autoUpdateInContainerDesc;
+
+  /// No description provided for @showBaseServices.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示基础运行服务'**
+  String get showBaseServices;
+
+  /// No description provided for @showBaseServicesDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'在已安装列表中显示底层基础运行服务'**
+  String get showBaseServicesDesc;
+
+  /// No description provided for @cleanDeprecatedServices.
+  ///
+  /// In zh, this message translates to:
+  /// **'清理废弃基础服务'**
+  String get cleanDeprecatedServices;
+
+  /// No description provided for @cleanDeprecatedServicesDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'移除已不再使用的基础运行服务，释放磁盘空间'**
+  String get cleanDeprecatedServicesDesc;
+
+  /// No description provided for @checkNewVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'检查新版本'**
+  String get checkNewVersion;
+
+  /// No description provided for @feedbackMenu.
+  ///
+  /// In zh, this message translates to:
+  /// **'意见反馈'**
+  String get feedbackMenu;
+
+  /// No description provided for @officialWebsite.
+  ///
+  /// In zh, this message translates to:
+  /// **'官网'**
+  String get officialWebsite;
+
+  /// No description provided for @feedbackTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'意见反馈'**
+  String get feedbackTitle;
+
+  /// No description provided for @uploadLog.
+  ///
+  /// In zh, this message translates to:
+  /// **'同时上传日志文件'**
+  String get uploadLog;
+
+  /// No description provided for @noPrivacyInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'日志中不包含个人隐私信息'**
+  String get noPrivacyInfo;
+
+  /// No description provided for @submitFeedback.
+  ///
+  /// In zh, this message translates to:
+  /// **'提交'**
+  String get submitFeedback;
+
+  /// No description provided for @feedbackHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'请填写问题概述或描述'**
+  String get feedbackHint;
+
+  /// No description provided for @feedbackSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'感谢您的反馈！'**
+  String get feedbackSuccess;
+
+  /// No description provided for @feedbackFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'反馈提交失败，请稍后重试'**
+  String get feedbackFailed;
+
+  /// No description provided for @confirmExit.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认退出'**
+  String get confirmExit;
+
+  /// No description provided for @exitWithInstalling.
+  ///
+  /// In zh, this message translates to:
+  /// **'有正在进行的安装任务，确定要退出吗？'**
+  String get exitWithInstalling;
+
+  /// No description provided for @exitBtn.
+  ///
+  /// In zh, this message translates to:
+  /// **'退出'**
+  String get exitBtn;
+
+  /// No description provided for @downloadManager.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载管理'**
+  String get downloadManager;
+
+  /// No description provided for @clearRecords.
+  ///
+  /// In zh, this message translates to:
+  /// **'清空记录'**
+  String get clearRecords;
+
+  /// No description provided for @noDownloadTasks.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无下载任务'**
+  String get noDownloadTasks;
+
+  /// No description provided for @cannotOpenLink.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法打开链接: {url}'**
+  String cannotOpenLink(String url);
+
+  /// No description provided for @envCheckPassed.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装完成，环境检测通过'**
+  String get envCheckPassed;
+
+  /// No description provided for @envCheckFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装完成，但环境仍异常，请检查'**
+  String get envCheckFailed;
+
+  /// No description provided for @launching.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在启动 {appName}...'**
+  String launching(String appName);
+
+  /// No description provided for @launchFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'启动失败: {error}'**
+  String launchFailed(String error);
+
+  /// No description provided for @copied.
+  ///
+  /// In zh, this message translates to:
+  /// **'已复制：{value}'**
+  String copied(String value);
+
+  /// No description provided for @createDesktopShortcut.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建桌面快捷方式'**
+  String get createDesktopShortcut;
+
+  /// No description provided for @appNotFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到应用信息'**
+  String get appNotFound;
+
+  /// No description provided for @noVersionHistory.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无版本历史'**
+  String get noVersionHistory;
+
+  /// No description provided for @installedBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'已安装'**
+  String get installedBadge;
+
+  /// No description provided for @uninstallFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'卸载失败: {result}'**
+  String uninstallFailed(String result);
+
+  /// No description provided for @uninstallSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'{name} 已卸载'**
+  String uninstallSuccess(String name);
+
+  /// No description provided for @uninstallError.
+  ///
+  /// In zh, this message translates to:
+  /// **'卸载异常: {error}'**
+  String uninstallError(String error);
+
+  /// No description provided for @commandCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'命令已复制到剪贴板，请粘贴到终端中执行'**
+  String get commandCopied;
 }
 
 class _AppLocalizationsDelegate

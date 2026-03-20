@@ -73,7 +73,11 @@ class AppRepositoryImpl implements AppRepository {
   }) async {
     try {
       final response = await _apiService.getWelcomeAppList(
-        PageParams(pageNo: page, pageSize: pageSize, lan: _resolveLang(ApiClient.getLocale?.call())),
+        PageParams(
+          pageNo: page,
+          pageSize: pageSize,
+          lan: _resolveLang(ApiClient.getLocale?.call()),
+        ),
       );
 
       if (response.data.data == null) return [];
@@ -96,7 +100,12 @@ class AppRepositoryImpl implements AppRepository {
     try {
       // 使用搜索接口获取全部应用
       final response = await _apiService.getSearchAppList(
-        SearchAppListRequest(keyword: '', pageNo: page, pageSize: pageSize, lan: _resolveLang(ApiClient.getLocale?.call())),
+        SearchAppListRequest(
+          keyword: '',
+          pageNo: page,
+          pageSize: pageSize,
+          lan: _resolveLang(ApiClient.getLocale?.call()),
+        ),
       );
 
       if (response.data.data == null) return [];

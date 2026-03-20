@@ -148,9 +148,13 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
     final description = _descriptionController.text.trim();
 
     if (overview.isEmpty && description.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.feedbackHint ?? '请填写问题概述或描述')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)?.feedbackHint ?? '请填写问题概述或描述',
+          ),
+        ),
+      );
       return;
     }
 
@@ -189,16 +193,24 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.feedbackSuccess ?? '感谢您的反馈！')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)?.feedbackSuccess ?? '感谢您的反馈！',
+            ),
+          ),
+        );
       }
     } catch (e, s) {
       AppLogger.error('提交反馈失败', e, s);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.feedbackFailed ?? '反馈提交失败，请稍后重试')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)?.feedbackFailed ?? '反馈提交失败，请稍后重试',
+            ),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);

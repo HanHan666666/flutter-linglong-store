@@ -116,8 +116,14 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         builder: (ctx) => AlertDialog(
           title: Text(l10n?.checkUpdate ?? '检查更新'),
           content: isNewer
-              ? Text(l10n?.newVersionFound(tagName, currentVersion) ?? '发现新版本 $tagName！\n当前版本：$currentVersion')
-              : Text(l10n?.alreadyLatest(currentVersion) ?? '当前已是最新版本 ($currentVersion)'),
+              ? Text(
+                  l10n?.newVersionFound(tagName, currentVersion) ??
+                      '发现新版本 $tagName！\n当前版本：$currentVersion',
+                )
+              : Text(
+                  l10n?.alreadyLatest(currentVersion) ??
+                      '当前已是最新版本 ($currentVersion)',
+                ),
           actions: [
             if (isNewer)
               TextButton(
@@ -511,7 +517,10 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(AppLocalizations.of(context)?.cacheSize ?? '缓存大小', style: Theme.of(context).textTheme.bodyMedium),
+                    Text(
+                      AppLocalizations.of(context)?.cacheSize ?? '缓存大小',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       cacheSizeText,
@@ -602,8 +611,13 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         children: [
           // 启动时检查商店版本更新
           SwitchListTile(
-            title: Text(AppLocalizations.of(context)?.startupCheckUpdate ?? '启动时检查商店版本更新'),
-            subtitle: Text(AppLocalizations.of(context)?.startupCheckUpdateDesc ?? '每次启动时检测是否有新版本可用'),
+            title: Text(
+              AppLocalizations.of(context)?.startupCheckUpdate ?? '启动时检查商店版本更新',
+            ),
+            subtitle: Text(
+              AppLocalizations.of(context)?.startupCheckUpdateDesc ??
+                  '每次启动时检测是否有新版本可用',
+            ),
             value: state.checkVersionOnStartup,
             onChanged: (value) {
               ref
@@ -614,8 +628,14 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           _buildDivider(context),
           // 容器内自动更新商店本体
           SwitchListTile(
-            title: Text(AppLocalizations.of(context)?.autoUpdateInContainer ?? '容器内自动更新商店本体'),
-            subtitle: Text(AppLocalizations.of(context)?.autoUpdateInContainerDesc ?? '在玲珑容器内运行时自动更新商店应用'),
+            title: Text(
+              AppLocalizations.of(context)?.autoUpdateInContainer ??
+                  '容器内自动更新商店本体',
+            ),
+            subtitle: Text(
+              AppLocalizations.of(context)?.autoUpdateInContainerDesc ??
+                  '在玲珑容器内运行时自动更新商店应用',
+            ),
             value: state.autoUpdateStoreInContainer,
             onChanged: (value) {
               ref
@@ -626,8 +646,13 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           _buildDivider(context),
           // 已安装列表中显示基础运行服务
           SwitchListTile(
-            title: Text(AppLocalizations.of(context)?.showBaseServices ?? '显示基础运行服务'),
-            subtitle: Text(AppLocalizations.of(context)?.showBaseServicesDesc ?? '在已安装列表中显示底层基础运行服务'),
+            title: Text(
+              AppLocalizations.of(context)?.showBaseServices ?? '显示基础运行服务',
+            ),
+            subtitle: Text(
+              AppLocalizations.of(context)?.showBaseServicesDesc ??
+                  '在已安装列表中显示底层基础运行服务',
+            ),
             value: state.showBaseService,
             onChanged: (value) {
               ref.read(settingProvider.notifier).setShowBaseService(value);
@@ -640,8 +665,14 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               Icons.cleaning_services_outlined,
               color: Theme.of(context).colorScheme.secondary,
             ),
-            title: Text(AppLocalizations.of(context)?.cleanDeprecatedServices ?? '清理废弃基础服务'),
-            subtitle: Text(AppLocalizations.of(context)?.cleanDeprecatedServicesDesc ?? '移除已不再使用的基础运行服务，释放磁盘空间'),
+            title: Text(
+              AppLocalizations.of(context)?.cleanDeprecatedServices ??
+                  '清理废弃基础服务',
+            ),
+            subtitle: Text(
+              AppLocalizations.of(context)?.cleanDeprecatedServicesDesc ??
+                  '移除已不再使用的基础运行服务，释放磁盘空间',
+            ),
             trailing: state.isPruningBaseService
                 ? const SizedBox(
                     width: 20,
@@ -792,7 +823,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.system_update_alt, size: 18),
-                  label: Text(AppLocalizations.of(context)?.checkNewVersion ?? '检查新版本'),
+                  label: Text(
+                    AppLocalizations.of(context)?.checkNewVersion ?? '检查新版本',
+                  ),
                 ),
                 const SizedBox(width: 12),
                 OutlinedButton.icon(
@@ -801,7 +834,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                     builder: (_) => const FeedbackDialog(),
                   ),
                   icon: const Icon(Icons.feedback_outlined, size: 18),
-                  label: Text(AppLocalizations.of(context)?.feedbackMenu ?? '意见反馈'),
+                  label: Text(
+                    AppLocalizations.of(context)?.feedbackMenu ?? '意见反馈',
+                  ),
                 ),
               ],
             ),
@@ -821,7 +856,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                 TextButton.icon(
                   onPressed: () => _openUrl('https://linglong.dev'),
                   icon: const Icon(Icons.language, size: 18),
-                  label: Text(AppLocalizations.of(context)?.officialWebsite ?? '官网'),
+                  label: Text(
+                    AppLocalizations.of(context)?.officialWebsite ?? '官网',
+                  ),
                 ),
               ],
             ),
@@ -874,7 +911,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (mounted) {
-      _showSnackBar(AppLocalizations.of(context)?.cannotOpenLink(url) ?? '无法打开链接: $url');
+      _showSnackBar(
+        AppLocalizations.of(context)?.cannotOpenLink(url) ?? '无法打开链接: $url',
+      );
     }
   }
 }

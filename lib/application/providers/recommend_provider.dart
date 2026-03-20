@@ -40,7 +40,9 @@ class Recommend extends _$Recommend {
       List<BannerInfo> banners = cachedData?.banners ?? const [];
       try {
         final carouselResponse = await apiService.getWelcomeCarouselList(
-          AppWelcomeSearchRequest(lan: _resolveApiLang(ApiClient.getLocale?.call())),
+          AppWelcomeSearchRequest(
+            lan: _resolveApiLang(ApiClient.getLocale?.call()),
+          ),
         );
         banners = _convertBanners(carouselResponse.data.data);
       } catch (e, s) {
@@ -48,7 +50,11 @@ class Recommend extends _$Recommend {
       }
 
       final appResponse = await apiService.getWelcomeAppList(
-        PageParams(pageNo: 1, pageSize: _pageSize, lan: _resolveApiLang(ApiClient.getLocale?.call())),
+        PageParams(
+          pageNo: 1,
+          pageSize: _pageSize,
+          lan: _resolveApiLang(ApiClient.getLocale?.call()),
+        ),
       );
       final apps = _convertApps(appResponse.data.data);
       final data = RecommendData(
@@ -80,7 +86,9 @@ class Recommend extends _$Recommend {
   }
 
   Future<void> loadMore() async {
-    if (state.isLoadingMore || state.data == null || !state.data!.apps.hasMore) {
+    if (state.isLoadingMore ||
+        state.data == null ||
+        !state.data!.apps.hasMore) {
       return;
     }
 
@@ -90,7 +98,11 @@ class Recommend extends _$Recommend {
       final apiService = ref.read(appApiServiceProvider);
       final nextPage = state.currentPage + 1;
       final response = await apiService.getWelcomeAppList(
-        PageParams(pageNo: nextPage, pageSize: _pageSize, lan: _resolveApiLang(ApiClient.getLocale?.call())),
+        PageParams(
+          pageNo: nextPage,
+          pageSize: _pageSize,
+          lan: _resolveApiLang(ApiClient.getLocale?.call()),
+        ),
       );
 
       final currentApps = state.data!.apps.items;

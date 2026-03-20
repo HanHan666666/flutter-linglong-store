@@ -485,9 +485,14 @@ class _BannerSectionState extends State<_BannerSection> {
     } else {
       // 无法打开链接时显示错误提示
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.cannotOpenLink(url) ?? '无法打开链接: $url')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)?.cannotOpenLink(url) ??
+                  '无法打开链接: $url',
+            ),
+          ),
+        );
       }
     }
   }

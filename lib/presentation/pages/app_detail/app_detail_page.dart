@@ -241,7 +241,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
     // 空状态
     if (detailState.app == null) {
-      return Center(child: Text(AppLocalizations.of(context)?.appNotFound ?? '未找到应用信息'));
+      return Center(
+        child: Text(AppLocalizations.of(context)?.appNotFound ?? '未找到应用信息'),
+      );
     }
 
     final app = detailState.app!;
@@ -684,11 +686,15 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     subtitleParts.isEmpty ? '--' : subtitleParts.join(' · '),
                   ),
                   trailing: isInstalledVersion
-                      ? Text(AppLocalizations.of(context)?.installedBadge ?? '已安装')
+                      ? Text(
+                          AppLocalizations.of(context)?.installedBadge ?? '已安装',
+                        )
                       : TextButton(
                           onPressed: () =>
                               _installVersion(currentApp!, version.versionNo),
-                          child: Text(AppLocalizations.of(context)?.install ?? '安装'),
+                          child: Text(
+                            AppLocalizations.of(context)?.install ?? '安装',
+                          ),
                         ),
                 );
               },
@@ -820,15 +826,23 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       await cliRepo.runApp(app.appId);
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.launching(app.name) ?? '正在启动 ${app.name}')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)?.launching(app.name) ??
+                  '正在启动 ${app.name}',
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)?.launchFailed(e.toString()) ?? '启动失败: $e'),
+            content: Text(
+              AppLocalizations.of(context)?.launchFailed(e.toString()) ??
+                  '启动失败: $e',
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

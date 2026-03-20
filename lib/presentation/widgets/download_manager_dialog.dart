@@ -48,7 +48,10 @@ class DownloadManagerDialog extends ConsumerWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
-          Text(AppLocalizations.of(context)?.downloadManager ?? '下载管理', style: AppTextStyles.title3),
+          Text(
+            AppLocalizations.of(context)?.downloadManager ?? '下载管理',
+            style: AppTextStyles.title3,
+          ),
           const Spacer(),
           // 清空历史按鈕
           if (queueState.history.isNotEmpty)
@@ -126,7 +129,10 @@ class DownloadManagerDialog extends ConsumerWidget {
               color: context.appColors.textTertiary,
             ),
             const SizedBox(height: AppSpacing.md),
-            Text(AppLocalizations.of(context)?.noDownloadTasks ?? '暂无下载任务', style: AppTextStyles.tertiary),
+            Text(
+              AppLocalizations.of(context)?.noDownloadTasks ?? '暂无下载任务',
+              style: AppTextStyles.tertiary,
+            ),
           ],
         ),
       ),

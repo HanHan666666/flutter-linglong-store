@@ -53,6 +53,7 @@ class AllApps extends _$AllApps {
     if (norm.startsWith('en')) return 'en_US';
     return 'zh_CN';
   }
+
   @override
   AllAppsState build() {
     // 初始化时加载数据
@@ -171,7 +172,11 @@ class AllApps extends _$AllApps {
 
     // 全部分类：使用推荐应用接口
     final response = await apiService.getWelcomeAppList(
-      PageParams(pageNo: page, pageSize: 20, lan: _resolveApiLang(ApiClient.getLocale?.call())),
+      PageParams(
+        pageNo: page,
+        pageSize: 20,
+        lan: _resolveApiLang(ApiClient.getLocale?.call()),
+      ),
     );
     return _convertApps(response.data.data);
   }

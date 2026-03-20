@@ -58,6 +58,44 @@ Shame in breaking architecture, Honor in following specifications.
 Shame in pretending to understand, Honor in honest ignorance.
 Shame in blind modification, Honor in careful refactoring.
 
+## 根据需要，必须严格遵守这些skill
+### 核心开发技能
+brainstorming - 创意工作前必须使用，探索用户意图和设计
+writing-plans - 编写实施计划
+executing-plans - 执行实施计划
+test-driven-development - 测试驱动开发
+systematic-debugging - 系统化调试
+verification-before-completion - 完成前验证
+requesting-code-review - 请求代码审查
+receiving-code-review - 接收代码审查反馈
+subagent-driven-development - 子代理驱动开发
+dispatching-parallel-agents - 并行代理调度
+using-git-worktrees - 使用 git worktrees
+finishing-a-development-branch - 完成开发分支
+### Flutter 专项技能
+flutter-architecting-apps - Flutter 应用架构
+flutter-building-layouts - Flutter 布局构建
+flutter-building-forms - Flutter 表单构建
+flutter-managing-state - Flutter 状态管理
+flutter-testing-apps - Flutter 应用测试
+flutter-animating-apps - Flutter 动画
+flutter-theming-apps - Flutter 主题
+flutter-localizing-apps - Flutter 国际化
+flutter-caching-data - Flutter 数据缓存
+flutter-handling-concurrency - Flutter 并发处理
+flutter-handling-http-and-json - Flutter HTTP 和 JSON 处理
+flutter-implementing-navigation-and-routing - Flutter 导航和路由
+flutter-working-with-databases - Flutter 数据库
+flutter-embedding-native-views - Flutter 嵌入原生视图
+flutter-interoperating-with-native-apis - Flutter 与原生 API 互操作
+flutter-building-plugins - Flutter 插件构建
+flutter-adding-home-screen-widgets - Flutter 主屏幕小部件
+flutter-improving-accessibility - Flutter 无障碍
+flutter-reducing-app-size - Flutter 应用大小优化
+flutter-setting-up-on-linux - Flutter Linux 环境设置
+flutter-setting-up-on-macos - Flutter macOS 环境设置
+flutter-setting-up-on-windows - Flutter Windows 环境设置
+
 ## 项目概览
 - 本仓库是玲珑应用商店从旧版 Tauri/React 迁移到 Flutter 的实现，目标是 **UI 像素级一致** 与 **业务逻辑等价**。
 - 仅面向 Linux 桌面端，核心系统能力通过 `ll-cli` 完成，必要时使用 Rust FFI（见 `lib/rust/`）。

@@ -8,6 +8,7 @@ build/
 .idea/
 .vscode/
 *.iml
+.worktrees/
 
 # Generated
 *.g.dart

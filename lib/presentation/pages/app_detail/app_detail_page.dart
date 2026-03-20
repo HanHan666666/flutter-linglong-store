@@ -1108,6 +1108,10 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     List<String> screenshots,
     int initialIndex,
   ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final loadFailedText = AppLocalizations.of(context)?.loadFailed ?? '加载失败';
+    final errorColor = Theme.of(context).colorScheme.error;
+
     try {
       await showScreenshotPreviewLightbox(
         context,
@@ -1123,11 +1127,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)?.loadFailed ?? '加载失败'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
+      messenger.showSnackBar(
+        SnackBar(content: Text(loadFailedText), backgroundColor: errorColor),
       );
     }
   }

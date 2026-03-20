@@ -237,9 +237,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themeSettings => '主题设置';
 
   @override
-  String get repoConfig => '仓库配置';
-
-  @override
   String get cacheManagement => '缓存管理';
 
   @override
@@ -268,17 +265,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get goDownload => '前往下载';
-
-  @override
-  String get editRepo => '修改仓库源';
-
-  @override
-  String repoSwitched(String repoName) {
-    return '仓库已切换为: $repoName';
-  }
-
-  @override
-  String get modifyBtn => '修改';
 
   @override
   String get cacheSize => '缓存大小';

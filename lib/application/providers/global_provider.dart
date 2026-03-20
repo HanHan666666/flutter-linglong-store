@@ -60,7 +60,6 @@ class GlobalAppState {
     this.userPreferences = const UserPreferences(),
     this.isInitialized = false,
     this.arch,
-    this.repoName,
     this.appVersion,
     this.checking = false,
     this.installing = false,
@@ -86,9 +85,6 @@ class GlobalAppState {
 
   /// 系统架构
   final String? arch;
-
-  /// 仓库名称
-  final String? repoName;
 
   /// 应用版本
   final String? appVersion;
@@ -124,7 +120,6 @@ class GlobalAppState {
     UserPreferences? userPreferences,
     bool? isInitialized,
     String? arch,
-    String? repoName,
     String? appVersion,
     bool? checking,
     bool? installing,
@@ -142,7 +137,6 @@ class GlobalAppState {
       userPreferences: userPreferences ?? this.userPreferences,
       isInitialized: isInitialized ?? this.isInitialized,
       arch: arch ?? this.arch,
-      repoName: repoName ?? this.repoName,
       appVersion: appVersion ?? this.appVersion,
       checking: checking ?? this.checking,
       installing: installing ?? this.installing,
@@ -340,12 +334,6 @@ class GlobalApp extends _$GlobalApp {
 
   /// 设置架构
   void setArch(String arch) => state = state.copyWith(arch: arch);
-
-  /// 设置仓库名称
-  Future<void> setRepoName(String name) async {
-    state = state.copyWith(repoName: name);
-    await _prefs.setString('repo_name', name);
-  }
 
   /// 设置应用版本
   void setAppVersion(String version) =>

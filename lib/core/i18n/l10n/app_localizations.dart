@@ -554,12 +554,6 @@ abstract class AppLocalizations {
   /// **'主题设置'**
   String get themeSettings;
 
-  /// No description provided for @repoConfig.
-  ///
-  /// In zh, this message translates to:
-  /// **'仓库配置'**
-  String get repoConfig;
-
   /// No description provided for @cacheManagement.
   ///
   /// In zh, this message translates to:
@@ -607,24 +601,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'前往下载'**
   String get goDownload;
-
-  /// No description provided for @editRepo.
-  ///
-  /// In zh, this message translates to:
-  /// **'修改仓库源'**
-  String get editRepo;
-
-  /// No description provided for @repoSwitched.
-  ///
-  /// In zh, this message translates to:
-  /// **'仓库已切换为: {repoName}'**
-  String repoSwitched(String repoName);
-
-  /// No description provided for @modifyBtn.
-  ///
-  /// In zh, this message translates to:
-  /// **'修改'**
-  String get modifyBtn;
 
   /// No description provided for @cacheSize.
   ///

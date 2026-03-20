@@ -241,9 +241,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeSettings => 'Theme Settings';
 
   @override
-  String get repoConfig => 'Repository Config';
-
-  @override
   String get cacheManagement => 'Cache Management';
 
   @override
@@ -272,17 +269,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get goDownload => 'Go to Download';
-
-  @override
-  String get editRepo => 'Edit Repository';
-
-  @override
-  String repoSwitched(String repoName) {
-    return 'Repository switched to: $repoName';
-  }
-
-  @override
-  String get modifyBtn => 'Modify';
 
   @override
   String get cacheSize => 'Cache Size';

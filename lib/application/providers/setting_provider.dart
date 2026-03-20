@@ -23,9 +23,6 @@ sealed class SettingState with _$SettingState {
     /// 主题模式
     @Default(ThemeMode.system) ThemeMode themeMode,
 
-    /// 仓库名称
-    @Default('repo:linglong') String repoName,
-
     /// 缓存大小（字节）
     @Default(0) int cacheSize,
 
@@ -77,12 +74,6 @@ class Setting extends _$Setting {
         restoredState = restoredState.copyWith(
           themeMode: ThemeMode.values[themeModeIndex],
         );
-      }
-
-      // 加载仓库名称
-      final repoName = _prefs.getString('repo_name');
-      if (repoName != null && repoName.isNotEmpty) {
-        restoredState = restoredState.copyWith(repoName: repoName);
       }
 
       // 加载启动时检查版本更新开关
@@ -184,13 +175,6 @@ class Setting extends _$Setting {
     state = state.copyWith(themeMode: mode);
     await _prefs.setInt('linglong-store-theme-mode', mode.index);
     AppLogger.info('Theme mode changed to: ${mode.name}');
-  }
-
-  /// 设置仓库名称
-  Future<void> setRepoName(String name) async {
-    state = state.copyWith(repoName: name);
-    await _prefs.setString('repo_name', name);
-    AppLogger.info('Repo name changed to: $name');
   }
 
   /// 设置应用版本
@@ -300,6 +284,3 @@ const List<Locale> supportedLocales = [Locale('zh'), Locale('en')];
 
 /// 语言名称映射
 const Map<String, String> languageNames = {'zh': '中文', 'en': 'English'};
-
-/// 默认仓库列表
-const List<String> defaultRepos = ['repo:linglong', 'repo:deepin'];

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/di/providers.dart';
 import '../../core/logging/app_logger.dart';
 import 'installed_apps_provider.dart';
@@ -468,7 +469,8 @@ class LaunchSequence extends _$LaunchSequence {
           llVersion: globalApp.llVersion,
           llBinVersion: globalApp.llBinVersion,
           osVersion: globalApp.osVersion,
-          repoName: globalApp.repoName,
+          // 仓库配置不再允许用户切换，埋点统一记录默认仓库即可。
+          repoName: AppConfig.defaultStoreRepoName,
           appVersion: globalApp.appVersion,
         );
   }

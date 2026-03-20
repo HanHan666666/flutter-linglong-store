@@ -2,7 +2,18 @@
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
-build/
+build/*
+!build/docker/
+!build/docker/**
+!build/scripts/
+!build/scripts/**
+!build/packaging/
+!build/packaging/**
+build/**/ephemeral/
+build/**/bundle/
+build/linux/
+build/flutter_assets/
+build/native_assets/
 
 # IDE
 .idea/

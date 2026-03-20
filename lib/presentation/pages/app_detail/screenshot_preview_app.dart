@@ -1,66 +1,184 @@
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:window_manager/window_manager.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
-/// 截图预览独立窗口 App
+import '../../../core/config/theme.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
+import 'screenshot_preview_window_payload.dart';
+
+const MethodChannel _previewWindowChannel = MethodChannel(
+  'org.linglong_store/preview_window',
+);
+
+/// 截图预览独立窗口 App。
 ///
-/// 仅由 main.dart 在检测到 `screenshot_preview` 参数时运行，
-/// 作为独立的 Flutter Desktop 子窗口。
-class ScreenshotPreviewApp extends StatelessWidget {
+/// 子窗口只承载截图预览 UI，不启动主应用的路由和业务 Provider。
+class ScreenshotPreviewApp extends StatefulWidget {
   const ScreenshotPreviewApp({
     super.key,
-    required this.screenshots,
-    required this.initialIndex,
+    required this.initialPayload,
+    required this.windowBinding,
   });
 
-  final List<String> screenshots;
-  final int initialIndex;
+  final ScreenshotPreviewWindowPayload initialPayload;
+  final ScreenshotPreviewWindowBinding windowBinding;
+
+  @override
+  State<ScreenshotPreviewApp> createState() => _ScreenshotPreviewAppState();
+}
+
+class _ScreenshotPreviewAppState extends State<ScreenshotPreviewApp> {
+  late ScreenshotPreviewWindowPayload _payload;
+
+  @override
+  void initState() {
+    super.initState();
+    _payload = widget.initialPayload;
+    widget.windowBinding.registerMethodHandler(_handleMethodCall);
+  }
+
+  @override
+  void dispose() {
+    widget.windowBinding.registerMethodHandler(null);
+    super.dispose();
+  }
+
+  Future<dynamic> _handleMethodCall(MethodCall call) async {
+    switch (call.method) {
+      case kScreenshotPreviewUpdateMethod:
+        final nextPayload = _parsePayload(call.arguments);
+        if (nextPayload == null) {
+          return false;
+        }
+        if (mounted) {
+          setState(() => _payload = nextPayload);
+        }
+        return true;
+      case kScreenshotPreviewActivateMethod:
+        await widget.windowBinding.focusWindow();
+        return true;
+      case kScreenshotPreviewCloseMethod:
+        await widget.windowBinding.closeWindow();
+        return true;
+      default:
+        throw MissingPluginException('Unsupported method: ${call.method}');
+    }
+  }
+
+  ScreenshotPreviewWindowPayload? _parsePayload(dynamic arguments) {
+    if (arguments is Map) {
+      return ScreenshotPreviewWindowPayload.tryParseJson(
+        Map<String, dynamic>.from(arguments as Map<dynamic, dynamic>),
+      );
+    }
+    if (arguments is String) {
+      return ScreenshotPreviewWindowPayload.tryParseArguments(arguments);
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(useMaterial3: true).copyWith(
-        scaffoldBackgroundColor: const Color(0xFF1C1C28),
-        colorScheme: const ColorScheme.dark(surface: Color(0xFF1C1C28)),
-      ),
+      locale: _payload.locale,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: _payload.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: _ScreenshotPreviewPage(
-        screenshots: screenshots,
-        initialIndex: initialIndex,
+        payload: _payload,
+        windowBinding: widget.windowBinding,
       ),
     );
   }
 }
 
-// ---------------------------------------------------------------------------
-// 页面
-// ---------------------------------------------------------------------------
+abstract class ScreenshotPreviewWindowBinding {
+  Future<void> registerMethodHandler(
+    Future<dynamic> Function(MethodCall call)? handler,
+  );
+
+  Future<void> closeWindow();
+
+  Future<void> focusWindow();
+
+  Future<void> startDragging();
+}
+
+class DesktopScreenshotPreviewWindowBinding
+    implements ScreenshotPreviewWindowBinding {
+  DesktopScreenshotPreviewWindowBinding({required WindowController controller})
+    : _controller = controller;
+
+  final WindowController _controller;
+
+  @override
+  Future<void> closeWindow() async {
+    await _previewWindowChannel.invokeMethod<void>('hideWindow');
+  }
+
+  @override
+  Future<void> focusWindow() async {
+    await _previewWindowChannel.invokeMethod<void>('focusWindow');
+  }
+
+  @override
+  Future<void> registerMethodHandler(
+    Future<dynamic> Function(MethodCall call)? handler,
+  ) {
+    return _controller.setWindowMethodHandler(handler);
+  }
+
+  @override
+  Future<void> startDragging() async {
+    await _previewWindowChannel.invokeMethod<void>('startDragging');
+  }
+}
 
 class _ScreenshotPreviewPage extends StatefulWidget {
   const _ScreenshotPreviewPage({
-    required this.screenshots,
-    required this.initialIndex,
+    required this.payload,
+    required this.windowBinding,
   });
 
-  final List<String> screenshots;
-  final int initialIndex;
+  final ScreenshotPreviewWindowPayload payload;
+  final ScreenshotPreviewWindowBinding windowBinding;
 
   @override
   State<_ScreenshotPreviewPage> createState() => _ScreenshotPreviewPageState();
 }
 
 class _ScreenshotPreviewPageState extends State<_ScreenshotPreviewPage> {
-  late final PageController _pageController;
+  late PageController _pageController;
   late int _currentIndex;
   final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    _currentIndex = widget.initialIndex;
-    _pageController = PageController(initialPage: widget.initialIndex);
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _focusNode.requestFocus());
+    _syncWithPayload(widget.payload);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _focusNode.requestFocus();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _ScreenshotPreviewPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.payload != widget.payload) {
+      _pageController.dispose();
+      _syncWithPayload(widget.payload);
+    }
   }
 
   @override
@@ -70,8 +188,15 @@ class _ScreenshotPreviewPageState extends State<_ScreenshotPreviewPage> {
     super.dispose();
   }
 
+  void _syncWithPayload(ScreenshotPreviewWindowPayload payload) {
+    _currentIndex = payload.initialIndex;
+    _pageController = PageController(initialPage: payload.initialIndex);
+  }
+
   void _goTo(int index) {
-    if (index < 0 || index >= widget.screenshots.length) return;
+    if (index < 0 || index >= widget.payload.screenshots.length) {
+      return;
+    }
     _pageController.animateToPage(
       index,
       duration: const Duration(milliseconds: 240),
@@ -79,14 +204,18 @@ class _ScreenshotPreviewPageState extends State<_ScreenshotPreviewPage> {
     );
   }
 
+  Future<void> _closeWindow() => widget.windowBinding.closeWindow();
+
   @override
   Widget build(BuildContext context) {
     return KeyboardListener(
       focusNode: _focusNode,
       onKeyEvent: (event) {
-        if (event is! KeyDownEvent) return;
+        if (event is! KeyDownEvent) {
+          return;
+        }
         if (event.logicalKey == LogicalKeyboardKey.escape) {
-          windowManager.close();
+          _closeWindow();
         } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
           _goTo(_currentIndex - 1);
         } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
@@ -94,29 +223,29 @@ class _ScreenshotPreviewPageState extends State<_ScreenshotPreviewPage> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF1C1C28),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Column(
           children: [
-            _buildTitleBar(),
+            _buildTitleBar(context),
             Expanded(child: _buildImageArea(context)),
-            if (widget.screenshots.length > 1) _buildThumbnailBar(),
+            if (widget.payload.screenshots.length > 1) _buildThumbnailBar(),
           ],
         ),
       ),
     );
   }
 
-  /// 自定义标题栏：可拖动 + 页码 + 快捷键提示 + 关闭按钮
-  Widget _buildTitleBar() {
+  Widget _buildTitleBar(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return GestureDetector(
-      // 拖动标题栏区域移动窗口
-      onPanStart: (_) => windowManager.startDragging(),
+      onPanStart: (_) => widget.windowBinding.startDragging(),
       child: Container(
         height: 48,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: const BoxDecoration(
-          color: Color(0xFF15151F),
-          border: Border(bottom: BorderSide(color: Colors.white10)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          border: const Border(bottom: BorderSide(color: Colors.white10)),
         ),
         child: Row(
           children: [
@@ -126,9 +255,9 @@ class _ScreenshotPreviewPageState extends State<_ScreenshotPreviewPage> {
               size: 17,
             ),
             const SizedBox(width: 8),
-            const Text(
-              '截图预览',
-              style: TextStyle(
+            Text(
+              l10n?.screenShots ?? '屏幕截图',
+              style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -139,7 +268,6 @@ class _ScreenshotPreviewPageState extends State<_ScreenshotPreviewPage> {
             const SizedBox(width: 4),
             const _KeyHintBadge(label: '←  →'),
             const SizedBox(width: 16),
-            // 页码指示器
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
@@ -147,38 +275,40 @@ class _ScreenshotPreviewPageState extends State<_ScreenshotPreviewPage> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                '${_currentIndex + 1} / ${widget.screenshots.length}',
-                style:
-                    const TextStyle(color: Colors.white60, fontSize: 12),
+                '${_currentIndex + 1} / ${widget.payload.screenshots.length}',
+                style: const TextStyle(color: Colors.white60, fontSize: 12),
               ),
             ),
             const SizedBox(width: 12),
-            _WindowCloseButton(onTap: () => windowManager.close()),
+            Tooltip(
+              message: l10n?.close ?? '关闭',
+              child: _WindowCloseButton(onTap: _closeWindow),
+            ),
           ],
         ),
       ),
     );
   }
 
-  /// 图片查看区：PageView + InteractiveViewer + 左右导航箭头
   Widget _buildImageArea(BuildContext context) {
     return Stack(
       children: [
         PageView.builder(
           controller: _pageController,
-          itemCount: widget.screenshots.length,
-          onPageChanged: (i) => setState(() => _currentIndex = i),
+          itemCount: widget.payload.screenshots.length,
+          onPageChanged: (index) => setState(() => _currentIndex = index),
           itemBuilder: (context, index) {
             return InteractiveViewer(
               minScale: 0.5,
               maxScale: 5.0,
               child: Center(
                 child: Image.network(
-                  widget.screenshots[index],
+                  widget.payload.screenshots[index],
                   fit: BoxFit.contain,
-                  cacheWidth: (MediaQuery.sizeOf(context).width *
-                          MediaQuery.devicePixelRatioOf(context))
-                      .toInt(),
+                  cacheWidth:
+                      (MediaQuery.sizeOf(context).width *
+                              MediaQuery.devicePixelRatioOf(context))
+                          .toInt(),
                   errorBuilder: (_, __, ___) => const Center(
                     child: Icon(
                       Icons.broken_image_outlined,
@@ -203,7 +333,7 @@ class _ScreenshotPreviewPageState extends State<_ScreenshotPreviewPage> {
               ),
             ),
           ),
-        if (_currentIndex < widget.screenshots.length - 1)
+        if (_currentIndex < widget.payload.screenshots.length - 1)
           Positioned(
             right: 12,
             top: 0,
@@ -219,7 +349,6 @@ class _ScreenshotPreviewPageState extends State<_ScreenshotPreviewPage> {
     );
   }
 
-  /// 底部缩略图导航栏（多张截图时显示）
   Widget _buildThumbnailBar() {
     return Container(
       height: 76,
@@ -230,7 +359,7 @@ class _ScreenshotPreviewPageState extends State<_ScreenshotPreviewPage> {
       ),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: widget.screenshots.length,
+        itemCount: widget.payload.screenshots.length,
         itemBuilder: (context, index) {
           final selected = index == _currentIndex;
           return GestureDetector(
@@ -250,7 +379,7 @@ class _ScreenshotPreviewPageState extends State<_ScreenshotPreviewPage> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(3),
                 child: Image.network(
-                  widget.screenshots[index],
+                  widget.payload.screenshots[index],
                   width: 82,
                   height: 60,
                   fit: BoxFit.cover,
@@ -276,11 +405,6 @@ class _ScreenshotPreviewPageState extends State<_ScreenshotPreviewPage> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// 辅助 Widgets
-// ---------------------------------------------------------------------------
-
-/// 左右翻页导航箭头（悬停高亮）
 class _NavArrowButton extends StatefulWidget {
   const _NavArrowButton({required this.icon, required this.onTap});
 
@@ -317,7 +441,6 @@ class _NavArrowButtonState extends State<_NavArrowButton> {
   }
 }
 
-/// 键盘快捷键提示标签
 class _KeyHintBadge extends StatelessWidget {
   const _KeyHintBadge({required this.label});
 
@@ -344,11 +467,10 @@ class _KeyHintBadge extends StatelessWidget {
   }
 }
 
-/// 关闭按钮（悬停时高亮为红色）
 class _WindowCloseButton extends StatefulWidget {
   const _WindowCloseButton({required this.onTap});
 
-  final VoidCallback onTap;
+  final Future<void> Function() onTap;
 
   @override
   State<_WindowCloseButton> createState() => _WindowCloseButtonState();

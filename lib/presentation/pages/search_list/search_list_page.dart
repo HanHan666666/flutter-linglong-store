@@ -21,12 +21,8 @@ class SearchListPage extends ConsumerStatefulWidget {
   ConsumerState<SearchListPage> createState() => _SearchListPageState();
 }
 
-class _SearchListPageState extends ConsumerState<SearchListPage>
-    with AutomaticKeepAliveClientMixin {
+class _SearchListPageState extends ConsumerState<SearchListPage> {
   final ScrollController _scrollController = ScrollController();
-
-  @override
-  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -77,8 +73,6 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-
     final state = ref.watch(searchProvider);
 
     return Scaffold(body: _buildBody(state));

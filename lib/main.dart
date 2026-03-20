@@ -10,11 +10,17 @@ import 'core/network/api_client.dart';
 import 'core/logging/app_logger.dart';
 import 'core/platform/single_instance.dart';
 import 'core/platform/window_service.dart';
+import 'core/config/app_config.dart';
 import 'core/storage/cache_service.dart';
 import 'core/storage/preferences_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 应用图片缓存限额（Flutter 默认 100MB/1000张，压缩到 64MB/200张）
+  PaintingBinding.instance.imageCache.maximumSizeBytes =
+      AppConfig.imageCacheSizeBytes;
+  PaintingBinding.instance.imageCache.maximumSize = 200;
 
   // 初始化日志（同步执行）
   await AppLogger.init();

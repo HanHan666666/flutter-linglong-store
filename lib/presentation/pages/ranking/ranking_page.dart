@@ -5,7 +5,10 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../../application/providers/application_card_state_provider.dart';
 import '../../../application/providers/ranking_provider.dart';
+import '../../../core/config/page_visibility.dart';
+import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
+import '../../../core/config/visibility_aware_mixin.dart';
 import '../../../domain/models/ranking_models.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/widgets.dart';
@@ -19,11 +22,17 @@ class RankingPage extends ConsumerStatefulWidget {
 }
 
 class _RankingPageState extends ConsumerState<RankingPage>
-    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
+    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin, VisibilityAwareMixin {
   late TabController _tabController;
+
+  /// 页面是否可见（用于控制副作用）
+  bool _isPageVisible = true;
 
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  String get routePath => AppRoutes.ranking;
 
   @override
   void initState() {
@@ -43,9 +52,21 @@ class _RankingPageState extends ConsumerState<RankingPage>
   }
 
   void _onTabChanged() {
+    // 页面不可见时跳过 Tab 切换处理
+    if (!_isPageVisible) return;
     if (!_tabController.indexIsChanging) {
       final type = RankingType.values[_tabController.index];
       ref.read(rankingProvider.notifier).selectType(type);
+    }
+  }
+
+  /// 可见性变更回调
+  @override
+  void onVisibilityChanged(PageVisibilityEvent event) {
+    if (event.becameHidden) {
+      _isPageVisible = false;
+    } else if (event.becameVisible) {
+      _isPageVisible = true;
     }
   }
 

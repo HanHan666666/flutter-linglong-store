@@ -444,6 +444,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                         width: 280,
                         height: 180,
                         fit: BoxFit.cover,
+                        // 限制解码尺寸，避免原图 1920x1080 全量解码到内存
+                        cacheWidth: (280 * MediaQuery.devicePixelRatioOf(context)).toInt(),
+                        cacheHeight: (180 * MediaQuery.devicePixelRatioOf(context)).toInt(),
                         errorBuilder: (_, __, ___) => Container(
                           width: 280,
                           height: 180,
@@ -1138,6 +1141,9 @@ class _ScreenshotPreviewPageState extends State<_ScreenshotPreviewPage> {
               child: Image.network(
                 widget.screenshots[index],
                 fit: BoxFit.contain,
+                // 限制解码尺寸为屏幕宽度，避免超大截图撑爆内存
+                cacheWidth: (MediaQuery.sizeOf(context).width *
+                    MediaQuery.devicePixelRatioOf(context)).toInt(),
                 errorBuilder: (_, __, ___) => const Icon(
                   Icons.broken_image,
                   color: Colors.white54,

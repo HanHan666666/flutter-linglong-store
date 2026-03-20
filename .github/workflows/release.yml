@@ -207,7 +207,7 @@ jobs:
     needs: [prepare-release, build-amd64, build-arm64, build-arm64-qemu]
     # Publish when amd64 succeeds and arm64 is available from either the native runner
     # or the fallback QEMU path. A skipped fallback is expected after native arm64 passes.
-    if: ${{ needs.build-amd64.result == 'success' && (needs.build-arm64.result == 'success' || (needs.build-arm64.result != 'success' && needs.build-arm64-qemu.result == 'success')) }}
+    if: ${{ always() && needs.build-amd64.result == 'success' && (needs.build-arm64.result == 'success' || (needs.build-arm64.result != 'success' && needs.build-arm64-qemu.result == 'success')) }}
     runs-on: ubuntu-latest
     steps:
       - name: Download release notes

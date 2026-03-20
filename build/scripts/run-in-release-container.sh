@@ -3,9 +3,11 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 IMAGE_TAG="${LINGLONG_RELEASE_IMAGE_TAG:-linglong-store/debian10-release:local}"
-HOME_DIR="$ROOT_DIR/build/.release-home"
-PUB_CACHE_DIR="$ROOT_DIR/build/.release-pub-cache"
-FLUTTER_CACHE_DIR="$ROOT_DIR/build/.release-flutter-cache"
+CACHE_ROOT="${LINGLONG_RELEASE_CACHE_ROOT:-${TMPDIR:-/tmp}/linglong-store-release-cache}"
+WORKSPACE_CACHE_ROOT="$CACHE_ROOT/$(basename "$ROOT_DIR")"
+HOME_DIR="$WORKSPACE_CACHE_ROOT/home"
+PUB_CACHE_DIR="$WORKSPACE_CACHE_ROOT/pub-cache"
+FLUTTER_CACHE_DIR="$WORKSPACE_CACHE_ROOT/flutter-cache"
 GIT_COMMON_DIR="${GIT_COMMON_DIR:-}"
 GIT_DIR_PATH="${GIT_DIR_PATH:-}"
 DOCKER_PLATFORM="${DOCKER_PLATFORM:-}"
@@ -20,12 +22,27 @@ shift
 
 mkdir -p "$HOME_DIR" "$PUB_CACHE_DIR" "$FLUTTER_CACHE_DIR"
 
+resolve_git_path() {
+  local git_path="$1"
+
+  if [[ -z "$git_path" ]]; then
+    return 0
+  fi
+
+  if [[ "$git_path" = /* ]]; then
+    printf '%s\n' "$git_path"
+    return 0
+  fi
+
+  printf '%s/%s\n' "$ROOT_DIR" "$git_path"
+}
+
 if [[ -z "$GIT_COMMON_DIR" ]] && git -C "$ROOT_DIR" rev-parse --git-common-dir > /dev/null 2>&1; then
-  GIT_COMMON_DIR="$(git -C "$ROOT_DIR" rev-parse --git-common-dir)"
+  GIT_COMMON_DIR="$(resolve_git_path "$(git -C "$ROOT_DIR" rev-parse --git-common-dir)")"
 fi
 
 if [[ -z "$GIT_DIR_PATH" ]] && git -C "$ROOT_DIR" rev-parse --git-dir > /dev/null 2>&1; then
-  GIT_DIR_PATH="$(git -C "$ROOT_DIR" rev-parse --git-dir)"
+  GIT_DIR_PATH="$(resolve_git_path "$(git -C "$ROOT_DIR" rev-parse --git-dir)")"
 fi
 
 if [[ -n "$DOCKER_PLATFORM" ]]; then
@@ -74,7 +91,7 @@ fi
 docker_run_cmd+=(
   "$IMAGE_TAG"
   # Keep Dockerfile ENV PATH entries for flutter/dart; login shells reset PATH on Debian.
-  bash -c 'set -euo pipefail; mkdir -p "$HOME" "$PUB_CACHE"; exec "$@"'
+  bash -c 'set -euo pipefail; mkdir -p "$HOME" "$PUB_CACHE"; git config --global --add safe.directory "$PWD"; git config --global --add safe.directory /opt/flutter; exec "$@"'
   _
   "$SCRIPT_PATH"
   --inner

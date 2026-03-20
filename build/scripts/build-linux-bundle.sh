@@ -158,6 +158,7 @@ rsync -a \
   --delete \
   --exclude '.git' \
   --exclude '.dart_tool' \
+  --exclude 'build/linux' \
   --exclude 'build/out' \
   --exclude 'build/tmp' \
   --exclude 'build/.release-home' \

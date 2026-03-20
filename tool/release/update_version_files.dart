@@ -50,22 +50,26 @@ final RegExp _appVersionPattern = RegExp(
 );
 
 String _replaceVersionLine(String input, String replacement) {
-  final updated = input.replaceFirst(_versionLinePattern, replacement);
-  if (updated == input) {
+  // 先检查 pattern 是否存在，避免"替换值相同时误报未找到"的假阳性
+  if (!_versionLinePattern.hasMatch(input)) {
     throw ArgumentError('Unable to find version line to update.');
   }
-  return _normalizeTrailingNewline(updated);
+  return _normalizeTrailingNewline(
+    input.replaceFirst(_versionLinePattern, replacement),
+  );
 }
 
 String _replaceAppVersionConstant(String input, String version) {
-  final updated = input.replaceFirst(
-    _appVersionPattern,
-    "static const String appVersion = '$version';",
-  );
-  if (updated == input) {
+  // 先检查 pattern 是否存在，避免"替换值相同时误报未找到"的假阳性
+  if (!_appVersionPattern.hasMatch(input)) {
     throw ArgumentError('Unable to find appVersion constant to update.');
   }
-  return _normalizeTrailingNewline(updated);
+  return _normalizeTrailingNewline(
+    input.replaceFirst(
+      _appVersionPattern,
+      "static const String appVersion = '$version';",
+    ),
+  );
 }
 
 String _normalizeTrailingNewline(String input) {

@@ -74,7 +74,9 @@ class _SearchBarState extends ConsumerState<SearchBar> {
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller ?? TextEditingController(text: widget.initialText ?? '');
+    _controller =
+        widget.controller ??
+        TextEditingController(text: widget.initialText ?? '');
     _focusNode = widget.focusNode ?? FocusNode();
     _inputText = _controller.text;
 
@@ -97,7 +99,9 @@ class _SearchBarState extends ConsumerState<SearchBar> {
 
   /// 焦点变化处理
   void _onFocusChange() {
-    if (_focusNode.hasFocus && _inputText.isNotEmpty && widget.showSuggestions) {
+    if (_focusNode.hasFocus &&
+        _inputText.isNotEmpty &&
+        widget.showSuggestions) {
       setState(() {
         _showSuggestionList = true;
       });

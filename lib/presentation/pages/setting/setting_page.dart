@@ -272,7 +272,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       title: Text(label),
       value: locale,
       groupValue: isSelected ? locale : null, // ignore: deprecated_member_use
-      onChanged: (value) { // ignore: deprecated_member_use
+      onChanged: (value) {
+        // ignore: deprecated_member_use
         if (value != null) {
           // 同时更新两个 Provider
           ref.read(settingProvider.notifier).setLocale(value);
@@ -567,7 +568,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     final confirmed = await ConfirmDialog.show(
       context,
       title: l10n?.cleanDeprecatedServices ?? '清理废弃基础服务',
-      message: l10n?.pruneBaseServiceMessage ??
+      message:
+          l10n?.pruneBaseServiceMessage ??
           '将执行 ll-cli prune 命令，移除所有已不再被任何应用依赖的基础运行服务。\n\n清理后可节省磁盘空间，但如进行中有其他操作可能需要重新下载。',
       confirmText: l10n?.clean ?? '清理',
       cancelText: l10n?.cancel ?? '取消',
@@ -652,7 +654,11 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             _buildDivider(context),
 
             // 开发者信息
-            _buildInfoRow(context, label: l10n?.developer ?? '开发者', value: l10n?.linglongCommunity ?? '玲珑社区'),
+            _buildInfoRow(
+              context,
+              label: l10n?.developer ?? '开发者',
+              value: l10n?.linglongCommunity ?? '玲珑社区',
+            ),
             _buildDivider(context),
 
             // 已收录应用数量
@@ -703,9 +709,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.system_update_alt, size: 18),
-                  label: Text(
-                    l10n?.checkNewVersion ?? '检查新版本',
-                  ),
+                  label: Text(l10n?.checkNewVersion ?? '检查新版本'),
                 ),
                 const SizedBox(width: 12),
                 OutlinedButton.icon(
@@ -714,9 +718,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                     builder: (_) => const FeedbackDialog(),
                   ),
                   icon: const Icon(Icons.feedback_outlined, size: 18),
-                  label: Text(
-                    l10n?.feedbackMenu ?? '意见反馈',
-                  ),
+                  label: Text(l10n?.feedbackMenu ?? '意见反馈'),
                 ),
               ],
             ),
@@ -736,9 +738,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                 TextButton.icon(
                   onPressed: () => _openUrl('https://linglong.dev'),
                   icon: const Icon(Icons.language, size: 18),
-                  label: Text(
-                    l10n?.officialWebsite ?? '官网',
-                  ),
+                  label: Text(l10n?.officialWebsite ?? '官网'),
                 ),
               ],
             ),

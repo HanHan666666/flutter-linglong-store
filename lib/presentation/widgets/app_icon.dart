@@ -44,7 +44,8 @@ class AppIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bgColor = placeholderColor ??
+    final bgColor =
+        placeholderColor ??
         (theme.brightness == Brightness.light
             ? Colors.grey[200]
             : Colors.grey[800]);
@@ -69,7 +70,8 @@ class AppIcon extends StatelessWidget {
         memCacheWidth: effectiveMemCacheWidth,
         maxWidthDiskCache: effectiveDiskCacheWidth,
         placeholder: (context, url) => _buildPlaceholder(context, bgColor!),
-        errorWidget: (context, url, error) => _buildErrorWidget(context, bgColor!),
+        errorWidget: (context, url, error) =>
+            _buildErrorWidget(context, bgColor!),
       ),
     );
   }
@@ -102,7 +104,9 @@ class AppIcon extends StatelessWidget {
       style: TextStyle(
         fontSize: size * 0.4,
         fontWeight: FontWeight.bold,
-        color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.5),
+        color: Theme.of(
+          context,
+        ).textTheme.bodyLarge?.color?.withValues(alpha: 0.5),
       ),
     );
   }
@@ -142,7 +146,7 @@ class AppIcon extends StatelessWidget {
   bool _isEnglishLetter(String char) {
     final codeUnit = char.codeUnitAt(0);
     return (codeUnit >= 0x41 && codeUnit <= 0x5A) || // A-Z
-           (codeUnit >= 0x61 && codeUnit <= 0x7A);   // a-z
+        (codeUnit >= 0x61 && codeUnit <= 0x7A); // a-z
   }
 
   /// 构建默认图标
@@ -152,7 +156,9 @@ class AppIcon extends StatelessWidget {
     return Icon(
       Icons.apps,
       size: size * 0.5,
-      color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.3),
+      color: Theme.of(
+        context,
+      ).textTheme.bodyLarge?.color?.withValues(alpha: 0.3),
     );
   }
 
@@ -169,7 +175,9 @@ class AppIcon extends StatelessWidget {
       child: Icon(
         Icons.broken_image,
         size: size * 0.4,
-        color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.3),
+        color: Theme.of(
+          context,
+        ).textTheme.bodyLarge?.color?.withValues(alpha: 0.3),
       ),
     );
   }

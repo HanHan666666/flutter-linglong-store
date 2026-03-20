@@ -93,7 +93,8 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final defaultTitle = title ?? (l10n?.noData ?? '暂无数据');
-    final defaultDescription = description ?? (l10n?.noDataDescription ?? '这里还没有任何内容');
+    final defaultDescription =
+        description ?? (l10n?.noDataDescription ?? '这里还没有任何内容');
     final defaultIcon = icon ?? Icons.inbox;
 
     return Center(
@@ -106,8 +107,11 @@ class EmptyState extends StatelessWidget {
             Icon(
               defaultIcon,
               size: iconSize,
-              color: iconColor ??
-                  Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.3),
+              color:
+                  iconColor ??
+                  Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.color?.withValues(alpha: 0.3),
             ),
 
             const SizedBox(height: 16),
@@ -116,8 +120,8 @@ class EmptyState extends StatelessWidget {
             Text(
               defaultTitle,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+              ),
               textAlign: TextAlign.center,
             ),
 
@@ -128,17 +132,14 @@ class EmptyState extends StatelessWidget {
               Text(
                 defaultDescription,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).textTheme.bodySmall?.color,
-                    ),
+                  color: Theme.of(context).textTheme.bodySmall?.color,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
 
             // 自定义操作按钮
-            if (action != null) ...[
-              const SizedBox(height: 16),
-              action!,
-            ],
+            if (action != null) ...[const SizedBox(height: 16), action!],
 
             // 重试按钮
             if (onRetry != null) ...[

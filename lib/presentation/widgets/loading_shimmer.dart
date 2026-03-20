@@ -23,15 +23,18 @@ class LoadingShimmer extends StatelessWidget {
 
   /// 创建应用卡片骨架屏
   const LoadingShimmer.card({super.key, this.count = 1, this.enabled = true})
-      : type = ShimmerType.card;
+    : type = ShimmerType.card;
 
   /// 创建列表项骨架屏
-  const LoadingShimmer.listItem({super.key, this.count = 1, this.enabled = true})
-      : type = ShimmerType.listItem;
+  const LoadingShimmer.listItem({
+    super.key,
+    this.count = 1,
+    this.enabled = true,
+  }) : type = ShimmerType.listItem;
 
   /// 创建网格骨架屏
   const LoadingShimmer.grid({super.key, this.count = 1, this.enabled = true})
-      : type = ShimmerType.grid;
+    : type = ShimmerType.grid;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +43,10 @@ class LoadingShimmer extends StatelessWidget {
     }
 
     return Column(
-      children: List.generate(count, (index) => _buildShimmerItem(context, index)),
+      children: List.generate(
+        count,
+        (index) => _buildShimmerItem(context, index),
+      ),
     );
   }
 
@@ -93,18 +99,43 @@ class LoadingShimmer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 标题占位
-                _buildShimmerBox(context, baseColor: baseColor, highlightColor: highlightColor, width: double.infinity, height: 16),
+                _buildShimmerBox(
+                  context,
+                  baseColor: baseColor,
+                  highlightColor: highlightColor,
+                  width: double.infinity,
+                  height: 16,
+                ),
                 const SizedBox(height: 8),
                 // 描述占位
-                _buildShimmerBox(context, baseColor: baseColor, highlightColor: highlightColor, width: double.infinity, height: 12),
+                _buildShimmerBox(
+                  context,
+                  baseColor: baseColor,
+                  highlightColor: highlightColor,
+                  width: double.infinity,
+                  height: 12,
+                ),
                 const SizedBox(height: 4),
-                _buildShimmerBox(context, baseColor: baseColor, highlightColor: highlightColor, width: 200, height: 12),
+                _buildShimmerBox(
+                  context,
+                  baseColor: baseColor,
+                  highlightColor: highlightColor,
+                  width: 200,
+                  height: 12,
+                ),
               ],
             ),
           ),
           const SizedBox(width: 12),
           // 按钮占位
-          _buildShimmerBox(context, baseColor: baseColor, highlightColor: highlightColor, width: 60, height: 32, borderRadius: 16),
+          _buildShimmerBox(
+            context,
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            width: 60,
+            height: 32,
+            borderRadius: 16,
+          ),
         ],
       ),
     );
@@ -121,15 +152,34 @@ class LoadingShimmer extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Row(
         children: [
-          _buildShimmerBox(context, baseColor: baseColor, highlightColor: highlightColor, width: 48, height: 48, borderRadius: 8),
+          _buildShimmerBox(
+            context,
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            width: 48,
+            height: 48,
+            borderRadius: 8,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildShimmerBox(context, baseColor: baseColor, highlightColor: highlightColor, width: 150, height: 14),
+                _buildShimmerBox(
+                  context,
+                  baseColor: baseColor,
+                  highlightColor: highlightColor,
+                  width: 150,
+                  height: 14,
+                ),
                 const SizedBox(height: 6),
-                _buildShimmerBox(context, baseColor: baseColor, highlightColor: highlightColor, width: 200, height: 12),
+                _buildShimmerBox(
+                  context,
+                  baseColor: baseColor,
+                  highlightColor: highlightColor,
+                  width: 200,
+                  height: 12,
+                ),
               ],
             ),
           ),
@@ -149,11 +199,30 @@ class LoadingShimmer extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildShimmerBox(context, baseColor: baseColor, highlightColor: highlightColor, width: double.infinity, height: 120, borderRadius: 8),
+          _buildShimmerBox(
+            context,
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            width: double.infinity,
+            height: 120,
+            borderRadius: 8,
+          ),
           const SizedBox(height: 8),
-          _buildShimmerBox(context, baseColor: baseColor, highlightColor: highlightColor, width: 100, height: 14),
+          _buildShimmerBox(
+            context,
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            width: 100,
+            height: 14,
+          ),
           const SizedBox(height: 4),
-          _buildShimmerBox(context, baseColor: baseColor, highlightColor: highlightColor, width: 60, height: 12),
+          _buildShimmerBox(
+            context,
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            width: 60,
+            height: 12,
+          ),
         ],
       ),
     );

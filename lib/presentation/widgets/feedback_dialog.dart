@@ -48,8 +48,8 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     // 从国际化获取分类列表，如果不存在则使用默认值
-    final categories = l10n?.feedbackCategories.split(',') ??
-        _kFeedbackCategories;
+    final categories =
+        l10n?.feedbackCategories.split(',') ?? _kFeedbackCategories;
 
     return AlertDialog(
       title: Text(l10n?.feedbackTitle ?? '意见反馈'),

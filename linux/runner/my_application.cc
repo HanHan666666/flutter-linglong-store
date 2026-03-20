@@ -8,7 +8,6 @@
 #endif
 
 #include "flutter/generated_plugin_registrant.h"
-#include "desktop_multi_window/desktop_multi_window_plugin.h"
 
 struct _MyApplication {
   GtkApplication parent_instance;
@@ -144,13 +143,6 @@ static void my_application_activate(GApplication* application) {
   setup_native_theme_channel(self, view);
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
-
-  // 为 desktop_multi_window 创建的子窗口注册所有插件，
-  // 否则子窗口 Flutter engine 找不到 window_manager 等 channel 实现
-  desktop_multi_window_plugin_set_window_created_callback(
-      [](FlPluginRegistry* registry) {
-        fl_register_plugins(registry);
-      });
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }

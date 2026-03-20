@@ -1,6 +1,3 @@
-import 'dart:convert';
-
-import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -23,6 +20,7 @@ import '../../../application/providers/network_speed_provider.dart';
 import '../../../application/providers/running_process_provider.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/utils/format_utils.dart';
+import 'screenshot_preview_lightbox.dart';
 
 part 'app_detail_page.g.dart';
 
@@ -1104,23 +1102,35 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     }
   }
 
-  /// 在独立的 Flutter Desktop 窗口中预览截图
-  void _showScreenshotPreview(
+  /// 在主窗口内以灯箱形式预览截图
+  Future<void> _showScreenshotPreview(
     BuildContext context,
     List<String> screenshots,
     int initialIndex,
-  ) {
-    // 通过 desktop_multi_window 创建子窗口，传入截图列表和初始索引
-    WindowController.create(
-      WindowConfiguration(
-        hiddenAtLaunch: true,
-        arguments: jsonEncode({
-          'type': 'screenshot_preview',
-          'screenshots': screenshots,
-          'initial_index': initialIndex,
-        }),
-      ),
-    );
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final loadFailedText = AppLocalizations.of(context)?.loadFailed ?? '加载失败';
+    final errorColor = Theme.of(context).colorScheme.error;
+
+    try {
+      await showScreenshotPreviewLightbox(
+        context,
+        screenshots: screenshots,
+        initialIndex: initialIndex,
+      );
+    } catch (error, stackTrace) {
+      AppLogger.error(
+        'Failed to open screenshot preview lightbox',
+        error,
+        stackTrace,
+      );
+      if (!mounted) {
+        return;
+      }
+      messenger.showSnackBar(
+        SnackBar(content: Text(loadFailedText), backgroundColor: errorColor),
+      );
+    }
   }
 
   /// 创建快捷方式

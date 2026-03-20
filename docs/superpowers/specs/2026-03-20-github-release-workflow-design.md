@@ -168,6 +168,9 @@ changelog 生成范围固定为：
 
 release commit 本身只承载版本号同步，不应计入本次 release notes，避免 changelog 中出现自引用的 `chore: release <version>` 条目。
 
+如果当前仓库不存在任何 `v3.0.*` tag，则首个 Release 不回溯历史提交，直接使用固定引导文案，例如：
+- `首个 GitHub Release，后续版本将从上一版 tag 自动生成变更日志。`
+
 changelog 只汇总 Conventional Commits，并按类型分组展示，至少包含：
 - `feat`
 - `fix`
@@ -260,6 +263,16 @@ CI 与 Release 的架构策略不同：
 ### Release Assets
 
 `release.yml` 在两种架构都构建完成后，统一创建 GitHub Release，并上传所有资产。
+
+首版实现固定采用 GitHub Actions 原生 `GITHUB_TOKEN`，并在 release workflow 中显式声明：
+- `permissions: contents: write`
+
+在本设计中，默认前提是：
+- `GITHUB_TOKEN` 可以直接 push 默认分支上的 release commit
+- `GITHUB_TOKEN` 可以直接 push `v<version>` tag
+- `GITHUB_TOKEN` 可以直接创建 GitHub Release
+
+因此首版流程不额外引入 PAT、GitHub App token 或复杂的权限分流逻辑。
 
 Release 页面需包含：
 - 版本标题

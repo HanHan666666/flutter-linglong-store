@@ -213,3 +213,4 @@ time ./build/package-deb.sh
 - 2026-03-19：推荐页自动补页不能只依赖滚动触底；当首屏或窗口尺寸变化后内容仍不足一屏时，页面必须在可见态下继续 `loadMore()`，直到列表可滚动或 `hasMore=false`，隐藏态继续暂停这类副作用。
 - 2026-03-19：全局搜索入口统一收敛到标题栏真实搜索框；用户在 header 输入后按 Enter 或点击搜索图标进入 `/search_list?q=...`。`SearchListPage` 只负责结果展示，不得再内置第二个搜索框。
 - 2026-03-20：Flutter 商店不支持“用户可配置仓库源”；设置页、Provider 和本地偏好都不要再保存/恢复 `repo_name`。接口层和埋点若需要 `repoName`，统一使用 `AppConfig.defaultStoreRepoName`，不要把协议字段误删成业务配置。
+- 2026-03-20：GitHub Actions 统一拆为 `ci.yml`（仅 `pull_request` 轻量校验）、`nightly.yml`（`UTC+8 03:00` 的 `amd64` nightly 预发布）和 `release.yml`（正式双架构发版）；`package-smoke-test.sh` 只允许留在 nightly，禁止再放回 PR CI。

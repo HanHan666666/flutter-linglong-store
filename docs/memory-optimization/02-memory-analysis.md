@@ -22,15 +22,17 @@ Flutter Linux 桌面应用的内存主要由以下部分组成：
 
 根据代码审计，以下是 **最可能导致 700MB 高占用** 的原因（按影响程度排序）：
 
-### 🔴 热点 1：图片解码未限尺寸（预估 100~200MB 浪费）
+### ✅ 热点 1：图片解码未限尺寸（预估 100~200MB 浪费）— **已修复**
 
-**问题文件：**
+> **修复提交：** `e4af3b0` — 2026-03-20
 
-| 位置 | 问题 |
-|------|------|
-| `lib/presentation/pages/app_detail/app_detail_page.dart` L372 | 截图缩略图 `Image.network()` 无 `cacheWidth`，280×180 显示但原图可能 1920×1080 |
-| `lib/presentation/pages/app_detail/app_detail_page.dart` L949 | 截图预览 `Image.network()` 全尺寸解码，PageView 多张同时驻留 |
-| `lib/presentation/pages/recommend/recommend_page.dart` L468 | 轮播 Banner `Image.network()` 无尺寸限制 |
+**已修复文件：**
+
+| 位置 | 修复内容 |
+|------|----------|
+| `lib/presentation/pages/app_detail/app_detail_page.dart` L442 | 截图缩略图添加 `cacheWidth`/`cacheHeight`（280×180 × DPR） |
+| `lib/presentation/pages/app_detail/app_detail_page.dart` L1138 | 截图预览添加 `cacheWidth`（屏幕宽度 × DPR） |
+| `lib/presentation/pages/recommend/widgets/recommend_banner_background.dart` L131 | Banner 装饰图添加 `memCacheWidth`/`memCacheHeight`（392×392） |
 
 **内存计算示例：**
 - 一张 1920×1080 的图片解码到内存 = 1920 × 1080 × 4bytes = **~7.9 MB**
@@ -40,7 +42,9 @@ Flutter Linux 桌面应用的内存主要由以下部分组成：
 
 **单单图片这一项就可能浪费 80~100+ MB。**
 
-### 🔴 热点 2：ImageCache 限额配置未生效（预估 36MB 多占）
+### ✅ 热点 2：ImageCache 限额配置未生效（预估 36MB 多占）— **已修复**
+
+> **修复提交：** `e4af3b0` — 2026-03-20
 
 **问题文件：** `lib/core/config/app_config.dart` L36
 
@@ -49,23 +53,34 @@ Flutter Linux 桌面应用的内存主要由以下部分组成：
 static const int imageCacheSizeBytes = 64 * 1024 * 1024; // 64MB
 ```
 
-但 **全项目没有任何代码将这个值应用到 `PaintingBinding.instance.imageCache`**。
+**已修复：** 在 `lib/main.dart` 中添加了 ImageCache 配置：
 
-Flutter 默认 ImageCache = **100MB / 1000 张**，意味着比期望多缓存了 36MB 图片数据。
+```dart
+PaintingBinding.instance.imageCache.maximumSizeBytes = AppConfig.imageCacheSizeBytes;
+PaintingBinding.instance.imageCache.maximumSize = 200;
+```
 
-### 🟡 热点 3：KeepAlive 页面缺乏可见性暂停（预估 30~60MB）
+ImageCache 现已生效 64MB / 200 张限制。
 
-**5 个带 KeepAlive 的页面中，只有 1 个正确实现了 VisibilityAwareMixin：**
+### ✅ 热点 3：KeepAlive 页面缺乏可见性暂停（预估 30~60MB）— **已修复**
+
+> **修复提交：** `e4af3b0` — 2026-03-20
+
+**修复后状态：**
 
 | 页面 | KeepAlive | VisibilityAwareMixin | 隐藏时暂停副作用 |
 |------|-----------|---------------------|-----------------|
 | 推荐页 ✅ | ✅ | ✅ | ✅ 暂停轮播/滚动 |
-| 全部应用 ❌ | ✅ | ❌ | ❌ 滚动监听持续活跃 |
-| 排行榜 ❌ | ✅ | ❌ | ❌ TabController 持续 |
-| 搜索列表 ❌ | ✅ | ❌ | ❌ 不应 KeepAlive |
-| 自定义分类 ❌ | ✅ | ❌ | ❌ 滚动监听持续活跃 |
+| 全部应用 ✅ | ✅ | ✅ | ✅ 滚动监听暂停 |
+| 排行榜 ✅ | ✅ | ✅ | ✅ Tab 切换暂停 |
+| 搜索列表 ✅ | ❌ 已移除 | — | — 不再 KeepAlive |
+| 自定义分类 ✅ | ✅ | ✅ | ✅ 滚动监听暂停 |
 
-隐藏的页面仍保留完整 Widget 树 + 数据，且副作用（自动加载更多、滚动事件）仍在运行。
+**修复内容：**
+- `all_apps_page.dart` — 补 `VisibilityAwareMixin`，`_onScroll` 加可见性守卫
+- `ranking_page.dart` — 补 `VisibilityAwareMixin`，Tab 切换加可见性守卫
+- `custom_category_page.dart` — 补 `VisibilityAwareMixin`，`_onScroll` 加可见性守卫
+- `search_list_page.dart` — 移除 `AutomaticKeepAliveClientMixin`（不在 `keepAliveRoutes` 白名单中）
 
 ### 🟡 热点 4：排行榜一次加载 100 条（预估 10~20MB）
 
@@ -111,24 +126,22 @@ class InstalledApps extends _$InstalledApps { ... }
 ## 2.3 内存热点总结图
 
 ```
-  图片解码(未限尺寸)    ImageCache(100MB默认)     KeepAlive页面(4个无暂停)
+  图片解码(已修复✅)      ImageCache(已修复✅)      KeepAlive页面(已修复✅)
        ▼                      ▼                         ▼
   ┌─────────┐          ┌─────────────┐           ┌──────────────┐
-  │80~150 MB│          │  多占 36 MB  │           │  30~60 MB    │
-  └────┬────┘          └──────┬──────┘           └──────┬───────┘
-       │                      │                         │
-       └────────────┬─────────┘                         │
-                    ▼                                   │
-              ┌───────────┐                             │
-              │ 700 MB    │◄────────────────────────────┘
-              │ 总内存     │◄──── Hive全量加载 (10~30 MB)
-              │           │◄──── 排行榜100条 (10~20 MB)
-              │           │◄──── installedApps (5~15 MB)
-              └───────────┘
+  │节省~70MB│          │ 节省 ~36 MB │           │ 节省 ~30-60MB│
+  └─────────┘          └─────────────┘           └──────────────┘
 ```
 
-## 2.4 经验判断
+## 2.4 修复状态
 
-基于以上分析，**图片相关优化（热点 1 + 热点 2）是收益最大的方向**，仅修复这两项预计可节省 **120~230 MB**，单独就能将内存从 700MB 降至 500~580MB 区间。
+| 热点 | 问题 | 状态 | 预估节省 |
+|------|------|------|----------|
+| 热点 1 | 图片解码未限尺寸 | ✅ 已修复 | ~70 MB |
+| 热点 2 | ImageCache 限额未生效 | ✅ 已修复 | ~36 MB |
+| 热点 3 | KeepAlive 页面无可见性暂停 | ✅ 已修复 | ~30-60 MB |
+| 热点 4 | 排行榜一次加载 100 条 | 🟡 待优化 | ~10-20 MB |
+| 热点 5 | Hive Box 全量加载 | 🟡 待优化 | ~10-30 MB |
+| 热点 6 | installedAppsProvider 全量持有 | 🟡 待优化 | ~5-15 MB |
 
-结合 KeepAlive 优化，有信心将稳态内存控制在 **450MB 以内**。
+**已修复三项预计节省：141~181 MB**，可将内存从 700MB 降至 **520~560MB** 区间。

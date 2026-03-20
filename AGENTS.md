@@ -214,3 +214,5 @@ time ./build/package-deb.sh
 - 2026-03-19：全局搜索入口统一收敛到标题栏真实搜索框；用户在 header 输入后按 Enter 或点击搜索图标进入 `/search_list?q=...`。`SearchListPage` 只负责结果展示，不得再内置第二个搜索框。
 - 2026-03-20：Flutter 商店不支持“用户可配置仓库源”；设置页、Provider 和本地偏好都不要再保存/恢复 `repo_name`。接口层和埋点若需要 `repoName`，统一使用 `AppConfig.defaultStoreRepoName`，不要把协议字段误删成业务配置。
 - 2026-03-20：GitHub Actions 统一拆为 `ci.yml`（仅 `pull_request` 轻量校验）、`nightly.yml`（`UTC+8 03:00` 的 `amd64` nightly 预发布）和 `release.yml`（正式双架构发版）；`package-smoke-test.sh` 只允许留在 nightly，禁止再放回 PR CI。
+- 2026-03-20：Gitee 镜像仓库固定为 `hanplus/flutter-linglong-store`；Git refs 先推 `master` 与 tags，再统一通过 `build/scripts/sync-gitee-release.sh` 同步 GitHub Release，禁止手工在 Gitee 页面逐个上传资产。
+- 2026-03-20：`GITEE_REPO` 允许写 `owner/repo` 或完整 `https://gitee.com/...(.git)` URL，但同步脚本内部必须先归一成 `owner/repo` 后再调用 Gitee API。

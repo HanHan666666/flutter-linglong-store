@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../application/providers/global_provider.dart';
 import '../../application/providers/setting_provider.dart';
 import '../../core/config/app_config.dart';
+import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/network/api_client.dart';
 
@@ -45,8 +46,9 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: const Text('意见反馈'),
+      title: Text(l10n?.feedbackTitle ?? '意见反馈'),
       content: SizedBox(
         width: 440,
         child: SingleChildScrollView(
@@ -111,8 +113,8 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
               // 上传日志复选框
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('同时上传日志文件'),
-                subtitle: const Text('日志中不包含个人隐私信息'),
+                title: Text(l10n?.uploadLog ?? '同时上传日志文件'),
+                subtitle: Text(l10n?.noPrivacyInfo ?? '日志中不包含个人隐私信息'),
                 value: _uploadLogFile,
                 onChanged: (value) =>
                     setState(() => _uploadLogFile = value ?? false),
@@ -124,7 +126,7 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
       actions: [
         TextButton(
           onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(l10n?.cancel ?? '取消'),
         ),
         FilledButton(
           onPressed: _isSubmitting ? null : _submit,
@@ -134,7 +136,7 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('提交'),
+              : Text(l10n?.submitFeedback ?? '提交'),
         ),
       ],
     );
@@ -148,7 +150,7 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
     if (overview.isEmpty && description.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('请填写问题概述或描述')));
+      ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.feedbackHint ?? '请填写问题概述或描述')));
       return;
     }
 
@@ -189,14 +191,14 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('感谢您的反馈！')));
+        ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.feedbackSuccess ?? '感谢您的反馈！')));
       }
     } catch (e, s) {
       AppLogger.error('提交反馈失败', e, s);
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('反馈提交失败，请稍后重试')));
+        ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.feedbackFailed ?? '反馈提交失败，请稍后重试')));
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);

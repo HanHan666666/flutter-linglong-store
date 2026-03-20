@@ -35,7 +35,7 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
         MenuItem(
           label: '复制进入容器命令',
           onClick: (_) =>
-              _copyText('ll-cli enter ${app.appId}', '命令已复制到剪贴板，请粘贴到终端中执行'),
+              _copyText('ll-cli enter ${app.appId}', AppLocalizations.of(context)?.commandCopied ?? '命令已复制到剪贴板，请粘贴到终端中执行'),
         ),
         MenuItem(
           label: '复制应用 ID',

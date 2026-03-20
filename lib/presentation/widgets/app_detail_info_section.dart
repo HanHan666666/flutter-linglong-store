@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/i18n/l10n/app_localizations.dart';
+
 enum AppDetailInfoSpan { compact, full }
 
 class AppDetailInfoEntry {
@@ -117,7 +119,7 @@ class _CopyableValue extends StatelessWidget {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('已复制：$value'),
+                    content: Text(AppLocalizations.of(context)?.copied(value) ?? '已复制：$value'),
                     duration: const Duration(seconds: 2),
                   ),
                 );

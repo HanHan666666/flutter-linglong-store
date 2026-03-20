@@ -487,7 +487,7 @@ class _BannerSectionState extends State<_BannerSection> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('无法打开链接: $url')));
+        ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.cannotOpenLink(url) ?? '无法打开链接: $url')));
       }
     }
   }

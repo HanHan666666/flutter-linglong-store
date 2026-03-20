@@ -110,13 +110,14 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           ref.read(settingProvider).appVersion ?? AppConfig.appVersion;
       final isNewer = _isVersionNewer(currentVersion, tagName);
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('检查更新'),
+          title: Text(l10n?.checkUpdate ?? '检查更新'),
           content: isNewer
-              ? Text('发现新版本 $tagName！\n当前版本：$currentVersion')
-              : Text('当前已是最新版本 ($currentVersion)'),
+              ? Text(l10n?.newVersionFound(tagName, currentVersion) ?? '发现新版本 $tagName！\n当前版本：$currentVersion')
+              : Text(l10n?.alreadyLatest(currentVersion) ?? '当前已是最新版本 ($currentVersion)'),
           actions: [
             if (isNewer)
               TextButton(
@@ -126,11 +127,11 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                     'https://gitee.com/Shirosu/linglong-store/releases/latest',
                   );
                 },
-                child: const Text('前往下载'),
+                child: Text(l10n?.goDownload ?? '前往下载'),
               ),
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('确定'),
+              child: Text(l10n?.confirm ?? '确定'),
             ),
           ],
         ),
@@ -181,31 +182,31 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 语言设置
-          _buildSectionTitle(context, '语言设置'),
+          _buildSectionTitle(context, l10n?.languageSettings ?? '语言设置'),
           _buildLanguageSection(context, state),
 
           const SizedBox(height: 24),
 
           // 主题设置
-          _buildSectionTitle(context, '主题设置'),
+          _buildSectionTitle(context, l10n?.themeSettings ?? '主题设置'),
           _buildThemeSection(context, state),
 
           const SizedBox(height: 24),
 
           // 仓库配置
-          _buildSectionTitle(context, '仓库配置'),
+          _buildSectionTitle(context, l10n?.repoConfig ?? '仓库配置'),
           _buildRepoSection(context, state),
 
           const SizedBox(height: 24),
 
           // 缓存管理
-          _buildSectionTitle(context, '缓存管理'),
+          _buildSectionTitle(context, l10n?.cacheManagement ?? '缓存管理'),
           _buildCacheSection(context, state),
 
           const SizedBox(height: 24),
 
           // 商店选项
-          _buildSectionTitle(context, '商店选项'),
+          _buildSectionTitle(context, l10n?.storeOptions ?? '商店选项'),
           _buildStoreOptionsSection(context, state),
 
           const SizedBox(height: 24),
@@ -389,7 +390,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                 TextButton.icon(
                   onPressed: () => _showRepoEditDialog(context, state),
                   icon: const Icon(Icons.edit, size: 18),
-                  label: const Text('修改'),
+                  label: Text(AppLocalizations.of(context)?.modifyBtn ?? '修改'),
                 ),
               ],
             ),
@@ -431,9 +432,10 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     ref.read(globalAppProvider.notifier).setRepoName(repoName);
 
     if (mounted) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('仓库已切换为: $repoName'),
+          content: Text(l10n?.repoSwitched(repoName) ?? '仓库已切换为: $repoName'),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -449,32 +451,35 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
     final result = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('修改仓库源'),
-        content: TextField(
-          controller: _repoController,
-          decoration: const InputDecoration(
-            labelText: '仓库名称',
-            hintText: '例如: repo:linglong',
-            border: OutlineInputBorder(),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(l10n?.editRepo ?? '修改仓库源'),
+          content: TextField(
+            controller: _repoController,
+            decoration: const InputDecoration(
+              labelText: '仓库名称',
+              hintText: '例如: repo:linglong',
+              border: OutlineInputBorder(),
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final value = _repoController.text.trim();
-              if (value.isNotEmpty) {
-                Navigator.of(context).pop(value);
-              }
-            },
-            child: const Text('确定'),
-          ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n?.cancel ?? '取消'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final value = _repoController.text.trim();
+                if (value.isNotEmpty) {
+                  Navigator.of(context).pop(value);
+                }
+              },
+              child: Text(l10n?.confirm ?? '确定'),
+            ),
+          ],
+        );
+      },
     );
 
     if (result != null && result.isNotEmpty) {
@@ -506,7 +511,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('缓存大小', style: Theme.of(context).textTheme.bodyMedium),
+                    Text(AppLocalizations.of(context)?.cacheSize ?? '缓存大小', style: Theme.of(context).textTheme.bodyMedium),
                     const SizedBox(height: 4),
                     Text(
                       cacheSizeText,
@@ -597,8 +602,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         children: [
           // 启动时检查商店版本更新
           SwitchListTile(
-            title: const Text('启动时检查商店版本更新'),
-            subtitle: const Text('每次启动时检测是否有新版本可用'),
+            title: Text(AppLocalizations.of(context)?.startupCheckUpdate ?? '启动时检查商店版本更新'),
+            subtitle: Text(AppLocalizations.of(context)?.startupCheckUpdateDesc ?? '每次启动时检测是否有新版本可用'),
             value: state.checkVersionOnStartup,
             onChanged: (value) {
               ref
@@ -609,8 +614,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           _buildDivider(context),
           // 容器内自动更新商店本体
           SwitchListTile(
-            title: const Text('容器内自动更新商店本体'),
-            subtitle: const Text('在玲珑容器内运行时自动更新商店应用'),
+            title: Text(AppLocalizations.of(context)?.autoUpdateInContainer ?? '容器内自动更新商店本体'),
+            subtitle: Text(AppLocalizations.of(context)?.autoUpdateInContainerDesc ?? '在玲珑容器内运行时自动更新商店应用'),
             value: state.autoUpdateStoreInContainer,
             onChanged: (value) {
               ref
@@ -621,8 +626,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           _buildDivider(context),
           // 已安装列表中显示基础运行服务
           SwitchListTile(
-            title: const Text('显示基础运行服务'),
-            subtitle: const Text('在已安装列表中显示底层基础运行服务'),
+            title: Text(AppLocalizations.of(context)?.showBaseServices ?? '显示基础运行服务'),
+            subtitle: Text(AppLocalizations.of(context)?.showBaseServicesDesc ?? '在已安装列表中显示底层基础运行服务'),
             value: state.showBaseService,
             onChanged: (value) {
               ref.read(settingProvider.notifier).setShowBaseService(value);
@@ -635,8 +640,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               Icons.cleaning_services_outlined,
               color: Theme.of(context).colorScheme.secondary,
             ),
-            title: const Text('清理废弃基础服务'),
-            subtitle: const Text('移除已不再使用的基础运行服务，释放磁盘空间'),
+            title: Text(AppLocalizations.of(context)?.cleanDeprecatedServices ?? '清理废弃基础服务'),
+            subtitle: Text(AppLocalizations.of(context)?.cleanDeprecatedServicesDesc ?? '移除已不再使用的基础运行服务，释放磁盘空间'),
             trailing: state.isPruningBaseService
                 ? const SizedBox(
                     width: 20,
@@ -787,7 +792,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.system_update_alt, size: 18),
-                  label: const Text('检查新版本'),
+                  label: Text(AppLocalizations.of(context)?.checkNewVersion ?? '检查新版本'),
                 ),
                 const SizedBox(width: 12),
                 OutlinedButton.icon(
@@ -796,7 +801,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                     builder: (_) => const FeedbackDialog(),
                   ),
                   icon: const Icon(Icons.feedback_outlined, size: 18),
-                  label: const Text('意见反馈'),
+                  label: Text(AppLocalizations.of(context)?.feedbackMenu ?? '意见反馈'),
                 ),
               ],
             ),
@@ -816,7 +821,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                 TextButton.icon(
                   onPressed: () => _openUrl('https://linglong.dev'),
                   icon: const Icon(Icons.language, size: 18),
-                  label: const Text('官网'),
+                  label: Text(AppLocalizations.of(context)?.officialWebsite ?? '官网'),
                 ),
               ],
             ),
@@ -869,7 +874,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (mounted) {
-      _showSnackBar('无法打开链接: $url');
+      _showSnackBar(AppLocalizations.of(context)?.cannotOpenLink(url) ?? '无法打开链接: $url');
     }
   }
 }

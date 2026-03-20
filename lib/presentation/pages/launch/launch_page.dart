@@ -7,6 +7,7 @@ import '../../../application/providers/launch_provider.dart';
 import '../../../application/providers/linglong_env_provider.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../widgets/linglong_env_dialog.dart';
 
 /// 启动页面
@@ -340,7 +341,7 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
                   ref.read(launchSequenceProvider.notifier).retry();
                 },
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('重试'),
+                label: Text(AppLocalizations.of(context)?.retry ?? '重试'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,

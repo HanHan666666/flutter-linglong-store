@@ -11,6 +11,7 @@ import '../../../core/config/page_visibility.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/config/visibility_aware_mixin.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/utils/version_compare.dart';
 import '../../../domain/models/installed_app.dart';
 import '../../widgets/app_card_actions.dart';
@@ -152,7 +153,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
         if (result.contains('失败')) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('卸载失败: $result'),
+              content: Text(AppLocalizations.of(context)?.uninstallFailed(result) ?? '卸载失败: $result'),
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
@@ -169,14 +170,14 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
 
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('${app.name} 已卸载')));
+          ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.uninstallSuccess(app.name) ?? '${app.name} 已卸载')));
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('卸载异常: $e'),
+            content: Text(AppLocalizations.of(context)?.uninstallError(e.toString()) ?? '卸载异常: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

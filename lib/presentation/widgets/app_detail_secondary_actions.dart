@@ -34,7 +34,7 @@ class AppDetailSecondaryActions extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: onCreateShortcut,
           icon: const Icon(Icons.shortcut_outlined, size: 18),
-          label: const Text('创建桌面快捷方式'),
+          label: Text(l10n?.createDesktopShortcut ?? '创建桌面快捷方式'),
         ),
         const SizedBox(width: 12),
         OutlinedButton.icon(

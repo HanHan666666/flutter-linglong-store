@@ -5,6 +5,7 @@ import '../../application/providers/install_queue_provider.dart';
 import '../../application/providers/network_speed_provider.dart';
 import '../../core/config/theme.dart';
 import '../../core/di/providers.dart';
+import '../../core/i18n/l10n/app_localizations.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_task.dart';
 
@@ -47,15 +48,15 @@ class DownloadManagerDialog extends ConsumerWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
-          const Text('下载管理', style: AppTextStyles.title3),
+          Text(AppLocalizations.of(context)?.downloadManager ?? '下载管理', style: AppTextStyles.title3),
           const Spacer(),
-          // 清空历史按钮
+          // 清空历史按鈕
           if (queueState.history.isNotEmpty)
             TextButton(
               onPressed: () {
                 ref.read(installQueueProvider.notifier).clearHistory();
               },
-              child: const Text('清空记录'),
+              child: Text(AppLocalizations.of(context)?.clearRecords ?? '清空记录'),
             ),
           // 关闭按钮
           IconButton(
@@ -125,7 +126,7 @@ class DownloadManagerDialog extends ConsumerWidget {
               color: context.appColors.textTertiary,
             ),
             const SizedBox(height: AppSpacing.md),
-            Text('暂无下载任务', style: AppTextStyles.tertiary),
+            Text(AppLocalizations.of(context)?.noDownloadTasks ?? '暂无下载任务', style: AppTextStyles.tertiary),
           ],
         ),
       ),

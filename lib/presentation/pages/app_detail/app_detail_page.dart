@@ -241,7 +241,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
     // 空状态
     if (detailState.app == null) {
-      return const Center(child: Text('未找到应用信息'));
+      return Center(child: Text(AppLocalizations.of(context)?.appNotFound ?? '未找到应用信息'));
     }
 
     final app = detailState.app!;
@@ -651,7 +651,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             const SizedBox.shrink(),
           if (versionsError != null) const SizedBox(height: 12),
           if (versions.isEmpty && !isLoading)
-            const Text('暂无版本历史')
+            Text(AppLocalizations.of(context)?.noVersionHistory ?? '暂无版本历史')
           else
             ListView.builder(
               shrinkWrap: true,
@@ -684,11 +684,11 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     subtitleParts.isEmpty ? '--' : subtitleParts.join(' · '),
                   ),
                   trailing: isInstalledVersion
-                      ? const Text('已安装')
+                      ? Text(AppLocalizations.of(context)?.installedBadge ?? '已安装')
                       : TextButton(
                           onPressed: () =>
                               _installVersion(currentApp!, version.versionNo),
-                          child: const Text('安装'),
+                          child: Text(AppLocalizations.of(context)?.install ?? '安装'),
                         ),
                 );
               },
@@ -725,7 +725,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     .loadDetail(widget.appInfo);
               },
               icon: const Icon(Icons.refresh),
-              label: const Text('重试'),
+              label: Text(AppLocalizations.of(context)?.retry ?? '重试'),
             ),
           ],
         ),
@@ -822,13 +822,13 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('正在启动 ${app.name}')));
+        ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)?.launching(app.name) ?? '正在启动 ${app.name}')));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('启动失败: $e'),
+            content: Text(AppLocalizations.of(context)?.launchFailed(e.toString()) ?? '启动失败: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

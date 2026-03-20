@@ -7,6 +7,7 @@ import '../../application/providers/app_collection_sync_provider.dart';
 import '../../core/config/keepalive_visibility_sync.dart';
 import '../../core/config/theme.dart';
 import '../../core/di/providers.dart';
+import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/platform/window_service.dart';
 import '../../domain/models/install_progress.dart';
@@ -129,23 +130,26 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   void _showCloseConfirmDialog() {
     showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('确认退出'),
-        content: const Text('有正在进行的安装任务，确定要退出吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop(true);
-              WindowService.close();
-            },
-            child: const Text('退出'),
-          ),
-        ],
-      ),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(l10n?.confirmExit ?? '确认退出'),
+          content: Text(l10n?.exitWithInstalling ?? '有正在进行的安装任务，确定要退出吗？'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n?.cancel ?? '取消'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(true);
+                WindowService.close();
+              },
+              child: Text(l10n?.exitBtn ?? '退出'),
+            ),
+          ],
+        );
+      },
     );
   }
 

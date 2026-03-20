@@ -73,5 +73,138 @@
   "confirmUninstallMessage": "Are you sure you want to uninstall this app?",
   "noData": "No Data",
   "noDataDescription": "There is no content here yet",
-  "searchApps": "Search apps..."
+  "searchApps": "Search apps...",
+  "languageSettings": "Language Settings",
+  "themeSettings": "Theme Settings",
+  "repoConfig": "Repository Config",
+  "cacheManagement": "Cache Management",
+  "storeOptions": "Store Options",
+  "checkUpdate": "Check for Updates",
+  "currentVersion": "Current version: {version}",
+  "@currentVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "newVersionFound": "New version {tagName} found, current version {currentVersion}",
+  "@newVersionFound": {
+    "placeholders": {
+      "tagName": {
+        "type": "String"
+      },
+      "currentVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadyLatest": "Already the latest version {version}",
+  "@alreadyLatest": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "checkingUpdate": "Checking for updates...",
+  "goDownload": "Go to Download",
+  "editRepo": "Edit Repository",
+  "repoSwitched": "Repository switched to: {repoName}",
+  "@repoSwitched": {
+    "placeholders": {
+      "repoName": {
+        "type": "String"
+      }
+    }
+  },
+  "modifyBtn": "Modify",
+  "cacheSize": "Cache Size",
+  "startupCheckUpdate": "Check for store updates at launch",
+  "startupCheckUpdateDesc": "Check if a new version is available on each startup",
+  "autoUpdateInContainer": "Auto-update store in container",
+  "autoUpdateInContainerDesc": "Automatically update the store app when running in Linglong container",
+  "showBaseServices": "Show base runtime services",
+  "showBaseServicesDesc": "Show underlying base runtime services in the installed list",
+  "cleanDeprecatedServices": "Clean up deprecated base services",
+  "cleanDeprecatedServicesDesc": "Remove unused base runtime services to free up disk space",
+  "checkNewVersion": "Check New Version",
+  "feedbackMenu": "Feedback",
+  "officialWebsite": "Official Website",
+  "feedbackTitle": "Feedback",
+  "uploadLog": "Also upload log file",
+  "noPrivacyInfo": "Logs contain no personal privacy information",
+  "submitFeedback": "Submit",
+  "feedbackHint": "Please describe the issue",
+  "feedbackSuccess": "Thank you for your feedback!",
+  "feedbackFailed": "Feedback submission failed, please try again later",
+  "confirmExit": "Confirm Exit",
+  "exitWithInstalling": "There are ongoing installation tasks. Are you sure you want to exit?",
+  "exitBtn": "Exit",
+  "downloadManager": "Download Manager",
+  "clearRecords": "Clear Records",
+  "noDownloadTasks": "No download tasks",
+  "cannotOpenLink": "Cannot open link: {url}",
+  "@cannotOpenLink": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "envCheckPassed": "Installation complete, environment check passed",
+  "envCheckFailed": "Installation complete, but environment is still abnormal, please check",
+  "launching": "Launching {appName}...",
+  "@launching": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "launchFailed": "Launch failed: {error}",
+  "@launchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "copied": "Copied: {value}",
+  "@copied": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "createDesktopShortcut": "Create Desktop Shortcut",
+  "appNotFound": "App information not found",
+  "noVersionHistory": "No version history",
+  "installedBadge": "Installed",
+  "uninstallFailed": "Uninstall failed: {result}",
+  "@uninstallFailed": {
+    "placeholders": {
+      "result": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallSuccess": "{name} has been uninstalled",
+  "@uninstallSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallError": "Uninstall error: {error}",
+  "@uninstallError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "commandCopied": "Command copied to clipboard, paste and run in terminal"
 }

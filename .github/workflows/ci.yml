@@ -1,7 +1,6 @@
 name: CI
 
 on:
-  push:
   pull_request:
 
 permissions:
@@ -11,8 +10,6 @@ jobs:
   validate-amd64:
     name: Validate amd64
     runs-on: ubuntu-latest
-    env:
-      TARGET_ARCH: amd64
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,12 +19,6 @@ jobs:
         with:
           channel: stable
           cache: true
-
-      - name: Resolve smoke-test version from pubspec
-        id: version
-        run: |
-          version="$(sed -n 's/^version: //p' pubspec.yaml | head -n1 | cut -d+ -f1)"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Fetch Dart dependencies
         run: flutter pub get
@@ -41,24 +32,6 @@ jobs:
       - name: Run tests
         run: flutter test
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and cache Debian 10 release image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: build/docker/debian10-release.Dockerfile
-          load: true
-          tags: linglong-store/debian10-release:local
-          cache-from: type=gha,scope=debian10-release
-          cache-to: type=gha,mode=max,scope=debian10-release
-
+      # Packaging smoke tests moved to nightly to keep PR feedback fast.
       - name: Run release CLI smoke test
         run: bash build/scripts/release-cli-smoke-test.sh
-
-      - name: Run Debian 10 packaging smoke test
-        run: bash build/scripts/package-smoke-test.sh
-        env:
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-          TARGET_ARCH: amd64

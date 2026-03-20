@@ -54,7 +54,7 @@ class LinglongEnvDialog extends ConsumerWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           Text(
-            '环境检测',
+            AppLocalizations.of(context)?.envCheckTitle ?? '环境检测',
             style: AppTextStyles.title3.copyWith(
               color: context.appColors.textPrimary,
             ),
@@ -97,7 +97,7 @@ class LinglongEnvDialog extends ConsumerWidget {
         const CircularProgressIndicator(),
         const SizedBox(height: AppSpacing.xl),
         Text(
-          '正在检测玲珑环境...',
+          AppLocalizations.of(context)?.checkingLinglongEnv ?? '正在检测玲珑环境...',
           style: AppTextStyles.body.copyWith(
             color: context.appColors.textSecondary,
           ),
@@ -117,7 +117,7 @@ class LinglongEnvDialog extends ConsumerWidget {
 
     if (result == null) {
       return Text(
-        '未知状态',
+        AppLocalizations.of(context)?.unknownStatus ?? '未知状态',
         style: AppTextStyles.body.copyWith(
           color: context.appColors.textSecondary,
         ),
@@ -163,8 +163,8 @@ class LinglongEnvDialog extends ConsumerWidget {
         // 详细信息
         _buildDetailItem(
           context,
-          'll-cli 版本',
-          result.llCliVersion ?? '未检测到',
+          AppLocalizations.of(context)?.llCliVersion ?? 'll-cli 版本',
+          AppLocalizations.of(context)?.notDetected ?? '未检测到',
           result.llCliVersion != null,
         ),
 
@@ -186,7 +186,7 @@ class LinglongEnvDialog extends ConsumerWidget {
                     Icon(Icons.error_outline, color: AppColors.error, size: 16),
                     const SizedBox(width: AppSpacing.sm),
                     Text(
-                      '错误信息',
+                      AppLocalizations.of(context)?.errorMessage ?? '错误信息',
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.error,
                         fontWeight: FontWeight.w500,
@@ -280,7 +280,7 @@ class LinglongEnvDialog extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         Text(
-          envState.installMessage ?? '正在安装...',
+          envState.installMessage ?? AppLocalizations.of(context)?.installingLinglong ?? '正在安装...',
           style: AppTextStyles.body.copyWith(
             color: context.appColors.textSecondary,
           ),
@@ -305,7 +305,7 @@ class LinglongEnvDialog extends ConsumerWidget {
       TextButton(
         onPressed: () => _handleExit(context),
         child: Text(
-          '退出商店',
+          AppLocalizations.of(context)?.exitStore ?? '退出商店',
           style: TextStyle(color: context.appColors.textSecondary),
         ),
       ),
@@ -314,7 +314,7 @@ class LinglongEnvDialog extends ConsumerWidget {
       TextButton.icon(
         onPressed: () => _handleManualInstall(context, ref),
         icon: const Icon(Icons.open_in_new, size: 16),
-        label: const Text('手动安装'),
+        label: Text(AppLocalizations.of(context)?.manualInstall ?? '手动安装'),
         style: TextButton.styleFrom(foregroundColor: AppColors.info),
       ),
 
@@ -324,7 +324,7 @@ class LinglongEnvDialog extends ConsumerWidget {
             ? null
             : () => _handleAutoInstall(context, ref),
         icon: const Icon(Icons.download, size: 16),
-        label: const Text('自动安装'),
+        label: Text(AppLocalizations.of(context)?.autoInstall ?? '自动安装'),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
@@ -335,7 +335,7 @@ class LinglongEnvDialog extends ConsumerWidget {
       OutlinedButton.icon(
         onPressed: () => _handleRecheck(context, ref),
         icon: const Icon(Icons.refresh, size: 16),
-        label: const Text('重新检测'),
+        label: Text(AppLocalizations.of(context)?.recheck ?? '重新检测'),
         style: OutlinedButton.styleFrom(
           foregroundColor: context.appColors.textPrimary,
           side: BorderSide(color: context.appColors.border),
@@ -347,7 +347,7 @@ class LinglongEnvDialog extends ConsumerWidget {
         TextButton(
           onPressed: () => _handleSkip(context, ref),
           child: Text(
-            '跳过检测',
+            AppLocalizations.of(context)?.skipCheck ?? '跳过检测',
             style: TextStyle(color: context.appColors.textSecondary),
           ),
         ),

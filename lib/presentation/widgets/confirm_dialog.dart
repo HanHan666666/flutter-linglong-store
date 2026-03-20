@@ -143,15 +143,17 @@ class ConfirmDialog extends StatelessWidget {
     BuildContext context, {
     String? appName,
   }) {
-    final name = appName != null ? ' $appName' : '该应用';
+    final l10n = AppLocalizations.of(context);
+    final name = appName ?? '该应用';
     return showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) => ConfirmDialog.delete(
-        title: '应用正在运行',
-        message: '$name 当前正在运行中，卸载前需要强制关闭所有运行实例。\n是否强制关闭并卸载？',
-        confirmText: '强制关闭并卸载',
-        cancelText: '取消',
+        title: l10n?.appRunningTitle ?? '应用正在运行',
+        message: l10n?.appRunningUninstallMessage(name) ??
+            '$name 当前正在运行中，卸载前需要强制关闭所有运行实例。\n是否强制关闭并卸载？',
+        confirmText: l10n?.forceCloseAndUninstall ?? '强制关闭并卸载',
+        cancelText: l10n?.cancel ?? '取消',
       ),
     );
   }
@@ -165,17 +167,22 @@ class ConfirmDialog extends StatelessWidget {
     required String currentVersion,
     required String targetVersion,
   }) {
+    final l10n = AppLocalizations.of(context);
     return showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) => ConfirmDialog(
-        title: '确认降级',
-        message:
+        title: l10n?.confirmDowngrade ?? '确认降级',
+        message: l10n?.downgradeMessageWithVersion(
+              appName,
+              currentVersion,
+              targetVersion,
+            ) ??
             '当前已安装 $appName v$currentVersion，'
-            '您尝试安装较低的版本 v$targetVersion。\n'
-            '降级安装可能导致功能异常，是否继续？',
-        confirmText: '确认降级',
-        cancelText: '取消',
+                '您尝试安装较低的版本 v$targetVersion。\n'
+                '降级安装可能导致功能异常，是否继续？',
+        confirmText: l10n?.confirmDowngrade ?? '确认降级',
+        cancelText: l10n?.cancel ?? '取消',
         confirmStyle: ConfirmButtonStyle.warning,
       ),
     );
@@ -189,14 +196,16 @@ class ConfirmDialog extends StatelessWidget {
     required String appName,
     required String version,
   }) {
+    final l10n = AppLocalizations.of(context);
     return showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) => ConfirmDialog(
-        title: '已安装此版本',
-        message: '$appName v$version 已安装。\n是否重新安装（将覆盖现有安装）？',
-        confirmText: '强制重装',
-        cancelText: '取消',
+        title: l10n?.alreadyInstalledVersion ?? '已安装此版本',
+        message: l10n?.reinstallMessage(appName, version) ??
+            '$appName v$version 已安装。\n是否重新安装（将覆盖现有安装）？',
+        confirmText: l10n?.forceReinstall ?? '强制重装',
+        cancelText: l10n?.cancel ?? '取消',
         confirmStyle: ConfirmButtonStyle.primary,
       ),
     );

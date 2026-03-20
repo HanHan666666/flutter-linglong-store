@@ -30,36 +30,46 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
         .killLoadingIds
         .contains(app.id);
 
+    // 获取国际化实例用于菜单项标签
+    final l10n = AppLocalizations.of(context);
     final menu = Menu(
       items: [
         MenuItem(
-          label: '复制进入容器命令',
+          label: l10n?.copyContainerCommand ?? '复制进入容器命令',
           onClick: (_) => _copyText(
             'll-cli enter ${app.appId}',
-            AppLocalizations.of(context)?.commandCopied ??
-                '命令已复制到剪贴板，请粘贴到终端中执行',
+            l10n?.commandCopied ?? '命令已复制到剪贴板，请粘贴到终端中执行',
           ),
         ),
         MenuItem(
-          label: '复制应用 ID',
-          onClick: (_) => _copyText(app.appId, '已复制应用 ID'),
+          label: l10n?.copyAppId ?? '复制应用 ID',
+          onClick: (_) => _copyText(
+            app.appId,
+            l10n?.copied(app.appId) ?? '已复制应用 ID',
+          ),
         ),
         MenuItem(
-          label: '复制 PID',
-          onClick: (_) => _copyText(app.pid.toString(), '已复制 PID'),
+          label: l10n?.copyPid ?? '复制 PID',
+          onClick: (_) => _copyText(
+            app.pid.toString(),
+            l10n?.copied(app.pid.toString()) ?? '已复制 PID',
+          ),
         ),
         MenuItem(
-          label: '复制容器 ID',
-          onClick: (_) => _copyText(app.containerId, '已复制容器 ID'),
+          label: l10n?.copyContainerId ?? '复制容器 ID',
+          onClick: (_) => _copyText(
+            app.containerId,
+            l10n?.copied(app.containerId) ?? '已复制容器 ID',
+          ),
         ),
         MenuItem.separator(),
         MenuItem(
-          label: '刷新进程列表',
+          label: l10n?.refreshProcessList ?? '刷新进程列表',
           onClick: (_) => ref.read(runningProcessProvider.notifier).refresh(),
         ),
         MenuItem.separator(),
         MenuItem(
-          label: '停止进程',
+          label: l10n?.stopProcess ?? '停止进程',
           disabled: isKilling,
           onClick: (_) => _stopProcess(app),
         ),
@@ -100,9 +110,14 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
         .killApp(app);
     if (!mounted) return;
 
+    final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(success ? '${app.name} 已停止' : '停止 ${app.name} 失败'),
+        content: Text(
+          success
+              ? (l10n?.stopSuccess(app.name) ?? '${app.name} 已停止')
+              : (l10n?.stopFailed ?? '停止失败'),
+        ),
         backgroundColor: success ? null : Theme.of(context).colorScheme.error,
       ),
     );
@@ -136,7 +151,8 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '进程列表刷新失败，当前显示的是上次成功获取的数据',
+                    l10n?.processRefreshFailed ??
+                        '进程列表刷新失败，当前显示的是上次成功获取的数据',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: const Color(0xFF8C5A00),
                     ),
@@ -163,7 +179,7 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
       return EmptyState(
         icon: Icons.layers_clear,
         title: l10n?.linglongProcess ?? '玲珑进程',
-        description: '当前没有运行中的玲珑应用',
+        description: l10n?.noRunningApps ?? '当前没有运行中的玲珑应用',
         retryText: l10n?.refresh ?? '刷新',
         onRetry: () => ref.read(runningProcessProvider.notifier).refresh(),
       );
@@ -218,8 +234,8 @@ class _ProcessToolbar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final lastRefreshedText = state.lastRefreshedAt == null
-        ? '尚未刷新'
-        : '上次刷新 ${_formatTime(state.lastRefreshedAt!)}';
+        ? (l10n?.notRefreshed ?? '尚未刷新')
+        : '${l10n?.lastRefresh ?? '上次刷新'} ${_formatTime(state.lastRefreshedAt!)}';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
@@ -248,7 +264,7 @@ class _ProcessToolbar extends ConsumerWidget {
           const Spacer(),
           if (state.isRefreshing) ...[
             Text(
-              '刷新中',
+              l10n?.refreshing ?? '刷新中',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.outline,
               ),
@@ -295,6 +311,7 @@ class _ProcessTableHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       height: 44,
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -304,16 +321,42 @@ class _ProcessTableHeader extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          _ProcessHeaderCell(label: '应用名称', width: 240),
-          _ProcessHeaderCell(label: '版本号', width: 120, centered: true),
-          _ProcessHeaderCell(label: '架构', width: 100, centered: true),
-          _ProcessHeaderCell(label: '渠道', width: 90, centered: true),
-          _ProcessHeaderCell(label: '来源', width: 110, centered: true),
-          _ProcessHeaderCell(label: 'PID', width: 90, centered: true),
-          _ProcessHeaderCell(label: '容器 ID', width: 210),
-          SizedBox(width: 48),
+          _ProcessHeaderCell(
+            label: l10n?.appName ?? '应用名称',
+            width: 240,
+          ),
+          _ProcessHeaderCell(
+            label: l10n?.versionNo ?? '版本号',
+            width: 120,
+            centered: true,
+          ),
+          _ProcessHeaderCell(
+            label: l10n?.architecture ?? '架构',
+            width: 100,
+            centered: true,
+          ),
+          _ProcessHeaderCell(
+            label: l10n?.channelLabel ?? '渠道',
+            width: 90,
+            centered: true,
+          ),
+          _ProcessHeaderCell(
+            label: l10n?.source ?? '来源',
+            width: 110,
+            centered: true,
+          ),
+          _ProcessHeaderCell(
+            label: 'PID',
+            width: 90,
+            centered: true,
+          ),
+          _ProcessHeaderCell(
+            label: l10n?.containerId ?? '容器 ID',
+            width: 210,
+          ),
+          const SizedBox(width: 48),
         ],
       ),
     );
@@ -497,7 +540,8 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.more_horiz),
-                      tooltip: '更多操作',
+                      tooltip: AppLocalizations.of(context)?.moreActions ??
+                          '更多操作',
                     ),
                   ),
                 ),

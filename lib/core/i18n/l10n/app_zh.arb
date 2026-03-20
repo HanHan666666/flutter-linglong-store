@@ -62,6 +62,7 @@
   "updateComplete": "更新完成",
   "noApps": "暂无应用",
   "noInstalledApps": "暂无已安装应用",
+  "noInstalledAppsHint": "您还没有安装任何玲珑应用，去推荐页看看吧",
   "noUpdateApps": "暂无可用更新",
   "version": "版本",
   "size": "大小",
@@ -195,5 +196,233 @@
       }
     }
   },
-  "commandCopied": "命令已复制到剪贴板，请粘贴到终端中执行"
+  "commandCopied": "命令已复制到剪贴板，请粘贴到终端中执行",
+  "skipCheck": "跳过检测",
+  "loadFailed": "加载失败",
+  "shortcutCreated": "快捷方式已创建",
+  "shortcutCreateFailed": "创建失败: {error}",
+  "@shortcutCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "envCheckTitle": "环境检测",
+  "checkingLinglongEnv": "正在检测玲珑环境...",
+  "unknownStatus": "未知状态",
+  "llCliVersion": "ll-cli 版本",
+  "notDetected": "未检测到",
+  "errorMessage": "错误信息",
+  "installingLinglong": "正在安装...",
+  "appIntroduction": "应用介绍",
+  "collapse": "收起",
+  "expandAll": "展开全部",
+  "packageName": "包名",
+  "architecture": "架构",
+  "channelLabel": "渠道",
+  "runtime": "运行时",
+  "license": "许可证",
+  "homepage": "主页",
+  "appInfo": "应用信息",
+  "versionHistory": "版本历史",
+  "versionListLoadFailed": "版本列表加载失败，请重试",
+  "versionListUpdateFailed": "版本列表更新失败，显示最近一次结果",
+  "uninstallApp": "卸载应用",
+  "uninstallConfirmMessage": "确定要卸载 {name} 吗？\n卸载后应用数据将被删除，此操作不可恢复。",
+  "@uninstallConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noDescription": "暂无描述",
+  "categoryLabel": "分类",
+  "searchNotFound": "未找到相关应用",
+  "searchTryOtherKeywords": "尝试使用其他关键词搜索",
+  "searchInputHint": "在顶部搜索框输入关键词",
+  "searchPressEnter": "按 Enter 开始搜索应用",
+  "searchResultCount": "找到 {count} 个结果",
+  "@searchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchInstalledApps": "搜索已安装的应用",
+  "noMatchingApp": "未找到匹配的应用",
+  "noMatchingAppHint": "没有找到 \"{query}\" 相关的应用",
+  "@noMatchingAppHint": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "updateCount": "共 {count} 个应用可更新",
+  "@updateCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updating": "正在更新...",
+  "updateAll": "全部更新",
+  "updateCheckFailed": "检查更新失败",
+  "noUpdate": "暂无更新",
+  "allAppsUpToDate": "您的所有应用都是最新版本",
+  "noMore": "没有更多了",
+  "appTitleShort": "玲珑应用商店",
+  "detectingEnv": "正在检测玲珑环境...",
+  "stepEnvCheck": "环境检测",
+  "stepAppLoad": "应用加载",
+  "stepUpdateCheck": "更新检查",
+  "stepQueueRecovery": "队列恢复",
+  "launchFailedTitle": "启动失败",
+  "skip": "跳过",
+  "cannotGetVersion": "无法获取版本信息",
+  "newVersionAvailable": "发现新版本 {version}！\n当前版本：{current}",
+  "@newVersionAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      }
+    }
+  },
+  "languageZh": "中文",
+  "themeFollowSystem": "跟随系统",
+  "themeLight": "浅色模式",
+  "themeDark": "深色模式",
+  "clearingCache": "清除中...",
+  "clearCache": "清除缓存",
+  "clearCacheDesc": "清除缓存可以释放存储空间，但会重新下载应用图标和部分数据。",
+  "clearCacheConfirm": "确认清除缓存",
+  "clearCacheMessage": "确定要清除所有缓存吗？",
+  "cacheCleared": "缓存已清除",
+  "clearCacheFailed": "清除缓存失败",
+  "appVersion": "应用版本",
+  "appCount": "已收录应用数量",
+  "systemArch": "系统架构",
+  "linglongVersion": "玲珑版本",
+  "checkNetwork": "请检查网络连接后重试",
+  "copyContainerCommand": "复制进入容器命令",
+  "commandCopiedToClipboard": "命令已复制到剪贴板",
+  "copyAppId": "复制应用 ID",
+  "stopSuccess": "{name} 已停止",
+  "@stopSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stopFailed": "停止失败",
+  "processRefreshFailed": "进程列表刷新失败...",
+  "noRunningApps": "当前没有运行中的玲珑应用",
+  "notRefreshed": "尚未刷新",
+  "lastRefresh": "上次刷新",
+  "refreshing": "刷新中",
+  "appName": "应用名称",
+  "versionNo": "版本号",
+  "source": "来源",
+  "containerId": "容器 ID",
+  "appRunningTitle": "应用正在运行",
+  "appRunningMessage": "该应用正在运行，需要先关闭才能卸载",
+  "downgradeConfirm": "确认降级",
+  "downgradeMessage": "目标版本低于当前版本，确定要降级吗？",
+  "alreadyInstalledVersion": "已安装此版本",
+  "waiting": "等待中",
+  "completed": "已完成",
+  "remove": "移除",
+  "feedbackCategories": "商店缺陷,应用更新,应用故障",
+  "feedbackCategory": "问题分类",
+  "overview": "概述",
+  "overviewHint": "请简要描述问题",
+  "detailDescription": "详细描述",
+  "none": "无",
+  "clearSearch": "清除搜索词",
+  "minimize": "最小化",
+  "restore": "还原",
+  "maximize": "最大化",
+  "close": "关闭",
+  "goRecommend": "去推荐页看看吧",
+  "processRefreshFailedHint": "进程列表刷新失败，当前显示的是上次成功获取的数据",
+  "moreActions": "更多操作",
+  "appRunningUninstallMessage": "{name} 当前正在运行中，卸载前需要强制关闭所有运行实例。\n是否强制关闭并卸载？",
+  "@appRunningUninstallMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "forceCloseAndUninstall": "强制关闭并卸载",
+  "downgradeMessageWithVersion": "当前已安装 {appName} v{currentVersion}，您尝试安装较低的版本 v{targetVersion}。\n降级安装可能导致功能异常，是否继续？",
+  "@downgradeMessageWithVersion": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "currentVersion": {
+        "type": "String"
+      },
+      "targetVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmDowngrade": "确认降级",
+  "reinstallMessage": "{appName} v{version} 已安装。\n是否重新安装（将覆盖现有安装）？",
+  "@reinstallMessage": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "forceReinstall": "强制重装",
+  "installingLabel": "正在安装",
+  "waitingCount": "等待中 ({count})",
+  "@waitingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "detailDescriptionHint": "请详细描述您遇到的问题",
+  "linglongCommunity": "玲珑社区",
+  "unknown": "未知",
+  "copyPid": "复制 PID",
+  "copyContainerId": "复制容器 ID",
+  "refreshProcessList": "刷新进程列表",
+  "stopProcess": "停止进程",
+  "checkUpdateNetworkError": "检查更新失败，请检查网络连接",
+  "pruneServiceTitle": "清理废弃基础服务",
+  "pruneServiceMessage": "将执行 ll-cli prune 命令，移除所有已不再被任何应用依赖的基础运行服务。\n\n清理后可节省磁盘空间，但如进行中有其他操作可能需要重新下载。",
+  "pruneServiceSuccess": "废弃基础服务已清理",
+  "pruneServiceFailed": "清理失败，请稍后重试",
+  "clearCacheHint": "清除缓存可以释放存储空间，但可能会导致应用需要重新加载数据。",
+  "pruneBaseServiceMessage": "将执行 ll-cli prune 命令，移除所有已不再被任何应用依赖的基础运行服务。\n\n清理后可节省磁盘空间，但如进行中有其他操作可能需要重新下载。",
+  "clean": "清理",
+  "baseServiceCleaned": "废弃基础服务已清理",
+  "cleanFailed": "清理失败，请稍后重试",
+  "appCountValue": "{count} 个",
+  "@appCountValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "llCliVersionLabel": "ll-cli 版本"
 }

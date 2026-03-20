@@ -470,6 +470,12 @@ abstract class AppLocalizations {
   /// **'暂无已安装应用'**
   String get noInstalledApps;
 
+  /// No description provided for @noInstalledAppsHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'您还没有安装任何玲珑应用，去推荐页看看吧'**
+  String get noInstalledAppsHint;
+
   /// No description provided for @noUpdateApps.
   ///
   /// In zh, this message translates to:
@@ -835,6 +841,802 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'命令已复制到剪贴板，请粘贴到终端中执行'**
   String get commandCopied;
+
+  /// No description provided for @skipCheck.
+  ///
+  /// In zh, this message translates to:
+  /// **'跳过检测'**
+  String get skipCheck;
+
+  /// No description provided for @loadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'加载失败'**
+  String get loadFailed;
+
+  /// No description provided for @shortcutCreated.
+  ///
+  /// In zh, this message translates to:
+  /// **'快捷方式已创建'**
+  String get shortcutCreated;
+
+  /// No description provided for @shortcutCreateFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建失败: {error}'**
+  String shortcutCreateFailed(String error);
+
+  /// No description provided for @envCheckTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'环境检测'**
+  String get envCheckTitle;
+
+  /// No description provided for @checkingLinglongEnv.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在检测玲珑环境...'**
+  String get checkingLinglongEnv;
+
+  /// No description provided for @unknownStatus.
+  ///
+  /// In zh, this message translates to:
+  /// **'未知状态'**
+  String get unknownStatus;
+
+  /// No description provided for @llCliVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'ll-cli 版本'**
+  String get llCliVersion;
+
+  /// No description provided for @notDetected.
+  ///
+  /// In zh, this message translates to:
+  /// **'未检测到'**
+  String get notDetected;
+
+  /// No description provided for @errorMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'错误信息'**
+  String get errorMessage;
+
+  /// No description provided for @installingLinglong.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在安装...'**
+  String get installingLinglong;
+
+  /// No description provided for @appIntroduction.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用介绍'**
+  String get appIntroduction;
+
+  /// No description provided for @collapse.
+  ///
+  /// In zh, this message translates to:
+  /// **'收起'**
+  String get collapse;
+
+  /// No description provided for @expandAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'展开全部'**
+  String get expandAll;
+
+  /// No description provided for @packageName.
+  ///
+  /// In zh, this message translates to:
+  /// **'包名'**
+  String get packageName;
+
+  /// No description provided for @architecture.
+  ///
+  /// In zh, this message translates to:
+  /// **'架构'**
+  String get architecture;
+
+  /// No description provided for @channelLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'渠道'**
+  String get channelLabel;
+
+  /// No description provided for @runtime.
+  ///
+  /// In zh, this message translates to:
+  /// **'运行时'**
+  String get runtime;
+
+  /// No description provided for @license.
+  ///
+  /// In zh, this message translates to:
+  /// **'许可证'**
+  String get license;
+
+  /// No description provided for @homepage.
+  ///
+  /// In zh, this message translates to:
+  /// **'主页'**
+  String get homepage;
+
+  /// No description provided for @appInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用信息'**
+  String get appInfo;
+
+  /// No description provided for @versionHistory.
+  ///
+  /// In zh, this message translates to:
+  /// **'版本历史'**
+  String get versionHistory;
+
+  /// No description provided for @versionListLoadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'版本列表加载失败，请重试'**
+  String get versionListLoadFailed;
+
+  /// No description provided for @versionListUpdateFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'版本列表更新失败，显示最近一次结果'**
+  String get versionListUpdateFailed;
+
+  /// No description provided for @uninstallApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'卸载应用'**
+  String get uninstallApp;
+
+  /// No description provided for @uninstallConfirmMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要卸载 {name} 吗？\n卸载后应用数据将被删除，此操作不可恢复。'**
+  String uninstallConfirmMessage(String name);
+
+  /// No description provided for @noDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无描述'**
+  String get noDescription;
+
+  /// No description provided for @categoryLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'分类'**
+  String get categoryLabel;
+
+  /// No description provided for @searchNotFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到相关应用'**
+  String get searchNotFound;
+
+  /// No description provided for @searchTryOtherKeywords.
+  ///
+  /// In zh, this message translates to:
+  /// **'尝试使用其他关键词搜索'**
+  String get searchTryOtherKeywords;
+
+  /// No description provided for @searchInputHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'在顶部搜索框输入关键词'**
+  String get searchInputHint;
+
+  /// No description provided for @searchPressEnter.
+  ///
+  /// In zh, this message translates to:
+  /// **'按 Enter 开始搜索应用'**
+  String get searchPressEnter;
+
+  /// No description provided for @searchResultCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'找到 {count} 个结果'**
+  String searchResultCount(int count);
+
+  /// No description provided for @searchInstalledApps.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索已安装的应用'**
+  String get searchInstalledApps;
+
+  /// No description provided for @noMatchingApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到匹配的应用'**
+  String get noMatchingApp;
+
+  /// No description provided for @noMatchingAppHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有找到 \"{query}\" 相关的应用'**
+  String noMatchingAppHint(String query);
+
+  /// No description provided for @updateCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'共 {count} 个应用可更新'**
+  String updateCount(int count);
+
+  /// No description provided for @updating.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在更新...'**
+  String get updating;
+
+  /// No description provided for @updateAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部更新'**
+  String get updateAll;
+
+  /// No description provided for @updateCheckFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'检查更新失败'**
+  String get updateCheckFailed;
+
+  /// No description provided for @noUpdate.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无更新'**
+  String get noUpdate;
+
+  /// No description provided for @allAppsUpToDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'您的所有应用都是最新版本'**
+  String get allAppsUpToDate;
+
+  /// No description provided for @noMore.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有更多了'**
+  String get noMore;
+
+  /// No description provided for @appTitleShort.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑应用商店'**
+  String get appTitleShort;
+
+  /// No description provided for @detectingEnv.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在检测玲珑环境...'**
+  String get detectingEnv;
+
+  /// No description provided for @stepEnvCheck.
+  ///
+  /// In zh, this message translates to:
+  /// **'环境检测'**
+  String get stepEnvCheck;
+
+  /// No description provided for @stepAppLoad.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用加载'**
+  String get stepAppLoad;
+
+  /// No description provided for @stepUpdateCheck.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新检查'**
+  String get stepUpdateCheck;
+
+  /// No description provided for @stepQueueRecovery.
+  ///
+  /// In zh, this message translates to:
+  /// **'队列恢复'**
+  String get stepQueueRecovery;
+
+  /// No description provided for @launchFailedTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'启动失败'**
+  String get launchFailedTitle;
+
+  /// No description provided for @skip.
+  ///
+  /// In zh, this message translates to:
+  /// **'跳过'**
+  String get skip;
+
+  /// No description provided for @cannotGetVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法获取版本信息'**
+  String get cannotGetVersion;
+
+  /// No description provided for @newVersionAvailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'发现新版本 {version}！\n当前版本：{current}'**
+  String newVersionAvailable(String version, String current);
+
+  /// No description provided for @languageZh.
+  ///
+  /// In zh, this message translates to:
+  /// **'中文'**
+  String get languageZh;
+
+  /// No description provided for @themeFollowSystem.
+  ///
+  /// In zh, this message translates to:
+  /// **'跟随系统'**
+  String get themeFollowSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In zh, this message translates to:
+  /// **'浅色模式'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In zh, this message translates to:
+  /// **'深色模式'**
+  String get themeDark;
+
+  /// No description provided for @clearingCache.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除中...'**
+  String get clearingCache;
+
+  /// No description provided for @clearCache.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除缓存'**
+  String get clearCache;
+
+  /// No description provided for @clearCacheDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除缓存可以释放存储空间，但会重新下载应用图标和部分数据。'**
+  String get clearCacheDesc;
+
+  /// No description provided for @clearCacheConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认清除缓存'**
+  String get clearCacheConfirm;
+
+  /// No description provided for @clearCacheMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要清除所有缓存吗？'**
+  String get clearCacheMessage;
+
+  /// No description provided for @cacheCleared.
+  ///
+  /// In zh, this message translates to:
+  /// **'缓存已清除'**
+  String get cacheCleared;
+
+  /// No description provided for @clearCacheFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除缓存失败'**
+  String get clearCacheFailed;
+
+  /// No description provided for @appVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用版本'**
+  String get appVersion;
+
+  /// No description provided for @appCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'已收录应用数量'**
+  String get appCount;
+
+  /// No description provided for @systemArch.
+  ///
+  /// In zh, this message translates to:
+  /// **'系统架构'**
+  String get systemArch;
+
+  /// No description provided for @linglongVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑版本'**
+  String get linglongVersion;
+
+  /// No description provided for @checkNetwork.
+  ///
+  /// In zh, this message translates to:
+  /// **'请检查网络连接后重试'**
+  String get checkNetwork;
+
+  /// No description provided for @copyContainerCommand.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制进入容器命令'**
+  String get copyContainerCommand;
+
+  /// No description provided for @commandCopiedToClipboard.
+  ///
+  /// In zh, this message translates to:
+  /// **'命令已复制到剪贴板'**
+  String get commandCopiedToClipboard;
+
+  /// No description provided for @copyAppId.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制应用 ID'**
+  String get copyAppId;
+
+  /// No description provided for @stopSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'{name} 已停止'**
+  String stopSuccess(String name);
+
+  /// No description provided for @stopFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止失败'**
+  String get stopFailed;
+
+  /// No description provided for @processRefreshFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'进程列表刷新失败...'**
+  String get processRefreshFailed;
+
+  /// No description provided for @noRunningApps.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前没有运行中的玲珑应用'**
+  String get noRunningApps;
+
+  /// No description provided for @notRefreshed.
+  ///
+  /// In zh, this message translates to:
+  /// **'尚未刷新'**
+  String get notRefreshed;
+
+  /// No description provided for @lastRefresh.
+  ///
+  /// In zh, this message translates to:
+  /// **'上次刷新'**
+  String get lastRefresh;
+
+  /// No description provided for @refreshing.
+  ///
+  /// In zh, this message translates to:
+  /// **'刷新中'**
+  String get refreshing;
+
+  /// No description provided for @appName.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用名称'**
+  String get appName;
+
+  /// No description provided for @versionNo.
+  ///
+  /// In zh, this message translates to:
+  /// **'版本号'**
+  String get versionNo;
+
+  /// No description provided for @source.
+  ///
+  /// In zh, this message translates to:
+  /// **'来源'**
+  String get source;
+
+  /// No description provided for @containerId.
+  ///
+  /// In zh, this message translates to:
+  /// **'容器 ID'**
+  String get containerId;
+
+  /// No description provided for @appRunningTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用正在运行'**
+  String get appRunningTitle;
+
+  /// No description provided for @appRunningMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'该应用正在运行，需要先关闭才能卸载'**
+  String get appRunningMessage;
+
+  /// No description provided for @downgradeConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认降级'**
+  String get downgradeConfirm;
+
+  /// No description provided for @downgradeMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标版本低于当前版本，确定要降级吗？'**
+  String get downgradeMessage;
+
+  /// No description provided for @alreadyInstalledVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'已安装此版本'**
+  String get alreadyInstalledVersion;
+
+  /// No description provided for @waiting.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待中'**
+  String get waiting;
+
+  /// No description provided for @completed.
+  ///
+  /// In zh, this message translates to:
+  /// **'已完成'**
+  String get completed;
+
+  /// No description provided for @remove.
+  ///
+  /// In zh, this message translates to:
+  /// **'移除'**
+  String get remove;
+
+  /// No description provided for @feedbackCategories.
+  ///
+  /// In zh, this message translates to:
+  /// **'商店缺陷,应用更新,应用故障'**
+  String get feedbackCategories;
+
+  /// No description provided for @feedbackCategory.
+  ///
+  /// In zh, this message translates to:
+  /// **'问题分类'**
+  String get feedbackCategory;
+
+  /// No description provided for @overview.
+  ///
+  /// In zh, this message translates to:
+  /// **'概述'**
+  String get overview;
+
+  /// No description provided for @overviewHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'请简要描述问题'**
+  String get overviewHint;
+
+  /// No description provided for @detailDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'详细描述'**
+  String get detailDescription;
+
+  /// No description provided for @none.
+  ///
+  /// In zh, this message translates to:
+  /// **'无'**
+  String get none;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除搜索词'**
+  String get clearSearch;
+
+  /// No description provided for @minimize.
+  ///
+  /// In zh, this message translates to:
+  /// **'最小化'**
+  String get minimize;
+
+  /// No description provided for @restore.
+  ///
+  /// In zh, this message translates to:
+  /// **'还原'**
+  String get restore;
+
+  /// No description provided for @maximize.
+  ///
+  /// In zh, this message translates to:
+  /// **'最大化'**
+  String get maximize;
+
+  /// No description provided for @close.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭'**
+  String get close;
+
+  /// No description provided for @goRecommend.
+  ///
+  /// In zh, this message translates to:
+  /// **'去推荐页看看吧'**
+  String get goRecommend;
+
+  /// No description provided for @processRefreshFailedHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'进程列表刷新失败，当前显示的是上次成功获取的数据'**
+  String get processRefreshFailedHint;
+
+  /// No description provided for @moreActions.
+  ///
+  /// In zh, this message translates to:
+  /// **'更多操作'**
+  String get moreActions;
+
+  /// No description provided for @appRunningUninstallMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'{name} 当前正在运行中，卸载前需要强制关闭所有运行实例。\n是否强制关闭并卸载？'**
+  String appRunningUninstallMessage(String name);
+
+  /// No description provided for @forceCloseAndUninstall.
+  ///
+  /// In zh, this message translates to:
+  /// **'强制关闭并卸载'**
+  String get forceCloseAndUninstall;
+
+  /// No description provided for @downgradeMessageWithVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前已安装 {appName} v{currentVersion}，您尝试安装较低的版本 v{targetVersion}。\n降级安装可能导致功能异常，是否继续？'**
+  String downgradeMessageWithVersion(
+    String appName,
+    String currentVersion,
+    String targetVersion,
+  );
+
+  /// No description provided for @confirmDowngrade.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认降级'**
+  String get confirmDowngrade;
+
+  /// No description provided for @reinstallMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'{appName} v{version} 已安装。\n是否重新安装（将覆盖现有安装）？'**
+  String reinstallMessage(String appName, String version);
+
+  /// No description provided for @forceReinstall.
+  ///
+  /// In zh, this message translates to:
+  /// **'强制重装'**
+  String get forceReinstall;
+
+  /// No description provided for @installingLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在安装'**
+  String get installingLabel;
+
+  /// No description provided for @waitingCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待中 ({count})'**
+  String waitingCount(int count);
+
+  /// No description provided for @detailDescriptionHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'请详细描述您遇到的问题'**
+  String get detailDescriptionHint;
+
+  /// No description provided for @linglongCommunity.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑社区'**
+  String get linglongCommunity;
+
+  /// No description provided for @unknown.
+  ///
+  /// In zh, this message translates to:
+  /// **'未知'**
+  String get unknown;
+
+  /// No description provided for @copyPid.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制 PID'**
+  String get copyPid;
+
+  /// No description provided for @copyContainerId.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制容器 ID'**
+  String get copyContainerId;
+
+  /// No description provided for @refreshProcessList.
+  ///
+  /// In zh, this message translates to:
+  /// **'刷新进程列表'**
+  String get refreshProcessList;
+
+  /// No description provided for @stopProcess.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止进程'**
+  String get stopProcess;
+
+  /// No description provided for @checkUpdateNetworkError.
+  ///
+  /// In zh, this message translates to:
+  /// **'检查更新失败，请检查网络连接'**
+  String get checkUpdateNetworkError;
+
+  /// No description provided for @pruneServiceTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'清理废弃基础服务'**
+  String get pruneServiceTitle;
+
+  /// No description provided for @pruneServiceMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'将执行 ll-cli prune 命令，移除所有已不再被任何应用依赖的基础运行服务。\n\n清理后可节省磁盘空间，但如进行中有其他操作可能需要重新下载。'**
+  String get pruneServiceMessage;
+
+  /// No description provided for @pruneServiceSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'废弃基础服务已清理'**
+  String get pruneServiceSuccess;
+
+  /// No description provided for @pruneServiceFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'清理失败，请稍后重试'**
+  String get pruneServiceFailed;
+
+  /// No description provided for @clearCacheHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除缓存可以释放存储空间，但可能会导致应用需要重新加载数据。'**
+  String get clearCacheHint;
+
+  /// No description provided for @pruneBaseServiceMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'将执行 ll-cli prune 命令，移除所有已不再被任何应用依赖的基础运行服务。\n\n清理后可节省磁盘空间，但如进行中有其他操作可能需要重新下载。'**
+  String get pruneBaseServiceMessage;
+
+  /// No description provided for @clean.
+  ///
+  /// In zh, this message translates to:
+  /// **'清理'**
+  String get clean;
+
+  /// No description provided for @baseServiceCleaned.
+  ///
+  /// In zh, this message translates to:
+  /// **'废弃基础服务已清理'**
+  String get baseServiceCleaned;
+
+  /// No description provided for @cleanFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'清理失败，请稍后重试'**
+  String get cleanFailed;
+
+  /// No description provided for @appCountValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个'**
+  String appCountValue(int count);
+
+  /// No description provided for @llCliVersionLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'ll-cli 版本'**
+  String get llCliVersionLabel;
 }
 
 class _AppLocalizationsDelegate

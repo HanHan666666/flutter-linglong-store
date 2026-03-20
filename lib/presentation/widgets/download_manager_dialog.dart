@@ -77,6 +77,7 @@ class DownloadManagerDialog extends ConsumerWidget {
     WidgetRef ref,
     InstallQueueState queueState,
   ) {
+    final l10n = AppLocalizations.of(context);
     final hasActiveTasks = queueState.hasActiveTasks();
     final hasHistory = queueState.history.isNotEmpty;
 
@@ -91,13 +92,20 @@ class DownloadManagerDialog extends ConsumerWidget {
         children: [
           // 当前任务
           if (queueState.currentTask != null) ...[
-            _buildSectionTitle(context, '正在安装'),
+            _buildSectionTitle(
+              context,
+              l10n?.installingLabel ?? '正在安装',
+            ),
             _buildCurrentTask(context, ref, queueState.currentTask!),
             const SizedBox(height: AppSpacing.sm),
           ],
           // 等待队列
           if (queueState.queue.isNotEmpty) ...[
-            _buildSectionTitle(context, '等待中 (${queueState.queue.length})'),
+            _buildSectionTitle(
+              context,
+              l10n?.waitingCount(queueState.queue.length) ??
+                  '等待中 (${queueState.queue.length})',
+            ),
             ...queueState.queue.map(
               (task) => _buildQueueItem(context, ref, task),
             ),
@@ -105,7 +113,7 @@ class DownloadManagerDialog extends ConsumerWidget {
           ],
           // 历史记录
           if (queueState.history.isNotEmpty) ...[
-            _buildSectionTitle(context, '已完成'),
+            _buildSectionTitle(context, l10n?.completed ?? '已完成'),
             ...queueState.history.map(
               (task) => _buildHistoryItem(context, ref, task),
             ),
@@ -261,7 +269,7 @@ class _TaskCard extends StatelessWidget {
                   ),
                 ),
                 // 操作按钮
-                _buildActionButtons(),
+                _buildActionButtons(context),
               ],
             ),
             // 进度条（仅当前任务显示）
@@ -346,7 +354,9 @@ class _TaskCard extends StatelessWidget {
   }
 
   /// 构建操作按钮
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     if (task.isProcessing ||
         task.status == InstallStatus.downloading ||
         task.status == InstallStatus.pending) {
@@ -354,7 +364,7 @@ class _TaskCard extends StatelessWidget {
       return IconButton(
         icon: const Icon(Icons.close, size: 18),
         onPressed: onCancel,
-        tooltip: '取消',
+        tooltip: l10n?.cancel ?? '取消',
       );
     }
 
@@ -366,13 +376,13 @@ class _TaskCard extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.refresh, size: 18),
             onPressed: onRetry,
-            tooltip: '重试',
+            tooltip: l10n?.retry ?? '重试',
           ),
           if (onRemove != null)
             IconButton(
               icon: const Icon(Icons.close, size: 18),
               onPressed: onRemove,
-              tooltip: '移除',
+              tooltip: l10n?.remove ?? '移除',
             ),
         ],
       );
@@ -385,13 +395,13 @@ class _TaskCard extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.open_in_new, size: 18),
             onPressed: onOpen,
-            tooltip: '打开',
+            tooltip: l10n?.open ?? '打开',
           ),
           if (onRemove != null)
             IconButton(
               icon: const Icon(Icons.close, size: 18),
               onPressed: onRemove,
-              tooltip: '移除',
+              tooltip: l10n?.remove ?? '移除',
             ),
         ],
       );
@@ -401,7 +411,7 @@ class _TaskCard extends StatelessWidget {
       return IconButton(
         icon: const Icon(Icons.close, size: 18),
         onPressed: onRemove,
-        tooltip: '移除',
+        tooltip: l10n?.remove ?? '移除',
       );
     }
 

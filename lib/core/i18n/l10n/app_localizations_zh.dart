@@ -195,6 +195,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noInstalledApps => '暂无已安装应用';
 
   @override
+  String get noInstalledAppsHint => '您还没有安装任何玲珑应用，去推荐页看看吧';
+
+  @override
   String get noUpdateApps => '暂无可用更新';
 
   @override
@@ -396,4 +399,430 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get commandCopied => '命令已复制到剪贴板，请粘贴到终端中执行';
+
+  @override
+  String get skipCheck => '跳过检测';
+
+  @override
+  String get loadFailed => '加载失败';
+
+  @override
+  String get shortcutCreated => '快捷方式已创建';
+
+  @override
+  String shortcutCreateFailed(String error) {
+    return '创建失败: $error';
+  }
+
+  @override
+  String get envCheckTitle => '环境检测';
+
+  @override
+  String get checkingLinglongEnv => '正在检测玲珑环境...';
+
+  @override
+  String get unknownStatus => '未知状态';
+
+  @override
+  String get llCliVersion => 'll-cli 版本';
+
+  @override
+  String get notDetected => '未检测到';
+
+  @override
+  String get errorMessage => '错误信息';
+
+  @override
+  String get installingLinglong => '正在安装...';
+
+  @override
+  String get appIntroduction => '应用介绍';
+
+  @override
+  String get collapse => '收起';
+
+  @override
+  String get expandAll => '展开全部';
+
+  @override
+  String get packageName => '包名';
+
+  @override
+  String get architecture => '架构';
+
+  @override
+  String get channelLabel => '渠道';
+
+  @override
+  String get runtime => '运行时';
+
+  @override
+  String get license => '许可证';
+
+  @override
+  String get homepage => '主页';
+
+  @override
+  String get appInfo => '应用信息';
+
+  @override
+  String get versionHistory => '版本历史';
+
+  @override
+  String get versionListLoadFailed => '版本列表加载失败，请重试';
+
+  @override
+  String get versionListUpdateFailed => '版本列表更新失败，显示最近一次结果';
+
+  @override
+  String get uninstallApp => '卸载应用';
+
+  @override
+  String uninstallConfirmMessage(String name) {
+    return '确定要卸载 $name 吗？\n卸载后应用数据将被删除，此操作不可恢复。';
+  }
+
+  @override
+  String get noDescription => '暂无描述';
+
+  @override
+  String get categoryLabel => '分类';
+
+  @override
+  String get searchNotFound => '未找到相关应用';
+
+  @override
+  String get searchTryOtherKeywords => '尝试使用其他关键词搜索';
+
+  @override
+  String get searchInputHint => '在顶部搜索框输入关键词';
+
+  @override
+  String get searchPressEnter => '按 Enter 开始搜索应用';
+
+  @override
+  String searchResultCount(int count) {
+    return '找到 $count 个结果';
+  }
+
+  @override
+  String get searchInstalledApps => '搜索已安装的应用';
+
+  @override
+  String get noMatchingApp => '未找到匹配的应用';
+
+  @override
+  String noMatchingAppHint(String query) {
+    return '没有找到 \"$query\" 相关的应用';
+  }
+
+  @override
+  String updateCount(int count) {
+    return '共 $count 个应用可更新';
+  }
+
+  @override
+  String get updating => '正在更新...';
+
+  @override
+  String get updateAll => '全部更新';
+
+  @override
+  String get updateCheckFailed => '检查更新失败';
+
+  @override
+  String get noUpdate => '暂无更新';
+
+  @override
+  String get allAppsUpToDate => '您的所有应用都是最新版本';
+
+  @override
+  String get noMore => '没有更多了';
+
+  @override
+  String get appTitleShort => '玲珑应用商店';
+
+  @override
+  String get detectingEnv => '正在检测玲珑环境...';
+
+  @override
+  String get stepEnvCheck => '环境检测';
+
+  @override
+  String get stepAppLoad => '应用加载';
+
+  @override
+  String get stepUpdateCheck => '更新检查';
+
+  @override
+  String get stepQueueRecovery => '队列恢复';
+
+  @override
+  String get launchFailedTitle => '启动失败';
+
+  @override
+  String get skip => '跳过';
+
+  @override
+  String get cannotGetVersion => '无法获取版本信息';
+
+  @override
+  String newVersionAvailable(String version, String current) {
+    return '发现新版本 $version！\n当前版本：$current';
+  }
+
+  @override
+  String get languageZh => '中文';
+
+  @override
+  String get themeFollowSystem => '跟随系统';
+
+  @override
+  String get themeLight => '浅色模式';
+
+  @override
+  String get themeDark => '深色模式';
+
+  @override
+  String get clearingCache => '清除中...';
+
+  @override
+  String get clearCache => '清除缓存';
+
+  @override
+  String get clearCacheDesc => '清除缓存可以释放存储空间，但会重新下载应用图标和部分数据。';
+
+  @override
+  String get clearCacheConfirm => '确认清除缓存';
+
+  @override
+  String get clearCacheMessage => '确定要清除所有缓存吗？';
+
+  @override
+  String get cacheCleared => '缓存已清除';
+
+  @override
+  String get clearCacheFailed => '清除缓存失败';
+
+  @override
+  String get appVersion => '应用版本';
+
+  @override
+  String get appCount => '已收录应用数量';
+
+  @override
+  String get systemArch => '系统架构';
+
+  @override
+  String get linglongVersion => '玲珑版本';
+
+  @override
+  String get checkNetwork => '请检查网络连接后重试';
+
+  @override
+  String get copyContainerCommand => '复制进入容器命令';
+
+  @override
+  String get commandCopiedToClipboard => '命令已复制到剪贴板';
+
+  @override
+  String get copyAppId => '复制应用 ID';
+
+  @override
+  String stopSuccess(String name) {
+    return '$name 已停止';
+  }
+
+  @override
+  String get stopFailed => '停止失败';
+
+  @override
+  String get processRefreshFailed => '进程列表刷新失败...';
+
+  @override
+  String get noRunningApps => '当前没有运行中的玲珑应用';
+
+  @override
+  String get notRefreshed => '尚未刷新';
+
+  @override
+  String get lastRefresh => '上次刷新';
+
+  @override
+  String get refreshing => '刷新中';
+
+  @override
+  String get appName => '应用名称';
+
+  @override
+  String get versionNo => '版本号';
+
+  @override
+  String get source => '来源';
+
+  @override
+  String get containerId => '容器 ID';
+
+  @override
+  String get appRunningTitle => '应用正在运行';
+
+  @override
+  String get appRunningMessage => '该应用正在运行，需要先关闭才能卸载';
+
+  @override
+  String get downgradeConfirm => '确认降级';
+
+  @override
+  String get downgradeMessage => '目标版本低于当前版本，确定要降级吗？';
+
+  @override
+  String get alreadyInstalledVersion => '已安装此版本';
+
+  @override
+  String get waiting => '等待中';
+
+  @override
+  String get completed => '已完成';
+
+  @override
+  String get remove => '移除';
+
+  @override
+  String get feedbackCategories => '商店缺陷,应用更新,应用故障';
+
+  @override
+  String get feedbackCategory => '问题分类';
+
+  @override
+  String get overview => '概述';
+
+  @override
+  String get overviewHint => '请简要描述问题';
+
+  @override
+  String get detailDescription => '详细描述';
+
+  @override
+  String get none => '无';
+
+  @override
+  String get clearSearch => '清除搜索词';
+
+  @override
+  String get minimize => '最小化';
+
+  @override
+  String get restore => '还原';
+
+  @override
+  String get maximize => '最大化';
+
+  @override
+  String get close => '关闭';
+
+  @override
+  String get goRecommend => '去推荐页看看吧';
+
+  @override
+  String get processRefreshFailedHint => '进程列表刷新失败，当前显示的是上次成功获取的数据';
+
+  @override
+  String get moreActions => '更多操作';
+
+  @override
+  String appRunningUninstallMessage(String name) {
+    return '$name 当前正在运行中，卸载前需要强制关闭所有运行实例。\n是否强制关闭并卸载？';
+  }
+
+  @override
+  String get forceCloseAndUninstall => '强制关闭并卸载';
+
+  @override
+  String downgradeMessageWithVersion(
+    String appName,
+    String currentVersion,
+    String targetVersion,
+  ) {
+    return '当前已安装 $appName v$currentVersion，您尝试安装较低的版本 v$targetVersion。\n降级安装可能导致功能异常，是否继续？';
+  }
+
+  @override
+  String get confirmDowngrade => '确认降级';
+
+  @override
+  String reinstallMessage(String appName, String version) {
+    return '$appName v$version 已安装。\n是否重新安装（将覆盖现有安装）？';
+  }
+
+  @override
+  String get forceReinstall => '强制重装';
+
+  @override
+  String get installingLabel => '正在安装';
+
+  @override
+  String waitingCount(int count) {
+    return '等待中 ($count)';
+  }
+
+  @override
+  String get detailDescriptionHint => '请详细描述您遇到的问题';
+
+  @override
+  String get linglongCommunity => '玲珑社区';
+
+  @override
+  String get unknown => '未知';
+
+  @override
+  String get copyPid => '复制 PID';
+
+  @override
+  String get copyContainerId => '复制容器 ID';
+
+  @override
+  String get refreshProcessList => '刷新进程列表';
+
+  @override
+  String get stopProcess => '停止进程';
+
+  @override
+  String get checkUpdateNetworkError => '检查更新失败，请检查网络连接';
+
+  @override
+  String get pruneServiceTitle => '清理废弃基础服务';
+
+  @override
+  String get pruneServiceMessage =>
+      '将执行 ll-cli prune 命令，移除所有已不再被任何应用依赖的基础运行服务。\n\n清理后可节省磁盘空间，但如进行中有其他操作可能需要重新下载。';
+
+  @override
+  String get pruneServiceSuccess => '废弃基础服务已清理';
+
+  @override
+  String get pruneServiceFailed => '清理失败，请稍后重试';
+
+  @override
+  String get clearCacheHint => '清除缓存可以释放存储空间，但可能会导致应用需要重新加载数据。';
+
+  @override
+  String get pruneBaseServiceMessage =>
+      '将执行 ll-cli prune 命令，移除所有已不再被任何应用依赖的基础运行服务。\n\n清理后可节省磁盘空间，但如进行中有其他操作可能需要重新下载。';
+
+  @override
+  String get clean => '清理';
+
+  @override
+  String get baseServiceCleaned => '废弃基础服务已清理';
+
+  @override
+  String get cleanFailed => '清理失败，请稍后重试';
+
+  @override
+  String appCountValue(int count) {
+    return '$count 个';
+  }
+
+  @override
+  String get llCliVersionLabel => 'll-cli 版本';
 }

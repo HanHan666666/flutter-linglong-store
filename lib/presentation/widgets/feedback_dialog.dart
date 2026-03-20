@@ -47,6 +47,10 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    // 从国际化获取分类列表，如果不存在则使用默认值
+    final categories = l10n?.feedbackCategories.split(',') ??
+        _kFeedbackCategories;
+
     return AlertDialog(
       title: Text(l10n?.feedbackTitle ?? '意见反馈'),
       content: SizedBox(
@@ -58,7 +62,7 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
             children: [
               // 问题分类多选
               Text(
-                '问题分类',
+                l10n?.feedbackCategory ?? '问题分类',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -67,7 +71,7 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
-                children: _kFeedbackCategories.map((cat) {
+                children: categories.map((cat) {
                   final selected = _selectedCategories.contains(cat);
                   return FilterChip(
                     label: Text(cat),
@@ -89,10 +93,10 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
               // 概述输入框
               TextField(
                 controller: _overviewController,
-                decoration: const InputDecoration(
-                  labelText: '概述',
-                  hintText: '请简要描述问题',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n?.overview ?? '概述',
+                  hintText: l10n?.overviewHint ?? '请简要描述问题',
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
@@ -101,11 +105,11 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
               TextField(
                 controller: _descriptionController,
                 maxLines: 5,
-                decoration: const InputDecoration(
-                  labelText: '详细描述',
-                  hintText: '请详细描述您遇到的问题',
+                decoration: InputDecoration(
+                  labelText: l10n?.detailDescription ?? '详细描述',
+                  hintText: l10n?.detailDescriptionHint ?? '请详细描述您遇到的问题',
                   alignLabelWithHint: true,
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 8),
@@ -169,13 +173,15 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
       }
 
       // 构建消息体（与旧版格式保持一致）
+      final l10n = AppLocalizations.of(context);
+      final noneText = l10n?.none ?? '无';
       final categories = _selectedCategories.isEmpty
-          ? '无'
+          ? noneText
           : _selectedCategories.join(', ');
       final message =
           '分类: $categories\n'
-          '概述: ${overview.isEmpty ? "无" : overview}\n'
-          '描述: ${description.isEmpty ? "无" : description}';
+          '概述: ${overview.isEmpty ? noneText : overview}\n'
+          '描述: ${description.isEmpty ? noneText : description}';
 
       final globalState = ref.read(globalAppProvider);
       final settingState = ref.read(settingProvider);

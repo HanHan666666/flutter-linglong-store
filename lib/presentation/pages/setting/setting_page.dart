@@ -94,7 +94,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       final tagName = response.data['tag_name'] as String?;
       if (!mounted) return;
       if (tagName == null) {
-        _showSnackBar('无法获取版本信息');
+        _showSnackBar(
+          AppLocalizations.of(context)?.cannotGetVersion ?? '无法获取版本信息',
+        );
         return;
       }
       final currentVersion =
@@ -134,7 +136,11 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         ),
       );
     } catch (e) {
-      if (mounted) _showSnackBar('检查更新失败，请检查网络连接');
+      if (mounted) {
+        _showSnackBar(
+          AppLocalizations.of(context)?.updateCheckFailed ?? '检查更新失败，请检查网络连接',
+        );
+      }
     } finally {
       if (mounted) setState(() => _isCheckingUpdate = false);
     }
@@ -225,6 +231,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
   /// 构建语言设置部分
   Widget _buildLanguageSection(BuildContext context, SettingState state) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -239,7 +246,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           _buildLanguageTile(
             context,
             locale: const Locale('zh'),
-            label: '中文',
+            label: l10n?.languageZh ?? '中文',
             isSelected: state.locale.languageCode == 'zh',
           ),
           _buildDivider(context),
@@ -278,6 +285,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
   /// 构建主题设置部分
   Widget _buildThemeSection(BuildContext context, SettingState state) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -292,7 +300,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           _buildThemeTile(
             context,
             mode: ThemeMode.system,
-            label: '跟随系统',
+            label: l10n?.themeFollowSystem ?? '跟随系统',
             icon: Icons.brightness_auto,
             isSelected: state.themeMode == ThemeMode.system,
           ),
@@ -300,7 +308,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           _buildThemeTile(
             context,
             mode: ThemeMode.light,
-            label: '浅色模式',
+            label: l10n?.themeLight ?? '浅色模式',
             icon: Icons.light_mode,
             isSelected: state.themeMode == ThemeMode.light,
           ),
@@ -308,7 +316,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           _buildThemeTile(
             context,
             mode: ThemeMode.dark,
-            label: '深色模式',
+            label: l10n?.themeDark ?? '深色模式',
             icon: Icons.dark_mode,
             isSelected: state.themeMode == ThemeMode.dark,
           ),
@@ -350,6 +358,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
   /// 构建缓存管理部分
   Widget _buildCacheSection(BuildContext context, SettingState state) {
     final cacheSizeText = formatBytes(state.cacheSize);
+    final l10n = AppLocalizations.of(context);
 
     return Card(
       elevation: 0,
@@ -372,7 +381,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(context)?.cacheSize ?? '缓存大小',
+                      l10n?.cacheSize ?? '缓存大小',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 4),
@@ -397,7 +406,11 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.cleaning_services, size: 18),
-                  label: Text(state.isClearingCache ? '清除中...' : '清除缓存'),
+                  label: Text(
+                    state.isClearingCache
+                        ? (l10n?.clearingCache ?? '清除中...')
+                        : (l10n?.clearCache ?? '清除缓存'),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(
                       context,
@@ -411,7 +424,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '清除缓存可以释放存储空间，但可能会导致应用需要重新加载数据。',
+              l10n?.clearCacheHint ?? '清除缓存可以释放存储空间，但可能会导致应用需要重新加载数据。',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -424,12 +437,13 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
   /// 清除缓存
   Future<void> _clearCache(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await ConfirmDialog.show(
       context,
-      title: '确认清除缓存',
-      message: '确定要清除所有缓存数据吗？这可能会影响应用的加载速度。',
-      confirmText: '清除',
-      cancelText: '取消',
+      title: l10n?.clearCacheConfirm ?? '确认清除缓存',
+      message: l10n?.clearCacheMessage ?? '确定要清除所有缓存数据吗？这可能会影响应用的加载速度。',
+      confirmText: l10n?.clearCache ?? '清除',
+      cancelText: l10n?.cancel ?? '取消',
     );
 
     if (confirmed != true) return;
@@ -440,7 +454,11 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(success ? '缓存已清除' : '清除缓存失败'),
+        content: Text(
+          success
+              ? (l10n?.cacheCleared ?? '缓存已清除')
+              : (l10n?.clearCacheFailed ?? '清除缓存失败'),
+        ),
         backgroundColor: success
             ? Theme.of(context).colorScheme.primary
             : Theme.of(context).colorScheme.error,
@@ -545,13 +563,14 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
   /// 执行清理废弃基础服务
   Future<void> _pruneBaseService(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await ConfirmDialog.show(
       context,
-      title: '清理废弃基础服务',
-      message:
+      title: l10n?.cleanDeprecatedServices ?? '清理废弃基础服务',
+      message: l10n?.pruneBaseServiceMessage ??
           '将执行 ll-cli prune 命令，移除所有已不再被任何应用依赖的基础运行服务。\n\n清理后可节省磁盘空间，但如进行中有其他操作可能需要重新下载。',
-      confirmText: '清理',
-      cancelText: '取消',
+      confirmText: l10n?.clean ?? '清理',
+      cancelText: l10n?.cancel ?? '取消',
     );
 
     if (confirmed != true) return;
@@ -562,7 +581,11 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(success ? '废弃基础服务已清理' : '清理失败，请稍后重试'),
+        content: Text(
+          success
+              ? (l10n?.baseServiceCleaned ?? '废弃基础服务已清理')
+              : (l10n?.cleanFailed ?? '清理失败，请稍后重试'),
+        ),
         backgroundColor: success
             ? Theme.of(context).colorScheme.primary
             : Theme.of(context).colorScheme.error,
@@ -576,6 +599,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     SettingState state,
     GlobalAppState globalState,
   ) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -622,44 +646,46 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             // 版本信息
             _buildInfoRow(
               context,
-              label: '应用版本',
+              label: l10n?.appVersion ?? '应用版本',
               value: state.appVersion ?? AppConfig.appVersion,
             ),
             _buildDivider(context),
 
             // 开发者信息
-            _buildInfoRow(context, label: '开发者', value: '玲珑社区'),
+            _buildInfoRow(context, label: l10n?.developer ?? '开发者', value: l10n?.linglongCommunity ?? '玲珑社区'),
             _buildDivider(context),
 
             // 已收录应用数量
             _buildInfoRow(
               context,
-              label: '已收录应用数量',
-              value: _appTotalCount < 0 ? '加载中...' : '$_appTotalCount 个',
+              label: l10n?.appCount ?? '已收录应用数量',
+              value: _appTotalCount < 0
+                  ? (l10n?.loading ?? '加载中...')
+                  : l10n?.appCountValue(_appTotalCount) ?? '$_appTotalCount 个',
             ),
             _buildDivider(context),
 
             // 系统架构
             _buildInfoRow(
               context,
-              label: '系统架构',
-              value: globalState.arch ?? '未知',
+              label: l10n?.systemArch ?? '系统架构',
+              value: globalState.arch ?? (l10n?.unknown ?? '未知'),
             ),
             _buildDivider(context),
 
             // 玲珑版本
             _buildInfoRow(
               context,
-              label: '玲珑版本',
-              value: globalState.llVersion ?? '未知',
+              label: l10n?.linglongVersion ?? '玲珑版本',
+              value: globalState.llVersion ?? (l10n?.unknown ?? '未知'),
             ),
             _buildDivider(context),
 
             // ll-cli 版本
             _buildInfoRow(
               context,
-              label: 'll-cli 版本',
-              value: globalState.llBinVersion ?? '未知',
+              label: l10n?.llCliVersion ?? 'll-cli 版本',
+              value: globalState.llBinVersion ?? (l10n?.unknown ?? '未知'),
             ),
 
             const SizedBox(height: 16),
@@ -678,7 +704,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                         )
                       : const Icon(Icons.system_update_alt, size: 18),
                   label: Text(
-                    AppLocalizations.of(context)?.checkNewVersion ?? '检查新版本',
+                    l10n?.checkNewVersion ?? '检查新版本',
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -689,7 +715,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   ),
                   icon: const Icon(Icons.feedback_outlined, size: 18),
                   label: Text(
-                    AppLocalizations.of(context)?.feedbackMenu ?? '意见反馈',
+                    l10n?.feedbackMenu ?? '意见反馈',
                   ),
                 ),
               ],
@@ -711,7 +737,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   onPressed: () => _openUrl('https://linglong.dev'),
                   icon: const Icon(Icons.language, size: 18),
                   label: Text(
-                    AppLocalizations.of(context)?.officialWebsite ?? '官网',
+                    l10n?.officialWebsite ?? '官网',
                   ),
                 ),
               ],

@@ -62,6 +62,7 @@
   "updateComplete": "Update complete",
   "noApps": "No apps available",
   "noInstalledApps": "No installed apps",
+  "noInstalledAppsHint": "You haven't installed any Linglong apps yet, check the recommendations",
   "noUpdateApps": "No updates available",
   "version": "Version",
   "size": "Size",
@@ -195,5 +196,233 @@
       }
     }
   },
-  "commandCopied": "Command copied to clipboard, paste and run in terminal"
+  "commandCopied": "Command copied to clipboard, paste and run in terminal",
+  "skipCheck": "Skip Check",
+  "loadFailed": "Load Failed",
+  "shortcutCreated": "Shortcut Created",
+  "shortcutCreateFailed": "Creation Failed: {error}",
+  "@shortcutCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "envCheckTitle": "Environment Check",
+  "checkingLinglongEnv": "Checking Linglong environment...",
+  "unknownStatus": "Unknown Status",
+  "llCliVersion": "ll-cli Version",
+  "notDetected": "Not Detected",
+  "errorMessage": "Error Message",
+  "installingLinglong": "Installing...",
+  "appIntroduction": "App Introduction",
+  "collapse": "Collapse",
+  "expandAll": "Expand All",
+  "packageName": "Package Name",
+  "architecture": "Architecture",
+  "channelLabel": "Channel",
+  "runtime": "Runtime",
+  "license": "License",
+  "homepage": "Homepage",
+  "appInfo": "App Information",
+  "versionHistory": "Version History",
+  "versionListLoadFailed": "Version list failed to load, please retry",
+  "versionListUpdateFailed": "Version list update failed, showing last results",
+  "uninstallApp": "Uninstall App",
+  "uninstallConfirmMessage": "Are you sure you want to uninstall {name}?\nApp data will be deleted and cannot be recovered.",
+  "@uninstallConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noDescription": "No description available",
+  "categoryLabel": "Category",
+  "searchNotFound": "No related apps found",
+  "searchTryOtherKeywords": "Try other keywords",
+  "searchInputHint": "Enter keywords in the search box above",
+  "searchPressEnter": "Press Enter to search",
+  "searchResultCount": "Found {count} results",
+  "@searchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchInstalledApps": "Search installed apps",
+  "noMatchingApp": "No matching app found",
+  "noMatchingAppHint": "No app found for \"{query}\"",
+  "@noMatchingAppHint": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "updateCount": "{count} apps available for update",
+  "@updateCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updating": "Updating...",
+  "updateAll": "Update All",
+  "updateCheckFailed": "Update check failed",
+  "noUpdate": "No updates",
+  "allAppsUpToDate": "All your apps are up to date",
+  "noMore": "No more",
+  "appTitleShort": "Linglong Store",
+  "detectingEnv": "Detecting Linglong environment...",
+  "stepEnvCheck": "Environment Check",
+  "stepAppLoad": "Loading Apps",
+  "stepUpdateCheck": "Checking Updates",
+  "stepQueueRecovery": "Recovering Queue",
+  "launchFailedTitle": "Launch failed",
+  "skip": "Skip",
+  "cannotGetVersion": "Cannot get version info",
+  "newVersionAvailable": "New version {version} available!\nCurrent: {current}",
+  "@newVersionAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      }
+    }
+  },
+  "languageZh": "Chinese",
+  "themeFollowSystem": "Follow System",
+  "themeLight": "Light Mode",
+  "themeDark": "Dark Mode",
+  "clearingCache": "Clearing...",
+  "clearCache": "Clear Cache",
+  "clearCacheDesc": "Clearing cache can free up storage space, but will re-download app icons and some data.",
+  "clearCacheConfirm": "Confirm Clear Cache",
+  "clearCacheMessage": "Clear all cache?",
+  "cacheCleared": "Cache cleared",
+  "clearCacheFailed": "Failed to clear cache",
+  "appVersion": "App Version",
+  "appCount": "Total Apps",
+  "systemArch": "System Architecture",
+  "linglongVersion": "Linglong Version",
+  "checkNetwork": "Please check network and retry",
+  "copyContainerCommand": "Copy container command",
+  "commandCopiedToClipboard": "Command copied to clipboard",
+  "copyAppId": "Copy App ID",
+  "stopSuccess": "{name} stopped",
+  "@stopSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stopFailed": "Stop failed",
+  "processRefreshFailed": "Process list refresh failed...",
+  "noRunningApps": "No running apps",
+  "notRefreshed": "Not refreshed",
+  "lastRefresh": "Last refresh",
+  "refreshing": "Refreshing",
+  "appName": "App Name",
+  "versionNo": "Version",
+  "source": "Source",
+  "containerId": "Container ID",
+  "appRunningTitle": "App is running",
+  "appRunningMessage": "App is running, close it first",
+  "downgradeConfirm": "Confirm Downgrade",
+  "downgradeMessage": "Target version is lower, confirm downgrade?",
+  "alreadyInstalledVersion": "This version is installed",
+  "waiting": "Waiting",
+  "completed": "Completed",
+  "remove": "Remove",
+  "feedbackCategories": "Store Bug,App Update,App Issue",
+  "feedbackCategory": "Category",
+  "overview": "Overview",
+  "overviewHint": "Briefly describe the issue",
+  "detailDescription": "Detailed Description",
+  "none": "None",
+  "clearSearch": "Clear search",
+  "minimize": "Minimize",
+  "restore": "Restore",
+  "maximize": "Maximize",
+  "close": "Close",
+  "goRecommend": "Check recommendations",
+  "processRefreshFailedHint": "Process list refresh failed, showing last successful data",
+  "moreActions": "More Actions",
+  "appRunningUninstallMessage": "{name} is currently running. All instances must be closed before uninstalling.\nForce close and uninstall?",
+  "@appRunningUninstallMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "forceCloseAndUninstall": "Force Close & Uninstall",
+  "downgradeMessageWithVersion": "{appName} v{currentVersion} is installed, you're trying to install lower version v{targetVersion}.\nDowngrade may cause issues, continue?",
+  "@downgradeMessageWithVersion": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "currentVersion": {
+        "type": "String"
+      },
+      "targetVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmDowngrade": "Confirm Downgrade",
+  "reinstallMessage": "{appName} v{version} is already installed.\nReinstall (will overwrite existing installation)?",
+  "@reinstallMessage": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "forceReinstall": "Force Reinstall",
+  "installingLabel": "Installing",
+  "waitingCount": "Waiting ({count})",
+  "@waitingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "detailDescriptionHint": "Describe the issue in detail",
+  "linglongCommunity": "Linglong Community",
+  "unknown": "Unknown",
+  "copyPid": "Copy PID",
+  "copyContainerId": "Copy Container ID",
+  "refreshProcessList": "Refresh Process List",
+  "stopProcess": "Stop Process",
+  "checkUpdateNetworkError": "Update check failed, please check network connection",
+  "pruneServiceTitle": "Clean Deprecated Base Services",
+  "pruneServiceMessage": "Will execute ll-cli prune to remove all unused base runtime services.\n\nThis frees up disk space, but ongoing operations may need to re-download.",
+  "pruneServiceSuccess": "Deprecated base services cleaned",
+  "pruneServiceFailed": "Cleanup failed, please retry later",
+  "clearCacheHint": "Clearing cache can free up storage space, but may require reloading app data.",
+  "pruneBaseServiceMessage": "Will execute ll-cli prune to remove all unused base runtime services.\n\nThis frees up disk space, but ongoing operations may need to re-download.",
+  "clean": "Clean",
+  "baseServiceCleaned": "Deprecated base services cleaned",
+  "cleanFailed": "Cleanup failed, please retry later",
+  "appCountValue": "{count} apps",
+  "@appCountValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "llCliVersionLabel": "ll-cli Version"
 }

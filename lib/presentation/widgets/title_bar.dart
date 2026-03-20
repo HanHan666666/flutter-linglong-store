@@ -4,6 +4,7 @@ import 'package:window_manager/window_manager.dart';
 
 import '../../core/config/routes.dart';
 import '../../core/config/theme.dart';
+import '../../core/i18n/l10n/app_localizations.dart';
 
 /// 自定义标题栏
 ///
@@ -79,6 +80,7 @@ class CustomTitleBar extends StatelessWidget {
 
   /// 构建 Logo 区域
   Widget _buildLogoSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -90,9 +92,9 @@ class CustomTitleBar extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.sm),
         // 应用名称
-        const Text(
-          '玲珑应用商店社区版',
-          style: TextStyle(
+        Text(
+          l10n?.appTitle ?? '玲珑应用商店社区版',
+          style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w400,
             // 标题区文字颜色跟随主题变化，需在生成时通过 context 获取
@@ -187,6 +189,7 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       constraints: const BoxConstraints(maxWidth: 534),
       height: 32,
@@ -223,7 +226,7 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
                 focusNode: _focusNode,
                 maxLines: 1,
                 decoration: InputDecoration(
-                  hintText: '在这里搜索你想搜索的应用',
+                  hintText: l10n?.searchPlaceholder ?? '在这里搜索你想搜索的应用',
                   hintStyle: AppTextStyles.caption.copyWith(
                     fontSize: 13,
                     color: context.appColors.textTertiary,
@@ -252,7 +255,7 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
                           onPressed: _clearSearch,
                           splashRadius: 14,
                           padding: EdgeInsets.zero,
-                          tooltip: '清除搜索词',
+                          tooltip: l10n?.clearSearch ?? '清除搜索词',
                         )
                       : null,
                 ),
@@ -321,23 +324,26 @@ class _WindowControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         _WindowButton(
           icon: Icons.remove,
           onPressed: onMinimize,
-          tooltip: '最小化',
+          tooltip: l10n?.minimize ?? '最小化',
         ),
         _WindowButton(
           icon: isMaximized ? Icons.filter_none : Icons.crop_square,
           onPressed: onMaximize,
-          tooltip: isMaximized ? '还原' : '最大化',
+          tooltip: isMaximized
+              ? (l10n?.restore ?? '还原')
+              : (l10n?.maximize ?? '最大化'),
         ),
         _WindowButton(
           icon: Icons.close,
           onPressed: onClose,
-          tooltip: '关闭',
+          tooltip: l10n?.close ?? '关闭',
           isClose: true,
         ),
       ],

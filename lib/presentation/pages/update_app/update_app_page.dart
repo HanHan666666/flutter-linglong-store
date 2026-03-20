@@ -5,6 +5,7 @@ import '../../../application/providers/app_operation_queue_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
 import '../../../application/providers/update_apps_provider.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/install_task.dart';
 import '../../../domain/models/install_progress.dart';
 import '../../widgets/app_icon.dart';
@@ -94,6 +95,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
       return const SizedBox.shrink();
     }
     final isUpdating = installState.hasActiveTasks();
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -111,7 +113,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
           // 更新数量提示
           Expanded(
             child: Text(
-              '共 ${state.count} 个应用可更新',
+              l10n?.updateCount(state.count) ?? '共 ${state.count} 个应用可更新',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -128,7 +130,9 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.system_update, size: 18),
-            label: Text(isUpdating ? '正在更新...' : '全部更新'),
+            label: Text(isUpdating
+                ? (l10n?.updating ?? '正在更新...')
+                : (l10n?.updateAll ?? '全部更新')),
           ),
         ],
       ),
@@ -141,6 +145,8 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
     UpdateAppsState state,
     InstallQueueState installState,
   ) {
+    final l10n = AppLocalizations.of(context);
+
     // 加载中状态
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -150,9 +156,9 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
     if (state.error != null) {
       return EmptyState(
         icon: Icons.error_outline,
-        title: '检查更新失败',
+        title: l10n?.updateCheckFailed ?? '检查更新失败',
         description: state.error,
-        retryText: '重试',
+        retryText: l10n?.retry ?? '重试',
         onRetry: () {
           ref.read(updateAppsProvider.notifier).checkUpdates();
         },
@@ -161,10 +167,10 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
 
     // 空状态
     if (state.apps.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.system_update_alt,
-        title: '暂无更新',
-        description: '您的所有应用都是最新版本',
+        title: l10n?.noUpdate ?? '暂无更新',
+        description: l10n?.allAppsUpToDate ?? '您的所有应用都是最新版本',
       );
     }
 

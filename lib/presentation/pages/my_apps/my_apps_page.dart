@@ -231,19 +231,20 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
   }
 
   Widget _buildHeader(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       alignment: Alignment.centerLeft,
       child: Row(
         children: [
           _TabTitle(
-            label: '我的应用',
+            label: l10n?.myApps ?? '我的应用',
             isActive: _activeTab == _MyAppsTab.app,
             onTap: () => _setActiveTab(_MyAppsTab.app),
           ),
           const SizedBox(width: 24),
           _TabTitle(
-            label: '玲珑进程',
+            label: l10n?.linglongProcess ?? '玲珑进程',
             isActive: _activeTab == _MyAppsTab.process,
             onTap: () => _setActiveTab(_MyAppsTab.process),
           ),
@@ -264,7 +265,8 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
           });
         },
         decoration: InputDecoration(
-          hintText: '搜索已安装的应用',
+          hintText: AppLocalizations.of(context)?.searchInstalledApps ??
+              '搜索已安装的应用',
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
@@ -298,9 +300,9 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
     if (state.error != null) {
       return EmptyState(
         icon: Icons.error_outline,
-        title: '加载失败',
+        title: AppLocalizations.of(context)?.loadFailed ?? '加载失败',
         description: state.error,
-        retryText: '重试',
+        retryText: AppLocalizations.of(context)?.retry ?? '重试',
         onRetry: () {
           ref.read(installedAppsProvider.notifier).refresh();
         },
@@ -308,19 +310,22 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
     }
 
     if (state.apps.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.apps_outage,
-        title: '暂无已安装应用',
-        description: '您还没有安装任何玲珑应用，去推荐页看看吧',
+        title: AppLocalizations.of(context)?.noInstalledApps ?? '暂无已安装应用',
+        description: AppLocalizations.of(context)?.noInstalledAppsHint ??
+            '您还没有安装任何玲珑应用，去推荐页看看吧',
       );
     }
 
     if (filteredApps.isEmpty) {
+      final l10n = AppLocalizations.of(context);
       return EmptyState(
         icon: Icons.search_off,
-        title: '未找到匹配的应用',
-        description: '没有找到 "$_searchQuery" 相关的应用',
-        retryText: '清除搜索',
+        title: l10n?.noMatchingApp ?? '未找到匹配的应用',
+        description: l10n?.noMatchingAppHint(_searchQuery) ??
+            '没有找到 "$_searchQuery" 相关的应用',
+        retryText: l10n?.clearSearch ?? '清除搜索',
         onRetry: () {
           _searchController.clear();
           setState(() {
@@ -341,6 +346,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
             appId: app.appId,
             latestVersion: app.version,
           );
+          final l10n = AppLocalizations.of(context);
           return AppCard(
             appId: app.appId,
             name: app.name,
@@ -361,7 +367,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
             menuActions: [
               AppCardMenuAction(
                 value: 'uninstall',
-                label: '卸载',
+                label: l10n?.uninstall ?? '卸载',
                 icon: Icons.delete_outline,
                 onSelected: () => _uninstallApp(app),
               ),

@@ -194,7 +194,7 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
   /// 构建应用名称
   Widget _buildAppName(BuildContext context) {
     return Text(
-      '玲珑应用商店',
+      AppLocalizations.of(context)?.appTitleShort ?? '玲珑应用商店',
       style: AppTextStyles.title1.copyWith(
         color: context.appColors.textPrimary,
         fontWeight: FontWeight.w600,
@@ -211,7 +211,7 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
     // 如果环境正在检测，显示环境检测状态
     String message = launchState.stepInfo.message;
     if (envState.isChecking) {
-      message = '正在检测玲珑环境...';
+      message = AppLocalizations.of(context)?.detectingEnv ?? '正在检测玲珑环境...';
     }
 
     return AnimatedSwitcher(
@@ -253,11 +253,12 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
 
   /// 构建步骤指示器
   Widget _buildStepIndicators(BuildContext context, LaunchState launchState) {
+    final l10n = AppLocalizations.of(context);
     final steps = [
-      (LaunchStep.environmentCheck, '环境检测'),
-      (LaunchStep.installedAppsInit, '应用加载'),
-      (LaunchStep.updateCheck, '更新检查'),
-      (LaunchStep.queueRecovery, '队列恢复'),
+      (LaunchStep.environmentCheck, l10n?.stepEnvCheck ?? '环境检测'),
+      (LaunchStep.installedAppsInit, l10n?.stepAppLoad ?? '应用加载'),
+      (LaunchStep.updateCheck, l10n?.stepUpdateCheck ?? '更新检查'),
+      (LaunchStep.queueRecovery, l10n?.stepQueueRecovery ?? '队列恢复'),
     ];
 
     return Row(
@@ -320,7 +321,9 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
 
           // 错误消息
           Text(
-            launchState.errorMessage ?? '启动失败',
+            launchState.errorMessage ??
+                AppLocalizations.of(context)?.launchFailedTitle ??
+                '启动失败',
             style: AppTextStyles.body.copyWith(
               color: context.appColors.textPrimary,
             ),
@@ -360,7 +363,7 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
                   ref.read(launchSequenceProvider.notifier).skipCurrentStep();
                 },
                 child: Text(
-                  '跳过',
+                  AppLocalizations.of(context)?.skip ?? '跳过',
                   style: TextStyle(color: context.appColors.textSecondary),
                 ),
               ),

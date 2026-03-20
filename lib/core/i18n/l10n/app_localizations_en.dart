@@ -197,6 +197,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noInstalledApps => 'No installed apps';
 
   @override
+  String get noInstalledAppsHint =>
+      'You haven\'t installed any Linglong apps yet, check the recommendations';
+
+  @override
   String get noUpdateApps => 'No updates available';
 
   @override
@@ -409,4 +413,436 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get commandCopied =>
       'Command copied to clipboard, paste and run in terminal';
+
+  @override
+  String get skipCheck => 'Skip Check';
+
+  @override
+  String get loadFailed => 'Load Failed';
+
+  @override
+  String get shortcutCreated => 'Shortcut Created';
+
+  @override
+  String shortcutCreateFailed(String error) {
+    return 'Creation Failed: $error';
+  }
+
+  @override
+  String get envCheckTitle => 'Environment Check';
+
+  @override
+  String get checkingLinglongEnv => 'Checking Linglong environment...';
+
+  @override
+  String get unknownStatus => 'Unknown Status';
+
+  @override
+  String get llCliVersion => 'll-cli Version';
+
+  @override
+  String get notDetected => 'Not Detected';
+
+  @override
+  String get errorMessage => 'Error Message';
+
+  @override
+  String get installingLinglong => 'Installing...';
+
+  @override
+  String get appIntroduction => 'App Introduction';
+
+  @override
+  String get collapse => 'Collapse';
+
+  @override
+  String get expandAll => 'Expand All';
+
+  @override
+  String get packageName => 'Package Name';
+
+  @override
+  String get architecture => 'Architecture';
+
+  @override
+  String get channelLabel => 'Channel';
+
+  @override
+  String get runtime => 'Runtime';
+
+  @override
+  String get license => 'License';
+
+  @override
+  String get homepage => 'Homepage';
+
+  @override
+  String get appInfo => 'App Information';
+
+  @override
+  String get versionHistory => 'Version History';
+
+  @override
+  String get versionListLoadFailed =>
+      'Version list failed to load, please retry';
+
+  @override
+  String get versionListUpdateFailed =>
+      'Version list update failed, showing last results';
+
+  @override
+  String get uninstallApp => 'Uninstall App';
+
+  @override
+  String uninstallConfirmMessage(String name) {
+    return 'Are you sure you want to uninstall $name?\nApp data will be deleted and cannot be recovered.';
+  }
+
+  @override
+  String get noDescription => 'No description available';
+
+  @override
+  String get categoryLabel => 'Category';
+
+  @override
+  String get searchNotFound => 'No related apps found';
+
+  @override
+  String get searchTryOtherKeywords => 'Try other keywords';
+
+  @override
+  String get searchInputHint => 'Enter keywords in the search box above';
+
+  @override
+  String get searchPressEnter => 'Press Enter to search';
+
+  @override
+  String searchResultCount(int count) {
+    return 'Found $count results';
+  }
+
+  @override
+  String get searchInstalledApps => 'Search installed apps';
+
+  @override
+  String get noMatchingApp => 'No matching app found';
+
+  @override
+  String noMatchingAppHint(String query) {
+    return 'No app found for \"$query\"';
+  }
+
+  @override
+  String updateCount(int count) {
+    return '$count apps available for update';
+  }
+
+  @override
+  String get updating => 'Updating...';
+
+  @override
+  String get updateAll => 'Update All';
+
+  @override
+  String get updateCheckFailed => 'Update check failed';
+
+  @override
+  String get noUpdate => 'No updates';
+
+  @override
+  String get allAppsUpToDate => 'All your apps are up to date';
+
+  @override
+  String get noMore => 'No more';
+
+  @override
+  String get appTitleShort => 'Linglong Store';
+
+  @override
+  String get detectingEnv => 'Detecting Linglong environment...';
+
+  @override
+  String get stepEnvCheck => 'Environment Check';
+
+  @override
+  String get stepAppLoad => 'Loading Apps';
+
+  @override
+  String get stepUpdateCheck => 'Checking Updates';
+
+  @override
+  String get stepQueueRecovery => 'Recovering Queue';
+
+  @override
+  String get launchFailedTitle => 'Launch failed';
+
+  @override
+  String get skip => 'Skip';
+
+  @override
+  String get cannotGetVersion => 'Cannot get version info';
+
+  @override
+  String newVersionAvailable(String version, String current) {
+    return 'New version $version available!\nCurrent: $current';
+  }
+
+  @override
+  String get languageZh => 'Chinese';
+
+  @override
+  String get themeFollowSystem => 'Follow System';
+
+  @override
+  String get themeLight => 'Light Mode';
+
+  @override
+  String get themeDark => 'Dark Mode';
+
+  @override
+  String get clearingCache => 'Clearing...';
+
+  @override
+  String get clearCache => 'Clear Cache';
+
+  @override
+  String get clearCacheDesc =>
+      'Clearing cache can free up storage space, but will re-download app icons and some data.';
+
+  @override
+  String get clearCacheConfirm => 'Confirm Clear Cache';
+
+  @override
+  String get clearCacheMessage => 'Clear all cache?';
+
+  @override
+  String get cacheCleared => 'Cache cleared';
+
+  @override
+  String get clearCacheFailed => 'Failed to clear cache';
+
+  @override
+  String get appVersion => 'App Version';
+
+  @override
+  String get appCount => 'Total Apps';
+
+  @override
+  String get systemArch => 'System Architecture';
+
+  @override
+  String get linglongVersion => 'Linglong Version';
+
+  @override
+  String get checkNetwork => 'Please check network and retry';
+
+  @override
+  String get copyContainerCommand => 'Copy container command';
+
+  @override
+  String get commandCopiedToClipboard => 'Command copied to clipboard';
+
+  @override
+  String get copyAppId => 'Copy App ID';
+
+  @override
+  String stopSuccess(String name) {
+    return '$name stopped';
+  }
+
+  @override
+  String get stopFailed => 'Stop failed';
+
+  @override
+  String get processRefreshFailed => 'Process list refresh failed...';
+
+  @override
+  String get noRunningApps => 'No running apps';
+
+  @override
+  String get notRefreshed => 'Not refreshed';
+
+  @override
+  String get lastRefresh => 'Last refresh';
+
+  @override
+  String get refreshing => 'Refreshing';
+
+  @override
+  String get appName => 'App Name';
+
+  @override
+  String get versionNo => 'Version';
+
+  @override
+  String get source => 'Source';
+
+  @override
+  String get containerId => 'Container ID';
+
+  @override
+  String get appRunningTitle => 'App is running';
+
+  @override
+  String get appRunningMessage => 'App is running, close it first';
+
+  @override
+  String get downgradeConfirm => 'Confirm Downgrade';
+
+  @override
+  String get downgradeMessage => 'Target version is lower, confirm downgrade?';
+
+  @override
+  String get alreadyInstalledVersion => 'This version is installed';
+
+  @override
+  String get waiting => 'Waiting';
+
+  @override
+  String get completed => 'Completed';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get feedbackCategories => 'Store Bug,App Update,App Issue';
+
+  @override
+  String get feedbackCategory => 'Category';
+
+  @override
+  String get overview => 'Overview';
+
+  @override
+  String get overviewHint => 'Briefly describe the issue';
+
+  @override
+  String get detailDescription => 'Detailed Description';
+
+  @override
+  String get none => 'None';
+
+  @override
+  String get clearSearch => 'Clear search';
+
+  @override
+  String get minimize => 'Minimize';
+
+  @override
+  String get restore => 'Restore';
+
+  @override
+  String get maximize => 'Maximize';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get goRecommend => 'Check recommendations';
+
+  @override
+  String get processRefreshFailedHint =>
+      'Process list refresh failed, showing last successful data';
+
+  @override
+  String get moreActions => 'More Actions';
+
+  @override
+  String appRunningUninstallMessage(String name) {
+    return '$name is currently running. All instances must be closed before uninstalling.\nForce close and uninstall?';
+  }
+
+  @override
+  String get forceCloseAndUninstall => 'Force Close & Uninstall';
+
+  @override
+  String downgradeMessageWithVersion(
+    String appName,
+    String currentVersion,
+    String targetVersion,
+  ) {
+    return '$appName v$currentVersion is installed, you\'re trying to install lower version v$targetVersion.\nDowngrade may cause issues, continue?';
+  }
+
+  @override
+  String get confirmDowngrade => 'Confirm Downgrade';
+
+  @override
+  String reinstallMessage(String appName, String version) {
+    return '$appName v$version is already installed.\nReinstall (will overwrite existing installation)?';
+  }
+
+  @override
+  String get forceReinstall => 'Force Reinstall';
+
+  @override
+  String get installingLabel => 'Installing';
+
+  @override
+  String waitingCount(int count) {
+    return 'Waiting ($count)';
+  }
+
+  @override
+  String get detailDescriptionHint => 'Describe the issue in detail';
+
+  @override
+  String get linglongCommunity => 'Linglong Community';
+
+  @override
+  String get unknown => 'Unknown';
+
+  @override
+  String get copyPid => 'Copy PID';
+
+  @override
+  String get copyContainerId => 'Copy Container ID';
+
+  @override
+  String get refreshProcessList => 'Refresh Process List';
+
+  @override
+  String get stopProcess => 'Stop Process';
+
+  @override
+  String get checkUpdateNetworkError =>
+      'Update check failed, please check network connection';
+
+  @override
+  String get pruneServiceTitle => 'Clean Deprecated Base Services';
+
+  @override
+  String get pruneServiceMessage =>
+      'Will execute ll-cli prune to remove all unused base runtime services.\n\nThis frees up disk space, but ongoing operations may need to re-download.';
+
+  @override
+  String get pruneServiceSuccess => 'Deprecated base services cleaned';
+
+  @override
+  String get pruneServiceFailed => 'Cleanup failed, please retry later';
+
+  @override
+  String get clearCacheHint =>
+      'Clearing cache can free up storage space, but may require reloading app data.';
+
+  @override
+  String get pruneBaseServiceMessage =>
+      'Will execute ll-cli prune to remove all unused base runtime services.\n\nThis frees up disk space, but ongoing operations may need to re-download.';
+
+  @override
+  String get clean => 'Clean';
+
+  @override
+  String get baseServiceCleaned => 'Deprecated base services cleaned';
+
+  @override
+  String get cleanFailed => 'Cleanup failed, please retry later';
+
+  @override
+  String appCountValue(int count) {
+    return '$count apps';
+  }
+
+  @override
+  String get llCliVersionLabel => 'll-cli Version';
 }

@@ -6,6 +6,7 @@ import 'package:shimmer/shimmer.dart';
 import '../../../application/providers/application_card_state_provider.dart';
 import '../../../application/providers/search_provider.dart';
 import '../../../core/config/theme.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/recommend_models.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/widgets.dart';
@@ -99,9 +100,9 @@ class _SearchListPageState extends ConsumerState<SearchListPage> {
 
     // 无结果状态
     if (state.results.isEmpty) {
-      return const EmptyState.search(
-        title: '未找到相关应用',
-        description: '尝试使用其他关键词搜索',
+      return EmptyState.search(
+        title: AppLocalizations.of(context)?.searchNotFound ?? '未找到相关应用',
+        description: AppLocalizations.of(context)?.searchTryOtherKeywords ?? '尝试使用其他关键词搜索',
       );
     }
 
@@ -130,6 +131,7 @@ class _SearchListPageState extends ConsumerState<SearchListPage> {
   }
 
   Widget _buildEmptySearch() {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -141,7 +143,7 @@ class _SearchListPageState extends ConsumerState<SearchListPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            '在顶部搜索框输入关键词',
+            l10n?.searchInputHint ?? '在顶部搜索框输入关键词',
             style: TextStyle(
               fontSize: 16,
               color: context.appColors.textSecondary,
@@ -149,7 +151,7 @@ class _SearchListPageState extends ConsumerState<SearchListPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            '按 Enter 开始搜索应用',
+            l10n?.searchPressEnter ?? '按 Enter 开始搜索应用',
             style: TextStyle(
               fontSize: 14,
               color: context.appColors.textTertiary,
@@ -161,6 +163,7 @@ class _SearchListPageState extends ConsumerState<SearchListPage> {
   }
 
   Widget _buildResultHeader(SearchState state) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
@@ -169,7 +172,7 @@ class _SearchListPageState extends ConsumerState<SearchListPage> {
       child: Row(
         children: [
           Text(
-            '找到 ${state.total} 个结果',
+            l10n?.searchResultCount(state.total) ?? '找到 ${state.total} 个结果',
             style: TextStyle(
               fontSize: 14,
               color: context.appColors.textSecondary,
@@ -291,9 +294,13 @@ class _AppsGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     if (apps.isEmpty) {
-      return const SliverToBoxAdapter(
-        child: EmptyState.search(title: '未找到相关应用', description: '尝试使用其他关键词搜索'),
+      return SliverToBoxAdapter(
+        child: EmptyState.search(
+          title: l10n?.searchNotFound ?? '未找到相关应用',
+          description: l10n?.searchTryOtherKeywords ?? '尝试使用其他关键词搜索',
+        ),
       );
     }
 
@@ -394,11 +401,12 @@ class _NoMoreDataItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Center(
         child: Text(
-          '没有更多了',
+          l10n?.noMore ?? '没有更多了',
           style: TextStyle(fontSize: 12, color: context.appColors.textTertiary),
         ),
       ),

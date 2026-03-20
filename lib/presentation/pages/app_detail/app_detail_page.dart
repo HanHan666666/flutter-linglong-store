@@ -337,7 +337,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 const SizedBox(height: 4),
                 // 版本信息
                 Text(
-                  '版本 ${app.version}',
+                  '${AppLocalizations.of(context)?.version ?? '版本'} ${app.version}',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -478,7 +478,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     final theme = Theme.of(context);
     // 优先使用详情中的完整描述
     final description =
-        detailState.appDetail?.appDesc ?? app.description ?? '暂无描述';
+        detailState.appDetail?.appDesc ?? app.description ?? AppLocalizations.of(context)?.noDescription ?? '暂无描述';
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -486,7 +486,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '应用介绍',
+            AppLocalizations.of(context)?.appIntroduction ?? '应用介绍',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -514,7 +514,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     .read(appDetailProvider(widget.appId).notifier)
                     .toggleDescription();
               },
-              child: Text(detailState.isDescriptionExpanded ? '收起' : '展开全部'),
+              child: Text(detailState.isDescriptionExpanded
+                  ? (AppLocalizations.of(context)?.collapse ?? '收起')
+                  : (AppLocalizations.of(context)?.expandAll ?? '展开全部')),
             ),
         ],
       ),
@@ -534,37 +536,60 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     // 长字段独占整行，短字段按三列栅格排布，避免继续把所有信息竖着堆成表格。
     final entries = <AppDetailInfoEntry>[
       AppDetailInfoEntry(
-        label: '包名',
+        label: AppLocalizations.of(context)?.packageName ?? '包名',
         value: app.appId,
         span: AppDetailInfoSpan.full,
         isCopyable: true,
       ),
-      AppDetailInfoEntry(label: '版本', value: app.version),
-      if (app.arch != null) AppDetailInfoEntry(label: '架构', value: app.arch!),
+      AppDetailInfoEntry(
+        label: AppLocalizations.of(context)?.version ?? '版本',
+        value: app.version,
+      ),
+      if (app.arch != null)
+        AppDetailInfoEntry(
+          label: AppLocalizations.of(context)?.architecture ?? '架构',
+          value: app.arch!,
+        ),
       if (app.channel != null)
-        AppDetailInfoEntry(label: '渠道', value: app.channel!),
+        AppDetailInfoEntry(
+          label: AppLocalizations.of(context)?.channelLabel ?? '渠道',
+          value: app.channel!,
+        ),
       if (formattedAppSize != null)
-        AppDetailInfoEntry(label: '大小', value: formattedAppSize),
-      if (app.kind != null) AppDetailInfoEntry(label: '类型', value: app.kind!),
+        AppDetailInfoEntry(
+          label: AppLocalizations.of(context)?.size ?? '大小',
+          value: formattedAppSize,
+        ),
+      if (app.kind != null)
+        AppDetailInfoEntry(
+          label: AppLocalizations.of(context)?.appType ?? '类型',
+          value: app.kind!,
+        ),
       if (detail?.developerName != null)
-        AppDetailInfoEntry(label: '开发者', value: detail!.developerName!),
+        AppDetailInfoEntry(
+          label: AppLocalizations.of(context)?.developer ?? '开发者',
+          value: detail!.developerName!,
+        ),
       if (detail?.categoryName != null)
-        AppDetailInfoEntry(label: '分类', value: detail!.categoryName!),
+        AppDetailInfoEntry(
+          label: AppLocalizations.of(context)?.categoryLabel ?? '分类',
+          value: detail!.categoryName!,
+        ),
       if (app.runtime != null)
         AppDetailInfoEntry(
-          label: '运行时',
+          label: AppLocalizations.of(context)?.runtime ?? '运行时',
           value: app.runtime!,
           span: AppDetailInfoSpan.full,
         ),
       if (detail?.license != null)
         AppDetailInfoEntry(
-          label: '许可证',
+          label: AppLocalizations.of(context)?.license ?? '许可证',
           value: detail!.license!,
           span: AppDetailInfoSpan.full,
         ),
       if (detail?.homePage != null)
         AppDetailInfoEntry(
-          label: '主页',
+          label: AppLocalizations.of(context)?.homepage ?? '主页',
           value: detail!.homePage!,
           span: AppDetailInfoSpan.full,
         ),
@@ -576,7 +601,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '应用信息',
+            AppLocalizations.of(context)?.appInfo ?? '应用信息',
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -608,7 +633,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           Row(
             children: [
               Text(
-                '版本历史',
+                AppLocalizations.of(context)?.versionHistory ?? '版本历史',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -629,7 +654,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               children: [
                 Expanded(
                   child: Text(
-                    '版本列表加载失败，请重试',
+                    AppLocalizations.of(context)?.versionListLoadFailed ??
+                        '版本列表加载失败，请重试',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.error,
                     ),
@@ -641,13 +667,14 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                         .read(appDetailProvider(widget.appId).notifier)
                         .retryVersions();
                   },
-                  child: const Text('重试'),
+                  child: Text(AppLocalizations.of(context)?.retry ?? '重试'),
                 ),
               ],
             )
           else if (versionsError != null)
             Text(
-              '版本列表更新失败，显示最近一次结果',
+              AppLocalizations.of(context)?.versionListUpdateFailed ??
+                  '版本列表更新失败，显示最近一次结果',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.error,
               ),
@@ -717,7 +744,10 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           children: [
             Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
-            Text('加载失败', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              AppLocalizations.of(context)?.loadFailed ?? '加载失败',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Text(
               error,
@@ -962,7 +992,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        '卸载应用',
+                        AppLocalizations.of(context)?.uninstallApp ?? '卸载应用',
                         style: textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -978,12 +1008,11 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                         height: 1.5,
                       ),
                       children: [
-                        const TextSpan(text: '确定要卸载 '),
                         TextSpan(
-                          text: app.name,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          text: AppLocalizations.of(context)
+                                  ?.uninstallConfirmMessage(app.name) ??
+                              '确定要卸载 ${app.name} 吗？\n卸载后应用数据将被删除，此操作不可恢复。',
                         ),
-                        const TextSpan(text: ' 吗？\n卸载后应用数据将被删除，此操作不可恢复。'),
                       ],
                     ),
                   ),
@@ -994,7 +1023,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     children: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx),
-                        child: const Text('取消'),
+                        child: Text(AppLocalizations.of(context)?.cancel ?? '取消'),
                       ),
                       const SizedBox(width: 8),
                       FilledButton(
@@ -1006,7 +1035,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                           backgroundColor: colorScheme.error,
                           foregroundColor: colorScheme.onError,
                         ),
-                        child: const Text('卸载'),
+                        child: Text(AppLocalizations.of(context)?.uninstall ?? '卸载'),
                       ),
                     ],
                   ),
@@ -1035,13 +1064,23 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('${app.name} 已卸载')));
+        ).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)?.uninstallSuccess(app.name) ??
+                  '${app.name} 已卸载',
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('卸载失败: $e'),
+            content: Text(
+              AppLocalizations.of(context)?.uninstallError(e.toString()) ??
+                  '卸载失败: $e',
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -1074,13 +1113,22 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('快捷方式已创建')));
+        ).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)?.shortcutCreated ?? '快捷方式已创建',
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('创建失败: $e'),
+            content: Text(
+              AppLocalizations.of(context)?.shortcutCreateFailed(e.toString()) ??
+                  '创建失败: $e',
+            ),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

@@ -272,8 +272,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       title: Text(label),
       value: locale,
       groupValue: isSelected ? locale : null, // ignore: deprecated_member_use
+      // ignore: deprecated_member_use
       onChanged: (value) {
-        // ignore: deprecated_member_use
         if (value != null) {
           // 同时更新两个 Provider
           ref.read(settingProvider.notifier).setLocale(value);

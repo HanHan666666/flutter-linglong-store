@@ -7,11 +7,18 @@ import '../../../../tool/release/update_version_files.dart';
 void main() {
   group('update version file helpers', () {
     test('rewrites pubspec files as exact release-version snapshots', () {
-      final pubspec = File('test/fixtures/release/sample_pubspec.yaml').readAsStringSync();
-      final linuxPubspec = File('test/fixtures/release/sample_linux_pubspec.yaml').readAsStringSync();
+      final pubspec = File(
+        'test/fixtures/release/sample_pubspec.yaml',
+      ).readAsStringSync();
+      final linuxPubspec = File(
+        'test/fixtures/release/sample_linux_pubspec.yaml',
+      ).readAsStringSync();
 
       final updatedPubspec = updatePubspecVersion(pubspec, '3.0.7');
-      final updatedLinuxPubspec = updateLinuxPubspecVersion(linuxPubspec, '3.0.7');
+      final updatedLinuxPubspec = updateLinuxPubspecVersion(
+        linuxPubspec,
+        '3.0.7',
+      );
 
       expect(
         updatedPubspec,
@@ -42,11 +49,18 @@ flutter:
     });
 
     test('rewrites app version constants as exact source snapshots', () {
-      final appConfig = File('test/fixtures/release/sample_app_config.dart').readAsStringSync();
-      final appConstants = File('test/fixtures/release/sample_app_constants.dart').readAsStringSync();
+      final appConfig = File(
+        'test/fixtures/release/sample_app_config.dart',
+      ).readAsStringSync();
+      final appConstants = File(
+        'test/fixtures/release/sample_app_constants.dart',
+      ).readAsStringSync();
 
       final updatedAppConfig = updateAppConfigVersion(appConfig, '3.0.7');
-      final updatedAppConstants = updateAppConstantsVersion(appConstants, '3.0.7');
+      final updatedAppConstants = updateAppConstantsVersion(
+        appConstants,
+        '3.0.7',
+      );
 
       expect(
         updatedAppConfig,

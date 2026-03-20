@@ -4,21 +4,24 @@ import '../../../../tool/release/generate_changelog.dart';
 
 void main() {
   group('generateChangelog', () {
-    test('returns the exact first release body when no previous tag exists', () {
-      final firstReleaseBody = generateChangelog(
-        previousTag: null,
-        releaseVersion: '3.0.7',
-        commits: const [],
-      );
+    test(
+      'returns the exact first release body when no previous tag exists',
+      () {
+        final firstReleaseBody = generateChangelog(
+          previousTag: null,
+          releaseVersion: '3.0.7',
+          commits: const [],
+        );
 
-      expect(
-        firstReleaseBody,
-        equals('''## Release Notes
+        expect(
+          firstReleaseBody,
+          equals('''## Release Notes
 
 首个 GitHub Release，后续版本将从上一版 tag 自动生成变更日志。
 '''),
-      );
-    });
+        );
+      },
+    );
 
     test('renders grouped changelog output without the release commit', () {
       final changelogBody = generateChangelog(

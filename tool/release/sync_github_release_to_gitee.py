@@ -36,6 +36,12 @@ class SyncConfig:
     temp_dir: Path
 
 
+def resolve_api_url(base_url: str, endpoint: str) -> str:
+    if endpoint.startswith("http://") or endpoint.startswith("https://"):
+        return endpoint
+    return f"{base_url}{endpoint}"
+
+
 def normalize_gitee_repo(value: str) -> str:
     repo = value.strip()
     if not repo:
@@ -70,16 +76,37 @@ def needs_update(github_release: dict[str, Any], gitee_release: dict[str, Any] |
         return True
 
     github_assets = github_release.get("assets") or []
-    gitee_assets = gitee_release.get("assets") or []
+    gitee_assets = comparable_gitee_assets(
+        gitee_release.get("tag_name"),
+        gitee_release.get("assets") or [],
+    )
     if len(github_assets) != len(gitee_assets):
         return True
 
-    gitee_asset_map = {asset["name"]: asset["size"] for asset in gitee_assets}
+    gitee_asset_map = {asset["name"]: asset.get("size") for asset in gitee_assets}
     for asset in github_assets:
-        if gitee_asset_map.get(asset["name"]) != asset["size"]:
+        if asset["name"] not in gitee_asset_map:
+            return True
+        gitee_size = gitee_asset_map[asset["name"]]
+        if gitee_size is not None and gitee_size != asset["size"]:
             return True
 
     return False
+
+
+def comparable_gitee_assets(
+    tag_name: str | None,
+    assets: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    if not tag_name:
+        return assets
+
+    generated_names = {f"{tag_name}.zip", f"{tag_name}.tar.gz"}
+    return [asset for asset in assets if asset.get("name") not in generated_names]
+
+
+def release_asset_download_url(asset: dict[str, Any]) -> str:
+    return asset.get("browser_download_url") or asset["url"]
 
 
 def request(
@@ -122,7 +149,7 @@ def github_request(
     }
     if headers:
         merged_headers.update(headers)
-    url = f"https://api.github.com{endpoint}"
+    url = resolve_api_url("https://api.github.com", endpoint)
     return request(
         url,
         method=method,
@@ -146,8 +173,9 @@ def gitee_request(
     }
     if headers:
         merged_headers.update(headers)
-    separator = "&" if "?" in endpoint else "?"
-    url = f"https://gitee.com/api/v5{endpoint}{separator}access_token={config.gitee_token}"
+    url = resolve_api_url("https://gitee.com/api/v5", endpoint)
+    separator = "&" if "?" in url else "?"
+    url = f"{url}{separator}access_token={config.gitee_token}"
     return request(
         url,
         method=method,
@@ -215,13 +243,33 @@ def create_gitee_release(config: SyncConfig, github_release: dict[str, Any]) -> 
 
 
 def download_asset(config: SyncConfig, asset: dict[str, Any], destination: Path) -> None:
-    data = github_request(
-        config,
-        asset["url"],
-        headers={"Accept": "application/octet-stream"},
-        parse_json=False,
-    )
-    destination.write_bytes(data)
+    download_url = release_asset_download_url(asset)
+    headers = {
+        "Accept": "application/octet-stream",
+        "User-Agent": USER_AGENT,
+    }
+    if "api.github.com" in download_url:
+        headers["Authorization"] = f"Bearer {config.github_token}"
+
+    last_error: Exception | None = None
+    for attempt in range(1, 4):
+        try:
+            data = request(
+                download_url,
+                headers=headers,
+                parse_json=False,
+            )
+            destination.write_bytes(data)
+            return
+        except Exception as error:  # noqa: BLE001
+            last_error = error
+            if attempt < 3:
+                print(f"    Download failed, retrying ({attempt}/3)...")
+                time.sleep(2)
+
+    raise RuntimeError(
+        f"Failed to download {asset['name']} after retries: {last_error}"
+    ) from last_error
 
 
 def upload_asset_to_gitee_release(

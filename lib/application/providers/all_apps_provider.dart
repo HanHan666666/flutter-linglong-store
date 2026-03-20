@@ -1,10 +1,11 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../domain/models/recommend_models.dart';
 import '../../core/logging/app_logger.dart';
+import '../../core/network/api_client.dart';
 import '../../core/network/api_exceptions.dart';
 import '../../data/models/api_dto.dart';
+import '../../domain/models/recommend_models.dart';
 import 'api_provider.dart';
 
 part 'all_apps_provider.freezed.dart';
@@ -45,6 +46,13 @@ sealed class AllAppsState with _$AllAppsState {
 /// 全部应用页状态 Provider
 @riverpod
 class AllApps extends _$AllApps {
+  /// 将 Flutter locale 归一成后端约定的语言值（zh_CN / en_US）
+  static String _resolveApiLang(String? locale) {
+    final norm = locale?.trim().replaceAll('-', '_').toLowerCase();
+    if (norm == null || norm.isEmpty) return 'zh_CN';
+    if (norm.startsWith('en')) return 'en_US';
+    return 'zh_CN';
+  }
   @override
   AllAppsState build() {
     // 初始化时加载数据
@@ -155,6 +163,7 @@ class AllApps extends _$AllApps {
           menuCode: categoryCode,
           pageNo: page,
           pageSize: 20,
+          lan: _resolveApiLang(ApiClient.getLocale?.call()),
         ),
       );
       return _convertApps(response.data.data);
@@ -162,7 +171,7 @@ class AllApps extends _$AllApps {
 
     // 全部分类：使用推荐应用接口
     final response = await apiService.getWelcomeAppList(
-      PageParams(pageNo: page, pageSize: 20),
+      PageParams(pageNo: page, pageSize: 20, lan: _resolveApiLang(ApiClient.getLocale?.call())),
     );
     return _convertApps(response.data.data);
   }

@@ -1,10 +1,11 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../domain/models/recommend_models.dart';
 import '../../core/logging/app_logger.dart';
+import '../../core/network/api_client.dart';
 import '../../core/network/api_exceptions.dart';
 import '../../data/models/api_dto.dart';
+import '../../domain/models/recommend_models.dart';
 import 'api_provider.dart';
 
 part 'custom_category_provider.freezed.dart';
@@ -17,6 +18,14 @@ class CustomCategory extends _$CustomCategory {
   // 来自侧边栏菜单 rule 的排序/过滤规则，在 loadData 时提取并复用
   String? _sortType;
   bool? _filter;
+
+  /// 将 Flutter locale 归一成后端约定的语言值（zh_CN / en_US）
+  static String _resolveApiLang(String? locale) {
+    final norm = locale?.trim().replaceAll('-', '_').toLowerCase();
+    if (norm == null || norm.isEmpty) return 'zh_CN';
+    if (norm.startsWith('en')) return 'en_US';
+    return 'zh_CN';
+  }
 
   @override
   CustomCategoryState build() {
@@ -62,6 +71,7 @@ class CustomCategory extends _$CustomCategory {
           pageSize: 20,
           sortType: _sortType,
           filter: _filter,
+          lan: _resolveApiLang(ApiClient.getLocale?.call()),
         ),
       );
 
@@ -120,6 +130,7 @@ class CustomCategory extends _$CustomCategory {
           pageSize: 20,
           sortType: _sortType,
           filter: _filter,
+          lan: _resolveApiLang(ApiClient.getLocale?.call()),
         ),
       );
 

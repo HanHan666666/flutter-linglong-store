@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/logging/app_logger.dart';
+import '../../core/network/api_client.dart';
 import '../../core/network/api_exceptions.dart';
 import '../../core/storage/recommend_page_cache.dart';
 import '../../data/models/api_dto.dart';
@@ -13,6 +14,14 @@ part 'recommend_provider.g.dart';
 @riverpod
 class Recommend extends _$Recommend {
   static const int _pageSize = 10;
+
+  /// 将 Flutter locale 归一成后端约定的语言值（zh_CN / en_US）
+  static String _resolveApiLang(String? locale) {
+    final norm = locale?.trim().replaceAll('-', '_').toLowerCase();
+    if (norm == null || norm.isEmpty) return 'zh_CN';
+    if (norm.startsWith('en')) return 'en_US';
+    return 'zh_CN';
+  }
 
   @override
   RecommendState build() {
@@ -31,7 +40,7 @@ class Recommend extends _$Recommend {
       List<BannerInfo> banners = cachedData?.banners ?? const [];
       try {
         final carouselResponse = await apiService.getWelcomeCarouselList(
-          const AppWelcomeSearchRequest(),
+          AppWelcomeSearchRequest(lan: _resolveApiLang(ApiClient.getLocale?.call())),
         );
         banners = _convertBanners(carouselResponse.data.data);
       } catch (e, s) {
@@ -39,7 +48,7 @@ class Recommend extends _$Recommend {
       }
 
       final appResponse = await apiService.getWelcomeAppList(
-        const PageParams(pageNo: 1, pageSize: _pageSize),
+        PageParams(pageNo: 1, pageSize: _pageSize, lan: _resolveApiLang(ApiClient.getLocale?.call())),
       );
       final apps = _convertApps(appResponse.data.data);
       final data = RecommendData(
@@ -81,7 +90,7 @@ class Recommend extends _$Recommend {
       final apiService = ref.read(appApiServiceProvider);
       final nextPage = state.currentPage + 1;
       final response = await apiService.getWelcomeAppList(
-        PageParams(pageNo: nextPage, pageSize: _pageSize),
+        PageParams(pageNo: nextPage, pageSize: _pageSize, lan: _resolveApiLang(ApiClient.getLocale?.call())),
       );
 
       final currentApps = state.data!.apps.items;

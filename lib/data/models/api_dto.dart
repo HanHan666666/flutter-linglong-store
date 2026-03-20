@@ -388,7 +388,7 @@ sealed class AppWelcomeSearchRequest with _$AppWelcomeSearchRequest {
     @Default(AppConfig.defaultStoreRepoName)
     String repoName,
     String? arch,
-    @Default(AppConfig.defaultLocale) String lan,
+    String? lan,
     String? categoryId,
     @JsonKey(name: 'pageNo') int? pageNo,
     @JsonKey(name: 'pageSize') int? pageSize,
@@ -443,6 +443,7 @@ sealed class AppVersionListRequest with _$AppVersionListRequest {
     String? arch,
     @JsonKey(name: 'pageNo') @Default(1) int pageNo,
     @JsonKey(name: 'pageSize') @Default(20) int pageSize,
+    String? lan,
   }) = _AppVersionListRequest;
 
   factory AppVersionListRequest.fromJson(Map<String, dynamic> json) =>

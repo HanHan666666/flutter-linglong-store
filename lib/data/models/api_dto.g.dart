@@ -363,7 +363,7 @@ _AppWelcomeSearchRequest _$AppWelcomeSearchRequestFromJson(
   name: json['name'] as String?,
   repoName: json['repoName'] as String? ?? AppConfig.defaultStoreRepoName,
   arch: json['arch'] as String?,
-  lan: json['lan'] as String? ?? AppConfig.defaultLocale,
+  lan: json['lan'] as String?,
   categoryId: json['categoryId'] as String?,
   pageNo: (json['pageNo'] as num?)?.toInt(),
   pageSize: (json['pageSize'] as num?)?.toInt(),
@@ -427,6 +427,7 @@ _AppVersionListRequest _$AppVersionListRequestFromJson(
   arch: json['arch'] as String?,
   pageNo: (json['pageNo'] as num?)?.toInt() ?? 1,
   pageSize: (json['pageSize'] as num?)?.toInt() ?? 20,
+  lan: json['lan'] as String?,
 );
 
 Map<String, dynamic> _$AppVersionListRequestToJson(
@@ -437,6 +438,7 @@ Map<String, dynamic> _$AppVersionListRequestToJson(
   'arch': instance.arch,
   'pageNo': instance.pageNo,
   'pageSize': instance.pageSize,
+  'lan': instance.lan,
 };
 
 _AppVersionDTO _$AppVersionDTOFromJson(Map<String, dynamic> json) =>

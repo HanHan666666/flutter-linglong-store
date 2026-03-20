@@ -73,7 +73,7 @@ class AppRepositoryImpl implements AppRepository {
   }) async {
     try {
       final response = await _apiService.getWelcomeAppList(
-        PageParams(pageNo: page, pageSize: pageSize),
+        PageParams(pageNo: page, pageSize: pageSize, lan: _resolveLang(ApiClient.getLocale?.call())),
       );
 
       if (response.data.data == null) return [];
@@ -96,7 +96,7 @@ class AppRepositoryImpl implements AppRepository {
     try {
       // 使用搜索接口获取全部应用
       final response = await _apiService.getSearchAppList(
-        SearchAppListRequest(keyword: '', pageNo: page, pageSize: pageSize),
+        SearchAppListRequest(keyword: '', pageNo: page, pageSize: pageSize, lan: _resolveLang(ApiClient.getLocale?.call())),
       );
 
       if (response.data.data == null) return [];
@@ -122,6 +122,7 @@ class AppRepositoryImpl implements AppRepository {
           keyword: keyword,
           pageNo: page,
           pageSize: pageSize,
+          lan: _resolveLang(ApiClient.getLocale?.call()),
         ),
       );
 
@@ -140,7 +141,7 @@ class AppRepositoryImpl implements AppRepository {
   Future<AppDetailDTO> getAppDetail(String appId, {String? arch}) async {
     try {
       AppLogger.info('获取应用详情: $appId');
-      final detailLang = _resolveDetailLang(ApiClient.getLocale?.call());
+      final detailLang = _resolveLang(ApiClient.getLocale?.call());
 
       // /app/getAppDetail 需要显式 lang 才会按语言过滤截图和标签。
       final response = await _apiService.getAppDetail([
@@ -172,8 +173,8 @@ class AppRepositoryImpl implements AppRepository {
     }
   }
 
-  /// 将 Flutter locale 归一成后端 /app/getAppDetail 约定的语言值。
-  String _resolveDetailLang(String? locale) {
+  /// 将 Flutter locale 归一成后端 API 约定的语言值（zh_CN / en_US）。
+  String _resolveLang(String? locale) {
     final normalized = locale?.trim().replaceAll('-', '_').toLowerCase();
     if (normalized == null || normalized.isEmpty) {
       return _detailDefaultLang;
@@ -181,7 +182,7 @@ class AppRepositoryImpl implements AppRepository {
     if (normalized.startsWith('en')) {
       return 'en_US';
     }
-    return _detailDefaultLang;
+    return _detailDefaultLang; // 默认 zh_CN
   }
 
   @override
@@ -202,6 +203,7 @@ class AppRepositoryImpl implements AppRepository {
           arch: arch ?? _currentArch,
           pageNo: page,
           pageSize: pageSize,
+          lan: _resolveLang(ApiClient.getLocale?.call()),
         ),
       );
 
@@ -219,12 +221,13 @@ class AppRepositoryImpl implements AppRepository {
     int limit = 100,
   }) async {
     try {
+      final lan = _resolveLang(ApiClient.getLocale?.call());
       final response = type == 'new'
           ? await _apiService.getNewAppList(
-              PageParams(pageNo: 1, pageSize: limit),
+              PageParams(pageNo: 1, pageSize: limit, lan: lan),
             )
           : await _apiService.getInstallAppList(
-              PageParams(pageNo: 1, pageSize: limit),
+              PageParams(pageNo: 1, pageSize: limit, lan: lan),
             );
 
       if (response.data.data == null) return [];

@@ -4702,7 +4702,7 @@ as String?,
 /// @nodoc
 mixin _$AppWelcomeSearchRequest {
 
- String? get appId; String? get name;@JsonKey(name: 'repoName') String get repoName; String? get arch; String get lan; String? get categoryId;@JsonKey(name: 'pageNo') int? get pageNo;@JsonKey(name: 'pageSize') int? get pageSize;
+ String? get appId; String? get name;@JsonKey(name: 'repoName') String get repoName; String? get arch; String? get lan; String? get categoryId;@JsonKey(name: 'pageNo') int? get pageNo;@JsonKey(name: 'pageSize') int? get pageSize;
 /// Create a copy of AppWelcomeSearchRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4735,7 +4735,7 @@ abstract mixin class $AppWelcomeSearchRequestCopyWith<$Res>  {
   factory $AppWelcomeSearchRequestCopyWith(AppWelcomeSearchRequest value, $Res Function(AppWelcomeSearchRequest) _then) = _$AppWelcomeSearchRequestCopyWithImpl;
 @useResult
 $Res call({
- String? appId, String? name,@JsonKey(name: 'repoName') String repoName, String? arch, String lan, String? categoryId,@JsonKey(name: 'pageNo') int? pageNo,@JsonKey(name: 'pageSize') int? pageSize
+ String? appId, String? name,@JsonKey(name: 'repoName') String repoName, String? arch, String? lan, String? categoryId,@JsonKey(name: 'pageNo') int? pageNo,@JsonKey(name: 'pageSize') int? pageSize
 });
 
 
@@ -4752,14 +4752,14 @@ class _$AppWelcomeSearchRequestCopyWithImpl<$Res>
 
 /// Create a copy of AppWelcomeSearchRequest
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? appId = freezed,Object? name = freezed,Object? repoName = null,Object? arch = freezed,Object? lan = null,Object? categoryId = freezed,Object? pageNo = freezed,Object? pageSize = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? appId = freezed,Object? name = freezed,Object? repoName = null,Object? arch = freezed,Object? lan = freezed,Object? categoryId = freezed,Object? pageNo = freezed,Object? pageSize = freezed,}) {
   return _then(_self.copyWith(
 appId: freezed == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String?,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,repoName: null == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
 as String,arch: freezed == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
-as String?,lan: null == lan ? _self.lan : lan // ignore: cast_nullable_to_non_nullable
-as String,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as String?,lan: freezed == lan ? _self.lan : lan // ignore: cast_nullable_to_non_nullable
+as String?,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
 as String?,pageNo: freezed == pageNo ? _self.pageNo : pageNo // ignore: cast_nullable_to_non_nullable
 as int?,pageSize: freezed == pageSize ? _self.pageSize : pageSize // ignore: cast_nullable_to_non_nullable
 as int?,
@@ -4844,7 +4844,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? appId,  String? name, @JsonKey(name: 'repoName')  String repoName,  String? arch,  String lan,  String? categoryId, @JsonKey(name: 'pageNo')  int? pageNo, @JsonKey(name: 'pageSize')  int? pageSize)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? appId,  String? name, @JsonKey(name: 'repoName')  String repoName,  String? arch,  String? lan,  String? categoryId, @JsonKey(name: 'pageNo')  int? pageNo, @JsonKey(name: 'pageSize')  int? pageSize)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppWelcomeSearchRequest() when $default != null:
 return $default(_that.appId,_that.name,_that.repoName,_that.arch,_that.lan,_that.categoryId,_that.pageNo,_that.pageSize);case _:
@@ -4865,7 +4865,7 @@ return $default(_that.appId,_that.name,_that.repoName,_that.arch,_that.lan,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? appId,  String? name, @JsonKey(name: 'repoName')  String repoName,  String? arch,  String lan,  String? categoryId, @JsonKey(name: 'pageNo')  int? pageNo, @JsonKey(name: 'pageSize')  int? pageSize)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? appId,  String? name, @JsonKey(name: 'repoName')  String repoName,  String? arch,  String? lan,  String? categoryId, @JsonKey(name: 'pageNo')  int? pageNo, @JsonKey(name: 'pageSize')  int? pageSize)  $default,) {final _that = this;
 switch (_that) {
 case _AppWelcomeSearchRequest():
 return $default(_that.appId,_that.name,_that.repoName,_that.arch,_that.lan,_that.categoryId,_that.pageNo,_that.pageSize);}
@@ -4882,7 +4882,7 @@ return $default(_that.appId,_that.name,_that.repoName,_that.arch,_that.lan,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? appId,  String? name, @JsonKey(name: 'repoName')  String repoName,  String? arch,  String lan,  String? categoryId, @JsonKey(name: 'pageNo')  int? pageNo, @JsonKey(name: 'pageSize')  int? pageSize)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? appId,  String? name, @JsonKey(name: 'repoName')  String repoName,  String? arch,  String? lan,  String? categoryId, @JsonKey(name: 'pageNo')  int? pageNo, @JsonKey(name: 'pageSize')  int? pageSize)?  $default,) {final _that = this;
 switch (_that) {
 case _AppWelcomeSearchRequest() when $default != null:
 return $default(_that.appId,_that.name,_that.repoName,_that.arch,_that.lan,_that.categoryId,_that.pageNo,_that.pageSize);case _:
@@ -4897,14 +4897,14 @@ return $default(_that.appId,_that.name,_that.repoName,_that.arch,_that.lan,_that
 @JsonSerializable()
 
 class _AppWelcomeSearchRequest implements AppWelcomeSearchRequest {
-  const _AppWelcomeSearchRequest({this.appId, this.name, @JsonKey(name: 'repoName') this.repoName = AppConfig.defaultStoreRepoName, this.arch, this.lan = AppConfig.defaultLocale, this.categoryId, @JsonKey(name: 'pageNo') this.pageNo, @JsonKey(name: 'pageSize') this.pageSize});
+  const _AppWelcomeSearchRequest({this.appId, this.name, @JsonKey(name: 'repoName') this.repoName = AppConfig.defaultStoreRepoName, this.arch, this.lan, this.categoryId, @JsonKey(name: 'pageNo') this.pageNo, @JsonKey(name: 'pageSize') this.pageSize});
   factory _AppWelcomeSearchRequest.fromJson(Map<String, dynamic> json) => _$AppWelcomeSearchRequestFromJson(json);
 
 @override final  String? appId;
 @override final  String? name;
 @override@JsonKey(name: 'repoName') final  String repoName;
 @override final  String? arch;
-@override@JsonKey() final  String lan;
+@override final  String? lan;
 @override final  String? categoryId;
 @override@JsonKey(name: 'pageNo') final  int? pageNo;
 @override@JsonKey(name: 'pageSize') final  int? pageSize;
@@ -4942,7 +4942,7 @@ abstract mixin class _$AppWelcomeSearchRequestCopyWith<$Res> implements $AppWelc
   factory _$AppWelcomeSearchRequestCopyWith(_AppWelcomeSearchRequest value, $Res Function(_AppWelcomeSearchRequest) _then) = __$AppWelcomeSearchRequestCopyWithImpl;
 @override @useResult
 $Res call({
- String? appId, String? name,@JsonKey(name: 'repoName') String repoName, String? arch, String lan, String? categoryId,@JsonKey(name: 'pageNo') int? pageNo,@JsonKey(name: 'pageSize') int? pageSize
+ String? appId, String? name,@JsonKey(name: 'repoName') String repoName, String? arch, String? lan, String? categoryId,@JsonKey(name: 'pageNo') int? pageNo,@JsonKey(name: 'pageSize') int? pageSize
 });
 
 
@@ -4959,14 +4959,14 @@ class __$AppWelcomeSearchRequestCopyWithImpl<$Res>
 
 /// Create a copy of AppWelcomeSearchRequest
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? appId = freezed,Object? name = freezed,Object? repoName = null,Object? arch = freezed,Object? lan = null,Object? categoryId = freezed,Object? pageNo = freezed,Object? pageSize = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? appId = freezed,Object? name = freezed,Object? repoName = null,Object? arch = freezed,Object? lan = freezed,Object? categoryId = freezed,Object? pageNo = freezed,Object? pageSize = freezed,}) {
   return _then(_AppWelcomeSearchRequest(
 appId: freezed == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String?,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,repoName: null == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
 as String,arch: freezed == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
-as String?,lan: null == lan ? _self.lan : lan // ignore: cast_nullable_to_non_nullable
-as String,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as String?,lan: freezed == lan ? _self.lan : lan // ignore: cast_nullable_to_non_nullable
+as String?,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
 as String?,pageNo: freezed == pageNo ? _self.pageNo : pageNo // ignore: cast_nullable_to_non_nullable
 as int?,pageSize: freezed == pageSize ? _self.pageSize : pageSize // ignore: cast_nullable_to_non_nullable
 as int?,
@@ -5521,7 +5521,7 @@ as List<CarouselDTO>,
 /// @nodoc
 mixin _$AppVersionListRequest {
 
-@JsonKey(name: 'appId') String get appId;@JsonKey(name: 'repoName') String get repoName; String? get arch;@JsonKey(name: 'pageNo') int get pageNo;@JsonKey(name: 'pageSize') int get pageSize;
+@JsonKey(name: 'appId') String get appId;@JsonKey(name: 'repoName') String get repoName; String? get arch;@JsonKey(name: 'pageNo') int get pageNo;@JsonKey(name: 'pageSize') int get pageSize; String? get lan;
 /// Create a copy of AppVersionListRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -5534,16 +5534,16 @@ $AppVersionListRequestCopyWith<AppVersionListRequest> get copyWith => _$AppVersi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppVersionListRequest&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.repoName, repoName) || other.repoName == repoName)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.pageNo, pageNo) || other.pageNo == pageNo)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppVersionListRequest&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.repoName, repoName) || other.repoName == repoName)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.pageNo, pageNo) || other.pageNo == pageNo)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize)&&(identical(other.lan, lan) || other.lan == lan));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appId,repoName,arch,pageNo,pageSize);
+int get hashCode => Object.hash(runtimeType,appId,repoName,arch,pageNo,pageSize,lan);
 
 @override
 String toString() {
-  return 'AppVersionListRequest(appId: $appId, repoName: $repoName, arch: $arch, pageNo: $pageNo, pageSize: $pageSize)';
+  return 'AppVersionListRequest(appId: $appId, repoName: $repoName, arch: $arch, pageNo: $pageNo, pageSize: $pageSize, lan: $lan)';
 }
 
 
@@ -5554,7 +5554,7 @@ abstract mixin class $AppVersionListRequestCopyWith<$Res>  {
   factory $AppVersionListRequestCopyWith(AppVersionListRequest value, $Res Function(AppVersionListRequest) _then) = _$AppVersionListRequestCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'appId') String appId,@JsonKey(name: 'repoName') String repoName, String? arch,@JsonKey(name: 'pageNo') int pageNo,@JsonKey(name: 'pageSize') int pageSize
+@JsonKey(name: 'appId') String appId,@JsonKey(name: 'repoName') String repoName, String? arch,@JsonKey(name: 'pageNo') int pageNo,@JsonKey(name: 'pageSize') int pageSize, String? lan
 });
 
 
@@ -5571,14 +5571,15 @@ class _$AppVersionListRequestCopyWithImpl<$Res>
 
 /// Create a copy of AppVersionListRequest
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? repoName = null,Object? arch = freezed,Object? pageNo = null,Object? pageSize = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? repoName = null,Object? arch = freezed,Object? pageNo = null,Object? pageSize = null,Object? lan = freezed,}) {
   return _then(_self.copyWith(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,repoName: null == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
 as String,arch: freezed == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
 as String?,pageNo: null == pageNo ? _self.pageNo : pageNo // ignore: cast_nullable_to_non_nullable
 as int,pageSize: null == pageSize ? _self.pageSize : pageSize // ignore: cast_nullable_to_non_nullable
-as int,
+as int,lan: freezed == lan ? _self.lan : lan // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -5660,10 +5661,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId, @JsonKey(name: 'repoName')  String repoName,  String? arch, @JsonKey(name: 'pageNo')  int pageNo, @JsonKey(name: 'pageSize')  int pageSize)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId, @JsonKey(name: 'repoName')  String repoName,  String? arch, @JsonKey(name: 'pageNo')  int pageNo, @JsonKey(name: 'pageSize')  int pageSize,  String? lan)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppVersionListRequest() when $default != null:
-return $default(_that.appId,_that.repoName,_that.arch,_that.pageNo,_that.pageSize);case _:
+return $default(_that.appId,_that.repoName,_that.arch,_that.pageNo,_that.pageSize,_that.lan);case _:
   return orElse();
 
 }
@@ -5681,10 +5682,10 @@ return $default(_that.appId,_that.repoName,_that.arch,_that.pageNo,_that.pageSiz
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId, @JsonKey(name: 'repoName')  String repoName,  String? arch, @JsonKey(name: 'pageNo')  int pageNo, @JsonKey(name: 'pageSize')  int pageSize)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId, @JsonKey(name: 'repoName')  String repoName,  String? arch, @JsonKey(name: 'pageNo')  int pageNo, @JsonKey(name: 'pageSize')  int pageSize,  String? lan)  $default,) {final _that = this;
 switch (_that) {
 case _AppVersionListRequest():
-return $default(_that.appId,_that.repoName,_that.arch,_that.pageNo,_that.pageSize);}
+return $default(_that.appId,_that.repoName,_that.arch,_that.pageNo,_that.pageSize,_that.lan);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -5698,10 +5699,10 @@ return $default(_that.appId,_that.repoName,_that.arch,_that.pageNo,_that.pageSiz
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'appId')  String appId, @JsonKey(name: 'repoName')  String repoName,  String? arch, @JsonKey(name: 'pageNo')  int pageNo, @JsonKey(name: 'pageSize')  int pageSize)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'appId')  String appId, @JsonKey(name: 'repoName')  String repoName,  String? arch, @JsonKey(name: 'pageNo')  int pageNo, @JsonKey(name: 'pageSize')  int pageSize,  String? lan)?  $default,) {final _that = this;
 switch (_that) {
 case _AppVersionListRequest() when $default != null:
-return $default(_that.appId,_that.repoName,_that.arch,_that.pageNo,_that.pageSize);case _:
+return $default(_that.appId,_that.repoName,_that.arch,_that.pageNo,_that.pageSize,_that.lan);case _:
   return null;
 
 }
@@ -5713,7 +5714,7 @@ return $default(_that.appId,_that.repoName,_that.arch,_that.pageNo,_that.pageSiz
 @JsonSerializable()
 
 class _AppVersionListRequest implements AppVersionListRequest {
-  const _AppVersionListRequest({@JsonKey(name: 'appId') required this.appId, @JsonKey(name: 'repoName') this.repoName = AppConfig.defaultStoreRepoName, this.arch, @JsonKey(name: 'pageNo') this.pageNo = 1, @JsonKey(name: 'pageSize') this.pageSize = 20});
+  const _AppVersionListRequest({@JsonKey(name: 'appId') required this.appId, @JsonKey(name: 'repoName') this.repoName = AppConfig.defaultStoreRepoName, this.arch, @JsonKey(name: 'pageNo') this.pageNo = 1, @JsonKey(name: 'pageSize') this.pageSize = 20, this.lan});
   factory _AppVersionListRequest.fromJson(Map<String, dynamic> json) => _$AppVersionListRequestFromJson(json);
 
 @override@JsonKey(name: 'appId') final  String appId;
@@ -5721,6 +5722,7 @@ class _AppVersionListRequest implements AppVersionListRequest {
 @override final  String? arch;
 @override@JsonKey(name: 'pageNo') final  int pageNo;
 @override@JsonKey(name: 'pageSize') final  int pageSize;
+@override final  String? lan;
 
 /// Create a copy of AppVersionListRequest
 /// with the given fields replaced by the non-null parameter values.
@@ -5735,16 +5737,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppVersionListRequest&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.repoName, repoName) || other.repoName == repoName)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.pageNo, pageNo) || other.pageNo == pageNo)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppVersionListRequest&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.repoName, repoName) || other.repoName == repoName)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.pageNo, pageNo) || other.pageNo == pageNo)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize)&&(identical(other.lan, lan) || other.lan == lan));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appId,repoName,arch,pageNo,pageSize);
+int get hashCode => Object.hash(runtimeType,appId,repoName,arch,pageNo,pageSize,lan);
 
 @override
 String toString() {
-  return 'AppVersionListRequest(appId: $appId, repoName: $repoName, arch: $arch, pageNo: $pageNo, pageSize: $pageSize)';
+  return 'AppVersionListRequest(appId: $appId, repoName: $repoName, arch: $arch, pageNo: $pageNo, pageSize: $pageSize, lan: $lan)';
 }
 
 
@@ -5755,7 +5757,7 @@ abstract mixin class _$AppVersionListRequestCopyWith<$Res> implements $AppVersio
   factory _$AppVersionListRequestCopyWith(_AppVersionListRequest value, $Res Function(_AppVersionListRequest) _then) = __$AppVersionListRequestCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'appId') String appId,@JsonKey(name: 'repoName') String repoName, String? arch,@JsonKey(name: 'pageNo') int pageNo,@JsonKey(name: 'pageSize') int pageSize
+@JsonKey(name: 'appId') String appId,@JsonKey(name: 'repoName') String repoName, String? arch,@JsonKey(name: 'pageNo') int pageNo,@JsonKey(name: 'pageSize') int pageSize, String? lan
 });
 
 
@@ -5772,14 +5774,15 @@ class __$AppVersionListRequestCopyWithImpl<$Res>
 
 /// Create a copy of AppVersionListRequest
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? appId = null,Object? repoName = null,Object? arch = freezed,Object? pageNo = null,Object? pageSize = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? appId = null,Object? repoName = null,Object? arch = freezed,Object? pageNo = null,Object? pageSize = null,Object? lan = freezed,}) {
   return _then(_AppVersionListRequest(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,repoName: null == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
 as String,arch: freezed == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
 as String?,pageNo: null == pageNo ? _self.pageNo : pageNo // ignore: cast_nullable_to_non_nullable
 as int,pageSize: null == pageSize ? _self.pageSize : pageSize // ignore: cast_nullable_to_non_nullable
-as int,
+as int,lan: freezed == lan ? _self.lan : lan // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

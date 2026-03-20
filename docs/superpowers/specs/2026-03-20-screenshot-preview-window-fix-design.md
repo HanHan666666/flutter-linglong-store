@@ -44,6 +44,8 @@ The preview window itself will:
 3. expose a lightweight app shell that inherits locale/theme values from the payload instead of hardcoded values,
 4. close only its own window through its own `WindowController`, not through shared main-window assumptions.
 
+Because `window_manager` is unreliable for the preview sub-window close path in the current multi-window integration, the final implementation may use a tiny runner-owned MethodChannel for current-window hide/focus operations instead of calling the plugin close path directly from Dart.
+
 ## Architecture
 
 ### 1. Typed Payload Model

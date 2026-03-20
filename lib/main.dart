@@ -17,6 +17,7 @@ import 'core/config/app_config.dart';
 import 'core/storage/cache_service.dart';
 import 'core/storage/preferences_service.dart';
 import 'presentation/pages/app_detail/screenshot_preview_app.dart';
+import 'presentation/pages/app_detail/screenshot_preview_window_payload.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,13 +37,8 @@ void main() async {
   // 子窗口检测：在单实例检测和主窗口初始化之前执行
   // desktop_multi_window 通过 arguments 区分主窗口与子窗口
   final windowController = await WindowController.fromCurrentEngine();
-  if (windowController.arguments.isNotEmpty) {
-    final argMap =
-        jsonDecode(windowController.arguments) as Map<String, dynamic>;
-    if (argMap['type'] == 'screenshot_preview') {
-      await _runScreenshotPreviewWindow(argMap);
-      return;
-    }
+  if (await _tryRunSubWindow(windowController)) {
+    return;
   }
 
   // 单实例检测：必须在窗口初始化之前执行
@@ -87,11 +83,46 @@ void main() async {
   );
 }
 
-/// 初始化并运行截图预览子窗口
-Future<void> _runScreenshotPreviewWindow(Map<String, dynamic> args) async {
-  final screenshots = List<String>.from(args['screenshots'] as List);
-  final initialIndex = args['initial_index'] as int? ?? 0;
+Future<bool> _tryRunSubWindow(WindowController windowController) async {
+  final arguments = windowController.arguments;
+  if (arguments.isEmpty) {
+    return false;
+  }
 
+  final payload = ScreenshotPreviewWindowPayload.tryParseArguments(arguments);
+  if (payload != null) {
+    await _runScreenshotPreviewWindow(
+      windowController: windowController,
+      payload: payload,
+    );
+    return true;
+  }
+
+  if (_extractWindowType(arguments) == kScreenshotPreviewWindowType) {
+    await _runInvalidScreenshotPreviewWindow();
+    return true;
+  }
+
+  return false;
+}
+
+String? _extractWindowType(String arguments) {
+  try {
+    final decoded = jsonDecode(arguments);
+    if (decoded is Map && decoded['type'] is String) {
+      return decoded['type'] as String;
+    }
+  } catch (_) {
+    // 参数损坏时返回 null，由调用方决定是否展示错误窗。
+  }
+  return null;
+}
+
+/// 初始化并运行截图预览子窗口
+Future<void> _runScreenshotPreviewWindow({
+  required WindowController windowController,
+  required ScreenshotPreviewWindowPayload payload,
+}) async {
   // 注意：windowManager.ensureInitialized() 已在 main() 顶部统一调用，此处不重复
   // 子窗口：隐藏系统标题栏，使用自定义标题栏
   const windowOptions = WindowOptions(
@@ -108,10 +139,31 @@ Future<void> _runScreenshotPreviewWindow(Map<String, dynamic> args) async {
     await windowManager.focus();
   });
 
-  runApp(ScreenshotPreviewApp(
-    screenshots: screenshots,
-    initialIndex: initialIndex,
-  ));
+  runApp(
+    ScreenshotPreviewApp(
+      initialPayload: payload,
+      windowBinding: DesktopScreenshotPreviewWindowBinding(
+        controller: windowController,
+      ),
+    ),
+  );
+}
+
+Future<void> _runInvalidScreenshotPreviewWindow() async {
+  const windowOptions = WindowOptions(
+    size: Size(480, 240),
+    minimumSize: Size(420, 220),
+    center: true,
+    title: '截图预览',
+    backgroundColor: Colors.transparent,
+    titleBarStyle: TitleBarStyle.hidden,
+    windowButtonVisibility: false,
+  );
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
+  runApp(const ScreenshotPreviewLaunchErrorApp());
 }
 
 /// 注册退出时的清理回调

@@ -2,6 +2,7 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
@@ -69,7 +70,7 @@ class _ScreenshotPreviewAppState extends State<ScreenshotPreviewApp> {
   ScreenshotPreviewWindowPayload? _parsePayload(dynamic arguments) {
     if (arguments is Map) {
       return ScreenshotPreviewWindowPayload.tryParseJson(
-        Map<String, dynamic>.from(arguments as Map<dynamic, dynamic>),
+        Map<String, dynamic>.from(arguments),
       );
     }
     if (arguments is String) {
@@ -96,6 +97,67 @@ class _ScreenshotPreviewAppState extends State<ScreenshotPreviewApp> {
       home: _ScreenshotPreviewPage(
         payload: _payload,
         windowBinding: widget.windowBinding,
+      ),
+    );
+  }
+}
+
+/// 参数损坏时的轻量错误壳，避免子窗口在启动时直接崩溃。
+class ScreenshotPreviewLaunchErrorApp extends StatelessWidget {
+  const ScreenshotPreviewLaunchErrorApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      locale: const Locale('zh'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      home: Builder(
+        builder: (context) {
+          final l10n = AppLocalizations.of(context);
+          return Scaffold(
+            body: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 360),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48),
+                      const SizedBox(height: 12),
+                      Text(
+                        '截图预览加载失败',
+                        style: Theme.of(context).textTheme.titleMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '子窗口参数无效，请关闭后重试。',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: () => _previewWindowChannel
+                            .invokeMethod<void>('hideWindow'),
+                        child: Text(l10n?.close ?? '关闭'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -139,7 +201,7 @@ class DesktopScreenshotPreviewWindowBinding
 
   @override
   Future<void> startDragging() async {
-    await _previewWindowChannel.invokeMethod<void>('startDragging');
+    await windowManager.startDragging();
   }
 }
 

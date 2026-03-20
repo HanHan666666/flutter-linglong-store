@@ -41,6 +41,19 @@ jobs:
       - name: Run tests
         run: flutter test
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and cache Debian 10 release image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: build/docker/debian10-release.Dockerfile
+          load: true
+          tags: linglong-store/debian10-release:local
+          cache-from: type=gha,scope=debian10-release
+          cache-to: type=gha,mode=max,scope=debian10-release
+
       - name: Run Debian 10 packaging smoke test
         run: bash build/scripts/package-smoke-test.sh
         env:

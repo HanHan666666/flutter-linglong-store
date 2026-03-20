@@ -10,6 +10,7 @@ import '../../../application/providers/setting_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/logging/app_logger.dart';
+import '../../../data/datasources/remote/app_api_service.dart';
 import '../../../data/models/api_dto.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/feedback_dialog.dart';
@@ -25,6 +26,28 @@ class SettingPage extends ConsumerStatefulWidget {
 /// Gitee Latest Release API
 const _kGiteeLatestApi =
     'https://gitee.com/api/v5/repos/Shirosu/linglong-store/releases/latest';
+
+@visibleForTesting
+Future<void> runSettingPageInitialization({
+  required Future<String> Function() resolveAppVersion,
+  required void Function(String version) setAppVersion,
+  required Future<void> Function() refreshCacheSize,
+  required bool Function() isMounted,
+  required Future<int?> Function() fetchAppTotalCount,
+  required void Function(int total) setAppTotalCount,
+}) async {
+  final version = await resolveAppVersion();
+  setAppVersion(version);
+
+  if (!isMounted()) return;
+  await refreshCacheSize();
+
+  if (!isMounted()) return;
+  final total = await fetchAppTotalCount();
+  if (!isMounted() || total == null) return;
+
+  setAppTotalCount(total);
+}
 
 class _SettingPageState extends ConsumerState<SettingPage> {
   /// 已收录应用数量（-1 表示加载中）
@@ -42,26 +65,31 @@ class _SettingPageState extends ConsumerState<SettingPage> {
   /// 初始化设置
   Future<void> _initSettings() async {
     final notifier = ref.read(settingProvider.notifier);
+    final apiService = ref.read(appApiServiceProvider);
 
-    // 获取应用版本
-    try {
-      final packageInfo = await PackageInfo.fromPlatform();
-      notifier.setAppVersion(packageInfo.version);
-    } catch (e) {
-      notifier.setAppVersion(AppConfig.appVersion);
-    }
-
-    // 缓存体积属于非启动关键路径，进入设置页后再异步刷新即可。
-    await notifier.refreshCacheSize();
-
-    // 异步获取已收录应用总数
-    _fetchAppTotalCount();
+    await runSettingPageInitialization(
+      resolveAppVersion: () async {
+        try {
+          final packageInfo = await PackageInfo.fromPlatform();
+          return packageInfo.version;
+        } catch (_) {
+          return AppConfig.appVersion;
+        }
+      },
+      setAppVersion: notifier.setAppVersion,
+      refreshCacheSize: notifier.refreshCacheSize,
+      isMounted: () => mounted,
+      fetchAppTotalCount: () => _fetchAppTotalCount(apiService),
+      setAppTotalCount: (total) {
+        if (!mounted) return;
+        setState(() => _appTotalCount = total);
+      },
+    );
   }
 
   /// 获取已收录应用总数（空关键词搜索，取 total 字段）
-  Future<void> _fetchAppTotalCount() async {
+  Future<int?> _fetchAppTotalCount(AppApiService apiService) async {
     try {
-      final apiService = ref.read(appApiServiceProvider);
       final response = await apiService.getSearchAppList(
         const SearchAppListRequest(
           keyword: '',
@@ -71,10 +99,10 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           repoName: AppConfig.defaultStoreRepoName,
         ),
       );
-      final total = response.data.data?.total;
-      if (mounted && total != null) setState(() => _appTotalCount = total);
+      return response.data.data?.total;
     } catch (e) {
       AppLogger.warning('[SettingPage] 获取应用总数失败: $e');
+      return null;
     }
   }
 

@@ -1,0 +1,235 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Manual release version
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-release:
+    name: Prepare release
+    if: ${{ github.ref_name == github.event.repository.default_branch }}
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release-version.outputs.version }}
+      tag: ${{ steps.release-version.outputs.tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Keep the legacy Flutter path available for shell entrypoints
+        run: |
+          flutter_bin="$(command -v flutter)"
+          flutter_root="$(cd "$(dirname "$flutter_bin")/.." && pwd)"
+          sudo mkdir -p /home/han
+          sudo ln -sfn "$flutter_root" /home/han/flutter
+
+      - name: Resolve release version
+        id: release-version
+        env:
+          MANUAL_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ -n "${MANUAL_VERSION}" ]]; then
+            version="$(bash build/scripts/resolve-release-version.sh --manual-version "${MANUAL_VERSION}")"
+          else
+            version="$(bash build/scripts/resolve-release-version.sh)"
+          fi
+          version="${version//$'\n'/}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Update version files
+        run: bash build/scripts/update-version-files.sh "${{ steps.release-version.outputs.version }}"
+
+      - name: Commit release version bump
+        run: |
+          git add pubspec.yaml linux/pubspec.yaml lib/core/config/app_config.dart lib/core/constants/app_constants.dart
+          git commit -m "chore: release ${{ steps.release-version.outputs.version }}"
+
+      - name: Push release commit
+        run: git push origin "HEAD:${{ github.event.repository.default_branch }}"
+
+      - name: Create release tag
+        run: git tag "${{ steps.release-version.outputs.tag }}"
+
+      - name: Push release tag
+        run: git push origin "${{ steps.release-version.outputs.tag }}"
+
+      - name: Generate release notes
+        run: |
+          previous_tag="$(git describe --tags --abbrev=0 --match 'v3.0.*' HEAD^ 2>/dev/null || true)"
+          if [[ -n "$previous_tag" ]]; then
+            bash build/scripts/generate-changelog.sh "${{ steps.release-version.outputs.version }}" "$previous_tag" > release-notes.md
+          else
+            bash build/scripts/generate-changelog.sh "${{ steps.release-version.outputs.version }}" > release-notes.md
+          fi
+          cat <<'EOF' >> release-notes.md
+
+          ## Download
+          - amd64: bundle / deb / rpm / AppImage
+          - arm64: bundle / deb / rpm / AppImage
+
+          ## Requirements
+          - Linux
+          - GTK 3
+          - 玲珑运行环境
+          EOF
+
+      - name: Upload release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes.md
+          if-no-files-found: error
+
+  build-amd64:
+    name: Build amd64
+    needs: prepare-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-release.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Build bundle
+        run: bash build/scripts/package-bundle.sh --version "${{ needs.prepare-release.outputs.version }}" --arch amd64
+
+      - name: Build Debian package
+        run: bash build/scripts/package-deb.sh --version "${{ needs.prepare-release.outputs.version }}" --arch amd64
+
+      - name: Build RPM package
+        run: bash build/scripts/package-rpm.sh --version "${{ needs.prepare-release.outputs.version }}" --arch amd64
+
+      - name: Build AppImage
+        run: bash build/scripts/package-appimage.sh --version "${{ needs.prepare-release.outputs.version }}" --arch amd64
+
+      - name: Upload amd64 release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-amd64
+          path: build/out/linux/${{ needs.prepare-release.outputs.version }}/amd64
+          if-no-files-found: error
+
+  build-arm64:
+    name: Build arm64 native
+    needs: prepare-release
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-release.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Build bundle
+        run: bash build/scripts/package-bundle.sh --version "${{ needs.prepare-release.outputs.version }}" --arch arm64
+
+      - name: Build Debian package
+        run: bash build/scripts/package-deb.sh --version "${{ needs.prepare-release.outputs.version }}" --arch arm64
+
+      - name: Build RPM package
+        run: bash build/scripts/package-rpm.sh --version "${{ needs.prepare-release.outputs.version }}" --arch arm64
+
+      - name: Build AppImage
+        run: bash build/scripts/package-appimage.sh --version "${{ needs.prepare-release.outputs.version }}" --arch arm64
+
+      - name: Upload arm64 release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-arm64
+          path: build/out/linux/${{ needs.prepare-release.outputs.version }}/arm64
+          if-no-files-found: error
+
+  build-arm64-qemu:
+    name: Build arm64 fallback
+    needs: [prepare-release, build-arm64]
+    if: ${{ always() && (needs.build-arm64.result == 'failure' || needs.build-arm64.result == 'cancelled') }}
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_DEFAULT_PLATFORM: linux/arm64
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-release.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build bundle
+        run: bash build/scripts/package-bundle.sh --version "${{ needs.prepare-release.outputs.version }}" --arch arm64
+
+      - name: Build Debian package
+        run: bash build/scripts/package-deb.sh --version "${{ needs.prepare-release.outputs.version }}" --arch arm64
+
+      - name: Build RPM package
+        run: bash build/scripts/package-rpm.sh --version "${{ needs.prepare-release.outputs.version }}" --arch arm64
+
+      - name: Build AppImage
+        run: bash build/scripts/package-appimage.sh --version "${{ needs.prepare-release.outputs.version }}" --arch arm64
+
+      - name: Upload arm64 fallback release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-arm64
+          path: build/out/linux/${{ needs.prepare-release.outputs.version }}/arm64
+          if-no-files-found: error
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [prepare-release, build-amd64, build-arm64, build-arm64-qemu]
+    if: ${{ needs.build-amd64.result == 'success' && (needs.build-arm64.result == 'success' || needs.build-arm64-qemu.result == 'success') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download release notes
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes
+
+      - name: Download release assets
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-assets-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare-release.outputs.tag }}
+          name: 玲珑应用商店社区版 ${{ needs.prepare-release.outputs.tag }}
+          body_path: release-notes/release-notes.md
+          fail_on_unmatched_files: true
+          files: |
+            artifacts/**/*.tar.gz
+            artifacts/**/*.deb
+            artifacts/**/*.rpm
+            artifacts/**/*.AppImage

@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-amd64:
+    name: Validate amd64
+    runs-on: ubuntu-latest
+    env:
+      TARGET_ARCH: amd64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve smoke-test version from pubspec
+        id: version
+        run: |
+          version="$(sed -n 's/^version: //p' pubspec.yaml | head -n1 | cut -d+ -f1)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch Dart dependencies
+        run: flutter pub get
+
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Run static analysis
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Run Debian 10 packaging smoke test
+        run: bash build/scripts/package-smoke-test.sh
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          TARGET_ARCH: amd64

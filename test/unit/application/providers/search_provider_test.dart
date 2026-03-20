@@ -46,12 +46,12 @@ void main() {
       test('should handle search results', () {
         // Arrange
         final results = [
-          RecommendAppInfo(
+          const RecommendAppInfo(
             appId: 'com.example.app1',
             name: 'App 1',
             version: '1.0.0',
           ),
-          RecommendAppInfo(
+          const RecommendAppInfo(
             appId: 'com.example.app2',
             name: 'App 2',
             version: '2.0.0',

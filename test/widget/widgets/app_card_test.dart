@@ -83,7 +83,7 @@ void main() {
     late InstalledApp testApp;
 
     setUp(() {
-      testApp = InstalledApp(
+      testApp = const InstalledApp(
         appId: 'com.example.test',
         name: 'Test App',
         version: '1.0.0',
@@ -185,14 +185,14 @@ void main() {
     });
 
     testWidgets('should handle long app name with ellipsis', (tester) async {
-      final longNameApp = InstalledApp(
+      const longNameApp = InstalledApp(
         appId: 'com.example.verylongname',
         name: 'This is a very long application name that should be truncated with ellipsis',
         version: '1.0.0',
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: SizedBox(
               width: 300,
@@ -207,7 +207,7 @@ void main() {
     });
 
     testWidgets('should handle null description gracefully', (tester) async {
-      final noDescApp = InstalledApp(
+      const noDescApp = InstalledApp(
         appId: 'com.example.test',
         name: 'Test App',
         version: '1.0.0',
@@ -215,7 +215,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: AppCard(app: noDescApp),
           ),

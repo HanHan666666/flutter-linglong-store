@@ -77,7 +77,7 @@ void main() {
     late InstalledApp testApp;
 
     setUp(() {
-      testApp = InstalledApp(
+      testApp = const InstalledApp(
         appId: 'com.example.test',
         name: 'Test App',
         version: '1.0.0',
@@ -115,7 +115,7 @@ void main() {
     });
 
     testWidgets('AppCard should render correctly with long text', (tester) async {
-      final longTextApp = InstalledApp(
+      const longTextApp = InstalledApp(
         appId: 'com.example.longname',
         name: 'Very Long Application Name That Should Be Truncated',
         version: '1.0.0',
@@ -129,7 +129,7 @@ void main() {
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF016FFD)),
           ),
-          home: Scaffold(
+          home: const Scaffold(
             body: Center(
               child: SizedBox(
                 width: 400,
@@ -173,9 +173,9 @@ void main() {
 
     testWidgets('AppCard list should render correctly', (tester) async {
       final apps = [
-        InstalledApp(appId: '1', name: 'App One', version: '1.0.0', description: 'First app'),
-        InstalledApp(appId: '2', name: 'App Two', version: '2.0.0', description: 'Second app'),
-        InstalledApp(appId: '3', name: 'App Three', version: '3.0.0', description: 'Third app'),
+        const InstalledApp(appId: '1', name: 'App One', version: '1.0.0', description: 'First app'),
+        const InstalledApp(appId: '2', name: 'App Two', version: '2.0.0', description: 'Second app'),
+        const InstalledApp(appId: '3', name: 'App Three', version: '3.0.0', description: 'Third app'),
       ];
 
       await tester.pumpWidget(

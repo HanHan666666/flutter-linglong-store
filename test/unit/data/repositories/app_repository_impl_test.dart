@@ -51,7 +51,7 @@ void main() {
       test('should return list of InstalledApp on success', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          AppListResponse(
+          const AppListResponse(
             code: 200,
             data: AppListPagedData(
               records: [
@@ -99,7 +99,7 @@ void main() {
       test('should return empty list when data is null', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          AppListResponse(code: 200, data: null),
+          const AppListResponse(code: 200, data: null),
           Response(
             requestOptions: RequestOptions(path: '/visit/getWelcomeAppList'),
           ),
@@ -137,7 +137,7 @@ void main() {
       test('should return list of InstalledApp on success', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          AppListResponse(
+          const AppListResponse(
             code: 200,
             data: AppListPagedData(
               records: [
@@ -174,7 +174,7 @@ void main() {
       test('should pass correct pagination parameters', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          AppListResponse(
+          const AppListResponse(
             code: 200,
             data: AppListPagedData(
               records: [],
@@ -209,7 +209,7 @@ void main() {
       test('should return matching apps for keyword', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          AppListResponse(
+          const AppListResponse(
             code: 200,
             data: AppListPagedData(
               records: [
@@ -245,7 +245,7 @@ void main() {
       test('should pass keyword in request', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          AppListResponse(
+          const AppListResponse(
             code: 200,
             data: AppListPagedData(
               records: [],
@@ -283,7 +283,7 @@ void main() {
       test('should return app detail on success', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          AppDetailResponse(
+          const AppDetailResponse(
             code: 200,
             data: {
               'com.example.app': [
@@ -319,7 +319,7 @@ void main() {
       test('should throw exception when app not found', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          AppDetailResponse(code: 200, data: null),
+          const AppDetailResponse(code: 200, data: null),
           Response(requestOptions: RequestOptions(path: '/app/getAppDetail')),
         );
 
@@ -337,7 +337,7 @@ void main() {
       test('should use custom arch when provided', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          AppDetailResponse(
+          const AppDetailResponse(
             code: 200,
             data: {
               'com.example.app': [
@@ -371,7 +371,7 @@ void main() {
         // Arrange
         ApiClient.getLocale = () => 'en';
         final mockResponse = HttpResponse(
-          AppDetailResponse(
+          const AppDetailResponse(
             code: 200,
             data: {
               'com.example.app': [
@@ -405,7 +405,7 @@ void main() {
       test('should request versions with explicit repoName and arch', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          VersionListResponse(code: 200, data: const []),
+          const VersionListResponse(code: 200, data: []),
           Response(
             requestOptions: RequestOptions(
               path: '/visit/getSearchAppVersionList',
@@ -440,9 +440,9 @@ void main() {
         () async {
           // Arrange
           final mockResponse = HttpResponse(
-            VersionListResponse(
+            const VersionListResponse(
               code: 200,
-              data: const [
+              data: [
                 AppVersionDTO(
                   versionId: 'runtime-2',
                   appId: 'com.example.app',
@@ -495,7 +495,7 @@ void main() {
       test('should return empty list when no versions', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          VersionListResponse(code: 200, data: const []),
+          const VersionListResponse(code: 200, data: []),
           Response(
             requestOptions: RequestOptions(
               path: '/visit/getSearchAppVersionList',
@@ -528,9 +528,9 @@ void main() {
         ];
 
         final mockResponse = HttpResponse(
-          AppListArrayResponse(
+          const AppListArrayResponse(
             code: 200,
-            data: const [
+            data: [
               AppListItemDTO(
                 appId: 'com.example.app',
                 appName: '示例应用',
@@ -560,7 +560,7 @@ void main() {
       test('should return new apps for type=new', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          AppListResponse(
+          const AppListResponse(
             code: 200,
             data: AppListPagedData(
               records: [
@@ -597,7 +597,7 @@ void main() {
       test('should return install apps for type=download', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          AppListResponse(
+          const AppListResponse(
             code: 200,
             data: AppListPagedData(
               records: [
@@ -634,7 +634,7 @@ void main() {
       test('should use limit parameter correctly', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          AppListResponse(
+          const AppListResponse(
             code: 200,
             data: AppListPagedData(
               records: [],
@@ -667,7 +667,7 @@ void main() {
     group('mapDetailToInstalledApp', () {
       test('should correctly map AppDetailDTO to InstalledApp', () {
         // Arrange
-        final dto = AppDetailDTO(
+        const dto = AppDetailDTO(
           appId: 'com.example.app',
           appName: 'Test App',
           appVersion: '1.0.0',
@@ -702,7 +702,7 @@ void main() {
 
       test('should handle null optional fields', () {
         // Arrange
-        final dto = AppDetailDTO(
+        const dto = AppDetailDTO(
           appId: 'com.example.app',
           appName: 'Test App',
           appVersion: '1.0.0',
@@ -735,9 +735,9 @@ void main() {
           ];
 
           final mockResponse = HttpResponse(
-            AppListArrayResponse(
+            const AppListArrayResponse(
               code: 200,
-              data: const [
+              data: [
                 AppListItemDTO(
                   appId: 'org.deepin.calculator',
                   appName: '计算器',
@@ -806,9 +806,9 @@ void main() {
 
           if (appIds.length == 1 && appIds.single == 'org.deepin.calculator') {
             return HttpResponse(
-              AppListArrayResponse(
+              const AppListArrayResponse(
                 code: 200,
-                data: const [
+                data: [
                   AppListItemDTO(
                     appId: 'org.deepin.calculator',
                     appName: '计算器',
@@ -824,9 +824,9 @@ void main() {
           }
 
           return HttpResponse(
-            AppListArrayResponse(
+            const AppListArrayResponse(
               code: 200,
-              data: const [
+              data: [
                 AppListItemDTO(
                   appId: 'org.deepin.camera',
                   appName: '相机',

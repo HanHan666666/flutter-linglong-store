@@ -56,7 +56,7 @@ void main() {
     group('RankingData', () {
       test('should create with required fields', () {
         // Arrange
-        final data = RankingData(
+        const data = RankingData(
           type: RankingType.download,
           apps: [
             RankingAppInfo(
@@ -76,7 +76,7 @@ void main() {
 
       test('should support copyWith', () {
         // Arrange
-        final data = RankingData(
+        const data = RankingData(
           type: RankingType.download,
           apps: [],
         );
@@ -95,7 +95,7 @@ void main() {
     group('RankingAppInfo', () {
       test('should create with required fields', () {
         // Arrange & Act
-        final app = RankingAppInfo(
+        const app = RankingAppInfo(
           appId: 'com.example.app',
           name: 'Test App',
           version: '1.0.0',
@@ -141,14 +141,14 @@ void main() {
       test('should hold complete ranking data', () {
         // Arrange
         final apps = [
-          RankingAppInfo(
+          const RankingAppInfo(
             appId: 'com.app1',
             name: 'App 1',
             version: '1.0.0',
             rank: 1,
             downloadCount: 10000,
           ),
-          RankingAppInfo(
+          const RankingAppInfo(
             appId: 'com.app2',
             name: 'App 2',
             version: '1.0.0',

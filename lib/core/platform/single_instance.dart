@@ -100,7 +100,7 @@ class SingleInstance {
         _lockFile = raf;
 
         // 写入当前进程 PID，便于调试
-        await raf.writeString('\nPID: ${pid} - ${DateTime.now().toIso8601String()}');
+        await raf.writeString('\nPID: $pid - ${DateTime.now().toIso8601String()}');
 
         return true;
       } on FileSystemException catch (e) {

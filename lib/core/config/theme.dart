@@ -450,30 +450,30 @@ class AppShadows {
   /// Modal 阴影
   /// 值: 0 18px 48px rgba(15, 23, 42, 0.16)
   static List<BoxShadow> get modal => [
-    BoxShadow(
+    const BoxShadow(
       color: AppColors.modalShadow,
       blurRadius: 48,
-      offset: const Offset(0, 18),
+      offset: Offset(0, 18),
     ),
   ];
 
   /// 分类筛选栏阴影
   /// 值: 0 8px 32px rgba(31, 38, 135, 0.16)
   static List<BoxShadow> get category => [
-    BoxShadow(
+    const BoxShadow(
       color: AppColors.categoryShadow,
       blurRadius: 32,
-      offset: const Offset(0, 8),
+      offset: Offset(0, 8),
     ),
   ];
 
   /// 浮动更新按钮阴影
   /// 值: 0 4px 12px rgba(0, 0, 0, 0.15)
   static List<BoxShadow> get floatingButton => [
-    BoxShadow(
+    const BoxShadow(
       color: AppColors.floatingButtonShadow,
       blurRadius: 12,
-      offset: const Offset(0, 4),
+      offset: Offset(0, 4),
     ),
   ];
 
@@ -799,7 +799,7 @@ class AppTheme {
     dialogTheme: DialogThemeData(
       shape: RoundedRectangleBorder(
         borderRadius: AppRadius.smRadius,
-        side: BorderSide(color: AppColors.modalBorder),
+        side: const BorderSide(color: AppColors.modalBorder),
       ),
       elevation: 0,
       backgroundColor: AppColors.surface,
@@ -858,7 +858,7 @@ class AppTheme {
     ),
 
     // 导航抽屉主题
-    navigationDrawerTheme: NavigationDrawerThemeData(
+    navigationDrawerTheme: const NavigationDrawerThemeData(
       backgroundColor: AppColors.background,
       indicatorColor: AppColors.primaryLight,
       tileHeight: 48,

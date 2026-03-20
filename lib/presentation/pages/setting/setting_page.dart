@@ -63,7 +63,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     try {
       final apiService = ref.read(appApiServiceProvider);
       final response = await apiService.getSearchAppList(
-        SearchAppListRequest(
+        const SearchAppListRequest(
           keyword: '',
           pageNo: 1,
           pageSize: 1,
@@ -271,8 +271,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     return RadioListTile<Locale>(
       title: Text(label),
       value: locale,
-      groupValue: isSelected ? locale : null,
-      onChanged: (value) {
+      groupValue: isSelected ? locale : null, // ignore: deprecated_member_use
+      onChanged: (value) { // ignore: deprecated_member_use
         if (value != null) {
           // 同时更新两个 Provider
           ref.read(settingProvider.notifier).setLocale(value);

@@ -347,7 +347,7 @@ class _ProcessTableHeader extends StatelessWidget {
             width: 110,
             centered: true,
           ),
-          _ProcessHeaderCell(
+          const _ProcessHeaderCell(
             label: 'PID',
             width: 90,
             centered: true,

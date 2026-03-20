@@ -164,6 +164,10 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
 
     setState(() => _isSubmitting = true);
 
+    // 提前捕获 context 相关引用，避免跨 async 间隙使用 BuildContext
+    final l10n = AppLocalizations.of(context);
+    final noneText = l10n?.none ?? '无';
+
     try {
       String? logFileUrl;
 
@@ -173,8 +177,6 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
       }
 
       // 构建消息体（与旧版格式保持一致）
-      final l10n = AppLocalizations.of(context);
-      final noneText = l10n?.none ?? '无';
       final categories = _selectedCategories.isEmpty
           ? noneText
           : _selectedCategories.join(', ');

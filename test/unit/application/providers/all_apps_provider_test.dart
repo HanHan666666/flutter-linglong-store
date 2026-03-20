@@ -44,9 +44,9 @@ void main() {
     group('AllAppsData', () {
       test('should create with required fields', () {
         // Arrange
-        final data = AllAppsData(
+        const data = AllAppsData(
           categories: [CategoryInfo(code: 'all', name: '全部')],
-          apps: const PaginatedResponse<RecommendAppInfo>(
+          apps: PaginatedResponse<RecommendAppInfo>(
             items: [],
             total: 0,
             page: 1,
@@ -62,9 +62,9 @@ void main() {
 
       test('should support copyWith', () {
         // Arrange
-        final data = AllAppsData(
+        const data = AllAppsData(
           categories: [CategoryInfo(code: 'all', name: '全部')],
-          apps: const PaginatedResponse<RecommendAppInfo>(
+          apps: PaginatedResponse<RecommendAppInfo>(
             items: [],
             total: 0,
             page: 1,
@@ -76,8 +76,8 @@ void main() {
         // Act
         final newData = data.copyWith(
           categories: [
-            CategoryInfo(code: 'all', name: '全部'),
-            CategoryInfo(code: 'cat-1', name: 'Category 1'),
+            const CategoryInfo(code: 'all', name: '全部'),
+            const CategoryInfo(code: 'cat-1', name: 'Category 1'),
           ],
         );
 

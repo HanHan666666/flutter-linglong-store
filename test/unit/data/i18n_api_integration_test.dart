@@ -16,6 +16,7 @@
 ///
 /// 注意：flutter test 会使用 TestWidgetsFlutterBinding，导致所有 HTTP 返回 400。
 ///       真实 API 测试必须使用 dart test -p vm 运行。
+library;
 // @dart=2.19
 // ignore_for_file: avoid_print
 import 'dart:io';
@@ -53,7 +54,7 @@ void main() {
   group('I18n DTO 序列化验证', () {
     group('PageParams', () {
       test('lan 字段被正确序列化到 JSON', () {
-        final params = PageParams(
+        const params = PageParams(
           pageNo: 1,
           pageSize: 10,
           lan: 'zh_CN',
@@ -63,13 +64,13 @@ void main() {
       });
 
       test('lan 为 en_US 时正确序列化', () {
-        final params = PageParams(pageNo: 1, pageSize: 10, lan: 'en_US');
+        const params = PageParams(pageNo: 1, pageSize: 10, lan: 'en_US');
         final json = params.toJson();
         expect(json['lan'], equals('en_US'));
       });
 
       test('lan 为 null 时不包含该字段（或为 null）', () {
-        final params = PageParams(pageNo: 1, pageSize: 10);
+        const params = PageParams(pageNo: 1, pageSize: 10);
         final json = params.toJson();
         // null 字段可以不序列化，也可以序列化为 null，均可接受
         expect(json['lan'], isNull);
@@ -78,7 +79,7 @@ void main() {
 
     group('SearchAppListRequest', () {
       test('lan=zh_CN 正确序列化', () {
-        final req = SearchAppListRequest(
+        const req = SearchAppListRequest(
           keyword: 'wps',
           pageNo: 1,
           pageSize: 10,
@@ -91,7 +92,7 @@ void main() {
       });
 
       test('lan=en_US 正确序列化', () {
-        final req = SearchAppListRequest(
+        const req = SearchAppListRequest(
           keyword: 'test',
           pageNo: 1,
           pageSize: 5,
@@ -127,7 +128,7 @@ void main() {
 
     group('AppVersionListRequest', () {
       test('新增的 lan 字段正确序列化', () {
-        final req = AppVersionListRequest(
+        const req = AppVersionListRequest(
           appId: 'cn.wps.wps-office',
           lan: 'zh_CN',
         );
@@ -137,7 +138,7 @@ void main() {
       });
 
       test('lan 为 null 时不影响其他字段', () {
-        final req = AppVersionListRequest(appId: 'com.example.app');
+        const req = AppVersionListRequest(appId: 'com.example.app');
         final json = req.toJson();
         expect(json['appId'], equals('com.example.app'));
         expect(json['lan'], isNull);
@@ -148,7 +149,7 @@ void main() {
       test('lan 字段若存在则正确序列化', () {
         // SidebarAppsRequest 已有 String? lan 字段
         // 此处只测 PageParams 路径，SidebarAppsRequest 同理
-        final params = PageParams(
+        const params = PageParams(
           pageNo: 1,
           pageSize: 20,
           lan: 'zh_CN',
@@ -294,7 +295,7 @@ void main() {
 
       // 用一个已知存在的应用来测试版本列表
       final response = await apiService.getSearchAppVersionList(
-        AppVersionListRequest(
+        const AppVersionListRequest(
           appId: 'cn.wps.wps-office',
           repoName: AppConfig.defaultStoreRepoName,
           pageNo: 1,

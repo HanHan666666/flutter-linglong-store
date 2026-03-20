@@ -100,7 +100,7 @@ void main() {
         message: 'Loading apps...',
       );
 
-      final state = LaunchState(
+      const state = LaunchState(
         currentStep: LaunchStep.installedAppsInit,
         progress: 0.5,
         stepInfo: stepInfo,
@@ -137,7 +137,7 @@ void main() {
     });
 
     test('should calculate totalProgress correctly for environment check step', () {
-      final state = LaunchState(
+      const state = LaunchState(
         currentStep: LaunchStep.environmentCheck,
         progress: 0.5,
       );
@@ -148,7 +148,7 @@ void main() {
     });
 
     test('should calculate totalProgress correctly for installed apps init step', () {
-      final state = LaunchState(
+      const state = LaunchState(
         currentStep: LaunchStep.installedAppsInit,
         progress: 0.5,
       );
@@ -160,7 +160,7 @@ void main() {
     });
 
     test('should calculate totalProgress correctly for update check step', () {
-      final state = LaunchState(
+      const state = LaunchState(
         currentStep: LaunchStep.updateCheck,
         progress: 0.5,
       );
@@ -172,7 +172,7 @@ void main() {
     });
 
     test('should calculate totalProgress correctly for queue recovery step', () {
-      final state = LaunchState(
+      const state = LaunchState(
         currentStep: LaunchStep.queueRecovery,
         progress: 0.5,
       );
@@ -184,7 +184,7 @@ void main() {
     });
 
     test('should return progress when has error', () {
-      final state = LaunchState(
+      const state = LaunchState(
         currentStep: LaunchStep.installedAppsInit,
         progress: 0.5,
         hasError: true,
@@ -210,7 +210,7 @@ void main() {
     });
 
     test('should clear error with clearError flag', () {
-      final state = LaunchState(
+      const state = LaunchState(
         hasError: true,
         errorMessage: 'Test error',
       );
@@ -225,7 +225,7 @@ void main() {
     });
 
     test('should preserve hasError when not clearing', () {
-      final state = LaunchState(
+      const state = LaunchState(
         hasError: true,
         errorMessage: 'Test error',
       );

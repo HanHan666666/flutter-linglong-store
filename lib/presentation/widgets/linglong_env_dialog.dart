@@ -33,7 +33,7 @@ class LinglongEnvDialog extends ConsumerWidget {
     return AlertDialog(
       shape: RoundedRectangleBorder(
         borderRadius: AppRadius.smRadius,
-        side: BorderSide(color: AppColors.modalBorder),
+        side: const BorderSide(color: AppColors.modalBorder),
       ),
       elevation: 0,
       backgroundColor: context.appColors.surface,
@@ -183,7 +183,7 @@ class LinglongEnvDialog extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.error_outline, color: AppColors.error, size: 16),
+                    const Icon(Icons.error_outline, color: AppColors.error, size: 16),
                     const SizedBox(width: AppSpacing.sm),
                     Text(
                       AppLocalizations.of(context)?.errorMessage ?? '错误信息',

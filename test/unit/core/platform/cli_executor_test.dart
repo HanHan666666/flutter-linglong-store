@@ -59,7 +59,7 @@ void main() {
 
   group('CliTimeoutException', () {
     test('should create exception with correct properties', () {
-      final exception = CliTimeoutException('执行超时', 'install');
+      const exception = CliTimeoutException('执行超时', 'install');
 
       expect(exception.message, equals('执行超时'));
       expect(exception.command, equals('install'));
@@ -69,7 +69,7 @@ void main() {
 
   group('CliExecutionException', () {
     test('should create exception with correct properties', () {
-      final exception = CliExecutionException('执行失败', 1, 'install');
+      const exception = CliExecutionException('执行失败', 1, 'install');
 
       expect(exception.message, equals('执行失败'));
       expect(exception.exitCode, equals(1));

@@ -121,7 +121,7 @@ void main() {
     group('Install state', () {
       testWidgets('should display "Install" label', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
             home: Scaffold(
               body: InstallButton(state: InstallButtonState.install),
             ),
@@ -133,7 +133,7 @@ void main() {
 
       testWidgets('should display download icon', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
             home: Scaffold(
               body: InstallButton(state: InstallButtonState.install),
             ),
@@ -167,7 +167,7 @@ void main() {
     group('Installing state', () {
       testWidgets('should display progress indicator', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
             home: Scaffold(
               body: InstallButton(
                 state: InstallButtonState.installing,
@@ -182,7 +182,7 @@ void main() {
 
       testWidgets('should display progress percentage', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
             home: Scaffold(
               body: InstallButton(
                 state: InstallButtonState.installing,
@@ -219,7 +219,7 @@ void main() {
     group('Installed state', () {
       testWidgets('should display "Open" label', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
             home: Scaffold(
               body: InstallButton(state: InstallButtonState.installed),
             ),
@@ -231,7 +231,7 @@ void main() {
 
       testWidgets('should display open icon', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
             home: Scaffold(
               body: InstallButton(state: InstallButtonState.installed),
             ),
@@ -245,7 +245,7 @@ void main() {
     group('Update state', () {
       testWidgets('should display "Update" label', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
             home: Scaffold(
               body: InstallButton(state: InstallButtonState.update),
             ),
@@ -257,7 +257,7 @@ void main() {
 
       testWidgets('should display update icon', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
             home: Scaffold(
               body: InstallButton(state: InstallButtonState.update),
             ),
@@ -271,7 +271,7 @@ void main() {
     group('Failed state', () {
       testWidgets('should display "Retry" label', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
             home: Scaffold(
               body: InstallButton(state: InstallButtonState.failed),
             ),
@@ -283,7 +283,7 @@ void main() {
 
       testWidgets('should display refresh icon', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
             home: Scaffold(
               body: InstallButton(state: InstallButtonState.failed),
             ),
@@ -317,7 +317,7 @@ void main() {
     group('Progress display', () {
       testWidgets('should show 0% at start', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
             home: Scaffold(
               body: InstallButton(
                 state: InstallButtonState.installing,
@@ -332,7 +332,7 @@ void main() {
 
       testWidgets('should show 100% at completion', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
             home: Scaffold(
               body: InstallButton(
                 state: InstallButtonState.installing,

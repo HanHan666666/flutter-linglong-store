@@ -402,7 +402,7 @@ class NvidiaDiagnostics {
     // 检查 Wayland 兼容性
     if (Platform.environment['WAYLAND_DISPLAY'] != null ||
         Platform.environment['XDG_SESSION_TYPE'] == 'wayland') {
-      issues.add(NvidiaIssue(
+      issues.add(const NvidiaIssue(
         type: NvidiaIssueType.waylandCompat,
         severity: NvidiaIssueSeverity.warning,
         message: 'NVIDIA + Wayland 可能存在兼容性问题',
@@ -427,7 +427,7 @@ class NvidiaDiagnostics {
     // 检查 32 位库
     final has32Bit = await _check32BitLibs();
     if (!has32Bit) {
-      issues.add(NvidiaIssue(
+      issues.add(const NvidiaIssue(
         type: NvidiaIssueType.missing32Bit,
         severity: NvidiaIssueSeverity.info,
         message: '未检测到 32 位 NVIDIA 库',

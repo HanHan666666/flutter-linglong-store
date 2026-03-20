@@ -102,7 +102,7 @@ class AppIcon extends StatelessWidget {
       style: TextStyle(
         fontSize: size * 0.4,
         fontWeight: FontWeight.bold,
-        color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.5),
+        color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.5),
       ),
     );
   }
@@ -152,7 +152,7 @@ class AppIcon extends StatelessWidget {
     return Icon(
       Icons.apps,
       size: size * 0.5,
-      color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.3),
+      color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.3),
     );
   }
 
@@ -169,7 +169,7 @@ class AppIcon extends StatelessWidget {
       child: Icon(
         Icons.broken_image,
         size: size * 0.4,
-        color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.3),
+        color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.3),
       ),
     );
   }

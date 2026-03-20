@@ -2,14 +2,15 @@ include: package:flutter_lints/flutter.yaml
 
 linter:
   rules:
-    - prefer_const_constructors
-    - prefer_const_declarations
-    - prefer_final_locals
-    - avoid_print: false
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_final_locals: true
+    avoid_print: false
 
 analyzer:
   errors:
     invalid_annotation_target: ignore
+    unintended_html_in_doc_comment: ignore
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"

@@ -10,11 +10,11 @@ void main() {
   group('ErrorState i18n Tests', () {
     testWidgets('should display default error text in Chinese', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          locale: const Locale('zh'),
+        const MaterialApp(
+          locale: Locale('zh'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(
+          home: Scaffold(
             body: ErrorState(),
           ),
         ),
@@ -26,11 +26,11 @@ void main() {
 
     testWidgets('should display default error text in English', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          locale: const Locale('en'),
+        const MaterialApp(
+          locale: Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(
+          home: Scaffold(
             body: ErrorState(),
           ),
         ),
@@ -42,10 +42,10 @@ void main() {
 
     testWidgets('should use custom error text', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(
+          home: Scaffold(
             body: ErrorState(
               title: 'Custom Error',
               description: 'Custom error description',
@@ -62,11 +62,11 @@ void main() {
   group('EmptyState i18n Tests', () {
     testWidgets('should display default empty text in Chinese', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          locale: const Locale('zh'),
+        const MaterialApp(
+          locale: Locale('zh'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(
+          home: Scaffold(
             body: EmptyState(),
           ),
         ),
@@ -78,11 +78,11 @@ void main() {
 
     testWidgets('should display default empty text in English', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          locale: const Locale('en'),
+        const MaterialApp(
+          locale: Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(
+          home: Scaffold(
             body: EmptyState(),
           ),
         ),
@@ -94,10 +94,10 @@ void main() {
 
     testWidgets('should use custom empty text', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(
+          home: Scaffold(
             body: EmptyState(
               title: 'No Results',
               description: 'Try a different search',

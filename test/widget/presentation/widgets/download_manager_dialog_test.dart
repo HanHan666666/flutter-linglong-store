@@ -160,8 +160,8 @@ class TestInstallQueue extends InstallQueue {
 class TestUpdateApps extends UpdateApps {
   @override
   UpdateAppsState build() {
-    return UpdateAppsState(
-      apps: const [
+    return const UpdateAppsState(
+      apps: [
         UpdatableApp(
           installedApp: InstalledApp(
             appId: 'org.example.demo',

@@ -5,7 +5,7 @@ void main() {
   group('SearchAppListRequest JSON Serialization', () {
     test('should serialize keyword to name field', () {
       // Arrange
-      final request = SearchAppListRequest(
+      const request = SearchAppListRequest(
         keyword: 'wps',
         pageNo: 1,
         pageSize: 10,
@@ -26,7 +26,7 @@ void main() {
 
     test('should include optional fields when provided', () {
       // Arrange
-      final request = SearchAppListRequest(
+      const request = SearchAppListRequest(
         keyword: 'test',
         pageNo: 2,
         pageSize: 20,
@@ -189,7 +189,7 @@ void main() {
   group('Full Request-Response Integration', () {
     test('request JSON matches backend API expectations', () {
       // Arrange
-      final request = SearchAppListRequest(
+      const request = SearchAppListRequest(
         keyword: 'wps',
         pageNo: 1,
         pageSize: 10,

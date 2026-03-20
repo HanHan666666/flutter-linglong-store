@@ -1,368 +1,484 @@
-# GitHub Release Workflow Design
+# GitHub Workflow Design
 
 **Date:** 2026-03-20
 
 ## Background
 
-当前 Flutter 仓库还没有正式的 GitHub Actions 发布链路：
-- 仓库缺少 `.github/workflows/`
-- 当前版本号分散在 `pubspec.yaml`、`linux/pubspec.yaml`、`lib/core/config/app_config.dart`、`lib/core/constants/app_constants.dart`
-- 现有构建方式只有 `flutter build linux --release` 产出的 Linux `bundle`
-- 文档中提到过 `.deb` / `.rpm` / `.AppImage` 打包，但仓库里还没有实际打包脚本与 Release 流程
+当前仓库已经具备正式 Release 所需的核心脚本与 GitHub Actions 基础链路，但新的发布节奏要求与最初设计发生了变化：
 
-用户希望补齐一套正式的 CI / Release 体系，并满足以下目标：
-- `push` / `pull_request` 仅做日常构建校验
-- 正式发版只允许 `workflow_dispatch`
-- Release 默认自动递增 `3.0.x` 的 patch，也支持手动指定版本
-- Release body 自动汇总“上一个 Git tag 到当前版本”的 Conventional Commits
-- 自动构建并发布 `amd64` 和 `arm64`
-- 正式 Release 资产包含 `bundle` 压缩包、`.deb`、`.rpm`、`.AppImage`
-- 为最大兼容性，构建和打包统一基于 Debian 10 容器
-- 首版暂不把 Arch Linux 资产纳入正式发布
+- `push` 不再需要自动跑 GitHub Actions
+- `pull_request` 只保留轻量校验，尽量缩短反馈时间
+- 真正昂贵的 Linux 打包与冒烟测试统一收敛到每日构建
+- 每日构建只需要 `amd64`
+- 每日构建要维护一个固定的 GitHub prerelease，而不是每天创建一个新的 Release
+- 只有默认分支相对上一次 nightly 有新提交时，才重新发布 nightly
+- 工作流在 GitHub Actions 页面上的名称需要体现版本信息，至少不能让 nightly / release 的执行记录失去版本辨识度
+
+这意味着现有“CI 校验 + 正式 Release”二分结构需要升级为“三段式职责分离”：
+
+1. `pull_request` 轻量校验
+2. nightly prerelease 构建与发布
+3. 手动正式 Release
 
 ## Confirmed Requirements
 
-- CI 与 Release 必须职责分离：
-  - `ci.yml` 负责 `push` / `pull_request` 校验
-  - `release.yml` 只负责 `workflow_dispatch` 发版
-- 日常 `push` / `pull_request` 默认只跑 `amd64`
-- 正式 Release 必须跑 `amd64` 和 `arm64`
-- `release.yml` 需要支持两个版本策略：
-  - 手动传入版本号时，使用用户指定版本
-  - 未传入版本号时，自动从最新 `v3.0.*` tag 递增 patch
-- 版本发布前必须同步更新仓库内所有版本源，并生成独立 release commit
-- tag、源码版本、Release 名称、资产文件名必须严格一致
-- changelog 必须根据上一个 tag 到当前 release commit 的 Conventional Commits 自动生成，不依赖手工维护 `CHANGELOG.md`
-- 打包与构建必须以 Debian 10 容器为统一环境，避免直接依赖 GitHub runner 宿主机的软件栈
-- `arm64` 构建优先使用原生 ARM GitHub runner；只有当原生 ARM 路径不可用或不稳定时，才退回 QEMU 容器模拟
-- 所有业务细节和维护约束都要写入 `docs/`
+- `ci.yml` 只响应 `pull_request`
+- `ci.yml` 只保留轻量校验：
+  - `flutter pub get`
+  - `dart run build_runner build --delete-conflicting-outputs`
+  - `flutter analyze`
+  - `flutter test`
+- `push` 不再触发日常 GitHub Actions
+- 新增 `nightly.yml`
+  - 触发：`schedule` + `workflow_dispatch`
+  - 定时：每天 `UTC+8 03:00`
+  - GitHub Actions cron 使用 UTC，因此实际写为 `0 19 * * *`
+  - 只在默认分支执行
+  - 只构建 `amd64`
+- nightly 复用现有 Debian 10 容器化打包链
+- nightly 必须包含现有 packaging smoke test
+- nightly 只在默认分支 `HEAD` 相对上一次 nightly 有变化时才真正发布
+- nightly 维护固定 prerelease 与固定滚动 tag，而不是每天新建 release
+- 正式 `release.yml` 继续只允许 `workflow_dispatch`
+- 正式 Release 继续生成 `amd64` + `arm64` 双架构资产
+- `Action` 名称必须有版本辨识信息
+- 所有关键约束必须写入项目 `docs/`
 
 ## Current Project Constraints
 
-### Version Sources
+### Existing Packaging Baseline
 
-当前仓库的版本信息至少分散在以下文件：
-- `pubspec.yaml`
-- `linux/pubspec.yaml`
-- `lib/core/config/app_config.dart`
-- `lib/core/constants/app_constants.dart`
+当前 Flutter Linux 构建稳定依赖两段式流程：
 
-如果只更新其中一部分，会导致 UI 展示版本、Flutter 包版本、打包版本和 Release tag 漂移。
+1. Flutter 先产出 Linux `bundle`
+2. 自定义脚本从 `bundle` 派生：
+   - `tar.gz`
+   - `.deb`
+   - `.rpm`
+   - `.AppImage`
 
-### Packaging Baseline
+核心脚本已经存在：
 
-当前 Flutter Linux 能稳定产出的官方构建物是：
-- `build/linux/x64/release/bundle/`
+- `build/scripts/build-linux-bundle.sh`
+- `build/scripts/package-bundle.sh`
+- `build/scripts/package-deb.sh`
+- `build/scripts/package-rpm.sh`
+- `build/scripts/package-appimage.sh`
+- `build/scripts/package-smoke-test.sh`
 
-因此本方案不假设 Flutter 直接输出 `.deb` / `.rpm` / `.AppImage`，而是采用两段式流程：
-1. Flutter 负责生成 Linux `bundle`
-2. 自定义脚本基于 `bundle` 再进行 Debian / RPM / AppImage 打包
+因此 nightly 不应该再创建一套平行打包逻辑，而应直接复用这条链路。
 
-### Architecture Strategy
+### Existing Release Strategy
 
-Flutter Linux 桌面首版不依赖“单机交叉编译出另一架构桌面产物”这一路线。正式发布按架构分别构建：
-- `amd64`：在 x86 GitHub runner 上运行 Debian 10 容器进行原生构建
-- `arm64`：优先在 ARM GitHub runner 上运行 Debian 10 容器进行原生构建
-- QEMU 仅作为 ARM 发布链的降级后备方案，不作为首选主路径
+当前正式 Release 设计已经明确：
+
+- `release.yml` 只负责正式发版
+- `workflow_dispatch` 解析正式版本号
+- 正式版本需要更新版本源、提交 release commit、打正式 tag
+- 正式 Release 页面上传双架构四类资产
+
+新的 nightly 需求不能污染这条正式发版链，否则：
+
+- 版本号规则会混乱
+- prerelease 与正式 release 的边界会被打散
+- 权限与失败语义会明显复杂化
+
+### GitHub Actions Naming Limitation
+
+GitHub Actions 顶层 `run-name` 在 workflow 启动时就会求值，不能引用后续 job 的运行时输出。这意味着：
+
+- 正式 `release.yml` 可以在 `workflow_dispatch` 时直接把输入版本写进 `run-name`
+- nightly 的真实版本标签通常需要先 checkout 仓库、解析 `pubspec.yaml`、拼接日期与提交 SHA 后才能得到
+- 因此 nightly 无法把“运行时解析后的完整版本号”百分之百放进顶层 workflow run title
+
+本设计对“Action 名称要有版本号”的落实方式是：
+
+- 正式 Release：顶层 `run-name` 直接体现版本
+- nightly：
+  - 顶层 `run-name` 体现 nightly channel 与触发方式
+  - 关键 job 名称体现 nightly 版本标签
+  - GitHub prerelease 标题体现 nightly 版本标签
+  - 资产文件名体现 nightly 版本标签
+
+这样虽然不能让 schedule 入口在最外层 run title 使用运行时输出，但版本辨识信息仍然会稳定暴露在用户实际查看与下载的关键位置。
 
 ## Approaches
 
-### Option A: 单个 Workflow 同时处理 CI 与 Release
+### Option A: 在现有 `ci.yml` 中同时承载 PR 校验和 nightly 发布
 
-- 一个 workflow 同时包含 `push` / `pull_request` / `workflow_dispatch`
-- 通过条件判断区分校验与正式发版流程
-
-**Pros**
-- 文件数量少
-- 入口集中
-
-**Cons**
-- 条件分支复杂，后续维护成本高
-- 版本号、tag、上传 Release 与普通 CI 混在一起，出错面大
-- 很容易在 PR 校验里误触及 release 逻辑
-
-### Option B: CI 与 Release 分离
-
-- `ci.yml` 只负责日常校验
-- `release.yml` 只负责手动发版
+- `ci.yml` 同时处理 `pull_request`、`schedule`、`workflow_dispatch`
+- 通过 `if:` 分流轻量校验与 nightly 发布
 
 **Pros**
-- 责任边界清晰
-- Release 的版本、tag、资产上传逻辑不会污染 PR 流水线
-- 后续可以独立调整 CI 与发版策略
+- 文件数量最少
+- 现有 CI 文件可以继续复用
 
 **Cons**
-- 需要额外维护两个 workflow 和共享脚本
+- PR 校验与 nightly 发布共享同一 workflow，职责变脏
+- `permissions`、artifact 上传、prerelease 更新条件会变复杂
+- 后续排查失败时，很难一眼区分是“校验失败”还是“发布失败”
 
-### Option C: 仅保留 Release Workflow，本地脚本辅助校验
+### Option B: 在 `release.yml` 中增加 nightly 模式
 
-- GitHub Actions 只做正式发版
-- 日常校验依赖本地命令和零散脚本
+- `release.yml` 同时承载手动正式发版与 nightly prerelease
 
 **Pros**
-- 初期实现最少
+- 现有打包与发布逻辑复用最多
 
 **Cons**
-- 不满足用户要求的日常 `push` / `pull_request` 自动校验
-- 容易在合并后才暴露构建问题
+- 正式 Release 与 nightly prerelease 混在一起，风险最高
+- 正式 tag / prerelease tag / 版本更新 / changelog 规则会相互缠绕
+- 任何 nightly 逻辑错误都更容易误伤正式发布
+
+### Option C: 拆成三条独立工作流
+
+- `ci.yml`：只做 `pull_request` 轻量校验
+- `nightly.yml`：只做 nightly 构建与 prerelease 发布
+- `release.yml`：只做手动正式发布
+
+**Pros**
+- 职责边界最清晰
+- PR 反馈最快
+- nightly 与正式 release 的权限、版本、tag、失败语义彻底隔离
+- 后续维护与排障成本最低
+
+**Cons**
+- 需要维护第三个 workflow 文件
+- 需要同步更新工作流校验脚本与文档
 
 ## Recommended Design
 
-选择 **Option B**。
+选择 **Option C**。
 
 ### Workflow Split
 
-新增两条正式工作流：
-- `.github/workflows/ci.yml`
-- `.github/workflows/release.yml`
-
-其中：
-- `ci.yml`
-  - 触发：`push`、`pull_request`
-  - 目标：静态分析、测试、Debian 10 容器内 `amd64` release 构建与打包 smoke test
-  - 不生成版本号、不打 tag、不创建 Release
-- `release.yml`
-  - 触发：`workflow_dispatch`
-  - 目标：解析版本号、更新版本源、生成 changelog、创建 release commit、打 tag、双架构构建、上传 Release 资产
-
-### Versioning and Tagging
-
-`release.yml` 提供一个可选输入：
-- `version`
-
-规则如下：
-- 如果传入 `version`，直接使用该版本
-- 如果未传入 `version`，自动从仓库中筛选所有 `v3.0.*` tag，并按语义化版本取 **semver 最大值** 后递增 patch，而不是按 tag 创建时间取最近一个
-- 若仓库不存在任何 `v3.0.*` tag，则自动从 `3.0.0` 开始
-
-版本确定后，统一更新以下文件：
-- `pubspec.yaml`
-  - 写入 `<version>+1`
-- `linux/pubspec.yaml`
-  - 写入 `<version>+1`
-- `lib/core/config/app_config.dart`
-  - 写入纯语义化版本 `<version>`
-- `lib/core/constants/app_constants.dart`
-  - 写入纯语义化版本 `<version>`
-
-首版桌面发布链不单独维护递增的 Flutter build number，`pubspec` 与 `linux/pubspec` 的 `+build-number` 固定为 `+1`，避免再引入一套额外的版本编号规则。
-
-更新完成后创建正式 release commit：
-- commit message: `chore: release <version>`
-
-release workflow 只允许在默认分支上执行。创建 release commit 后，必须先把该 commit push 回默认分支，再基于已推送的 commit SHA 创建并推送 tag：
-- branch push: 默认分支上的 `chore: release <version>`
-- tag push: `v<version>`
-
-如果远端已经存在同名 tag 或同版本 release commit，workflow 必须直接失败，禁止覆盖历史版本。
-
-这样可以保证：
-- 仓库源码版本和 Release 完全一致
-- 后续任何人 checkout 某个 release tag 都能看到匹配的版本源
-
-### Changelog Generation
-
-changelog 生成范围固定为：
-- 从上一个 release tag
-- 到创建 release commit 之前的当前业务提交 `HEAD`
-
-release commit 本身只承载版本号同步，不应计入本次 release notes，避免 changelog 中出现自引用的 `chore: release <version>` 条目。
-
-如果当前仓库不存在任何 `v3.0.*` tag，则首个 Release 不回溯历史提交，直接使用固定引导文案，例如：
-- `首个 GitHub Release，后续版本将从上一版 tag 自动生成变更日志。`
-
-changelog 只汇总 Conventional Commits，并按类型分组展示，至少包含：
-- `feat`
-- `fix`
-- `refactor`
-- `docs`
-- `test`
-- `chore`
-
-不在上述分组内、但仍符合 Conventional Commits 前缀的提交，统一归入 `other` 分组，而不是静默丢弃。
-
-Release body 直接复用这份自动生成的 changelog，并在底部补充：
-- 版本号
-- 系统要求
-- 各架构资产说明
-
-changelog 不要求同步维护 `CHANGELOG.md`，以避免手工文件与 Release 页面双写漂移。
-
-### Build Environment
-
-正式构建与打包统一放进 Debian 10 容器执行，避免直接依赖 GitHub runner 宿主机环境。
-
-容器层需要统一完成以下工作：
-- 配置 Debian 10 可用 APT 源
-- 安装 Flutter Linux 构建依赖
-- 安装基础打包依赖：
-  - `dpkg-deb`
-  - `rpmbuild`
-  - `patchelf`
-  - `desktop-file-utils`
-  - `squashfs-tools`
-- 安装 AppImage 打包工具：
-  - `linuxdeploy`
-  - `appimagetool`
-
-Debian 10 的换源逻辑必须独立成共享脚本，由 `ci.yml` 与 `release.yml` 共用，避免两份 workflow 各自内联一套源配置。
-
-### Build Matrix
-
-CI 与 Release 的架构策略不同：
-
-- `ci.yml`
-  - 默认只跑 `amd64`
-  - 目的是在日常提交中控制耗时，并尽快暴露构建回归
-
-- `release.yml`
-  - 固定跑 `amd64` 与 `arm64`
-  - `arm64` 首选原生 ARM runner
-  - `arm64` 采用固定的两阶段策略：
-    1. 先跑原生 ARM runner 构建
-    2. 仅当原生 ARM job 进入 `failure` 或 `cancelled` 状态时，自动触发一次 QEMU 容器重试
-  - 若原生 ARM 与 QEMU 两条路径都失败，则整个 Release 失败，不发布半套资产
-
-### Packaging Strategy
-
-所有正式资产都从同一份 Flutter Linux `bundle` 派生，保证内容一致。
-
-每个架构都生成四类资产：
-- `bundle` 压缩包
-- `.deb`
-- `.rpm`
-- `.AppImage`
-
-推荐命名固定为：
-- `linglong-store-<version>-linux-amd64.tar.gz`
-- `linglong-store_<version>_amd64.deb`
-- `linglong-store-<version>-1.x86_64.rpm`
-- `linglong-store-<version>-amd64.AppImage`
-- `linglong-store-<version>-linux-arm64.tar.gz`
-- `linglong-store_<version>_arm64.deb`
-- `linglong-store-<version>-1.aarch64.rpm`
-- `linglong-store-<version>-arm64.AppImage`
-
-### Packaging Metadata
-
-打包模板和元数据不应直接散落在 workflow 里，而应独立收敛到 `build/` 目录，至少包括：
-- Debian control 模板
-- RPM spec 模板
-- `.desktop` 模板
-- icon / AppDir 组装配置
-
-这样后续修改：
-- 应用名
-- 图标
-- 分类
-- `Exec` 路径
-- 依赖信息
-
-都不需要直接改 workflow 主体。
-
-### Release Assets
-
-`release.yml` 在两种架构都构建完成后，统一创建 GitHub Release，并上传所有资产。
-
-首版实现固定采用 GitHub Actions 原生 `GITHUB_TOKEN`，并在 release workflow 中显式声明：
-- `permissions: contents: write`
-
-在本设计中，默认前提是：
-- `GITHUB_TOKEN` 可以直接 push 默认分支上的 release commit
-- `GITHUB_TOKEN` 可以直接 push `v<version>` tag
-- `GITHUB_TOKEN` 可以直接创建 GitHub Release
-
-因此首版流程不额外引入 PAT、GitHub App token 或复杂的权限分流逻辑。
-
-Release 页面需包含：
-- 版本标题
-- 自动生成 changelog
-- 按架构区分的下载说明
-- Linux 运行依赖说明
-
-首版 Release 不包含：
-- Arch Linux 正式资产
-- 自动同步到其他代码托管平台
-- 自动发布 AUR / 软件源仓库
-
-## File Responsibilities
-
-建议新增和修改的文件职责如下：
+工作流职责调整为三条独立链路：
 
 - `.github/workflows/ci.yml`
-  - 日常 `push` / `pull_request` 校验入口
+  - 只响应 `pull_request`
+  - 只做轻量校验
+- `.github/workflows/nightly.yml`
+  - 响应 `schedule` 与 `workflow_dispatch`
+  - 负责 nightly 打包、冒烟测试、固定 prerelease 更新
 - `.github/workflows/release.yml`
-  - 正式 `workflow_dispatch` 发版入口
-- `build/scripts/configure-debian10-apt.sh`
-  - Debian 10 EOL 源配置与换源逻辑
-- `build/scripts/resolve-release-version.sh`
-  - 解析手动版本或自动递增 patch
-- `build/scripts/update-version-files.sh`
-  - 批量更新 Flutter 版本源文件
-- `build/scripts/generate-changelog.sh`
-  - 基于 Git tag 与 Conventional Commits 生成 Release body
-- `build/scripts/build-linux-bundle.sh`
-  - 在容器内执行 Flutter bundle 构建
-- `build/scripts/package-deb.sh`
-  - 基于 bundle 生成 `.deb`
-- `build/scripts/package-rpm.sh`
-  - 基于 bundle 生成 `.rpm`
-- `build/scripts/package-appimage.sh`
-  - 基于 bundle 生成 `.AppImage`
-- `build/scripts/package-bundle.sh`
-  - 生成标准 `tar.gz` bundle 资产
-- `build/packaging/linux/`
-  - `.desktop`、icon、Debian control、RPM spec、AppImage 资源模板
-- `docs/`
-  - 发布流程、维护说明、常见故障排查
+  - 继续只响应 `workflow_dispatch`
+  - 负责正式双架构 Release
 
-## Error Handling and Guardrails
+### PR Validation Workflow
 
-- 当手动输入版本号不符合语义化版本时，release workflow 直接失败
-- 当自动解析版本号时，若发现最新 tag 不属于 `v3.0.*` 范围，不应错误递增其他主版本
-- 当自动解析版本号时，必须按 `v3.0.*` 的 semver 最大值取基线，而不是按 tag 创建时间或 git 遍历顺序取值
-- 当版本源文件更新后存在未提交改动，workflow 必须显式 commit，而不是依赖脏工作区继续打 tag
-- 当 changelog 为空时，workflow 不自动填充模糊文案，应仍然展示“本次版本无符合 Conventional Commits 的提交”
-- 当生成 changelog 时，必须固定基于 release commit 之前的 `HEAD`，不得把 `chore: release <version>` 自身写进 release notes
-- 当 `arm64` 原生 runner 构建失败或取消时，只允许自动回退一次 QEMU；若 QEMU 后备也失败，Release 不应发布半套资产
-- 任一架构缺少 `.deb` / `.rpm` / `.AppImage` / `bundle` 任一必需产物时，Release 创建必须失败
-- Release 一律以完整双架构资产为成功标准，避免出现用户下载页面只存在部分文件的半成品版本
+`ci.yml` 改为：
 
-## Testing Strategy
+- 触发：`pull_request`
+- 不再响应 `push`
+- 不再执行 Debian 10 packaging smoke test
+- 不再上传 nightly / release 资产
 
-### CI Validation
+保留的校验步骤：
 
-`ci.yml` 至少覆盖：
+- 安装 Flutter
 - `flutter pub get`
 - `dart run build_runner build --delete-conflicting-outputs`
 - `flutter analyze`
 - `flutter test`
-- Debian 10 容器内 `amd64` release bundle 构建
-- `.deb` / `.rpm` / `.AppImage` / `bundle` 的最小打包验证
 
-### Release Validation
+这个 workflow 的目标只有一个：尽快发现 PR 里的源码回归，而不是验证完整 Linux 发布链。
+
+### Nightly Trigger and Branch Rules
+
+`nightly.yml` 的触发规则：
+
+- `schedule`
+- `workflow_dispatch`
+
+cron 使用：
+
+```yaml
+schedule:
+  - cron: '0 19 * * *'
+```
+
+GitHub Actions 使用 UTC 计时，`0 19 * * *` 对应中国时区 `UTC+8` 的每天 `03:00`。
+
+nightly 还必须加两层保护：
+
+- 只允许默认分支真正执行 nightly 发布逻辑
+- 非默认分支手动触发时直接跳过或失败，防止把临时分支误发为 nightly
+
+### Nightly Publication Strategy
+
+nightly 维护一个固定滚动 prerelease：
+
+- 固定 tag：`nightly`
+- 固定 Release 标题前缀：`Nightly Build`
+- `prerelease: true`
+- `latest: false`
+
+nightly 不每天创建新 Release，而是每次覆盖同一个 prerelease。
+
+这样做的原因：
+
+- release 列表不会被 nightly 冲刷
+- 用户始终只看到最新一份 nightly
+- nightly 天生就是“滚动快照”，不是稳定版本档案
+
+### Nightly Change Detection
+
+“有 commit 才发布”不采用时间窗口判断，而采用“当前默认分支 `HEAD` 是否已被 nightly 覆盖”的判断。
+
+推荐流程：
+
+1. 读取当前默认分支 `HEAD`
+2. 查询已有 nightly prerelease
+3. 从 release body 的固定元数据字段中提取上一次 nightly 对应的 commit SHA
+4. 比较：
+   - 如果 SHA 相同：`should_publish=false`，nightly 构建与发布 job 全部跳过
+   - 如果 SHA 不同：继续构建、冒烟测试、发布
+
+推荐写入 release body 的元数据：
+
+```text
+Nightly source commit: <full_sha>
+Nightly source date: <iso8601>
+Nightly version label: <nightly_label>
+```
+
+这种方式比“过去 24 小时是否有 commit”更稳，因为它判断的是“nightly 是否已经覆盖当前源码状态”，不会因为 GitHub 定时漂移、补跑、人工重跑而重复发布或漏发布。
+
+### Nightly Version Label
+
+nightly 需要一个对人可读、对资产命名稳定、对 GitHub 页面可辨识的版本标签。
+
+推荐生成规则：
+
+- `base_version`：来自当前仓库 `pubspec.yaml` 的语义化版本部分
+- `build_date`：使用 `UTC+8` 逻辑日期，格式 `YYYYMMDD`
+- `short_sha`：当前默认分支 `HEAD` 的短 SHA
+
+拼接得到：
+
+- `nightly_label = <base_version>-nightly.<YYYYMMDD>+<short_sha>`
+
+示例：
+
+- `3.0.7-nightly.20260321+abc1234`
+
+这个标签用于：
+
+- nightly prerelease 标题
+- nightly job 名称
+- nightly 资产文件名
+- nightly release body 元数据
+
+### Action Naming Strategy
+
+“Action 名称要有版本号”的要求，按工作流类型分开落实。
+
+#### 正式 Release
+
+正式 `release.yml` 可以直接使用顶层 `run-name`，因为版本号来自 `workflow_dispatch` 输入或自动版本解析入口的可预期上下文。
+
+推荐展示效果：
+
+- `Release v3.0.8`
+- `Release auto -> v3.0.8`
+
+此外，关键 job 名称也要带版本：
+
+- `Prepare release 3.0.8`
+- `Build amd64 3.0.8`
+- `Build arm64 3.0.8`
+- `Publish release 3.0.8`
+
+#### Nightly
+
+nightly 顶层 `run-name` 无法稳定引用运行时解析出的 `nightly_label`，因此采用分层展示：
+
+- 顶层 `run-name`
+  - `Nightly build (scheduled)`
+  - `Nightly build (manual)`
+- 关键 job 名称包含真实 `nightly_label`
+  - `Prepare nightly 3.0.7-nightly.20260321+abc1234`
+  - `Build nightly amd64 3.0.7-nightly.20260321+abc1234`
+  - `Publish nightly 3.0.7-nightly.20260321+abc1234`
+- nightly prerelease 标题包含真实 `nightly_label`
+  - `Nightly Build 3.0.7-nightly.20260321+abc1234`
+
+这里的核心原则不是执着于 GitHub Actions 顶层 run title 的单点展示，而是确保用户在“工作流详情、构建 job、Release 页面、下载资产”这些真正会查看的位置，都能稳定看到版本信息。
+
+### Nightly Build and Smoke Test
+
+nightly 继续复用现有 Debian 10 容器化打包链：
+
+- `build/scripts/run-in-release-container.sh`
+- `build/docker/debian10-release.Dockerfile`
+- `build/scripts/package-smoke-test.sh`
+
+nightly 的职责是完整验证“当前默认分支源码是否还能打出 Linux 发布资产”，因此：
+
+- packaging smoke test 从 `ci.yml` 迁移到 `nightly.yml`
+- nightly 至少运行：
+  - Debian 10 release image 构建
+  - `package-smoke-test.sh`
+
+nightly 只构建 `amd64`，不引入 `arm64`，原因是：
+
+- nightly 目标是高价值、低维护成本的日常回归守门
+- `arm64` 构建开销更高，且当前用户明确只需要 `amd64` nightly
+- `arm64` 继续留给正式 `release.yml` 负责
+
+### Nightly Asset Naming
+
+nightly 资产必须包含版本标签，避免本地下载后被同名文件覆盖。
+
+推荐命名：
+
+- `linglong-store-<nightly_label>-linux-amd64.tar.gz`
+- `linglong-store-<nightly_label>-amd64.deb`
+- `linglong-store-<nightly_label>-x86_64.rpm`
+- `linglong-store-<nightly_label>-amd64.AppImage`
+
+示例：
+
+- `linglong-store-3.0.7-nightly.20260321+abc1234-linux-amd64.tar.gz`
+
+如果具体包管理器版本字段不适合直接使用完整 `nightly_label`，则实现层需要对“显示标签”和“包管理器内部版本字段”做分离处理，但对外展示的 Release 标题与下载文件名仍然以 `nightly_label` 为准。
+
+### Formal Release Workflow
+
+`release.yml` 继续维持正式 Release 的既有职责：
+
+- 只响应 `workflow_dispatch`
+- 默认分支保护不变
+- 解析正式版本号
+- 更新版本源文件
+- 创建 release commit
+- 推送正式 tag
+- 构建 `amd64` + `arm64`
+- 上传正式 Release 资产
+
+nightly 相关逻辑禁止混入 `release.yml`，包括：
+
+- nightly tag 维护
+- nightly prerelease body 元数据
+- nightly SHA 去重判断
+- nightly 单架构打包分支
+
+### Validation Script Updates
+
+现有工作流校验脚本也必须同步调整，否则文档和实现会漂移。
+
+`build/scripts/validate-release-workflow.sh` 需要从旧断言迁移到新断言：
+
+- 删除对 `ci.yml` 中 `push` 的断言
+- 删除对 `ci.yml` 中 `package-smoke-test.sh` 的断言
+- 保留对 `ci.yml` 中 `pull_request` 的断言
+- 新增对 `nightly.yml` 的断言：
+  - 存在 `schedule`
+  - 存在 `workflow_dispatch`
+  - 存在 `package-smoke-test.sh`
+  - 存在 `nightly` prerelease 相关逻辑
+- 继续保留对 `release.yml` 的正式发版约束断言
+
+### Documentation Requirements
+
+与工作流一起维护的文档至少要覆盖：
+
+- PR 校验、nightly prerelease、正式 Release 三者的边界
+- nightly 的 `UTC+8 03:00` 调度说明
+- nightly “有新 commit 才发布”的 SHA 判断规则
+- nightly 固定 tag / fixed prerelease 的维护约束
+- Action 名称中的版本辨识策略
+- 常见失败场景：
+  - nightly 已存在但 body 元数据缺失
+  - nightly tag 指向漂移
+  - package smoke test 失败
+  - release / nightly 条件判断写错导致误发
+
+## File Responsibilities
+
+建议文件职责调整如下：
+
+- `.github/workflows/ci.yml`
+  - `pull_request` 轻量校验入口
+- `.github/workflows/nightly.yml`
+  - nightly 构建、smoke test、固定 prerelease 发布入口
+- `.github/workflows/release.yml`
+  - 正式 `workflow_dispatch` 发版入口
+- `build/scripts/package-smoke-test.sh`
+  - nightly 完整打包回归验证脚本
+- `build/scripts/validate-release-workflow.sh`
+  - 工作流结构与关键约束的静态校验脚本
+- `build/scripts/resolve-release-version.sh`
+  - 正式 release 版本解析
+- `docs/`
+  - 工作流职责、nightly 规则、维护说明、排障文档
+
+## Error Handling and Guardrails
+
+- 非默认分支禁止真正执行 nightly 发布
+- nightly 查询不到现有 prerelease 时，应按“首次 nightly 发布”处理，而不是直接失败
+- nightly 找到 prerelease 但 body 元数据缺失时，应视为“无法确认已发布 SHA”，继续构建并重写 metadata
+- 当前 `HEAD` 与已发布 SHA 相同时，nightly 必须显式输出“skip”结果，避免看起来像异常中断
+- packaging smoke test 任一步失败，nightly 不得更新 prerelease
+- `release.yml` 不得因为 nightly 引入额外权限或额外条件分支
+- 任何一次正式 Release 缺失任一必需资产时，整个 Release 必须失败
+
+## Testing Strategy
+
+### PR Validation
+
+`ci.yml` 至少验证：
+
+- Flutter 依赖可解析
+- 代码生成可成功执行
+- `flutter analyze`
+- `flutter test`
+
+### Nightly Validation
+
+`nightly.yml` 至少验证：
+
+- 默认分支判断正确
+- nightly SHA 去重判断正确
+- Debian 10 容器镜像可成功构建或复用缓存
+- `package-smoke-test.sh` 通过
+- `amd64` 四类 nightly 资产可生成
+- prerelease 更新成功
+- release body 写入新的 nightly metadata
+
+### Formal Release Validation
 
 `release.yml` 至少验证：
-- 目标版本解析正确
+
+- 正式版本解析正确
 - 版本源文件更新正确
 - changelog 生成正确
-- `amd64` 与 `arm64` 均成功生成四类正式资产
-- GitHub Release 上传成功且文件名符合命名约束
+- `amd64` 与 `arm64` 双架构正式资产齐全
+- 正式 GitHub Release 上传成功
 
 ## Out of Scope
 
 本次设计明确不包含：
-- Arch Linux 包的正式发布资产
+
+- `push` 触发的 GitHub Actions 恢复
+- `arm64` nightly
+- 为 nightly 单独维护长期历史版本列表
 - 自动维护 `CHANGELOG.md`
-- 自动推送到 Gitee / OBS / AUR
-- 额外的 macOS / Windows 发布链路
-- 在首版 CI 中默认启用 `arm64` 日常校验
+- macOS / Windows 发布链路
+- Arch Linux 正式发布资产
 
 ## Expected Outcome
 
-完成后，仓库将具备一套可维护、可追溯、兼容性优先的 Linux 发版体系：
-- 日常提交通过 `ci.yml` 获得 Debian 10 `amd64` 校验
-- 正式版本通过 `release.yml` 手动触发
-- 默认自动递增 `3.0.x` patch，也支持手动指定版本
-- Release 页面自动附带 Conventional Commits changelog
-- 用户可以直接下载 `amd64` / `arm64` 的 `bundle`、`.deb`、`.rpm`、`.AppImage`
+完成后，仓库将形成稳定的三层工作流结构：
+
+- `pull_request` 只做快速源码校验
+- nightly 每天 `UTC+8 03:00` 只在默认分支有新提交时构建一次 `amd64` prerelease，并附带完整 packaging smoke test
+- 正式版本继续通过 `workflow_dispatch` 构建双架构 Release
+
+最终效果是：
+
+- PR 反馈更快
+- 昂贵的 Linux 打包回归被收敛到 nightly
+- nightly 对用户保持单一最新快照
+- 正式 Release 不受 nightly 逻辑污染
+- GitHub Actions / Release / 资产下载路径都具备足够清晰的版本辨识信息

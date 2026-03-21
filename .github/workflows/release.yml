@@ -237,3 +237,37 @@ jobs:
             artifacts/**/*.deb
             artifacts/**/*.rpm
             artifacts/**/*.AppImage
+
+  publish-aur:
+    name: Publish to AUR ${{ needs.prepare-release.outputs.version }}
+    needs: [prepare-release, publish-release]
+    if: ${{ always() && needs.publish-release.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-release.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Setup SSH for AUR
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur_key
+          chmod 600 ~/.ssh/aur_key
+          cat >> ~/.ssh/config <<EOF
+          Host aur.archlinux.org
+            IdentityFile ~/.ssh/aur_key
+            User aur
+          EOF
+          chmod 600 ~/.ssh/config
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+
+      - name: Publish AUR package
+        run: bash build/scripts/publish-aur.sh --version "${{ needs.prepare-release.outputs.version }}"
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/aur_key

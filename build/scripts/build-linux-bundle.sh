@@ -188,6 +188,26 @@ fi
 
 cp -a "$expected_bundle_dir" "$bundle_dir"
 
+# Add logo.png to bundle root for AUR packaging
+# Convert SVG to PNG if rsvg-convert is available, otherwise use fallback
+logo_svg="$bundle_dir/data/flutter_assets/assets/icons/logo.svg"
+logo_png="$bundle_dir/logo.png"
+if [[ -f "$logo_svg" ]]; then
+  if command -v rsvg-convert &>/dev/null; then
+    rsvg-convert -w 256 -h 256 "$logo_svg" -o "$logo_png"
+  elif command -v convert &>/dev/null; then
+    # ImageMagick fallback
+    convert -background none -resize 256x256 "$logo_svg" "$logo_png"
+  else
+    echo "Warning: Neither rsvg-convert nor ImageMagick found, logo.png not generated" >&2
+  fi
+fi
+
+# Copy LICENSE to bundle
+if [[ -f "$ROOT_DIR/LICENSE" ]]; then
+  cp "$ROOT_DIR/LICENSE" "$bundle_dir/LICENSE"
+fi
+
 printf 'version=%s\narch=%s\nbundle_dir=%s\n' \
   "$release_version" \
   "$target_arch" \

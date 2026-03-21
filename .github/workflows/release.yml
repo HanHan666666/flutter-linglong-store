@@ -133,6 +133,13 @@ jobs:
           path: build/out/linux/${{ needs.prepare-release.outputs.version }}/amd64
           if-no-files-found: error
 
+      - name: Upload amd64 sha256sums
+        uses: actions/upload-artifact@v4
+        with:
+          name: sha256sums-amd64
+          path: build/out/linux/${{ needs.prepare-release.outputs.version }}/amd64/sha256sum-amd64.txt
+          if-no-files-found: warn
+
   build-arm64:
     name: Build arm64 native ${{ needs.prepare-release.outputs.version }}
     needs: prepare-release
@@ -162,6 +169,13 @@ jobs:
           name: release-assets-arm64
           path: build/out/linux/${{ needs.prepare-release.outputs.version }}/arm64
           if-no-files-found: error
+
+      - name: Upload arm64 sha256sums
+        uses: actions/upload-artifact@v4
+        with:
+          name: sha256sums-arm64
+          path: build/out/linux/${{ needs.prepare-release.outputs.version }}/arm64/sha256sum-arm64.txt
+          if-no-files-found: warn
 
   build-arm64-qemu:
     name: Build arm64 fallback ${{ needs.prepare-release.outputs.version }}
@@ -203,6 +217,13 @@ jobs:
           name: release-assets-arm64
           path: build/out/linux/${{ needs.prepare-release.outputs.version }}/arm64
           if-no-files-found: error
+
+      - name: Upload arm64 fallback sha256sums
+        uses: actions/upload-artifact@v4
+        with:
+          name: sha256sums-arm64
+          path: build/out/linux/${{ needs.prepare-release.outputs.version }}/arm64/sha256sum-arm64.txt
+          if-no-files-found: warn
 
   publish-release:
     name: Publish GitHub Release ${{ needs.prepare-release.outputs.version }}
@@ -250,6 +271,38 @@ jobs:
           ref: ${{ needs.prepare-release.outputs.tag }}
           fetch-depth: 0
 
+      - name: Download sha256sums
+        uses: actions/download-artifact@v4
+        with:
+          pattern: sha256sums-*
+          path: sha256sums
+          merge-multiple: true
+
+      - name: Read sha256sums
+        id: sha256sums
+        run: |
+          # With merge-multiple: true, files are named by artifact content
+          # sha256sum-amd64.txt and sha256sum-arm64.txt will be at root
+          sha_amd64=""
+          sha_arm64=""
+
+          if [[ -f "sha256sums/sha256sum-amd64.txt" ]]; then
+            sha_amd64=$(cat "sha256sums/sha256sum-amd64.txt")
+            echo "AMD64 SHA256: $sha_amd64"
+          else
+            echo "Warning: AMD64 sha256sum not found" >&2
+          fi
+
+          if [[ -f "sha256sums/sha256sum-arm64.txt" ]]; then
+            sha_arm64=$(cat "sha256sums/sha256sum-arm64.txt")
+            echo "ARM64 SHA256: $sha_arm64"
+          else
+            echo "Warning: ARM64 sha256sum not found" >&2
+          fi
+
+          echo "sha_amd64=$sha_amd64" >> "$GITHUB_OUTPUT"
+          echo "sha_arm64=$sha_arm64" >> "$GITHUB_OUTPUT"
+
       - name: Setup SSH for AUR
         env:
           AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
@@ -266,6 +319,9 @@ jobs:
           ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
 
       - name: Publish AUR package
+        env:
+          SHA256_AMD64: ${{ steps.sha256sums.outputs.sha_amd64 }}
+          SHA256_ARM64: ${{ steps.sha256sums.outputs.sha_arm64 }}
         run: bash build/scripts/publish-aur.sh --version "${{ needs.prepare-release.outputs.version }}"
 
       - name: Cleanup SSH key

@@ -62,3 +62,8 @@ fi
 
 rm -f "$artifact_path"
 tar -C "$output_dir/bundle" -czf "$artifact_path" "linglong-store"
+
+# Calculate sha256 for AUR packaging (filename includes arch to avoid merge conflicts)
+sha256_file="$output_dir/sha256sum-${target_arch}.txt"
+sha256sum "$artifact_path" | cut -d' ' -f1 > "$sha256_file"
+echo "SHA256 ($target_arch): $(cat "$sha256_file")"

@@ -7,6 +7,10 @@ release_version=""
 target_arch="x86_64"
 aur_repo_url="ssh://aur@aur.archlinux.org/linglong-store-bin.git"
 
+# SHA256 checksums from environment (set by CI)
+sha256_amd64="${SHA256_AMD64:-}"
+sha256_arm64="${SHA256_ARM64:-}"
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --version)
@@ -46,28 +50,35 @@ esac
 # Generate PKGBUILD
 generate_pkgbuild() {
   local version="$1"
-  local arch="$2"
-  local download_url="https://github.com/HanHan666666/flutter-linglong-store/releases/download/v${version}/linglong-store-${version}-linux-amd64.tar.gz"
   local pkgver="${version//-/.}"
+
+  # Use SKIP if sha256 not provided (fallback for manual runs)
+  local sha_x86_64="${sha256_amd64:-SKIP}"
+  local sha_aarch64="${sha256_arm64:-SKIP}"
+
+  if [[ "$sha_x86_64" == "SKIP" || "$sha_aarch64" == "SKIP" ]]; then
+    echo "Warning: Using SKIP for sha256sums. This is not recommended for production!" >&2
+  fi
 
   cat <<EOF
 # Maintainer: HanHan666666 <tar.zip@outlook.com>
 pkgname=linglong-store-bin
 pkgver=${pkgver}
 pkgrel=1
-pkgdesc="Linglong Application Store Community Edition"
+pkgdesc="Linglong Application Store Community Edition - 玲珑应用商店社区版"
 arch=('x86_64' 'aarch64')
 url="https://github.com/HanHan666666/flutter-linglong-store"
 license=('MIT')
 depends=('gtk3' 'xz' 'libstdc++')
+optdepends=('linglong: 玲珑运行环境（必需）')
 provides=('linglong-store')
 conflicts=('linglong-store')
 
 source_x86_64=("linglong-store-\${pkgver}-linux-amd64.tar.gz::https://github.com/HanHan666666/flutter-linglong-store/releases/download/v\${pkgver}/linglong-store-\${pkgver}-linux-amd64.tar.gz")
 source_aarch64=("linglong-store-\${pkgver}-linux-arm64.tar.gz::https://github.com/HanHan666666/flutter-linglong-store/releases/download/v\${pkgver}/linglong-store-\${pkgver}-linux-arm64.tar.gz")
 
-sha256sums_x86_64=('SKIP')
-sha256sums_aarch64=('SKIP')
+sha256sums_x86_64=('${sha_x86_64}')
+sha256sums_aarch64=('${sha_aarch64}')
 
 package() {
   install -dm755 "\${pkgdir}/opt/linglong-store"
@@ -100,11 +111,18 @@ Categories=System;PackageManager;
 Keywords=linglong;store;app;package;
 DESKTOP
 
+  # Install icon
   install -dm755 "\${pkgdir}/usr/share/icons/hicolor/256x256/apps"
-  if [[ -f "\${srcdir}/linglong-store/data/flutter_assets/assets/icons/logo.png" ]]; then
+  if [[ -f "\${srcdir}/linglong-store/logo.png" ]]; then
+    cp "\${srcdir}/linglong-store/logo.png" "\${pkgdir}/usr/share/icons/hicolor/256x256/apps/linglong-store.png"
+  elif [[ -f "\${srcdir}/linglong-store/data/flutter_assets/assets/icons/logo.png" ]]; then
     cp "\${srcdir}/linglong-store/data/flutter_assets/assets/icons/logo.png" "\${pkgdir}/usr/share/icons/hicolor/256x256/apps/linglong-store.png"
-  else
-    rsvg-convert -w 256 -h 256 "\${srcdir}/linglong-store/data/flutter_assets/assets/icons/logo.svg" -o "\${pkgdir}/usr/share/icons/hicolor/256x256/apps/linglong-store.png" 2>/dev/null || true
+  fi
+
+  # Install LICENSE
+  install -dm755 "\${pkgdir}/usr/share/licenses/\${pkgname}"
+  if [[ -f "\${srcdir}/linglong-store/LICENSE" ]]; then
+    cp "\${srcdir}/linglong-store/LICENSE" "\${pkgdir}/usr/share/licenses/\${pkgname}/LICENSE"
   fi
 }
 EOF
@@ -137,7 +155,7 @@ update_aur_repo() {
   cd "$work_dir"
 
   # Generate new PKGBUILD
-  generate_pkgbuild "$version" "$target_arch" > PKGBUILD
+  generate_pkgbuild "$version" > PKGBUILD
 
   # Generate .SRCINFO
   makepkg --printsrcinfo > .SRCINFO

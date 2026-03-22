@@ -216,3 +216,4 @@ time ./build/package-deb.sh
 - 2026-03-20：GitHub Actions 统一拆为 `ci.yml`（仅 `pull_request` 轻量校验）、`nightly.yml`（`UTC+8 03:00` 的 `amd64` nightly 预发布）和 `release.yml`（正式双架构发版）；`package-smoke-test.sh` 只允许留在 nightly，禁止再放回 PR CI。
 - 2026-03-20：Gitee 镜像仓库固定为 `hanplus/flutter-linglong-store`；Git refs 先推 `master` 与 tags，再统一通过 `build/scripts/sync-gitee-release.sh` 同步 GitHub Release，禁止手工在 Gitee 页面逐个上传资产。
 - 2026-03-20：`GITEE_REPO` 允许写 `owner/repo` 或完整 `https://gitee.com/...(.git)` URL，但同步脚本内部必须先归一成 `owner/repo` 后再调用 Gitee API。
+- 2026-03-22：侧边栏动态菜单配置当前以 Flutter 本地目录 `local_sidebar_menu_catalog.dart` 为准；未来若要切回接口配置，只允许从 `sidebarConfigProvider` 这一处切换数据源，侧边栏项标签与自定义分类页标题必须继续复用同一套菜单解析 helper，禁止各自直接读取后端 `menuName`。

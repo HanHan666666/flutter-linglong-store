@@ -1,0 +1,89 @@
+# Maintainer: @MAINTAINER_NAME@ <@MAINTAINER_EMAIL@>
+pkgname=linglong-store-bin
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc="Linglong Application Store Community Edition - 玲珑应用商店社区版"
+arch=('x86_64' 'aarch64')
+url="@PROJECT_URL@"
+license=('MIT')
+depends=(
+  'gtk3'
+  'xz'
+  'libstdc++'
+  'glibc'
+  'gcc-libs'
+  'hicolor-icon-theme'
+)
+optdepends=(
+  'linglong: 玲珑运行环境（必需）'
+)
+provides=('linglong-store')
+conflicts=('linglong-store')
+install=linglong-store-bin.install
+changelog=linglong-store-bin.changelog
+
+source_x86_64=("linglong-store-${pkgver}-linux-amd64.tar.gz::@RELEASE_URL_BASE@/v${pkgver}/linglong-store-${pkgver}-linux-amd64.tar.gz")
+source_aarch64=("linglong-store-${pkgver}-linux-arm64.tar.gz::@RELEASE_URL_BASE@/v${pkgver}/linglong-store-${pkgver}-linux-arm64.tar.gz")
+
+sha256sums_x86_64=('@SHA256_AMD64@')
+sha256sums_aarch64=('@SHA256_ARM64@')
+
+package() {
+  # Install application files
+  install -dm755 "${pkgdir}/opt/linglong-store"
+  cp -a "${srcdir}/linglong-store/." "${pkgdir}/opt/linglong-store/"
+
+  # Install launcher script
+  install -dm755 "${pkgdir}/usr/bin"
+  cat > "${pkgdir}/usr/bin/linglong-store" <<'LAUNCHER'
+#!/usr/bin/env bash
+set -euo pipefail
+exec /opt/linglong-store/linglong_store "$@"
+LAUNCHER
+  chmod 755 "${pkgdir}/usr/bin/linglong-store"
+
+  # Install desktop entry
+  install -dm755 "${pkgdir}/usr/share/applications"
+  cat > "${pkgdir}/usr/share/applications/linglong-store.desktop" <<'DESKTOP'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Linglong Store
+Name[zh_CN]=玲珑应用商店社区版
+GenericName=Application Store
+GenericName[zh_CN]=应用商店
+Comment=Linglong Application Store Community Edition
+Comment[zh_CN]=玲珑应用商店社区版
+Exec=linglong-store
+Icon=linglong-store
+StartupWMClass=org.linglong-store.LinyapsManager
+Terminal=false
+Categories=System;PackageManager;
+Keywords=linglong;store;app;package;
+DESKTOP
+
+  # Validate desktop file if tool available
+  if command -v desktop-file-validate &>/dev/null; then
+    desktop-file-validate "${pkgdir}/usr/share/applications/linglong-store.desktop" || true
+  fi
+
+  # Install icon
+  install -dm755 "${pkgdir}/usr/share/icons/hicolor/256x256/apps"
+  if [[ -f "${srcdir}/linglong-store/logo.png" ]]; then
+    install -m644 "${srcdir}/linglong-store/logo.png" "${pkgdir}/usr/share/icons/hicolor/256x256/apps/linglong-store.png"
+  elif [[ -f "${srcdir}/linglong-store/data/flutter_assets/assets/icons/logo.png" ]]; then
+    install -m644 "${srcdir}/linglong-store/data/flutter_assets/assets/icons/logo.png" "${pkgdir}/usr/share/icons/hicolor/256x256/apps/linglong-store.png"
+  fi
+
+  # Install metainfo
+  install -dm755 "${pkgdir}/usr/share/metainfo"
+  if [[ -f "${srcdir}/linglong-store/linglong-store.metainfo.xml" ]]; then
+    install -m644 "${srcdir}/linglong-store/linglong-store.metainfo.xml" "${pkgdir}/usr/share/metainfo/linglong-store.metainfo.xml"
+  fi
+
+  # Install LICENSE
+  install -dm755 "${pkgdir}/usr/share/licenses/${pkgname}"
+  if [[ -f "${srcdir}/linglong-store/LICENSE" ]]; then
+    install -m644 "${srcdir}/linglong-store/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  fi
+}

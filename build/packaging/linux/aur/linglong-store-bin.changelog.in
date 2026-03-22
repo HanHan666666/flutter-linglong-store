@@ -1,0 +1,3 @@
+@VERSION@-1
+  * Release @VERSION@
+  * See: @PROJECT_URL@/releases/tag/v@VERSION@

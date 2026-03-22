@@ -1,0 +1,21 @@
+post_install() {
+  echo ""
+  echo "==> 玲珑应用商店社区版安装完成"
+  echo "==> "
+  echo "==> 重要提示："
+  echo "==>   本软件需要玲珑运行环境才能正常工作"
+  echo "==>   请安装 linglong 包: yay -S linglong"
+  echo "==> "
+  echo "==> 启动方式："
+  echo "==>   从应用菜单启动 'Linglong Store'"
+  echo "==>   或运行命令: linglong-store"
+  echo ""
+}
+
+post_upgrade() {
+  post_install
+}
+
+pre_remove() {
+  echo "==> 感谢使用玲珑应用商店社区版"
+}

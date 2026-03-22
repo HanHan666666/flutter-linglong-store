@@ -79,7 +79,7 @@ executable_name="linglong-store"
 icon_name="linglong-store"
 wm_class="org.linglong-store.LinyapsManager"
 app_id="org.linglongstore.linglong_store"
-project_url="https://github.com/SXFreell/linglong-store"
+project_url="https://github.com/HanHan666666/flutter-linglong-store"
 maintainer="Linglong Store Community <community@linglong.dev>"
 
 render_file() {

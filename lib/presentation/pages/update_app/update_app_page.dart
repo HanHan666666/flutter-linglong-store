@@ -129,7 +129,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
                     height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.system_update, size: 18),
+                : const Icon(Icons.update, size: 18),
             label: Text(
               isUpdating
                   ? (l10n?.updating ?? '正在更新...')
@@ -170,7 +170,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
     // 空状态
     if (state.apps.isEmpty) {
       return EmptyState(
-        icon: Icons.system_update_alt,
+        icon: Icons.update,
         title: l10n?.noUpdate ?? '暂无更新',
         description: l10n?.allAppsUpToDate ?? '您的所有应用都是最新版本',
       );

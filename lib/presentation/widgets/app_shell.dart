@@ -160,6 +160,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     final currentSearchQuery = currentPath == '/search_list'
         ? (routerState.uri.queryParameters['q'] ?? '')
         : '';
+    final updateCount = ref.watch(updatableAppsCountProvider);
 
     return Scaffold(
       body: Stack(
@@ -179,7 +180,10 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
                 child: Row(
                   children: [
                     // 左侧导航栏
-                    Sidebar(currentPath: currentPath),
+                    Sidebar(
+                      currentPath: currentPath,
+                      updateCount: updateCount,
+                    ),
                     // 右侧内容区域，背景跟随主题
                     Expanded(
                       child: Container(

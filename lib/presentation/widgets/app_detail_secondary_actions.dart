@@ -27,26 +27,40 @@ class AppDetailSecondaryActions extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final errorColor = theme.colorScheme.error;
 
+    // 按钮高度与 InstallButton.large (40px) 保持一致
+    const buttonHeight = 40.0;
+    const iconSize = 18.0;
+
     // 次级动作保持紧凑横向排布，由外层决定何时整体换行。
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        OutlinedButton.icon(
-          onPressed: onCreateShortcut,
-          icon: const Icon(Icons.shortcut_outlined, size: 18),
-          label: Text(l10n?.createDesktopShortcut ?? '创建桌面快捷方式'),
+        SizedBox(
+          height: buttonHeight,
+          child: OutlinedButton.icon(
+            onPressed: onCreateShortcut,
+            icon: const Icon(Icons.shortcut_outlined, size: iconSize),
+            label: Text(l10n?.createDesktopShortcut ?? '创建桌面快捷方式'),
+          ),
         ),
         const SizedBox(width: 12),
-        OutlinedButton.icon(
-          onPressed: onUninstall,
-          icon: Icon(Icons.delete_outline_rounded, size: 18, color: errorColor),
-          label: Text(
-            l10n?.uninstall ?? '卸载',
-            style: TextStyle(color: errorColor),
-          ),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: errorColor,
-            side: BorderSide(color: errorColor),
+        SizedBox(
+          height: buttonHeight,
+          child: OutlinedButton.icon(
+            onPressed: onUninstall,
+            icon: Icon(
+              Icons.delete_outline_rounded,
+              size: iconSize,
+              color: errorColor,
+            ),
+            label: Text(
+              l10n?.uninstall ?? '卸载',
+              style: TextStyle(color: errorColor),
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: errorColor,
+              side: BorderSide(color: errorColor),
+            ),
           ),
         ),
       ],

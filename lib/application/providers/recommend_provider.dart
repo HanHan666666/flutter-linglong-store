@@ -131,8 +131,9 @@ class Recommend extends _$Recommend {
   }
 
   Future<void> _hydrateFromCacheIfPresent() async {
+    final locale = _resolveApiLang(ApiClient.getLocale?.call());
     final cacheStore = ref.read(recommendPageCacheStoreProvider);
-    final snapshot = await cacheStore.read();
+    final snapshot = await cacheStore.read(locale);
     if (snapshot == null) {
       return;
     }
@@ -152,6 +153,7 @@ class Recommend extends _$Recommend {
     required RecommendData data,
     required int currentPage,
   }) async {
+    final locale = _resolveApiLang(ApiClient.getLocale?.call());
     final cacheStore = ref.read(recommendPageCacheStoreProvider);
     await cacheStore.write(
       RecommendPageCacheSnapshot(
@@ -159,6 +161,7 @@ class Recommend extends _$Recommend {
         apps: data.apps,
         currentPage: currentPage,
       ),
+      locale,
     );
   }
 

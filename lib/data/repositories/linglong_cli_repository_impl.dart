@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import '../../core/i18n/install_messages.dart';
 import '../../domain/models/installed_app.dart';
 import '../../domain/models/running_app.dart';
 import '../../domain/models/install_progress.dart';
@@ -13,7 +14,9 @@ import '../mappers/cli_output_parser.dart';
 
 /// ll-cli Repository 实现
 class LinglongCliRepositoryImpl implements LinglongCliRepository {
-  LinglongCliRepositoryImpl();
+  LinglongCliRepositoryImpl(this._messages);
+
+  final InstallMessages _messages;
 
   /// 活跃的安装任务进程 PID（用于取消）
   final Map<String, int> _activeProcessPids = {};
@@ -35,7 +38,9 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
   }
 
   String _operationLabel(InstallTaskKind kind) {
-    return kind == InstallTaskKind.update ? '更新' : '安装';
+    return kind == InstallTaskKind.update
+        ? _messages.updateLabel
+        : _messages.installLabel;
   }
 
   Stream<InstallProgress> _runInstallLikeOperation(
@@ -53,7 +58,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
     yield InstallProgress(
       appId: appId,
       status: InstallStatus.pending,
-      message: '准备$operationLabel $appId...',
+      message: _messages.preparing(operationLabel, appId),
     );
 
     try {
@@ -80,7 +85,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
           yield InstallProgress(
             appId: appId,
             status: InstallStatus.cancelled,
-            message: '$operationLabel已取消',
+            message: _messages.cancelled(operationLabel),
           );
           return;
         }
@@ -92,21 +97,21 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
             appId: appId,
             status: InstallStatus.downloading,
             progress: progressInfo.progress,
-            message: InstallErrorCode.getStatusFromMessage(event.line),
+            message: _messages.getStatusFromMessage(event.line),
           );
         } else if (progressInfo.phase == InstallPhase.installing) {
           yield InstallProgress(
             appId: appId,
             status: InstallStatus.installing,
             progress: progressInfo.progress,
-            message: InstallErrorCode.getStatusFromMessage(event.line),
+            message: _messages.getStatusFromMessage(event.line),
           );
         } else if (progressInfo.phase == InstallPhase.completed) {
           yield InstallProgress(
             appId: appId,
             status: InstallStatus.success,
             progress: 100,
-            message: '$operationLabel完成',
+            message: _messages.completed(operationLabel),
           );
           return;
         } else if (progressInfo.phase == InstallPhase.failed) {
@@ -120,7 +125,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
             status: InstallStatus.failed,
             message: errorMessage,
             error: errorCode != null
-                ? InstallErrorCode.getStatusFromCode(errorCode)
+                ? _messages.getErrorMessageFromCode(errorCode)
                 : errorMessage,
             errorCode: errorCode,
           );
@@ -138,21 +143,21 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
           appId: appId,
           status: InstallStatus.success,
           progress: 100,
-          message: '$operationLabel完成',
+          message: _messages.completed(operationLabel),
         );
       } else {
         yield InstallProgress(
           appId: appId,
           status: InstallStatus.failed,
-          message: '$operationLabel状态未知',
-          error: '无法确认$operationLabel结果',
+          message: _messages.unknownStatus(operationLabel),
+          error: _messages.confirmFailed(operationLabel),
         );
       }
     } on CliTimeoutException catch (e) {
       yield InstallProgress(
         appId: appId,
         status: InstallStatus.failed,
-        message: '$operationLabel超时',
+        message: _messages.timeout(operationLabel),
         error: e.message,
         errorCode: -2,
       );
@@ -160,14 +165,14 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       yield InstallProgress(
         appId: appId,
         status: InstallStatus.cancelled,
-        message: '$operationLabel已取消',
+        message: _messages.cancelled(operationLabel),
       );
     } catch (e, stack) {
       AppLogger.error('[LinglongCli] $operationLabel异常: $appId', e, stack);
       yield InstallProgress(
         appId: appId,
         status: InstallStatus.failed,
-        message: '$operationLabel失败',
+        message: _messages.failed(operationLabel),
         error: e.toString(),
       );
     } finally {
@@ -328,11 +333,11 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         return output.stdout;
       } else {
         AppLogger.warning('[LinglongCli] 卸载失败: ${output.stderr}');
-        return '卸载失败: ${output.stderr}';
+        return _messages.uninstallFailed(output.stderr);
       }
     } catch (e, stack) {
       AppLogger.error('[LinglongCli] 卸载异常: $appId', e, stack);
-      return '卸载异常: $e';
+      return _messages.uninstallException(e.toString());
     }
   }
 
@@ -377,7 +382,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         ], timeout: const Duration(seconds: 10));
 
         if (!output.success && attempt == 5) {
-          return '终止失败: ${output.stderr}';
+          return _messages.stopFailed(output.stderr);
         }
 
         if (attempt < 5) {
@@ -388,7 +393,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       return 'Successfully stopped $appName';
     } catch (e, stack) {
       AppLogger.error('[LinglongCli] 终止应用异常: $appName', e, stack);
-      return '终止异常: $e';
+      return _messages.stopException(e.toString());
     }
   }
 
@@ -413,9 +418,9 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       ], timeout: const Duration(seconds: 10));
 
       if (output.success) {
-        return '快捷方式已创建';
+        return _messages.shortcutCreated;
       } else {
-        return '创建失败: ${output.stderr}';
+        return _messages.shortcutCreateFailed(output.stderr);
       }
     } catch (e) {
       // 如果 desktop 命令不存在，尝试手动创建
@@ -454,11 +459,11 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       if (output.success) {
         return output.stdout;
       } else {
-        return '清理失败: ${output.stderr}';
+        return _messages.pruneFailed(output.stderr);
       }
     } catch (e, stack) {
       AppLogger.error('[LinglongCli] 清理异常', e, stack);
-      return '清理异常: $e';
+      return _messages.pruneException(e.toString());
     }
   }
 
@@ -472,10 +477,10 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       if (output.success) {
         return output.stdout.trim();
       } else {
-        return '获取版本失败';
+        return _messages.versionFailed;
       }
     } catch (e) {
-      return 'll-cli 未安装';
+      return _messages.llCliNotInstalled;
     }
   }
 
@@ -489,7 +494,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       ], timeout: kQueryTimeout);
 
       if (!queryOutput.success) {
-        return '无法获取应用信息';
+        return _messages.appInfoUnavailable;
       }
 
       // ll-cli info 输出 JSON，直接解析
@@ -525,9 +530,9 @@ Categories=Application;
       await file.parent.create(recursive: true);
       await file.writeAsString(desktopContent);
 
-      return '快捷方式已创建: $desktopPath';
+      return _messages.shortcutCreatedWithPath(desktopPath);
     } catch (e) {
-      return '创建快捷方式失败: $e';
+      return _messages.shortcutCreateException(e.toString());
     }
   }
 }

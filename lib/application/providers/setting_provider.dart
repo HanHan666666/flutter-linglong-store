@@ -7,8 +7,13 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging/app_logger.dart';
+import 'all_apps_provider.dart';
+import 'custom_category_provider.dart';
 import 'install_queue_provider.dart';
 import 'installed_apps_provider.dart';
+import 'ranking_provider.dart';
+import 'recommend_provider.dart';
+import 'search_provider.dart';
 
 part 'setting_provider.freezed.dart';
 part 'setting_provider.g.dart';
@@ -168,6 +173,30 @@ class Setting extends _$Setting {
     state = state.copyWith(locale: locale);
     await _prefs.setString('linglong-store-language', locale.languageCode);
     AppLogger.info('Locale changed to: ${locale.languageCode}');
+
+    // 刷新所有依赖语言的数据 Provider
+    _invalidateLocaleDependentProviders();
+  }
+
+  /// 刷新所有依赖语言的数据 Provider
+  ///
+  /// 语言切换后，需要刷新以下 Provider 以获取对应语言的数据：
+  /// - 推荐列表
+  /// - 全部应用列表
+  /// - 排行榜
+  /// - 搜索结果
+  /// - 自定义分类
+  void _invalidateLocaleDependentProviders() {
+    // 刷新推荐列表
+    ref.invalidate(recommendProvider);
+    // 刷新全部应用列表
+    ref.invalidate(allAppsProvider);
+    // 刷新排行榜
+    ref.invalidate(rankingProvider);
+    // 刷新搜索结果
+    ref.invalidate(searchProvider);
+    // 刷新自定义分类
+    ref.invalidate(customCategoryProvider);
   }
 
   /// 设置主题模式

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'application/providers/global_provider.dart';
@@ -24,16 +23,11 @@ class LinglongStoreApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
 
       // 国际化配置
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
 
       // 语言配置
       locale: locale,
-      supportedLocales: const [Locale('zh'), Locale('en')],
+      supportedLocales: AppLocalizations.supportedLocales,
 
       // 主题配置
       theme: AppTheme.lightTheme,

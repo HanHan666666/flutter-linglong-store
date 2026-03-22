@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/recommend_models.dart';
 import 'cache_service.dart';
 
-const _recommendPageCacheKey = 'recommend_page_cache';
+const _recommendPageCacheKeyPrefix = 'recommend_page_cache';
+
+/// 构建包含 locale 的缓存 key
+String _buildCacheKey(String locale) => '$_recommendPageCacheKeyPrefix|$locale';
 
 /// 推荐页缓存快照。
 ///
@@ -22,11 +25,11 @@ class RecommendPageCacheSnapshot {
 
 /// 推荐页缓存读写接口，便于测试时用内存实现覆盖。
 abstract class RecommendPageCacheStore {
-  Future<RecommendPageCacheSnapshot?> read();
+  Future<RecommendPageCacheSnapshot?> read(String locale);
 
-  Future<void> write(RecommendPageCacheSnapshot snapshot);
+  Future<void> write(RecommendPageCacheSnapshot snapshot, String locale);
 
-  Future<void> clear();
+  Future<void> clear(String locale);
 }
 
 final recommendPageCacheStoreProvider = Provider<RecommendPageCacheStore>((ref) {
@@ -37,8 +40,9 @@ class HiveRecommendPageCacheStore implements RecommendPageCacheStore {
   const HiveRecommendPageCacheStore();
 
   @override
-  Future<RecommendPageCacheSnapshot?> read() async {
-    final raw = CacheService.get<Map>(_recommendPageCacheKey);
+  Future<RecommendPageCacheSnapshot?> read(String locale) async {
+    final cacheKey = _buildCacheKey(locale);
+    final raw = CacheService.get<Map>(cacheKey);
     if (raw == null) {
       return null;
     }
@@ -67,8 +71,9 @@ class HiveRecommendPageCacheStore implements RecommendPageCacheStore {
   }
 
   @override
-  Future<void> write(RecommendPageCacheSnapshot snapshot) async {
-    await CacheService.set<Map<String, dynamic>>(_recommendPageCacheKey, {
+  Future<void> write(RecommendPageCacheSnapshot snapshot, String locale) async {
+    final cacheKey = _buildCacheKey(locale);
+    await CacheService.set<Map<String, dynamic>>(cacheKey, {
       'banners': snapshot.banners.map(_bannerToJson).toList(),
       'apps': snapshot.apps.items.map(_appToJson).toList(),
       'total': snapshot.apps.total,
@@ -80,8 +85,9 @@ class HiveRecommendPageCacheStore implements RecommendPageCacheStore {
   }
 
   @override
-  Future<void> clear() async {
-    await CacheService.delete(_recommendPageCacheKey);
+  Future<void> clear(String locale) async {
+    final cacheKey = _buildCacheKey(locale);
+    await CacheService.delete(cacheKey);
   }
 
   static BannerInfo _bannerFromJson(Map<String, dynamic> json) {

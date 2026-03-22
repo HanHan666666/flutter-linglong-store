@@ -1637,6 +1637,336 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'ll-cli 版本'**
   String get llCliVersionLabel;
+
+  /// No description provided for @rankingTabDownload.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载榜'**
+  String get rankingTabDownload;
+
+  /// No description provided for @rankingTabRising.
+  ///
+  /// In zh, this message translates to:
+  /// **'新秀榜'**
+  String get rankingTabRising;
+
+  /// No description provided for @rankingTabUpdate.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新榜'**
+  String get rankingTabUpdate;
+
+  /// No description provided for @rankingTabHot.
+  ///
+  /// In zh, this message translates to:
+  /// **'热门榜'**
+  String get rankingTabHot;
+
+  /// No description provided for @installErrorGeneric.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 通用错误'**
+  String get installErrorGeneric;
+
+  /// No description provided for @installErrorTimeout.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 进度超时'**
+  String get installErrorTimeout;
+
+  /// No description provided for @installCancelled.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装已取消'**
+  String get installCancelled;
+
+  /// No description provided for @installErrorUnknown.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 未知错误'**
+  String get installErrorUnknown;
+
+  /// No description provided for @installErrorAppNotFoundRemote.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 远程仓库找不到应用'**
+  String get installErrorAppNotFoundRemote;
+
+  /// No description provided for @installErrorAppNotFoundLocal.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 本地找不到应用'**
+  String get installErrorAppNotFoundLocal;
+
+  /// No description provided for @installFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败'**
+  String get installFailed;
+
+  /// No description provided for @installErrorAppNotInRemote.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 远程无该应用'**
+  String get installErrorAppNotInRemote;
+
+  /// No description provided for @installErrorSameVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 已安装同版本'**
+  String get installErrorSameVersion;
+
+  /// No description provided for @installErrorDowngrade.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 需要降级安装'**
+  String get installErrorDowngrade;
+
+  /// No description provided for @installErrorModuleVersionNotAllowed.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 安装模块时不允许指定版本'**
+  String get installErrorModuleVersionNotAllowed;
+
+  /// No description provided for @installErrorModuleRequiresApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 安装模块需先安装应用'**
+  String get installErrorModuleRequiresApp;
+
+  /// No description provided for @installErrorModuleExists.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 模块已存在'**
+  String get installErrorModuleExists;
+
+  /// No description provided for @installErrorArchMismatch.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 架构不匹配'**
+  String get installErrorArchMismatch;
+
+  /// No description provided for @installErrorModuleNotInRemote.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 远程无该模块'**
+  String get installErrorModuleNotInRemote;
+
+  /// No description provided for @installErrorMissingErofs.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 缺少 erofs 解压命令'**
+  String get installErrorMissingErofs;
+
+  /// No description provided for @installErrorUnsupportedFormat.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 不支持的文件格式'**
+  String get installErrorUnsupportedFormat;
+
+  /// No description provided for @installErrorNetwork.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 网络错误'**
+  String get installErrorNetwork;
+
+  /// No description provided for @installErrorInvalidRef.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 无效引用'**
+  String get installErrorInvalidRef;
+
+  /// No description provided for @installErrorUnknownArch.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 未知架构'**
+  String get installErrorUnknownArch;
+
+  /// No description provided for @installErrorCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装失败: 错误码 {code}'**
+  String installErrorCode(int code);
+
+  /// No description provided for @installStatusStarting.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始安装'**
+  String get installStatusStarting;
+
+  /// No description provided for @installStatusInstallingApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在安装应用'**
+  String get installStatusInstallingApp;
+
+  /// No description provided for @installStatusInstallingRuntime.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在安装运行时'**
+  String get installStatusInstallingRuntime;
+
+  /// No description provided for @installStatusInstallingBase.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在安装基础包'**
+  String get installStatusInstallingBase;
+
+  /// No description provided for @installStatusDownloadingMeta.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在下载元数据'**
+  String get installStatusDownloadingMeta;
+
+  /// No description provided for @installStatusDownloadingFiles.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在下载文件'**
+  String get installStatusDownloadingFiles;
+
+  /// No description provided for @installStatusPostProcessing.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装后处理'**
+  String get installStatusPostProcessing;
+
+  /// No description provided for @installStatusCompleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装完成'**
+  String get installStatusCompleted;
+
+  /// No description provided for @installStatusProcessing.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在处理'**
+  String get installStatusProcessing;
+
+  /// No description provided for @operationInstall.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装'**
+  String get operationInstall;
+
+  /// No description provided for @operationUpdate.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新'**
+  String get operationUpdate;
+
+  /// No description provided for @operationPreparing.
+  ///
+  /// In zh, this message translates to:
+  /// **'准备{operation} {appId}...'**
+  String operationPreparing(String operation, String appId);
+
+  /// No description provided for @operationCancelled.
+  ///
+  /// In zh, this message translates to:
+  /// **'{operation}已取消'**
+  String operationCancelled(String operation);
+
+  /// No description provided for @operationCompleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'{operation}完成'**
+  String operationCompleted(String operation);
+
+  /// No description provided for @operationUnknown.
+  ///
+  /// In zh, this message translates to:
+  /// **'{operation}状态未知'**
+  String operationUnknown(String operation);
+
+  /// No description provided for @operationConfirmFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法确认{operation}结果'**
+  String operationConfirmFailed(String operation);
+
+  /// No description provided for @operationTimeout.
+  ///
+  /// In zh, this message translates to:
+  /// **'{operation}超时'**
+  String operationTimeout(String operation);
+
+  /// No description provided for @operationFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'{operation}失败'**
+  String operationFailed(String operation);
+
+  /// No description provided for @uninstallFailedWithError.
+  ///
+  /// In zh, this message translates to:
+  /// **'卸载失败: {error}'**
+  String uninstallFailedWithError(String error);
+
+  /// No description provided for @uninstallException.
+  ///
+  /// In zh, this message translates to:
+  /// **'卸载异常: {error}'**
+  String uninstallException(String error);
+
+  /// No description provided for @stopFailedWithError.
+  ///
+  /// In zh, this message translates to:
+  /// **'终止失败: {error}'**
+  String stopFailedWithError(String error);
+
+  /// No description provided for @stopException.
+  ///
+  /// In zh, this message translates to:
+  /// **'终止异常: {error}'**
+  String stopException(String error);
+
+  /// No description provided for @shortcutCreatedWithPath.
+  ///
+  /// In zh, this message translates to:
+  /// **'快捷方式已创建: {path}'**
+  String shortcutCreatedWithPath(String path);
+
+  /// No description provided for @shortcutCreateFailedWithError.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建失败: {error}'**
+  String shortcutCreateFailedWithError(String error);
+
+  /// No description provided for @pruneFailedWithError.
+  ///
+  /// In zh, this message translates to:
+  /// **'清理失败: {error}'**
+  String pruneFailedWithError(String error);
+
+  /// No description provided for @pruneException.
+  ///
+  /// In zh, this message translates to:
+  /// **'清理异常: {error}'**
+  String pruneException(String error);
+
+  /// No description provided for @getVersionFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'获取版本失败'**
+  String get getVersionFailed;
+
+  /// No description provided for @llCliNotInstalled.
+  ///
+  /// In zh, this message translates to:
+  /// **'ll-cli 未安装'**
+  String get llCliNotInstalled;
+
+  /// No description provided for @appInfoUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法获取应用信息'**
+  String get appInfoUnavailable;
+
+  /// No description provided for @shortcutCreateException.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建快捷方式失败: {error}'**
+  String shortcutCreateException(String error);
 }
 
 class _AppLocalizationsDelegate

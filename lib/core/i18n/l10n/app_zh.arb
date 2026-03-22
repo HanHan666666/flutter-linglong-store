@@ -424,5 +424,187 @@
       }
     }
   },
-  "llCliVersionLabel": "ll-cli 版本"
+  "llCliVersionLabel": "ll-cli 版本",
+  "rankingTabDownload": "下载榜",
+  "rankingTabRising": "新秀榜",
+  "rankingTabUpdate": "更新榜",
+  "rankingTabHot": "热门榜",
+
+  "installErrorGeneric": "安装失败: 通用错误",
+  "installErrorTimeout": "安装失败: 进度超时",
+  "installCancelled": "安装已取消",
+  "installErrorUnknown": "安装失败: 未知错误",
+  "installErrorAppNotFoundRemote": "安装失败: 远程仓库找不到应用",
+  "installErrorAppNotFoundLocal": "安装失败: 本地找不到应用",
+  "installFailed": "安装失败",
+  "installErrorAppNotInRemote": "安装失败: 远程无该应用",
+  "installErrorSameVersion": "安装失败: 已安装同版本",
+  "installErrorDowngrade": "安装失败: 需要降级安装",
+  "installErrorModuleVersionNotAllowed": "安装失败: 安装模块时不允许指定版本",
+  "installErrorModuleRequiresApp": "安装失败: 安装模块需先安装应用",
+  "installErrorModuleExists": "安装失败: 模块已存在",
+  "installErrorArchMismatch": "安装失败: 架构不匹配",
+  "installErrorModuleNotInRemote": "安装失败: 远程无该模块",
+  "installErrorMissingErofs": "安装失败: 缺少 erofs 解压命令",
+  "installErrorUnsupportedFormat": "安装失败: 不支持的文件格式",
+  "installErrorNetwork": "安装失败: 网络错误",
+  "installErrorInvalidRef": "安装失败: 无效引用",
+  "installErrorUnknownArch": "安装失败: 未知架构",
+  "installErrorCode": "安装失败: 错误码 {code}",
+  "@installErrorCode": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+
+  "installStatusStarting": "开始安装",
+  "installStatusInstallingApp": "正在安装应用",
+  "installStatusInstallingRuntime": "正在安装运行时",
+  "installStatusInstallingBase": "正在安装基础包",
+  "installStatusDownloadingMeta": "正在下载元数据",
+  "installStatusDownloadingFiles": "正在下载文件",
+  "installStatusPostProcessing": "安装后处理",
+  "installStatusCompleted": "安装完成",
+  "installStatusProcessing": "正在处理",
+
+  "operationInstall": "安装",
+  "operationUpdate": "更新",
+  "operationPreparing": "准备{operation} {appId}...",
+  "@operationPreparing": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      },
+      "appId": {
+        "type": "String"
+      }
+    }
+  },
+  "operationCancelled": "{operation}已取消",
+  "@operationCancelled": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationCompleted": "{operation}完成",
+  "@operationCompleted": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationUnknown": "{operation}状态未知",
+  "@operationUnknown": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationConfirmFailed": "无法确认{operation}结果",
+  "@operationConfirmFailed": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationTimeout": "{operation}超时",
+  "@operationTimeout": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationFailed": "{operation}失败",
+  "@operationFailed": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+
+  "uninstallFailedWithError": "卸载失败: {error}",
+  "@uninstallFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallException": "卸载异常: {error}",
+  "@uninstallException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "stopFailedWithError": "终止失败: {error}",
+  "@stopFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "stopException": "终止异常: {error}",
+  "@stopException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreated": "快捷方式已创建",
+  "shortcutCreatedWithPath": "快捷方式已创建: {path}",
+  "@shortcutCreatedWithPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreateFailedWithError": "创建失败: {error}",
+  "@shortcutCreateFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pruneFailedWithError": "清理失败: {error}",
+  "@pruneFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pruneException": "清理异常: {error}",
+  "@pruneException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "getVersionFailed": "获取版本失败",
+  "llCliNotInstalled": "ll-cli 未安装",
+  "appInfoUnavailable": "无法获取应用信息",
+  "shortcutCreateException": "创建快捷方式失败: {error}",
+  "@shortcutCreateException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

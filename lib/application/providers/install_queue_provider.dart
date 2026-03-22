@@ -5,8 +5,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/i18n/install_messages.dart';
 import '../../core/logging/app_logger.dart';
-import '../../core/di/providers.dart' show analyticsRepositoryProvider;
+import '../../core/di/providers.dart' show analyticsRepositoryProvider, currentLocaleProvider;
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_state_machine.dart';
 import '../../domain/models/install_task.dart';
@@ -28,10 +29,18 @@ SharedPreferences sharedPreferences(Ref ref) {
   throw UnimplementedError('SharedPreferences not initialized');
 }
 
+/// InstallMessages Provider - 根据当前 locale 获取国际化消息
+@riverpod
+InstallMessages installMessages(Ref ref) {
+  final locale = ref.watch(currentLocaleProvider);
+  return InstallMessages.fromLocale(locale);
+}
+
 /// Linglong CLI Repository Provider
 @riverpod
 LinglongCliRepository linglongCliRepository(Ref ref) {
-  return LinglongCliRepositoryImpl();
+  final messages = ref.watch(installMessagesProvider);
+  return LinglongCliRepositoryImpl(messages);
 }
 
 /// 安装队列状态

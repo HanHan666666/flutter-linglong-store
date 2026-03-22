@@ -319,15 +319,15 @@ class _InMemoryRecommendPageCacheStore implements RecommendPageCacheStore {
   RecommendPageCacheSnapshot? snapshot;
 
   @override
-  Future<RecommendPageCacheSnapshot?> read() async => snapshot;
+  Future<RecommendPageCacheSnapshot?> read(String locale) async => snapshot;
 
   @override
-  Future<void> write(RecommendPageCacheSnapshot snapshot) async {
+  Future<void> write(RecommendPageCacheSnapshot snapshot, String locale) async {
     this.snapshot = snapshot;
   }
 
   @override
-  Future<void> clear() async {
+  Future<void> clear(String locale) async {
     snapshot = null;
   }
 }

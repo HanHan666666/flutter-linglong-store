@@ -421,7 +421,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadFailed => 'Load Failed';
 
   @override
-  String get shortcutCreated => 'Shortcut Created';
+  String get shortcutCreated => 'Shortcut created';
 
   @override
   String shortcutCreateFailed(String error) {
@@ -845,4 +845,215 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get llCliVersionLabel => 'll-cli Version';
+
+  @override
+  String get rankingTabDownload => 'Downloads';
+
+  @override
+  String get rankingTabRising => 'New Apps';
+
+  @override
+  String get rankingTabUpdate => 'Updates';
+
+  @override
+  String get rankingTabHot => 'Trending';
+
+  @override
+  String get installErrorGeneric => 'Installation failed: Generic error';
+
+  @override
+  String get installErrorTimeout => 'Installation failed: Progress timeout';
+
+  @override
+  String get installCancelled => 'Installation cancelled';
+
+  @override
+  String get installErrorUnknown => 'Installation failed: Unknown error';
+
+  @override
+  String get installErrorAppNotFoundRemote =>
+      'Installation failed: App not found in remote repo';
+
+  @override
+  String get installErrorAppNotFoundLocal =>
+      'Installation failed: App not found locally';
+
+  @override
+  String get installFailed => 'Installation failed';
+
+  @override
+  String get installErrorAppNotInRemote =>
+      'Installation failed: App not in remote';
+
+  @override
+  String get installErrorSameVersion =>
+      'Installation failed: Same version already installed';
+
+  @override
+  String get installErrorDowngrade => 'Installation failed: Downgrade required';
+
+  @override
+  String get installErrorModuleVersionNotAllowed =>
+      'Installation failed: Version not allowed for module';
+
+  @override
+  String get installErrorModuleRequiresApp =>
+      'Installation failed: Install app first before module';
+
+  @override
+  String get installErrorModuleExists =>
+      'Installation failed: Module already exists';
+
+  @override
+  String get installErrorArchMismatch =>
+      'Installation failed: Architecture mismatch';
+
+  @override
+  String get installErrorModuleNotInRemote =>
+      'Installation failed: Module not in remote';
+
+  @override
+  String get installErrorMissingErofs =>
+      'Installation failed: Missing erofs decompression command';
+
+  @override
+  String get installErrorUnsupportedFormat =>
+      'Installation failed: Unsupported file format';
+
+  @override
+  String get installErrorNetwork => 'Installation failed: Network error';
+
+  @override
+  String get installErrorInvalidRef => 'Installation failed: Invalid reference';
+
+  @override
+  String get installErrorUnknownArch =>
+      'Installation failed: Unknown architecture';
+
+  @override
+  String installErrorCode(int code) {
+    return 'Installation failed: Error code $code';
+  }
+
+  @override
+  String get installStatusStarting => 'Starting installation';
+
+  @override
+  String get installStatusInstallingApp => 'Installing application';
+
+  @override
+  String get installStatusInstallingRuntime => 'Installing runtime';
+
+  @override
+  String get installStatusInstallingBase => 'Installing base package';
+
+  @override
+  String get installStatusDownloadingMeta => 'Downloading metadata';
+
+  @override
+  String get installStatusDownloadingFiles => 'Downloading files';
+
+  @override
+  String get installStatusPostProcessing => 'Post-installation processing';
+
+  @override
+  String get installStatusCompleted => 'Installation complete';
+
+  @override
+  String get installStatusProcessing => 'Processing';
+
+  @override
+  String get operationInstall => 'Install';
+
+  @override
+  String get operationUpdate => 'Update';
+
+  @override
+  String operationPreparing(String operation, String appId) {
+    return 'Preparing $operation $appId...';
+  }
+
+  @override
+  String operationCancelled(String operation) {
+    return '$operation cancelled';
+  }
+
+  @override
+  String operationCompleted(String operation) {
+    return '$operation completed';
+  }
+
+  @override
+  String operationUnknown(String operation) {
+    return '$operation status unknown';
+  }
+
+  @override
+  String operationConfirmFailed(String operation) {
+    return 'Cannot confirm $operation result';
+  }
+
+  @override
+  String operationTimeout(String operation) {
+    return '$operation timeout';
+  }
+
+  @override
+  String operationFailed(String operation) {
+    return '$operation failed';
+  }
+
+  @override
+  String uninstallFailedWithError(String error) {
+    return 'Uninstall failed: $error';
+  }
+
+  @override
+  String uninstallException(String error) {
+    return 'Uninstall exception: $error';
+  }
+
+  @override
+  String stopFailedWithError(String error) {
+    return 'Stop failed: $error';
+  }
+
+  @override
+  String stopException(String error) {
+    return 'Stop exception: $error';
+  }
+
+  @override
+  String shortcutCreatedWithPath(String path) {
+    return 'Shortcut created: $path';
+  }
+
+  @override
+  String shortcutCreateFailedWithError(String error) {
+    return 'Creation failed: $error';
+  }
+
+  @override
+  String pruneFailedWithError(String error) {
+    return 'Cleanup failed: $error';
+  }
+
+  @override
+  String pruneException(String error) {
+    return 'Cleanup exception: $error';
+  }
+
+  @override
+  String get getVersionFailed => 'Failed to get version';
+
+  @override
+  String get llCliNotInstalled => 'll-cli not installed';
+
+  @override
+  String get appInfoUnavailable => 'Cannot get app info';
+
+  @override
+  String shortcutCreateException(String error) {
+    return 'Failed to create shortcut: $error';
+  }
 }

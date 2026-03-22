@@ -6,7 +6,12 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging/app_logger.dart';
+import 'all_apps_provider.dart';
+import 'custom_category_provider.dart';
 import 'install_queue_provider.dart';
+import 'ranking_provider.dart';
+import 'recommend_provider.dart';
+import 'search_provider.dart';
 
 part 'global_provider.freezed.dart';
 part 'global_provider.g.dart';
@@ -224,6 +229,25 @@ class GlobalApp extends _$GlobalApp {
     state = state.copyWith(locale: locale);
     await _prefs.setString(_kLanguageKey, locale.languageCode);
     AppLogger.info('Locale changed to: ${locale.languageCode}');
+
+    // 刷新所有依赖语言的数据 Provider
+    _invalidateLocaleDependentProviders();
+  }
+
+  /// 刷新所有依赖语言的数据 Provider
+  ///
+  /// 语言切换后，需要刷新以下 Provider 以获取对应语言的数据：
+  /// - 推荐列表
+  /// - 全部应用列表
+  /// - 排行榜
+  /// - 搜索结果
+  /// - 自定义分类
+  void _invalidateLocaleDependentProviders() {
+    ref.invalidate(recommendProvider);
+    ref.invalidate(allAppsProvider);
+    ref.invalidate(rankingProvider);
+    ref.invalidate(searchProvider);
+    ref.invalidate(customCategoryProvider);
   }
 
   /// 设置中文

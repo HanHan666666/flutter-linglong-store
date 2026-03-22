@@ -424,5 +424,187 @@
       }
     }
   },
-  "llCliVersionLabel": "ll-cli Version"
+  "llCliVersionLabel": "ll-cli Version",
+  "rankingTabDownload": "Downloads",
+  "rankingTabRising": "New Apps",
+  "rankingTabUpdate": "Updates",
+  "rankingTabHot": "Trending",
+
+  "installErrorGeneric": "Installation failed: Generic error",
+  "installErrorTimeout": "Installation failed: Progress timeout",
+  "installCancelled": "Installation cancelled",
+  "installErrorUnknown": "Installation failed: Unknown error",
+  "installErrorAppNotFoundRemote": "Installation failed: App not found in remote repo",
+  "installErrorAppNotFoundLocal": "Installation failed: App not found locally",
+  "installFailed": "Installation failed",
+  "installErrorAppNotInRemote": "Installation failed: App not in remote",
+  "installErrorSameVersion": "Installation failed: Same version already installed",
+  "installErrorDowngrade": "Installation failed: Downgrade required",
+  "installErrorModuleVersionNotAllowed": "Installation failed: Version not allowed for module",
+  "installErrorModuleRequiresApp": "Installation failed: Install app first before module",
+  "installErrorModuleExists": "Installation failed: Module already exists",
+  "installErrorArchMismatch": "Installation failed: Architecture mismatch",
+  "installErrorModuleNotInRemote": "Installation failed: Module not in remote",
+  "installErrorMissingErofs": "Installation failed: Missing erofs decompression command",
+  "installErrorUnsupportedFormat": "Installation failed: Unsupported file format",
+  "installErrorNetwork": "Installation failed: Network error",
+  "installErrorInvalidRef": "Installation failed: Invalid reference",
+  "installErrorUnknownArch": "Installation failed: Unknown architecture",
+  "installErrorCode": "Installation failed: Error code {code}",
+  "@installErrorCode": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+
+  "installStatusStarting": "Starting installation",
+  "installStatusInstallingApp": "Installing application",
+  "installStatusInstallingRuntime": "Installing runtime",
+  "installStatusInstallingBase": "Installing base package",
+  "installStatusDownloadingMeta": "Downloading metadata",
+  "installStatusDownloadingFiles": "Downloading files",
+  "installStatusPostProcessing": "Post-installation processing",
+  "installStatusCompleted": "Installation complete",
+  "installStatusProcessing": "Processing",
+
+  "operationInstall": "Install",
+  "operationUpdate": "Update",
+  "operationPreparing": "Preparing {operation} {appId}...",
+  "@operationPreparing": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      },
+      "appId": {
+        "type": "String"
+      }
+    }
+  },
+  "operationCancelled": "{operation} cancelled",
+  "@operationCancelled": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationCompleted": "{operation} completed",
+  "@operationCompleted": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationUnknown": "{operation} status unknown",
+  "@operationUnknown": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationConfirmFailed": "Cannot confirm {operation} result",
+  "@operationConfirmFailed": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationTimeout": "{operation} timeout",
+  "@operationTimeout": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationFailed": "{operation} failed",
+  "@operationFailed": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+
+  "uninstallFailedWithError": "Uninstall failed: {error}",
+  "@uninstallFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallException": "Uninstall exception: {error}",
+  "@uninstallException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "stopFailedWithError": "Stop failed: {error}",
+  "@stopFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "stopException": "Stop exception: {error}",
+  "@stopException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreated": "Shortcut created",
+  "shortcutCreatedWithPath": "Shortcut created: {path}",
+  "@shortcutCreatedWithPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreateFailedWithError": "Creation failed: {error}",
+  "@shortcutCreateFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pruneFailedWithError": "Cleanup failed: {error}",
+  "@pruneFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pruneException": "Cleanup exception: {error}",
+  "@pruneException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "getVersionFailed": "Failed to get version",
+  "llCliNotInstalled": "ll-cli not installed",
+  "appInfoUnavailable": "Cannot get app info",
+  "shortcutCreateException": "Failed to create shortcut: {error}",
+  "@shortcutCreateException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

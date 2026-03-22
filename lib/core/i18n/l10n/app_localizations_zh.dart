@@ -825,4 +825,203 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get llCliVersionLabel => 'll-cli 版本';
+
+  @override
+  String get rankingTabDownload => '下载榜';
+
+  @override
+  String get rankingTabRising => '新秀榜';
+
+  @override
+  String get rankingTabUpdate => '更新榜';
+
+  @override
+  String get rankingTabHot => '热门榜';
+
+  @override
+  String get installErrorGeneric => '安装失败: 通用错误';
+
+  @override
+  String get installErrorTimeout => '安装失败: 进度超时';
+
+  @override
+  String get installCancelled => '安装已取消';
+
+  @override
+  String get installErrorUnknown => '安装失败: 未知错误';
+
+  @override
+  String get installErrorAppNotFoundRemote => '安装失败: 远程仓库找不到应用';
+
+  @override
+  String get installErrorAppNotFoundLocal => '安装失败: 本地找不到应用';
+
+  @override
+  String get installFailed => '安装失败';
+
+  @override
+  String get installErrorAppNotInRemote => '安装失败: 远程无该应用';
+
+  @override
+  String get installErrorSameVersion => '安装失败: 已安装同版本';
+
+  @override
+  String get installErrorDowngrade => '安装失败: 需要降级安装';
+
+  @override
+  String get installErrorModuleVersionNotAllowed => '安装失败: 安装模块时不允许指定版本';
+
+  @override
+  String get installErrorModuleRequiresApp => '安装失败: 安装模块需先安装应用';
+
+  @override
+  String get installErrorModuleExists => '安装失败: 模块已存在';
+
+  @override
+  String get installErrorArchMismatch => '安装失败: 架构不匹配';
+
+  @override
+  String get installErrorModuleNotInRemote => '安装失败: 远程无该模块';
+
+  @override
+  String get installErrorMissingErofs => '安装失败: 缺少 erofs 解压命令';
+
+  @override
+  String get installErrorUnsupportedFormat => '安装失败: 不支持的文件格式';
+
+  @override
+  String get installErrorNetwork => '安装失败: 网络错误';
+
+  @override
+  String get installErrorInvalidRef => '安装失败: 无效引用';
+
+  @override
+  String get installErrorUnknownArch => '安装失败: 未知架构';
+
+  @override
+  String installErrorCode(int code) {
+    return '安装失败: 错误码 $code';
+  }
+
+  @override
+  String get installStatusStarting => '开始安装';
+
+  @override
+  String get installStatusInstallingApp => '正在安装应用';
+
+  @override
+  String get installStatusInstallingRuntime => '正在安装运行时';
+
+  @override
+  String get installStatusInstallingBase => '正在安装基础包';
+
+  @override
+  String get installStatusDownloadingMeta => '正在下载元数据';
+
+  @override
+  String get installStatusDownloadingFiles => '正在下载文件';
+
+  @override
+  String get installStatusPostProcessing => '安装后处理';
+
+  @override
+  String get installStatusCompleted => '安装完成';
+
+  @override
+  String get installStatusProcessing => '正在处理';
+
+  @override
+  String get operationInstall => '安装';
+
+  @override
+  String get operationUpdate => '更新';
+
+  @override
+  String operationPreparing(String operation, String appId) {
+    return '准备$operation $appId...';
+  }
+
+  @override
+  String operationCancelled(String operation) {
+    return '$operation已取消';
+  }
+
+  @override
+  String operationCompleted(String operation) {
+    return '$operation完成';
+  }
+
+  @override
+  String operationUnknown(String operation) {
+    return '$operation状态未知';
+  }
+
+  @override
+  String operationConfirmFailed(String operation) {
+    return '无法确认$operation结果';
+  }
+
+  @override
+  String operationTimeout(String operation) {
+    return '$operation超时';
+  }
+
+  @override
+  String operationFailed(String operation) {
+    return '$operation失败';
+  }
+
+  @override
+  String uninstallFailedWithError(String error) {
+    return '卸载失败: $error';
+  }
+
+  @override
+  String uninstallException(String error) {
+    return '卸载异常: $error';
+  }
+
+  @override
+  String stopFailedWithError(String error) {
+    return '终止失败: $error';
+  }
+
+  @override
+  String stopException(String error) {
+    return '终止异常: $error';
+  }
+
+  @override
+  String shortcutCreatedWithPath(String path) {
+    return '快捷方式已创建: $path';
+  }
+
+  @override
+  String shortcutCreateFailedWithError(String error) {
+    return '创建失败: $error';
+  }
+
+  @override
+  String pruneFailedWithError(String error) {
+    return '清理失败: $error';
+  }
+
+  @override
+  String pruneException(String error) {
+    return '清理异常: $error';
+  }
+
+  @override
+  String get getVersionFailed => '获取版本失败';
+
+  @override
+  String get llCliNotInstalled => 'll-cli 未安装';
+
+  @override
+  String get appInfoUnavailable => '无法获取应用信息';
+
+  @override
+  String shortcutCreateException(String error) {
+    return '创建快捷方式失败: $error';
+  }
 }

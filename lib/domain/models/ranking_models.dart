@@ -5,21 +5,20 @@ part 'ranking_models.freezed.dart';
 /// 排行榜类型
 enum RankingType {
   /// 下载榜
-  download('download', '下载榜'),
+  download('download'),
 
   /// 新秀榜
-  rising('rising', '新秀榜'),
+  rising('rising'),
 
   /// 更新榜
-  update('update', '更新榜'),
+  update('update'),
 
   /// 热门榜
-  hot('hot', '热门榜');
+  hot('hot');
 
-  const RankingType(this.code, this.label);
+  const RankingType(this.code);
 
   final String code;
-  final String label;
 }
 
 /// 排行榜应用信息

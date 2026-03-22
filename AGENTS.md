@@ -218,3 +218,4 @@ time ./build/package-deb.sh
 - 2026-03-20：`GITEE_REPO` 允许写 `owner/repo` 或完整 `https://gitee.com/...(.git)` URL，但同步脚本内部必须先归一成 `owner/repo` 后再调用 Gitee API。
 - 2026-03-22：侧边栏动态菜单配置当前以 Flutter 本地目录 `local_sidebar_menu_catalog.dart` 为准；未来若要切回接口配置，只允许从 `sidebarConfigProvider` 这一处切换数据源，侧边栏项标签与自定义分类页标题必须继续复用同一套菜单解析 helper，禁止各自直接读取后端 `menuName`。
 - 2026-03-22：自定义分类页状态必须按 `menuCode` 使用 `customCategoryProvider(code)` 分片管理，禁止再用单例 provider 在 `initState/didUpdateWidget` 中手动切换分类；页头应用数量必须使用 `/app/sidebar/apps` 返回的真实 `total`，分页大小固定与 Rust 旧版对齐为 `30`，语言切换时通过失效 `sidebarConfigProvider` 驱动当前分类 family 重新加载，禁止直接 `invalidate(customCategoryProvider)`。
+- 2026-03-22：安装/更新进度链路必须先在仓储层把 `ll-cli --json` 输出正规化，再写入队列；`task.message` 只允许承载可直接展示的规范化文案，原始后端 message 只能放在 `rawMessage/errorDetail` 这类诊断字段里，禁止任何页面直接渲染整段 JSON 原文。

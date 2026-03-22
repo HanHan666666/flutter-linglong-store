@@ -1,0 +1,16 @@
+{
+  "session_id": "ai-1774151064-1874851",
+  "ccb_project_id": "3af274430af05dcbb81740c509a9d6320f6817a5d79ebc160b0f8038bf6b59df",
+  "work_dir": "/home/han/linglong-store/flutter-linglong-store",
+  "work_dir_norm": "/home/han/linglong-store/flutter-linglong-store",
+  "start_dir": "/home/han/linglong-store/flutter-linglong-store",
+  "terminal": "tmux",
+  "active": false,
+  "started_at": "2026-03-22 11:44:24",
+  "updated_at": "2026-03-22 11:44:32",
+  "pane_id": "%0",
+  "pane_title_marker": "CCB-Claude",
+  "claude_session_path": "/home/han/.claude/projects/-home-han-linglong-store-flutter-linglong-store/97e25e42-9254-47a5-94bc-5a4cc29ec748.jsonl",
+  "claude_session_id": "97e25e42-9254-47a5-94bc-5a4cc29ec748",
+  "ended_at": "2026-03-22 11:44:33"
+}

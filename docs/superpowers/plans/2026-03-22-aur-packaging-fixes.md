@@ -673,10 +673,19 @@ git commit -m "feat(aur): add local validation script"
 ## 验收标准
 
 - [x] PKGBUILD 使用模板文件而非内嵌字符串
-- [x] 依赖声明完整（包含 glibc, gcc-libs, hicolor-icon-theme）
-- [x] 有 .install 文件用于用户提示
+- [x] 依赖声明完整，AUR 元数据至少显式包含 `bash`、`glib2` 与桌面运行所需图形库
+- [x] 不再保留纯提示型 `.install` 文件
 - [x] 有 changelog 文件
 - [x] CI 中有 namcap 验证步骤
-- [x] metainfo 文件包含在 bundle 中
+- [x] AUR 所需的 license / desktop / metainfo / icon 作为本地 `source` 一起发布
 - [x] 所有打包格式（deb/rpm/aur）的 URL 一致
 - [x] 本地验证脚本可正常运行
+
+---
+
+## 2026-03-22 Follow-up 修复
+
+- [x] AUR 包改为把 `LICENSE`、`linglong-store.desktop`、`linglong-store.metainfo.xml`、`linglong-store.svg` 作为本地 `source` 一起发布，彻底移除对 release tarball 附带元数据文件的隐式依赖。
+- [x] `PKGBUILD` 移除纯提示型 `.install` 钩子，`pkgdesc` 改为简洁描述，并补齐 `glib2` 等运行时依赖声明。
+- [x] `build/scripts/validate-aur-package.sh` 改为 Arch Docker 全链路验证：渲染模板、生成 `.SRCINFO`、`makepkg --verifysource`、实际打包、读取 `.PKGINFO` 校验关键依赖。
+- [x] `release.yml` 改为直接调用 Arch Docker 校验脚本，不再在 Ubuntu runner 上尝试 `apt-get install namcap`。

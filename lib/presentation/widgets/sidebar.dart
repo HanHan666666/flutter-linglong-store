@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../application/providers/sidebar_config_provider.dart';
 import '../../core/config/routes.dart';
 import '../../core/config/theme.dart';
+import '../../core/config/local_sidebar_menu_catalog.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
+import '../../data/models/api_dto.dart';
 import 'download_manager_dialog.dart';
 
 /// 侧边栏菜单项定义
@@ -56,7 +58,10 @@ class Sidebar extends ConsumerWidget {
     // 读取服务端下发的动态菜单（失败时默认返回空列表，不影响静态菜单）
     final dynamicMenus = ref
         .watch(sidebarConfigProvider)
-        .maybeWhen(data: (menus) => menus, orElse: () => []);
+        .maybeWhen<List<SidebarMenuDTO>>(
+          data: (menus) => menus,
+          orElse: () => const <SidebarMenuDTO>[],
+        );
 
     // decoration 需要读取 context 颜色，不能使用 const
     return AnimatedContainer(
@@ -93,7 +98,7 @@ class _MenuSection extends StatelessWidget {
   final bool isCollapsed;
 
   /// 服务端下发的动态菜单列表
-  final List dynamicMenus;
+  final List<SidebarMenuDTO> dynamicMenus;
 
   /// 将9秤宽的分隔带（在静态菜单和动态菜单之间）
   Widget _buildDivider(BuildContext context) => Padding(
@@ -321,7 +326,7 @@ class _DynamicMenuItemTile extends StatefulWidget {
     required this.isCollapsed,
   });
 
-  final dynamic menu;
+  final SidebarMenuDTO menu;
   final bool isSelected;
   final bool isCollapsed;
 
@@ -335,7 +340,12 @@ class _DynamicMenuItemTileState extends State<_DynamicMenuItemTile> {
   @override
   Widget build(BuildContext context) {
     final route = '/custom_category/${widget.menu.menuCode}';
-    final label = widget.menu.menuName as String;
+    final locale = Localizations.localeOf(context);
+    final presentation = buildSidebarMenuPresentation(
+      menuCode: widget.menu.menuCode,
+      locale: locale,
+      fallbackName: widget.menu.menuName,
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -386,7 +396,9 @@ class _DynamicMenuItemTileState extends State<_DynamicMenuItemTile> {
                 ],
                 // 图标：优先使用 menuIcon 资源名，不可用时显示默认图标
                 Icon(
-                  Icons.category_outlined,
+                  widget.isSelected
+                      ? presentation.selectedIcon
+                      : presentation.icon,
                   size: 20,
                   color: widget.isSelected
                       ? AppColors.primary
@@ -396,8 +408,9 @@ class _DynamicMenuItemTileState extends State<_DynamicMenuItemTile> {
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
-                      label,
+                      presentation.label,
                       maxLines: 1,
+                      softWrap: false,
                       overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.menuActive.copyWith(
                         color: widget.isSelected

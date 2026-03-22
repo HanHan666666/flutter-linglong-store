@@ -7,6 +7,8 @@ import '../../core/network/api_exceptions.dart';
 import '../../data/models/api_dto.dart';
 import '../../domain/models/recommend_models.dart';
 import 'api_provider.dart';
+import 'sidebar_config_provider.dart';
+import '../../core/config/local_sidebar_menu_catalog.dart';
 
 part 'custom_category_provider.freezed.dart';
 part 'custom_category_provider.g.dart';
@@ -48,17 +50,11 @@ class CustomCategory extends _$CustomCategory {
     try {
       final apiService = ref.read(appApiServiceProvider);
 
-      // 获取侧边栏配置
-      final menuResponse = await apiService.getSidebarConfig();
-      final categoryInfo = _findCategoryInfo(
-        menuResponse.data.data?.menus ?? [],
-        _categoryCode,
-      );
+      final menus = await ref.read(sidebarConfigProvider.future);
+      final categoryInfo = _findCategoryInfo(menus, _categoryCode);
 
       // 提取排序/过滤规则，在 loadMore 时复用
-      final menu = (menuResponse.data.data?.menus ?? [])
-          .where((m) => m.menuCode == _categoryCode)
-          .firstOrNull;
+      final menu = menus.where((m) => m.menuCode == _categoryCode).firstOrNull;
       _sortType = menu?.rule?.sortBy;
       final minScore = menu?.rule?.filterMinScore ?? 0;
       _filter = minScore > 0 ? true : null;
@@ -91,11 +87,16 @@ class CustomCategory extends _$CustomCategory {
 
   /// 从配置中查找分类信息
   CategoryInfo _findCategoryInfo(List<SidebarMenuDTO> menus, String code) {
+    final locale = resolveSidebarMenuLocale(ApiClient.getLocale?.call());
     for (final menu in menus) {
       if (menu.menuCode == code) {
         return CategoryInfo(
           code: menu.menuCode,
-          name: menu.menuName,
+          name: resolveSidebarMenuLabel(
+            menuCode: menu.menuCode,
+            locale: locale,
+            fallbackName: menu.menuName,
+          ),
           icon: menu.menuIcon,
           appCount: menu.categoryIds.length,
         );

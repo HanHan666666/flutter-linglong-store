@@ -168,80 +168,83 @@ class _MenuItemTileState extends State<_MenuItemTile> {
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs / 2,
       ),
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
-        child: GestureDetector(
-          onTap: () => context.go(widget.item.route),
-          child: AnimatedContainer(
-            duration: AppAnimation.fast,
-            height: 36,
-            padding: EdgeInsets.symmetric(
-              horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
-            ),
-            decoration: BoxDecoration(
-              // 默认态使用目标色的透明版本，避免 Colors.transparent（透明黑）
-              // 在动画插值时产生深色闪烁
-              color: widget.isSelected
-                  ? context.appColors.primaryLight
-                  : (_isHovered
-                        ? context.appColors.surfaceContainerLow
-                        : context.appColors.surfaceContainerLow.withAlpha(0)),
-              borderRadius: AppRadius.xsRadius,
-            ),
-            child: Row(
-              mainAxisAlignment: widget.isCollapsed
-                  ? MainAxisAlignment.center
-                  : MainAxisAlignment.start,
-              children: [
-                // 选中指示器
-                if (!widget.isCollapsed) ...[
-                  AnimatedContainer(
-                    duration: AppAnimation.fast,
-                    width: widget.isSelected ? 3 : 0,
-                    height: widget.isSelected ? 16 : 0,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  SizedBox(
-                    width: widget.isSelected
-                        ? AppSpacing.sm
-                        : AppSpacing.sm + 3,
-                  ),
-                ],
-                // 图标
-                Icon(
-                  widget.isSelected
-                      ? widget.item.selectedIcon
-                      : widget.item.icon,
-                  size: 20,
-                  color: widget.isSelected
-                      ? AppColors.primary
-                      : context.appColors.textSecondary,
-                ),
-                // 文字
-                if (!widget.isCollapsed) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      widget.item.localizedLabel(l10n),
-                      maxLines: 1,
-                      softWrap: false,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.menuActive.copyWith(
-                        color: widget.isSelected
-                            ? AppColors.primary
-                            : context.appColors.textPrimary,
-                        fontWeight: widget.isSelected
-                            ? FontWeight.w500
-                            : FontWeight.w400,
+      child: Tooltip(
+        message: widget.item.localizedLabel(l10n),
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          child: GestureDetector(
+            onTap: () => context.go(widget.item.route),
+            child: AnimatedContainer(
+              duration: AppAnimation.fast,
+              height: 36,
+              padding: EdgeInsets.symmetric(
+                horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
+              ),
+              decoration: BoxDecoration(
+                // 默认态使用目标色的透明版本，避免 Colors.transparent（透明黑）
+                // 在动画插值时产生深色闪烁
+                color: widget.isSelected
+                    ? context.appColors.primaryLight
+                    : (_isHovered
+                          ? context.appColors.surfaceContainerLow
+                          : context.appColors.surfaceContainerLow.withAlpha(0)),
+                borderRadius: AppRadius.xsRadius,
+              ),
+              child: Row(
+                mainAxisAlignment: widget.isCollapsed
+                    ? MainAxisAlignment.center
+                    : MainAxisAlignment.start,
+                children: [
+                  // 选中指示器
+                  if (!widget.isCollapsed) ...[
+                    AnimatedContainer(
+                      duration: AppAnimation.fast,
+                      width: widget.isSelected ? 3 : 0,
+                      height: widget.isSelected ? 16 : 0,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
+                    SizedBox(
+                      width: widget.isSelected
+                          ? AppSpacing.sm
+                          : AppSpacing.sm + 3,
+                    ),
+                  ],
+                  // 图标
+                  Icon(
+                    widget.isSelected
+                        ? widget.item.selectedIcon
+                        : widget.item.icon,
+                    size: 20,
+                    color: widget.isSelected
+                        ? AppColors.primary
+                        : context.appColors.textSecondary,
                   ),
+                  // 文字
+                  if (!widget.isCollapsed) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        widget.item.localizedLabel(l10n),
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.menuActive.copyWith(
+                          color: widget.isSelected
+                              ? AppColors.primary
+                              : context.appColors.textPrimary,
+                          fontWeight: widget.isSelected
+                              ? FontWeight.w500
+                              : FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

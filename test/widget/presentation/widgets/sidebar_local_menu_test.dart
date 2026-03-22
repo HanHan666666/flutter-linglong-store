@@ -9,6 +9,32 @@ import 'package:linglong_store/presentation/widgets/sidebar.dart';
 
 void main() {
   group('Sidebar local dynamic menu config', () {
+    testWidgets('adds tooltip for fixed top menu items', (tester) async {
+      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sidebarConfigProvider.overrideWith((ref) async => const []),
+          ],
+          child: const MaterialApp(
+            locale: Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: Sidebar(currentPath: '/')),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('Recommend'), findsOneWidget);
+      expect(find.byTooltip('All Apps'), findsOneWidget);
+      expect(find.byTooltip('Ranking'), findsOneWidget);
+    });
+
     testWidgets('renders localized english labels for known local menu codes', (
       tester,
     ) async {

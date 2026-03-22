@@ -47,86 +47,11 @@ case "$target_arch" in
     ;;
 esac
 
-# Generate PKGBUILD
-generate_pkgbuild() {
-  local version="$1"
-  local pkgver="${version//-/.}"
-
-  # Use SKIP if sha256 not provided (fallback for manual runs)
-  local sha_x86_64="${sha256_amd64:-SKIP}"
-  local sha_aarch64="${sha256_arm64:-SKIP}"
-
-  if [[ "$sha_x86_64" == "SKIP" || "$sha_aarch64" == "SKIP" ]]; then
-    echo "Warning: Using SKIP for sha256sums. This is not recommended for production!" >&2
-  fi
-
-  cat <<EOF
-# Maintainer: HanHan666666 <tar.zip@outlook.com>
-pkgname=linglong-store-bin
-pkgver=${pkgver}
-pkgrel=1
-pkgdesc="Linglong Application Store Community Edition - 玲珑应用商店社区版"
-arch=('x86_64' 'aarch64')
-url="https://github.com/HanHan666666/flutter-linglong-store"
-license=('MIT')
-depends=('gtk3' 'xz' 'libstdc++')
-optdepends=('linglong: 玲珑运行环境（必需）')
-provides=('linglong-store')
-conflicts=('linglong-store')
-
-source_x86_64=("linglong-store-\${pkgver}-linux-amd64.tar.gz::https://github.com/HanHan666666/flutter-linglong-store/releases/download/v\${pkgver}/linglong-store-\${pkgver}-linux-amd64.tar.gz")
-source_aarch64=("linglong-store-\${pkgver}-linux-arm64.tar.gz::https://github.com/HanHan666666/flutter-linglong-store/releases/download/v\${pkgver}/linglong-store-\${pkgver}-linux-arm64.tar.gz")
-
-sha256sums_x86_64=('${sha_x86_64}')
-sha256sums_aarch64=('${sha_aarch64}')
-
-package() {
-  install -dm755 "\${pkgdir}/opt/linglong-store"
-  cp -a "\${srcdir}/linglong-store/." "\${pkgdir}/opt/linglong-store/"
-
-  install -dm755 "\${pkgdir}/usr/bin"
-  cat > "\${pkgdir}/usr/bin/linglong-store" <<'LAUNCHER'
-#!/usr/bin/env bash
-set -euo pipefail
-exec /opt/linglong-store/linglong_store "\$@"
-LAUNCHER
-  chmod +x "\${pkgdir}/usr/bin/linglong-store"
-
-  install -dm755 "\${pkgdir}/usr/share/applications"
-  cat > "\${pkgdir}/usr/share/applications/linglong-store.desktop" <<'DESKTOP'
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Linglong Store
-Name[zh_CN]=玲珑应用商店社区版
-GenericName=Application Store
-GenericName[zh_CN]=应用商店
-Comment=Linglong Application Store Community Edition
-Comment[zh_CN]=玲珑应用商店社区版
-Exec=linglong-store
-Icon=linglong-store
-StartupWMClass=org.linglong-store.LinyapsManager
-Terminal=false
-Categories=System;PackageManager;
-Keywords=linglong;store;app;package;
-DESKTOP
-
-  # Install icon
-  install -dm755 "\${pkgdir}/usr/share/icons/hicolor/256x256/apps"
-  if [[ -f "\${srcdir}/linglong-store/logo.png" ]]; then
-    cp "\${srcdir}/linglong-store/logo.png" "\${pkgdir}/usr/share/icons/hicolor/256x256/apps/linglong-store.png"
-  elif [[ -f "\${srcdir}/linglong-store/data/flutter_assets/assets/icons/logo.png" ]]; then
-    cp "\${srcdir}/linglong-store/data/flutter_assets/assets/icons/logo.png" "\${pkgdir}/usr/share/icons/hicolor/256x256/apps/linglong-store.png"
-  fi
-
-  # Install LICENSE
-  install -dm755 "\${pkgdir}/usr/share/licenses/\${pkgname}"
-  if [[ -f "\${srcdir}/linglong-store/LICENSE" ]]; then
-    cp "\${srcdir}/linglong-store/LICENSE" "\${pkgdir}/usr/share/licenses/\${pkgname}/LICENSE"
-  fi
-}
-EOF
-}
+# Validate SHA256 checksums
+if [[ -z "$sha256_amd64" || -z "$sha256_arm64" ]]; then
+  echo "Error: SHA256_AMD64 and SHA256_ARM64 environment variables are required" >&2
+  exit 1
+fi
 
 # Setup SSH for AUR
 setup_aur_ssh() {
@@ -140,10 +65,11 @@ Host aur.archlinux.org
   User aur
 EOF
     chmod 600 ~/.ssh/config
+    ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts 2>/dev/null
   fi
 }
 
-# Clone AUR repo and update
+# Update AUR repository
 update_aur_repo() {
   local version="$1"
   local work_dir
@@ -154,14 +80,36 @@ update_aur_repo() {
 
   cd "$work_dir"
 
-  # Generate new PKGBUILD
-  generate_pkgbuild "$version" > PKGBUILD
+  # Render templates
+  local metadata_dir
+  metadata_dir="$(mktemp -d)"
+
+  SHA256_AMD64="$sha256_amd64" \
+  SHA256_ARM64="$sha256_arm64" \
+  "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
+    --inner \
+    --version "$version" \
+    --arch "amd64" \
+    --output-dir "$metadata_dir" \
+    --sha256-amd64 "$sha256_amd64" \
+    --sha256-arm64 "$sha256_arm64"
+
+  # Copy rendered AUR files
+  cp "$metadata_dir/aur/PKGBUILD" PKGBUILD
+  cp "$metadata_dir/aur/linglong-store-bin.install" linglong-store-bin.install
+  cp "$metadata_dir/aur/linglong-store-bin.changelog" linglong-store-bin.changelog
 
   # Generate .SRCINFO
   makepkg --printsrcinfo > .SRCINFO
 
+  # Validate with namcap if available
+  if command -v namcap &>/dev/null; then
+    echo "Running namcap validation..."
+    namcap PKGBUILD || true
+  fi
+
   # Commit and push
-  git add PKGBUILD .SRCINFO
+  git add PKGBUILD .SRCINFO linglong-store-bin.install linglong-store-bin.changelog
   git -c user.name="HanHan666666" -c user.email="tar.zip@outlook.com" commit -m "Update to version $version"
   git push origin master
 
@@ -169,7 +117,7 @@ update_aur_repo() {
 
   # Cleanup
   cd /
-  rm -rf "$work_dir"
+  rm -rf "$work_dir" "$metadata_dir"
   rm -f ~/.ssh/aur_key
 }
 

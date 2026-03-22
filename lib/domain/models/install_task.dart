@@ -48,7 +48,10 @@ sealed class InstallTask with _$InstallTask {
     /// 当前状态
     @Default(InstallStatus.pending) InstallStatus status,
 
-    /// 安装进度 (0-100)
+    /// 安装进度。
+    ///
+    /// 新链路统一使用 `0.0..1.0` 比例值；为兼容旧展示链路，这里仍容忍
+    /// 历史上的 `0..100` 百分比值，并在 Presentation 层通过辅助方法归一化。
     @Default(0.0) double progress,
 
     /// 状态消息
@@ -97,6 +100,28 @@ extension InstallTaskX on InstallTask {
   /// 是否成功
   bool get isSuccess => status == InstallStatus.success;
 
+  /// 归一化后的进度值，统一转换为 `0.0..1.0` 供 UI 进度组件消费。
+  double get progressValue {
+    final raw = progress.isNaN ? 0.0 : progress;
+    final normalized = raw > 1 ? raw / 100 : raw;
+    return normalized.clamp(0.0, 1.0);
+  }
+
+  /// 统一百分比文案，兼容比例值和旧的百分比值。
+  String get progressPercentLabel =>
+      '${(progressValue * 100).round().clamp(0, 100)}%';
+
+  /// 待处理文案。
+  String get waitingMessage => isUpdateTask ? '等待更新...' : '等待安装...';
+
+  /// 开始执行文案。
+  String get preparingMessage => isUpdateTask ? '准备更新...' : '准备安装...';
+
+  /// 成功完成文案。
+  String get successMessage => isUpdateTask ? '更新完成' : '安装完成';
+
+  /// 用户取消文案。
+  String get cancelledMessage => isUpdateTask ? '更新已取消' : '安装已取消';
   /// 转换为 JSON 字符串（用于持久化）
   String toJsonString() => toJson().toString();
 }

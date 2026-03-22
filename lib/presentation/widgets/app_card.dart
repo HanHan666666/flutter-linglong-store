@@ -3,6 +3,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
+import '../../domain/models/install_task.dart';
 import 'app_icon.dart';
 import 'install_button.dart';
 
@@ -330,9 +331,16 @@ class _AppCardState extends State<AppCard> {
     bool isLoading,
   ) {
     if (isLoading) {
-      final progressPercent = (widget.progress * 100).round();
-      return progressPercent > 0
-          ? '$progressPercent%'
+      final progressTask = InstallTask(
+        id: 'app-card-progress',
+        appId: widget.appId,
+        appName: widget.name,
+        progress: widget.progress,
+        createdAt: 0,
+      );
+      final progressPercent = progressTask.progressPercentLabel;
+      return progressTask.progressValue > 0
+          ? progressPercent
           : (l10n?.installing ?? '安装中');
     }
 

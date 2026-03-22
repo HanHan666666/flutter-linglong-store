@@ -795,7 +795,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         case InstallStatus.installing:
           return InstallButtonState.installing;
         case InstallStatus.success:
-          return InstallButtonState.open;
+          // 任务成功后，需再次检查实际安装状态（用户可能已卸载）
+          if (hasInstalledInstance) {
+            return InstallButtonState.open;
+          }
+          // 已卸载，显示为安装状态
+          return InstallButtonState.notInstalled;
         case InstallStatus.failed:
         case InstallStatus.cancelled:
           // 任务失败或取消后，检查是否已安装

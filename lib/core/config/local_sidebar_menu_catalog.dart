@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../data/models/api_dto.dart';
 import '../i18n/l10n/app_localizations.dart';
 
-enum _SidebarMenuLabelKey { office, system, develop, entertainment }
+enum SidebarMenuLabelKey { office, system, develop, entertainment }
 
 class SidebarMenuPresentation {
   const SidebarMenuPresentation({
@@ -22,21 +22,21 @@ class LocalSidebarMenuConfig {
     required this.menu,
     required this.icon,
     required this.selectedIcon,
-    required _SidebarMenuLabelKey labelKey,
+    required SidebarMenuLabelKey labelKey,
   }) : _labelKey = labelKey;
 
   final SidebarMenuDTO menu;
   final IconData icon;
   final IconData selectedIcon;
-  final _SidebarMenuLabelKey _labelKey;
+  final SidebarMenuLabelKey _labelKey;
 
   String resolveLabel(Locale locale) {
     final l10n = lookupAppLocalizations(normalizeSidebarMenuLocale(locale));
     return switch (_labelKey) {
-      _SidebarMenuLabelKey.office => l10n.office,
-      _SidebarMenuLabelKey.system => l10n.system,
-      _SidebarMenuLabelKey.develop => l10n.develop,
-      _SidebarMenuLabelKey.entertainment => l10n.entertainment,
+      SidebarMenuLabelKey.office => l10n.office,
+      SidebarMenuLabelKey.system => l10n.system,
+      SidebarMenuLabelKey.develop => l10n.develop,
+      SidebarMenuLabelKey.entertainment => l10n.entertainment,
     };
   }
 }
@@ -53,7 +53,7 @@ const localSidebarMenuCatalog = <LocalSidebarMenuConfig>[
     ),
     icon: Icons.business_center_outlined,
     selectedIcon: Icons.business_center,
-    labelKey: _SidebarMenuLabelKey.office,
+    labelKey: SidebarMenuLabelKey.office,
   ),
   LocalSidebarMenuConfig(
     menu: SidebarMenuDTO(
@@ -66,7 +66,7 @@ const localSidebarMenuCatalog = <LocalSidebarMenuConfig>[
     ),
     icon: Icons.desktop_windows_outlined,
     selectedIcon: Icons.desktop_windows,
-    labelKey: _SidebarMenuLabelKey.system,
+    labelKey: SidebarMenuLabelKey.system,
   ),
   LocalSidebarMenuConfig(
     menu: SidebarMenuDTO(
@@ -79,7 +79,7 @@ const localSidebarMenuCatalog = <LocalSidebarMenuConfig>[
     ),
     icon: Icons.terminal_outlined,
     selectedIcon: Icons.terminal,
-    labelKey: _SidebarMenuLabelKey.develop,
+    labelKey: SidebarMenuLabelKey.develop,
   ),
   LocalSidebarMenuConfig(
     menu: SidebarMenuDTO(
@@ -92,7 +92,7 @@ const localSidebarMenuCatalog = <LocalSidebarMenuConfig>[
     ),
     icon: Icons.movie_outlined,
     selectedIcon: Icons.movie,
-    labelKey: _SidebarMenuLabelKey.entertainment,
+    labelKey: SidebarMenuLabelKey.entertainment,
   ),
 ];
 

@@ -429,6 +429,8 @@
   "rankingTabRising": "新秀榜",
   "rankingTabUpdate": "更新榜",
   "rankingTabHot": "热门榜",
+  "sidebarAllApps": "全 部",
+  "sidebarRanking": "排 行",
 
   "installErrorGeneric": "安装失败: 通用错误",
   "installErrorTimeout": "安装失败: 进度超时",

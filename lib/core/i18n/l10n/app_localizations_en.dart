@@ -859,6 +859,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rankingTabHot => 'Trending';
 
   @override
+  String get sidebarAllApps => 'All Apps';
+
+  @override
+  String get sidebarRanking => 'Ranking';
+
+  @override
   String get installErrorGeneric => 'Installation failed: Generic error';
 
   @override

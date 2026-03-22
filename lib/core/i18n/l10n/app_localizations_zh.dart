@@ -839,6 +839,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rankingTabHot => '热门榜';
 
   @override
+  String get sidebarAllApps => '全 部';
+
+  @override
+  String get sidebarRanking => '排 行';
+
+  @override
   String get installErrorGeneric => '安装失败: 通用错误';
 
   @override

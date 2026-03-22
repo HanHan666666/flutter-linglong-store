@@ -1662,6 +1662,18 @@ abstract class AppLocalizations {
   /// **'热门榜'**
   String get rankingTabHot;
 
+  /// No description provided for @sidebarAllApps.
+  ///
+  /// In zh, this message translates to:
+  /// **'全 部'**
+  String get sidebarAllApps;
+
+  /// No description provided for @sidebarRanking.
+  ///
+  /// In zh, this message translates to:
+  /// **'排 行'**
+  String get sidebarRanking;
+
   /// No description provided for @installErrorGeneric.
   ///
   /// In zh, this message translates to:

@@ -41,13 +41,13 @@ build/
 
 ### Task 1.1: 创建 PKGBUILD 模板
 
-- [ ] **Step 1: 创建 AUR 打包目录**
+- [x] **Step 1: 创建 AUR 打包目录**
 
 ```bash
 mkdir -p /home/han/linglong-store/flutter-linglong-store/build/packaging/linux/aur
 ```
 
-- [ ] **Step 2: 创建 PKGBUILD.in 模板文件**
+- [x] **Step 2: 创建 PKGBUILD.in 模板文件**
 
 文件: `build/packaging/linux/aur/PKGBUILD.in`
 
@@ -147,7 +147,7 @@ EOF
 
 ### Task 1.2: 创建安装脚本模板
 
-- [ ] **Step 1: 创建 .install 模板文件**
+- [x] **Step 1: 创建 .install 模板文件**
 
 文件: `build/packaging/linux/aur/linglong-store-bin.install.in`
 
@@ -179,7 +179,7 @@ EOF
 
 ### Task 1.3: 创建变更日志模板
 
-- [ ] **Step 1: 创建 changelog 模板文件**
+- [x] **Step 1: 创建 changelog 模板文件**
 
 文件: `build/packaging/linux/aur/linglong-store-bin.changelog.in`
 
@@ -191,7 +191,7 @@ cat > /home/han/linglong-store/flutter-linglong-store/build/packaging/linux/aur/
 EOF
 ```
 
-- [ ] **Step 2: Commit Task 1**
+- [x] **Step 2: Commit Task 1**
 
 ```bash
 cd /home/han/linglong-store/flutter-linglong-store
@@ -206,7 +206,7 @@ git commit -m "feat(aur): add PKGBUILD template and install script"
 **Files:**
 - Modify: `build/scripts/render-packaging-templates.sh`
 
-- [ ] **Step 1: 添加 AUR 模板渲染函数**
+- [x] **Step 1: 添加 AUR 模板渲染函数**
 
 在 `render-packaging-templates.sh` 中添加 AUR 模板渲染支持。修改文件，在 `render_file` 函数后添加新的变量和渲染调用：
 
@@ -289,7 +289,7 @@ fi
       ;;
 ```
 
-- [ ] **Step 2: Commit Task 2**
+- [x] **Step 2: Commit Task 2**
 
 ```bash
 cd /home/han/linglong-store/flutter-linglong-store
@@ -304,7 +304,7 @@ git commit -m "feat(aur): add AUR template rendering support"
 **Files:**
 - Modify: `build/scripts/publish-aur.sh`
 
-- [ ] **Step 1: 重构脚本使用模板渲染**
+- [x] **Step 1: 重构脚本使用模板渲染**
 
 修改 `publish-aur.sh`，移除内嵌的 `generate_pkgbuild` 函数，改用模板渲染：
 
@@ -440,7 +440,7 @@ main() {
 main
 ```
 
-- [ ] **Step 2: Commit Task 3**
+- [x] **Step 2: Commit Task 3**
 
 ```bash
 cd /home/han/linglong-store/flutter-linglong-store
@@ -455,7 +455,7 @@ git commit -m "refactor(aur): use template-based PKGBUILD generation"
 **Files:**
 - Modify: `build/scripts/build-linux-bundle.sh`
 
-- [ ] **Step 1: 在 bundle 中添加 metainfo 文件**
+- [x] **Step 1: 在 bundle 中添加 metainfo 文件**
 
 在 `build-linux-bundle.sh` 的 bundle 构建完成后添加 metainfo 文件复制。
 
@@ -477,7 +477,7 @@ if [[ -f "$metainfo_src" ]]; then
 fi
 ```
 
-- [ ] **Step 2: Commit Task 4**
+- [x] **Step 2: Commit Task 4**
 
 ```bash
 cd /home/han/linglong-store/flutter-linglong-store
@@ -492,7 +492,7 @@ git commit -m "feat(bundle): include metainfo for AUR packaging"
 **Files:**
 - Modify: `.github/workflows/release.yml`
 
-- [ ] **Step 1: 添加 AUR 验证 job**
+- [x] **Step 1: 添加 AUR 验证 job**
 
 在 `publish-aur` job 之前添加验证步骤。修改 `publish-aur` job：
 
@@ -523,7 +523,7 @@ git commit -m "feat(bundle): include metainfo for AUR packaging"
           namcap "$metadata_dir/aur/PKGBUILD" || echo "namcap warnings (non-blocking)"
 ```
 
-- [ ] **Step 2: Commit Task 5**
+- [x] **Step 2: Commit Task 5**
 
 ```bash
 cd /home/han/linglong-store/flutter-linglong-store
@@ -538,7 +538,7 @@ git commit -m "ci(aur): add namcap validation step"
 **Files:**
 - Modify: `build/scripts/render-packaging-templates.sh`
 
-- [ ] **Step 1: 统一项目 URL**
+- [x] **Step 1: 统一项目 URL**
 
 修改 `render-packaging-templates.sh` 中的 `project_url` 变量：
 
@@ -552,7 +552,7 @@ project_url="https://github.com/SXFreell/linglong-store"
 project_url="https://github.com/HanHan666666/flutter-linglong-store"
 ```
 
-- [ ] **Step 2: Commit Task 6**
+- [x] **Step 2: Commit Task 6**
 
 ```bash
 cd /home/han/linglong-store/flutter-linglong-store
@@ -568,7 +568,7 @@ git commit -m "fix: unify project URL across packaging templates"
 - Modify: `build/packaging/linux/deb/control.in`
 - Modify: `build/packaging/linux/rpm/linglong-store.spec.in`
 
-- [ ] **Step 1: 更新 deb control 依赖**
+- [x] **Step 1: 更新 deb control 依赖**
 
 修改 `build/packaging/linux/deb/control.in`：
 
@@ -582,7 +582,7 @@ Depends: libc6, libgtk-3-0, liblzma5, libstdc++6
 Depends: libc6, libgtk-3-0, liblzma5, libstdc++6, gcc-libs-base, hicolor-icon-theme
 ```
 
-- [ ] **Step 2: 更新 rpm spec 依赖**
+- [x] **Step 2: 更新 rpm spec 依赖**
 
 修改 `build/packaging/linux/rpm/linglong-store.spec.in`：
 
@@ -596,7 +596,7 @@ Requires: gtk3, xz-libs, libstdc++
 Requires: gtk3, xz-libs, libstdc++, glibc, hicolor-icon-theme
 ```
 
-- [ ] **Step 3: Commit Task 7**
+- [x] **Step 3: Commit Task 7**
 
 ```bash
 cd /home/han/linglong-store/flutter-linglong-store
@@ -611,7 +611,7 @@ git commit -m "fix: add missing dependencies to deb/rpm packages"
 **Files:**
 - Test: 本地验证脚本
 
-- [ ] **Step 1: 创建本地验证脚本**
+- [x] **Step 1: 创建本地验证脚本**
 
 ```bash
 cat > /home/han/linglong-store/flutter-linglong-store/build/scripts/validate-aur-package.sh << 'EOF'
@@ -653,14 +653,14 @@ EOF
 chmod +x /home/han/linglong-store/flutter-linglong-store/build/scripts/validate-aur-package.sh
 ```
 
-- [ ] **Step 2: 运行验证**
+- [x] **Step 2: 运行验证**
 
 ```bash
 cd /home/han/linglong-store/flutter-linglong-store
 bash build/scripts/validate-aur-package.sh
 ```
 
-- [ ] **Step 3: Commit validation script**
+- [x] **Step 3: Commit validation script**
 
 ```bash
 cd /home/han/linglong-store/flutter-linglong-store
@@ -672,11 +672,11 @@ git commit -m "feat(aur): add local validation script"
 
 ## 验收标准
 
-- [ ] PKGBUILD 使用模板文件而非内嵌字符串
-- [ ] 依赖声明完整（包含 glibc, gcc-libs, hicolor-icon-theme）
-- [ ] 有 .install 文件用于用户提示
-- [ ] 有 changelog 文件
-- [ ] CI 中有 namcap 验证步骤
-- [ ] metainfo 文件包含在 bundle 中
-- [ ] 所有打包格式（deb/rpm/aur）的 URL 一致
-- [ ] 本地验证脚本可正常运行
+- [x] PKGBUILD 使用模板文件而非内嵌字符串
+- [x] 依赖声明完整（包含 glibc, gcc-libs, hicolor-icon-theme）
+- [x] 有 .install 文件用于用户提示
+- [x] 有 changelog 文件
+- [x] CI 中有 namcap 验证步骤
+- [x] metainfo 文件包含在 bundle 中
+- [x] 所有打包格式（deb/rpm/aur）的 URL 一致
+- [x] 本地验证脚本可正常运行

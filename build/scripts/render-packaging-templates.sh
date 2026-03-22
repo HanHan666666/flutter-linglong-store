@@ -44,6 +44,14 @@ while [[ $# -gt 0 ]]; do
       payload_dir="$2"
       shift 2
       ;;
+    --sha256-amd64)
+      sha256_amd64="$2"
+      shift 2
+      ;;
+    --sha256-arm64)
+      sha256_arm64="$2"
+      shift 2
+      ;;
     *)
       echo "Usage: $0 [--inner] --version <version> --arch <amd64|arm64> --output-dir <dir> [--installed-size-kb <kb>] [--release <n>] [--payload-dir <dir>]" >&2
       exit 64
@@ -81,6 +89,9 @@ wm_class="org.linglong-store.LinyapsManager"
 app_id="org.linglongstore.linglong_store"
 project_url="https://github.com/HanHan666666/flutter-linglong-store"
 maintainer="Linglong Store Community <community@linglong.dev>"
+maintainer_name="HanHan666666"
+maintainer_email="tar.zip@outlook.com"
+release_url_base="https://github.com/HanHan666666/flutter-linglong-store/releases/download"
 
 render_file() {
   local input_path="$1"
@@ -109,7 +120,7 @@ render_file() {
 }
 
 rm -rf "$output_dir"
-mkdir -p "$output_dir/deb" "$output_dir/rpm" "$output_dir/appimage"
+mkdir -p "$output_dir/deb" "$output_dir/rpm" "$output_dir/appimage" "$output_dir/aur"
 
 render_file \
   "$ROOT_DIR/build/packaging/linux/linglong-store.desktop.in" \
@@ -129,3 +140,41 @@ render_file \
   "$output_dir/appimage/linglong-store.appdata.xml"
 
 chmod +x "$output_dir/appimage/AppRun"
+
+# AUR templates (only if sha256 provided)
+render_aur_template() {
+  local input_path="$1"
+  local output_path="$2"
+  local sha_amd64="$3"
+  local sha_arm64="$4"
+
+  mkdir -p "$(dirname "$output_path")"
+  local content
+  content="$(<"$input_path")"
+  content="${content//@PACKAGE_NAME@/$package_name}"
+  content="${content//@VERSION@/$release_version}"
+  content="${content//@MAINTAINER_NAME@/$maintainer_name}"
+  content="${content//@MAINTAINER_EMAIL@/$maintainer_email}"
+  content="${content//@PROJECT_URL@/$project_url}"
+  content="${content//@RELEASE_URL_BASE@/$release_url_base}"
+  content="${content//@SHA256_AMD64@/$sha_amd64}"
+  content="${content//@SHA256_ARM64@/$sha_arm64}"
+  printf '%s\n' "$content" > "$output_path"
+}
+
+# Render AUR templates if sha256 checksums are provided
+if [[ -n "${sha256_amd64:-}" && -n "${sha256_arm64:-}" ]]; then
+  render_aur_template \
+    "$ROOT_DIR/build/packaging/linux/aur/PKGBUILD.in" \
+    "$output_dir/aur/PKGBUILD" \
+    "$sha256_amd64" \
+    "$sha256_arm64"
+
+  render_file \
+    "$ROOT_DIR/build/packaging/linux/aur/linglong-store-bin.install.in" \
+    "$output_dir/aur/linglong-store-bin.install"
+
+  render_file \
+    "$ROOT_DIR/build/packaging/linux/aur/linglong-store-bin.changelog.in" \
+    "$output_dir/aur/linglong-store-bin.changelog"
+fi

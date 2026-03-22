@@ -429,6 +429,8 @@
   "rankingTabRising": "New Apps",
   "rankingTabUpdate": "Updates",
   "rankingTabHot": "Trending",
+  "sidebarAllApps": "All Apps",
+  "sidebarRanking": "Ranking",
 
   "installErrorGeneric": "Installation failed: Generic error",
   "installErrorTimeout": "Installation failed: Progress timeout",

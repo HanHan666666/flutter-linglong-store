@@ -5,25 +5,29 @@ import 'package:go_router/go_router.dart';
 import '../../application/providers/sidebar_config_provider.dart';
 import '../../core/config/routes.dart';
 import '../../core/config/theme.dart';
+import '../../core/i18n/l10n/app_localizations.dart';
 import 'download_manager_dialog.dart';
 
 /// 侧边栏菜单项定义
 enum SidebarMenuItem {
-  recommend('推荐', Icons.favorite_border, Icons.favorite, AppRoutes.recommend),
-  allApps('全 部', Icons.apps_outlined, Icons.apps, AppRoutes.allApps),
-  ranking(
-    '排 行',
-    Icons.leaderboard_outlined,
-    Icons.leaderboard,
-    AppRoutes.ranking,
-  );
+  recommend(Icons.favorite_border, Icons.favorite, AppRoutes.recommend),
+  allApps(Icons.apps_outlined, Icons.apps, AppRoutes.allApps),
+  ranking(Icons.leaderboard_outlined, Icons.leaderboard, AppRoutes.ranking);
 
-  const SidebarMenuItem(this.label, this.icon, this.selectedIcon, this.route);
+  const SidebarMenuItem(this.icon, this.selectedIcon, this.route);
 
-  final String label;
   final IconData icon;
   final IconData selectedIcon;
   final String route;
+
+  /// 获取本地化标签
+  String localizedLabel(AppLocalizations l10n) {
+    return switch (this) {
+      SidebarMenuItem.recommend => l10n.recommend,
+      SidebarMenuItem.allApps => l10n.sidebarAllApps,
+      SidebarMenuItem.ranking => l10n.sidebarRanking,
+    };
+  }
 }
 
 /// 侧边栏
@@ -150,6 +154,8 @@ class _MenuItemTileState extends State<_MenuItemTile> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
@@ -213,7 +219,7 @@ class _MenuItemTileState extends State<_MenuItemTile> {
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
-                      widget.item.label,
+                      widget.item.localizedLabel(l10n),
                       style: AppTextStyles.menuActive.copyWith(
                         color: widget.isSelected
                             ? AppColors.primary
@@ -235,26 +241,24 @@ class _MenuItemTileState extends State<_MenuItemTile> {
 }
 
 enum _BottomSidebarItem {
-  myApps('我的应用', Icons.folder_outlined, Icons.folder, AppRoutes.myApps),
-  downloadManager(
-    '下载管理',
-    Icons.download_outlined,
-    Icons.download_outlined,
-    null,
-  ),
-  setting('设置', Icons.settings_outlined, Icons.settings, AppRoutes.setting);
+  myApps(Icons.folder_outlined, Icons.folder, AppRoutes.myApps),
+  downloadManager(Icons.download_outlined, Icons.download_outlined, null),
+  setting(Icons.settings_outlined, Icons.settings, AppRoutes.setting);
 
-  const _BottomSidebarItem(
-    this.label,
-    this.icon,
-    this.selectedIcon,
-    this.route,
-  );
+  const _BottomSidebarItem(this.icon, this.selectedIcon, this.route);
 
-  final String label;
   final IconData icon;
   final IconData selectedIcon;
   final String? route;
+
+  /// 获取本地化标签
+  String localizedLabel(AppLocalizations l10n) {
+    return switch (this) {
+      _BottomSidebarItem.myApps => l10n.myApps,
+      _BottomSidebarItem.downloadManager => l10n.downloadManager,
+      _BottomSidebarItem.setting => l10n.settings,
+    };
+  }
 }
 
 /// 底部固定动作区域
@@ -438,8 +442,10 @@ class _BottomIconButtonState extends State<_BottomIconButton> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Tooltip(
-      message: widget.item.label,
+      message: widget.item.localizedLabel(l10n),
       child: MouseRegion(
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),

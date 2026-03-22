@@ -8,12 +8,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging/app_logger.dart';
 import 'all_apps_provider.dart';
-import 'custom_category_provider.dart';
 import 'install_queue_provider.dart';
 import 'installed_apps_provider.dart';
 import 'ranking_provider.dart';
 import 'recommend_provider.dart';
 import 'search_provider.dart';
+import 'sidebar_config_provider.dart';
 
 part 'setting_provider.freezed.dart';
 part 'setting_provider.g.dart';
@@ -185,7 +185,7 @@ class Setting extends _$Setting {
   /// - 全部应用列表
   /// - 排行榜
   /// - 搜索结果
-  /// - 自定义分类
+  /// - 侧边栏菜单配置（驱动自定义分类 family 重新加载）
   void _invalidateLocaleDependentProviders() {
     // 刷新推荐列表
     ref.invalidate(recommendProvider);
@@ -195,8 +195,8 @@ class Setting extends _$Setting {
     ref.invalidate(rankingProvider);
     // 刷新搜索结果
     ref.invalidate(searchProvider);
-    // 刷新自定义分类
-    ref.invalidate(customCategoryProvider);
+    // 刷新侧边栏菜单配置，当前分类页 family 会基于此重新加载
+    ref.invalidate(sidebarConfigProvider);
   }
 
   /// 设置主题模式

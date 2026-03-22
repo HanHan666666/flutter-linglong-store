@@ -1,10 +1,13 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/config/local_sidebar_menu_catalog.dart';
 import '../../core/logging/app_logger.dart';
 import '../../data/models/api_dto.dart';
 import 'api_provider.dart';
 
 part 'sidebar_config_provider.g.dart';
+
+const _useLocalSidebarConfig = true;
 
 /// 侧边栏服务端动态菜单 Provider
 ///
@@ -13,6 +16,12 @@ part 'sidebar_config_provider.g.dart';
 /// - 失败时返回空列表（不影响静态菜单的正常显示）。
 @Riverpod(keepAlive: true)
 Future<List<SidebarMenuDTO>> sidebarConfig(Ref ref) async {
+  if (_useLocalSidebarConfig) {
+    return localSidebarMenuCatalog.map((item) => item.menu).toList(
+      growable: false,
+    );
+  }
+
   try {
     final apiService = ref.read(appApiServiceProvider);
     final response = await apiService.getSidebarConfig();

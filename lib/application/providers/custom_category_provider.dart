@@ -7,14 +7,18 @@ import '../../core/network/api_exceptions.dart';
 import '../../data/models/api_dto.dart';
 import '../../domain/models/recommend_models.dart';
 import 'api_provider.dart';
+import 'sidebar_config_provider.dart';
+import '../../core/config/local_sidebar_menu_catalog.dart';
 
 part 'custom_category_provider.freezed.dart';
 part 'custom_category_provider.g.dart';
 
+const int _customCategoryPageSize = 30;
+
 /// 自定义分类页状态 Provider
 @riverpod
 class CustomCategory extends _$CustomCategory {
-  String _categoryCode = '';
+  bool _didScheduleInitialLoad = false;
   // 来自侧边栏菜单 rule 的排序/过滤规则，在 loadData 时提取并复用
   String? _sortType;
   bool? _filter;
@@ -28,37 +32,34 @@ class CustomCategory extends _$CustomCategory {
   }
 
   @override
-  CustomCategoryState build() {
-    return const CustomCategoryState();
-  }
+  CustomCategoryState build(String code) {
+    ref.listen<AsyncValue<List<SidebarMenuDTO>>>(sidebarConfigProvider, (
+      previous,
+      next,
+    ) {
+      if (previous == null || state.isLoading) return;
+      if (next.hasValue) {
+        Future.microtask(loadData);
+      }
+    });
 
-  /// 初始化分类
-  void initCategory(String code) {
-    if (_categoryCode == code) return;
-    _categoryCode = code;
-    loadData();
+    if (!_didScheduleInitialLoad) {
+      _didScheduleInitialLoad = true;
+      Future.microtask(loadData);
+    }
+
+    return CustomCategoryState(isLoading: true, categoryCode: code);
   }
 
   /// 加载数据
   Future<void> loadData() async {
-    if (_categoryCode.isEmpty) return;
-
     state = state.copyWith(isLoading: true, error: null);
 
     try {
       final apiService = ref.read(appApiServiceProvider);
 
-      // 获取侧边栏配置
-      final menuResponse = await apiService.getSidebarConfig();
-      final categoryInfo = _findCategoryInfo(
-        menuResponse.data.data?.menus ?? [],
-        _categoryCode,
-      );
-
-      // 提取排序/过滤规则，在 loadMore 时复用
-      final menu = (menuResponse.data.data?.menus ?? [])
-          .where((m) => m.menuCode == _categoryCode)
-          .firstOrNull;
+      final menus = await ref.read(sidebarConfigProvider.future);
+      final menu = menus.where((m) => m.menuCode == code).firstOrNull;
       _sortType = menu?.rule?.sortBy;
       final minScore = menu?.rule?.filterMinScore ?? 0;
       _filter = minScore > 0 ? true : null;
@@ -66,9 +67,9 @@ class CustomCategory extends _$CustomCategory {
       // 使用侧边栏应用接口获取应用
       final appsResponse = await apiService.getSidebarApps(
         SidebarAppsRequest(
-          menuCode: _categoryCode,
+          menuCode: code,
           pageNo: 1,
-          pageSize: 20,
+          pageSize: _customCategoryPageSize,
           sortType: _sortType,
           filter: _filter,
           lan: _resolveApiLang(ApiClient.getLocale?.call()),
@@ -76,12 +77,13 @@ class CustomCategory extends _$CustomCategory {
       );
 
       final apps = _convertApps(appsResponse.data.data);
+      final categoryInfo = _buildCategoryInfo(menu, apps.total);
 
       state = state.copyWith(
         isLoading: false,
         data: CustomCategoryData(categoryInfo: categoryInfo, apps: apps),
         currentPage: 1,
-        categoryCode: _categoryCode,
+        categoryCode: code,
       );
     } catch (e, s) {
       AppLogger.error('加载自定义分类数据失败', e, s);
@@ -89,21 +91,24 @@ class CustomCategory extends _$CustomCategory {
     }
   }
 
-  /// 从配置中查找分类信息
-  CategoryInfo _findCategoryInfo(List<SidebarMenuDTO> menus, String code) {
-    for (final menu in menus) {
-      if (menu.menuCode == code) {
-        return CategoryInfo(
-          code: menu.menuCode,
-          name: menu.menuName,
-          icon: menu.menuIcon,
-          appCount: menu.categoryIds.length,
-        );
-      }
+  /// 根据菜单配置和真实分页总数构建分类头部信息
+  CategoryInfo _buildCategoryInfo(SidebarMenuDTO? menu, int total) {
+    final locale = resolveSidebarMenuLocale(ApiClient.getLocale?.call());
+    if (menu != null) {
+      return CategoryInfo(
+        code: menu.menuCode,
+        name: resolveSidebarMenuLabel(
+          menuCode: menu.menuCode,
+          locale: locale,
+          fallbackName: menu.menuName,
+        ),
+        icon: menu.menuIcon,
+        appCount: total,
+      );
     }
 
     // 未找到时返回默认
-    return CategoryInfo(code: code, name: '未知分类', appCount: 0);
+    return CategoryInfo(code: code, name: code, appCount: total);
   }
 
   /// 刷新数据
@@ -113,7 +118,7 @@ class CustomCategory extends _$CustomCategory {
 
   /// 加载更多应用
   Future<void> loadMore() async {
-    if (state.isLoadingMore || state.data?.apps.hasMore == false) {
+    if (state.isLoading || state.isLoadingMore || state.data?.apps.hasMore == false) {
       return;
     }
 
@@ -125,9 +130,9 @@ class CustomCategory extends _$CustomCategory {
 
       final response = await apiService.getSidebarApps(
         SidebarAppsRequest(
-          menuCode: _categoryCode,
+          menuCode: code,
           pageNo: nextPage,
-          pageSize: 20,
+          pageSize: _customCategoryPageSize,
           sortType: _sortType,
           filter: _filter,
           lan: _resolveApiLang(ApiClient.getLocale?.call()),
@@ -146,7 +151,7 @@ class CustomCategory extends _$CustomCategory {
             items: mergedApps,
             total: newApps.total,
             page: nextPage,
-            pageSize: 20,
+            pageSize: _customCategoryPageSize,
             hasMore: newApps.hasMore,
           ),
         ),
@@ -164,7 +169,7 @@ class CustomCategory extends _$CustomCategory {
         items: [],
         total: 0,
         page: 1,
-        pageSize: 20,
+        pageSize: _customCategoryPageSize,
         hasMore: false,
       );
     }

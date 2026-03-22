@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../application/providers/sidebar_config_provider.dart';
 import '../../core/config/routes.dart';
 import '../../core/config/theme.dart';
+import '../../core/config/local_sidebar_menu_catalog.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
+import '../../data/models/api_dto.dart';
 import 'download_manager_dialog.dart';
 
 /// 侧边栏菜单项定义
@@ -56,7 +58,10 @@ class Sidebar extends ConsumerWidget {
     // 读取服务端下发的动态菜单（失败时默认返回空列表，不影响静态菜单）
     final dynamicMenus = ref
         .watch(sidebarConfigProvider)
-        .maybeWhen(data: (menus) => menus, orElse: () => []);
+        .maybeWhen<List<SidebarMenuDTO>>(
+          data: (menus) => menus,
+          orElse: () => const <SidebarMenuDTO>[],
+        );
 
     // decoration 需要读取 context 颜色，不能使用 const
     return AnimatedContainer(
@@ -93,7 +98,7 @@ class _MenuSection extends StatelessWidget {
   final bool isCollapsed;
 
   /// 服务端下发的动态菜单列表
-  final List dynamicMenus;
+  final List<SidebarMenuDTO> dynamicMenus;
 
   /// 将9秤宽的分隔带（在静态菜单和动态菜单之间）
   Widget _buildDivider(BuildContext context) => Padding(
@@ -163,80 +168,83 @@ class _MenuItemTileState extends State<_MenuItemTile> {
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs / 2,
       ),
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
-        child: GestureDetector(
-          onTap: () => context.go(widget.item.route),
-          child: AnimatedContainer(
-            duration: AppAnimation.fast,
-            height: 36,
-            padding: EdgeInsets.symmetric(
-              horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
-            ),
-            decoration: BoxDecoration(
-              // 默认态使用目标色的透明版本，避免 Colors.transparent（透明黑）
-              // 在动画插值时产生深色闪烁
-              color: widget.isSelected
-                  ? context.appColors.primaryLight
-                  : (_isHovered
-                        ? context.appColors.surfaceContainerLow
-                        : context.appColors.surfaceContainerLow.withAlpha(0)),
-              borderRadius: AppRadius.xsRadius,
-            ),
-            child: Row(
-              mainAxisAlignment: widget.isCollapsed
-                  ? MainAxisAlignment.center
-                  : MainAxisAlignment.start,
-              children: [
-                // 选中指示器
-                if (!widget.isCollapsed) ...[
-                  AnimatedContainer(
-                    duration: AppAnimation.fast,
-                    width: widget.isSelected ? 3 : 0,
-                    height: widget.isSelected ? 16 : 0,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  SizedBox(
-                    width: widget.isSelected
-                        ? AppSpacing.sm
-                        : AppSpacing.sm + 3,
-                  ),
-                ],
-                // 图标
-                Icon(
-                  widget.isSelected
-                      ? widget.item.selectedIcon
-                      : widget.item.icon,
-                  size: 20,
-                  color: widget.isSelected
-                      ? AppColors.primary
-                      : context.appColors.textSecondary,
-                ),
-                // 文字
-                if (!widget.isCollapsed) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      widget.item.localizedLabel(l10n),
-                      maxLines: 1,
-                      softWrap: false,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.menuActive.copyWith(
-                        color: widget.isSelected
-                            ? AppColors.primary
-                            : context.appColors.textPrimary,
-                        fontWeight: widget.isSelected
-                            ? FontWeight.w500
-                            : FontWeight.w400,
+      child: Tooltip(
+        message: widget.item.localizedLabel(l10n),
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          child: GestureDetector(
+            onTap: () => context.go(widget.item.route),
+            child: AnimatedContainer(
+              duration: AppAnimation.fast,
+              height: 36,
+              padding: EdgeInsets.symmetric(
+                horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
+              ),
+              decoration: BoxDecoration(
+                // 默认态使用目标色的透明版本，避免 Colors.transparent（透明黑）
+                // 在动画插值时产生深色闪烁
+                color: widget.isSelected
+                    ? context.appColors.primaryLight
+                    : (_isHovered
+                          ? context.appColors.surfaceContainerLow
+                          : context.appColors.surfaceContainerLow.withAlpha(0)),
+                borderRadius: AppRadius.xsRadius,
+              ),
+              child: Row(
+                mainAxisAlignment: widget.isCollapsed
+                    ? MainAxisAlignment.center
+                    : MainAxisAlignment.start,
+                children: [
+                  // 选中指示器
+                  if (!widget.isCollapsed) ...[
+                    AnimatedContainer(
+                      duration: AppAnimation.fast,
+                      width: widget.isSelected ? 3 : 0,
+                      height: widget.isSelected ? 16 : 0,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
+                    SizedBox(
+                      width: widget.isSelected
+                          ? AppSpacing.sm
+                          : AppSpacing.sm + 3,
+                    ),
+                  ],
+                  // 图标
+                  Icon(
+                    widget.isSelected
+                        ? widget.item.selectedIcon
+                        : widget.item.icon,
+                    size: 20,
+                    color: widget.isSelected
+                        ? AppColors.primary
+                        : context.appColors.textSecondary,
                   ),
+                  // 文字
+                  if (!widget.isCollapsed) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        widget.item.localizedLabel(l10n),
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.menuActive.copyWith(
+                          color: widget.isSelected
+                              ? AppColors.primary
+                              : context.appColors.textPrimary,
+                          fontWeight: widget.isSelected
+                              ? FontWeight.w500
+                              : FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -321,7 +329,7 @@ class _DynamicMenuItemTile extends StatefulWidget {
     required this.isCollapsed,
   });
 
-  final dynamic menu;
+  final SidebarMenuDTO menu;
   final bool isSelected;
   final bool isCollapsed;
 
@@ -335,82 +343,92 @@ class _DynamicMenuItemTileState extends State<_DynamicMenuItemTile> {
   @override
   Widget build(BuildContext context) {
     final route = '/custom_category/${widget.menu.menuCode}';
-    final label = widget.menu.menuName as String;
+    final locale = Localizations.localeOf(context);
+    final presentation = buildSidebarMenuPresentation(
+      menuCode: widget.menu.menuCode,
+      locale: locale,
+      fallbackName: widget.menu.menuName,
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs / 2,
       ),
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
-        child: GestureDetector(
-          onTap: () => context.go(route),
-          child: AnimatedContainer(
-            duration: AppAnimation.fast,
-            height: 36,
-            padding: EdgeInsets.symmetric(
-              horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
-            ),
-            decoration: BoxDecoration(
-              color: widget.isSelected
-                  ? context.appColors.primaryLight
-                  : (_isHovered
-                        ? context.appColors.surfaceContainerLow
-                        // 默认态使用目标色的透明版本，避免 Colors.transparent（透明黑）
-                        // 在动画插值时产生深色闪烁
-                        : context.appColors.surfaceContainerLow.withAlpha(0)),
-              borderRadius: AppRadius.xsRadius,
-            ),
-            child: Row(
-              mainAxisAlignment: widget.isCollapsed
-                  ? MainAxisAlignment.center
-                  : MainAxisAlignment.start,
-              children: [
-                if (!widget.isCollapsed) ...[
-                  AnimatedContainer(
-                    duration: AppAnimation.fast,
-                    width: widget.isSelected ? 3 : 0,
-                    height: widget.isSelected ? 16 : 0,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  SizedBox(
-                    width: widget.isSelected
-                        ? AppSpacing.sm
-                        : AppSpacing.sm + 3,
-                  ),
-                ],
-                // 图标：优先使用 menuIcon 资源名，不可用时显示默认图标
-                Icon(
-                  Icons.category_outlined,
-                  size: 20,
-                  color: widget.isSelected
-                      ? AppColors.primary
-                      : context.appColors.textSecondary,
-                ),
-                if (!widget.isCollapsed) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.menuActive.copyWith(
-                        color: widget.isSelected
-                            ? AppColors.primary
-                            : context.appColors.textPrimary,
-                        fontWeight: widget.isSelected
-                            ? FontWeight.w500
-                            : FontWeight.w400,
+      child: Tooltip(
+        message: presentation.label,
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          child: GestureDetector(
+            onTap: () => context.go(route),
+            child: AnimatedContainer(
+              duration: AppAnimation.fast,
+              height: 36,
+              padding: EdgeInsets.symmetric(
+                horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
+              ),
+              decoration: BoxDecoration(
+                color: widget.isSelected
+                    ? context.appColors.primaryLight
+                    : (_isHovered
+                          ? context.appColors.surfaceContainerLow
+                          // 默认态使用目标色的透明版本，避免 Colors.transparent（透明黑）
+                          // 在动画插值时产生深色闪烁
+                          : context.appColors.surfaceContainerLow.withAlpha(0)),
+                borderRadius: AppRadius.xsRadius,
+              ),
+              child: Row(
+                mainAxisAlignment: widget.isCollapsed
+                    ? MainAxisAlignment.center
+                    : MainAxisAlignment.start,
+                children: [
+                  if (!widget.isCollapsed) ...[
+                    AnimatedContainer(
+                      duration: AppAnimation.fast,
+                      width: widget.isSelected ? 3 : 0,
+                      height: widget.isSelected ? 16 : 0,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
+                    SizedBox(
+                      width: widget.isSelected
+                          ? AppSpacing.sm
+                          : AppSpacing.sm + 3,
+                    ),
+                  ],
+                  Icon(
+                    widget.isSelected
+                        ? presentation.selectedIcon
+                        : presentation.icon,
+                    size: 20,
+                    color: widget.isSelected
+                        ? AppColors.primary
+                        : context.appColors.textSecondary,
                   ),
+                  if (!widget.isCollapsed) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        presentation.label,
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.menuActive.copyWith(
+                          color: widget.isSelected
+                              ? AppColors.primary
+                              : context.appColors.textPrimary,
+                          fontWeight: widget.isSelected
+                              ? FontWeight.w500
+                              : FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

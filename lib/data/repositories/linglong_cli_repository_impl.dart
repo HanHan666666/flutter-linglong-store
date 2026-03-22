@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import '../../core/i18n/install_messages.dart';
@@ -465,21 +464,79 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
     try {
       AppLogger.info('[LinglongCli] 创建桌面快捷方式: $appId');
 
-      // ll-cli 可能没有直接的快捷方式命令
-      // 这里需要检查实际的命令支持
+      // 1. 检查应用是否已安装
+      final installedApps = await getInstalledApps();
+      final isInstalled = installedApps.any((app) => app.appId == appId);
+      if (!isInstalled) {
+        return '应用未安装，无法创建快捷方式: $appId';
+      }
+
+      // 2. 使用 ll-cli content 获取应用导出的文件列表
       final output = await CliExecutor.execute([
-        'desktop',
+        'content',
         appId,
       ], timeout: const Duration(seconds: 10));
 
-      if (output.success) {
-        return _messages.shortcutCreated;
-      } else {
+      if (!output.success) {
         return _messages.shortcutCreateFailed(output.stderr);
       }
-    } catch (e) {
-      // 如果 desktop 命令不存在，尝试手动创建
-      return await _createDesktopShortcutManually(appId);
+
+      // 3. 从输出中找到 .desktop 文件路径
+      final lines = output.stdout.split('\n');
+      String? desktopSource;
+      for (final line in lines) {
+        final trimmed = line.trim();
+        if (trimmed.isNotEmpty && trimmed.endsWith('.desktop')) {
+          desktopSource = trimmed;
+          break;
+        }
+      }
+
+      if (desktopSource == null) {
+        return '未找到应用导出的 desktop 文件: $appId';
+      }
+
+      // 4. 获取桌面目录路径
+      final home = Platform.environment['HOME'];
+      if (home == null || home.isEmpty) {
+        return '无法获取 HOME 目录';
+      }
+      final desktopDir = '$home/Desktop';
+
+      // 5. 确保桌面目录存在
+      final desktopDirFile = Directory(desktopDir);
+      if (!await desktopDirFile.exists()) {
+        await desktopDirFile.create(recursive: true);
+      }
+
+      // 6. 构建目标路径
+      final desktopFileName = desktopSource.split('/').last;
+      final targetPath = '$desktopDir/$desktopFileName';
+
+      // 7. 检查是否已存在
+      final targetFile = File(targetPath);
+      if (await targetFile.exists()) {
+        return '快捷方式已存在，不会覆盖: $targetPath';
+      }
+
+      // 8. 复制 .desktop 文件到桌面
+      final sourceFile = File(desktopSource);
+      if (!await sourceFile.exists()) {
+        return '源 desktop 文件不存在: $desktopSource';
+      }
+      await sourceFile.copy(targetPath);
+
+      // 9. 设置可执行权限 (0o755)
+      await Process.run('chmod', ['755', targetPath]);
+
+      AppLogger.info(
+        '[LinglongCli] 桌面快捷方式创建成功: $appId -> $targetPath',
+      );
+
+      return '已创建桌面快捷方式: $targetPath';
+    } catch (e, stack) {
+      AppLogger.error('[LinglongCli] 创建桌面快捷方式异常: $appId', e, stack);
+      return _messages.shortcutCreateException(e.toString());
     }
   }
 
@@ -539,55 +596,4 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
     }
   }
 
-  /// 手动创建桌面快捷方式
-  Future<String> _createDesktopShortcutManually(String appId) async {
-    try {
-      // 用 ll-cli info 获取应用信息（输出 JSON 格式）
-      final queryOutput = await CliExecutor.execute([
-        'info',
-        appId,
-      ], timeout: kQueryTimeout);
-
-      if (!queryOutput.success) {
-        return _messages.appInfoUnavailable;
-      }
-
-      // ll-cli info 输出 JSON，直接解析
-      String appName = appId;
-      String appDescription = '';
-      try {
-        final json = jsonDecode(queryOutput.stdout) as Map<String, dynamic>;
-        appName = (json['name'] as String?) ?? appId;
-        appDescription = (json['description'] as String?) ?? '';
-      } catch (_) {
-        // 解析失败时使用默认值
-      }
-
-      // 创建 .desktop 文件
-      final desktopContent =
-          '''
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=$appName
-Comment=$appDescription
-Exec=ll-cli run $appId
-Icon=$appId
-Terminal=false
-Categories=Application;
-''';
-
-      // 写入用户桌面目录
-      final home = Platform.environment['HOME'] ?? '';
-      final desktopPath = '$home/.local/share/applications/$appId.desktop';
-
-      final file = File(desktopPath);
-      await file.parent.create(recursive: true);
-      await file.writeAsString(desktopContent);
-
-      return _messages.shortcutCreatedWithPath(desktopPath);
-    } catch (e) {
-      return _messages.shortcutCreateException(e.toString());
-    }
   }
-}

@@ -7,11 +7,14 @@ PROJECT_URL="https://github.com/HanHan666666/flutter-linglong-store"
 release_version=""
 sha256_amd64="${SHA256_AMD64:-}"
 sha256_arm64="${SHA256_ARM64:-}"
+sha256_sig_amd64="${SHA256_SIG_AMD64:-}"
+sha256_sig_arm64="${SHA256_SIG_ARM64:-}"
+gpg_key_id="${GPG_KEY_ID:-}"
 run_inner="false"
 
 usage() {
   cat <<'EOF' >&2
-Usage: validate-aur-package.sh --version <version> [--sha256-amd64 <sha>] [--sha256-arm64 <sha>] [--inner]
+Usage: validate-aur-package.sh --version <version> [--sha256-amd64 <sha>] [--sha256-arm64 <sha>] [--sha256-sig-amd64 <sha>] [--sha256-sig-arm64 <sha>] [--gpg-key-id <keyid>] [--inner]
 EOF
 }
 
@@ -65,13 +68,25 @@ run_inner_validation() {
     sha256_arm64="$(compute_release_sha256 "$PROJECT_URL/releases/download/v${release_version}/linglong-store-${release_version}-linux-arm64.tar.gz")"
   fi
 
+  # Compute signature SHA256 if not provided
+  if [[ -z "$sha256_sig_amd64" ]]; then
+    sha256_sig_amd64="$(compute_release_sha256 "$PROJECT_URL/releases/download/v${release_version}/linglong-store-${release_version}-linux-amd64.tar.gz.asc")"
+  fi
+
+  if [[ -z "$sha256_sig_arm64" ]]; then
+    sha256_sig_arm64="$(compute_release_sha256 "$PROJECT_URL/releases/download/v${release_version}/linglong-store-${release_version}-linux-arm64.tar.gz.asc")"
+  fi
+
   bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
     --inner \
     --version "$release_version" \
     --arch amd64 \
     --output-dir "$metadata_dir" \
     --sha256-amd64 "$sha256_amd64" \
-    --sha256-arm64 "$sha256_arm64"
+    --sha256-arm64 "$sha256_arm64" \
+    --sha256-sig-amd64 "$sha256_sig_amd64" \
+    --sha256-sig-arm64 "$sha256_sig_arm64" \
+    --gpg-key-id "$gpg_key_id"
   chown -R builder:builder "$metadata_dir"
 
   output="$(
@@ -149,6 +164,18 @@ while [[ $# -gt 0 ]]; do
       sha256_arm64="$2"
       shift 2
       ;;
+    --sha256-sig-amd64)
+      sha256_sig_amd64="$2"
+      shift 2
+      ;;
+    --sha256-sig-arm64)
+      sha256_sig_arm64="$2"
+      shift 2
+      ;;
+    --gpg-key-id)
+      gpg_key_id="$2"
+      shift 2
+      ;;
     --inner)
       run_inner="true"
       shift
@@ -175,5 +202,8 @@ docker run --rm \
   -w /workspace \
   -e SHA256_AMD64="$sha256_amd64" \
   -e SHA256_ARM64="$sha256_arm64" \
+  -e SHA256_SIG_AMD64="$sha256_sig_amd64" \
+  -e SHA256_SIG_ARM64="$sha256_sig_arm64" \
+  -e GPG_KEY_ID="$gpg_key_id" \
   archlinux:latest \
   /bin/bash build/scripts/validate-aur-package.sh --inner --version "$release_version"

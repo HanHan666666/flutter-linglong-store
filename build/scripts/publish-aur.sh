@@ -10,6 +10,9 @@ aur_repo_url="ssh://aur@aur.archlinux.org/linglong-store-bin.git"
 # SHA256 checksums from environment (set by CI)
 sha256_amd64="${SHA256_AMD64:-}"
 sha256_arm64="${SHA256_ARM64:-}"
+sha256_sig_amd64="${SHA256_SIG_AMD64:-}"
+sha256_sig_arm64="${SHA256_SIG_ARM64:-}"
+gpg_key_id="${GPG_KEY_ID:-}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -86,13 +89,19 @@ update_aur_repo() {
 
   SHA256_AMD64="$sha256_amd64" \
   SHA256_ARM64="$sha256_arm64" \
+  SHA256_SIG_AMD64="$sha256_sig_amd64" \
+  SHA256_SIG_ARM64="$sha256_sig_arm64" \
+  GPG_KEY_ID="$gpg_key_id" \
   "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
     --inner \
     --version "$version" \
     --arch "amd64" \
     --output-dir "$metadata_dir" \
     --sha256-amd64 "$sha256_amd64" \
-    --sha256-arm64 "$sha256_arm64"
+    --sha256-arm64 "$sha256_arm64" \
+    --sha256-sig-amd64 "$sha256_sig_amd64" \
+    --sha256-sig-arm64 "$sha256_sig_arm64" \
+    --gpg-key-id "$gpg_key_id"
 
   # Copy rendered AUR files.
   cp "$metadata_dir/aur/PKGBUILD" PKGBUILD

@@ -225,12 +225,54 @@ jobs:
           path: build/out/linux/${{ needs.prepare-release.outputs.version }}/arm64/sha256sum-arm64.txt
           if-no-files-found: warn
 
+  sign-release:
+    name: Sign Release Assets
+    needs: [prepare-release, build-amd64, build-arm64, build-arm64-qemu]
+    if: ${{ always() && needs.build-amd64.result == 'success' && (needs.build-arm64.result == 'success' || (needs.build-arm64.result != 'success' && needs.build-arm64-qemu.result == 'success')) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download release assets
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-assets-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Import GPG key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          echo "GPG key imported successfully"
+
+      - name: Sign release tarballs
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          cd artifacts
+          for tarball in **/*.tar.gz; do
+            if [[ -f "$tarball" ]]; then
+              echo "Signing $tarball..."
+              echo "$GPG_PASSPHRASE" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
+                --armor --detach-sign "$tarball"
+            fi
+          done
+          ls -la **/*.asc || echo "No signature files created"
+
+      - name: Upload signed assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-release-assets
+          path: |
+            artifacts/**/*.tar.gz
+            artifacts/**/*.tar.gz.asc
+          if-no-files-found: error
+
   publish-release:
     name: Publish GitHub Release ${{ needs.prepare-release.outputs.version }}
-    needs: [prepare-release, build-amd64, build-arm64, build-arm64-qemu]
-    # Publish when amd64 succeeds and arm64 is available from either the native runner
-    # or the fallback QEMU path. A skipped fallback is expected after native arm64 passes.
-    if: ${{ always() && needs.build-amd64.result == 'success' && (needs.build-arm64.result == 'success' || (needs.build-arm64.result != 'success' && needs.build-arm64-qemu.result == 'success')) }}
+    needs: [prepare-release, sign-release]
+    if: ${{ always() && needs.sign-release.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Download release notes
@@ -239,12 +281,11 @@ jobs:
           name: release-notes
           path: release-notes
 
-      - name: Download release assets
+      - name: Download signed release assets
         uses: actions/download-artifact@v4
         with:
-          pattern: release-assets-*
+          name: signed-release-assets
           path: artifacts
-          merge-multiple: true
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -255,6 +296,7 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             artifacts/**/*.tar.gz
+            artifacts/**/*.tar.gz.asc
             artifacts/**/*.deb
             artifacts/**/*.rpm
             artifacts/**/*.AppImage
@@ -278,30 +320,51 @@ jobs:
           path: sha256sums
           merge-multiple: true
 
-      - name: Read sha256sums
-        id: sha256sums
+      - name: Download signed assets for signature SHA256
+        uses: actions/download-artifact@v4
+        with:
+          name: signed-release-assets
+          path: signed-assets
+
+      - name: Calculate checksums
+        id: checksums
         run: |
-          # With merge-multiple: true, files are named by artifact content
-          # sha256sum-amd64.txt and sha256sum-arm64.txt will be at root
+          # Read tarball SHA256
           sha_amd64=""
           sha_arm64=""
 
           if [[ -f "sha256sums/sha256sum-amd64.txt" ]]; then
             sha_amd64=$(cat "sha256sums/sha256sum-amd64.txt")
             echo "AMD64 SHA256: $sha_amd64"
-          else
-            echo "Warning: AMD64 sha256sum not found" >&2
           fi
 
           if [[ -f "sha256sums/sha256sum-arm64.txt" ]]; then
             sha_arm64=$(cat "sha256sums/sha256sum-arm64.txt")
             echo "ARM64 SHA256: $sha_arm64"
-          else
-            echo "Warning: ARM64 sha256sum not found" >&2
+          fi
+
+          # Calculate signature SHA256
+          sha_sig_amd64=""
+          sha_sig_arm64=""
+
+          # Find signature files
+          sig_amd64=$(find signed-assets -name "*amd64.tar.gz.asc" | head -1)
+          sig_arm64=$(find signed-assets -name "*arm64.tar.gz.asc" | head -1)
+
+          if [[ -n "$sig_amd64" && -f "$sig_amd64" ]]; then
+            sha_sig_amd64=$(sha256sum "$sig_amd64" | awk '{print $1}')
+            echo "AMD64 signature SHA256: $sha_sig_amd64"
+          fi
+
+          if [[ -n "$sig_arm64" && -f "$sig_arm64" ]]; then
+            sha_sig_arm64=$(sha256sum "$sig_arm64" | awk '{print $1}')
+            echo "ARM64 signature SHA256: $sha_sig_arm64"
           fi
 
           echo "sha_amd64=$sha_amd64" >> "$GITHUB_OUTPUT"
           echo "sha_arm64=$sha_arm64" >> "$GITHUB_OUTPUT"
+          echo "sha_sig_amd64=$sha_sig_amd64" >> "$GITHUB_OUTPUT"
+          echo "sha_sig_arm64=$sha_sig_arm64" >> "$GITHUB_OUTPUT"
 
       - name: Setup SSH for AUR
         env:
@@ -319,16 +382,24 @@ jobs:
           ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
 
       - name: Validate AUR package in Arch Linux
+        env:
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
         run: |
           bash build/scripts/validate-aur-package.sh \
             --version "${{ needs.prepare-release.outputs.version }}" \
-            --sha256-amd64 "${{ steps.sha256sums.outputs.sha_amd64 }}" \
-            --sha256-arm64 "${{ steps.sha256sums.outputs.sha_arm64 }}"
+            --sha256-amd64 "${{ steps.checksums.outputs.sha_amd64 }}" \
+            --sha256-arm64 "${{ steps.checksums.outputs.sha_arm64 }}" \
+            --sha256-sig-amd64 "${{ steps.checksums.outputs.sha_sig_amd64 }}" \
+            --sha256-sig-arm64 "${{ steps.checksums.outputs.sha_sig_arm64 }}" \
+            --gpg-key-id "$GPG_KEY_ID"
 
       - name: Publish AUR package
         env:
-          SHA256_AMD64: ${{ steps.sha256sums.outputs.sha_amd64 }}
-          SHA256_ARM64: ${{ steps.sha256sums.outputs.sha_arm64 }}
+          SHA256_AMD64: ${{ steps.checksums.outputs.sha_amd64 }}
+          SHA256_ARM64: ${{ steps.checksums.outputs.sha_arm64 }}
+          SHA256_SIG_AMD64: ${{ steps.checksums.outputs.sha_sig_amd64 }}
+          SHA256_SIG_ARM64: ${{ steps.checksums.outputs.sha_sig_arm64 }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
         run: bash build/scripts/publish-aur.sh --version "${{ needs.prepare-release.outputs.version }}"
 
       - name: Cleanup SSH key

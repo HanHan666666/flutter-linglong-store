@@ -26,14 +26,23 @@ provides=('linglong-store')
 conflicts=('linglong-store')
 changelog=linglong-store-bin.changelog
 
+# PGP signature verification
+validpgpkeys=('@GPG_KEY_ID@')
+
 source=(
   'LICENSE'
   'linglong-store.desktop'
   'linglong-store.metainfo.xml'
   'linglong-store.svg'
 )
-source_x86_64=("linglong-store-${pkgver}-linux-amd64.tar.gz::@RELEASE_URL_BASE@/v${pkgver}/linglong-store-${pkgver}-linux-amd64.tar.gz")
-source_aarch64=("linglong-store-${pkgver}-linux-arm64.tar.gz::@RELEASE_URL_BASE@/v${pkgver}/linglong-store-${pkgver}-linux-arm64.tar.gz")
+source_x86_64=(
+  "linglong-store-${pkgver}-linux-amd64.tar.gz::@RELEASE_URL_BASE@/v${pkgver}/linglong-store-${pkgver}-linux-amd64.tar.gz"
+  "linglong-store-${pkgver}-linux-amd64.tar.gz.asc::@RELEASE_URL_BASE@/v${pkgver}/linglong-store-${pkgver}-linux-amd64.tar.gz.asc"
+)
+source_aarch64=(
+  "linglong-store-${pkgver}-linux-arm64.tar.gz::@RELEASE_URL_BASE@/v${pkgver}/linglong-store-${pkgver}-linux-arm64.tar.gz"
+  "linglong-store-${pkgver}-linux-arm64.tar.gz.asc::@RELEASE_URL_BASE@/v${pkgver}/linglong-store-${pkgver}-linux-arm64.tar.gz.asc"
+)
 
 sha256sums=(
   '@SHA256_LICENSE@'
@@ -41,8 +50,14 @@ sha256sums=(
   '@SHA256_METAINFO@'
   '@SHA256_ICON@'
 )
-sha256sums_x86_64=('@SHA256_AMD64@')
-sha256sums_aarch64=('@SHA256_ARM64@')
+sha256sums_x86_64=(
+  '@SHA256_AMD64@'
+  '@SHA256_SIG_AMD64@'
+)
+sha256sums_aarch64=(
+  '@SHA256_ARM64@'
+  '@SHA256_SIG_ARM64@'
+)
 
 package() {
   # Install application files

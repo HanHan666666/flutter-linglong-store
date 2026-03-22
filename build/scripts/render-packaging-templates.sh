@@ -17,6 +17,18 @@ output_dir=""
 installed_size_kb="0"
 release_number="1"
 payload_dir=""
+sha256_amd64=""
+sha256_arm64=""
+sha256_sig_amd64=""
+sha256_sig_arm64=""
+gpg_key_id=""
+
+# Read from environment if available
+sha256_amd64="${SHA256_AMD64:-$sha256_amd64}"
+sha256_arm64="${SHA256_ARM64:-$sha256_arm64}"
+sha256_sig_amd64="${SHA256_SIG_AMD64:-$sha256_sig_amd64}"
+sha256_sig_arm64="${SHA256_SIG_ARM64:-$sha256_sig_arm64}"
+gpg_key_id="${GPG_KEY_ID:-$gpg_key_id}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -50,6 +62,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --sha256-arm64)
       sha256_arm64="$2"
+      shift 2
+      ;;
+    --sha256-sig-amd64)
+      sha256_sig_amd64="$2"
+      shift 2
+      ;;
+    --sha256-sig-arm64)
+      sha256_sig_arm64="$2"
+      shift 2
+      ;;
+    --gpg-key-id)
+      gpg_key_id="$2"
       shift 2
       ;;
     *)
@@ -151,6 +175,9 @@ render_aur_template() {
   local sha_desktop="$6"
   local sha_metainfo="$7"
   local sha_icon="$8"
+  local sha_sig_amd64="${9:-}"
+  local sha_sig_arm64="${10:-}"
+  local key_id="${11:-}"
 
   mkdir -p "$(dirname "$output_path")"
   local content
@@ -167,6 +194,9 @@ render_aur_template() {
   content="${content//@SHA256_ICON@/$sha_icon}"
   content="${content//@SHA256_AMD64@/$sha_amd64}"
   content="${content//@SHA256_ARM64@/$sha_arm64}"
+  content="${content//@SHA256_SIG_AMD64@/$sha_sig_amd64}"
+  content="${content//@SHA256_SIG_ARM64@/$sha_sig_arm64}"
+  content="${content//@GPG_KEY_ID@/$key_id}"
   printf '%s\n' "$content" > "$output_path"
 }
 
@@ -192,7 +222,10 @@ if [[ -n "${sha256_amd64:-}" && -n "${sha256_arm64:-}" ]]; then
     "$sha256_license" \
     "$sha256_desktop" \
     "$sha256_metainfo" \
-    "$sha256_icon"
+    "$sha256_icon" \
+    "$sha256_sig_amd64" \
+    "$sha256_sig_arm64" \
+    "$gpg_key_id"
 
   render_file \
     "$ROOT_DIR/build/packaging/linux/aur/linglong-store-bin.changelog.in" \

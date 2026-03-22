@@ -800,6 +800,12 @@ abstract class AppLocalizations {
   /// **'创建桌面快捷方式'**
   String get createDesktopShortcut;
 
+  /// No description provided for @appDetailTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用详情'**
+  String get appDetailTitle;
+
   /// No description provided for @appNotFound.
   ///
   /// In zh, this message translates to:

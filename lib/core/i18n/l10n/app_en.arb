@@ -169,6 +169,7 @@
     }
   },
   "createDesktopShortcut": "Create Desktop Shortcut",
+  "appDetailTitle": "App Details",
   "appNotFound": "App information not found",
   "noVersionHistory": "No version history",
   "installedBadge": "Installed",

@@ -169,6 +169,7 @@
     }
   },
   "createDesktopShortcut": "创建桌面快捷方式",
+  "appDetailTitle": "应用详情",
   "appNotFound": "未找到应用信息",
   "noVersionHistory": "暂无版本历史",
   "installedBadge": "已安装",

@@ -374,6 +374,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get createDesktopShortcut => '创建桌面快捷方式';
 
   @override
+  String get appDetailTitle => '应用详情';
+
+  @override
   String get appNotFound => '未找到应用信息';
 
   @override

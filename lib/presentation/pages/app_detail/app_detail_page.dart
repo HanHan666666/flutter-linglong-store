@@ -212,7 +212,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     final hasInstalledInstance = installedVersions.isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(title: Text(detailState.app?.name ?? '应用详情')),
+      appBar: AppBar(title: Text(detailState.app?.name ?? AppLocalizations.of(context)?.appDetailTitle ?? 'App Details')),
       body: _buildBody(
         context,
         detailState,

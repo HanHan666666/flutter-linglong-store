@@ -387,6 +387,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get createDesktopShortcut => 'Create Desktop Shortcut';
 
   @override
+  String get appDetailTitle => 'App Details';
+
+  @override
   String get appNotFound => 'App information not found';
 
   @override

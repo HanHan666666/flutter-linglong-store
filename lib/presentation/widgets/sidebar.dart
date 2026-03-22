@@ -43,7 +43,7 @@ class Sidebar extends ConsumerWidget {
   /// 侧边栏默认宽度 - 176px
   ///
   /// 为英文展开态菜单预留稳定单行空间，避免 `Recommend` 等文案换行。
-  static const double defaultWidth = 176.0;
+  static const double defaultWidth = 164.0;
 
   /// 侧边栏折叠宽度 - 56px (3.5rem)
   static const double collapsedWidth = 56.0;

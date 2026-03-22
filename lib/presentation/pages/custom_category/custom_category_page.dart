@@ -40,18 +40,16 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    // 初始化分类
-    Future.microtask(() {
-      ref.read(customCategoryProvider.notifier).initCategory(widget.code);
-    });
   }
 
   @override
   void didUpdateWidget(CustomCategoryPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 当 code 改变时重新初始化
     if (oldWidget.code != widget.code) {
-      ref.read(customCategoryProvider.notifier).initCategory(widget.code);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_scrollController.hasClients) return;
+        _scrollController.jumpTo(0);
+      });
     }
   }
 
@@ -67,7 +65,7 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
     if (!_isPageVisible) return;
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      ref.read(customCategoryProvider.notifier).loadMore();
+      ref.read(customCategoryProvider(widget.code).notifier).loadMore();
     }
   }
 
@@ -85,10 +83,11 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
   Widget build(BuildContext context) {
     super.build(context);
 
-    final state = ref.watch(customCategoryProvider);
+    final state = ref.watch(customCategoryProvider(widget.code));
 
     return RefreshIndicator(
-      onRefresh: () => ref.read(customCategoryProvider.notifier).refresh(),
+      onRefresh: () =>
+          ref.read(customCategoryProvider(widget.code).notifier).refresh(),
       child: _buildBody(state),
     );
   }
@@ -103,7 +102,8 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
     if (state.error != null && state.data == null) {
       return ErrorState.generic(
         description: state.error,
-        onRetry: () => ref.read(customCategoryProvider.notifier).loadData(),
+        onRetry: () =>
+            ref.read(customCategoryProvider(widget.code).notifier).loadData(),
       );
     }
 

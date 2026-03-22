@@ -138,6 +138,11 @@ time ./build/package-deb.sh
 ./build/package-appimage.sh
 ```
 
+## 打包约定
+- AUR `linglong-store-bin` 的 `LICENSE`、`.desktop`、`metainfo`、应用图标必须作为 AUR 仓库内的本地 `source` 一起发布，不要再依赖 GitHub release tarball 是否额外打入这些文件。
+- AUR 包仅在确有安装/卸载钩子时才保留 `.install`；纯提示信息应收敛到 `PKGBUILD` 元数据或文档，不要在 `.install` 里硬编码 `yay` 等 helper 命令。
+- AUR 校验必须通过 `build/scripts/validate-aur-package.sh` 在 Arch Linux Docker 中执行；`ubuntu-latest` 上不要直接 `apt-get install namcap`，因为 runner 默认仓库里没有这个包。
+
 ## 架构与模块（高层）
 整体为分层架构（依赖方向：Presentation → Application → Domain ← Data ← Platform）：
 - **Presentation**：页面与通用组件，Riverpod Provider 读取状态并渲染 UI。

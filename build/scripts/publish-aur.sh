@@ -94,10 +94,13 @@ update_aur_repo() {
     --sha256-amd64 "$sha256_amd64" \
     --sha256-arm64 "$sha256_arm64"
 
-  # Copy rendered AUR files
+  # Copy rendered AUR files.
   cp "$metadata_dir/aur/PKGBUILD" PKGBUILD
-  cp "$metadata_dir/aur/linglong-store-bin.install" linglong-store-bin.install
   cp "$metadata_dir/aur/linglong-store-bin.changelog" linglong-store-bin.changelog
+  cp "$metadata_dir/aur/LICENSE" LICENSE
+  cp "$metadata_dir/aur/linglong-store.desktop" linglong-store.desktop
+  cp "$metadata_dir/aur/linglong-store.metainfo.xml" linglong-store.metainfo.xml
+  cp "$metadata_dir/aur/linglong-store.svg" linglong-store.svg
 
   # Generate .SRCINFO
   makepkg --printsrcinfo > .SRCINFO
@@ -109,7 +112,7 @@ update_aur_repo() {
   fi
 
   # Commit and push
-  git add PKGBUILD .SRCINFO linglong-store-bin.install linglong-store-bin.changelog
+  git add PKGBUILD .SRCINFO linglong-store-bin.changelog LICENSE linglong-store.desktop linglong-store.metainfo.xml linglong-store.svg
   git -c user.name="HanHan666666" -c user.email="tar.zip@outlook.com" commit -m "Update to version $version"
   git push origin master
 

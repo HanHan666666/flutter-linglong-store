@@ -176,7 +176,6 @@
 | 打开链接 | tauri-plugin-opener | url_launcher |
 | 系统架构 | @tauri-apps/plugin-os → arch() | dart:io Platform |
 | 状态持久化 | @tauri-store/zustand | shared_preferences / hive |
-| NVIDIA workaround | 读 /proc/driver/nvidia | Dart 文件检测 |
 
 ---
 
@@ -239,7 +238,6 @@
 - **Rust FFI（通过 flutter_rust_bridge）** 仅用于：
   - 安装流程（需要流式解析 JSON stdout + 超时监控 + 进度事件）
   - 网络速度监控（读 /proc/net/dev，需要高频轮询）
-  - NVIDIA workaround（启动时检测）
 
 这样可以复用现有 Rust 代码中最复杂的部分，同时简化大部分命令的实现。
 
@@ -395,17 +393,7 @@ IndexedStack (显示当前页)
 - 方案 B: 自实现文件锁 (`/tmp/linglong-store.lock`) + DBus 信号
 - 检测到重复实例时激活已有窗口 (`window_manager.focus()`)
 
-### 5.6 NVIDIA DMABUF Workaround
-
-**原实现：** Rust 启动时检测 `/proc/driver/nvidia/version`，设置环境变量。
-
-**Flutter 方案：**
-- 在 `main()` 中检测 NVIDIA GPU
-- 设置 `WEBKIT_DISABLE_DMABUF_RENDERER=1`（仅影响 WebView 场景）
-- Flutter 本身不使用 WebView，此 workaround **可能不需要**
-- 但如果 Flutter GTK embedding 有类似问题，保留检测逻辑
-
-### 5.7 错误码体系
+### 5.6 错误码体系
 
 **原实现：** `installErrorCodes.ts` — 40+ 错误码 → i18n key 映射。
 

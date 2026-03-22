@@ -71,8 +71,7 @@ lib/
 │   │   ├── cli_executor.dart              # ll-cli 命令执行器（统一超时/locale）
 │   │   ├── process_manager.dart           # 进程管理工具
 │   │   ├── window_service.dart            # 窗口管理封装
-│   │   ├── single_instance.dart           # 单实例控制
-│   │   └── nvidia_workaround.dart         # NVIDIA DMABUF 检测
+│   │   └── single_instance.dart           # 单实例控制
 │   │
 │   ├── i18n/                              # 国际化
 │   │   ├── l10n/                          # ARB 文件

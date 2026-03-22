@@ -152,7 +152,7 @@ time ./build/package-deb.sh
 - **Platform**：`ll-cli` 执行器、进程管理、窗口管理、单实例、可选 Rust FFI。
 
 关键入口与配置：
-- 入口初始化（单实例、NVIDIA workaround、窗口、日志、存储、语言）在 `main.dart`。
+- 入口初始化（单实例、窗口、日志、存储、语言）在 `main.dart`。
 - 路由使用 `go_router`，集中在 `core/config/routes.dart`。
 - 设计与目录结构详见：`/home/han/linglong-store/flutter-linglong-store/docs/02-flutter-architecture.md`。
 

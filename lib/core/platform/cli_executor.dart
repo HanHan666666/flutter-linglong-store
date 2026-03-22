@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:convert';
 
 import '../logging/app_logger.dart';
-import 'nvidia_workaround.dart';
 
 /// ll-cli 命令路径
 const String kLlCliPath = 'll-cli';
@@ -97,7 +96,6 @@ enum ProgressEventType {
 /// - 流式执行（实时输出）
 /// - 超时控制
 /// - 进程取消
-/// - NVIDIA 驱动兼容性
 class CliExecutor {
   CliExecutor._();
 
@@ -113,7 +111,6 @@ class CliExecutor {
     'LANG': 'C.UTF-8',
     'LANGUAGE': 'C.UTF-8',
     'LC_MESSAGES': 'C.UTF-8',
-    ...NvidiaWorkaround.getEnvVars(),
   };
 
   /// 执行 ll-cli 命令（同步等待）

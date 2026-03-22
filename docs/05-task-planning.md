@@ -129,10 +129,9 @@ F3:  (如有) P2-10 → P2-11 → P2-14
 | P3-04 | 网络速度监控 | F1 | P1-05 | `core/platform/network_speed.dart` |
 | P3-05 | 单实例控制 | A | Phase 2 | `core/platform/single_instance.dart` |
 | P3-06 | 缓存系统 (Seed + Runtime) | F1 | P2-05 | `core/cache/` |
-| P3-07 | NVIDIA 检测（如需） | A | Phase 2 | `core/platform/workarounds.dart` |
 
 ```
-A:  P3-01 → P3-02 → P3-05 → P3-07
+A:  P3-01 → P3-02 → P3-05
 F1: P3-04 → P3-06
 F2: P3-03
 ```

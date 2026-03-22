@@ -256,13 +256,7 @@ Phase 0        Phase 1        Phase 2        Phase 3        Phase 4
 - [ ] 托盘图标 + 右键菜单
 - [ ] 最小化到托盘 / 恢复
 
-### 3.4 NVIDIA DMABUF 回退
-
-- [ ] 检测 GPU 型号（读取 `/proc/driver/nvidia/version` 或 `lspci`）
-- [ ] 条件设置 `WEBKIT_DISABLE_DMABUF_RENDERER=1`
-- [ ] 注：Flutter 不使用 WebKit，此问题可能不适用——需验证
-
-### 3.5 网络速度监控
+### 3.4 网络速度监控
 
 - [ ] Dart `Process` 定时读取 `/proc/net/dev`
 - [ ] 解析收发字节差值 → 速率

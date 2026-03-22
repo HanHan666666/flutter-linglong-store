@@ -5,6 +5,6 @@ Priority: optional
 Architecture: @DEB_ARCH@
 Maintainer: @MAINTAINER@
 Installed-Size: @INSTALLED_SIZE_KB@
-Depends: libc6, libgtk-3-0, liblzma5, libstdc++6
+Depends: libc6, libgtk-3-0, liblzma5, libstdc++6, hicolor-icon-theme
 Description: @SUMMARY@
  @DESCRIPTION@

@@ -6,7 +6,7 @@ License: MIT
 URL: @PROJECT_URL@
 BuildArch: @RPM_ARCH@
 AutoReqProv: no
-Requires: gtk3, xz-libs, libstdc++
+Requires: gtk3, xz-libs, libstdc++, hicolor-icon-theme
 
 %description
 @DESCRIPTION@

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
+import '../../domain/models/install_task.dart';
 
 /// 安装按钮状态枚举
 enum InstallButtonState {
@@ -180,7 +181,13 @@ class InstallButton extends StatelessWidget {
   Widget _buildProgressButton(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final buttonHeight = _getButtonHeight();
-    final progressPercent = (progress * 100).toStringAsFixed(0);
+    final task = InstallTask(
+      id: 'install-button-preview',
+      appId: 'install-button-preview',
+      appName: 'install-button-preview',
+      progress: progress,
+      createdAt: 0,
+    );
     final cancelLabel = l10n?.cancel ?? '取消';
 
     return SizedBox(
@@ -200,7 +207,7 @@ class InstallButton extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(buttonHeight / 2),
                 child: LinearProgressIndicator(
-                  value: progress,
+                  value: task.progressValue,
                   backgroundColor: Colors.transparent,
                   minHeight: buttonHeight,
                 ),
@@ -216,8 +223,8 @@ class InstallButton extends StatelessWidget {
                 Text(
                   // 有速度时显示 "xx% · 2.5 MB/s"，否则仅显示进度
                   downloadSpeed != null && downloadSpeed!.isNotEmpty
-                      ? '$progressPercent% · $downloadSpeed'
-                      : '$progressPercent%',
+                      ? '${task.progressPercentLabel} · $downloadSpeed'
+                      : task.progressPercentLabel,
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     color: Theme.of(context).colorScheme.primary,

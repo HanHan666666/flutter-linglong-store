@@ -8,6 +8,7 @@ import '../../core/di/providers.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_task.dart';
+import 'app_icon.dart';
 
 /// 下载管理弹窗
 ///
@@ -409,7 +410,12 @@ class _TaskCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildStatusBadge(context),
+              AppIcon(
+                iconUrl: task.icon,
+                size: featured ? 48 : 42,
+                borderRadius: featured ? 16 : 14,
+                appName: task.appName,
+              ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
@@ -469,50 +475,6 @@ class _TaskCard extends StatelessWidget {
   }
 
   /// 构建状态图标
-  Widget _buildStatusBadge(BuildContext context) {
-    final appColors = context.appColors;
-    final icon = _buildStatusIcon(context);
-    return Container(
-      width: featured ? 48 : 42,
-      height: featured ? 48 : 42,
-      decoration: BoxDecoration(
-        color: featured
-            ? appColors.surface.withValues(alpha: 0.9)
-            : appColors.surfaceContainerHighest.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(featured ? 16 : 14),
-      ),
-      child: Center(child: icon),
-    );
-  }
-
-  Widget _buildStatusIcon(BuildContext context) {
-    IconData icon;
-    Color color;
-
-    switch (task.status) {
-      case InstallStatus.pending:
-        icon = Icons.schedule;
-        color = context.appColors.textTertiary;
-      case InstallStatus.downloading:
-        icon = Icons.downloading;
-        color = AppColors.primary;
-      case InstallStatus.installing:
-        icon = Icons.downloading;
-        color = AppColors.primary;
-      case InstallStatus.success:
-        icon = Icons.check_circle;
-        color = AppColors.success;
-      case InstallStatus.failed:
-        icon = Icons.error;
-        color = AppColors.error;
-      case InstallStatus.cancelled:
-        icon = Icons.cancel;
-        color = context.appColors.textTertiary;
-    }
-
-    return Icon(icon, size: featured ? 24 : 20, color: color);
-  }
-
   /// 构建进度条
   Widget _buildProgressBar(BuildContext context) {
     final appColors = context.appColors;

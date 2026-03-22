@@ -11,6 +11,7 @@ import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/presentation/pages/update_app/update_app_page.dart';
+import 'package:linglong_store/presentation/widgets/app_icon.dart';
 import 'package:linglong_store/presentation/widgets/download_manager_dialog.dart';
 import 'package:linglong_store/presentation/widgets/sidebar.dart';
 
@@ -25,6 +26,7 @@ void main() {
               id: 'task-1',
               appId: 'org.example.demo',
               appName: 'Demo',
+              icon: 'https://example.com/icon.png',
               kind: InstallTaskKind.update,
               status: InstallStatus.downloading,
               progress: 0.74,
@@ -68,6 +70,7 @@ void main() {
 
         expect(find.textContaining('74%'), findsOneWidget);
         expect(find.textContaining('2.3'), findsAtLeastNWidgets(1));
+        expect(find.byType(AppIcon), findsOneWidget);
 
         final dialogSize = tester.getSize(find.byType(Dialog));
         expect(dialogSize.height, greaterThanOrEqualTo(420));
@@ -156,11 +159,11 @@ void main() {
               sidebarConfigProvider.overrideWith((ref) async => []),
               networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
             ],
-            child: MaterialApp(
-              locale: const Locale('zh'),
+            child: const MaterialApp(
+              locale: Locale('zh'),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              home: const Scaffold(
+              home: Scaffold(
                 body: Row(
                   children: [
                     Sidebar(currentPath: '/update_apps'),

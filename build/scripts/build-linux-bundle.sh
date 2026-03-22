@@ -208,6 +208,13 @@ if [[ -f "$ROOT_DIR/LICENSE" ]]; then
   cp "$ROOT_DIR/LICENSE" "$bundle_dir/LICENSE"
 fi
 
+# Copy metainfo to bundle for AUR packaging
+metainfo_src="$ROOT_DIR/build/packaging/linux/appimage/linglong-store.appdata.xml"
+if [[ -f "$metainfo_src" ]]; then
+  # Convert appdata to metainfo format (same format, different name)
+  cp "$metainfo_src" "$bundle_dir/linglong-store.metainfo.xml"
+fi
+
 printf 'version=%s\narch=%s\nbundle_dir=%s\n' \
   "$release_version" \
   "$target_arch" \

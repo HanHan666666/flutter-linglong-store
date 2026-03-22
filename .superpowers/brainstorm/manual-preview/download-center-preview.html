@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Download Center Preview</title>
+  <style>
+    :root {
+      --bg: #eef3fb;
+      --panel: rgba(255, 255, 255, 0.84);
+      --panel-strong: #ffffff;
+      --line: rgba(15, 23, 42, 0.09);
+      --text: #152033;
+      --muted: #66758f;
+      --primary: #016ffd;
+      --primary-soft: rgba(1, 111, 253, 0.1);
+      --success: #34c759;
+      --warning: #f5a623;
+      --danger: #f05454;
+      --shadow: 0 28px 72px rgba(17, 24, 39, 0.16);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(1, 111, 253, 0.12), transparent 26%),
+        radial-gradient(circle at 85% 18%, rgba(52, 199, 89, 0.10), transparent 18%),
+        linear-gradient(180deg, #f7faff 0%, var(--bg) 100%);
+      padding: 40px 28px;
+    }
+
+    .page {
+      max-width: 1360px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+      align-items: end;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(1, 111, 253, 0.08);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 14px 0 10px;
+      font-size: 34px;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .notes {
+      min-width: 280px;
+      padding: 18px 20px;
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.74);
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    .notes h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+
+    .notes ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) minmax(520px, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .issue-card,
+    .dialog {
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+    }
+
+    .issue-card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.72));
+      padding: 22px;
+    }
+
+    .issue-card h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .issue {
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .issue:first-of-type {
+      border-top: none;
+      padding-top: 0;
+    }
+
+    .issue strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .issue p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .dialog {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(247, 250, 255, 0.82));
+      min-height: 620px;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+    }
+
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 22px 24px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .dialog-title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .title-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(1, 111, 253, 0.16), rgba(1, 111, 253, 0.04));
+      color: var(--primary);
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .title-copy h2 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .title-copy p {
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ghost {
+      border: 1px solid rgba(1, 111, 253, 0.12);
+      background: rgba(1, 111, 253, 0.05);
+      color: var(--primary);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .close {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--muted);
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      padding: 18px 24px 10px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .tab.active {
+      background: linear-gradient(180deg, rgba(1, 111, 253, 0.14), rgba(1, 111, 253, 0.06));
+      border-color: rgba(1, 111, 253, 0.12);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .tab-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .tab small {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .badge {
+      min-width: 24px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--primary);
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .content {
+      padding: 12px 24px 24px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(21, 32, 51, 0.05);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      width: fit-content;
+      margin-top: 6px;
+    }
+
+    .task {
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(15, 23, 42, 0.06);
+    }
+
+    .task.primary {
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(241, 247, 255, 0.88));
+    }
+
+    .task-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #dbeafe, #eff6ff);
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+    }
+
+    .task-info {
+      min-width: 0;
+    }
+
+    .task-topline {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    .task-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .pill.blue {
+      background: rgba(1, 111, 253, 0.1);
+      color: var(--primary);
+    }
+
+    .pill.green {
+      background: rgba(52, 199, 89, 0.12);
+      color: #1f8f3a;
+    }
+
+    .pill.orange {
+      background: rgba(245, 166, 35, 0.15);
+      color: #ac6c00;
+    }
+
+    .meta,
+    .status {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .progress-block {
+      margin-top: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .bar {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #0d7cff, #5cb8ff 42%, #34c759 100%);
+      box-shadow: 0 6px 14px rgba(1, 111, 253, 0.24);
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .action {
+      border: none;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      background: rgba(21, 32, 51, 0.06);
+      color: var(--text);
+    }
+
+    .action.primary {
+      background: rgba(1, 111, 253, 0.1);
+      color: var(--primary);
+    }
+
+    .action.danger {
+      background: rgba(240, 84, 84, 0.1);
+      color: var(--danger);
+    }
+
+    .action.icon {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 14px;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 24px 24px;
+      border-top: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.55);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .speed {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .speed span {
+      color: var(--primary);
+    }
+
+    @media (max-width: 1080px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 20px 14px;
+      }
+
+      .hero {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .tabs {
+        flex-direction: column;
+      }
+
+      .task {
+        grid-template-columns: 1fr;
+      }
+
+      .task-actions {
+        justify-content: flex-start;
+      }
+
+      .footer {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Preview / Download Center</div>
+        <h1>下载中心改版预览</h1>
+        <p class="subtitle">
+          这个预览页只展示视觉和结构方向，不代表最终像素值已经定稿。
+          重点是先验证三件事：弹窗高度稳定、活跃任务的信息层级清晰、进度和速度展示能真正看得懂。
+        </p>
+      </div>
+      <aside class="notes">
+        <h2>这版预览解决的点</h2>
+        <ul>
+          <li>弹窗改成稳定高度，不再因为列表数量少就整体变瘦。</li>
+          <li>把“下载中 / 等待中 / 已完成”做成清晰分区，不再只是一串堆叠卡片。</li>
+          <li>活跃任务使用可读的线性进度条，附带百分比、速度、阶段说明。</li>
+          <li>历史项降级为轻量卡片，视觉主次更明确。</li>
+        </ul>
+      </aside>
+    </section>
+
+    <section class="grid">
+      <aside class="issue-card">
+        <h3>当前问题拆解</h3>
+        <div class="issue">
+          <strong>1. 尺寸不稳定</strong>
+          <p>当前弹窗使用内容驱动高度，任务少时会塌得很矮，视觉上像“内容没撑起来”，也让滚动区显得不完整。</p>
+        </div>
+        <div class="issue">
+          <strong>2. 正在下载的信息不够醒目</strong>
+          <p>活跃任务和历史记录长得太像，用户一眼看不出现在到底在下什么、卡在哪一步、速度是多少。</p>
+        </div>
+        <div class="issue">
+          <strong>3. 进度条不可用感强</strong>
+          <p>当前条太轻、信息只挤在一行里，而且状态值来源虽然有，但展示方式没把它转成可理解的反馈。</p>
+        </div>
+        <div class="issue">
+          <strong>4. 交互层级偏乱</strong>
+          <p>取消、打开、移除都放在同一重量级上，缺少主次，历史项也没有被收成“次要信息”。</p>
+        </div>
+      </aside>
+
+      <div class="dialog">
+        <header class="dialog-header">
+          <div class="dialog-title">
+            <div class="title-icon">↓</div>
+            <div class="title-copy">
+              <h2>下载管理</h2>
+              <p>1 个活跃任务，2 个等待中，5 条最近记录</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button class="ghost">清空记录</button>
+            <button class="close">×</button>
+          </div>
+        </header>
+
+        <div class="tabs">
+          <div class="tab active">
+            <div class="tab-label">下载中 <span class="badge">1</span></div>
+            <small>把活跃任务抬高为主信息区，进度、速度、状态单独占位。</small>
+          </div>
+          <div class="tab">
+            <div class="tab-label">等待中 <span class="badge">2</span></div>
+            <small>等待任务保持紧凑，只看名称、版本和取消操作。</small>
+          </div>
+          <div class="tab">
+            <div class="tab-label">已完成 <span class="badge">5</span></div>
+            <small>历史项轻量化处理，优先提供打开 / 重试 / 移除。</small>
+          </div>
+        </div>
+
+        <main class="content">
+          <div class="section-tag">当前活跃任务</div>
+          <article class="task primary">
+            <div class="task-icon">📺</div>
+            <div class="task-info">
+              <div class="task-topline">
+                <div class="task-title">央视影音</div>
+                <span class="pill blue">更新中</span>
+                <span class="pill orange">下载资源</span>
+              </div>
+              <div class="meta">1.0.0.5 · stable · 还剩约 32 秒</div>
+              <div class="progress-block">
+                <div class="progress-row">
+                  <span>正在下载文件包...</span>
+                  <strong style="color:#152033;">74%</strong>
+                </div>
+                <div class="bar"><span style="width:74%;"></span></div>
+                <div class="progress-row">
+                  <span>28.4 MB / 38.1 MB</span>
+                  <span>2.3 MB/s</span>
+                </div>
+              </div>
+            </div>
+            <div class="task-actions">
+              <button class="action danger">取消</button>
+            </div>
+          </article>
+
+          <div class="section-tag">等待队列</div>
+          <article class="task">
+            <div class="task-icon">🧰</div>
+            <div class="task-info">
+              <div class="task-topline">
+                <div class="task-title">玲珑 IDE</div>
+                <span class="pill blue">等待更新</span>
+              </div>
+              <div class="status">当前任务完成后自动开始</div>
+            </div>
+            <div class="task-actions">
+              <button class="action icon">×</button>
+            </div>
+          </article>
+
+          <article class="task">
+            <div class="task-icon">🎵</div>
+            <div class="task-info">
+              <div class="task-topline">
+                <div class="task-title">网易云音乐</div>
+                <span class="pill blue">等待安装</span>
+              </div>
+              <div class="status">安装包已入队，等待执行</div>
+            </div>
+            <div class="task-actions">
+              <button class="action icon">×</button>
+            </div>
+          </article>
+
+          <div class="section-tag">最近记录</div>
+          <article class="task">
+            <div class="task-icon">✅</div>
+            <div class="task-info">
+              <div class="task-topline">
+                <div class="task-title">Visual Studio Code</div>
+                <span class="pill green">已完成</span>
+              </div>
+              <div class="status">安装完成 · 版本 1.97.2</div>
+            </div>
+            <div class="task-actions">
+              <button class="action primary">打开</button>
+              <button class="action icon">×</button>
+            </div>
+          </article>
+        </main>
+
+        <footer class="footer">
+          <div class="speed">实时下载速度 <span>↓ 2.3 MB/s</span></div>
+          <div>结构上会固定内容区高度，让少量列表时也保留完整骨架；真正的滚动只发生在列表区，不压缩头部和底部。</div>
+        </footer>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

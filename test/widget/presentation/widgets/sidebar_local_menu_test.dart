@@ -75,5 +75,35 @@ void main() {
       expect(find.text('Experimental'), findsOneWidget);
       expect(find.byIcon(Icons.widgets_outlined), findsOneWidget);
     });
+
+    testWidgets('adds tooltip for dynamic menu items', (tester) async {
+      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sidebarConfigProvider.overrideWith(
+              (ref) async => const [
+                SidebarMenuDTO(menuCode: 'office', menuName: '办公'),
+                SidebarMenuDTO(menuCode: 'system', menuName: '系统'),
+              ],
+            ),
+          ],
+          child: const MaterialApp(
+            locale: Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: Sidebar(currentPath: '/')),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip('Office'), findsOneWidget);
+      expect(find.byTooltip('System'), findsOneWidget);
+    });
   });
 }

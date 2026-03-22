@@ -110,6 +110,9 @@ class InstallMessages {
 
   // ==================== 操作消息 ====================
 
+  /// 等待操作
+  String waitingFor(String operation) => _l10n.waitingForOperation(operation);
+
   /// 准备操作
   String preparing(String operation, String appId) =>
       _l10n.operationPreparing(operation, appId);
@@ -166,6 +169,12 @@ class InstallMessages {
 
   /// 获取版本失败
   String get versionFailed => _l10n.getVersionFailed;
+
+  /// 任务崩溃中断
+  String get taskCrashInterrupted => _l10n.taskCrashInterrupted;
+
+  /// 任务崩溃重试提示
+  String get taskCrashRetryHint => _l10n.taskCrashRetryHint;
 
   /// ll-cli 未安装
   String get llCliNotInstalled => _l10n.llCliNotInstalled;

@@ -97,18 +97,6 @@ extension InstallTaskX on InstallTask {
   /// 是否成功
   bool get isSuccess => status == InstallStatus.success;
 
-  /// 待处理文案。
-  String get waitingMessage => isUpdateTask ? '等待更新...' : '等待安装...';
-
-  /// 开始执行文案。
-  String get preparingMessage => isUpdateTask ? '准备更新...' : '准备安装...';
-
-  /// 成功完成文案。
-  String get successMessage => isUpdateTask ? '更新完成' : '安装完成';
-
-  /// 用户取消文案。
-  String get cancelledMessage => isUpdateTask ? '更新已取消' : '安装已取消';
-
   /// 转换为 JSON 字符串（用于持久化）
   String toJsonString() => toJson().toString();
 }

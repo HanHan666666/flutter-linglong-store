@@ -282,6 +282,11 @@ class InstallQueue extends _$InstallQueue {
       status: InstallStatus.pending,
       createdAt: DateTime.now().millisecondsSinceEpoch,
     );
+    // 使用国际化消息
+    final messages = ref.read(installMessagesProvider);
+    final operation = kind == InstallTaskKind.update
+        ? messages.updateLabel
+        : messages.installLabel;
     final task = InstallTask(
       id: kindTask.id,
       appId: kindTask.appId,
@@ -292,7 +297,7 @@ class InstallQueue extends _$InstallQueue {
       force: kindTask.force,
       status: kindTask.status,
       createdAt: kindTask.createdAt,
-      message: kindTask.waitingMessage,
+      message: messages.waitingFor(operation),
     );
 
     state = state.copyWith(queue: [...state.queue, task]);
@@ -317,6 +322,7 @@ class InstallQueue extends _$InstallQueue {
   List<String> enqueueBatchOperations(List<EnqueueTaskParams> tasksParams) {
     final taskIds = <String>[];
     final newTasks = <InstallTask>[];
+    final messages = ref.read(installMessagesProvider);
 
     for (final params in tasksParams) {
       if (state.isAppInQueue(params.appId)) {
@@ -336,7 +342,10 @@ class InstallQueue extends _$InstallQueue {
       );
 
       taskIds.add(task.id);
-      newTasks.add(task.copyWith(message: task.waitingMessage));
+      final operation = params.kind == InstallTaskKind.update
+          ? messages.updateLabel
+          : messages.installLabel;
+      newTasks.add(task.copyWith(message: messages.waitingFor(operation)));
     }
 
     if (newTasks.isNotEmpty) {
@@ -386,10 +395,16 @@ class InstallQueue extends _$InstallQueue {
     // 重置取消标志（确保每次安装都是干净的状态）
     _resetCancelFlag();
 
+    // 使用国际化消息
+    final messages = ref.read(installMessagesProvider);
+    final operation = task.isUpdateTask
+        ? messages.updateLabel
+        : messages.installLabel;
+
     // 更新状态为安装中
     final installingTask = task.copyWith(
       status: InstallStatus.installing,
-      message: task.preparingMessage,
+      message: messages.preparing(operation, task.appId),
       startedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
@@ -502,9 +517,15 @@ class InstallQueue extends _$InstallQueue {
     _stateMachine?.dispose();
     _stateMachine = null;
 
+    // 使用国际化消息
+    final messages = ref.read(installMessagesProvider);
+    final operation = state.currentTask!.isUpdateTask
+        ? messages.updateLabel
+        : messages.installLabel;
+
     final cancelledTask = state.currentTask!.copyWith(
       status: InstallStatus.cancelled,
-      message: state.currentTask!.cancelledMessage,
+      message: messages.cancelled(operation),
       finishedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
@@ -552,10 +573,16 @@ class InstallQueue extends _$InstallQueue {
     _stateMachine?.dispose();
     _stateMachine = null;
 
+    // 使用国际化消息
+    final messages = ref.read(installMessagesProvider);
+    final operation = state.currentTask!.isUpdateTask
+        ? messages.updateLabel
+        : messages.installLabel;
+
     final completedTask = state.currentTask!.copyWith(
       status: InstallStatus.success,
       progress: 100,
-      message: state.currentTask!.successMessage,
+      message: messages.completed(operation),
       finishedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
@@ -606,13 +633,20 @@ class InstallQueue extends _$InstallQueue {
     // 检查是否为用户取消（参考 Rust 版本 InstallSlot.is_cancelled）
     final wasCancelled = isUserCancelled();
 
+    // 使用国际化消息
+    final messages = ref.read(installMessagesProvider);
+    final operation = state.currentTask!.isUpdateTask
+        ? messages.updateLabel
+        : messages.installLabel;
+    final cancelledMsg = messages.cancelled(operation);
+
     // 根据取消状态决定任务状态
     final failedTask = state.currentTask!.copyWith(
       status: wasCancelled ? InstallStatus.cancelled : InstallStatus.failed,
-      errorMessage: wasCancelled ? state.currentTask!.cancelledMessage : error,
+      errorMessage: wasCancelled ? cancelledMsg : error,
       errorCode: wasCancelled ? null : errorCode,
       errorDetail: wasCancelled ? null : errorDetail,
-      message: wasCancelled ? state.currentTask!.cancelledMessage : error,
+      message: wasCancelled ? cancelledMsg : error,
       finishedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
@@ -664,9 +698,14 @@ class InstallQueue extends _$InstallQueue {
 
       // 无论取消是否成功，都更新任务状态
       // 因为用户已明确要求取消，即使进程终止失败也应标记为取消
+      final messages = ref.read(installMessagesProvider);
+      final operation = state.currentTask!.isUpdateTask
+          ? messages.updateLabel
+          : messages.installLabel;
+
       final cancelledTask = state.currentTask!.copyWith(
         status: InstallStatus.cancelled,
-        message: state.currentTask!.cancelledMessage,
+        message: messages.cancelled(operation),
         finishedAt: DateTime.now().millisecondsSinceEpoch,
       );
 
@@ -776,10 +815,15 @@ class InstallQueue extends _$InstallQueue {
         'App ${persistedTask.appId} is installed, marking as success',
       );
 
+      final messages = ref.read(installMessagesProvider);
+      final operation = persistedTask.isUpdateTask
+          ? messages.updateLabel
+          : messages.installLabel;
+
       final successTask = persistedTask.copyWith(
         status: InstallStatus.success,
         progress: 100,
-        message: persistedTask.successMessage,
+        message: messages.completed(operation),
         finishedAt: DateTime.now().millisecondsSinceEpoch,
       );
 
@@ -793,10 +837,12 @@ class InstallQueue extends _$InstallQueue {
         'App ${persistedTask.appId} is not installed, marking as failed',
       );
 
+      final messages = ref.read(installMessagesProvider);
+
       final failedTask = persistedTask.copyWith(
         status: InstallStatus.failed,
-        message: '应用崩溃，任务中断',
-        errorMessage: '应用在执行过程中崩溃，请重试',
+        message: messages.taskCrashInterrupted,
+        errorMessage: messages.taskCrashRetryHint,
         finishedAt: DateTime.now().millisecondsSinceEpoch,
       );
 

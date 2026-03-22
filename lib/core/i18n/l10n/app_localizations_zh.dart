@@ -940,6 +940,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get installStatusProcessing => '正在处理';
 
   @override
+  String waitingForOperation(String operation) {
+    return '等待$operation...';
+  }
+
+  @override
   String get operationInstall => '安装';
 
   @override
@@ -979,6 +984,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String operationFailed(String operation) {
     return '$operation失败';
   }
+
+  @override
+  String get taskCrashInterrupted => '应用崩溃，任务中断';
+
+  @override
+  String get taskCrashRetryHint => '应用在执行过程中崩溃，请重试';
 
   @override
   String uninstallFailedWithError(String error) {

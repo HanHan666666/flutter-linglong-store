@@ -472,6 +472,14 @@
   "installStatusCompleted": "Installation complete",
   "installStatusProcessing": "Processing",
 
+  "waitingForOperation": "Waiting for {operation}...",
+  "@waitingForOperation": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
   "operationInstall": "Install",
   "operationUpdate": "Update",
   "operationPreparing": "Preparing {operation} {appId}...",
@@ -533,6 +541,9 @@
       }
     }
   },
+
+  "taskCrashInterrupted": "App crashed, task interrupted",
+  "taskCrashRetryHint": "App crashed during execution, please retry",
 
   "uninstallFailedWithError": "Uninstall failed: {error}",
   "@uninstallFailedWithError": {

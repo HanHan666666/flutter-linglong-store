@@ -972,6 +972,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get installStatusProcessing => 'Processing';
 
   @override
+  String waitingForOperation(String operation) {
+    return 'Waiting for $operation...';
+  }
+
+  @override
   String get operationInstall => 'Install';
 
   @override
@@ -1011,6 +1016,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String operationFailed(String operation) {
     return '$operation failed';
   }
+
+  @override
+  String get taskCrashInterrupted => 'App crashed, task interrupted';
+
+  @override
+  String get taskCrashRetryHint => 'App crashed during execution, please retry';
 
   @override
   String uninstallFailedWithError(String error) {

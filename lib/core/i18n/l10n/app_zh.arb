@@ -472,6 +472,14 @@
   "installStatusCompleted": "安装完成",
   "installStatusProcessing": "正在处理",
 
+  "waitingForOperation": "等待{operation}...",
+  "@waitingForOperation": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
   "operationInstall": "安装",
   "operationUpdate": "更新",
   "operationPreparing": "准备{operation} {appId}...",
@@ -533,6 +541,9 @@
       }
     }
   },
+
+  "taskCrashInterrupted": "应用崩溃，任务中断",
+  "taskCrashRetryHint": "应用在执行过程中崩溃，请重试",
 
   "uninstallFailedWithError": "卸载失败: {error}",
   "@uninstallFailedWithError": {

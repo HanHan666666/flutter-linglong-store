@@ -1860,6 +1860,12 @@ abstract class AppLocalizations {
   /// **'正在处理'**
   String get installStatusProcessing;
 
+  /// No description provided for @waitingForOperation.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待{operation}...'**
+  String waitingForOperation(String operation);
+
   /// No description provided for @operationInstall.
   ///
   /// In zh, this message translates to:
@@ -1913,6 +1919,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{operation}失败'**
   String operationFailed(String operation);
+
+  /// No description provided for @taskCrashInterrupted.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用崩溃，任务中断'**
+  String get taskCrashInterrupted;
+
+  /// No description provided for @taskCrashRetryHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用在执行过程中崩溃，请重试'**
+  String get taskCrashRetryHint;
 
   /// No description provided for @uninstallFailedWithError.
   ///

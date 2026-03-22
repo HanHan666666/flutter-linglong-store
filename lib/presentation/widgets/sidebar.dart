@@ -40,8 +40,10 @@ class Sidebar extends ConsumerWidget {
   /// 当前路由路径
   final String currentPath;
 
-  /// 侧边栏默认宽度 - 160px (10rem)
-  static const double defaultWidth = 160.0;
+  /// 侧边栏默认宽度 - 176px
+  ///
+  /// 为英文展开态菜单预留稳定单行空间，避免 `Recommend` 等文案换行。
+  static const double defaultWidth = 176.0;
 
   /// 侧边栏折叠宽度 - 56px (3.5rem)
   static const double collapsedWidth = 56.0;
@@ -220,6 +222,9 @@ class _MenuItemTileState extends State<_MenuItemTile> {
                   Expanded(
                     child: Text(
                       widget.item.localizedLabel(l10n),
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
                       style: AppTextStyles.menuActive.copyWith(
                         color: widget.isSelected
                             ? AppColors.primary

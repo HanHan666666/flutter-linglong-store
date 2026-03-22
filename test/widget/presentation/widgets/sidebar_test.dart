@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:linglong_store/application/providers/sidebar_config_provider.dart';
+import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
 import 'package:linglong_store/presentation/widgets/sidebar.dart';
 
@@ -26,6 +27,9 @@ void main() {
               ),
             ],
             child: const MaterialApp(
+              locale: Locale('zh'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(body: Sidebar(currentPath: '/my-apps')),
             ),
           ),
@@ -33,7 +37,7 @@ void main() {
 
         await tester.pumpAndSettle();
 
-        expect(find.text('推荐'), findsOneWidget);
+        expect(find.text('推 荐'), findsOneWidget);
         expect(find.text('全 部'), findsOneWidget);
         expect(find.text('排 行'), findsOneWidget);
         expect(find.text('更 新'), findsNothing);
@@ -55,6 +59,38 @@ void main() {
         expect((downloadsY - settingY).abs(), lessThan(2));
         expect(myAppsX, lessThan(downloadsX));
         expect(downloadsX, lessThan(settingX));
+      },
+    );
+
+    testWidgets(
+      'uses widened desktop width and single-line english labels',
+      (tester) async {
+        tester.view.physicalSize = const Size(1200, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              sidebarConfigProvider.overrideWith((ref) async => const []),
+            ],
+            child: const MaterialApp(
+              locale: Locale('en'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(body: Sidebar(currentPath: '/')),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        expect(Sidebar.defaultWidth, 176);
+
+        final recommendText = tester.widget<Text>(find.text('Recommend'));
+        expect(recommendText.maxLines, 1);
+        expect(recommendText.softWrap, isFalse);
+        expect(recommendText.overflow, TextOverflow.ellipsis);
       },
     );
   });

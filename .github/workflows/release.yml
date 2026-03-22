@@ -318,28 +318,12 @@ jobs:
           chmod 600 ~/.ssh/config
           ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
 
-      - name: Install namcap
+      - name: Validate AUR package in Arch Linux
         run: |
-          sudo apt-get update
-          sudo apt-get install -y namcap
-
-      - name: Validate PKGBUILD with namcap
-        run: |
-          # Generate PKGBUILD for validation
-          metadata_dir="$(mktemp -d)"
-          SHA256_AMD64="${{ steps.sha256sums.outputs.sha_amd64 }}" \
-          SHA256_ARM64="${{ steps.sha256sums.outputs.sha_arm64 }}" \
-          bash build/scripts/render-packaging-templates.sh \
-            --inner \
+          bash build/scripts/validate-aur-package.sh \
             --version "${{ needs.prepare-release.outputs.version }}" \
-            --arch amd64 \
-            --output-dir "$metadata_dir" \
             --sha256-amd64 "${{ steps.sha256sums.outputs.sha_amd64 }}" \
             --sha256-arm64 "${{ steps.sha256sums.outputs.sha_arm64 }}"
-
-          # Run namcap validation
-          echo "Running namcap on PKGBUILD..."
-          namcap "$metadata_dir/aur/PKGBUILD" || echo "namcap warnings (non-blocking)"
 
       - name: Publish AUR package
         env:

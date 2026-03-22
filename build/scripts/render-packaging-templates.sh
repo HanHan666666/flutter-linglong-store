@@ -147,6 +147,10 @@ render_aur_template() {
   local output_path="$2"
   local sha_amd64="$3"
   local sha_arm64="$4"
+  local sha_license="$5"
+  local sha_desktop="$6"
+  local sha_metainfo="$7"
+  local sha_icon="$8"
 
   mkdir -p "$(dirname "$output_path")"
   local content
@@ -157,6 +161,10 @@ render_aur_template() {
   content="${content//@MAINTAINER_EMAIL@/$maintainer_email}"
   content="${content//@PROJECT_URL@/$project_url}"
   content="${content//@RELEASE_URL_BASE@/$release_url_base}"
+  content="${content//@SHA256_LICENSE@/$sha_license}"
+  content="${content//@SHA256_DESKTOP@/$sha_desktop}"
+  content="${content//@SHA256_METAINFO@/$sha_metainfo}"
+  content="${content//@SHA256_ICON@/$sha_icon}"
   content="${content//@SHA256_AMD64@/$sha_amd64}"
   content="${content//@SHA256_ARM64@/$sha_arm64}"
   printf '%s\n' "$content" > "$output_path"
@@ -164,15 +172,27 @@ render_aur_template() {
 
 # Render AUR templates if sha256 checksums are provided
 if [[ -n "${sha256_amd64:-}" && -n "${sha256_arm64:-}" ]]; then
+  # Keep AUR metadata files in the package repo so icon/metainfo/license do not
+  # rely on optional extras bundled into the binary release archive.
+  cp "$ROOT_DIR/LICENSE" "$output_dir/aur/LICENSE"
+  cp "$output_dir/linglong-store.desktop" "$output_dir/aur/linglong-store.desktop"
+  cp "$output_dir/appimage/linglong-store.appdata.xml" "$output_dir/aur/linglong-store.metainfo.xml"
+  cp "$ROOT_DIR/assets/icons/logo.svg" "$output_dir/aur/linglong-store.svg"
+
+  sha256_license="$(sha256sum "$output_dir/aur/LICENSE" | awk '{print $1}')"
+  sha256_desktop="$(sha256sum "$output_dir/aur/linglong-store.desktop" | awk '{print $1}')"
+  sha256_metainfo="$(sha256sum "$output_dir/aur/linglong-store.metainfo.xml" | awk '{print $1}')"
+  sha256_icon="$(sha256sum "$output_dir/aur/linglong-store.svg" | awk '{print $1}')"
+
   render_aur_template \
     "$ROOT_DIR/build/packaging/linux/aur/PKGBUILD.in" \
     "$output_dir/aur/PKGBUILD" \
     "$sha256_amd64" \
-    "$sha256_arm64"
-
-  render_file \
-    "$ROOT_DIR/build/packaging/linux/aur/linglong-store-bin.install.in" \
-    "$output_dir/aur/linglong-store-bin.install"
+    "$sha256_arm64" \
+    "$sha256_license" \
+    "$sha256_desktop" \
+    "$sha256_metainfo" \
+    "$sha256_icon"
 
   render_file \
     "$ROOT_DIR/build/packaging/linux/aur/linglong-store-bin.changelog.in" \

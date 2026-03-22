@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import 'l10n/app_localizations.dart';
@@ -77,9 +79,32 @@ class InstallMessages {
 
   // ==================== 状态消息 ====================
 
+  /// 从 ll-cli 原始行或旧持久化 JSON 文本中提取纯 message 内容。
+  String extractMessageText(String message) {
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) {
+      return '';
+    }
+
+    try {
+      final decoded = jsonDecode(trimmed);
+      if (decoded is Map<String, dynamic>) {
+        final rawMessage = decoded['message']?.toString().trim();
+        if (rawMessage != null && rawMessage.isNotEmpty) {
+          return rawMessage;
+        }
+      }
+    } catch (_) {
+      // 非 JSON 行按普通文本处理。
+    }
+
+    return trimmed;
+  }
+
   /// 根据消息内容生成用户友好的状态描述
   String getStatusFromMessage(String message) {
-    final lower = message.toLowerCase();
+    final plainMessage = extractMessageText(message);
+    final lower = plainMessage.toLowerCase();
 
     if (lower.contains('beginning to install')) {
       return _l10n.installStatusStarting;
@@ -98,12 +123,12 @@ class InstallMessages {
       return _l10n.installStatusPostProcessing;
     } else if (lower.contains('success') || lower.contains('completed')) {
       return _l10n.installStatusCompleted;
-    } else if (message.isNotEmpty) {
+    } else if (plainMessage.isNotEmpty) {
       // 截取前50个字符作为状态
-      if (message.length > 50) {
-        return '${message.substring(0, 50)}...';
+      if (plainMessage.length > 50) {
+        return '${plainMessage.substring(0, 50)}...';
       }
-      return message;
+      return plainMessage;
     }
     return _l10n.installStatusProcessing;
   }

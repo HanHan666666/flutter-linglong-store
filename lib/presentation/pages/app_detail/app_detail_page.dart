@@ -212,7 +212,13 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     final hasInstalledInstance = installedVersions.isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(title: Text(detailState.app?.name ?? AppLocalizations.of(context)?.appDetailTitle ?? 'App Details')),
+      appBar: AppBar(
+        title: Text(
+          detailState.app?.name ??
+              AppLocalizations.of(context)?.appDetailTitle ??
+              'App Details',
+        ),
+      ),
       body: _buildBody(
         context,
         detailState,
@@ -379,10 +385,11 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                   ],
                 ),
                 // 安装状态消息
-                if (installTask != null && installTask.message != null) ...[
+                if (installTask != null &&
+                    installTask.displayMessage != null) ...[
                   const SizedBox(height: 8),
                   Text(
-                    installTask.message!,
+                    installTask.displayMessage!,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: installTask.isFailed
                           ? theme.colorScheme.error

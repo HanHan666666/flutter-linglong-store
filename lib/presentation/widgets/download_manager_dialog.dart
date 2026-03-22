@@ -134,7 +134,8 @@ class DownloadManagerDialog extends ConsumerWidget {
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: _OverviewPill(
-              label: l10n?.waitingCount(queueState.queue.length) ??
+              label:
+                  l10n?.waitingCount(queueState.queue.length) ??
                   '等待中 (${queueState.queue.length})',
               count: queueState.queue.length,
             ),
@@ -177,10 +178,7 @@ class DownloadManagerDialog extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (queueState.currentTask != null) ...[
-              _buildSectionTitle(
-                context,
-                l10n?.installingLabel ?? '正在安装',
-              ),
+              _buildSectionTitle(context, l10n?.installingLabel ?? '正在安装'),
               _buildCurrentTask(context, ref, queueState.currentTask!),
               const SizedBox(height: AppSpacing.md),
             ],
@@ -346,7 +344,10 @@ class DownloadManagerDialog extends ConsumerWidget {
     );
   }
 
-  String _buildHeaderSummary(BuildContext context, InstallQueueState queueState) {
+  String _buildHeaderSummary(
+    BuildContext context,
+    InstallQueueState queueState,
+  ) {
     final parts = <String>[];
     if (queueState.currentTask != null) {
       parts.add('1 个活跃任务');
@@ -426,10 +427,11 @@ class _TaskCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             task.appName,
-                            style: (featured
-                                    ? AppTextStyles.bodyMedium
-                                    : AppTextStyles.body)
-                                .copyWith(fontWeight: FontWeight.w600),
+                            style:
+                                (featured
+                                        ? AppTextStyles.bodyMedium
+                                        : AppTextStyles.body)
+                                    .copyWith(fontWeight: FontWeight.w600),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -478,7 +480,7 @@ class _TaskCard extends StatelessWidget {
   /// 构建进度条
   Widget _buildProgressBar(BuildContext context) {
     final appColors = context.appColors;
-    final message = task.message?.trim();
+    final message = task.displayMessage?.trim();
     final speed = downloadSpeed?.trim();
 
     return Column(
@@ -552,13 +554,16 @@ class _TaskCard extends StatelessWidget {
   }
 
   String _buildSubtitle(BuildContext context) {
-    if (task.isFailed && task.errorMessage != null && task.errorMessage!.isNotEmpty) {
+    if (task.isFailed &&
+        task.errorMessage != null &&
+        task.errorMessage!.isNotEmpty) {
       return task.errorMessage!;
     }
     final parts = <String>[
       if (task.version != null && task.version!.isNotEmpty) task.version!,
-      if (task.message != null && task.message!.trim().isNotEmpty) task.message!.trim(),
-      if ((task.message == null || task.message!.trim().isEmpty))
+      if (task.displayMessage != null && task.displayMessage!.trim().isNotEmpty)
+        task.displayMessage!.trim(),
+      if ((task.displayMessage == null || task.displayMessage!.trim().isEmpty))
         switch (task.status) {
           InstallStatus.pending => task.waitingMessage,
           InstallStatus.downloading => '正在下载资源',
@@ -670,7 +675,9 @@ class _OverviewPill extends StatelessWidget {
             : appColors.cardBackground.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(
-          color: highlighted ? appColors.primaryLight : appColors.borderSecondary,
+          color: highlighted
+              ? appColors.primaryLight
+              : appColors.borderSecondary,
         ),
       ),
       child: Row(
@@ -679,7 +686,9 @@ class _OverviewPill extends StatelessWidget {
             child: Text(
               label,
               style: AppTextStyles.caption.copyWith(
-                color: highlighted ? appColors.primary : appColors.textSecondary,
+                color: highlighted
+                    ? appColors.primary
+                    : appColors.textSecondary,
                 fontWeight: FontWeight.w600,
               ),
               maxLines: 1,

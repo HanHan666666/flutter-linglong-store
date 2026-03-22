@@ -43,6 +43,24 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         : _messages.installLabel;
   }
 
+  InstallProgressEventType _mapEventType(ParsedJsonEvent? jsonEvent) {
+    switch (jsonEvent?.eventType) {
+      case JsonEventType.progress:
+        return InstallProgressEventType.progress;
+      case JsonEventType.error:
+        return InstallProgressEventType.error;
+      case JsonEventType.message:
+        return InstallProgressEventType.message;
+      case null:
+        return InstallProgressEventType.message;
+    }
+  }
+
+  String _extractRawMessage(String line, {ParsedJsonEvent? jsonEvent}) {
+    final raw = jsonEvent?.message ?? _messages.extractMessageText(line);
+    return raw.trim();
+  }
+
   Stream<InstallProgress> _runInstallLikeOperation(
     String appId, {
     required InstallTaskKind kind,
@@ -57,8 +75,10 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
 
     yield InstallProgress(
       appId: appId,
+      eventType: InstallProgressEventType.message,
       status: InstallStatus.pending,
       message: _messages.preparing(operationLabel, appId),
+      rawMessage: _messages.preparing(operationLabel, appId),
     );
 
     try {
@@ -69,7 +89,9 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         args.add('--force');
       }
 
-      AppLogger.info('[LinglongCli] 开始$operationLabel: ll-cli ${args.join(' ')}');
+      AppLogger.info(
+        '[LinglongCli] 开始$operationLabel: ll-cli ${args.join(' ')}',
+      );
 
       await for (final event in CliExecutor.executeWithProgressAndProcess(
         args,
@@ -84,96 +106,127 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         if (_cancelFlags[processId] == true) {
           yield InstallProgress(
             appId: appId,
+            eventType: InstallProgressEventType.cancelled,
             status: InstallStatus.cancelled,
             message: _messages.cancelled(operationLabel),
+            rawMessage: _messages.cancelled(operationLabel),
           );
           return;
         }
 
+        final jsonEvent = CliOutputParser.parseJsonLine(event.line);
         final progressInfo = CliOutputParser.parseInstallProgressEx(event.line);
+        final rawMessage = _extractRawMessage(event.line, jsonEvent: jsonEvent);
+        final displayMessage = _messages.getStatusFromMessage(rawMessage);
 
         if (progressInfo.phase == InstallPhase.downloading) {
           yield InstallProgress(
             appId: appId,
+            eventType: _mapEventType(jsonEvent),
             status: InstallStatus.downloading,
             progress: progressInfo.progress,
-            message: _messages.getStatusFromMessage(event.line),
+            message: displayMessage,
+            rawMessage: rawMessage,
           );
         } else if (progressInfo.phase == InstallPhase.installing) {
           yield InstallProgress(
             appId: appId,
+            eventType: _mapEventType(jsonEvent),
             status: InstallStatus.installing,
             progress: progressInfo.progress,
-            message: _messages.getStatusFromMessage(event.line),
+            message: displayMessage,
+            rawMessage: rawMessage,
           );
         } else if (progressInfo.phase == InstallPhase.completed) {
           yield InstallProgress(
             appId: appId,
+            eventType: _mapEventType(jsonEvent),
             status: InstallStatus.success,
             progress: 100,
             message: _messages.completed(operationLabel),
+            rawMessage: rawMessage.isNotEmpty
+                ? rawMessage
+                : _messages.completed(operationLabel),
           );
           return;
         } else if (progressInfo.phase == InstallPhase.failed) {
-          final jsonEvent = CliOutputParser.parseJsonLine(event.line);
           final errorCode =
               jsonEvent?.code ?? CliOutputParser.extractErrorCode(event.line);
-          final errorMessage = progressInfo.errorMessage ?? event.line;
+          final errorDetail = rawMessage.isNotEmpty
+              ? rawMessage
+              : (progressInfo.errorMessage ?? event.line).trim();
+          final errorMessage = errorCode != null
+              ? _messages.getErrorMessageFromCode(errorCode)
+              : _messages.getStatusFromMessage(errorDetail);
 
           yield InstallProgress(
             appId: appId,
+            eventType: InstallProgressEventType.error,
             status: InstallStatus.failed,
             message: errorMessage,
-            error: errorCode != null
-                ? _messages.getErrorMessageFromCode(errorCode)
-                : errorMessage,
+            rawMessage: errorDetail,
+            error: errorMessage,
             errorCode: errorCode,
+            errorDetail: errorDetail,
           );
           return;
         }
       }
 
-      final output = await CliExecutor.execute(
-        ['info', appId],
-        timeout: kQueryTimeout,
-      );
+      final output = await CliExecutor.execute([
+        'info',
+        appId,
+      ], timeout: kQueryTimeout);
 
       if (output.success) {
         yield InstallProgress(
           appId: appId,
+          eventType: InstallProgressEventType.progress,
           status: InstallStatus.success,
           progress: 100,
           message: _messages.completed(operationLabel),
+          rawMessage: _messages.completed(operationLabel),
         );
       } else {
         yield InstallProgress(
           appId: appId,
+          eventType: InstallProgressEventType.error,
           status: InstallStatus.failed,
           message: _messages.unknownStatus(operationLabel),
           error: _messages.confirmFailed(operationLabel),
+          rawMessage: _messages.unknownStatus(operationLabel),
+          errorDetail: _messages.confirmFailed(operationLabel),
         );
       }
     } on CliTimeoutException catch (e) {
       yield InstallProgress(
         appId: appId,
+        eventType: InstallProgressEventType.error,
         status: InstallStatus.failed,
         message: _messages.timeout(operationLabel),
         error: e.message,
         errorCode: -2,
+        rawMessage: e.message,
+        errorDetail: e.message,
       );
     } on CliCancelledException {
       yield InstallProgress(
         appId: appId,
+        eventType: InstallProgressEventType.cancelled,
         status: InstallStatus.cancelled,
         message: _messages.cancelled(operationLabel),
+        rawMessage: _messages.cancelled(operationLabel),
       );
     } catch (e, stack) {
       AppLogger.error('[LinglongCli] $operationLabel异常: $appId', e, stack);
       yield InstallProgress(
         appId: appId,
+        eventType: InstallProgressEventType.error,
         status: InstallStatus.failed,
         message: _messages.failed(operationLabel),
         error: e.toString(),
+        rawMessage: e.toString(),
+        errorDetail: e.toString(),
       );
     } finally {
       _cancelFlags.remove(processId);
@@ -217,7 +270,9 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
   @override
   Future<List<RunningApp>> getRunningApps() async {
     try {
-      final psOutput = await CliExecutor.execute(['ps'], timeout: kQueryTimeout);
+      final psOutput = await CliExecutor.execute([
+        'ps',
+      ], timeout: kQueryTimeout);
 
       if (!psOutput.success) {
         AppLogger.warning('[LinglongCli] 获取运行中进程失败: ${psOutput.stderr}');

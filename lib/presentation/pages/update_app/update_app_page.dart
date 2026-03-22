@@ -130,9 +130,11 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.system_update, size: 18),
-            label: Text(isUpdating
-                ? (l10n?.updating ?? '正在更新...')
-                : (l10n?.updateAll ?? '全部更新')),
+            label: Text(
+              isUpdating
+                  ? (l10n?.updating ?? '正在更新...')
+                  : (l10n?.updateAll ?? '全部更新'),
+            ),
           ),
         ],
       ),
@@ -290,10 +292,10 @@ class _UpdatableAppItem extends ConsumerWidget {
             ),
 
             // 安装进度消息
-            if (installTask != null && installTask!.message != null) ...[
+            if (installTask != null && installTask!.displayMessage != null) ...[
               const SizedBox(height: 8),
               Text(
-                installTask!.message!,
+                installTask!.displayMessage!,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: installTask!.isFailed
                       ? theme.colorScheme.error

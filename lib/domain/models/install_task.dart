@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'install_progress.dart';
@@ -9,10 +11,7 @@ part 'install_task.g.dart';
 ///
 /// `install` 和 `update` 共用同一套串行状态机，但在执行命令、
 /// 取消文案和成功文案上需要显式区分，避免继续依赖调用方猜测。
-enum InstallTaskKind {
-  install,
-  update,
-}
+enum InstallTaskKind { install, update }
 
 /// 安装任务状态机
 ///
@@ -56,6 +55,9 @@ sealed class InstallTask with _$InstallTask {
 
     /// 状态消息
     String? message,
+
+    /// 安装链路中保留的原始 message 文本，用于诊断与兼容展示。
+    String? rawMessage,
 
     /// 错误消息
     String? errorMessage,
@@ -111,6 +113,12 @@ extension InstallTaskX on InstallTask {
   String get progressPercentLabel =>
       '${(progressValue * 100).round().clamp(0, 100)}%';
 
+  /// 对旧任务或异常任务兜底，避免把整段 JSON 原文直接渲染到 UI。
+  String? get displayMessage => _extractMessageText(message);
+
+  /// 保留原始 message 里的纯文本内容，供诊断或次级展示使用。
+  String? get displayRawMessage => _extractMessageText(rawMessage);
+
   /// 待处理文案。
   String get waitingMessage => isUpdateTask ? '等待更新...' : '等待安装...';
 
@@ -122,6 +130,28 @@ extension InstallTaskX on InstallTask {
 
   /// 用户取消文案。
   String get cancelledMessage => isUpdateTask ? '更新已取消' : '安装已取消';
+
   /// 转换为 JSON 字符串（用于持久化）
   String toJsonString() => toJson().toString();
+
+  static String? _extractMessageText(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(trimmed);
+      if (decoded is Map<String, dynamic>) {
+        final message = decoded['message']?.toString().trim();
+        if (message != null && message.isNotEmpty) {
+          return message;
+        }
+      }
+    } catch (_) {
+      // 非 JSON 字符串按普通文案处理。
+    }
+
+    return trimmed;
+  }
 }

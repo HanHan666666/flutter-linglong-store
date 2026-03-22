@@ -82,6 +82,61 @@ void main() {
       },
     );
 
+    testWidgets('shows plain message text instead of raw json payload', (
+      tester,
+    ) async {
+      final installQueue = TestInstallQueue(
+        initialState: InstallQueueState(
+          currentTask: InstallTask(
+            id: 'task-1',
+            appId: 'org.example.demo',
+            appName: 'Demo',
+            kind: InstallTaskKind.install,
+            status: InstallStatus.downloading,
+            progress: 0.05,
+            message: '{"message":"Beginning to pull data","percentage":5}',
+            createdAt: DateTime.now().millisecondsSinceEpoch,
+          ),
+          isProcessing: true,
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            installQueueProvider.overrideWith(() => installQueue),
+            networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+          ],
+          child: MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: Center(
+                    child: FilledButton(
+                      onPressed: () => showDownloadManagerDialog(context),
+                      child: const Text('open'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Beginning to pull data'), findsAtLeastNWidgets(1));
+      expect(
+        find.textContaining('{"message":"Beginning to pull data"'),
+        findsNothing,
+      );
+    });
+
     testWidgets('closing dialog detaches install queue updates', (
       tester,
     ) async {

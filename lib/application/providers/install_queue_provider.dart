@@ -7,7 +7,8 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/i18n/install_messages.dart';
 import '../../core/logging/app_logger.dart';
-import '../../core/di/providers.dart' show analyticsRepositoryProvider, currentLocaleProvider;
+import '../../core/di/providers.dart'
+    show analyticsRepositoryProvider, currentLocaleProvider;
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_state_machine.dart';
 import '../../domain/models/install_task.dart';
@@ -486,8 +487,10 @@ class InstallQueue extends _$InstallQueue {
       status: progress.status,
       progress: progress.progress,
       message: progress.message,
+      rawMessage: progress.rawMessage,
       errorMessage: progress.error,
       errorCode: progress.errorCode,
+      errorDetail: progress.errorDetail,
     );
 
     state = state.copyWith(currentTask: updatedTask);
@@ -501,6 +504,7 @@ class InstallQueue extends _$InstallQueue {
         appId,
         progress.error ?? '安装失败',
         errorCode: progress.errorCode,
+        errorDetail: progress.errorDetail ?? progress.rawMessage,
       );
     } else if (progress.status == InstallStatus.cancelled) {
       // 取消状态：停止超时检查，更新历史记录

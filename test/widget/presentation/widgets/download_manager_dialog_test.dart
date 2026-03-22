@@ -6,6 +6,7 @@ import 'package:linglong_store/application/providers/install_queue_provider.dart
 import 'package:linglong_store/application/providers/network_speed_provider.dart';
 import 'package:linglong_store/application/providers/sidebar_config_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
+import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
@@ -15,6 +16,69 @@ import 'package:linglong_store/presentation/widgets/sidebar.dart';
 
 void main() {
   group('DownloadManagerDialog', () {
+    testWidgets(
+      'shows active task progress as readable percent and keeps a stable shell height',
+      (tester) async {
+        final installQueue = TestInstallQueue(
+          initialState: InstallQueueState(
+            currentTask: InstallTask(
+              id: 'task-1',
+              appId: 'org.example.demo',
+              appName: 'Demo',
+              kind: InstallTaskKind.update,
+              status: InstallStatus.downloading,
+              progress: 0.74,
+              message: 'Downloading files',
+              createdAt: DateTime.now().millisecondsSinceEpoch,
+            ),
+            isProcessing: true,
+          ),
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              installQueueProvider.overrideWith(() => installQueue),
+              networkSpeedProvider.overrideWithValue(
+                const NetworkSpeed(downloadBytesPerSec: 2.3 * 1024 * 1024),
+              ),
+            ],
+            child: MaterialApp(
+              locale: const Locale('zh'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Builder(
+                builder: (context) {
+                  return Scaffold(
+                    body: Center(
+                      child: FilledButton(
+                        onPressed: () => showDownloadManagerDialog(context),
+                        child: const Text('open'),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('74%'), findsOneWidget);
+        expect(find.textContaining('2.3'), findsAtLeastNWidgets(1));
+
+        final dialogSize = tester.getSize(find.byType(Dialog));
+        expect(dialogSize.height, greaterThanOrEqualTo(420));
+
+        final indicator = tester.widget<LinearProgressIndicator>(
+          find.byType(LinearProgressIndicator),
+        );
+        expect(indicator.value, closeTo(0.74, 0.0001));
+      },
+    );
+
     testWidgets('closing dialog detaches install queue updates', (
       tester,
     ) async {
@@ -27,6 +91,9 @@ void main() {
             networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
           ],
           child: MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Builder(
               builder: (context) {
                 return Scaffold(
@@ -89,8 +156,11 @@ void main() {
               sidebarConfigProvider.overrideWith((ref) async => []),
               networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
             ],
-            child: const MaterialApp(
-              home: Scaffold(
+            child: MaterialApp(
+              locale: const Locale('zh'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const Scaffold(
                 body: Row(
                   children: [
                     Sidebar(currentPath: '/update_apps'),

@@ -248,4 +248,104 @@ void main() {
       },
     );
   });
+
+  group('UpdateApps provider concurrency', () {
+    test(
+      'keeps the freshest result when overlapping checks finish out of order',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final mockApiService = MockAppApiService();
+        final installedApps = MutableInstalledApps(
+          initialApps: const [
+            InstalledApp(
+              appId: 'org.example.demo',
+              name: 'Demo',
+              version: '1.0.0',
+              arch: 'x86_64',
+            ),
+          ],
+        );
+
+        when(mockApiService.appCheckUpdate(any)).thenAnswer((invocation) async {
+          final payload =
+              invocation.positionalArguments.single as List<AppCheckVersionBO>;
+          final version = payload.single.version;
+
+          if (version == '1.0.0') {
+            await Future<void>.delayed(const Duration(milliseconds: 60));
+            return HttpResponse(
+              const AppDetailListResponse(
+                code: 200,
+                data: [
+                  AppDetailDTO(
+                    appId: 'org.example.demo',
+                    appName: 'Demo',
+                    appVersion: '2.0.0',
+                  ),
+                ],
+              ),
+              Response(
+                requestOptions: RequestOptions(path: '/app/appCheckUpdate'),
+              ),
+            );
+          }
+
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+          return HttpResponse(
+            const AppDetailListResponse(code: 200, data: []),
+            Response(
+              requestOptions: RequestOptions(path: '/app/appCheckUpdate'),
+            ),
+          );
+        });
+
+        final container = ProviderContainer(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            appApiServiceProvider.overrideWithValue(mockApiService),
+            installedAppsProvider.overrideWith(() => installedApps),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final firstCheck =
+            container.read(updateAppsProvider.notifier).checkUpdates();
+
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+        installedApps.setApps(
+          const [
+            InstalledApp(
+              appId: 'org.example.demo',
+              name: 'Demo',
+              version: '2.0.0',
+              arch: 'x86_64',
+            ),
+          ],
+        );
+
+        final secondCheck =
+            container.read(updateAppsProvider.notifier).checkUpdates();
+
+        await Future.wait([firstCheck, secondCheck]);
+
+        expect(container.read(updateAppsProvider).apps, isEmpty);
+      },
+    );
+  });
+}
+
+class MutableInstalledApps extends InstalledApps {
+  MutableInstalledApps({required this.initialApps});
+
+  final List<InstalledApp> initialApps;
+
+  @override
+  InstalledAppsState build() {
+    return InstalledAppsState(apps: initialApps);
+  }
+
+  void setApps(List<InstalledApp> apps) {
+    state = InstalledAppsState(apps: apps);
+  }
 }

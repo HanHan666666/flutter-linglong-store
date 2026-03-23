@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -44,9 +46,11 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
         if (previous?.currentTask != null && next.currentTask == null) {
           final completedTask = next.history.firstOrNull;
           if (completedTask?.status == InstallStatus.success) {
-            ref
-                .read(appCollectionSyncServiceProvider)
-                .syncAfterSuccessfulOperation();
+            unawaited(
+              ref
+                  .read(appCollectionSyncServiceProvider)
+                  .syncAfterSuccessfulOperation(),
+            );
 
             // 如果开启了『安装后自动打开』，且是安装任务（不是更新），自动启动应用
             final prefs = ref.read(globalAppProvider).userPreferences;

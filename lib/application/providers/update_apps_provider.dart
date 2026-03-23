@@ -87,6 +87,8 @@ class UpdateAppsState {
 /// 管理可更新应用列表的状态
 @Riverpod(keepAlive: true)
 class UpdateApps extends _$UpdateApps {
+  int _latestRequestId = 0;
+
   @override
   UpdateAppsState build() {
     return const UpdateAppsState();
@@ -99,6 +101,7 @@ class UpdateApps extends _$UpdateApps {
   ///
   /// 比较已安装应用与远程最新版本，返回可更新列表
   Future<void> checkUpdates() async {
+    final requestId = ++_latestRequestId;
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
@@ -114,9 +117,17 @@ class UpdateApps extends _$UpdateApps {
       // 从远程 API 获取最新版本信息
       final updatableApps = await _checkUpdatesFromRemote(installedApps);
 
+      // 只允许最新一次检查落状态，避免旧请求覆盖新结果。
+      if (requestId != _latestRequestId) {
+        return;
+      }
+
       state = UpdateAppsState(apps: updatableApps, isLoading: false);
     } catch (e, s) {
       AppLogger.error('检查更新失败', e, s);
+      if (requestId != _latestRequestId) {
+        return;
+      }
       state = state.copyWith(isLoading: false, error: presentAppError(e));
     }
   }

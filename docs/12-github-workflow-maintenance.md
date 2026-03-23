@@ -127,6 +127,75 @@ nightly 的内部打包继续复用正式 semver 产物，然后由 `build/scrip
 - 不在 nightly 阶段改写仓库版本源
 - 如果后续要让 `.deb` / `.rpm` 内部包版本也具备 nightly 递增语义，需要单独扩展打包模板和版本映射，不要直接把显示标签硬塞进所有包管理器字段
 
+## 签名规则
+
+所有 nightly 和 release 构建的产物必须进行签名验证。
+
+### 各格式签名机制
+
+| 格式 | 签名方式 | 说明 |
+|------|----------|------|
+| **tar.gz** | 外部 `.asc` 文件 | tarball 本身无签名机制，必须通过独立的 PGP 签名文件验证 |
+| **deb** | APT 仓库级签名 | 标准做法是签名仓库元数据（`Release`/`InRelease`），而非单个 `.deb` 文件 |
+| **rpm** | 内嵌签名 | RPM 支持在包内嵌入 GPG 签名，用 `rpm -K` 验证 |
+
+### tar.gz 签名
+
+- 使用 GPG 生成 detached ASCII armor 签名
+- 签名文件命名：`<file>.tar.gz` → `<file>.tar.gz.asc`
+- 验证命令：`gpg --verify <file>.tar.gz.asc <file>.tar.gz`
+
+### RPM 内嵌签名
+
+RPM 包必须在构建后使用 `rpmsign` 添加内嵌 GPG 签名：
+
+```bash
+# 配置 ~/.rpmmacros
+%_gpg_name <GPG_KEY_ID>
+%_gpg_path ~/.gnupg
+%__gpg /usr/bin/gpg
+%_gpg_digest_algo sha256
+
+# 签名
+echo "$GPG_PASSPHRASE" | rpmsign --addsign package.rpm
+
+# 验证
+rpm -K package.rpm
+```
+
+签名后的 RPM 包可在任意支持 RPM 的系统上通过 `rpm -K` 验证完整性，无需额外下载签名文件。
+
+### 签名 Secrets
+
+| Secret | 用途 |
+|--------|------|
+| `GPG_PRIVATE_KEY` | GPG 私钥（ASCII armor 格式） |
+| `GPG_PASSPHRASE` | GPG 密码 |
+| `GPG_KEY_ID` | 用于 RPM 宏配置和 AUR 发布 |
+
+### 签名产物清单
+
+**Nightly 构建：**
+```
+linglong-store-<label>-linux-amd64.tar.gz
+linglong-store-<label>-linux-amd64.tar.gz.asc  ← PGP 签名
+linglong-store-<label>-amd64.deb
+linglong-store-<label>-x86_64.rpm              ← 内嵌签名
+linglong-store-<label>-amd64.AppImage
+```
+
+**Release 构建：**
+```
+linglong-store-<version>-linux-amd64.tar.gz + .asc
+linglong-store-<version>-linux-arm64.tar.gz + .asc
+linglong-store-<version>-amd64.deb
+linglong-store-<version>-arm64.deb
+linglong-store-<version>-x86_64.rpm            ← 内嵌签名
+linglong-store-<version>-aarch64.rpm           ← 内嵌签名
+linglong-store-<version>-amd64.AppImage
+linglong-store-<version>-arm64.AppImage
+```
+
 ## Nightly Release 规则
 
 nightly 固定维护一个滚动预发布：

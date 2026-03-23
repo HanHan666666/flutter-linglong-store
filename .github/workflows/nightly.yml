@@ -126,10 +126,56 @@ jobs:
           path: build/out/nightly/${{ needs.prepare-nightly.outputs.nightly_label }}/amd64
           if-no-files-found: error
 
-  publish-nightly:
-    name: Publish nightly ${{ needs.prepare-nightly.outputs.nightly_label }}
+  sign-nightly:
+    name: Sign nightly assets
     needs: [prepare-nightly, build-nightly-amd64]
     if: ${{ needs.prepare-nightly.outputs.should_publish == 'true' && needs.build-nightly-amd64.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download nightly assets
+        uses: actions/download-artifact@v4
+        with:
+          name: nightly-assets-amd64
+          path: artifacts
+
+      - name: Import GPG key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          echo "GPG key imported successfully"
+
+      - name: Sign nightly tarballs
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          cd artifacts
+          for tarball in *.tar.gz; do
+            if [[ -f "$tarball" ]]; then
+              echo "Signing $tarball..."
+              echo "$GPG_PASSPHRASE" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
+                --armor --detach-sign "$tarball"
+            fi
+          done
+          ls -la *.asc || echo "No signature files created"
+
+      - name: Upload signed assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-nightly-assets-amd64
+          path: |
+            artifacts/*.tar.gz
+            artifacts/*.tar.gz.asc
+            artifacts/*.deb
+            artifacts/*.rpm
+            artifacts/*.AppImage
+          if-no-files-found: error
+
+  publish-nightly:
+    name: Publish nightly ${{ needs.prepare-nightly.outputs.nightly_label }}
+    needs: [prepare-nightly, sign-nightly]
+    if: ${{ needs.prepare-nightly.outputs.should_publish == 'true' && needs.sign-nightly.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -142,10 +188,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Download nightly assets
+      - name: Download signed nightly assets
         uses: actions/download-artifact@v4
         with:
-          name: nightly-assets-amd64
+          name: signed-nightly-assets-amd64
           path: nightly-artifacts
 
       - name: Update nightly tag

@@ -144,6 +144,9 @@ class RunningProcess extends _$RunningProcess {
   /// 当前是否正在自动刷新
   bool get isAutoRefreshing => _refreshTimer != null;
 
+  /// 提供当前运行中应用快照，供卸载等同步流程安全读取。
+  List<RunningApp> get currentApps => state.apps;
+
   /// 当前是否处于进程 Tab。
   void setProcessTabActive(bool isActive) {
     _isProcessTabActive = isActive;

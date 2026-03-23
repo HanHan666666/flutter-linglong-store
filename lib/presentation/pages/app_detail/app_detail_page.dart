@@ -10,6 +10,7 @@ import '../../../domain/models/install_progress.dart';
 import '../../../data/models/api_dto.dart';
 import '../../../data/repositories/app_repository_impl.dart';
 import '../../widgets/app_icon.dart';
+import '../../widgets/app_detail_comment_section.dart';
 import '../../widgets/app_detail_secondary_actions.dart';
 import '../../widgets/app_detail_info_section.dart';
 import '../../widgets/install_button.dart';
@@ -31,22 +32,30 @@ class AppDetailState {
     this.app,
     this.appDetail,
     this.screenshots = const [],
+    this.comments = const [],
     this.versions = const [],
     this.isLoading = false,
+    this.isLoadingComments = false,
     this.isLoadingVersions = false,
+    this.commentsError,
     this.versionsError,
     this.error,
+    this.isSubmittingComment = false,
     this.isDescriptionExpanded = false,
   });
 
   final InstalledApp? app;
   final AppDetailDTO? appDetail;
   final List<AppScreenshotDTO> screenshots;
+  final List<AppCommentDTO> comments;
   final List<AppVersionDTO> versions;
   final bool isLoading;
+  final bool isLoadingComments;
   final bool isLoadingVersions;
+  final String? commentsError;
   final String? versionsError;
   final String? error;
+  final bool isSubmittingComment;
   final bool isDescriptionExpanded;
 
   /// 获取截图 URL 列表
@@ -57,13 +66,18 @@ class AppDetailState {
     InstalledApp? app,
     AppDetailDTO? appDetail,
     List<AppScreenshotDTO>? screenshots,
+    List<AppCommentDTO>? comments,
     List<AppVersionDTO>? versions,
     bool? isLoading,
+    bool? isLoadingComments,
     bool? isLoadingVersions,
+    String? commentsError,
     String? versionsError,
     String? error,
+    bool? isSubmittingComment,
     bool? isDescriptionExpanded,
     bool clearError = false,
+    bool clearCommentsError = false,
     bool clearVersionsError = false,
     bool clearAppDetail = false,
   }) {
@@ -71,13 +85,19 @@ class AppDetailState {
       app: app ?? this.app,
       appDetail: clearAppDetail ? null : (appDetail ?? this.appDetail),
       screenshots: screenshots ?? this.screenshots,
+      comments: comments ?? this.comments,
       versions: versions ?? this.versions,
       isLoading: isLoading ?? this.isLoading,
+      isLoadingComments: isLoadingComments ?? this.isLoadingComments,
       isLoadingVersions: isLoadingVersions ?? this.isLoadingVersions,
+      commentsError: clearCommentsError
+          ? null
+          : (commentsError ?? this.commentsError),
       versionsError: clearVersionsError
           ? null
           : (versionsError ?? this.versionsError),
       error: clearError ? null : (error ?? this.error),
+      isSubmittingComment: isSubmittingComment ?? this.isSubmittingComment,
       isDescriptionExpanded:
           isDescriptionExpanded ?? this.isDescriptionExpanded,
     );
@@ -119,13 +139,38 @@ class AppDetail extends _$AppDetail {
         appDetail: appDetail,
         screenshots: appDetail.screenshotList ?? [],
         isLoading: false,
+        clearCommentsError: true,
         clearVersionsError: true,
       );
 
-      // 异步加载版本列表
+      // 评论区在版本列表之前展示，优先等待评论加载完成，版本列表继续异步补齐。
+      await _loadComments();
       _loadVersions();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> _loadComments() async {
+    state = state.copyWith(
+      isLoadingComments: true,
+      clearCommentsError: true,
+    );
+
+    try {
+      final repository = ref.read(appRepositoryProvider);
+      final comments = await repository.getAppComments(appId);
+      state = state.copyWith(
+        comments: comments,
+        isLoadingComments: false,
+        clearCommentsError: true,
+      );
+    } catch (e) {
+      AppLogger.warning('[AppDetail] 评论列表加载失败: $appId - $e');
+      state = state.copyWith(
+        isLoadingComments: false,
+        commentsError: e.toString(),
+      );
     }
   }
 
@@ -167,6 +212,48 @@ class AppDetail extends _$AppDetail {
     await _loadVersions();
   }
 
+  Future<void> retryComments() async {
+    await _loadComments();
+  }
+
+  Future<void> submitComment(String remark, {String? version}) async {
+    final normalizedRemark = remark.trim();
+    if (normalizedRemark.isEmpty) {
+      return;
+    }
+
+    state = state.copyWith(
+      isSubmittingComment: true,
+      clearCommentsError: true,
+    );
+
+    try {
+      final repository = ref.read(appRepositoryProvider);
+      final success = await repository.saveAppComment(
+        appId: appId,
+        remark: normalizedRemark,
+        version: version,
+      );
+      if (!success) {
+        throw Exception('评论提交失败');
+      }
+
+      final comments = await repository.getAppComments(appId);
+      state = state.copyWith(
+        comments: comments,
+        isLoadingComments: false,
+        isSubmittingComment: false,
+        clearCommentsError: true,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isSubmittingComment: false,
+        commentsError: e.toString(),
+      );
+      rethrow;
+    }
+  }
+
   /// 切换描述展开状态
   void toggleDescription() {
     state = state.copyWith(isDescriptionExpanded: !state.isDescriptionExpanded);
@@ -188,6 +275,8 @@ class AppDetailPage extends ConsumerStatefulWidget {
 }
 
 class _AppDetailPageState extends ConsumerState<AppDetailPage> {
+  String? _selectedCommentVersion;
+
   @override
   void initState() {
     super.initState();
@@ -286,6 +375,11 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
           const Divider(height: 1),
 
+          // 评论区
+          _buildCommentSection(context, detailState),
+
+          const Divider(height: 1),
+
           // 版本列表
           _buildVersionList(
             context,
@@ -296,6 +390,38 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
           const SizedBox(height: 24),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCommentSection(
+    BuildContext context,
+    AppDetailState detailState,
+  ) {
+    final versionOptions = _buildCommentVersionOptions(detailState);
+    final selectedVersion = _resolveSelectedCommentVersion(
+      detailState,
+      versionOptions,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: AppDetailCommentSection(
+        comments: detailState.comments,
+        versionOptions: versionOptions,
+        selectedVersion: selectedVersion,
+        isLoading: detailState.isLoadingComments,
+        isSubmitting: detailState.isSubmittingComment,
+        errorMessage: detailState.commentsError,
+        onVersionChanged: (value) {
+          setState(() {
+            _selectedCommentVersion = value;
+          });
+        },
+        onRetry: () {
+          ref.read(appDetailProvider(widget.appId).notifier).retryComments();
+        },
+        onSubmit: (remark, version) => _submitComment(context, remark, version),
       ),
     );
   }
@@ -874,6 +1000,74 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   bool _shouldShowExpandButton(String text) {
     // 超过150个字符时显示展开按钮
     return text.length > 150;
+  }
+
+  List<String> _buildCommentVersionOptions(AppDetailState detailState) {
+    final versions = <String>[];
+
+    void addVersion(String? version) {
+      if (version == null || version.isEmpty || versions.contains(version)) {
+        return;
+      }
+      versions.add(version);
+    }
+
+    addVersion(detailState.app?.version);
+    for (final version in detailState.versions) {
+      addVersion(version.versionNo);
+    }
+
+    return versions;
+  }
+
+  String? _resolveSelectedCommentVersion(
+    AppDetailState detailState,
+    List<String> versionOptions,
+  ) {
+    final currentSelection = _selectedCommentVersion;
+    if (currentSelection != null && versionOptions.contains(currentSelection)) {
+      return currentSelection;
+    }
+    if (versionOptions.isNotEmpty) {
+      return versionOptions.first;
+    }
+    return detailState.app?.version;
+  }
+
+  Future<void> _submitComment(
+    BuildContext context,
+    String remark,
+    String? version,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+
+    try {
+      await ref
+          .read(appDetailProvider(widget.appId).notifier)
+          .submitComment(remark, version: version);
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n?.commentSubmitSuccess ?? '评论已提交',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n?.commentSubmitFailed(e.toString()) ?? '评论提交失败: $e',
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
   }
 
   /// 处理安装操作

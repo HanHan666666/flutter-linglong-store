@@ -413,6 +413,41 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shortcutCreated => '快捷方式已创建';
 
   @override
+  String get appComments => '评论区';
+
+  @override
+  String get appCommentsEmpty => '还没有评论，来写第一条吧';
+
+  @override
+  String get commentInputHint => '说说这个应用的使用体验';
+
+  @override
+  String get submitComment => '发表评论';
+
+  @override
+  String get commentVersionLabel => '关联版本';
+
+  @override
+  String get anonymousComment => '匿名访客';
+
+  @override
+  String get commentHelpful => '有帮助';
+
+  @override
+  String get commentNotHelpful => '没帮助';
+
+  @override
+  String get commentAnonymousHint => '匿名评论，按最新时间排序展示';
+
+  @override
+  String get commentSubmitSuccess => '评论已提交';
+
+  @override
+  String commentSubmitFailed(String error) {
+    return '评论提交失败: $error';
+  }
+
+  @override
   String shortcutCreateFailed(String error) {
     return '创建失败: $error';
   }

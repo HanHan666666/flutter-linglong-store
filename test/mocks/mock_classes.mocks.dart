@@ -119,6 +119,32 @@ class MockAppRepository extends _i1.Mock implements _i3.AppRepository {
           as _i4.Future<_i6.AppDetailDTO>);
 
   @override
+  _i4.Future<List<_i6.AppCommentDTO>> getAppComments(String? appId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getAppComments, [appId]),
+            returnValue: _i4.Future<List<_i6.AppCommentDTO>>.value(
+              <_i6.AppCommentDTO>[],
+            ),
+          )
+          as _i4.Future<List<_i6.AppCommentDTO>>);
+
+  @override
+  _i4.Future<bool> saveAppComment({
+    required String? appId,
+    required String? remark,
+    String? version,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveAppComment, [], {
+              #appId: appId,
+              #remark: remark,
+              #version: version,
+            }),
+            returnValue: _i4.Future<bool>.value(false),
+          )
+          as _i4.Future<bool>);
+
+  @override
   _i4.Future<List<_i6.AppVersionDTO>> getVersions(
     String? appId, {
     String? repoName,
@@ -494,6 +520,38 @@ class MockAppApiService extends _i1.Mock implements _i16.AppApiService {
                 ),
           )
           as _i4.Future<_i2.HttpResponse<_i6.AppDetailResponse>>);
+
+  @override
+  _i4.Future<_i2.HttpResponse<_i6.AppCommentListResponse>> getAppCommentList(
+    _i6.AppCommentSearchBO? request,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getAppCommentList, [request]),
+            returnValue:
+                _i4.Future<_i2.HttpResponse<_i6.AppCommentListResponse>>.value(
+                  _FakeHttpResponse_0<_i6.AppCommentListResponse>(
+                    this,
+                    Invocation.method(#getAppCommentList, [request]),
+                  ),
+                ),
+          )
+          as _i4.Future<_i2.HttpResponse<_i6.AppCommentListResponse>>);
+
+  @override
+  _i4.Future<_i2.HttpResponse<_i6.BooleanResponse>> saveAppComment(
+    _i6.AppCommentSaveBO? request,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveAppComment, [request]),
+            returnValue:
+                _i4.Future<_i2.HttpResponse<_i6.BooleanResponse>>.value(
+                  _FakeHttpResponse_0<_i6.BooleanResponse>(
+                    this,
+                    Invocation.method(#saveAppComment, [request]),
+                  ),
+                ),
+          )
+          as _i4.Future<_i2.HttpResponse<_i6.BooleanResponse>>);
 
   @override
   _i4.Future<_i2.HttpResponse<_i6.AppListArrayResponse>> getWelcomeCarouselList(

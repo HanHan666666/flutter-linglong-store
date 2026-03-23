@@ -19,6 +19,13 @@ enum RankingType {
   const RankingType(this.code);
 
   final String code;
+
+  String get label => switch (this) {
+        RankingType.download => '下载榜',
+        RankingType.rising => '新秀榜',
+        RankingType.update => '更新榜',
+        RankingType.hot => '热门榜',
+      };
 }
 
 /// 排行榜应用信息

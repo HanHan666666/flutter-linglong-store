@@ -182,6 +182,47 @@ class AppRepositoryImpl implements AppRepository {
     }
   }
 
+  @override
+  Future<List<AppCommentDTO>> getAppComments(String appId) async {
+    try {
+      AppLogger.info('获取应用评论列表: $appId');
+      final response = await _apiService.getAppCommentList(
+        AppCommentSearchBO(appId: appId),
+      );
+      return response.data.data;
+    } catch (e, s) {
+      AppLogger.error('获取应用评论失败: $appId', e, s);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<bool> saveAppComment({
+    required String appId,
+    required String remark,
+    String? version,
+  }) async {
+    try {
+      final normalizedRemark = remark.trim();
+      if (normalizedRemark.isEmpty) {
+        return false;
+      }
+
+      AppLogger.info('提交应用评论: $appId');
+      final response = await _apiService.saveAppComment(
+        AppCommentSaveBO(
+          appId: appId,
+          remark: normalizedRemark,
+          version: version,
+        ),
+      );
+      return response.data.data ?? false;
+    } catch (e, s) {
+      AppLogger.error('提交应用评论失败: $appId', e, s);
+      rethrow;
+    }
+  }
+
   /// 将 Flutter locale 归一成后端 API 约定的语言值（zh_CN / en_US）。
   String _resolveLang(String? locale) {
     final normalized = locale?.trim().replaceAll('-', '_').toLowerCase();

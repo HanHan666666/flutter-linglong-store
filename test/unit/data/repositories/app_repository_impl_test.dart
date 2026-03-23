@@ -515,6 +515,68 @@ void main() {
       });
     });
 
+    group('getAppComments', () {
+      test('should request comment list by appId', () async {
+        final mockResponse = HttpResponse(
+          const AppCommentListResponse(
+            code: 200,
+            data: [
+              AppCommentDTO(
+                id: 'comment-1',
+                appId: 'com.example.app',
+                version: '1.0.0',
+                remark: '评论内容',
+                createTime: '2026-03-23 09:00:00',
+              ),
+            ],
+          ),
+          Response(
+            requestOptions: RequestOptions(path: '/app/getAppCommentList'),
+          ),
+        );
+
+        when(
+          mockApiService.getAppCommentList(any),
+        ).thenAnswer((_) async => mockResponse);
+
+        final result = await repository.getAppComments('com.example.app');
+
+        expect(result, hasLength(1));
+        expect(result.single.remark, equals('评论内容'));
+        final captured =
+            verify(mockApiService.getAppCommentList(captureAny)).captured.single
+                as AppCommentSearchBO;
+        expect(captured.appId, equals('com.example.app'));
+      });
+    });
+
+    group('saveAppComment', () {
+      test('should post trimmed comment payload and return success', () async {
+        final mockResponse = HttpResponse(
+          const BooleanResponse(code: 200, data: true),
+          Response(requestOptions: RequestOptions(path: '/app/saveAppComment')),
+        );
+
+        when(
+          mockApiService.saveAppComment(any),
+        ).thenAnswer((_) async => mockResponse);
+
+        final result = await repository.saveAppComment(
+          appId: 'com.example.app',
+          remark: '很好用',
+          version: '1.0.0',
+        );
+
+        expect(result, isTrue);
+        final captured =
+            verify(mockApiService.saveAppComment(captureAny)).captured.single
+                as AppCommentSaveBO;
+        expect(captured.appId, equals('com.example.app'));
+        expect(captured.remark, equals('很好用'));
+        expect(captured.version, equals('1.0.0'));
+      });
+    });
+
     group('enrichInstalledAppsWithDetails', () {
       test('should merge icon and description from array response', () async {
         final apps = [

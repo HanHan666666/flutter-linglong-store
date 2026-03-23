@@ -219,3 +219,5 @@ time ./build/package-deb.sh
 - 2026-03-22：侧边栏动态菜单配置当前以 Flutter 本地目录 `local_sidebar_menu_catalog.dart` 为准；未来若要切回接口配置，只允许从 `sidebarConfigProvider` 这一处切换数据源，侧边栏项标签与自定义分类页标题必须继续复用同一套菜单解析 helper，禁止各自直接读取后端 `menuName`。
 - 2026-03-22：自定义分类页状态必须按 `menuCode` 使用 `customCategoryProvider(code)` 分片管理，禁止再用单例 provider 在 `initState/didUpdateWidget` 中手动切换分类；页头应用数量必须使用 `/app/sidebar/apps` 返回的真实 `total`，分页大小固定与 Rust 旧版对齐为 `30`，语言切换时通过失效 `sidebarConfigProvider` 驱动当前分类 family 重新加载，禁止直接 `invalidate(customCategoryProvider)`。
 - 2026-03-22：安装/更新进度链路必须先在仓储层把 `ll-cli --json` 输出正规化，再写入队列；`task.message` 只允许承载可直接展示的规范化文案，原始后端 message 只能放在 `rawMessage/errorDetail` 这类诊断字段里，禁止任何页面直接渲染整段 JSON 原文。
+- 2026-03-23：应用详情页评论区统一对接 `/app/getAppCommentList` 与 `/app/saveAppComment`；当前只支持匿名文本评论和只读的帮助数展示，不允许前端擅自增加评分、头像、点赞提交等后端不存在的交互。评论提交成功后必须回源刷新最新评论，不能本地伪造一条临时评论。
+- 2026-03-23：评论区“关联版本”禁止继续使用承载大量版本的桌面下拉框；统一改为横向胶囊选择，默认只展示前 `8` 个版本，超出部分通过“展开全部 / 收起”切换。提交评论时使用当前胶囊选中的版本值。

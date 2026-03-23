@@ -201,6 +201,24 @@
   "skipCheck": "跳过检测",
   "loadFailed": "加载失败",
   "shortcutCreated": "快捷方式已创建",
+  "appComments": "评论区",
+  "appCommentsEmpty": "还没有评论，来写第一条吧",
+  "commentInputHint": "说说这个应用的使用体验",
+  "submitComment": "发表评论",
+  "commentVersionLabel": "关联版本",
+  "anonymousComment": "匿名访客",
+  "commentHelpful": "有帮助",
+  "commentNotHelpful": "没帮助",
+  "commentAnonymousHint": "匿名评论，按最新时间排序展示",
+  "commentSubmitSuccess": "评论已提交",
+  "commentSubmitFailed": "评论提交失败: {error}",
+  "@commentSubmitFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "shortcutCreateFailed": "创建失败: {error}",
   "@shortcutCreateFailed": {
     "placeholders": {

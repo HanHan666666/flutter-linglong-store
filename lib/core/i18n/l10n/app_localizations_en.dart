@@ -427,6 +427,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortcutCreated => 'Shortcut created';
 
   @override
+  String get appComments => 'Comments';
+
+  @override
+  String get appCommentsEmpty => 'No comments yet. Be the first to post one.';
+
+  @override
+  String get commentInputHint => 'Share your experience with this app';
+
+  @override
+  String get submitComment => 'Post Comment';
+
+  @override
+  String get commentVersionLabel => 'Version';
+
+  @override
+  String get anonymousComment => 'Anonymous User';
+
+  @override
+  String get commentHelpful => 'Helpful';
+
+  @override
+  String get commentNotHelpful => 'Not Helpful';
+
+  @override
+  String get commentAnonymousHint =>
+      'Anonymous comments are shown in reverse chronological order';
+
+  @override
+  String get commentSubmitSuccess => 'Comment submitted';
+
+  @override
+  String commentSubmitFailed(String error) {
+    return 'Failed to submit comment: $error';
+  }
+
+  @override
   String shortcutCreateFailed(String error) {
     return 'Creation Failed: $error';
   }

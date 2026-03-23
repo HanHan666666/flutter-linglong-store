@@ -15,9 +15,11 @@ class AppCollectionSyncService {
   final Ref _ref;
 
   /// 后台刷新 installed apps 和 updates。
-  void syncAfterSuccessfulOperation() {
-    unawaited(_ref.read(installedAppsProvider.notifier).refresh());
-    unawaited(_ref.read(updateAppsProvider.notifier).checkUpdates());
+  Future<void> syncAfterSuccessfulOperation() async {
+    // 先刷新 installed apps，再基于新版本重新计算 updates，
+    // 避免更新列表继续读取到成功前的旧版本。
+    await _ref.read(installedAppsProvider.notifier).refresh();
+    await _ref.read(updateAppsProvider.notifier).checkUpdates();
   }
 }
 

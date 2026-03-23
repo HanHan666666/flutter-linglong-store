@@ -32,7 +32,12 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
 
   /// 全部更新
   void _updateAll() {
-    final apps = ref.read(updateAppsProvider).apps;
+    final installState = ref.read(installQueueProvider);
+    final apps = ref
+        .read(updateAppsProvider)
+        .apps
+        .where((app) => !installState.isAppInQueue(app.appId))
+        .toList();
     if (apps.isEmpty) {
       return;
     }
@@ -189,6 +194,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
             key: ValueKey(app.appId),
             app: app,
             installTask: installTask,
+            hasActiveTasks: installState.hasActiveTasks(),
             onUpdate: () => _updateApp(app),
           );
         },
@@ -203,11 +209,13 @@ class _UpdatableAppItem extends ConsumerWidget {
     super.key,
     required this.app,
     required this.installTask,
+    required this.hasActiveTasks,
     required this.onUpdate,
   });
 
   final UpdatableApp app;
   final InstallTask? installTask;
+  final bool hasActiveTasks;
   final VoidCallback onUpdate;
 
   @override
@@ -216,6 +224,14 @@ class _UpdatableAppItem extends ConsumerWidget {
 
     // 确定按钮状态
     final buttonState = _getButtonState();
+    // 刚完成的任务还留在 history 里时，列表可能短暂显示旧更新项；
+    // 队列仍活跃期间先禁用再次点击，避免同一 app 被重复入队。
+    final disableUpdateAction =
+        hasActiveTasks &&
+        installTask != null &&
+        (installTask!.status == InstallStatus.success ||
+            installTask!.status == InstallStatus.failed ||
+            installTask!.status == InstallStatus.cancelled);
     final progress = installTask?.progress ?? 0.0;
 
     return Card(
@@ -281,6 +297,7 @@ class _UpdatableAppItem extends ConsumerWidget {
                       ? ref.watch(networkSpeedProvider).formatted
                       : null,
                   onPressed: onUpdate,
+                  disabled: disableUpdateAction,
                   onCancel: installTask != null
                       ? () {
                           // 取消安装

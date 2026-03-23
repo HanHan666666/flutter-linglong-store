@@ -21,6 +21,7 @@ jobs:
     outputs:
       version: ${{ steps.release-version.outputs.version }}
       tag: ${{ steps.release-version.outputs.tag }}
+      source_commit: ${{ steps.source-commit.outputs.source_commit }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,12 +34,9 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Keep the legacy Flutter path available for shell entrypoints
-        run: |
-          flutter_bin="$(command -v flutter)"
-          flutter_root="$(cd "$(dirname "$flutter_bin")/.." && pwd)"
-          sudo mkdir -p /home/han
-          sudo ln -sfn "$flutter_root" /home/han/flutter
+      - name: Capture release source commit
+        id: source-commit
+        run: echo "source_commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Resolve release version
         id: release-version
@@ -54,31 +52,32 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
 
-      - name: Configure git identity
+      - name: Stage versioned release files
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          bash build/scripts/update-version-files.sh "${{ steps.release-version.outputs.version }}"
+          stage_dir="build/tmp/release-version-files"
+          rm -rf "$stage_dir"
+          mkdir -p \
+            "$stage_dir/linux" \
+            "$stage_dir/lib/core/config" \
+            "$stage_dir/lib/core/constants"
+          cp pubspec.yaml "$stage_dir/pubspec.yaml"
+          cp linux/pubspec.yaml "$stage_dir/linux/pubspec.yaml"
+          cp lib/core/config/app_config.dart "$stage_dir/lib/core/config/app_config.dart"
+          cp lib/core/constants/app_constants.dart "$stage_dir/lib/core/constants/app_constants.dart"
 
-      - name: Update version files
-        run: bash build/scripts/update-version-files.sh "${{ steps.release-version.outputs.version }}"
-
-      - name: Commit release version bump
-        run: |
-          git add pubspec.yaml linux/pubspec.yaml lib/core/config/app_config.dart lib/core/constants/app_constants.dart
-          git commit -m "chore: release ${{ steps.release-version.outputs.version }}"
-
-      - name: Push release commit
-        run: git push origin "HEAD:${{ github.event.repository.default_branch }}"
-
-      - name: Create release tag
-        run: git tag "${{ steps.release-version.outputs.tag }}"
-
-      - name: Push release tag
-        run: git push origin "${{ steps.release-version.outputs.tag }}"
+      - name: Upload versioned release files
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-version-files
+          path: build/tmp/release-version-files
+          if-no-files-found: error
 
       - name: Generate release notes
+        env:
+          SOURCE_COMMIT: ${{ steps.source-commit.outputs.source_commit }}
         run: |
-          previous_tag="$(git describe --tags --abbrev=0 --match 'v3.0.*' HEAD^ 2>/dev/null || true)"
+          previous_tag="$(git describe --tags --abbrev=0 --match 'v3.0.*' "$SOURCE_COMMIT" 2>/dev/null || true)"
           if [[ -n "$previous_tag" ]]; then
             bash build/scripts/generate-changelog.sh "${{ steps.release-version.outputs.version }}" "$previous_tag" > release-notes.md
           else
@@ -108,11 +107,24 @@ jobs:
     needs: prepare-release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout release tag
+      - name: Checkout release source
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.prepare-release.outputs.tag }}
+          ref: ${{ needs.prepare-release.outputs.source_commit }}
           fetch-depth: 0
+
+      - name: Download versioned release files
+        uses: actions/download-artifact@v4
+        with:
+          name: release-version-files
+          path: release-version-files
+
+      - name: Apply versioned release files
+        run: |
+          cp release-version-files/pubspec.yaml pubspec.yaml
+          cp release-version-files/linux/pubspec.yaml linux/pubspec.yaml
+          cp release-version-files/lib/core/config/app_config.dart lib/core/config/app_config.dart
+          cp release-version-files/lib/core/constants/app_constants.dart lib/core/constants/app_constants.dart
 
       - name: Build bundle
         run: bash build/scripts/package-bundle.sh --version "${{ needs.prepare-release.outputs.version }}" --arch amd64
@@ -145,11 +157,24 @@ jobs:
     needs: prepare-release
     runs-on: ubuntu-24.04-arm
     steps:
-      - name: Checkout release tag
+      - name: Checkout release source
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.prepare-release.outputs.tag }}
+          ref: ${{ needs.prepare-release.outputs.source_commit }}
           fetch-depth: 0
+
+      - name: Download versioned release files
+        uses: actions/download-artifact@v4
+        with:
+          name: release-version-files
+          path: release-version-files
+
+      - name: Apply versioned release files
+        run: |
+          cp release-version-files/pubspec.yaml pubspec.yaml
+          cp release-version-files/linux/pubspec.yaml linux/pubspec.yaml
+          cp release-version-files/lib/core/config/app_config.dart lib/core/config/app_config.dart
+          cp release-version-files/lib/core/constants/app_constants.dart lib/core/constants/app_constants.dart
 
       - name: Build bundle
         run: bash build/scripts/package-bundle.sh --version "${{ needs.prepare-release.outputs.version }}" --arch arm64
@@ -185,11 +210,24 @@ jobs:
     env:
       DOCKER_DEFAULT_PLATFORM: linux/arm64
     steps:
-      - name: Checkout release tag
+      - name: Checkout release source
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.prepare-release.outputs.tag }}
+          ref: ${{ needs.prepare-release.outputs.source_commit }}
           fetch-depth: 0
+
+      - name: Download versioned release files
+        uses: actions/download-artifact@v4
+        with:
+          name: release-version-files
+          path: release-version-files
+
+      - name: Apply versioned release files
+        run: |
+          cp release-version-files/pubspec.yaml pubspec.yaml
+          cp release-version-files/linux/pubspec.yaml linux/pubspec.yaml
+          cp release-version-files/lib/core/config/app_config.dart lib/core/config/app_config.dart
+          cp release-version-files/lib/core/constants/app_constants.dart lib/core/constants/app_constants.dart
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -305,10 +343,68 @@ jobs:
             artifacts/**/*.AppImage
           if-no-files-found: error
 
-  publish-release:
-    name: Publish GitHub Release ${{ needs.prepare-release.outputs.version }}
+  finalize-release-state:
+    name: Finalize release git state ${{ needs.prepare-release.outputs.version }}
     needs: [prepare-release, sign-release]
     if: ${{ always() && needs.sign-release.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-release.outputs.source_commit }}
+          fetch-depth: 0
+
+      - name: Download versioned release files
+        uses: actions/download-artifact@v4
+        with:
+          name: release-version-files
+          path: release-version-files
+
+      - name: Verify default branch head is unchanged
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          SOURCE_COMMIT: ${{ needs.prepare-release.outputs.source_commit }}
+        run: |
+          git fetch origin "$DEFAULT_BRANCH"
+          remote_head="$(git rev-parse "origin/$DEFAULT_BRANCH")"
+          if [[ "$remote_head" != "$SOURCE_COMMIT" ]]; then
+            echo "Default branch moved from $SOURCE_COMMIT to $remote_head during release execution." >&2
+            exit 1
+          fi
+
+      - name: Apply versioned release files
+        run: |
+          cp release-version-files/pubspec.yaml pubspec.yaml
+          cp release-version-files/linux/pubspec.yaml linux/pubspec.yaml
+          cp release-version-files/lib/core/config/app_config.dart lib/core/config/app_config.dart
+          cp release-version-files/lib/core/constants/app_constants.dart lib/core/constants/app_constants.dart
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit release version bump
+        run: |
+          git add pubspec.yaml linux/pubspec.yaml lib/core/config/app_config.dart lib/core/constants/app_constants.dart
+          git commit -m "chore: release ${{ needs.prepare-release.outputs.version }}"
+
+      - name: Push release commit
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: git push origin "HEAD:${DEFAULT_BRANCH}"
+
+      - name: Create release tag
+        run: git tag "${{ needs.prepare-release.outputs.tag }}"
+
+      - name: Push release tag
+        run: git push origin "${{ needs.prepare-release.outputs.tag }}"
+
+  publish-release:
+    name: Publish GitHub Release ${{ needs.prepare-release.outputs.version }}
+    needs: [prepare-release, sign-release, finalize-release-state]
+    if: ${{ always() && needs.sign-release.result == 'success' && needs.finalize-release-state.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Download release notes

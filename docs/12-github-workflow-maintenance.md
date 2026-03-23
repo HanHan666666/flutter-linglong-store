@@ -75,6 +75,18 @@
 - 正式 tag
 - `amd64` / `arm64` 资产发布
 
+发布时序：
+
+- `prepare-release` 只负责解析版本、生成版本化文件产物与 release notes，禁止在这里直接 `git push` 默认分支或创建正式 tag
+- build/sign job 必须统一消费同一份 `release-version-files` 中间产物，保证构建内容与最终 release commit 完全一致
+- 只有在正式构建与签名成功后，才允许进入独立的 `finalize-release-state` job 推送 release commit 并创建正式 tag
+- `publish-release` 必须依赖 `finalize-release-state`，不要在 tag 尚未落库时抢先创建 GitHub Release
+
+工具链约束：
+
+- release workflow 不允许再通过 `/home/han/flutter` 之类维护者本机路径兜底 Flutter/Dart
+- release CLI 统一优先走显式环境变量，其次走 runner `PATH` 或容器内标准路径
+
 禁止混入：
 
 - nightly tag

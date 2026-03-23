@@ -11,18 +11,35 @@ shift
 workspace_root="${LINGLONG_RELEASE_TOOL_ROOT:-$PWD}"
 
 resolve_dart_bin() {
+  local flutter_bin=""
+  local flutter_root=""
+
   if [[ -n "${LINGLONG_RELEASE_DART_BIN:-}" ]]; then
     printf '%s\n' "$LINGLONG_RELEASE_DART_BIN"
     return 0
   fi
 
-  if [[ -x /home/han/flutter/bin/dart ]]; then
-    printf '%s\n' /home/han/flutter/bin/dart
+  if [[ -n "${FLUTTER_ROOT:-}" && -x "${FLUTTER_ROOT}/bin/dart" ]]; then
+    printf '%s\n' "${FLUTTER_ROOT}/bin/dart"
     return 0
   fi
 
   if command -v dart > /dev/null 2>&1; then
     command -v dart
+    return 0
+  fi
+
+  if command -v flutter > /dev/null 2>&1; then
+    flutter_bin="$(command -v flutter)"
+    flutter_root="$(cd "$(dirname "$flutter_bin")/.." && pwd)"
+    if [[ -x "${flutter_root}/bin/dart" ]]; then
+      printf '%s\n' "${flutter_root}/bin/dart"
+      return 0
+    fi
+  fi
+
+  if [[ -n "${HOME:-}" && -x "${HOME}/flutter/bin/dart" ]]; then
+    printf '%s\n' "${HOME}/flutter/bin/dart"
     return 0
   fi
 

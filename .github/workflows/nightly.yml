@@ -17,6 +17,7 @@ jobs:
       should_publish: ${{ steps.decide.outputs.should_publish }}
       base_version: ${{ steps.metadata.outputs.base_version }}
       nightly_label: ${{ steps.metadata.outputs.nightly_label }}
+      nightly_tag: ${{ steps.metadata.outputs.nightly_tag }}
       short_sha: ${{ steps.metadata.outputs.short_sha }}
       nightly_date: ${{ steps.metadata.outputs.nightly_date }}
       source_commit: ${{ steps.decide.outputs.source_commit }}
@@ -32,6 +33,7 @@ jobs:
           eval "$(bash build/scripts/resolve-nightly-metadata.sh)"
           echo "base_version=$base_version" >> "$GITHUB_OUTPUT"
           echo "nightly_label=$nightly_label" >> "$GITHUB_OUTPUT"
+          echo "nightly_tag=nightly-$nightly_date" >> "$GITHUB_OUTPUT"
           echo "short_sha=$short_sha" >> "$GITHUB_OUTPUT"
           echo "nightly_date=$nightly_date" >> "$GITHUB_OUTPUT"
 
@@ -44,7 +46,7 @@ jobs:
               const { data } = await github.rest.repos.getReleaseByTag({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                tag: 'nightly',
+                tag: '${{ steps.metadata.outputs.nightly_tag }}',
               });
               const body = data.body || '';
               const shaMatch = body.match(/^Nightly source commit:\s*(.+)$/m);
@@ -148,8 +150,8 @@ jobs:
 
       - name: Update nightly tag
         run: |
-          git tag -f nightly "${{ needs.prepare-nightly.outputs.source_commit }}"
-          git push origin refs/tags/nightly --force
+          git tag -f "${{ needs.prepare-nightly.outputs.nightly_tag }}" "${{ needs.prepare-nightly.outputs.source_commit }}"
+          git push origin "refs/tags/${{ needs.prepare-nightly.outputs.nightly_tag }}" --force
 
       - name: Render nightly release notes
         run: |
@@ -176,7 +178,7 @@ jobs:
       - name: Publish nightly prerelease
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: nightly
+          tag_name: ${{ needs.prepare-nightly.outputs.nightly_tag }}
           target_commitish: ${{ needs.prepare-nightly.outputs.source_commit }}
           name: Nightly Build ${{ needs.prepare-nightly.outputs.nightly_label }}
           body_path: nightly-release-notes.md

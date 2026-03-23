@@ -20,6 +20,7 @@ import '../../../application/providers/network_speed_provider.dart';
 import '../../../application/providers/running_process_provider.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/utils/format_utils.dart';
+import '../../../core/config/theme.dart';
 import 'screenshot_preview_lightbox.dart';
 
 part 'app_detail_page.g.dart';
@@ -262,6 +263,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           // 头部信息区
           _buildHeader(
             context,
+            detailState,
             app,
             installTask,
             hasInstalledInstance: hasInstalledInstance,
@@ -301,11 +303,13 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   /// 构建头部信息区
   Widget _buildHeader(
     BuildContext context,
+    AppDetailState detailState,
     InstalledApp app,
     InstallTask? installTask, {
     required bool hasInstalledInstance,
   }) {
     final theme = Theme.of(context);
+    final appDetail = detailState.appDetail;
 
     // 确定安装按钮状态
     final buttonState = _getInstallButtonState(
@@ -341,6 +345,22 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 4),
+                // 简短描述（在应用名称下方）
+                if (appDetail?.appDesc != null && appDetail!.appDesc!.isNotEmpty)
+                  Text(
+                    appDetail.appDesc!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                // 标签列表（Chip 样式）
+                if (appDetail?.tagList != null && appDetail!.tagList!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  _buildTags(context, appDetail.tagList!),
+                ],
                 const SizedBox(height: 4),
                 // 版本信息
                 Text(
@@ -401,6 +421,33 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// 构建标签列表（Chip 样式）
+  Widget _buildTags(BuildContext context, List<AppTagDTO> tags) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      children: tags.map((tag) => _buildTag(context, tag.name)).toList(),
+    );
+  }
+
+  /// 构建单个标签 Chip
+  Widget _buildTag(BuildContext context, String label) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer,
+        borderRadius: AppRadius.fullRadius,
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onPrimaryContainer,
+        ),
       ),
     );
   }
@@ -488,12 +535,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     InstalledApp app,
   ) {
     final theme = Theme.of(context);
-    // 优先使用详情中的完整描述
-    final description =
-        detailState.appDetail?.appDesc ??
-        app.description ??
-        AppLocalizations.of(context)?.noDescription ??
-        '暂无描述';
+    final l10n = AppLocalizations.of(context);
+
+    // 优先使用长描述（detailDescription），为空时降级为简短描述
+    final description = detailState.appDetail?.detailDescription?.isNotEmpty == true
+        ? detailState.appDetail!.detailDescription!
+        : (detailState.appDetail?.appDesc ?? app.description ?? l10n?.noDescription ?? '暂无描述');
 
     return Padding(
       padding: const EdgeInsets.all(16.0),

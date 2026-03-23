@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import '../../core/i18n/install_messages.dart';
+import '../../core/network/api_exceptions.dart'
+    hide CliTimeoutException, CliExecutionException;
 import '../../domain/models/installed_app.dart';
 import '../../domain/models/running_app.dart';
 import '../../domain/models/install_progress.dart';
@@ -386,12 +388,23 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         AppLogger.info('[LinglongCli] 卸载成功: $appId');
         return output.stdout;
       } else {
+        // 失败时抛出异常，让调用方正确处理错误
         AppLogger.warning('[LinglongCli] 卸载失败: ${output.stderr}');
-        return _messages.uninstallFailed(output.stderr);
+        throw UninstallException(
+          output.stderr.isNotEmpty ? output.stderr : '卸载命令执行失败',
+          appId: appId,
+          exitCode: output.exitCode,
+        );
       }
+    } on UninstallException {
+      // 已是 UninstallException，直接重新抛出
+      rethrow;
     } catch (e, stack) {
       AppLogger.error('[LinglongCli] 卸载异常: $appId', e, stack);
-      return _messages.uninstallException(e.toString());
+      throw UninstallException(
+        e.toString(),
+        appId: appId,
+      );
     }
   }
 

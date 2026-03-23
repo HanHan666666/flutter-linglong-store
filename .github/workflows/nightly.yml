@@ -138,6 +138,9 @@ jobs:
           name: nightly-assets-amd64
           path: artifacts
 
+      - name: Install RPM signing tools
+        run: sudo apt-get update && sudo apt-get install -y rpm
+
       - name: Import GPG key
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -145,6 +148,17 @@ jobs:
         run: |
           echo "$GPG_PRIVATE_KEY" | gpg --batch --import
           echo "GPG key imported successfully"
+
+      - name: Configure RPM macros for signing
+        env:
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          cat > ~/.rpmmacros <<EOF
+          %_gpg_name ${GPG_KEY_ID}
+          %_gpg_path ~/.gnupg
+          %__gpg /usr/bin/gpg
+          %_gpg_digest_algo sha256
+          EOF
 
       - name: Sign nightly tarballs
         env:
@@ -159,6 +173,25 @@ jobs:
             fi
           done
           ls -la *.asc || echo "No signature files created"
+
+      - name: Sign nightly RPM packages
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          cd artifacts
+          for rpm in *.rpm; do
+            if [[ -f "$rpm" ]]; then
+              echo "Signing $rpm..."
+              echo "$GPG_PASSPHRASE" | rpmsign --addsign "$rpm"
+            fi
+          done
+          # Verify signatures
+          for rpm in *.rpm; do
+            if [[ -f "$rpm" ]]; then
+              echo "Verifying $rpm..."
+              rpm -K "$rpm"
+            fi
+          done
 
       - name: Upload signed assets
         uses: actions/upload-artifact@v4

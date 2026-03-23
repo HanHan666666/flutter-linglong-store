@@ -13,6 +13,7 @@ import '../../widgets/app_icon.dart';
 import '../../widgets/app_detail_comment_section.dart';
 import '../../widgets/app_detail_secondary_actions.dart';
 import '../../widgets/app_detail_info_section.dart';
+import '../../widgets/app_detail_version_section.dart';
 import '../../widgets/install_button.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../../core/di/providers.dart';
@@ -810,116 +811,24 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     InstallTask? currentInstallTask,
     Set<String> installedVersions,
   ) {
-    final versions = detailState.versions;
-    final isLoading = detailState.isLoadingVersions;
-    final versionsError = detailState.versionsError;
     final currentApp = detailState.app;
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                AppLocalizations.of(context)?.versionHistory ?? '版本历史',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              if (isLoading) ...[
-                const SizedBox(width: 12),
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (versionsError != null && versions.isEmpty)
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    AppLocalizations.of(context)?.versionListLoadFailed ??
-                        '版本列表加载失败，请重试',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    ref
-                        .read(appDetailProvider(widget.appId).notifier)
-                        .retryVersions();
-                  },
-                  child: Text(AppLocalizations.of(context)?.retry ?? '重试'),
-                ),
-              ],
-            )
-          else if (versionsError != null)
-            Text(
-              AppLocalizations.of(context)?.versionListUpdateFailed ??
-                  '版本列表更新失败，显示最近一次结果',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.error,
-              ),
-            )
-          else
-            const SizedBox.shrink(),
-          if (versionsError != null) const SizedBox(height: 12),
-          if (versions.isEmpty && !isLoading)
-            Text(AppLocalizations.of(context)?.noVersionHistory ?? '暂无版本历史')
-          else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: versions.length,
-              itemBuilder: (context, index) {
-                final version = versions[index];
-                final isInstalledVersion = installedVersions.contains(
-                  version.versionNo,
-                );
-                final formattedPackageSize = FormatUtils.formatFileSizeValue(
-                  version.packageSize,
-                );
-                final subtitleParts = <String>[
-                  if (version.releaseTime?.isNotEmpty ?? false)
-                    version.releaseTime!,
-                  if (formattedPackageSize != '--') formattedPackageSize,
-                ];
-
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    isInstalledVersion ? Icons.check_circle : Icons.history,
-                    color: isInstalledVersion
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey,
-                  ),
-                  title: Text('v${version.versionNo}'),
-                  subtitle: Text(
-                    subtitleParts.isEmpty ? '--' : subtitleParts.join(' · '),
-                  ),
-                  trailing: isInstalledVersion
-                      ? Text(
-                          AppLocalizations.of(context)?.installedBadge ?? '已安装',
-                        )
-                      : TextButton(
-                          onPressed: () =>
-                              _installVersion(currentApp!, version.versionNo),
-                          child: Text(
-                            AppLocalizations.of(context)?.install ?? '安装',
-                          ),
-                        ),
-                );
-              },
-            ),
-        ],
+      child: AppDetailVersionSection(
+        versions: detailState.versions,
+        installedVersions: installedVersions,
+        isLoading: detailState.isLoadingVersions,
+        errorMessage: detailState.versionsError,
+        onRetry: () {
+          ref.read(appDetailProvider(widget.appId).notifier).retryVersions();
+        },
+        onInstallVersion: (version) {
+          if (currentApp == null) {
+            return;
+          }
+          _installVersion(currentApp, version);
+        },
       ),
     );
   }

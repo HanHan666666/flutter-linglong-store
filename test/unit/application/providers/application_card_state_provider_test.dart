@@ -60,32 +60,46 @@ void main() {
       },
     );
 
-    test(
-      'keeps tri-state and exposes installing progress from active task',
-      () {
-        final installingTask = InstallTask(
-          id: 'task-1',
-          appId: 'org.example.app',
-          appName: 'Example App',
-          status: InstallStatus.pending,
-          progress: 0.35,
-          createdAt: DateTime.now().millisecondsSinceEpoch,
-        );
-        final index = ApplicationCardStateIndex(
-          installedVersionByAppId: const {},
-          updateAppIds: const {},
-          activeTasksByAppId: {'org.example.app': installingTask},
-        );
+    test('returns pending button state for queued task', () {
+      const index = ApplicationCardStateIndex(
+        installedVersionByAppId: {},
+        updateAppIds: {},
+        activeTasksByAppId: {
+          'org.example.app': InstallTask(
+            id: 'task-pending',
+            appId: 'org.example.app',
+            appName: 'Example',
+            status: InstallStatus.pending,
+            createdAt: 1,
+          ),
+        },
+      );
 
-        final state = index.resolve(
-          appId: 'org.example.app',
-          latestVersion: '1.0.0',
-        );
+      final resolved = index.resolve(appId: 'org.example.app');
 
-        expect(state.buttonState, InstallButtonState.notInstalled);
-        expect(state.isInstalling, isTrue);
-        expect(state.progress, closeTo(0.35, 0.001));
-      },
-    );
+      expect(resolved.buttonState, InstallButtonState.pending);
+      expect(resolved.isInstalling, isTrue);
+    });
+
+    test('returns installing button state for active download', () {
+      const index = ApplicationCardStateIndex(
+        installedVersionByAppId: {},
+        updateAppIds: {},
+        activeTasksByAppId: {
+          'org.example.app': InstallTask(
+            id: 'task-installing',
+            appId: 'org.example.app',
+            appName: 'Example',
+            status: InstallStatus.installing,
+            createdAt: 1,
+          ),
+        },
+      );
+
+      final resolved = index.resolve(appId: 'org.example.app');
+
+      expect(resolved.buttonState, InstallButtonState.installing);
+      expect(resolved.isInstalling, isTrue);
+    });
   });
 }

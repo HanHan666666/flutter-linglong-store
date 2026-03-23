@@ -75,6 +75,7 @@ Future<void> handleAppCardPrimaryAction({
       }
       return;
     case InstallButtonState.installing:
+    case InstallButtonState.pending:
     case InstallButtonState.uninstall:
       return;
   }

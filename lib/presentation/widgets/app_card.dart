@@ -231,10 +231,8 @@ class _AppCardState extends State<AppCard> {
 
   Widget _buildPrimaryButton(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isLoading =
-        widget.isInstalling &&
-        (widget.buttonState == InstallButtonState.notInstalled ||
-            widget.buttonState == InstallButtonState.update);
+    final isLoading = widget.buttonState == InstallButtonState.installing;
+    final isPending = widget.buttonState == InstallButtonState.pending;
     final label = _resolveLabel(l10n, widget.buttonState, isLoading);
 
     if (widget.buttonState == InstallButtonState.open ||
@@ -261,7 +259,7 @@ class _AppCardState extends State<AppCard> {
     return SizedBox(
       height: 28,
       child: FilledButton(
-        onPressed: isLoading ? null : widget.onPrimaryPressed,
+        onPressed: isLoading || isPending ? null : widget.onPrimaryPressed,
         style: FilledButton.styleFrom(
           minimumSize: const Size(56, 28),
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -350,6 +348,7 @@ class _AppCardState extends State<AppCard> {
       InstallButtonState.installed => l10n?.open ?? '打开',
       InstallButtonState.open => l10n?.open ?? '打开',
       InstallButtonState.installing => l10n?.installing ?? '安装中',
+      InstallButtonState.pending => l10n?.waitingForInstall ?? '等待安装',
       InstallButtonState.uninstall => l10n?.uninstall ?? '卸载',
     };
   }

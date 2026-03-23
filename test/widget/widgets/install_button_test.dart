@@ -406,8 +406,6 @@ void main() {
 
     group('Disabled state', () {
       testWidgets('should be disabled when disabled is true', (tester) async {
-        var pressed = false;
-
         await tester.pumpWidget(
           MaterialApp(
             locale: const Locale('zh'),
@@ -417,7 +415,7 @@ void main() {
               body: InstallButton(
                 state: InstallButtonState.update,
                 disabled: true,
-                onPressed: () => pressed = true,
+                onPressed: () {},
               ),
             ),
           ),

@@ -43,11 +43,21 @@ class ApplicationCardStateIndex {
     final hasUpdate = updateAppIds.contains(appId) || hasVersionUpdate;
     final activeTask = activeTasksByAppId[appId];
     final isInstalling = activeTask != null;
+    final activeButtonState = switch (activeTask?.status) {
+      InstallStatus.pending => InstallButtonState.pending,
+      InstallStatus.downloading || InstallStatus.installing =>
+        InstallButtonState.installing,
+      _ => null,
+    };
 
     return ResolvedApplicationCardState(
-      buttonState: !isInstalled
-          ? InstallButtonState.notInstalled
-          : (hasUpdate ? InstallButtonState.update : InstallButtonState.open),
+      buttonState:
+          activeButtonState ??
+          (!isInstalled
+              ? InstallButtonState.notInstalled
+              : (hasUpdate
+                    ? InstallButtonState.update
+                    : InstallButtonState.open)),
       isInstalled: isInstalled,
       hasUpdate: hasUpdate,
       isInstalling: isInstalling,

@@ -971,6 +971,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     if (installTask != null) {
       switch (installTask.status) {
         case InstallStatus.pending:
+          return InstallButtonState.pending;
         case InstallStatus.downloading:
         case InstallStatus.installing:
           return InstallButtonState.installing;
@@ -1101,6 +1102,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         _openApp(app);
         break;
       case InstallButtonState.installing:
+      case InstallButtonState.pending:
         // 安装中，不做操作
         break;
       case InstallButtonState.uninstall:

@@ -1363,6 +1363,529 @@ as String?,
 
 
 /// @nodoc
+mixin _$AppCommentSearchBO {
+
+@JsonKey(name: 'appId') String get appId;
+/// Create a copy of AppCommentSearchBO
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AppCommentSearchBOCopyWith<AppCommentSearchBO> get copyWith => _$AppCommentSearchBOCopyWithImpl<AppCommentSearchBO>(this as AppCommentSearchBO, _$identity);
+
+  /// Serializes this AppCommentSearchBO to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppCommentSearchBO&&(identical(other.appId, appId) || other.appId == appId));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,appId);
+
+@override
+String toString() {
+  return 'AppCommentSearchBO(appId: $appId)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AppCommentSearchBOCopyWith<$Res>  {
+  factory $AppCommentSearchBOCopyWith(AppCommentSearchBO value, $Res Function(AppCommentSearchBO) _then) = _$AppCommentSearchBOCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'appId') String appId
+});
+
+
+
+
+}
+/// @nodoc
+class _$AppCommentSearchBOCopyWithImpl<$Res>
+    implements $AppCommentSearchBOCopyWith<$Res> {
+  _$AppCommentSearchBOCopyWithImpl(this._self, this._then);
+
+  final AppCommentSearchBO _self;
+  final $Res Function(AppCommentSearchBO) _then;
+
+/// Create a copy of AppCommentSearchBO
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? appId = null,}) {
+  return _then(_self.copyWith(
+appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [AppCommentSearchBO].
+extension AppCommentSearchBOPatterns on AppCommentSearchBO {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AppCommentSearchBO value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AppCommentSearchBO() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AppCommentSearchBO value)  $default,){
+final _that = this;
+switch (_that) {
+case _AppCommentSearchBO():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AppCommentSearchBO value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AppCommentSearchBO() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AppCommentSearchBO() when $default != null:
+return $default(_that.appId);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId)  $default,) {final _that = this;
+switch (_that) {
+case _AppCommentSearchBO():
+return $default(_that.appId);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'appId')  String appId)?  $default,) {final _that = this;
+switch (_that) {
+case _AppCommentSearchBO() when $default != null:
+return $default(_that.appId);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _AppCommentSearchBO implements AppCommentSearchBO {
+  const _AppCommentSearchBO({@JsonKey(name: 'appId') required this.appId});
+  factory _AppCommentSearchBO.fromJson(Map<String, dynamic> json) => _$AppCommentSearchBOFromJson(json);
+
+@override@JsonKey(name: 'appId') final  String appId;
+
+/// Create a copy of AppCommentSearchBO
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AppCommentSearchBOCopyWith<_AppCommentSearchBO> get copyWith => __$AppCommentSearchBOCopyWithImpl<_AppCommentSearchBO>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$AppCommentSearchBOToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppCommentSearchBO&&(identical(other.appId, appId) || other.appId == appId));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,appId);
+
+@override
+String toString() {
+  return 'AppCommentSearchBO(appId: $appId)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AppCommentSearchBOCopyWith<$Res> implements $AppCommentSearchBOCopyWith<$Res> {
+  factory _$AppCommentSearchBOCopyWith(_AppCommentSearchBO value, $Res Function(_AppCommentSearchBO) _then) = __$AppCommentSearchBOCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'appId') String appId
+});
+
+
+
+
+}
+/// @nodoc
+class __$AppCommentSearchBOCopyWithImpl<$Res>
+    implements _$AppCommentSearchBOCopyWith<$Res> {
+  __$AppCommentSearchBOCopyWithImpl(this._self, this._then);
+
+  final _AppCommentSearchBO _self;
+  final $Res Function(_AppCommentSearchBO) _then;
+
+/// Create a copy of AppCommentSearchBO
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? appId = null,}) {
+  return _then(_AppCommentSearchBO(
+appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$AppCommentSaveBO {
+
+@JsonKey(name: 'appId') String get appId;@JsonKey(name: 'remark') String get remark;@JsonKey(name: 'version') String? get version;@JsonKey(name: 'visit') String? get visit;
+/// Create a copy of AppCommentSaveBO
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AppCommentSaveBOCopyWith<AppCommentSaveBO> get copyWith => _$AppCommentSaveBOCopyWithImpl<AppCommentSaveBO>(this as AppCommentSaveBO, _$identity);
+
+  /// Serializes this AppCommentSaveBO to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppCommentSaveBO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.remark, remark) || other.remark == remark)&&(identical(other.version, version) || other.version == version)&&(identical(other.visit, visit) || other.visit == visit));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,appId,remark,version,visit);
+
+@override
+String toString() {
+  return 'AppCommentSaveBO(appId: $appId, remark: $remark, version: $version, visit: $visit)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AppCommentSaveBOCopyWith<$Res>  {
+  factory $AppCommentSaveBOCopyWith(AppCommentSaveBO value, $Res Function(AppCommentSaveBO) _then) = _$AppCommentSaveBOCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'appId') String appId,@JsonKey(name: 'remark') String remark,@JsonKey(name: 'version') String? version,@JsonKey(name: 'visit') String? visit
+});
+
+
+
+
+}
+/// @nodoc
+class _$AppCommentSaveBOCopyWithImpl<$Res>
+    implements $AppCommentSaveBOCopyWith<$Res> {
+  _$AppCommentSaveBOCopyWithImpl(this._self, this._then);
+
+  final AppCommentSaveBO _self;
+  final $Res Function(AppCommentSaveBO) _then;
+
+/// Create a copy of AppCommentSaveBO
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? remark = null,Object? version = freezed,Object? visit = freezed,}) {
+  return _then(_self.copyWith(
+appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
+as String,remark: null == remark ? _self.remark : remark // ignore: cast_nullable_to_non_nullable
+as String,version: freezed == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
+as String?,visit: freezed == visit ? _self.visit : visit // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [AppCommentSaveBO].
+extension AppCommentSaveBOPatterns on AppCommentSaveBO {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AppCommentSaveBO value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AppCommentSaveBO() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AppCommentSaveBO value)  $default,){
+final _that = this;
+switch (_that) {
+case _AppCommentSaveBO():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AppCommentSaveBO value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AppCommentSaveBO() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId, @JsonKey(name: 'remark')  String remark, @JsonKey(name: 'version')  String? version, @JsonKey(name: 'visit')  String? visit)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AppCommentSaveBO() when $default != null:
+return $default(_that.appId,_that.remark,_that.version,_that.visit);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId, @JsonKey(name: 'remark')  String remark, @JsonKey(name: 'version')  String? version, @JsonKey(name: 'visit')  String? visit)  $default,) {final _that = this;
+switch (_that) {
+case _AppCommentSaveBO():
+return $default(_that.appId,_that.remark,_that.version,_that.visit);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'appId')  String appId, @JsonKey(name: 'remark')  String remark, @JsonKey(name: 'version')  String? version, @JsonKey(name: 'visit')  String? visit)?  $default,) {final _that = this;
+switch (_that) {
+case _AppCommentSaveBO() when $default != null:
+return $default(_that.appId,_that.remark,_that.version,_that.visit);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _AppCommentSaveBO implements AppCommentSaveBO {
+  const _AppCommentSaveBO({@JsonKey(name: 'appId') required this.appId, @JsonKey(name: 'remark') required this.remark, @JsonKey(name: 'version') this.version, @JsonKey(name: 'visit') this.visit});
+  factory _AppCommentSaveBO.fromJson(Map<String, dynamic> json) => _$AppCommentSaveBOFromJson(json);
+
+@override@JsonKey(name: 'appId') final  String appId;
+@override@JsonKey(name: 'remark') final  String remark;
+@override@JsonKey(name: 'version') final  String? version;
+@override@JsonKey(name: 'visit') final  String? visit;
+
+/// Create a copy of AppCommentSaveBO
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AppCommentSaveBOCopyWith<_AppCommentSaveBO> get copyWith => __$AppCommentSaveBOCopyWithImpl<_AppCommentSaveBO>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$AppCommentSaveBOToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppCommentSaveBO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.remark, remark) || other.remark == remark)&&(identical(other.version, version) || other.version == version)&&(identical(other.visit, visit) || other.visit == visit));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,appId,remark,version,visit);
+
+@override
+String toString() {
+  return 'AppCommentSaveBO(appId: $appId, remark: $remark, version: $version, visit: $visit)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AppCommentSaveBOCopyWith<$Res> implements $AppCommentSaveBOCopyWith<$Res> {
+  factory _$AppCommentSaveBOCopyWith(_AppCommentSaveBO value, $Res Function(_AppCommentSaveBO) _then) = __$AppCommentSaveBOCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'appId') String appId,@JsonKey(name: 'remark') String remark,@JsonKey(name: 'version') String? version,@JsonKey(name: 'visit') String? visit
+});
+
+
+
+
+}
+/// @nodoc
+class __$AppCommentSaveBOCopyWithImpl<$Res>
+    implements _$AppCommentSaveBOCopyWith<$Res> {
+  __$AppCommentSaveBOCopyWithImpl(this._self, this._then);
+
+  final _AppCommentSaveBO _self;
+  final $Res Function(_AppCommentSaveBO) _then;
+
+/// Create a copy of AppCommentSaveBO
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? appId = null,Object? remark = null,Object? version = freezed,Object? visit = freezed,}) {
+  return _then(_AppCommentSaveBO(
+appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
+as String,remark: null == remark ? _self.remark : remark // ignore: cast_nullable_to_non_nullable
+as String,version: freezed == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
+as String?,visit: freezed == visit ? _self.visit : visit // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$AppCheckVersionBO {
 
  String get appId; String get arch; String get version;
@@ -2137,6 +2660,293 @@ class __$AppTagDTOCopyWithImpl<$Res>
   return _then(_AppTagDTO(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,language: freezed == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$AppCommentDTO {
+
+@JsonKey(name: 'id') String get id;@JsonKey(name: 'appId') String get appId;@JsonKey(name: 'version') String? get version;@JsonKey(name: 'remark') String get remark;@JsonKey(name: 'visit') String? get visit;@JsonKey(name: 'clientIp') String? get clientIp;@JsonKey(name: 'agreeNum') int get agreeNum;@JsonKey(name: 'disagreeNum') int get disagreeNum;@JsonKey(name: 'createTime') String? get createTime;@JsonKey(name: 'updateTime') String? get updateTime;@JsonKey(name: 'isDelete') String? get isDelete;
+/// Create a copy of AppCommentDTO
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AppCommentDTOCopyWith<AppCommentDTO> get copyWith => _$AppCommentDTOCopyWithImpl<AppCommentDTO>(this as AppCommentDTO, _$identity);
+
+  /// Serializes this AppCommentDTO to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppCommentDTO&&(identical(other.id, id) || other.id == id)&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.version, version) || other.version == version)&&(identical(other.remark, remark) || other.remark == remark)&&(identical(other.visit, visit) || other.visit == visit)&&(identical(other.clientIp, clientIp) || other.clientIp == clientIp)&&(identical(other.agreeNum, agreeNum) || other.agreeNum == agreeNum)&&(identical(other.disagreeNum, disagreeNum) || other.disagreeNum == disagreeNum)&&(identical(other.createTime, createTime) || other.createTime == createTime)&&(identical(other.updateTime, updateTime) || other.updateTime == updateTime)&&(identical(other.isDelete, isDelete) || other.isDelete == isDelete));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,appId,version,remark,visit,clientIp,agreeNum,disagreeNum,createTime,updateTime,isDelete);
+
+@override
+String toString() {
+  return 'AppCommentDTO(id: $id, appId: $appId, version: $version, remark: $remark, visit: $visit, clientIp: $clientIp, agreeNum: $agreeNum, disagreeNum: $disagreeNum, createTime: $createTime, updateTime: $updateTime, isDelete: $isDelete)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AppCommentDTOCopyWith<$Res>  {
+  factory $AppCommentDTOCopyWith(AppCommentDTO value, $Res Function(AppCommentDTO) _then) = _$AppCommentDTOCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'id') String id,@JsonKey(name: 'appId') String appId,@JsonKey(name: 'version') String? version,@JsonKey(name: 'remark') String remark,@JsonKey(name: 'visit') String? visit,@JsonKey(name: 'clientIp') String? clientIp,@JsonKey(name: 'agreeNum') int agreeNum,@JsonKey(name: 'disagreeNum') int disagreeNum,@JsonKey(name: 'createTime') String? createTime,@JsonKey(name: 'updateTime') String? updateTime,@JsonKey(name: 'isDelete') String? isDelete
+});
+
+
+
+
+}
+/// @nodoc
+class _$AppCommentDTOCopyWithImpl<$Res>
+    implements $AppCommentDTOCopyWith<$Res> {
+  _$AppCommentDTOCopyWithImpl(this._self, this._then);
+
+  final AppCommentDTO _self;
+  final $Res Function(AppCommentDTO) _then;
+
+/// Create a copy of AppCommentDTO
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? appId = null,Object? version = freezed,Object? remark = null,Object? visit = freezed,Object? clientIp = freezed,Object? agreeNum = null,Object? disagreeNum = null,Object? createTime = freezed,Object? updateTime = freezed,Object? isDelete = freezed,}) {
+  return _then(_self.copyWith(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
+as String,version: freezed == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
+as String?,remark: null == remark ? _self.remark : remark // ignore: cast_nullable_to_non_nullable
+as String,visit: freezed == visit ? _self.visit : visit // ignore: cast_nullable_to_non_nullable
+as String?,clientIp: freezed == clientIp ? _self.clientIp : clientIp // ignore: cast_nullable_to_non_nullable
+as String?,agreeNum: null == agreeNum ? _self.agreeNum : agreeNum // ignore: cast_nullable_to_non_nullable
+as int,disagreeNum: null == disagreeNum ? _self.disagreeNum : disagreeNum // ignore: cast_nullable_to_non_nullable
+as int,createTime: freezed == createTime ? _self.createTime : createTime // ignore: cast_nullable_to_non_nullable
+as String?,updateTime: freezed == updateTime ? _self.updateTime : updateTime // ignore: cast_nullable_to_non_nullable
+as String?,isDelete: freezed == isDelete ? _self.isDelete : isDelete // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [AppCommentDTO].
+extension AppCommentDTOPatterns on AppCommentDTO {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AppCommentDTO value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AppCommentDTO() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AppCommentDTO value)  $default,){
+final _that = this;
+switch (_that) {
+case _AppCommentDTO():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AppCommentDTO value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AppCommentDTO() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'appId')  String appId, @JsonKey(name: 'version')  String? version, @JsonKey(name: 'remark')  String remark, @JsonKey(name: 'visit')  String? visit, @JsonKey(name: 'clientIp')  String? clientIp, @JsonKey(name: 'agreeNum')  int agreeNum, @JsonKey(name: 'disagreeNum')  int disagreeNum, @JsonKey(name: 'createTime')  String? createTime, @JsonKey(name: 'updateTime')  String? updateTime, @JsonKey(name: 'isDelete')  String? isDelete)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AppCommentDTO() when $default != null:
+return $default(_that.id,_that.appId,_that.version,_that.remark,_that.visit,_that.clientIp,_that.agreeNum,_that.disagreeNum,_that.createTime,_that.updateTime,_that.isDelete);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'appId')  String appId, @JsonKey(name: 'version')  String? version, @JsonKey(name: 'remark')  String remark, @JsonKey(name: 'visit')  String? visit, @JsonKey(name: 'clientIp')  String? clientIp, @JsonKey(name: 'agreeNum')  int agreeNum, @JsonKey(name: 'disagreeNum')  int disagreeNum, @JsonKey(name: 'createTime')  String? createTime, @JsonKey(name: 'updateTime')  String? updateTime, @JsonKey(name: 'isDelete')  String? isDelete)  $default,) {final _that = this;
+switch (_that) {
+case _AppCommentDTO():
+return $default(_that.id,_that.appId,_that.version,_that.remark,_that.visit,_that.clientIp,_that.agreeNum,_that.disagreeNum,_that.createTime,_that.updateTime,_that.isDelete);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'appId')  String appId, @JsonKey(name: 'version')  String? version, @JsonKey(name: 'remark')  String remark, @JsonKey(name: 'visit')  String? visit, @JsonKey(name: 'clientIp')  String? clientIp, @JsonKey(name: 'agreeNum')  int agreeNum, @JsonKey(name: 'disagreeNum')  int disagreeNum, @JsonKey(name: 'createTime')  String? createTime, @JsonKey(name: 'updateTime')  String? updateTime, @JsonKey(name: 'isDelete')  String? isDelete)?  $default,) {final _that = this;
+switch (_that) {
+case _AppCommentDTO() when $default != null:
+return $default(_that.id,_that.appId,_that.version,_that.remark,_that.visit,_that.clientIp,_that.agreeNum,_that.disagreeNum,_that.createTime,_that.updateTime,_that.isDelete);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _AppCommentDTO implements AppCommentDTO {
+  const _AppCommentDTO({@JsonKey(name: 'id') required this.id, @JsonKey(name: 'appId') required this.appId, @JsonKey(name: 'version') this.version, @JsonKey(name: 'remark') required this.remark, @JsonKey(name: 'visit') this.visit, @JsonKey(name: 'clientIp') this.clientIp, @JsonKey(name: 'agreeNum') this.agreeNum = 0, @JsonKey(name: 'disagreeNum') this.disagreeNum = 0, @JsonKey(name: 'createTime') this.createTime, @JsonKey(name: 'updateTime') this.updateTime, @JsonKey(name: 'isDelete') this.isDelete});
+  factory _AppCommentDTO.fromJson(Map<String, dynamic> json) => _$AppCommentDTOFromJson(json);
+
+@override@JsonKey(name: 'id') final  String id;
+@override@JsonKey(name: 'appId') final  String appId;
+@override@JsonKey(name: 'version') final  String? version;
+@override@JsonKey(name: 'remark') final  String remark;
+@override@JsonKey(name: 'visit') final  String? visit;
+@override@JsonKey(name: 'clientIp') final  String? clientIp;
+@override@JsonKey(name: 'agreeNum') final  int agreeNum;
+@override@JsonKey(name: 'disagreeNum') final  int disagreeNum;
+@override@JsonKey(name: 'createTime') final  String? createTime;
+@override@JsonKey(name: 'updateTime') final  String? updateTime;
+@override@JsonKey(name: 'isDelete') final  String? isDelete;
+
+/// Create a copy of AppCommentDTO
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AppCommentDTOCopyWith<_AppCommentDTO> get copyWith => __$AppCommentDTOCopyWithImpl<_AppCommentDTO>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$AppCommentDTOToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppCommentDTO&&(identical(other.id, id) || other.id == id)&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.version, version) || other.version == version)&&(identical(other.remark, remark) || other.remark == remark)&&(identical(other.visit, visit) || other.visit == visit)&&(identical(other.clientIp, clientIp) || other.clientIp == clientIp)&&(identical(other.agreeNum, agreeNum) || other.agreeNum == agreeNum)&&(identical(other.disagreeNum, disagreeNum) || other.disagreeNum == disagreeNum)&&(identical(other.createTime, createTime) || other.createTime == createTime)&&(identical(other.updateTime, updateTime) || other.updateTime == updateTime)&&(identical(other.isDelete, isDelete) || other.isDelete == isDelete));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,appId,version,remark,visit,clientIp,agreeNum,disagreeNum,createTime,updateTime,isDelete);
+
+@override
+String toString() {
+  return 'AppCommentDTO(id: $id, appId: $appId, version: $version, remark: $remark, visit: $visit, clientIp: $clientIp, agreeNum: $agreeNum, disagreeNum: $disagreeNum, createTime: $createTime, updateTime: $updateTime, isDelete: $isDelete)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AppCommentDTOCopyWith<$Res> implements $AppCommentDTOCopyWith<$Res> {
+  factory _$AppCommentDTOCopyWith(_AppCommentDTO value, $Res Function(_AppCommentDTO) _then) = __$AppCommentDTOCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'id') String id,@JsonKey(name: 'appId') String appId,@JsonKey(name: 'version') String? version,@JsonKey(name: 'remark') String remark,@JsonKey(name: 'visit') String? visit,@JsonKey(name: 'clientIp') String? clientIp,@JsonKey(name: 'agreeNum') int agreeNum,@JsonKey(name: 'disagreeNum') int disagreeNum,@JsonKey(name: 'createTime') String? createTime,@JsonKey(name: 'updateTime') String? updateTime,@JsonKey(name: 'isDelete') String? isDelete
+});
+
+
+
+
+}
+/// @nodoc
+class __$AppCommentDTOCopyWithImpl<$Res>
+    implements _$AppCommentDTOCopyWith<$Res> {
+  __$AppCommentDTOCopyWithImpl(this._self, this._then);
+
+  final _AppCommentDTO _self;
+  final $Res Function(_AppCommentDTO) _then;
+
+/// Create a copy of AppCommentDTO
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? appId = null,Object? version = freezed,Object? remark = null,Object? visit = freezed,Object? clientIp = freezed,Object? agreeNum = null,Object? disagreeNum = null,Object? createTime = freezed,Object? updateTime = freezed,Object? isDelete = freezed,}) {
+  return _then(_AppCommentDTO(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
+as String,version: freezed == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
+as String?,remark: null == remark ? _self.remark : remark // ignore: cast_nullable_to_non_nullable
+as String,visit: freezed == visit ? _self.visit : visit // ignore: cast_nullable_to_non_nullable
+as String?,clientIp: freezed == clientIp ? _self.clientIp : clientIp // ignore: cast_nullable_to_non_nullable
+as String?,agreeNum: null == agreeNum ? _self.agreeNum : agreeNum // ignore: cast_nullable_to_non_nullable
+as int,disagreeNum: null == disagreeNum ? _self.disagreeNum : disagreeNum // ignore: cast_nullable_to_non_nullable
+as int,createTime: freezed == createTime ? _self.createTime : createTime // ignore: cast_nullable_to_non_nullable
+as String?,updateTime: freezed == updateTime ? _self.updateTime : updateTime // ignore: cast_nullable_to_non_nullable
+as String?,isDelete: freezed == isDelete ? _self.isDelete : isDelete // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -3297,6 +4107,538 @@ code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,data: null == data ? _self._data : data // ignore: cast_nullable_to_non_nullable
 as List<AppDetailDTO>,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$AppCommentListResponse {
+
+ int get code; String? get message; List<AppCommentDTO> get data;
+/// Create a copy of AppCommentListResponse
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AppCommentListResponseCopyWith<AppCommentListResponse> get copyWith => _$AppCommentListResponseCopyWithImpl<AppCommentListResponse>(this as AppCommentListResponse, _$identity);
+
+  /// Serializes this AppCommentListResponse to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppCommentListResponse&&(identical(other.code, code) || other.code == code)&&(identical(other.message, message) || other.message == message)&&const DeepCollectionEquality().equals(other.data, data));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,code,message,const DeepCollectionEquality().hash(data));
+
+@override
+String toString() {
+  return 'AppCommentListResponse(code: $code, message: $message, data: $data)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AppCommentListResponseCopyWith<$Res>  {
+  factory $AppCommentListResponseCopyWith(AppCommentListResponse value, $Res Function(AppCommentListResponse) _then) = _$AppCommentListResponseCopyWithImpl;
+@useResult
+$Res call({
+ int code, String? message, List<AppCommentDTO> data
+});
+
+
+
+
+}
+/// @nodoc
+class _$AppCommentListResponseCopyWithImpl<$Res>
+    implements $AppCommentListResponseCopyWith<$Res> {
+  _$AppCommentListResponseCopyWithImpl(this._self, this._then);
+
+  final AppCommentListResponse _self;
+  final $Res Function(AppCommentListResponse) _then;
+
+/// Create a copy of AppCommentListResponse
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = null,}) {
+  return _then(_self.copyWith(
+code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String?,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as List<AppCommentDTO>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [AppCommentListResponse].
+extension AppCommentListResponsePatterns on AppCommentListResponse {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AppCommentListResponse value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AppCommentListResponse() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AppCommentListResponse value)  $default,){
+final _that = this;
+switch (_that) {
+case _AppCommentListResponse():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AppCommentListResponse value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AppCommentListResponse() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int code,  String? message,  List<AppCommentDTO> data)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AppCommentListResponse() when $default != null:
+return $default(_that.code,_that.message,_that.data);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int code,  String? message,  List<AppCommentDTO> data)  $default,) {final _that = this;
+switch (_that) {
+case _AppCommentListResponse():
+return $default(_that.code,_that.message,_that.data);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int code,  String? message,  List<AppCommentDTO> data)?  $default,) {final _that = this;
+switch (_that) {
+case _AppCommentListResponse() when $default != null:
+return $default(_that.code,_that.message,_that.data);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _AppCommentListResponse implements AppCommentListResponse {
+  const _AppCommentListResponse({required this.code, this.message, final  List<AppCommentDTO> data = const []}): _data = data;
+  factory _AppCommentListResponse.fromJson(Map<String, dynamic> json) => _$AppCommentListResponseFromJson(json);
+
+@override final  int code;
+@override final  String? message;
+ final  List<AppCommentDTO> _data;
+@override@JsonKey() List<AppCommentDTO> get data {
+  if (_data is EqualUnmodifiableListView) return _data;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_data);
+}
+
+
+/// Create a copy of AppCommentListResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AppCommentListResponseCopyWith<_AppCommentListResponse> get copyWith => __$AppCommentListResponseCopyWithImpl<_AppCommentListResponse>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$AppCommentListResponseToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppCommentListResponse&&(identical(other.code, code) || other.code == code)&&(identical(other.message, message) || other.message == message)&&const DeepCollectionEquality().equals(other._data, _data));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,code,message,const DeepCollectionEquality().hash(_data));
+
+@override
+String toString() {
+  return 'AppCommentListResponse(code: $code, message: $message, data: $data)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AppCommentListResponseCopyWith<$Res> implements $AppCommentListResponseCopyWith<$Res> {
+  factory _$AppCommentListResponseCopyWith(_AppCommentListResponse value, $Res Function(_AppCommentListResponse) _then) = __$AppCommentListResponseCopyWithImpl;
+@override @useResult
+$Res call({
+ int code, String? message, List<AppCommentDTO> data
+});
+
+
+
+
+}
+/// @nodoc
+class __$AppCommentListResponseCopyWithImpl<$Res>
+    implements _$AppCommentListResponseCopyWith<$Res> {
+  __$AppCommentListResponseCopyWithImpl(this._self, this._then);
+
+  final _AppCommentListResponse _self;
+  final $Res Function(_AppCommentListResponse) _then;
+
+/// Create a copy of AppCommentListResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? message = freezed,Object? data = null,}) {
+  return _then(_AppCommentListResponse(
+code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String?,data: null == data ? _self._data : data // ignore: cast_nullable_to_non_nullable
+as List<AppCommentDTO>,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$BooleanResponse {
+
+ int get code; String? get message; bool? get data;
+/// Create a copy of BooleanResponse
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BooleanResponseCopyWith<BooleanResponse> get copyWith => _$BooleanResponseCopyWithImpl<BooleanResponse>(this as BooleanResponse, _$identity);
+
+  /// Serializes this BooleanResponse to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BooleanResponse&&(identical(other.code, code) || other.code == code)&&(identical(other.message, message) || other.message == message)&&(identical(other.data, data) || other.data == data));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,code,message,data);
+
+@override
+String toString() {
+  return 'BooleanResponse(code: $code, message: $message, data: $data)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $BooleanResponseCopyWith<$Res>  {
+  factory $BooleanResponseCopyWith(BooleanResponse value, $Res Function(BooleanResponse) _then) = _$BooleanResponseCopyWithImpl;
+@useResult
+$Res call({
+ int code, String? message, bool? data
+});
+
+
+
+
+}
+/// @nodoc
+class _$BooleanResponseCopyWithImpl<$Res>
+    implements $BooleanResponseCopyWith<$Res> {
+  _$BooleanResponseCopyWithImpl(this._self, this._then);
+
+  final BooleanResponse _self;
+  final $Res Function(BooleanResponse) _then;
+
+/// Create a copy of BooleanResponse
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = freezed,}) {
+  return _then(_self.copyWith(
+code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as bool?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [BooleanResponse].
+extension BooleanResponsePatterns on BooleanResponse {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _BooleanResponse value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _BooleanResponse() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _BooleanResponse value)  $default,){
+final _that = this;
+switch (_that) {
+case _BooleanResponse():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _BooleanResponse value)?  $default,){
+final _that = this;
+switch (_that) {
+case _BooleanResponse() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int code,  String? message,  bool? data)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _BooleanResponse() when $default != null:
+return $default(_that.code,_that.message,_that.data);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int code,  String? message,  bool? data)  $default,) {final _that = this;
+switch (_that) {
+case _BooleanResponse():
+return $default(_that.code,_that.message,_that.data);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int code,  String? message,  bool? data)?  $default,) {final _that = this;
+switch (_that) {
+case _BooleanResponse() when $default != null:
+return $default(_that.code,_that.message,_that.data);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _BooleanResponse implements BooleanResponse {
+  const _BooleanResponse({required this.code, this.message, this.data});
+  factory _BooleanResponse.fromJson(Map<String, dynamic> json) => _$BooleanResponseFromJson(json);
+
+@override final  int code;
+@override final  String? message;
+@override final  bool? data;
+
+/// Create a copy of BooleanResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$BooleanResponseCopyWith<_BooleanResponse> get copyWith => __$BooleanResponseCopyWithImpl<_BooleanResponse>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$BooleanResponseToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BooleanResponse&&(identical(other.code, code) || other.code == code)&&(identical(other.message, message) || other.message == message)&&(identical(other.data, data) || other.data == data));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,code,message,data);
+
+@override
+String toString() {
+  return 'BooleanResponse(code: $code, message: $message, data: $data)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$BooleanResponseCopyWith<$Res> implements $BooleanResponseCopyWith<$Res> {
+  factory _$BooleanResponseCopyWith(_BooleanResponse value, $Res Function(_BooleanResponse) _then) = __$BooleanResponseCopyWithImpl;
+@override @useResult
+$Res call({
+ int code, String? message, bool? data
+});
+
+
+
+
+}
+/// @nodoc
+class __$BooleanResponseCopyWithImpl<$Res>
+    implements _$BooleanResponseCopyWith<$Res> {
+  __$BooleanResponseCopyWithImpl(this._self, this._then);
+
+  final _BooleanResponse _self;
+  final $Res Function(_BooleanResponse) _then;
+
+/// Create a copy of BooleanResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? message = freezed,Object? data = freezed,}) {
+  return _then(_BooleanResponse(
+code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as bool?,
   ));
 }
 

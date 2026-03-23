@@ -96,6 +96,28 @@ Map<String, dynamic> _$AppDetailSearchBOToJson(_AppDetailSearchBO instance) =>
       'lang': instance.lang,
     };
 
+_AppCommentSearchBO _$AppCommentSearchBOFromJson(Map<String, dynamic> json) =>
+    _AppCommentSearchBO(appId: json['appId'] as String);
+
+Map<String, dynamic> _$AppCommentSearchBOToJson(_AppCommentSearchBO instance) =>
+    <String, dynamic>{'appId': instance.appId};
+
+_AppCommentSaveBO _$AppCommentSaveBOFromJson(Map<String, dynamic> json) =>
+    _AppCommentSaveBO(
+      appId: json['appId'] as String,
+      remark: json['remark'] as String,
+      version: json['version'] as String?,
+      visit: json['visit'] as String?,
+    );
+
+Map<String, dynamic> _$AppCommentSaveBOToJson(_AppCommentSaveBO instance) =>
+    <String, dynamic>{
+      'appId': instance.appId,
+      'remark': instance.remark,
+      'version': instance.version,
+      'visit': instance.visit,
+    };
+
 _AppCheckVersionBO _$AppCheckVersionBOFromJson(Map<String, dynamic> json) =>
     _AppCheckVersionBO(
       appId: json['appId'] as String,
@@ -127,6 +149,36 @@ _AppTagDTO _$AppTagDTOFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$AppTagDTOToJson(_AppTagDTO instance) =>
     <String, dynamic>{'name': instance.name, 'lan': instance.language};
+
+_AppCommentDTO _$AppCommentDTOFromJson(Map<String, dynamic> json) =>
+    _AppCommentDTO(
+      id: json['id'] as String,
+      appId: json['appId'] as String,
+      version: json['version'] as String?,
+      remark: json['remark'] as String,
+      visit: json['visit'] as String?,
+      clientIp: json['clientIp'] as String?,
+      agreeNum: (json['agreeNum'] as num?)?.toInt() ?? 0,
+      disagreeNum: (json['disagreeNum'] as num?)?.toInt() ?? 0,
+      createTime: json['createTime'] as String?,
+      updateTime: json['updateTime'] as String?,
+      isDelete: json['isDelete'] as String?,
+    );
+
+Map<String, dynamic> _$AppCommentDTOToJson(_AppCommentDTO instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'appId': instance.appId,
+      'version': instance.version,
+      'remark': instance.remark,
+      'visit': instance.visit,
+      'clientIp': instance.clientIp,
+      'agreeNum': instance.agreeNum,
+      'disagreeNum': instance.disagreeNum,
+      'createTime': instance.createTime,
+      'updateTime': instance.updateTime,
+      'isDelete': instance.isDelete,
+    };
 
 _AppDetailDTO _$AppDetailDTOFromJson(Map<String, dynamic> json) =>
     _AppDetailDTO(
@@ -244,6 +296,40 @@ Map<String, dynamic> _$AppDetailListResponseToJson(
   'message': instance.message,
   'data': instance.data,
 };
+
+_AppCommentListResponse _$AppCommentListResponseFromJson(
+  Map<String, dynamic> json,
+) => _AppCommentListResponse(
+  code: (json['code'] as num).toInt(),
+  message: json['message'] as String?,
+  data:
+      (json['data'] as List<dynamic>?)
+          ?.map((e) => AppCommentDTO.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
+);
+
+Map<String, dynamic> _$AppCommentListResponseToJson(
+  _AppCommentListResponse instance,
+) => <String, dynamic>{
+  'code': instance.code,
+  'message': instance.message,
+  'data': instance.data,
+};
+
+_BooleanResponse _$BooleanResponseFromJson(Map<String, dynamic> json) =>
+    _BooleanResponse(
+      code: (json['code'] as num).toInt(),
+      message: json['message'] as String?,
+      data: json['data'] as bool?,
+    );
+
+Map<String, dynamic> _$BooleanResponseToJson(_BooleanResponse instance) =>
+    <String, dynamic>{
+      'code': instance.code,
+      'message': instance.message,
+      'data': instance.data,
+    };
 
 _AppListItemDTO _$AppListItemDTOFromJson(Map<String, dynamic> json) =>
     _AppListItemDTO(

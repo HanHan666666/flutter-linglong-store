@@ -866,6 +866,72 @@ abstract class AppLocalizations {
   /// **'快捷方式已创建'**
   String get shortcutCreated;
 
+  /// No description provided for @appComments.
+  ///
+  /// In zh, this message translates to:
+  /// **'评论区'**
+  String get appComments;
+
+  /// No description provided for @appCommentsEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有评论，来写第一条吧'**
+  String get appCommentsEmpty;
+
+  /// No description provided for @commentInputHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'说说这个应用的使用体验'**
+  String get commentInputHint;
+
+  /// No description provided for @submitComment.
+  ///
+  /// In zh, this message translates to:
+  /// **'发表评论'**
+  String get submitComment;
+
+  /// No description provided for @commentVersionLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'关联版本'**
+  String get commentVersionLabel;
+
+  /// No description provided for @anonymousComment.
+  ///
+  /// In zh, this message translates to:
+  /// **'匿名访客'**
+  String get anonymousComment;
+
+  /// No description provided for @commentHelpful.
+  ///
+  /// In zh, this message translates to:
+  /// **'有帮助'**
+  String get commentHelpful;
+
+  /// No description provided for @commentNotHelpful.
+  ///
+  /// In zh, this message translates to:
+  /// **'没帮助'**
+  String get commentNotHelpful;
+
+  /// No description provided for @commentAnonymousHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'匿名评论，按最新时间排序展示'**
+  String get commentAnonymousHint;
+
+  /// No description provided for @commentSubmitSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'评论已提交'**
+  String get commentSubmitSuccess;
+
+  /// No description provided for @commentSubmitFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'评论提交失败: {error}'**
+  String commentSubmitFailed(String error);
+
   /// No description provided for @shortcutCreateFailed.
   ///
   /// In zh, this message translates to:

@@ -26,6 +26,16 @@ abstract class AppRepository {
   /// 获取应用详情（含截图）
   Future<AppDetailDTO> getAppDetail(String appId, {String? arch});
 
+  /// 获取应用评论列表
+  Future<List<AppCommentDTO>> getAppComments(String appId);
+
+  /// 提交应用评论
+  Future<bool> saveAppComment({
+    required String appId,
+    required String remark,
+    String? version,
+  });
+
   /// 获取应用历史版本列表
   Future<List<AppVersionDTO>> getVersions(
     String appId, {

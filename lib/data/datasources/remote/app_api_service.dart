@@ -59,6 +59,20 @@ abstract class AppApiService {
     @Body() List<AppDetailSearchBO> request,
   );
 
+  /// 获取应用评论列表
+  /// POST /app/getAppCommentList
+  @POST('/app/getAppCommentList')
+  Future<HttpResponse<AppCommentListResponse>> getAppCommentList(
+    @Body() AppCommentSearchBO request,
+  );
+
+  /// 提交应用评论
+  /// POST /app/saveAppComment
+  @POST('/app/saveAppComment')
+  Future<HttpResponse<BooleanResponse>> saveAppComment(
+    @Body() AppCommentSaveBO request,
+  );
+
   // ============== 轮播图/推荐接口 ==============
 
   /// 轮播图列表

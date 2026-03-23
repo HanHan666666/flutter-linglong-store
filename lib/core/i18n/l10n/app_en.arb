@@ -201,6 +201,24 @@
   "skipCheck": "Skip Check",
   "loadFailed": "Load Failed",
   "shortcutCreated": "Shortcut Created",
+  "appComments": "Comments",
+  "appCommentsEmpty": "No comments yet. Be the first to post one.",
+  "commentInputHint": "Share your experience with this app",
+  "submitComment": "Post Comment",
+  "commentVersionLabel": "Version",
+  "anonymousComment": "Anonymous User",
+  "commentHelpful": "Helpful",
+  "commentNotHelpful": "Not Helpful",
+  "commentAnonymousHint": "Anonymous comments are shown in reverse chronological order",
+  "commentSubmitSuccess": "Comment submitted",
+  "commentSubmitFailed": "Failed to submit comment: {error}",
+  "@commentSubmitFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "shortcutCreateFailed": "Creation Failed: {error}",
   "@shortcutCreateFailed": {
     "placeholders": {

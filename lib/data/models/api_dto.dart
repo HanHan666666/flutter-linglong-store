@@ -166,6 +166,31 @@ sealed class AppDetailSearchBO with _$AppDetailSearchBO {
       _$AppDetailSearchBOFromJson(json);
 }
 
+/// 应用评论查询参数
+@freezed
+sealed class AppCommentSearchBO with _$AppCommentSearchBO {
+  const factory AppCommentSearchBO({
+    @JsonKey(name: 'appId') required String appId,
+  }) = _AppCommentSearchBO;
+
+  factory AppCommentSearchBO.fromJson(Map<String, dynamic> json) =>
+      _$AppCommentSearchBOFromJson(json);
+}
+
+/// 应用评论保存参数
+@freezed
+sealed class AppCommentSaveBO with _$AppCommentSaveBO {
+  const factory AppCommentSaveBO({
+    @JsonKey(name: 'appId') required String appId,
+    @JsonKey(name: 'remark') required String remark,
+    @JsonKey(name: 'version') String? version,
+    @JsonKey(name: 'visit') String? visit,
+  }) = _AppCommentSaveBO;
+
+  factory AppCommentSaveBO.fromJson(Map<String, dynamic> json) =>
+      _$AppCommentSaveBOFromJson(json);
+}
+
 /// 检查更新请求
 @freezed
 sealed class AppCheckVersionBO with _$AppCheckVersionBO {
@@ -201,6 +226,27 @@ sealed class AppTagDTO with _$AppTagDTO {
 
   factory AppTagDTO.fromJson(Map<String, dynamic> json) =>
       _$AppTagDTOFromJson(json);
+}
+
+/// 应用评论 DTO
+@freezed
+sealed class AppCommentDTO with _$AppCommentDTO {
+  const factory AppCommentDTO({
+    @JsonKey(name: 'id') required String id,
+    @JsonKey(name: 'appId') required String appId,
+    @JsonKey(name: 'version') String? version,
+    @JsonKey(name: 'remark') required String remark,
+    @JsonKey(name: 'visit') String? visit,
+    @JsonKey(name: 'clientIp') String? clientIp,
+    @JsonKey(name: 'agreeNum') @Default(0) int agreeNum,
+    @JsonKey(name: 'disagreeNum') @Default(0) int disagreeNum,
+    @JsonKey(name: 'createTime') String? createTime,
+    @JsonKey(name: 'updateTime') String? updateTime,
+    @JsonKey(name: 'isDelete') String? isDelete,
+  }) = _AppCommentDTO;
+
+  factory AppCommentDTO.fromJson(Map<String, dynamic> json) =>
+      _$AppCommentDTOFromJson(json);
 }
 
 /// 应用详情 DTO
@@ -284,6 +330,32 @@ sealed class AppDetailListResponse with _$AppDetailListResponse {
 
   factory AppDetailListResponse.fromJson(Map<String, dynamic> json) =>
       _$AppDetailListResponseFromJson(json);
+}
+
+/// 应用评论列表响应
+@freezed
+sealed class AppCommentListResponse with _$AppCommentListResponse {
+  const factory AppCommentListResponse({
+    required int code,
+    String? message,
+    @Default([]) List<AppCommentDTO> data,
+  }) = _AppCommentListResponse;
+
+  factory AppCommentListResponse.fromJson(Map<String, dynamic> json) =>
+      _$AppCommentListResponseFromJson(json);
+}
+
+/// 通用布尔结果响应
+@freezed
+sealed class BooleanResponse with _$BooleanResponse {
+  const factory BooleanResponse({
+    required int code,
+    String? message,
+    bool? data,
+  }) = _BooleanResponse;
+
+  factory BooleanResponse.fromJson(Map<String, dynamic> json) =>
+      _$BooleanResponseFromJson(json);
 }
 
 // ============== 应用列表相关 ==============

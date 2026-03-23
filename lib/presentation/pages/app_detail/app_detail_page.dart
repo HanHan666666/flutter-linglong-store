@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../application/providers/app_uninstall_provider.dart';
+import '../../../application/providers/installed_apps_provider.dart';
+import '../../../application/providers/network_speed_provider.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/utils/version_compare.dart';
 import '../../../domain/models/installed_app.dart';
@@ -16,9 +19,6 @@ import '../../widgets/app_detail_info_section.dart';
 import '../../widgets/install_button.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../../core/di/providers.dart';
-import '../../../application/providers/installed_apps_provider.dart';
-import '../../../application/providers/network_speed_provider.dart';
-import '../../../application/providers/running_process_provider.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/utils/format_utils.dart';
 import '../../../core/config/theme.dart';
@@ -1198,161 +1198,15 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         );
   }
 
-  /// 显示卸载确认对话框（PC-native 风格）
+  /// 显示卸载确认对话框
   ///
-  /// 若应用正在运行中，会先弹出「强制关闭并卸载」警告；
-  /// 否则显示常规 PC-native 卸载确认对话框。
+  /// 使用统一的卸载服务处理所有逻辑：
+  /// - 运行中检测
+  /// - 确认弹窗
+  /// - kill 进程
+  /// - 执行卸载
   Future<void> _showUninstallDialog(InstalledApp app) async {
-    // 检查应用是否正在运行
-    final runningApps = ref.read(runningAppsListProvider);
-    final runningInstances = runningApps
-        .where((r) => r.appId == app.appId)
-        .toList();
-
-    if (runningInstances.isNotEmpty) {
-      // 应用运行中，显示强制关闭确认弹窗
-      final confirmed = await ConfirmDialog.showUninstallRunning(
-        context,
-        appName: app.name,
-      );
-      if (confirmed != true || !mounted) return;
-      // 先强制关闭所有运行实例
-      for (final running in runningInstances) {
-        await ref.read(runningProcessProvider.notifier).killApp(running);
-      }
-      _uninstallApp(app);
-      return;
-    }
-
-    // 正常卸载：显示 PC-native 风格确认对话框
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (ctx) {
-        final colorScheme = Theme.of(ctx).colorScheme;
-        final textTheme = Theme.of(ctx).textTheme;
-
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 警告图标 + 标题行
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.delete_outline_rounded,
-                        color: colorScheme.error,
-                        size: 28,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        AppLocalizations.of(context)?.uninstallApp ?? '卸载应用',
-                        style: textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // 描述信息
-                  RichText(
-                    text: TextSpan(
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        height: 1.5,
-                      ),
-                      children: [
-                        TextSpan(
-                          text:
-                              AppLocalizations.of(
-                                context,
-                              )?.uninstallConfirmMessage(app.name) ??
-                              '确定要卸载 ${app.name} 吗？\n卸载后应用数据将被删除，此操作不可恢复。',
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // 操作按钮行，取消在左，危险卸载按钮在右
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: Text(
-                          AppLocalizations.of(context)?.cancel ?? '取消',
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      FilledButton(
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          _uninstallApp(app);
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: colorScheme.error,
-                          foregroundColor: colorScheme.onError,
-                        ),
-                        child: Text(
-                          AppLocalizations.of(context)?.uninstall ?? '卸载',
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  /// 卸载应用
-  Future<void> _uninstallApp(InstalledApp app) async {
-    try {
-      final cliRepo = ref.read(linglongCliRepositoryProvider);
-      await cliRepo.uninstallApp(app.appId, app.version);
-
-      // 乐观更新：从已安装列表中移除
-      ref
-          .read(installedAppsProvider.notifier)
-          .removeApp(app.appId, app.version);
-      // 后台重新检查更新列表（不 await，不阻塞 UI）
-      ref.read(updateAppsProvider.notifier).checkUpdates();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.uninstallSuccess(app.name) ??
-                  '${app.name} 已卸载',
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.uninstallError(e.toString()) ??
-                  '卸载失败: $e',
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-    }
+    await ref.read(appUninstallServiceProvider).uninstall(context, app);
   }
 
   /// 在主窗口内以灯箱形式预览截图

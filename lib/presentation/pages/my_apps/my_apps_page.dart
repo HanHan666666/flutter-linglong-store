@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../application/providers/app_uninstall_provider.dart';
 import '../../../application/providers/application_card_state_provider.dart';
 import '../../../application/providers/installed_apps_provider.dart';
-import '../../../core/di/providers.dart'
-    show linglongCliRepositoryProvider, analyticsRepositoryProvider;
 import '../../../application/providers/running_process_provider.dart';
-import '../../../application/providers/update_apps_provider.dart';
 import '../../../core/config/page_visibility.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
@@ -114,86 +112,9 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
         .setProcessTabActive(tab == _MyAppsTab.process);
   }
 
-  /// 卸载应用（含运行中检测）
-  ///
-  /// 若应用正在运行，先弹出「强制关闭并卸载」确认弹窗，
-  /// 用户确认后依次 kill 所有运行实例再执行卸载。
+  /// 卸载应用（使用统一的卸载服务）
   Future<void> _uninstallApp(InstalledApp app) async {
-    // 检查应用是否正在运行
-    final runningApps = ref.read(runningAppsListProvider);
-    final runningInstances = runningApps
-        .where((r) => r.appId == app.appId)
-        .toList();
-
-    bool? confirmed;
-    if (runningInstances.isNotEmpty) {
-      // 应用运行中，显示强制关闭确认弹窗
-      confirmed = await ConfirmDialog.showUninstallRunning(
-        context,
-        appName: app.name,
-      );
-    } else {
-      confirmed = await ConfirmDialog.showUninstall(context, appName: app.name);
-    }
-
-    if (confirmed != true || !mounted) return;
-
-    // 若运行中，先强制关闭所有运行实例
-    if (runningInstances.isNotEmpty) {
-      for (final running in runningInstances) {
-        await ref.read(runningProcessProvider.notifier).killApp(running);
-      }
-    }
-
-    try {
-      final repo = ref.read(linglongCliRepositoryProvider);
-      final result = await repo.uninstallApp(app.appId, app.version);
-
-      if (mounted) {
-        if (result.contains('失败')) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                AppLocalizations.of(context)?.uninstallFailed(result) ??
-                    '卸载失败: $result',
-              ),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
-        } else {
-          ref
-              .read(installedAppsProvider.notifier)
-              .removeApp(app.appId, app.version);
-          ref.read(updateAppsProvider.notifier).checkUpdates();
-
-          // 上报卸载统计记录（fire-and-forget）
-          ref
-              .read(analyticsRepositoryProvider)
-              .reportUninstall(app.appId, app.version, appName: app.name);
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                AppLocalizations.of(context)?.uninstallSuccess(app.name) ??
-                    '${app.name} 已卸载',
-              ),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.uninstallError(e.toString()) ??
-                  '卸载异常: $e',
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-    }
+    await ref.read(appUninstallServiceProvider).uninstall(context, app);
   }
 
   @override

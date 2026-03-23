@@ -102,6 +102,28 @@ class CliPermissionException extends AppException {
   String get userMessage => '权限不足，请检查用户权限';
 }
 
+/// 卸载失败异常
+///
+/// 当 ll-cli uninstall 命令执行失败时抛出，包括：
+/// - PKExec 授权被取消
+/// - 应用不存在
+/// - 其他执行错误
+class UninstallException extends AppException {
+  const UninstallException(this.message, {this.appId, this.exitCode});
+
+  /// 应用 ID
+  final String? appId;
+
+  /// 退出码（如果有）
+  final int? exitCode;
+
+  @override
+  final String message;
+
+  @override
+  String get userMessage => '卸载失败：$message';
+}
+
 /// 将底层异常转换为用户可见文案
 String presentAppError(Object error) {
   if (error is AppException) {

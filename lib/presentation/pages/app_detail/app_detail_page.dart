@@ -152,10 +152,7 @@ class AppDetail extends _$AppDetail {
   }
 
   Future<void> _loadComments() async {
-    state = state.copyWith(
-      isLoadingComments: true,
-      clearCommentsError: true,
-    );
+    state = state.copyWith(isLoadingComments: true, clearCommentsError: true);
 
     try {
       final repository = ref.read(appRepositoryProvider);
@@ -222,10 +219,7 @@ class AppDetail extends _$AppDetail {
       return;
     }
 
-    state = state.copyWith(
-      isSubmittingComment: true,
-      clearCommentsError: true,
-    );
+    state = state.copyWith(isSubmittingComment: true, clearCommentsError: true);
 
     try {
       final repository = ref.read(appRepositoryProvider);
@@ -473,7 +467,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 ),
                 const SizedBox(height: 4),
                 // 简短描述（在应用名称下方）
-                if (appDetail?.appDesc != null && appDetail!.appDesc!.isNotEmpty)
+                if (appDetail?.appDesc != null &&
+                    appDetail!.appDesc!.isNotEmpty)
                   Text(
                     appDetail.appDesc!,
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -483,7 +478,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 // 标签列表（Chip 样式）
-                if (appDetail?.tagList != null && appDetail!.tagList!.isNotEmpty) ...[
+                if (appDetail?.tagList != null &&
+                    appDetail!.tagList!.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   _buildTags(context, appDetail.tagList!),
                 ],
@@ -664,9 +660,13 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     final l10n = AppLocalizations.of(context);
 
     // 优先使用长描述（detailDescription），为空时降级为简短描述
-    final description = detailState.appDetail?.detailDescription?.isNotEmpty == true
+    final description =
+        detailState.appDetail?.detailDescription?.isNotEmpty == true
         ? detailState.appDetail!.detailDescription!
-        : (detailState.appDetail?.appDesc ?? app.description ?? l10n?.noDescription ?? '暂无描述');
+        : (detailState.appDetail?.appDesc ??
+              app.description ??
+              l10n?.noDescription ??
+              '暂无描述');
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -1050,11 +1050,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n?.commentSubmitSuccess ?? '评论已提交',
-          ),
-        ),
+        SnackBar(content: Text(l10n?.commentSubmitSuccess ?? '评论已提交')),
       );
     } catch (e) {
       if (!context.mounted) {

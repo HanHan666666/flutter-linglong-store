@@ -99,7 +99,9 @@ void main() {
         expect(find.textContaining('75%'), findsOneWidget);
       });
 
-      testWidgets('should display download speed when provided', (tester) async {
+      testWidgets('should display download speed when provided', (
+        tester,
+      ) async {
         await tester.pumpWidget(
           const MaterialApp(
             locale: Locale('zh'),
@@ -118,7 +120,9 @@ void main() {
         expect(find.textContaining('2.5 MB/s'), findsOneWidget);
       });
 
-      testWidgets('should not display speed when state is not installing', (tester) async {
+      testWidgets('should not display speed when state is not installing', (
+        tester,
+      ) async {
         await tester.pumpWidget(
           const MaterialApp(
             locale: Locale('zh'),
@@ -222,7 +226,9 @@ void main() {
         expect(find.text('等待安装'), findsOneWidget);
 
         // 模拟悬停
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer(location: Offset.zero);
         addTearDown(gesture.removePointer);
         await tester.pump();
@@ -235,7 +241,9 @@ void main() {
         expect(find.text('等待安装'), findsNothing);
       });
 
-      testWidgets('should call onCancel when tapped while hovering', (tester) async {
+      testWidgets('should call onCancel when tapped while hovering', (
+        tester,
+      ) async {
         var cancelled = false;
 
         await tester.pumpWidget(
@@ -253,7 +261,9 @@ void main() {
         );
 
         // 模拟悬停
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer(location: Offset.zero);
         addTearDown(gesture.removePointer);
         await tester.pump();
@@ -284,7 +294,9 @@ void main() {
         );
 
         // 模拟悬停
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer(location: Offset.zero);
         addTearDown(gesture.removePointer);
         await tester.pump();
@@ -296,7 +308,9 @@ void main() {
         expect(find.byIcon(Icons.close), findsOneWidget);
       });
 
-      testWidgets('should not allow cancel if onCancel is null', (tester) async {
+      testWidgets('should not allow cancel if onCancel is null', (
+        tester,
+      ) async {
         await tester.pumpWidget(
           const MaterialApp(
             locale: Locale('zh'),
@@ -309,13 +323,17 @@ void main() {
         );
 
         // 模拟悬停
-        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        final gesture = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
         await gesture.addPointer(location: Offset.zero);
         addTearDown(gesture.removePointer);
         await tester.pump();
 
         await gesture.moveTo(tester.getCenter(find.byType(InstallButton)));
-        await tester.pump(const Duration(milliseconds: 200)); // 不用 pumpAndSettle，因为动画会持续
+        await tester.pump(
+          const Duration(milliseconds: 200),
+        ); // 不用 pumpAndSettle，因为动画会持续
 
         // 没有 onCancel，悬停后仍然显示"等待安装"
         expect(find.text('等待安装'), findsOneWidget);
@@ -422,7 +440,9 @@ void main() {
         );
 
         // 禁用状态按钮不可点击
-        final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+        final button = tester.widget<ElevatedButton>(
+          find.byType(ElevatedButton),
+        );
         expect(button.onPressed, isNull);
       });
     });

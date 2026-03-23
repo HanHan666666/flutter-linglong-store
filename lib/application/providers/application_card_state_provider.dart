@@ -45,8 +45,8 @@ class ApplicationCardStateIndex {
     final isInstalling = activeTask != null;
     final activeButtonState = switch (activeTask?.status) {
       InstallStatus.pending => InstallButtonState.pending,
-      InstallStatus.downloading || InstallStatus.installing =>
-        InstallButtonState.installing,
+      InstallStatus.downloading ||
+      InstallStatus.installing => InstallButtonState.installing,
       _ => null,
     };
 

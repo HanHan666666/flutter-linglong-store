@@ -179,3 +179,6 @@ time ./build/package-deb.sh
 ## 迁移对照与限制
 - 功能与 UI 需与旧版对齐，避免引入新功能或改动行为语义。
 - 对应关系与风险评估见：`/home/han/linglong-store/flutter-linglong-store/docs/01-migration-plan.md`。
+
+## 变更记录
+- 2026-03-23：应用详情页评论区统一对接 `/app/getAppCommentList` 与 `/app/saveAppComment`；当前只支持匿名文本评论和只读的帮助数展示，不允许前端擅自增加评分、头像、点赞提交等后端不存在的交互。评论提交成功后必须回源刷新最新评论，不能本地伪造一条临时评论。

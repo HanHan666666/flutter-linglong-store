@@ -10,6 +10,9 @@ enum InstallButtonState {
   /// 安装中
   installing,
 
+  /// 等待安装（排队中）
+  pending,
+
   /// 已安装
   installed,
 
@@ -26,7 +29,7 @@ enum InstallButtonState {
 /// 安装按钮组件
 ///
 /// 显示应用的安装状态和操作按钮
-class InstallButton extends StatelessWidget {
+class InstallButton extends StatefulWidget {
   /// 按钮状态
   final InstallButtonState state;
 
@@ -60,9 +63,16 @@ class InstallButton extends StatelessWidget {
   });
 
   @override
+  State<InstallButton> createState() => _InstallButtonState();
+}
+
+class _InstallButtonState extends State<InstallButton> {
+  bool _isHovering = false;
+
+  @override
   Widget build(BuildContext context) {
     // 根据状态构建不同的按钮样式
-    switch (state) {
+    switch (widget.state) {
       case InstallButtonState.notInstalled:
         return _buildPrimaryButton(
           context,
@@ -72,6 +82,9 @@ class InstallButton extends StatelessWidget {
 
       case InstallButtonState.installing:
         return _buildProgressButton(context);
+
+      case InstallButtonState.pending:
+        return _buildPendingButton(context);
 
       case InstallButtonState.installed:
         return _buildOutlinedButton(
@@ -114,7 +127,7 @@ class InstallButton extends StatelessWidget {
     return SizedBox(
       height: buttonHeight,
       child: ElevatedButton.icon(
-        onPressed: disabled ? null : onPressed,
+        onPressed: widget.disabled ? null : widget.onPressed,
         icon: Icon(icon, size: _getIconSize()),
         label: Text(label),
         style: ElevatedButton.styleFrom(
@@ -138,7 +151,7 @@ class InstallButton extends StatelessWidget {
     return SizedBox(
       height: buttonHeight,
       child: OutlinedButton.icon(
-        onPressed: disabled ? null : onPressed,
+        onPressed: widget.disabled ? null : widget.onPressed,
         icon: Icon(icon, size: _getIconSize()),
         label: Text(label),
         style: OutlinedButton.styleFrom(
@@ -162,7 +175,7 @@ class InstallButton extends StatelessWidget {
     return SizedBox(
       height: buttonHeight,
       child: OutlinedButton.icon(
-        onPressed: disabled ? null : onPressed,
+        onPressed: widget.disabled ? null : widget.onPressed,
         icon: Icon(icon, size: _getIconSize(), color: Colors.red),
         label: Text(label, style: const TextStyle(color: Colors.red)),
         style: OutlinedButton.styleFrom(
@@ -185,7 +198,7 @@ class InstallButton extends StatelessWidget {
       id: 'install-button-preview',
       appId: 'install-button-preview',
       appName: 'install-button-preview',
-      progress: progress,
+      progress: widget.progress,
       createdAt: 0,
     );
     final cancelLabel = l10n?.cancel ?? '取消';
@@ -222,20 +235,20 @@ class InstallButton extends StatelessWidget {
               children: [
                 Text(
                   // 有速度时显示 "xx% · 2.5 MB/s"，否则仅显示进度
-                  downloadSpeed != null && downloadSpeed!.isNotEmpty
-                      ? '${task.progressPercentLabel} · $downloadSpeed'
+                  widget.downloadSpeed != null && widget.downloadSpeed!.isNotEmpty
+                      ? '${task.progressPercentLabel} · ${widget.downloadSpeed}'
                       : task.progressPercentLabel,
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
-                if (onCancel != null) ...[
+                if (widget.onCancel != null) ...[
                   const SizedBox(width: 8),
                   Tooltip(
                     message: cancelLabel,
                     child: GestureDetector(
-                      onTap: onCancel,
+                      onTap: widget.onCancel,
                       child: Icon(
                         Icons.close,
                         size: _getIconSize(),
@@ -252,9 +265,82 @@ class InstallButton extends StatelessWidget {
     );
   }
 
+  /// 构建等待按钮（排队中）
+  ///
+  /// 默认显示转圈 + "等待安装"，鼠标悬停时显示 "取消安装"
+  Widget _buildPendingButton(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final buttonHeight = _getButtonHeight();
+    final theme = Theme.of(context);
+
+    // 悬停时显示取消，否则显示等待
+    final isHovering = _isHovering && widget.onCancel != null;
+    final label = isHovering
+        ? (l10n?.cancelInstall ?? '取消安装')
+        : (l10n?.waitingForInstall ?? '等待安装');
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovering = true),
+      onExit: (_) => setState(() => _isHovering = false),
+      cursor: widget.onCancel != null ? SystemMouseCursors.click : MouseCursor.defer,
+      child: GestureDetector(
+        onTap: isHovering ? widget.onCancel : null,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          height: buttonHeight,
+          padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding()),
+          decoration: BoxDecoration(
+            color: isHovering
+                ? theme.colorScheme.errorContainer.withValues(alpha: 0.3)
+                : theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(buttonHeight / 2),
+            border: Border.all(
+              color: isHovering
+                  ? theme.colorScheme.error.withValues(alpha: 0.5)
+                  : theme.colorScheme.outlineVariant,
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!isHovering) ...[
+                SizedBox(
+                  width: _getIconSize(),
+                  height: _getIconSize(),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ] else ...[
+                Icon(
+                  Icons.close,
+                  size: _getIconSize(),
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: isHovering
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   /// 获取按钮高度
   double _getButtonHeight() {
-    switch (size) {
+    switch (widget.size) {
       case ButtonSize.small:
         return 28;
       case ButtonSize.medium:
@@ -266,7 +352,7 @@ class InstallButton extends StatelessWidget {
 
   /// 获取图标大小
   double _getIconSize() {
-    switch (size) {
+    switch (widget.size) {
       case ButtonSize.small:
         return 14;
       case ButtonSize.medium:
@@ -278,7 +364,7 @@ class InstallButton extends StatelessWidget {
 
   /// 获取水平内边距
   double _getHorizontalPadding() {
-    switch (size) {
+    switch (widget.size) {
       case ButtonSize.small:
         return 12;
       case ButtonSize.medium:

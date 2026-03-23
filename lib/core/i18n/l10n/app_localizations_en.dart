@@ -1112,4 +1112,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String shortcutCreateException(String error) {
     return 'Failed to create shortcut: $error';
   }
+
+  @override
+  String get waitingForInstall => 'Waiting';
+
+  @override
+  String get cancelInstall => 'Cancel';
 }

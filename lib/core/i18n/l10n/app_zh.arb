@@ -638,5 +638,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "waitingForInstall": "等待安装",
+  "cancelInstall": "取消安装"
 }

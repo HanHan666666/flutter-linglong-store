@@ -1,141 +1,36 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:linglong_store/domain/models/install_task.dart';
-import 'package:linglong_store/domain/models/install_progress.dart';
-
-/// 安装按钮状态枚举
-enum InstallButtonState {
-  install,
-  installing,
-  installed,
-  update,
-  failed,
-}
-
-/// 安装按钮 Widget（用于测试）
-///
-/// 注意：这是测试用的简化版本
-/// 实际项目应该在 lib/presentation/widgets/ 中实现完整版本
-class InstallButton extends StatelessWidget {
-  const InstallButton({
-    super.key,
-    required this.state,
-    this.progress = 0.0,
-    this.onPressed,
-    this.error,
-  });
-
-  final InstallButtonState state;
-  final double progress;
-  final VoidCallback? onPressed;
-  final String? error;
-
-  String get _label {
-    switch (state) {
-      case InstallButtonState.install:
-        return 'Install';
-      case InstallButtonState.installing:
-        return 'Installing...';
-      case InstallButtonState.installed:
-        return 'Open';
-      case InstallButtonState.update:
-        return 'Update';
-      case InstallButtonState.failed:
-        return 'Retry';
-    }
-  }
-
-  IconData get _icon {
-    switch (state) {
-      case InstallButtonState.install:
-        return Icons.download;
-      case InstallButtonState.installing:
-        return Icons.downloading;
-      case InstallButtonState.installed:
-        return Icons.open_in_new;
-      case InstallButtonState.update:
-        return Icons.update;
-      case InstallButtonState.failed:
-        return Icons.refresh;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (state == InstallButtonState.installing) {
-      return _buildInstallingButton(context);
-    }
-
-    return ElevatedButton.icon(
-      onPressed: state == InstallButtonState.installing ? null : onPressed,
-      icon: Icon(_icon, size: 18),
-      label: Text(_label),
-      style: _getButtonStyle(context),
-    );
-  }
-
-  Widget _buildInstallingButton(BuildContext context) {
-    return SizedBox(
-      width: 120,
-      height: 36,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          LinearProgressIndicator(
-            value: progress,
-            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-          ),
-          Text(
-            '${(progress * 100).toInt()}%',
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-        ],
-      ),
-    );
-  }
-
-  ButtonStyle _getButtonStyle(BuildContext context) {
-    switch (state) {
-      case InstallButtonState.installed:
-        return ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-          foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
-        );
-      case InstallButtonState.failed:
-        return ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.errorContainer,
-          foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
-        );
-      default:
-        return ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        );
-    }
-  }
-}
+import 'package:linglong_store/presentation/widgets/install_button.dart';
+import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 
 void main() {
   group('InstallButton Widget', () {
     group('Install state', () {
-      testWidgets('should display "Install" label', (tester) async {
+      testWidgets('should display "安装" label in Chinese', (tester) async {
         await tester.pumpWidget(
           const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
-              body: InstallButton(state: InstallButtonState.install),
+              body: InstallButton(state: InstallButtonState.notInstalled),
             ),
           ),
         );
 
-        expect(find.text('Install'), findsOneWidget);
+        expect(find.text('安 装'), findsOneWidget);
       });
 
       testWidgets('should display download icon', (tester) async {
         await tester.pumpWidget(
           const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
-              body: InstallButton(state: InstallButtonState.install),
+              body: InstallButton(state: InstallButtonState.notInstalled),
             ),
           ),
         );
@@ -148,9 +43,12 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: InstallButton(
-                state: InstallButtonState.install,
+                state: InstallButtonState.notInstalled,
                 onPressed: () => pressed = true,
               ),
             ),
@@ -168,6 +66,9 @@ void main() {
       testWidgets('should display progress indicator', (tester) async {
         await tester.pumpWidget(
           const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: InstallButton(
                 state: InstallButtonState.installing,
@@ -183,6 +84,9 @@ void main() {
       testWidgets('should display progress percentage', (tester) async {
         await tester.pumpWidget(
           const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: InstallButton(
                 state: InstallButtonState.installing,
@@ -192,46 +96,255 @@ void main() {
           ),
         );
 
-        expect(find.text('75%'), findsOneWidget);
+        expect(find.textContaining('75%'), findsOneWidget);
       });
 
-      testWidgets('should not be pressable during install', (tester) async {
-        var pressed = false;
-
+      testWidgets('should display download speed when provided', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: InstallButton(
                 state: InstallButtonState.installing,
                 progress: 0.5,
-                onPressed: () => pressed = true,
+                downloadSpeed: '2.5 MB/s',
               ),
             ),
           ),
         );
 
-        // 安装中状态不应该有可点击的 ElevatedButton
-        expect(find.byType(ElevatedButton), findsNothing);
-        expect(pressed, isFalse);
+        expect(find.textContaining('2.5 MB/s'), findsOneWidget);
+      });
+
+      testWidgets('should not display speed when state is not installing', (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: InstallButton(
+                state: InstallButtonState.pending,
+                downloadSpeed: '2.5 MB/s',
+              ),
+            ),
+          ),
+        );
+
+        expect(find.textContaining('2.5 MB/s'), findsNothing);
+      });
+    });
+
+    group('Pending state', () {
+      testWidgets('should display "等待安装" label in Chinese', (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: InstallButton(state: InstallButtonState.pending),
+            ),
+          ),
+        );
+
+        expect(find.text('等待安装'), findsOneWidget);
+      });
+
+      testWidgets('should display "Waiting" label in English', (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            locale: Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: InstallButton(state: InstallButtonState.pending),
+            ),
+          ),
+        );
+
+        expect(find.text('Waiting'), findsOneWidget);
+      });
+
+      testWidgets('should display circular progress indicator', (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: InstallButton(state: InstallButtonState.pending),
+            ),
+          ),
+        );
+
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      });
+
+      testWidgets('should not show cancel button initially', (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: InstallButton(
+                state: InstallButtonState.pending,
+                onCancel: () {},
+              ),
+            ),
+          ),
+        );
+
+        // 初始状态显示"等待安装"，不是"取消安装"
+        expect(find.text('等待安装'), findsOneWidget);
+        expect(find.text('取消安装'), findsNothing);
+      });
+
+      testWidgets('should show "取消安装" on hover', (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: InstallButton(
+                state: InstallButtonState.pending,
+                onCancel: () {},
+              ),
+            ),
+          ),
+        );
+
+        // 初始状态
+        expect(find.text('等待安装'), findsOneWidget);
+
+        // 模拟悬停
+        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        await gesture.addPointer(location: Offset.zero);
+        addTearDown(gesture.removePointer);
+        await tester.pump();
+
+        await gesture.moveTo(tester.getCenter(find.byType(InstallButton)));
+        await tester.pumpAndSettle();
+
+        // 悬停后显示"取消安装"
+        expect(find.text('取消安装'), findsOneWidget);
+        expect(find.text('等待安装'), findsNothing);
+      });
+
+      testWidgets('should call onCancel when tapped while hovering', (tester) async {
+        var cancelled = false;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: InstallButton(
+                state: InstallButtonState.pending,
+                onCancel: () => cancelled = true,
+              ),
+            ),
+          ),
+        );
+
+        // 模拟悬停
+        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        await gesture.addPointer(location: Offset.zero);
+        addTearDown(gesture.removePointer);
+        await tester.pump();
+
+        await gesture.moveTo(tester.getCenter(find.byType(InstallButton)));
+        await tester.pumpAndSettle();
+
+        // 点击取消
+        await tester.tap(find.byType(InstallButton));
+        await tester.pump();
+
+        expect(cancelled, isTrue);
+      });
+
+      testWidgets('should show close icon on hover', (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: InstallButton(
+                state: InstallButtonState.pending,
+                onCancel: () {},
+              ),
+            ),
+          ),
+        );
+
+        // 模拟悬停
+        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        await gesture.addPointer(location: Offset.zero);
+        addTearDown(gesture.removePointer);
+        await tester.pump();
+
+        await gesture.moveTo(tester.getCenter(find.byType(InstallButton)));
+        await tester.pumpAndSettle();
+
+        // 悬停后显示关闭图标
+        expect(find.byIcon(Icons.close), findsOneWidget);
+      });
+
+      testWidgets('should not allow cancel if onCancel is null', (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: InstallButton(state: InstallButtonState.pending),
+            ),
+          ),
+        );
+
+        // 模拟悬停
+        final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        await gesture.addPointer(location: Offset.zero);
+        addTearDown(gesture.removePointer);
+        await tester.pump();
+
+        await gesture.moveTo(tester.getCenter(find.byType(InstallButton)));
+        await tester.pump(const Duration(milliseconds: 200)); // 不用 pumpAndSettle，因为动画会持续
+
+        // 没有 onCancel，悬停后仍然显示"等待安装"
+        expect(find.text('等待安装'), findsOneWidget);
+        expect(find.text('取消安装'), findsNothing);
       });
     });
 
     group('Installed state', () {
-      testWidgets('should display "Open" label', (tester) async {
+      testWidgets('should display "打开" label in Chinese', (tester) async {
         await tester.pumpWidget(
           const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: InstallButton(state: InstallButtonState.installed),
             ),
           ),
         );
 
-        expect(find.text('Open'), findsOneWidget);
+        expect(find.text('打 开'), findsOneWidget);
       });
 
       testWidgets('should display open icon', (tester) async {
         await tester.pumpWidget(
           const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: InstallButton(state: InstallButtonState.installed),
             ),
@@ -243,21 +356,27 @@ void main() {
     });
 
     group('Update state', () {
-      testWidgets('should display "Update" label', (tester) async {
+      testWidgets('should display "更新" label in Chinese', (tester) async {
         await tester.pumpWidget(
           const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: InstallButton(state: InstallButtonState.update),
             ),
           ),
         );
 
-        expect(find.text('Update'), findsOneWidget);
+        expect(find.text('更 新'), findsOneWidget);
       });
 
       testWidgets('should display update icon', (tester) async {
         await tester.pumpWidget(
           const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: InstallButton(state: InstallButtonState.update),
             ),
@@ -268,125 +387,105 @@ void main() {
       });
     });
 
-    group('Failed state', () {
-      testWidgets('should display "Retry" label', (tester) async {
+    group('Uninstall state', () {
+      testWidgets('should display "卸载" label in Chinese', (tester) async {
         await tester.pumpWidget(
           const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
-              body: InstallButton(state: InstallButtonState.failed),
+              body: InstallButton(state: InstallButtonState.uninstall),
             ),
           ),
         );
 
-        expect(find.text('Retry'), findsOneWidget);
+        expect(find.text('卸 载'), findsOneWidget);
       });
+    });
 
-      testWidgets('should display refresh icon', (tester) async {
-        await tester.pumpWidget(
-          const MaterialApp(
-            home: Scaffold(
-              body: InstallButton(state: InstallButtonState.failed),
-            ),
-          ),
-        );
-
-        expect(find.byIcon(Icons.refresh), findsOneWidget);
-      });
-
-      testWidgets('should be pressable after failure', (tester) async {
+    group('Disabled state', () {
+      testWidgets('should be disabled when disabled is true', (tester) async {
         var pressed = false;
 
         await tester.pumpWidget(
           MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: InstallButton(
-                state: InstallButtonState.failed,
+                state: InstallButtonState.update,
+                disabled: true,
                 onPressed: () => pressed = true,
               ),
             ),
           ),
         );
 
-        await tester.tap(find.byType(ElevatedButton));
-        await tester.pump();
-
-        expect(pressed, isTrue);
+        // 禁用状态按钮不可点击
+        final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+        expect(button.onPressed, isNull);
       });
     });
 
-    group('Progress display', () {
-      testWidgets('should show 0% at start', (tester) async {
+    group('Button sizes', () {
+      testWidgets('small size should have correct height', (tester) async {
         await tester.pumpWidget(
           const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: InstallButton(
-                state: InstallButtonState.installing,
-                progress: 0.0,
+                state: InstallButtonState.update,
+                size: ButtonSize.small,
               ),
             ),
           ),
         );
 
-        expect(find.text('0%'), findsOneWidget);
+        final sizedBox = tester.widget<SizedBox>(find.byType(SizedBox).first);
+        expect(sizedBox.height, 28);
       });
 
-      testWidgets('should show 100% at completion', (tester) async {
+      testWidgets('medium size should have correct height', (tester) async {
         await tester.pumpWidget(
           const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: InstallButton(
-                state: InstallButtonState.installing,
-                progress: 1.0,
+                state: InstallButtonState.update,
+                size: ButtonSize.medium,
               ),
             ),
           ),
         );
 
-        expect(find.text('100%'), findsOneWidget);
+        final sizedBox = tester.widget<SizedBox>(find.byType(SizedBox).first);
+        expect(sizedBox.height, 32);
       });
-    });
-  });
 
-  group('InstallTask integration', () {
-    test('should map InstallTask to correct button state', () {
-      final pendingTask = InstallTask(
-        id: 'task-1',
-        appId: 'com.example.test',
-        appName: 'Test App',
-        createdAt: DateTime.now().millisecondsSinceEpoch,
-      );
-      expect(pendingTask.isProcessing, isFalse);
-      expect(pendingTask.isCompleted, isFalse);
-      expect(pendingTask.isFailed, isFalse);
+      testWidgets('large size should have correct height', (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: InstallButton(
+                state: InstallButtonState.update,
+                size: ButtonSize.large,
+              ),
+            ),
+          ),
+        );
 
-      final processingTask = InstallTask(
-        id: 'task-2',
-        appId: 'com.example.test',
-        appName: 'Test App',
-        status: InstallStatus.installing,
-        progress: 50.0,
-        createdAt: DateTime.now().millisecondsSinceEpoch,
-      );
-      expect(processingTask.isProcessing, isTrue);
-
-      final completedTask = InstallTask(
-        id: 'task-3',
-        appId: 'com.example.test',
-        appName: 'Test App',
-        status: InstallStatus.success,
-        createdAt: DateTime.now().millisecondsSinceEpoch,
-      );
-      expect(completedTask.isCompleted, isTrue);
-
-      final failedTask = InstallTask(
-        id: 'task-4',
-        appId: 'com.example.test',
-        appName: 'Test App',
-        status: InstallStatus.failed,
-        errorMessage: 'Install failed',
-        createdAt: DateTime.now().millisecondsSinceEpoch,
-      );
-      expect(failedTask.isFailed, isTrue);
+        final sizedBox = tester.widget<SizedBox>(find.byType(SizedBox).first);
+        expect(sizedBox.height, 40);
+      });
     });
   });
 }

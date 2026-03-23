@@ -1079,4 +1079,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String shortcutCreateException(String error) {
     return '创建快捷方式失败: $error';
   }
+
+  @override
+  String get waitingForInstall => '等待安装';
+
+  @override
+  String get cancelInstall => '取消安装';
 }

@@ -404,3 +404,200 @@ Center(
   ),
 )
 ```
+
+---
+
+## 八、InstallButton（安装按钮）
+
+### 8.1 概述
+
+`InstallButton` 是一个通用的安装状态按钮组件，根据 `InstallButtonState` 枚举值渲染不同的按钮样式。该组件被设计为**自包含**，调用方只需传入状态和回调，无需关心内部渲染细节。
+
+**核心设计原则**：
+- 组件根据 `InstallStatus` 决定显示内容，实现 UI 与业务逻辑解耦
+- 任何页面（更新页、详情页、列表页）都可以复用同一组件
+- 支持**悬停交互**：`pending` 状态下悬停可切换为"取消安装"
+
+### 8.2 状态枚举
+
+```dart
+enum InstallButtonState {
+  notInstalled,  // 未安装
+  installing,    // 安装中
+  pending,       // 等待安装（排队中）
+  installed,     // 已安装
+  update,        // 需要更新
+  open,          // 打开应用
+  uninstall,     // 卸载
+}
+```
+
+### 8.3 各状态渲染
+
+| 状态 | 按钮样式 | 文案 | 图标 | 交互 |
+|------|---------|------|------|------|
+| `notInstalled` | 主色实心按钮 | "安 装" | `Icons.download` | 点击触发 `onPressed` |
+| `installing` | 进度条样式 | "xx% · 网速" | — | 显示进度，可取消 |
+| `pending` | 禁用态容器 | "等待安装" | 转圈图标 | 悬停切换为"取消安装" |
+| `installed` | 描边按钮 | "打 开" | `Icons.open_in_new` | 点击触发 `onPressed` |
+| `update` | 主色实心按钮 | "更 新" | `Icons.update` | 点击触发 `onPressed` |
+| `open` | 描边按钮 | "打 开" | `Icons.open_in_new` | 点击触发 `onPressed` |
+| `uninstall` | 红色描边按钮 | "卸 载" | `Icons.delete_outline` | 点击触发 `onPressed` |
+
+### 8.4 pending 状态详解
+
+**问题背景**：
+系统采用**严格串行安装**机制，同一时刻只允许一个安装任务执行。当用户点击"一键更新"时，所有应用被批量入队，状态为 `InstallStatus.pending`。
+
+**解决方案**：
+- `pending` 状态显示为独立的"等待安装"样式
+- 鼠标悬停时切换为"取消安装"（红色），允许用户从队列中移除
+- 组件内部使用 `StatefulWidget` 维护悬停状态
+
+**悬停交互实现**：
+
+```dart
+Widget _buildPendingButton(BuildContext context) {
+  // 默认：转圈 + "等待安装"
+  // 悬停：关闭图标 + "取消安装"（红色）
+  return MouseRegion(
+    onEnter: (_) => setState(() => _isHovering = true),
+    onExit: (_) => setState(() => _isHovering = false),
+    cursor: widget.onCancel != null ? SystemMouseCursors.click : MouseCursor.defer,
+    child: GestureDetector(
+      onTap: isHovering ? widget.onCancel : null,
+      child: AnimatedContainer(
+        // 动画过渡
+      ),
+    ),
+  );
+}
+```
+
+**视觉规格**：
+
+| 属性 | 默认态 | 悬停态 |
+|------|--------|--------|
+| 背景 | `surfaceContainerHighest` | `errorContainer` (30%透明) |
+| 边框 | `outlineVariant` | `error` (50%透明) |
+| 图标 | 转圈 `CircularProgressIndicator` | `Icons.close` |
+| 文字 | "等待安装", `onSurfaceVariant` | "取消安装", `error` |
+| 光标 | `defer` | `click` |
+
+### 8.5 installing 状态详解
+
+**进度显示**：
+- 使用 `LinearProgressIndicator` 显示安装进度
+- 进度值由 `progress` 参数传入（0.0 - 1.0）
+- 显示格式：`75%` 或 `75% · 2.5 MB/s`
+
+**网速来源**：
+- 网速由 `networkSpeedProvider` 提供
+- 该 Provider 通过读取 `/proc/net/dev` 计算全局网络速度
+- **只有 `installing` 状态才显示网速**，`pending` 状态不显示
+
+**网速显示条件**：
+```dart
+downloadSpeed: buttonState == InstallButtonState.installing
+    ? ref.watch(networkSpeedProvider).formatted
+    : null,
+```
+
+### 8.6 按钮尺寸
+
+```dart
+enum ButtonSize { small, medium, large }
+```
+
+| 尺寸 | 高度 | 图标 | 水平内边距 |
+|------|------|------|-----------|
+| `small` | 28px | 14px | 12px |
+| `medium` | 32px | 16px | 16px |
+| `large` | 40px | 18px | 20px |
+
+### 8.7 组件 API
+
+```dart
+class InstallButton extends StatefulWidget {
+  /// 按钮状态
+  final InstallButtonState state;
+
+  /// 安装进度 (0.0 - 1.0)
+  final double progress;
+
+  /// 按钮点击回调
+  final VoidCallback? onPressed;
+
+  /// 取消安装回调（用于 pending 和 installing 状态）
+  final VoidCallback? onCancel;
+
+  /// 下载速度文本（如 "2.5 MB/s"）
+  final String? downloadSpeed;
+
+  /// 是否禁用
+  final bool disabled;
+
+  /// 按钮大小
+  final ButtonSize size;
+}
+```
+
+### 8.8 使用示例
+
+**更新页面中使用**：
+
+```dart
+InstallButton(
+  state: _getButtonState(),  // 根据 InstallTask 状态映射
+  progress: installTask?.progress ?? 0.0,
+  downloadSpeed: buttonState == InstallButtonState.installing
+      ? ref.watch(networkSpeedProvider).formatted
+      : null,
+  onPressed: onUpdate,
+  onCancel: onCancel,
+  size: ButtonSize.small,
+);
+```
+
+**状态映射示例**：
+
+```dart
+InstallButtonState _getButtonState() {
+  if (installTask != null) {
+    switch (installTask!.status) {
+      case InstallStatus.pending:
+        return InstallButtonState.pending;
+      case InstallStatus.downloading:
+      case InstallStatus.installing:
+        return InstallButtonState.installing;
+      case InstallStatus.success:
+      case InstallStatus.failed:
+      case InstallStatus.cancelled:
+        break;
+    }
+  }
+  return InstallButtonState.update;
+}
+```
+
+### 8.9 相关文件
+
+| 文件 | 说明 |
+|------|------|
+| `lib/presentation/widgets/install_button.dart` | 组件实现 |
+| `lib/presentation/pages/update_app/update_app_page.dart` | 更新页面使用示例 |
+| `test/widget/widgets/install_button_test.dart` | 单元测试（24 个测试用例） |
+| `test/widget/presentation/pages/update_app/update_app_page_test.dart` | 更新页面测试 |
+
+### 8.10 设计决策记录
+
+**为什么 pending 和 installing 是两个独立状态？**
+
+1. **语义清晰**：`pending` 表示"在队列中等待"，`installing` 表示"正在执行"
+2. **UI 区分**：用户需要知道哪些应用"正在下载"（显示进度），哪些"排队等待"
+3. **交互不同**：`installing` 显示进度条，`pending` 显示转圈并支持悬停取消
+4. **网速显示**：只有当前执行的任务才显示网速，避免所有按钮都显示相同的全局网速
+
+**为什么使用 StatefulWidget？**
+
+为了支持悬停交互，组件需要维护 `_isHovering` 状态。如果使用 `StatelessWidget`，需要在父组件管理悬停状态，增加了耦合度。使用 `StatefulWidget` 使组件自包含，复用更简单。

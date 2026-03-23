@@ -90,6 +90,85 @@ void main() {
         expect(recordedSingles, isEmpty);
       },
     );
+
+    testWidgets(
+      'shows "等待安装" for pending apps in queue, not progress bar',
+      (tester) async {
+        final installQueue = TestInstallQueue(
+          initialState: InstallQueueState(
+            currentTask: InstallTask(
+              id: 'task-running',
+              appId: 'org.example.app1',
+              appName: 'App 1',
+              kind: InstallTaskKind.update,
+              status: InstallStatus.installing,
+              progress: 0.5,
+              message: 'Installing app 1',
+              createdAt: DateTime.now().millisecondsSinceEpoch,
+            ),
+            queue: [
+              InstallTask(
+                id: 'task-pending',
+                appId: 'org.example.app2',
+                appName: 'App 2',
+                kind: InstallTaskKind.update,
+                status: InstallStatus.pending,
+                createdAt: DateTime.now().millisecondsSinceEpoch,
+              ),
+            ],
+            isProcessing: true,
+          ),
+        );
+        final updateApps = TestUpdateApps(
+          apps: const [
+            UpdatableApp(
+              installedApp: InstalledApp(
+                appId: 'org.example.app1',
+                name: 'App 1',
+                version: '1.0.0',
+              ),
+              latestVersion: '1.1.0',
+            ),
+            UpdatableApp(
+              installedApp: InstalledApp(
+                appId: 'org.example.app2',
+                name: 'App 2',
+                version: '2.0.0',
+              ),
+              latestVersion: '2.1.0',
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              installQueueProvider.overrideWith(() => installQueue),
+              updateAppsProvider.overrideWith(() => updateApps),
+              networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+              appOperationQueueControllerProvider.overrideWith(
+                (ref) => RecordingAppOperationQueueController(ref),
+              ),
+            ],
+            child: const MaterialApp(
+              locale: Locale('zh'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(body: UpdateAppPage()),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        // App 2 是 pending 状态，应该显示"等待安装"，而不是进度条
+        expect(find.text('等待安装'), findsOneWidget);
+        // 网速不应该显示（因为 App 2 不是当前任务）
+        expect(find.textContaining('KB/s'), findsNothing);
+        expect(find.textContaining('MB/s'), findsNothing);
+      },
+    );
   });
 }
 

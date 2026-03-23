@@ -2069,6 +2069,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'创建快捷方式失败: {error}'**
   String shortcutCreateException(String error);
+
+  /// No description provided for @waitingForInstall.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待安装'**
+  String get waitingForInstall;
+
+  /// No description provided for @cancelInstall.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消安装'**
+  String get cancelInstall;
 }
 
 class _AppLocalizationsDelegate

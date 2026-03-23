@@ -73,6 +73,11 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
         );
   }
 
+  /// 取消应用安装/更新
+  Future<void> _cancelAppInstall(String appId) async {
+    await ref.read(installQueueProvider.notifier).cancelTask(appId);
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(updateAppsProvider);
@@ -196,6 +201,9 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
             installTask: installTask,
             hasActiveTasks: installState.hasActiveTasks(),
             onUpdate: () => _updateApp(app),
+            onCancel: installTask != null
+                ? () => _cancelAppInstall(app.appId)
+                : null,
           );
         },
       ),
@@ -211,12 +219,14 @@ class _UpdatableAppItem extends ConsumerWidget {
     required this.installTask,
     required this.hasActiveTasks,
     required this.onUpdate,
+    required this.onCancel,
   });
 
   final UpdatableApp app;
   final InstallTask? installTask;
   final bool hasActiveTasks;
   final VoidCallback onUpdate;
+  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -298,11 +308,7 @@ class _UpdatableAppItem extends ConsumerWidget {
                       : null,
                   onPressed: onUpdate,
                   disabled: disableUpdateAction,
-                  onCancel: installTask != null
-                      ? () {
-                          // 取消安装
-                        }
-                      : null,
+                  onCancel: onCancel,
                   size: ButtonSize.small,
                 ),
               ],
@@ -345,6 +351,7 @@ class _UpdatableAppItem extends ConsumerWidget {
     if (installTask != null) {
       switch (installTask!.status) {
         case InstallStatus.pending:
+          return InstallButtonState.pending;
         case InstallStatus.downloading:
         case InstallStatus.installing:
           return InstallButtonState.installing;

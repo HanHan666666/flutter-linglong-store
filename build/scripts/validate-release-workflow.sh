@@ -38,5 +38,15 @@ require_grep "schedule" .github/workflows/nightly.yml
 require_grep "workflow_dispatch" .github/workflows/nightly.yml
 require_grep "package-smoke-test.sh" .github/workflows/nightly.yml
 require_grep "nightly" .github/workflows/nightly.yml
+require_grep "publish-aur-nightly:" .github/workflows/nightly.yml
+require_grep "needs: [prepare-nightly, publish-nightly]" .github/workflows/nightly.yml
+require_grep "needs.prepare-nightly.outputs.should_publish == 'true'" .github/workflows/nightly.yml
+require_grep "needs.publish-nightly.result == 'success'" .github/workflows/nightly.yml
+require_grep "signed-nightly-assets-amd64" .github/workflows/nightly.yml
+require_grep "normalize-nightly-aur-version.sh" .github/workflows/nightly.yml
+require_grep "validate-aur-package.sh" .github/workflows/nightly.yml
+require_grep "publish-aur.sh" .github/workflows/nightly.yml
+require_grep "linglong-store-nightly-bin" .github/workflows/nightly.yml
+require_grep "ssh://aur@aur.archlinux.org/linglong-store-nightly-bin.git" .github/workflows/nightly.yml
 
 echo "Release workflow validation passed."

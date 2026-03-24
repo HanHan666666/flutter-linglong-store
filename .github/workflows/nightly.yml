@@ -282,3 +282,94 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             nightly-artifacts/*
+
+  publish-aur-nightly:
+    name: Publish nightly AUR ${{ needs.prepare-nightly.outputs.nightly_label }}
+    needs: [prepare-nightly, publish-nightly]
+    if: ${{ always() && needs.prepare-nightly.outputs.should_publish == 'true' && needs.publish-nightly.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-nightly.outputs.nightly_tag }}
+          fetch-depth: 0
+
+      - name: Download signed nightly assets
+        uses: actions/download-artifact@v4
+        with:
+          name: signed-nightly-assets-amd64
+          path: signed-nightly-assets
+
+      - name: Calculate nightly checksums
+        id: checksums
+        run: |
+          tarball_path="$(find signed-nightly-assets -type f -name '*amd64.tar.gz' ! -name '*.asc' -print -quit)"
+          if [[ -z "$tarball_path" ]]; then
+            echo "Failed to locate the signed nightly amd64 tarball." >&2
+            exit 1
+          fi
+
+          sig_path="$(find signed-nightly-assets -type f -name '*amd64.tar.gz.asc' -print -quit)"
+          if [[ -z "$sig_path" ]]; then
+            echo "Failed to locate the signed nightly amd64 tarball signature." >&2
+            exit 1
+          fi
+
+          sha_amd64="$(sha256sum "$tarball_path" | awk '{print $1}')"
+          sha_sig_amd64="$(sha256sum "$sig_path" | awk '{print $1}')"
+
+          echo "sha_amd64=$sha_amd64" >> "$GITHUB_OUTPUT"
+          echo "sha_sig_amd64=$sha_sig_amd64" >> "$GITHUB_OUTPUT"
+
+      - name: Normalize nightly AUR version
+        id: aur-version
+        run: |
+          aur_version="$(bash build/scripts/normalize-nightly-aur-version.sh "${{ needs.prepare-nightly.outputs.nightly_label }}")"
+          echo "aur_version=$aur_version" >> "$GITHUB_OUTPUT"
+
+      - name: Setup SSH for AUR
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur_key
+          chmod 600 ~/.ssh/aur_key
+          cat >> ~/.ssh/config <<EOF
+          Host aur.archlinux.org
+            IdentityFile ~/.ssh/aur_key
+            User aur
+          EOF
+          chmod 600 ~/.ssh/config
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+
+      - name: Validate nightly AUR package in Arch Linux
+        env:
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          bash build/scripts/validate-aur-package.sh \
+            --version "${{ needs.prepare-nightly.outputs.nightly_label }}" \
+            --channel nightly \
+            --package-name linglong-store-nightly-bin \
+            --aur-version "${{ steps.aur-version.outputs.aur_version }}" \
+            --sha256-amd64 "${{ steps.checksums.outputs.sha_amd64 }}" \
+            --sha256-sig-amd64 "${{ steps.checksums.outputs.sha_sig_amd64 }}" \
+            --gpg-key-id "$GPG_KEY_ID"
+
+      - name: Publish nightly AUR package
+        env:
+          SHA256_AMD64: ${{ steps.checksums.outputs.sha_amd64 }}
+          SHA256_SIG_AMD64: ${{ steps.checksums.outputs.sha_sig_amd64 }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          bash build/scripts/publish-aur.sh \
+            --version "${{ needs.prepare-nightly.outputs.nightly_label }}" \
+            --channel nightly \
+            --package-name linglong-store-nightly-bin \
+            --repo-url "ssh://aur@aur.archlinux.org/linglong-store-nightly-bin.git" \
+            --aur-version "${{ steps.aur-version.outputs.aur_version }}" \
+            --arch x86_64
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/aur_key

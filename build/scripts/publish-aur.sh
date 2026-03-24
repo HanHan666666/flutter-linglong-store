@@ -4,8 +4,11 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 release_version=""
+channel="stable"
+package_name=""
+aur_version=""
 target_arch="x86_64"
-aur_repo_url="ssh://aur@aur.archlinux.org/linglong-store-bin.git"
+aur_repo_url=""
 
 # SHA256 checksums from environment (set by CI)
 sha256_amd64="${SHA256_AMD64:-}"
@@ -20,12 +23,28 @@ while [[ $# -gt 0 ]]; do
       release_version="$2"
       shift 2
       ;;
+    --channel)
+      channel="$2"
+      shift 2
+      ;;
+    --package-name)
+      package_name="$2"
+      shift 2
+      ;;
+    --repo-url)
+      aur_repo_url="$2"
+      shift 2
+      ;;
+    --aur-version)
+      aur_version="$2"
+      shift 2
+      ;;
     --arch)
       target_arch="$2"
       shift 2
       ;;
     *)
-      echo "Usage: $0 --version <version> [--arch x86_64|aarch64]" >&2
+      echo "Usage: $0 --version <version> [--channel stable|nightly] [--package-name <pkgname>] [--repo-url <url>] [--aur-version <pkgver>] [--arch x86_64|aarch64]" >&2
       exit 64
       ;;
   esac
@@ -34,6 +53,27 @@ done
 if [[ -z "$release_version" ]]; then
   echo "--version is required." >&2
   exit 64
+fi
+
+case "$channel" in
+  stable)
+    : "${package_name:=linglong-store-bin}"
+    : "${aur_version:=$release_version}"
+    ;;
+  nightly)
+    : "${package_name:=linglong-store-nightly-bin}"
+    if [[ -z "$aur_version" ]]; then
+      aur_version="$(bash "$ROOT_DIR/build/scripts/normalize-nightly-aur-version.sh" "$release_version")"
+    fi
+    ;;
+  *)
+    echo "Unsupported channel: $channel" >&2
+    exit 64
+    ;;
+esac
+
+if [[ -z "$aur_repo_url" ]]; then
+  aur_repo_url="ssh://aur@aur.archlinux.org/${package_name}.git"
 fi
 
 # Map architecture names
@@ -51,9 +91,19 @@ case "$target_arch" in
 esac
 
 # Validate SHA256 checksums
-if [[ -z "$sha256_amd64" || -z "$sha256_arm64" ]]; then
-  echo "Error: SHA256_AMD64 and SHA256_ARM64 environment variables are required" >&2
+if [[ -z "$sha256_amd64" || -z "$sha256_sig_amd64" ]]; then
+  echo "Error: SHA256_AMD64 and SHA256_SIG_AMD64 environment variables are required" >&2
   exit 1
+fi
+
+if [[ "$channel" == "stable" && ( -z "$sha256_arm64" || -z "$sha256_sig_arm64" ) ]]; then
+  echo "Error: stable AUR publishing requires SHA256_ARM64 and SHA256_SIG_ARM64" >&2
+  exit 1
+fi
+
+if [[ "$channel" == "nightly" && "$target_arch" != "x86_64" ]]; then
+  echo "Nightly AUR publishing only supports the x86_64 package set." >&2
+  exit 64
 fi
 
 # Setup SSH for AUR
@@ -76,6 +126,9 @@ EOF
 update_aur_repo() {
   local version="$1"
   local work_dir
+  local desktop_filename
+  local changelog_filename
+  local rendered_pkgver
   work_dir="$(mktemp -d)"
 
   echo "Cloning AUR repository..."
@@ -97,11 +150,18 @@ update_aur_repo() {
     --version "$version" \
     --arch "amd64" \
     --output-dir "$metadata_dir" \
+    --channel "$channel" \
     --sha256-amd64 "$sha256_amd64" \
     --sha256-arm64 "$sha256_arm64" \
     --sha256-sig-amd64 "$sha256_sig_amd64" \
     --sha256-sig-arm64 "$sha256_sig_arm64" \
     --gpg-key-id "$gpg_key_id"
+
+  rendered_pkgver="$(sed -n 's/^pkgver=//p' "$metadata_dir/aur/PKGBUILD")"
+  if [[ "$rendered_pkgver" != "$aur_version" ]]; then
+    echo "Rendered PKGBUILD pkgver $rendered_pkgver did not match expected AUR version $aur_version." >&2
+    exit 1
+  fi
 
   mapfile -t rendered_desktop_files < <(find "$metadata_dir/aur" -maxdepth 1 -type f -name '*.desktop' | sort)
   if [[ "${#rendered_desktop_files[@]}" -ne 1 ]]; then
@@ -111,9 +171,17 @@ update_aur_repo() {
 
   desktop_filename="$(basename "${rendered_desktop_files[0]}")"
 
+  mapfile -t rendered_changelog_files < <(find "$metadata_dir/aur" -maxdepth 1 -type f -name '*.changelog' | sort)
+  if [[ "${#rendered_changelog_files[@]}" -ne 1 ]]; then
+    echo "Expected exactly one rendered AUR changelog file in $metadata_dir/aur, found ${#rendered_changelog_files[@]}" >&2
+    exit 1
+  fi
+
+  changelog_filename="$(basename "${rendered_changelog_files[0]}")"
+
   # Copy rendered AUR files.
   cp "$metadata_dir/aur/PKGBUILD" PKGBUILD
-  cp "$metadata_dir/aur/linglong-store-bin.changelog" linglong-store-bin.changelog
+  cp "$metadata_dir/aur/$changelog_filename" "$changelog_filename"
   cp "$metadata_dir/aur/LICENSE" LICENSE
   cp "$metadata_dir/aur/$desktop_filename" "$desktop_filename"
   cp "$metadata_dir/aur/linglong-store.metainfo.xml" linglong-store.metainfo.xml
@@ -129,11 +197,11 @@ update_aur_repo() {
   fi
 
   # Commit and push
-  git add PKGBUILD .SRCINFO linglong-store-bin.changelog LICENSE "$desktop_filename" linglong-store.metainfo.xml linglong-store.svg
-  git -c user.name="HanHan666666" -c user.email="tar.zip@outlook.com" commit -m "Update to version $version"
+  git add PKGBUILD .SRCINFO "$changelog_filename" LICENSE "$desktop_filename" linglong-store.metainfo.xml linglong-store.svg
+  git -c user.name="HanHan666666" -c user.email="tar.zip@outlook.com" commit -m "Update to version $aur_version"
   git push origin master
 
-  echo "AUR package updated to version $version"
+  echo "AUR package updated to version $aur_version"
 
   # Cleanup
   cd /

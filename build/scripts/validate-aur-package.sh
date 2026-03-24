@@ -5,6 +5,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PROJECT_URL="https://github.com/HanHan666666/flutter-linglong-store"
 
 release_version=""
+channel="stable"
+package_name=""
+aur_version=""
 sha256_amd64="${SHA256_AMD64:-}"
 sha256_arm64="${SHA256_ARM64:-}"
 sha256_sig_amd64="${SHA256_SIG_AMD64:-}"
@@ -14,7 +17,7 @@ run_inner="false"
 
 usage() {
   cat <<'EOF' >&2
-Usage: validate-aur-package.sh --version <version> [--sha256-amd64 <sha>] [--sha256-arm64 <sha>] [--sha256-sig-amd64 <sha>] [--sha256-sig-arm64 <sha>] [--gpg-key-id <keyid>] [--inner]
+Usage: validate-aur-package.sh --version <version> [--channel stable|nightly] [--package-name <pkgname>] [--aur-version <pkgver>] [--sha256-amd64 <sha>] [--sha256-arm64 <sha>] [--sha256-sig-amd64 <sha>] [--sha256-sig-arm64 <sha>] [--gpg-key-id <keyid>] [--inner]
 EOF
 }
 
@@ -47,34 +50,137 @@ run_with_retries() {
   return 1
 }
 
+import_builder_gpg_key() {
+  local key_id="$1"
+  local keyserver=""
+
+  if [[ -z "$key_id" ]]; then
+    return 0
+  fi
+
+  # makepkg verifies source signatures with the builder user's keyring.
+  for keyserver in "hkps://keyserver.ubuntu.com" "hkps://keys.openpgp.org"; do
+    if runuser -u builder -- gpg --batch --keyserver "$keyserver" --recv-keys "$key_id" >/dev/null 2>&1; then
+      return 0
+    fi
+
+    sleep 2
+  done
+
+  echo "Failed to import GPG key ${key_id} for AUR source verification." >&2
+  return 1
+}
+
+resolve_channel_defaults() {
+  case "$channel" in
+    stable)
+      : "${package_name:=linglong-store-bin}"
+      : "${aur_version:=$release_version}"
+      ;;
+    nightly)
+      : "${package_name:=linglong-store-nightly-bin}"
+      if [[ -z "$aur_version" ]]; then
+        aur_version="$(bash "$ROOT_DIR/build/scripts/normalize-nightly-aur-version.sh" "$release_version")"
+      fi
+      ;;
+    *)
+      echo "Unsupported channel: $channel" >&2
+      exit 64
+      ;;
+  esac
+}
+
+build_release_asset_url() {
+  local asset_name="$1"
+  local tag_root=""
+
+  # Keep URL resolution aligned with the template renderer's stable/nightly tag model.
+  case "$channel" in
+    stable)
+      tag_root="v${release_version}"
+      ;;
+    nightly)
+      if [[ "$release_version" =~ -nightly\.([0-9]{8})\+[0-9A-Fa-f]+$ ]]; then
+        tag_root="nightly-${BASH_REMATCH[1]}"
+      else
+        echo "Nightly validation requires a version like <semver>-nightly.<YYYYMMDD>+<sha>, got: $release_version" >&2
+        exit 64
+      fi
+      ;;
+  esac
+
+  printf '%s/releases/download/%s/%s\n' "$PROJECT_URL" "$tag_root" "$asset_name"
+}
+
+assert_output_contains() {
+  local haystack="$1"
+  local needle="$2"
+  local error_message="$3"
+
+  if ! grep -Fq "$needle" <<<"$haystack"; then
+    echo "$error_message" >&2
+    exit 1
+  fi
+}
+
+assert_file_contains() {
+  local file_path="$1"
+  local needle="$2"
+  local error_message="$3"
+
+  if ! grep -Fq "$needle" "$file_path"; then
+    echo "$error_message" >&2
+    exit 1
+  fi
+}
+
+assert_file_not_contains() {
+  local file_path="$1"
+  local needle="$2"
+  local error_message="$3"
+
+  if grep -Fq "$needle" "$file_path"; then
+    echo "$error_message" >&2
+    exit 1
+  fi
+}
+
 run_inner_validation() {
   local metadata_dir
   local output
   local pkg_path
   local pkginfo
+  local pkg_contents
+  local desktop_filename
+  local changelog_filename
+  local expected_conflict
+  local expected_pkginfo_pkgver
+  local expected_arch_line_primary
+  local expected_arch_line_secondary
 
-  run_with_retries pacman -Sy --noconfirm --needed base-devel namcap curl git >/dev/null
+  run_with_retries pacman -Sy --noconfirm --needed base-devel namcap curl git gnupg >/dev/null
   useradd -m builder >/dev/null 2>&1 || true
+  import_builder_gpg_key "$gpg_key_id"
 
   metadata_dir="$(mktemp -d)"
   trap 'rm -rf "$metadata_dir"' RETURN
   chown -R builder:builder "$metadata_dir"
 
   if [[ -z "$sha256_amd64" ]]; then
-    sha256_amd64="$(compute_release_sha256 "$PROJECT_URL/releases/download/v${release_version}/linglong-store-${release_version}-linux-amd64.tar.gz")"
+    sha256_amd64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-amd64.tar.gz")")"
   fi
 
-  if [[ -z "$sha256_arm64" ]]; then
-    sha256_arm64="$(compute_release_sha256 "$PROJECT_URL/releases/download/v${release_version}/linglong-store-${release_version}-linux-arm64.tar.gz")"
+  if [[ "$channel" == "stable" && -z "$sha256_arm64" ]]; then
+    sha256_arm64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-arm64.tar.gz")")"
   fi
 
   # Compute signature SHA256 if not provided
   if [[ -z "$sha256_sig_amd64" ]]; then
-    sha256_sig_amd64="$(compute_release_sha256 "$PROJECT_URL/releases/download/v${release_version}/linglong-store-${release_version}-linux-amd64.tar.gz.asc")"
+    sha256_sig_amd64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-amd64.tar.gz.asc")")"
   fi
 
-  if [[ -z "$sha256_sig_arm64" ]]; then
-    sha256_sig_arm64="$(compute_release_sha256 "$PROJECT_URL/releases/download/v${release_version}/linglong-store-${release_version}-linux-arm64.tar.gz.asc")"
+  if [[ "$channel" == "stable" && -z "$sha256_sig_arm64" ]]; then
+    sha256_sig_arm64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-arm64.tar.gz.asc")")"
   fi
 
   bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
@@ -82,6 +188,7 @@ run_inner_validation() {
     --version "$release_version" \
     --arch amd64 \
     --output-dir "$metadata_dir" \
+    --channel "$channel" \
     --sha256-amd64 "$sha256_amd64" \
     --sha256-arm64 "$sha256_arm64" \
     --sha256-sig-amd64 "$sha256_sig_amd64" \
@@ -96,9 +203,9 @@ cd "$metadata_dir/aur"
 makepkg --printsrcinfo > .SRCINFO
 makepkg --verifysource --nodeps >/dev/null
 makepkg -f --nodeps --noconfirm >/dev/null
-pkg_path="\$(find . -maxdepth 1 -name "linglong-store-bin-${release_version}-1-*.pkg.tar.zst" ! -name '*-debug-*' -print -quit)"
+pkg_path="\$(find . -maxdepth 1 -name "${package_name}-${aur_version}-1-*.pkg.tar.zst" ! -name '*-debug-*' -print -quit)"
 if [[ -z "\$pkg_path" ]]; then
-  echo "Failed to locate built linglong-store-bin package." >&2
+  echo "Failed to locate built ${package_name} package." >&2
   exit 1
 fi
 printf '%s\n' "\$pkg_path" > .pkg-path
@@ -107,6 +214,25 @@ EOF
   )"
   pkg_path="$(<"$metadata_dir/aur/.pkg-path")"
   pkginfo="$(bsdtar -xOf "$metadata_dir/aur/$pkg_path" .PKGINFO)"
+  pkg_contents="$(bsdtar -tf "$metadata_dir/aur/$pkg_path")"
+
+  case "$channel" in
+    stable)
+      desktop_filename="linglong-store.desktop"
+      changelog_filename="linglong-store-bin.changelog"
+      expected_conflict="linglong-store"
+      expected_arch_line_primary="arch = x86_64"
+      expected_arch_line_secondary="arch = aarch64"
+      ;;
+    nightly)
+      desktop_filename="linglong-store-nightly.desktop"
+      changelog_filename="${package_name}.changelog"
+      expected_conflict="linglong-store-bin"
+      expected_arch_line_primary="arch = x86_64"
+      expected_arch_line_secondary="arch = aarch64"
+      ;;
+  esac
+  expected_pkginfo_pkgver="${aur_version}-1"
 
   if [[ -n "$output" ]]; then
     printf '%s\n' "$output"
@@ -142,10 +268,47 @@ EOF
     exit 1
   fi
 
-  if ! grep -Fq "pkgdesc = Community store for browsing and installing Linglong applications" "$metadata_dir/aur/.SRCINFO"; then
-    echo "AUR metadata did not render the expected package description." >&2
-    exit 1
+  assert_file_contains "$metadata_dir/aur/.SRCINFO" "pkgname = ${package_name}" \
+    "AUR metadata did not render the expected package name."
+  assert_file_contains "$metadata_dir/aur/.SRCINFO" "pkgver = ${aur_version}" \
+    "AUR metadata did not render the expected pkgver."
+  assert_file_contains "$metadata_dir/aur/.SRCINFO" "pkgdesc = Community store for browsing and installing Linglong applications" \
+    "AUR metadata did not render the expected package description."
+  assert_file_contains "$metadata_dir/aur/.SRCINFO" "changelog = ${changelog_filename}" \
+    "AUR metadata did not render the expected changelog filename."
+  assert_file_contains "$metadata_dir/aur/.SRCINFO" "source = ${desktop_filename}" \
+    "AUR metadata did not render the expected desktop filename."
+  assert_file_contains "$metadata_dir/aur/.SRCINFO" "provides = linglong-store" \
+    "AUR metadata did not render the expected provides entry."
+  assert_file_contains "$metadata_dir/aur/.SRCINFO" "conflicts = ${expected_conflict}" \
+    "AUR metadata did not render the expected conflicts entry."
+  assert_file_contains "$metadata_dir/aur/.SRCINFO" "$expected_arch_line_primary" \
+    "AUR metadata did not render the expected primary architecture."
+
+  if [[ "$channel" == "stable" ]]; then
+    assert_file_contains "$metadata_dir/aur/.SRCINFO" "$expected_arch_line_secondary" \
+      "Stable AUR metadata is still missing the arm64 architecture."
+  else
+    assert_file_not_contains "$metadata_dir/aur/.SRCINFO" "$expected_arch_line_secondary" \
+      "Nightly AUR metadata unexpectedly rendered the arm64 architecture."
+    assert_file_not_contains "$metadata_dir/aur/.SRCINFO" "source_aarch64 =" \
+      "Nightly AUR metadata unexpectedly rendered source_aarch64 entries."
   fi
+
+  assert_output_contains "$pkginfo" "pkgname = ${package_name}" \
+    "Built AUR package did not keep the expected package name."
+  assert_output_contains "$pkginfo" "pkgver = ${expected_pkginfo_pkgver}" \
+    "Built AUR package did not keep the expected pkgver."
+  assert_output_contains "$pkginfo" "depend = glib2" \
+    "AUR package metadata is still missing the glib2 runtime dependency."
+  assert_output_contains "$pkginfo" "depend = bash" \
+    "AUR package metadata is still missing the bash runtime dependency."
+  assert_output_contains "$pkginfo" "provides = linglong-store" \
+    "Built AUR package did not keep the expected provides entry."
+  assert_output_contains "$pkginfo" "conflict = ${expected_conflict}" \
+    "Built AUR package did not keep the expected conflicts entry."
+  assert_output_contains "$pkg_contents" "usr/share/applications/${desktop_filename}" \
+    "Built AUR package did not install the expected desktop file."
 
   echo "AUR package validation passed."
 }
@@ -154,6 +317,18 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --version)
       release_version="$2"
+      shift 2
+      ;;
+    --channel)
+      channel="$2"
+      shift 2
+      ;;
+    --package-name)
+      package_name="$2"
+      shift 2
+      ;;
+    --aur-version)
+      aur_version="$2"
       shift 2
       ;;
     --sha256-amd64)
@@ -187,14 +362,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ "$run_inner" == "true" ]]; then
-  run_inner_validation
-  exit 0
-fi
-
 if [[ -z "$release_version" ]]; then
   usage
   exit 64
+fi
+
+resolve_channel_defaults
+
+if [[ "$run_inner" == "true" ]]; then
+  run_inner_validation
+  exit 0
 fi
 
 docker run --rm \
@@ -206,4 +383,9 @@ docker run --rm \
   -e SHA256_SIG_ARM64="$sha256_sig_arm64" \
   -e GPG_KEY_ID="$gpg_key_id" \
   archlinux:latest \
-  /bin/bash build/scripts/validate-aur-package.sh --inner --version "$release_version"
+  /bin/bash build/scripts/validate-aur-package.sh \
+    --inner \
+    --version "$release_version" \
+    --channel "$channel" \
+    --package-name "$package_name" \
+    --aur-version "$aur_version"

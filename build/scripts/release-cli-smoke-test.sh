@@ -36,5 +36,10 @@ bash build/scripts/render-packaging-templates.sh \
   --output-dir "$RENDER_OUTPUT_DIR"
 
 test -f "$RENDER_OUTPUT_DIR/linglong-store.desktop"
+grep -q '^Name=玲珑应用商店社区版$' "$RENDER_OUTPUT_DIR/linglong-store.desktop"
+grep -q '^Comment=Linglong Store Community Edition$' "$RENDER_OUTPUT_DIR/linglong-store.desktop"
+grep -q '<name>玲珑应用商店社区版</name>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
+grep -q '<summary>Linglong Store Community Edition</summary>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
+grep -q '<launchable type="desktop-id">linglong-store.desktop</launchable>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 
 echo "Release CLI smoke test passed."

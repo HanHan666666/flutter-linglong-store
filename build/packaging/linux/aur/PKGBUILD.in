@@ -79,7 +79,7 @@ LAUNCHER
 
   # Validate desktop file if tool available
   if command -v desktop-file-validate &>/dev/null; then
-    desktop-file-validate "${pkgdir}/usr/share/applications/linglong-store.desktop" || true
+    desktop-file-validate "${pkgdir}/usr/share/applications/@DESKTOP_FILENAME@" || true
   fi
 
   # Install icon

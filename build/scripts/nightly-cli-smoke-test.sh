@@ -36,7 +36,9 @@ bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
 
 test -f "$RENDER_OUTPUT_DIR/linglong-store-nightly.desktop"
 grep -q '^Name=.*Nightly' "$RENDER_OUTPUT_DIR/linglong-store-nightly.desktop"
+grep -q '^Comment=.*Nightly' "$RENDER_OUTPUT_DIR/linglong-store-nightly.desktop"
 grep -q '<name>.*Nightly</name>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
+grep -q '<summary>.*Nightly</summary>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 grep -q '<launchable type="desktop-id">linglong-store-nightly.desktop</launchable>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 
 bash "$ROOT_DIR/build/scripts/prepare-nightly-assets.sh" \

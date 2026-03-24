@@ -6,6 +6,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 release_version=""
 target_arch="x86_64"
 aur_repo_url="ssh://aur@aur.archlinux.org/linglong-store-bin.git"
+channel="stable"
+desktop_filename="linglong-store.desktop"
 
 # SHA256 checksums from environment (set by CI)
 sha256_amd64="${SHA256_AMD64:-}"
@@ -24,8 +26,12 @@ while [[ $# -gt 0 ]]; do
       target_arch="$2"
       shift 2
       ;;
+    --channel)
+      channel="$2"
+      shift 2
+      ;;
     *)
-      echo "Usage: $0 --version <version> [--arch x86_64|aarch64]" >&2
+      echo "Usage: $0 --version <version> [--arch x86_64|aarch64] [--channel stable|nightly]" >&2
       exit 64
       ;;
   esac
@@ -46,6 +52,19 @@ case "$target_arch" in
     ;;
   *)
     echo "Unsupported architecture: $target_arch" >&2
+    exit 64
+    ;;
+esac
+
+case "$channel" in
+  stable)
+    ;;
+  nightly)
+    # Nightly publishes a different desktop filename while keeping the same install layout.
+    desktop_filename="linglong-store-nightly.desktop"
+    ;;
+  *)
+    echo "Unsupported channel: $channel" >&2
     exit 64
     ;;
 esac
@@ -97,6 +116,7 @@ update_aur_repo() {
     --version "$version" \
     --arch "amd64" \
     --output-dir "$metadata_dir" \
+    --channel "$channel" \
     --sha256-amd64 "$sha256_amd64" \
     --sha256-arm64 "$sha256_arm64" \
     --sha256-sig-amd64 "$sha256_sig_amd64" \
@@ -107,7 +127,7 @@ update_aur_repo() {
   cp "$metadata_dir/aur/PKGBUILD" PKGBUILD
   cp "$metadata_dir/aur/linglong-store-bin.changelog" linglong-store-bin.changelog
   cp "$metadata_dir/aur/LICENSE" LICENSE
-  cp "$metadata_dir/aur/linglong-store.desktop" linglong-store.desktop
+  cp "$metadata_dir/aur/$desktop_filename" "$desktop_filename"
   cp "$metadata_dir/aur/linglong-store.metainfo.xml" linglong-store.metainfo.xml
   cp "$metadata_dir/aur/linglong-store.svg" linglong-store.svg
 
@@ -121,7 +141,7 @@ update_aur_repo() {
   fi
 
   # Commit and push
-  git add PKGBUILD .SRCINFO linglong-store-bin.changelog LICENSE linglong-store.desktop linglong-store.metainfo.xml linglong-store.svg
+  git add PKGBUILD .SRCINFO linglong-store-bin.changelog LICENSE "$desktop_filename" linglong-store.metainfo.xml linglong-store.svg
   git -c user.name="HanHan666666" -c user.email="tar.zip@outlook.com" commit -m "Update to version $version"
   git push origin master
 

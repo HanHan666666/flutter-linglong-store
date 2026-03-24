@@ -31,7 +31,7 @@ validpgpkeys=('@GPG_KEY_ID@')
 
 source=(
   'LICENSE'
-  'linglong-store.desktop'
+  '@DESKTOP_FILENAME@'
   'linglong-store.metainfo.xml'
   'linglong-store.svg'
 )
@@ -75,7 +75,7 @@ LAUNCHER
 
   # Install desktop metadata from tracked AUR sources so package metadata
   # does not depend on optional files inside the release tarball.
-  install -Dm644 "${srcdir}/linglong-store.desktop" "${pkgdir}/usr/share/applications/linglong-store.desktop"
+  install -Dm644 "${srcdir}/@DESKTOP_FILENAME@" "${pkgdir}/usr/share/applications/@DESKTOP_FILENAME@"
 
   # Validate desktop file if tool available
   if command -v desktop-file-validate &>/dev/null; then

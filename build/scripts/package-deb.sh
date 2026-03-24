@@ -13,6 +13,8 @@ fi
 
 release_version=""
 target_arch=""
+channel="stable"
+desktop_filename="linglong-store.desktop"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -24,8 +26,12 @@ while [[ $# -gt 0 ]]; do
       target_arch="$2"
       shift 2
       ;;
+    --channel)
+      channel="$2"
+      shift 2
+      ;;
     *)
-      echo "Usage: $0 [--inner] --version <version> --arch <amd64|arm64>" >&2
+      echo "Usage: $0 [--inner] --version <version> --arch <amd64|arm64> [--channel stable|nightly]" >&2
       exit 64
       ;;
   esac
@@ -45,6 +51,19 @@ case "$target_arch" in
     ;;
   *)
     echo "Unsupported architecture: $target_arch" >&2
+    exit 64
+    ;;
+esac
+
+case "$channel" in
+  stable)
+    ;;
+  nightly)
+    # Nightly only changes the desktop metadata filename, not the install locations.
+    desktop_filename="linglong-store-nightly.desktop"
+    ;;
+  *)
+    echo "Unsupported channel: $channel" >&2
     exit 64
     ;;
 esac
@@ -86,10 +105,11 @@ installed_size_kb="$(du -sk "$payload_dir" | cut -f1)"
   --version "$release_version" \
   --arch "$target_arch" \
   --output-dir "$metadata_dir" \
-  --installed-size-kb "$installed_size_kb"
+  --installed-size-kb "$installed_size_kb" \
+  --channel "$channel"
 
 cp "$metadata_dir/deb/control" "$payload_dir/DEBIAN/control"
-cp "$metadata_dir/linglong-store.desktop" "$payload_dir/usr/share/applications/linglong-store.desktop"
+cp "$metadata_dir/$desktop_filename" "$payload_dir/usr/share/applications/$desktop_filename"
 cp "$metadata_dir/appimage/linglong-store.appdata.xml" "$payload_dir/usr/share/metainfo/linglong-store.appdata.xml"
 
 rm -f "$artifact_path"

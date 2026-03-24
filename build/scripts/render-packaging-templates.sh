@@ -207,6 +207,7 @@ render_aur_template() {
   local content
   content="$(<"$input_path")"
   content="${content//@PACKAGE_NAME@/$package_name}"
+  content="${content//@DESKTOP_FILENAME@/$desktop_filename}"
   content="${content//@VERSION@/$release_version}"
   content="${content//@MAINTAINER_NAME@/$maintainer_name}"
   content="${content//@MAINTAINER_EMAIL@/$maintainer_email}"

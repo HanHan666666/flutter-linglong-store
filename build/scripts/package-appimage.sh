@@ -13,6 +13,8 @@ fi
 
 release_version=""
 target_arch=""
+channel="stable"
+desktop_filename="linglong-store.desktop"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -24,8 +26,12 @@ while [[ $# -gt 0 ]]; do
       target_arch="$2"
       shift 2
       ;;
+    --channel)
+      channel="$2"
+      shift 2
+      ;;
     *)
-      echo "Usage: $0 [--inner] --version <version> --arch <amd64|arm64>" >&2
+      echo "Usage: $0 [--inner] --version <version> --arch <amd64|arm64> [--channel stable|nightly]" >&2
       exit 64
       ;;
   esac
@@ -47,6 +53,19 @@ case "$target_arch" in
     ;;
   *)
     echo "Unsupported architecture: $target_arch" >&2
+    exit 64
+    ;;
+esac
+
+case "$channel" in
+  stable)
+    ;;
+  nightly)
+    # Nightly keeps the same install layout and executable, but uses a distinct desktop filename.
+    desktop_filename="linglong-store-nightly.desktop"
+    ;;
+  *)
+    echo "Unsupported channel: $channel" >&2
     exit 64
     ;;
 esac
@@ -83,19 +102,20 @@ chmod +x "$appdir/usr/bin/linglong-store"
   --inner \
   --version "$release_version" \
   --arch "$target_arch" \
-  --output-dir "$metadata_dir"
+  --output-dir "$metadata_dir" \
+  --channel "$channel"
 
 rsvg-convert -w 256 -h 256 "$ROOT_DIR/assets/icons/logo.svg" -o "$appdir/linglong-store.png"
 cp "$appdir/linglong-store.png" "$appdir/usr/share/icons/hicolor/256x256/apps/linglong-store.png"
-cp "$metadata_dir/linglong-store.desktop" "$appdir/linglong-store.desktop"
-cp "$metadata_dir/linglong-store.desktop" "$appdir/usr/share/applications/linglong-store.desktop"
+cp "$metadata_dir/$desktop_filename" "$appdir/$desktop_filename"
+cp "$metadata_dir/$desktop_filename" "$appdir/usr/share/applications/$desktop_filename"
 cp "$metadata_dir/appimage/AppRun" "$appdir/AppRun"
 cp "$metadata_dir/appimage/linglong-store.appdata.xml" "$appdir/usr/share/metainfo/linglong-store.appdata.xml"
 chmod +x "$appdir/AppRun"
 
 linuxdeploy \
   --appdir "$appdir" \
-  --desktop-file "$appdir/linglong-store.desktop" \
+  --desktop-file "$appdir/$desktop_filename" \
   --icon-file "$appdir/linglong-store.png"
 
 rm -f "$artifact_path"

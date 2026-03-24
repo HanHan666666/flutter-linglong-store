@@ -13,6 +13,8 @@ fi
 
 release_version=""
 target_arch=""
+channel="stable"
+desktop_filename="linglong-store.desktop"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -24,8 +26,12 @@ while [[ $# -gt 0 ]]; do
       target_arch="$2"
       shift 2
       ;;
+    --channel)
+      channel="$2"
+      shift 2
+      ;;
     *)
-      echo "Usage: $0 [--inner] --version <version> --arch <amd64|arm64>" >&2
+      echo "Usage: $0 [--inner] --version <version> --arch <amd64|arm64> [--channel stable|nightly]" >&2
       exit 64
       ;;
   esac
@@ -47,6 +53,19 @@ case "$target_arch" in
     ;;
   *)
     echo "Unsupported architecture: $target_arch" >&2
+    exit 64
+    ;;
+esac
+
+case "$channel" in
+  stable)
+    ;;
+  nightly)
+    # Keep the RPM payload layout stable while switching the user-facing desktop filename.
+    desktop_filename="linglong-store-nightly.desktop"
+    ;;
+  *)
+    echo "Unsupported channel: $channel" >&2
     exit 64
     ;;
 esac
@@ -92,9 +111,10 @@ rsvg-convert -w 256 -h 256 "$ROOT_DIR/assets/icons/logo.svg" -o "$icon_path"
   --version "$release_version" \
   --arch "$target_arch" \
   --output-dir "$metadata_dir" \
-  --payload-dir "$payload_dir"
+  --payload-dir "$payload_dir" \
+  --channel "$channel"
 
-cp "$metadata_dir/linglong-store.desktop" "$payload_dir/usr/share/applications/linglong-store.desktop"
+cp "$metadata_dir/$desktop_filename" "$payload_dir/usr/share/applications/$desktop_filename"
 cp "$metadata_dir/appimage/linglong-store.appdata.xml" "$payload_dir/usr/share/metainfo/linglong-store.appdata.xml"
 cp "$metadata_dir/rpm/linglong-store.spec" "$rpmbuild_root/SPECS/linglong-store.spec"
 

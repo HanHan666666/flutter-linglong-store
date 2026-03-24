@@ -40,17 +40,13 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    // family provider 会自动根据 code 参数初始化，无需手动调用 initCategory
   }
 
   @override
   void didUpdateWidget(CustomCategoryPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.code != widget.code) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || !_scrollController.hasClients) return;
-        _scrollController.jumpTo(0);
-      });
-    }
+    // family provider 会自动根据 code 参数变化重新构建，无需手动处理
   }
 
   @override
@@ -86,8 +82,7 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
     final state = ref.watch(customCategoryProvider(widget.code));
 
     return RefreshIndicator(
-      onRefresh: () =>
-          ref.read(customCategoryProvider(widget.code).notifier).refresh(),
+      onRefresh: () => ref.read(customCategoryProvider(widget.code).notifier).refresh(),
       child: _buildBody(state),
     );
   }
@@ -102,8 +97,7 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
     if (state.error != null && state.data == null) {
       return ErrorState.generic(
         description: state.error,
-        onRetry: () =>
-            ref.read(customCategoryProvider(widget.code).notifier).loadData(),
+        onRetry: () => ref.read(customCategoryProvider(widget.code).notifier).loadData(),
       );
     }
 

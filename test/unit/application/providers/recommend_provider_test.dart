@@ -101,12 +101,12 @@ void main() {
         currentPage: 1,
       );
 
-      when(mockApiService.getWelcomeCarouselList(any)).thenAnswer(
-        (_) => carouselCompleter.future,
-      );
-      when(mockApiService.getWelcomeAppList(any)).thenAnswer(
-        (_) => listCompleter.future,
-      );
+      when(
+        mockApiService.getWelcomeCarouselList(any),
+      ).thenAnswer((_) => carouselCompleter.future);
+      when(
+        mockApiService.getWelcomeAppList(any),
+      ).thenAnswer((_) => listCompleter.future);
 
       final container = ProviderContainer(
         overrides: [
@@ -124,15 +124,13 @@ void main() {
       expect(hydratedState.data?.apps.items.single.name, equals('Cached App'));
 
       carouselCompleter.complete(
-        _buildCarouselResponse(
-          const [
-            AppListItemDTO(
-              appId: 'remote-banner',
-              appName: 'Remote Banner',
-              appIcon: 'https://example.com/remote-banner.png',
-            ),
-          ],
-        ),
+        _buildCarouselResponse(const [
+          AppListItemDTO(
+            appId: 'remote-banner',
+            appName: 'Remote Banner',
+            appIcon: 'https://example.com/remote-banner.png',
+          ),
+        ]),
       );
       listCompleter.complete(
         _buildPagedResponse(
@@ -157,10 +155,12 @@ void main() {
     });
 
     test('loads more with rust page size 10', () async {
-      when(mockApiService.getWelcomeCarouselList(any)).thenAnswer(
-        (_) async => _buildCarouselResponse(const []),
-      );
-      when(mockApiService.getWelcomeAppList(any)).thenAnswer((invocation) async {
+      when(
+        mockApiService.getWelcomeCarouselList(any),
+      ).thenAnswer((_) async => _buildCarouselResponse(const []));
+      when(mockApiService.getWelcomeAppList(any)).thenAnswer((
+        invocation,
+      ) async {
         final request = invocation.positionalArguments.single as PageParams;
         if (request.pageNo == 1) {
           return _buildPagedResponse(
@@ -209,9 +209,9 @@ void main() {
       final state = container.read(recommendProvider);
       expect(state.data?.apps.items, hasLength(2));
 
-      final captured =
-          verify(mockApiService.getWelcomeAppList(captureAny)).captured
-              .cast<PageParams>();
+      final captured = verify(
+        mockApiService.getWelcomeAppList(captureAny),
+      ).captured.cast<PageParams>();
       expect(captured[0].pageSize, equals(10));
       expect(captured[1].pageNo, equals(2));
       expect(captured[1].pageSize, equals(10));
@@ -267,7 +267,9 @@ HttpResponse<AppListArrayResponse> _buildCarouselResponse(
 ) {
   return HttpResponse(
     AppListArrayResponse(code: 200, data: data),
-    Response(requestOptions: RequestOptions(path: '/visit/getWelcomeCarouselList')),
+    Response(
+      requestOptions: RequestOptions(path: '/visit/getWelcomeCarouselList'),
+    ),
   );
 }
 

@@ -472,6 +472,76 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
     return runtime.split(':').first;
   }
 
+  /// 根据 XDG Base Directory Specification 获取桌面目录路径
+  ///
+  /// 优先级顺序：
+  /// 1. XDG_DESKTOP_DIR 环境变量
+  /// 2. xdg-user-dir DESKTOP 命令
+  /// 3. ~/.config/user-dirs.dirs 配置文件
+  /// 4. 默认 ~/Desktop
+  Future<String> _getDesktopDirectory() async {
+    // 优先级1: XDG_DESKTOP_DIR 环境变量
+    final xdgDesktop = Platform.environment['XDG_DESKTOP_DIR'];
+    if (xdgDesktop != null && xdgDesktop.isNotEmpty) {
+      final dir = Directory(xdgDesktop);
+      if (await dir.exists()) {
+        AppLogger.debug('[LinglongCli] 使用 XDG_DESKTOP_DIR: $xdgDesktop');
+        return xdgDesktop;
+      }
+    }
+
+    // 优先级2: 通过 xdg-user-dir 命令获取
+    try {
+      final result = await Process.run('xdg-user-dir', ['DESKTOP']);
+      if (result.exitCode == 0) {
+        final path = (result.stdout as String).trim();
+        if (path.isNotEmpty && path != '/') {
+          final dir = Directory(path);
+          if (await dir.exists()) {
+            AppLogger.debug('[LinglongCli] 使用 xdg-user-dir: $path');
+            return path;
+          }
+        }
+      }
+    } catch (e) {
+      AppLogger.debug('[LinglongCli] xdg-user-dir 命令不可用: $e');
+    }
+
+    // 优先级3: 解析 ~/.config/user-dirs.dirs
+    try {
+      final home = Platform.environment['HOME'];
+      if (home != null && home.isNotEmpty) {
+        final userDirsFile = File('$home/.config/user-dirs.dirs');
+        if (await userDirsFile.exists()) {
+          final content = await userDirsFile.readAsString();
+          final match = RegExp(r'XDG_DESKTOP_DIR="([^"]+)"').firstMatch(content);
+          if (match != null) {
+            final rawPath = match.group(1)!;
+            final path = rawPath
+                .replaceAll(r'\$HOME', home)
+                .replaceAll(r'$HOME', home);
+            final dir = Directory(path);
+            if (await dir.exists()) {
+              AppLogger.debug('[LinglongCli] 使用 user-dirs.dirs: $path');
+              return path;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      AppLogger.debug('[LinglongCli] 解析 user-dirs.dirs 失败: $e');
+    }
+
+    // Fallback: 默认 ~/Desktop
+    final home = Platform.environment['HOME'];
+    if (home == null || home.isEmpty) {
+      throw Exception('无法获取 HOME 目录');
+    }
+    final fallbackPath = '$home/Desktop';
+    AppLogger.debug('[LinglongCli] 使用 fallback 路径: $fallbackPath');
+    return fallbackPath;
+  }
+
   @override
   Future<String> createDesktopShortcut(String appId) async {
     try {
@@ -509,12 +579,8 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         return '未找到应用导出的 desktop 文件: $appId';
       }
 
-      // 4. 获取桌面目录路径
-      final home = Platform.environment['HOME'];
-      if (home == null || home.isEmpty) {
-        return '无法获取 HOME 目录';
-      }
-      final desktopDir = '$home/Desktop';
+      // 4. 根据 XDG 规范获取桌面目录路径
+      final desktopDir = await _getDesktopDirectory();
 
       // 5. 确保桌面目录存在
       final desktopDirFile = Directory(desktopDir);

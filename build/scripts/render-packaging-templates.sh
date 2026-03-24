@@ -135,13 +135,39 @@ aur_source_aarch64_block=$'source_aarch64=(\n  "linglong-store-@AUR_SOURCE_VERSI
 aur_sha256sums_aarch64_block=$'sha256sums_aarch64=(\n  \'@SHA256_ARM64@\'\n  \'@SHA256_SIG_ARM64@\'\n)'
 should_render_aur="false"
 
+has_any_aur_inputs="false"
+if [[ -n "$sha256_amd64" || -n "$sha256_arm64" || -n "$sha256_sig_amd64" || -n "$sha256_sig_arm64" || -n "$gpg_key_id" ]]; then
+  has_any_aur_inputs="true"
+fi
+
+require_aur_prerequisites() {
+  local mode="$1"
+  shift
+
+  local missing=()
+  local name
+  for name in "$@"; do
+    if [[ -z "${!name}" ]]; then
+      missing+=("$name")
+    fi
+  done
+
+  if [[ "${#missing[@]}" -gt 0 ]]; then
+    echo "$mode AUR rendering requires: ${missing[*]}" >&2
+    exit 64
+  fi
+}
+
 case "$channel" in
   stable)
-    if [[ -n "$sha256_amd64" || -n "$sha256_arm64" ]]; then
-      if [[ -z "$sha256_amd64" || -z "$sha256_arm64" ]]; then
-        echo "Stable AUR rendering requires both amd64 and arm64 SHA256 values." >&2
-        exit 64
-      fi
+    if [[ "$has_any_aur_inputs" == "true" ]]; then
+      require_aur_prerequisites \
+        "Stable" \
+        sha256_amd64 \
+        sha256_arm64 \
+        sha256_sig_amd64 \
+        sha256_sig_arm64 \
+        gpg_key_id
       should_render_aur="true"
     fi
     ;;
@@ -158,11 +184,12 @@ case "$channel" in
     aur_source_aarch64_block=""
     aur_sha256sums_aarch64_block=""
 
-    if [[ -n "$sha256_amd64" || -n "$sha256_arm64" ]]; then
-      if [[ -z "$sha256_amd64" ]]; then
-        echo "Nightly AUR rendering requires an amd64 SHA256 value." >&2
-        exit 64
-      fi
+    if [[ "$has_any_aur_inputs" == "true" ]]; then
+      require_aur_prerequisites \
+        "Nightly" \
+        sha256_amd64 \
+        sha256_sig_amd64 \
+        gpg_key_id
       should_render_aur="true"
     fi
 

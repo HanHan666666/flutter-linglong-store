@@ -12,6 +12,11 @@ if [[ -z "$nightly_version" ]]; then
   exit 64
 fi
 
+if [[ ! "$nightly_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]{8}\+[0-9A-Fa-f]+$ ]]; then
+  echo "Nightly version must match <semver>-nightly.<YYYYMMDD>+<sha>." >&2
+  exit 64
+fi
+
 normalized_version="${nightly_version/-nightly./_nightly.}"
 normalized_version="${normalized_version//+/.}"
 

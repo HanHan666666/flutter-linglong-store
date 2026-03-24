@@ -35,6 +35,10 @@ fi
 normalized_aur_version="$(bash "$ROOT_DIR/build/scripts/normalize-nightly-aur-version.sh" \
   "3.0.2-nightly.20260324+8190b89")"
 test "$normalized_aur_version" = "3.0.2_nightly.20260324.8190b89"
+if bash "$ROOT_DIR/build/scripts/normalize-nightly-aur-version.sh" "3.0.2" >/dev/null 2>&1; then
+  echo "normalize-nightly-aur-version.sh unexpectedly accepted a non-nightly version." >&2
+  exit 1
+fi
 current_nightly_aur_version="$(bash "$ROOT_DIR/build/scripts/normalize-nightly-aur-version.sh" \
   "$nightly_label")"
 
@@ -57,11 +61,14 @@ bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
 
 test -f "$STABLE_AUR_OUTPUT_DIR/aur/PKGBUILD"
 assert_no_template_placeholders "$STABLE_AUR_OUTPUT_DIR/aur/PKGBUILD"
+test -f "$STABLE_AUR_OUTPUT_DIR/aur/linglong-store-bin.changelog"
+assert_no_template_placeholders "$STABLE_AUR_OUTPUT_DIR/aur/linglong-store-bin.changelog"
 grep -q '^pkgname=linglong-store-bin$' "$STABLE_AUR_OUTPUT_DIR/aur/PKGBUILD"
 grep -q "^arch=('x86_64' 'aarch64')$" "$STABLE_AUR_OUTPUT_DIR/aur/PKGBUILD"
 grep -q 'linglong-store-'"$base_version"'-linux-arm64.tar.gz::https://github.com/HanHan666666/flutter-linglong-store/releases/download/v'"$base_version"'/linglong-store-'"$base_version"'-linux-arm64.tar.gz' \
   "$STABLE_AUR_OUTPUT_DIR/aur/PKGBUILD"
 grep -q "^  'deadbeef'$" "$STABLE_AUR_OUTPUT_DIR/aur/PKGBUILD"
+grep -q '/releases/tag/v'"$base_version"'$' "$STABLE_AUR_OUTPUT_DIR/aur/linglong-store-bin.changelog"
 
 bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
   --inner \
@@ -82,10 +89,13 @@ bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
 
 test -f "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
 assert_no_template_placeholders "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
+test -f "$NIGHTLY_AUR_OUTPUT_DIR/aur/linglong-store-nightly-bin.changelog"
+assert_no_template_placeholders "$NIGHTLY_AUR_OUTPUT_DIR/aur/linglong-store-nightly-bin.changelog"
 grep -q '^pkgname=linglong-store-nightly-bin$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
 grep -q "^pkgver=${current_nightly_aur_version}$" "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
 grep -q "^arch=('x86_64')$" "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
 grep -q '^conflicts=('"'linglong-store-bin'"')$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
+grep -q '/releases/tag/nightly-'"$nightly_date"'$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/linglong-store-nightly-bin.changelog"
 if grep -q '^source_aarch64=' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"; then
   echo "Nightly PKGBUILD unexpectedly rendered source_aarch64 block." >&2
   exit 1

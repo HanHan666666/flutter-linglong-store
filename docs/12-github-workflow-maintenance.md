@@ -182,6 +182,10 @@ chmod 600 ~/.gnupg/rpm-gpg-passphrase
 # 签名前先确认 secret key 已导入
 gpg --batch --list-secret-keys --keyid-format LONG "$GPG_KEY_ID"
 
+# rpm -K 依赖 rpmdb keyring，还要额外导入公钥
+gpg --batch --armor --export "$GPG_KEY_ID" > /tmp/rpm-signing-public-key.asc
+rpm --import /tmp/rpm-signing-public-key.asc
+
 # 签名
 rpmsign --addsign package.rpm
 

@@ -297,6 +297,9 @@ jobs:
           printf '%s' "$GPG_PASSPHRASE" > ~/.gnupg/rpm-gpg-passphrase
           chmod 600 ~/.gnupg/rpm-gpg-passphrase
           gpg --batch --list-secret-keys --keyid-format LONG "$GPG_KEY_ID"
+          # rpm -K verifies against the rpmdb keyring, so import the matching public key too.
+          gpg --batch --armor --export "$GPG_KEY_ID" > /tmp/rpm-signing-public-key.asc
+          rpm --import /tmp/rpm-signing-public-key.asc
           cat > ~/.rpmmacros <<EOF
           %_signature gpg
           %_gpg_name ${GPG_KEY_ID}

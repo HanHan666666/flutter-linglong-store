@@ -5,7 +5,7 @@
   <summary>@SUMMARY@</summary>
   <metadata_license>MIT</metadata_license>
   <project_license>MIT</project_license>
-  <launchable type="desktop-id">linglong-store.desktop</launchable>
+  <launchable type="desktop-id">@LAUNCHABLE_DESKTOP_ID@</launchable>
   <description>
     <p>@DESCRIPTION@</p>
   </description>

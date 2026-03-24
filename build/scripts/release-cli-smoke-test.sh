@@ -2,6 +2,15 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/linglong-release-smoke.XXXXXX")"
+RENDER_OUTPUT_DIR="$TMP_ROOT/render"
+
+cleanup() {
+  rm -rf "$TMP_ROOT"
+}
+
+trap cleanup EXIT
+
 cd "$ROOT_DIR"
 
 version_output="$(bash build/scripts/resolve-release-version.sh)"
@@ -19,5 +28,13 @@ if [[ "$first_line" != "## Release Notes" ]]; then
   echo "Expected generate-changelog.sh to start with release notes header, got: $first_line" >&2
   exit 1
 fi
+
+bash build/scripts/render-packaging-templates.sh \
+  --inner \
+  --version "$version_output" \
+  --arch amd64 \
+  --output-dir "$RENDER_OUTPUT_DIR"
+
+test -f "$RENDER_OUTPUT_DIR/linglong-store.desktop"
 
 echo "Release CLI smoke test passed."

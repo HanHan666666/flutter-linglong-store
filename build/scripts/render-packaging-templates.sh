@@ -17,6 +17,7 @@ output_dir=""
 installed_size_kb="0"
 release_number="1"
 payload_dir=""
+channel="stable"
 sha256_amd64=""
 sha256_arm64=""
 sha256_sig_amd64=""
@@ -56,6 +57,10 @@ while [[ $# -gt 0 ]]; do
       payload_dir="$2"
       shift 2
       ;;
+    --channel)
+      channel="$2"
+      shift 2
+      ;;
     --sha256-amd64)
       sha256_amd64="$2"
       shift 2
@@ -77,7 +82,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     *)
-      echo "Usage: $0 [--inner] --version <version> --arch <amd64|arm64> --output-dir <dir> [--installed-size-kb <kb>] [--release <n>] [--payload-dir <dir>]" >&2
+      echo "Usage: $0 [--inner] --version <version> --arch <amd64|arm64> --output-dir <dir> [--installed-size-kb <kb>] [--release <n>] [--payload-dir <dir>] [--channel stable|nightly]" >&2
       exit 64
       ;;
   esac
@@ -107,6 +112,8 @@ package_name="linglong-store"
 display_name="玲珑应用商店社区版"
 summary_text="Linglong Store Community Edition"
 description_text="Desktop store for browsing and installing Linglong applications."
+desktop_filename="linglong-store.desktop"
+launchable_desktop_id="$desktop_filename"
 executable_name="linglong-store"
 icon_name="linglong-store"
 wm_class="org.linglong-store.LinyapsManager"
@@ -116,6 +123,22 @@ maintainer="Linglong Store Community <community@linglong.dev>"
 maintainer_name="HanHan666666"
 maintainer_email="tar.zip@outlook.com"
 release_url_base="https://github.com/HanHan666666/flutter-linglong-store/releases/download"
+
+case "$channel" in
+  stable)
+    ;;
+  nightly)
+    # Nightly only changes the visible metadata; layout and executable stay stable.
+    display_name="玲珑应用商店社区版 Nightly"
+    summary_text="Linglong Store Community Edition Nightly"
+    desktop_filename="linglong-store-nightly.desktop"
+    launchable_desktop_id="$desktop_filename"
+    ;;
+  *)
+    echo "Unsupported channel: $channel" >&2
+    exit 64
+    ;;
+esac
 
 render_file() {
   local input_path="$1"
@@ -131,6 +154,7 @@ render_file() {
   content="${content//@EXECUTABLE_NAME@/$executable_name}"
   content="${content//@ICON_NAME@/$icon_name}"
   content="${content//@WM_CLASS@/$wm_class}"
+  content="${content//@LAUNCHABLE_DESKTOP_ID@/$launchable_desktop_id}"
   content="${content//@VERSION@/$release_version}"
   content="${content//@DEB_ARCH@/$deb_arch}"
   content="${content//@RPM_ARCH@/$rpm_arch}"
@@ -148,7 +172,7 @@ mkdir -p "$output_dir/deb" "$output_dir/rpm" "$output_dir/appimage" "$output_dir
 
 render_file \
   "$ROOT_DIR/build/packaging/linux/linglong-store.desktop.in" \
-  "$output_dir/linglong-store.desktop"
+  "$output_dir/$desktop_filename"
 
 render_file \
   "$ROOT_DIR/build/packaging/linux/deb/control.in" \
@@ -205,12 +229,12 @@ if [[ -n "${sha256_amd64:-}" && -n "${sha256_arm64:-}" ]]; then
   # Keep AUR metadata files in the package repo so icon/metainfo/license do not
   # rely on optional extras bundled into the binary release archive.
   cp "$ROOT_DIR/LICENSE" "$output_dir/aur/LICENSE"
-  cp "$output_dir/linglong-store.desktop" "$output_dir/aur/linglong-store.desktop"
+  cp "$output_dir/$desktop_filename" "$output_dir/aur/$desktop_filename"
   cp "$output_dir/appimage/linglong-store.appdata.xml" "$output_dir/aur/linglong-store.metainfo.xml"
   cp "$ROOT_DIR/assets/icons/logo.svg" "$output_dir/aur/linglong-store.svg"
 
   sha256_license="$(sha256sum "$output_dir/aur/LICENSE" | awk '{print $1}')"
-  sha256_desktop="$(sha256sum "$output_dir/aur/linglong-store.desktop" | awk '{print $1}')"
+  sha256_desktop="$(sha256sum "$output_dir/aur/$desktop_filename" | awk '{print $1}')"
   sha256_metainfo="$(sha256sum "$output_dir/aur/linglong-store.metainfo.xml" | awk '{print $1}')"
   sha256_icon="$(sha256sum "$output_dir/aur/linglong-store.svg" | awk '{print $1}')"
 

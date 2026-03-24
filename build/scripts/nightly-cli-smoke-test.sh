@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/linglong-nightly-smoke.XXXXXX")"
 FAKE_SOURCE_DIR="$TMP_ROOT/source"
+RENDER_OUTPUT_DIR="$TMP_ROOT/render"
 OUTPUT_DIR="$TMP_ROOT/output"
 
 cleanup() {
@@ -25,6 +26,18 @@ touch "$FAKE_SOURCE_DIR/linglong-store-${base_version}-linux-amd64.tar.gz"
 touch "$FAKE_SOURCE_DIR/linglong-store_${base_version}_amd64.deb"
 touch "$FAKE_SOURCE_DIR/linglong-store-${base_version}-1.x86_64.rpm"
 touch "$FAKE_SOURCE_DIR/linglong-store-${base_version}-amd64.AppImage"
+
+bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
+  --inner \
+  --version "$base_version" \
+  --arch amd64 \
+  --output-dir "$RENDER_OUTPUT_DIR" \
+  --channel nightly
+
+test -f "$RENDER_OUTPUT_DIR/linglong-store-nightly.desktop"
+grep -q '^Name=.*Nightly' "$RENDER_OUTPUT_DIR/linglong-store-nightly.desktop"
+grep -q '<name>.*Nightly</name>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
+grep -q '<launchable type="desktop-id">linglong-store-nightly.desktop</launchable>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 
 bash "$ROOT_DIR/build/scripts/prepare-nightly-assets.sh" \
   --base-version "$base_version" \

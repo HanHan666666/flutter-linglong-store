@@ -21,6 +21,10 @@ if [[ ! "$nightly_label" =~ ^[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]{8}\+[0-9a-f]+
   exit 1
 fi
 
+normalized_aur_version="$(bash "$ROOT_DIR/build/scripts/normalize-nightly-aur-version.sh" \
+  "3.0.2-nightly.20260324+8190b89")"
+test "$normalized_aur_version" = "3.0.2_nightly.20260324.8190b89"
+
 mkdir -p "$FAKE_SOURCE_DIR"
 touch "$FAKE_SOURCE_DIR/linglong-store-${base_version}-linux-amd64.tar.gz"
 touch "$FAKE_SOURCE_DIR/linglong-store_${base_version}_amd64.deb"

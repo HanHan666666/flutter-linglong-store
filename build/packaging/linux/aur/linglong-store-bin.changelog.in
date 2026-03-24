@@ -1,3 +1,3 @@
-@VERSION@-1
-  * Release @VERSION@
-  * See: @PROJECT_URL@/releases/tag/v@VERSION@
+@AUR_PKGVER@-1
+  * Release @AUR_SOURCE_VERSION@
+  * See: @PROJECT_URL@/releases/tag/@AUR_SOURCE_TAG_ROOT@

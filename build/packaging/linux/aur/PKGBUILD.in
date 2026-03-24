@@ -1,9 +1,9 @@
 # Maintainer: @MAINTAINER_NAME@ <@MAINTAINER_EMAIL@>
-pkgname=linglong-store-bin
-pkgver=@VERSION@
+pkgname=@AUR_PKGNAME@
+pkgver=@AUR_PKGVER@
 pkgrel=1
 pkgdesc="Community store for browsing and installing Linglong applications"
-arch=('x86_64' 'aarch64')
+arch=(@AUR_ARCH_VALUES@)
 url="@PROJECT_URL@"
 license=('MIT')
 depends=(
@@ -22,9 +22,9 @@ depends=(
 optdepends=(
   'linglong: Linglong runtime environment for installing and launching apps'
 )
-provides=('linglong-store')
-conflicts=('linglong-store')
-changelog=linglong-store-bin.changelog
+provides=(@AUR_PROVIDES_VALUES@)
+conflicts=(@AUR_CONFLICTS_VALUES@)
+changelog=@AUR_CHANGELOG_FILENAME@
 
 # PGP signature verification
 validpgpkeys=('@GPG_KEY_ID@')
@@ -36,13 +36,10 @@ source=(
   'linglong-store.svg'
 )
 source_x86_64=(
-  "linglong-store-${pkgver}-linux-amd64.tar.gz::@RELEASE_URL_BASE@/v${pkgver}/linglong-store-${pkgver}-linux-amd64.tar.gz"
-  "linglong-store-${pkgver}-linux-amd64.tar.gz.asc::@RELEASE_URL_BASE@/v${pkgver}/linglong-store-${pkgver}-linux-amd64.tar.gz.asc"
+  "linglong-store-@AUR_SOURCE_VERSION@-linux-amd64.tar.gz::@RELEASE_URL_BASE@/@AUR_SOURCE_TAG_ROOT@/linglong-store-@AUR_SOURCE_VERSION@-linux-amd64.tar.gz"
+  "linglong-store-@AUR_SOURCE_VERSION@-linux-amd64.tar.gz.asc::@RELEASE_URL_BASE@/@AUR_SOURCE_TAG_ROOT@/linglong-store-@AUR_SOURCE_VERSION@-linux-amd64.tar.gz.asc"
 )
-source_aarch64=(
-  "linglong-store-${pkgver}-linux-arm64.tar.gz::@RELEASE_URL_BASE@/v${pkgver}/linglong-store-${pkgver}-linux-arm64.tar.gz"
-  "linglong-store-${pkgver}-linux-arm64.tar.gz.asc::@RELEASE_URL_BASE@/v${pkgver}/linglong-store-${pkgver}-linux-arm64.tar.gz.asc"
-)
+@AUR_SOURCE_AARCH64_BLOCK@
 
 sha256sums=(
   '@SHA256_LICENSE@'
@@ -54,10 +51,7 @@ sha256sums_x86_64=(
   '@SHA256_AMD64@'
   '@SHA256_SIG_AMD64@'
 )
-sha256sums_aarch64=(
-  '@SHA256_ARM64@'
-  '@SHA256_SIG_ARM64@'
-)
+@AUR_SHA256SUMS_AARCH64_BLOCK@
 
 package() {
   # Install application files

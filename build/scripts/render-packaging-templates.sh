@@ -123,9 +123,27 @@ maintainer="Linglong Store Community <community@linglong.dev>"
 maintainer_name="HanHan666666"
 maintainer_email="tar.zip@outlook.com"
 release_url_base="https://github.com/HanHan666666/flutter-linglong-store/releases/download"
+aur_pkgname="linglong-store-bin"
+aur_pkgver="$release_version"
+aur_arch_values="'x86_64' 'aarch64'"
+aur_provides_values="'linglong-store'"
+aur_conflicts_values="'linglong-store'"
+aur_changelog_filename="linglong-store-bin.changelog"
+aur_source_version="$release_version"
+aur_source_tag_root="v${release_version}"
+aur_source_aarch64_block=$'source_aarch64=(\n  "linglong-store-@AUR_SOURCE_VERSION@-linux-arm64.tar.gz::@RELEASE_URL_BASE@/@AUR_SOURCE_TAG_ROOT@/linglong-store-@AUR_SOURCE_VERSION@-linux-arm64.tar.gz"\n  "linglong-store-@AUR_SOURCE_VERSION@-linux-arm64.tar.gz.asc::@RELEASE_URL_BASE@/@AUR_SOURCE_TAG_ROOT@/linglong-store-@AUR_SOURCE_VERSION@-linux-arm64.tar.gz.asc"\n)'
+aur_sha256sums_aarch64_block=$'sha256sums_aarch64=(\n  \'@SHA256_ARM64@\'\n  \'@SHA256_SIG_ARM64@\'\n)'
+should_render_aur="false"
 
 case "$channel" in
   stable)
+    if [[ -n "$sha256_amd64" || -n "$sha256_arm64" ]]; then
+      if [[ -z "$sha256_amd64" || -z "$sha256_arm64" ]]; then
+        echo "Stable AUR rendering requires both amd64 and arm64 SHA256 values." >&2
+        exit 64
+      fi
+      should_render_aur="true"
+    fi
     ;;
   nightly)
     # Nightly only changes the visible metadata; layout and executable stay stable.
@@ -133,6 +151,29 @@ case "$channel" in
     summary_text="Linglong Store Community Edition Nightly"
     desktop_filename="linglong-store-nightly.desktop"
     launchable_desktop_id="$desktop_filename"
+    aur_pkgname="linglong-store-nightly-bin"
+    aur_arch_values="'x86_64'"
+    aur_conflicts_values="'linglong-store-bin'"
+    aur_changelog_filename="linglong-store-nightly-bin.changelog"
+    aur_source_aarch64_block=""
+    aur_sha256sums_aarch64_block=""
+
+    if [[ -n "$sha256_amd64" || -n "$sha256_arm64" ]]; then
+      if [[ -z "$sha256_amd64" ]]; then
+        echo "Nightly AUR rendering requires an amd64 SHA256 value." >&2
+        exit 64
+      fi
+      should_render_aur="true"
+    fi
+
+    if [[ "$release_version" =~ -nightly\.([0-9]{8})\+[0-9A-Fa-f]+$ ]]; then
+      # AUR pkgver cannot preserve the nightly prerelease separators verbatim.
+      aur_pkgver="$(bash "$ROOT_DIR/build/scripts/normalize-nightly-aur-version.sh" "$release_version")"
+      aur_source_tag_root="nightly-${BASH_REMATCH[1]}"
+    elif [[ "$should_render_aur" == "true" ]]; then
+      echo "Nightly AUR rendering requires a version like <semver>-nightly.<YYYYMMDD>+<sha>, got: $release_version" >&2
+      exit 64
+    fi
     ;;
   *)
     echo "Unsupported channel: $channel" >&2
@@ -222,11 +263,22 @@ render_aur_template() {
   content="${content//@SHA256_SIG_AMD64@/$sha_sig_amd64}"
   content="${content//@SHA256_SIG_ARM64@/$sha_sig_arm64}"
   content="${content//@GPG_KEY_ID@/$key_id}"
+  content="${content//@AUR_PKGNAME@/$aur_pkgname}"
+  content="${content//@AUR_PKGVER@/$aur_pkgver}"
+  content="${content//@AUR_ARCH_VALUES@/$aur_arch_values}"
+  content="${content//@AUR_PROVIDES_VALUES@/$aur_provides_values}"
+  content="${content//@AUR_CONFLICTS_VALUES@/$aur_conflicts_values}"
+  content="${content//@AUR_CHANGELOG_FILENAME@/$aur_changelog_filename}"
+  content="${content//@AUR_SOURCE_VERSION@/$aur_source_version}"
+  content="${content//@AUR_SOURCE_TAG_ROOT@/$aur_source_tag_root}"
+  content="${content//@AUR_SOURCE_AARCH64_BLOCK@/$aur_source_aarch64_block}"
+  content="${content//@AUR_SHA256SUMS_AARCH64_BLOCK@/$aur_sha256sums_aarch64_block}"
   printf '%s\n' "$content" > "$output_path"
 }
 
-# Render AUR templates if sha256 checksums are provided
-if [[ -n "${sha256_amd64:-}" && -n "${sha256_arm64:-}" ]]; then
+# Render AUR templates only when the caller provides the checksum coverage
+# required for the selected channel.
+if [[ "$should_render_aur" == "true" ]]; then
   # Keep AUR metadata files in the package repo so icon/metainfo/license do not
   # rely on optional extras bundled into the binary release archive.
   cp "$ROOT_DIR/LICENSE" "$output_dir/aur/LICENSE"
@@ -252,7 +304,16 @@ if [[ -n "${sha256_amd64:-}" && -n "${sha256_arm64:-}" ]]; then
     "$sha256_sig_arm64" \
     "$gpg_key_id"
 
-  render_file \
+  render_aur_template \
     "$ROOT_DIR/build/packaging/linux/aur/linglong-store-bin.changelog.in" \
-    "$output_dir/aur/linglong-store-bin.changelog"
+    "$output_dir/aur/$aur_changelog_filename" \
+    "$sha256_amd64" \
+    "$sha256_arm64" \
+    "$sha256_license" \
+    "$sha256_desktop" \
+    "$sha256_metainfo" \
+    "$sha256_icon" \
+    "$sha256_sig_amd64" \
+    "$sha256_sig_arm64" \
+    "$gpg_key_id"
 fi

@@ -9,7 +9,6 @@ import '../../../core/config/page_visibility.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/config/visibility_aware_mixin.dart';
-import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/ranking_models.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/widgets.dart';
@@ -59,17 +58,6 @@ class _RankingPageState extends ConsumerState<RankingPage>
       final type = RankingType.values[_tabController.index];
       ref.read(rankingProvider.notifier).selectType(type);
     }
-  }
-
-  /// 获取 Tab 标签文本
-  String _getTabLabel(RankingType type, BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return switch (type) {
-      RankingType.download => l10n.rankingTabDownload,
-      RankingType.rising => l10n.rankingTabRising,
-      RankingType.update => l10n.rankingTabUpdate,
-      RankingType.hot => l10n.rankingTabHot,
-    };
   }
 
   /// 可见性变更回调
@@ -132,7 +120,7 @@ class _RankingPageState extends ConsumerState<RankingPage>
         ),
         dividerColor: Colors.transparent,
         tabs: RankingType.values.map((type) {
-          return Tab(text: _getTabLabel(type, context));
+          return Tab(text: type.label);
         }).toList(),
       ),
     );

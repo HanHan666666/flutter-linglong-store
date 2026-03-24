@@ -82,7 +82,8 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
     final state = ref.watch(customCategoryProvider(widget.code));
 
     return RefreshIndicator(
-      onRefresh: () => ref.read(customCategoryProvider(widget.code).notifier).refresh(),
+      onRefresh: () =>
+          ref.read(customCategoryProvider(widget.code).notifier).refresh(),
       child: _buildBody(state),
     );
   }
@@ -97,7 +98,8 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
     if (state.error != null && state.data == null) {
       return ErrorState.generic(
         description: state.error,
-        onRetry: () => ref.read(customCategoryProvider(widget.code).notifier).loadData(),
+        onRetry: () =>
+            ref.read(customCategoryProvider(widget.code).notifier).loadData(),
       );
     }
 

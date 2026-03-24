@@ -18,9 +18,7 @@ depends=(
   'hicolor-icon-theme'
   'libepoxy'
   'pango'
-)
-optdepends=(
-  'linglong: Linglong runtime environment for installing and launching apps'
+  'linyaps'
 )
 provides=(@AUR_PROVIDES_VALUES@)
 conflicts=(@AUR_CONFLICTS_VALUES@)

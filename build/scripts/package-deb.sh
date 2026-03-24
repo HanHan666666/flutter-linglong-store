@@ -14,7 +14,6 @@ fi
 release_version=""
 target_arch=""
 channel="stable"
-desktop_filename="linglong-store.desktop"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -56,11 +55,7 @@ case "$target_arch" in
 esac
 
 case "$channel" in
-  stable)
-    ;;
-  nightly)
-    # Nightly only changes the desktop metadata filename, not the install locations.
-    desktop_filename="linglong-store-nightly.desktop"
+  stable|nightly)
     ;;
   *)
     echo "Unsupported channel: $channel" >&2
@@ -107,6 +102,14 @@ installed_size_kb="$(du -sk "$payload_dir" | cut -f1)"
   --output-dir "$metadata_dir" \
   --installed-size-kb "$installed_size_kb" \
   --channel "$channel"
+
+mapfile -t rendered_desktop_files < <(find "$metadata_dir" -maxdepth 1 -type f -name '*.desktop' | sort)
+if [[ "${#rendered_desktop_files[@]}" -ne 1 ]]; then
+  echo "Expected exactly one rendered desktop file in $metadata_dir, found ${#rendered_desktop_files[@]}" >&2
+  exit 1
+fi
+
+desktop_filename="$(basename "${rendered_desktop_files[0]}")"
 
 cp "$metadata_dir/deb/control" "$payload_dir/DEBIAN/control"
 cp "$metadata_dir/$desktop_filename" "$payload_dir/usr/share/applications/$desktop_filename"

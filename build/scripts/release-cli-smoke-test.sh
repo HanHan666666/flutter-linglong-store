@@ -35,6 +35,8 @@ bash build/scripts/render-packaging-templates.sh \
   --arch amd64 \
   --output-dir "$RENDER_OUTPUT_DIR"
 
+desktop_count="$(find "$RENDER_OUTPUT_DIR" -maxdepth 1 -type f -name '*.desktop' | awk 'END { print NR }')"
+test "$desktop_count" = "1"
 test -f "$RENDER_OUTPUT_DIR/linglong-store.desktop"
 grep -q '^Name=玲珑应用商店社区版$' "$RENDER_OUTPUT_DIR/linglong-store.desktop"
 grep -q '^Comment=Linglong Store Community Edition$' "$RENDER_OUTPUT_DIR/linglong-store.desktop"

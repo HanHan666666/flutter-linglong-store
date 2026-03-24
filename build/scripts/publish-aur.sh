@@ -6,8 +6,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 release_version=""
 target_arch="x86_64"
 aur_repo_url="ssh://aur@aur.archlinux.org/linglong-store-bin.git"
-channel="stable"
-desktop_filename="linglong-store.desktop"
 
 # SHA256 checksums from environment (set by CI)
 sha256_amd64="${SHA256_AMD64:-}"
@@ -26,12 +24,8 @@ while [[ $# -gt 0 ]]; do
       target_arch="$2"
       shift 2
       ;;
-    --channel)
-      channel="$2"
-      shift 2
-      ;;
     *)
-      echo "Usage: $0 --version <version> [--arch x86_64|aarch64] [--channel stable|nightly]" >&2
+      echo "Usage: $0 --version <version> [--arch x86_64|aarch64]" >&2
       exit 64
       ;;
   esac
@@ -52,19 +46,6 @@ case "$target_arch" in
     ;;
   *)
     echo "Unsupported architecture: $target_arch" >&2
-    exit 64
-    ;;
-esac
-
-case "$channel" in
-  stable)
-    ;;
-  nightly)
-    # Nightly publishes a different desktop filename while keeping the same install layout.
-    desktop_filename="linglong-store-nightly.desktop"
-    ;;
-  *)
-    echo "Unsupported channel: $channel" >&2
     exit 64
     ;;
 esac
@@ -116,12 +97,19 @@ update_aur_repo() {
     --version "$version" \
     --arch "amd64" \
     --output-dir "$metadata_dir" \
-    --channel "$channel" \
     --sha256-amd64 "$sha256_amd64" \
     --sha256-arm64 "$sha256_arm64" \
     --sha256-sig-amd64 "$sha256_sig_amd64" \
     --sha256-sig-arm64 "$sha256_sig_arm64" \
     --gpg-key-id "$gpg_key_id"
+
+  mapfile -t rendered_desktop_files < <(find "$metadata_dir/aur" -maxdepth 1 -type f -name '*.desktop' | sort)
+  if [[ "${#rendered_desktop_files[@]}" -ne 1 ]]; then
+    echo "Expected exactly one rendered AUR desktop file in $metadata_dir/aur, found ${#rendered_desktop_files[@]}" >&2
+    exit 1
+  fi
+
+  desktop_filename="$(basename "${rendered_desktop_files[0]}")"
 
   # Copy rendered AUR files.
   cp "$metadata_dir/aur/PKGBUILD" PKGBUILD

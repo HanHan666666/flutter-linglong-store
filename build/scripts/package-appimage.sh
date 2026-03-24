@@ -14,7 +14,6 @@ fi
 release_version=""
 target_arch=""
 channel="stable"
-desktop_filename="linglong-store.desktop"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -58,11 +57,7 @@ case "$target_arch" in
 esac
 
 case "$channel" in
-  stable)
-    ;;
-  nightly)
-    # Nightly keeps the same install layout and executable, but uses a distinct desktop filename.
-    desktop_filename="linglong-store-nightly.desktop"
+  stable|nightly)
     ;;
   *)
     echo "Unsupported channel: $channel" >&2
@@ -104,6 +99,14 @@ chmod +x "$appdir/usr/bin/linglong-store"
   --arch "$target_arch" \
   --output-dir "$metadata_dir" \
   --channel "$channel"
+
+mapfile -t rendered_desktop_files < <(find "$metadata_dir" -maxdepth 1 -type f -name '*.desktop' | sort)
+if [[ "${#rendered_desktop_files[@]}" -ne 1 ]]; then
+  echo "Expected exactly one rendered desktop file in $metadata_dir, found ${#rendered_desktop_files[@]}" >&2
+  exit 1
+fi
+
+desktop_filename="$(basename "${rendered_desktop_files[0]}")"
 
 rsvg-convert -w 256 -h 256 "$ROOT_DIR/assets/icons/logo.svg" -o "$appdir/linglong-store.png"
 cp "$appdir/linglong-store.png" "$appdir/usr/share/icons/hicolor/256x256/apps/linglong-store.png"

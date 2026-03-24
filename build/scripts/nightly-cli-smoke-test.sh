@@ -34,6 +34,8 @@ bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
   --output-dir "$RENDER_OUTPUT_DIR" \
   --channel nightly
 
+desktop_count="$(find "$RENDER_OUTPUT_DIR" -maxdepth 1 -type f -name '*.desktop' | awk 'END { print NR }')"
+test "$desktop_count" = "1"
 test -f "$RENDER_OUTPUT_DIR/linglong-store-nightly.desktop"
 grep -q '^Name=.*Nightly' "$RENDER_OUTPUT_DIR/linglong-store-nightly.desktop"
 grep -q '^Comment=.*Nightly' "$RENDER_OUTPUT_DIR/linglong-store-nightly.desktop"

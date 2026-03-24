@@ -14,7 +14,6 @@ fi
 release_version=""
 target_arch=""
 channel="stable"
-desktop_filename="linglong-store.desktop"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -58,11 +57,7 @@ case "$target_arch" in
 esac
 
 case "$channel" in
-  stable)
-    ;;
-  nightly)
-    # Keep the RPM payload layout stable while switching the user-facing desktop filename.
-    desktop_filename="linglong-store-nightly.desktop"
+  stable|nightly)
     ;;
   *)
     echo "Unsupported channel: $channel" >&2
@@ -113,6 +108,14 @@ rsvg-convert -w 256 -h 256 "$ROOT_DIR/assets/icons/logo.svg" -o "$icon_path"
   --output-dir "$metadata_dir" \
   --payload-dir "$payload_dir" \
   --channel "$channel"
+
+mapfile -t rendered_desktop_files < <(find "$metadata_dir" -maxdepth 1 -type f -name '*.desktop' | sort)
+if [[ "${#rendered_desktop_files[@]}" -ne 1 ]]; then
+  echo "Expected exactly one rendered desktop file in $metadata_dir, found ${#rendered_desktop_files[@]}" >&2
+  exit 1
+fi
+
+desktop_filename="$(basename "${rendered_desktop_files[0]}")"
 
 cp "$metadata_dir/$desktop_filename" "$payload_dir/usr/share/applications/$desktop_filename"
 cp "$metadata_dir/appimage/linglong-store.appdata.xml" "$payload_dir/usr/share/metainfo/linglong-store.appdata.xml"

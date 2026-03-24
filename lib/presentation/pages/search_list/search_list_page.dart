@@ -102,7 +102,9 @@ class _SearchListPageState extends ConsumerState<SearchListPage> {
     if (state.results.isEmpty) {
       return EmptyState.search(
         title: AppLocalizations.of(context)?.searchNotFound ?? '未找到相关应用',
-        description: AppLocalizations.of(context)?.searchTryOtherKeywords ?? '尝试使用其他关键词搜索',
+        description:
+            AppLocalizations.of(context)?.searchTryOtherKeywords ??
+            '尝试使用其他关键词搜索',
       );
     }
 

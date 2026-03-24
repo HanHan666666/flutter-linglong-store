@@ -22,7 +22,10 @@ class RankingPage extends ConsumerStatefulWidget {
 }
 
 class _RankingPageState extends ConsumerState<RankingPage>
-    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin, VisibilityAwareMixin {
+    with
+        AutomaticKeepAliveClientMixin,
+        SingleTickerProviderStateMixin,
+        VisibilityAwareMixin {
   late TabController _tabController;
 
   /// 页面是否可见（用于控制副作用）

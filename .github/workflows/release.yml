@@ -290,12 +290,25 @@ jobs:
       - name: Configure RPM macros for signing
         env:
           GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
+          # rpmsign runs without a TTY in GitHub Actions, so force loopback mode.
+          install -d -m 700 ~/.gnupg
+          printf '%s' "$GPG_PASSPHRASE" > ~/.gnupg/rpm-gpg-passphrase
+          chmod 600 ~/.gnupg/rpm-gpg-passphrase
+          gpg --batch --list-secret-keys --keyid-format LONG "$GPG_KEY_ID"
           cat > ~/.rpmmacros <<EOF
+          %_signature gpg
           %_gpg_name ${GPG_KEY_ID}
           %_gpg_path ~/.gnupg
           %__gpg /usr/bin/gpg
           %_gpg_digest_algo sha256
+          %__gpg_sign_cmd %{__gpg} \
+            --batch --no-verbose --no-armor --no-secmem-warning \
+            --pinentry-mode loopback --passphrase-file %{_gpg_path}/rpm-gpg-passphrase \
+            %{?_gpg_digest_algo:--digest-algo %{_gpg_digest_algo}} \
+            --local-user "%{_gpg_name}" \
+            --detach-sign --sign --output %{__signature_filename} %{__plaintext_filename}
           EOF
 
       - name: Sign release tarballs
@@ -313,14 +326,13 @@ jobs:
           ls -la **/*.asc || echo "No signature files created"
 
       - name: Sign release RPM packages
-        env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
+          trap 'rm -f ~/.gnupg/rpm-gpg-passphrase' EXIT
           cd artifacts
           for rpm in **/*.rpm; do
             if [[ -f "$rpm" ]]; then
               echo "Signing $rpm..."
-              echo "$GPG_PASSPHRASE" | rpmsign --addsign "$rpm"
+              rpmsign --addsign "$rpm"
             fi
           done
           # Verify signatures

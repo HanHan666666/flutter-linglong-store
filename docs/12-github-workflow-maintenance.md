@@ -163,19 +163,38 @@ RPM 包必须在构建后使用 `rpmsign` 添加内嵌 GPG 签名：
 
 ```bash
 # 配置 ~/.rpmmacros
+%_signature gpg
 %_gpg_name <GPG_KEY_ID>
 %_gpg_path ~/.gnupg
 %__gpg /usr/bin/gpg
 %_gpg_digest_algo sha256
+%__gpg_sign_cmd %{__gpg} \
+  --batch --no-verbose --no-armor --no-secmem-warning \
+  --pinentry-mode loopback --passphrase-file %{_gpg_path}/rpm-gpg-passphrase \
+  %{?_gpg_digest_algo:--digest-algo %{_gpg_digest_algo}} \
+  --local-user "%{_gpg_name}" \
+  --detach-sign --sign --output %{__signature_filename} %{__plaintext_filename}
+
+# CI 无 TTY 时，先准备 passphrase 文件
+printf '%s' "$GPG_PASSPHRASE" > ~/.gnupg/rpm-gpg-passphrase
+chmod 600 ~/.gnupg/rpm-gpg-passphrase
+
+# 签名前先确认 secret key 已导入
+gpg --batch --list-secret-keys --keyid-format LONG "$GPG_KEY_ID"
 
 # 签名
-echo "$GPG_PASSPHRASE" | rpmsign --addsign package.rpm
+rpmsign --addsign package.rpm
 
 # 验证
 rpm -K package.rpm
 ```
 
 签名后的 RPM 包可在任意支持 RPM 的系统上通过 `rpm -K` 验证完整性，无需额外下载签名文件。
+
+注意：
+
+- GitHub Actions / 容器里 `rpmsign` 没有可交互 TTY，禁止继续依赖 `echo "$GPG_PASSPHRASE" | rpmsign --addsign ...`
+- 必须通过 `%__gpg_sign_cmd` 显式切到 `gpg --batch --pinentry-mode loopback --passphrase-file ...`
 
 ### 签名 Secrets
 

@@ -224,3 +224,4 @@ time ./build/package-deb.sh
 - 2026-03-23：全局提示统一迁移为 `AppShell` 内容区右上角通知中心：页面/组件只能通过 `app_notification_helpers.dart` 触发提示，业务服务层不得直接依赖通知 UI；涉及卸载等应用层流程时，服务返回 typed result，由页面决定展示文案，`lib/` 内禁止继续新增 `ScaffoldMessenger/showSnackBar`。
 - 2026-03-23：正式 `release.yml` 必须先完成版本文件产物化、双架构构建与签名，再进入独立 `finalize-release-state` job 推送 release commit 和 tag；禁止在 `prepare-release` 阶段提前改远端分支或打 tag。
 - 2026-03-23：release 工具链禁止再硬编码 `/home/han/flutter` 一类维护者本机路径；统一优先使用显式环境变量，其次使用 runner `PATH` 或容器标准路径解析 Dart/Flutter。
+- 2026-03-24：GitHub Actions 中的 RPM 签名禁止继续使用 `echo "$GPG_PASSPHRASE" | rpmsign --addsign ...`；`nightly.yml` / `release.yml` 必须在 `~/.rpmmacros` 里显式覆盖 `%__gpg_sign_cmd`，统一走 `gpg --batch --pinentry-mode loopback --passphrase-file ...`，并在签名前先校验 `GPG_KEY_ID` 对应 secret key 已导入。

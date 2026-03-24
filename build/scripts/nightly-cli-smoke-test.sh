@@ -94,7 +94,7 @@ assert_no_template_placeholders "$NIGHTLY_AUR_OUTPUT_DIR/aur/linglong-store-nigh
 grep -q '^pkgname=linglong-store-nightly-bin$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
 grep -q "^pkgver=${current_nightly_aur_version}$" "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
 grep -q "^arch=('x86_64')$" "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
-grep -q '^conflicts=('"'linglong-store-bin'"')$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
+grep -q '^conflicts=('"'linglong-store' 'linglong-store-bin'"')$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
 grep -q '/releases/tag/nightly-'"$nightly_date"'$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/linglong-store-nightly-bin.changelog"
 if grep -q '^source_aarch64=' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"; then
   echo "Nightly PKGBUILD unexpectedly rendered source_aarch64 block." >&2

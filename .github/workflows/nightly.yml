@@ -5,6 +5,17 @@ on:
   schedule:
     - cron: '0 19 * * *'
   workflow_dispatch:
+    inputs:
+      force_aur_publish:
+        description: Force the nightly AUR publish job to reuse the existing prerelease assets.
+        required: false
+        default: false
+        type: boolean
+      aur_release_tag:
+        description: Optional existing nightly tag to reuse when manually recovering AUR publishing.
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -14,7 +25,11 @@ jobs:
     name: Prepare nightly metadata
     runs-on: ubuntu-latest
     outputs:
-      should_publish: ${{ steps.decide.outputs.should_publish }}
+      should_publish_release: ${{ steps.decide.outputs.should_publish_release }}
+      should_publish_aur: ${{ steps.decide.outputs.should_publish_aur }}
+      aur_asset_source: ${{ steps.decide.outputs.aur_asset_source }}
+      aur_nightly_label: ${{ steps.decide.outputs.aur_nightly_label }}
+      aur_nightly_tag: ${{ steps.decide.outputs.aur_nightly_tag }}
       base_version: ${{ steps.metadata.outputs.base_version }}
       nightly_label: ${{ steps.metadata.outputs.nightly_label }}
       nightly_tag: ${{ steps.metadata.outputs.nightly_tag }}
@@ -40,22 +55,71 @@ jobs:
       - name: Read existing nightly prerelease
         id: existing
         uses: actions/github-script@v7
+        env:
+          LOOKUP_NIGHTLY_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.aur_release_tag || steps.metadata.outputs.nightly_tag }}
+          SOURCE_COMMIT: ${{ github.sha }}
         with:
           script: |
+            const lookupTag = process.env.LOOKUP_NIGHTLY_TAG;
+            const sourceCommit = process.env.SOURCE_COMMIT;
+
+            const parseMetadata = (release) => {
+              const body = release.body || '';
+              const shaMatch = body.match(/^Nightly source commit:\s*(.+)$/m);
+              const labelMatch = body.match(/^Nightly version label:\s*(.+)$/m);
+              let label = labelMatch ? labelMatch[1].trim() : '';
+
+              if (!label) {
+                for (const asset of release.assets || []) {
+                  const assetMatch = asset.name.match(/^linglong-store-(.+)-linux-amd64\.tar\.gz$/);
+                  if (assetMatch) {
+                    label = assetMatch[1];
+                    break;
+                  }
+                }
+              }
+
+              return {
+                tag: release.tag_name || '',
+                publishedSha: shaMatch ? shaMatch[1].trim() : '',
+                publishedLabel: label,
+              };
+            };
+
+            const setOutputs = ({ tag, publishedSha, publishedLabel }) => {
+              core.setOutput('release_tag', tag || '');
+              core.setOutput('published_sha', publishedSha || '');
+              core.setOutput('published_label', publishedLabel || '');
+            };
+
             try {
               const { data } = await github.rest.repos.getReleaseByTag({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                tag: '${{ steps.metadata.outputs.nightly_tag }}',
+                tag: lookupTag,
               });
-              const body = data.body || '';
-              const shaMatch = body.match(/^Nightly source commit:\s*(.+)$/m);
-              core.setOutput('published_sha', shaMatch ? shaMatch[1].trim() : '');
+              setOutputs(parseMetadata(data));
             } catch (error) {
               if (error.status !== 404) {
                 throw error;
               }
-              core.setOutput('published_sha', '');
+
+              const releases = await github.paginate(github.rest.repos.listReleases, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 100,
+              });
+
+              const matchedRelease = releases
+                .filter((release) => release.prerelease && release.tag_name.startsWith('nightly-'))
+                .map((release) => ({ release, metadata: parseMetadata(release) }))
+                .find(({ metadata }) => metadata.publishedSha === sourceCommit);
+
+              if (matchedRelease) {
+                setOutputs(matchedRelease.metadata);
+              } else {
+                setOutputs({ tag: lookupTag, publishedSha: '', publishedLabel: '' });
+              }
             }
 
       - name: Decide whether nightly should publish
@@ -63,28 +127,93 @@ jobs:
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           PUBLISHED_SHA: ${{ steps.existing.outputs.published_sha }}
+          PUBLISHED_LABEL: ${{ steps.existing.outputs.published_label }}
+          PUBLISHED_RELEASE_TAG: ${{ steps.existing.outputs.release_tag }}
+          COMPUTED_NIGHTLY_LABEL: ${{ steps.metadata.outputs.nightly_label }}
+          COMPUTED_NIGHTLY_TAG: ${{ steps.metadata.outputs.nightly_tag }}
+          AUR_RELEASE_TAG_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.aur_release_tag || '' }}
+          FORCE_AUR_PUBLISH: ${{ github.event_name == 'workflow_dispatch' && inputs.force_aur_publish || 'false' }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
         run: |
           source_commit="$(git rev-parse HEAD)"
-          reason="changes detected"
-          should_publish="true"
+          release_reason="changes detected"
+          aur_reason="nightly prerelease will be published in this run"
+          should_publish_release="true"
+          should_publish_aur="true"
+          aur_asset_source="artifact"
+          aur_nightly_label="$COMPUTED_NIGHTLY_LABEL"
+          aur_nightly_tag="$COMPUTED_NIGHTLY_TAG"
 
           if [[ "${GITHUB_REF_NAME}" != "${DEFAULT_BRANCH}" ]]; then
-            should_publish="false"
-            reason="nightly only publishes from ${DEFAULT_BRANCH}"
+            should_publish_release="false"
+            should_publish_aur="false"
+            aur_asset_source="none"
+            release_reason="nightly only publishes from ${DEFAULT_BRANCH}"
+            aur_reason="$release_reason"
+          elif [[ "$FORCE_AUR_PUBLISH" == "true" && -n "$AUR_RELEASE_TAG_INPUT" ]]; then
+            if [[ "$PUBLISHED_RELEASE_TAG" != "$AUR_RELEASE_TAG_INPUT" ]]; then
+              echo "Requested aur_release_tag ${AUR_RELEASE_TAG_INPUT} was not found in existing nightly releases." >&2
+              exit 1
+            fi
+
+            if [[ -z "$PUBLISHED_LABEL" ]]; then
+              echo "Requested aur_release_tag ${AUR_RELEASE_TAG_INPUT} is missing a recoverable nightly version label." >&2
+              exit 1
+            fi
+
+            should_publish_release="false"
+            should_publish_aur="true"
+            aur_asset_source="release"
+            aur_nightly_tag="$PUBLISHED_RELEASE_TAG"
+            aur_nightly_label="$PUBLISHED_LABEL"
+            release_reason="manual AUR recovery requested for ${PUBLISHED_RELEASE_TAG}; skip prerelease publishing"
+            aur_reason="workflow_dispatch forced AUR publish using explicitly requested nightly prerelease assets"
           elif [[ -n "$PUBLISHED_SHA" && "$PUBLISHED_SHA" == "$source_commit" ]]; then
-            should_publish="false"
-            reason="HEAD ${source_commit} already published to nightly"
+            should_publish_release="false"
+            release_reason="HEAD ${source_commit} already published to nightly"
+
+            if [[ "$RUN_ATTEMPT" -gt 1 ]]; then
+              should_publish_aur="true"
+              aur_asset_source="release"
+              aur_reason="rerun detected; reuse the existing nightly prerelease assets for AUR recovery"
+            elif [[ "$FORCE_AUR_PUBLISH" == "true" ]]; then
+              should_publish_aur="true"
+              aur_asset_source="release"
+              aur_reason="workflow_dispatch forced AUR publish using existing nightly prerelease assets"
+            else
+              should_publish_aur="false"
+              aur_asset_source="none"
+              aur_reason="nightly prerelease already matches HEAD; skip first-attempt AUR publish too"
+            fi
+
+            if [[ "$aur_asset_source" == "release" ]]; then
+              aur_nightly_tag="$PUBLISHED_RELEASE_TAG"
+              if [[ -n "$PUBLISHED_LABEL" ]]; then
+                aur_nightly_label="$PUBLISHED_LABEL"
+              fi
+            fi
           fi
 
           echo "source_commit=$source_commit" >> "$GITHUB_OUTPUT"
-          echo "should_publish=$should_publish" >> "$GITHUB_OUTPUT"
-          echo "Nightly publish decision: $reason"
-          echo "Nightly publish decision: $reason" >> "$GITHUB_STEP_SUMMARY"
+          echo "should_publish_release=$should_publish_release" >> "$GITHUB_OUTPUT"
+          echo "should_publish_aur=$should_publish_aur" >> "$GITHUB_OUTPUT"
+          echo "aur_asset_source=$aur_asset_source" >> "$GITHUB_OUTPUT"
+          echo "aur_nightly_label=$aur_nightly_label" >> "$GITHUB_OUTPUT"
+          echo "aur_nightly_tag=$aur_nightly_tag" >> "$GITHUB_OUTPUT"
+          echo "Nightly release decision: $release_reason"
+          echo "Nightly AUR decision: $aur_reason"
+          {
+            echo "Nightly release decision: $release_reason"
+            echo "Nightly AUR decision: $aur_reason"
+            echo "Nightly AUR asset source: $aur_asset_source"
+            echo "Nightly AUR release tag: $aur_nightly_tag"
+            echo "Nightly AUR version label: $aur_nightly_label"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   build-nightly-amd64:
     name: Build nightly amd64 ${{ needs.prepare-nightly.outputs.nightly_label }}
     needs: prepare-nightly
-    if: ${{ needs.prepare-nightly.outputs.should_publish == 'true' }}
+    if: ${{ needs.prepare-nightly.outputs.should_publish_release == 'true' }}
     runs-on: ubuntu-latest
     env:
       TARGET_ARCH: amd64
@@ -131,7 +260,7 @@ jobs:
   sign-nightly:
     name: Sign nightly assets
     needs: [prepare-nightly, build-nightly-amd64]
-    if: ${{ needs.prepare-nightly.outputs.should_publish == 'true' && needs.build-nightly-amd64.result == 'success' }}
+    if: ${{ needs.prepare-nightly.outputs.should_publish_release == 'true' && needs.build-nightly-amd64.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Download nightly assets
@@ -225,7 +354,7 @@ jobs:
   publish-nightly:
     name: Publish nightly ${{ needs.prepare-nightly.outputs.nightly_label }}
     needs: [prepare-nightly, sign-nightly]
-    if: ${{ needs.prepare-nightly.outputs.should_publish == 'true' && needs.sign-nightly.result == 'success' }}
+    if: ${{ needs.prepare-nightly.outputs.should_publish_release == 'true' && needs.sign-nightly.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -288,31 +417,44 @@ jobs:
   publish-aur-nightly:
     name: Publish nightly AUR ${{ needs.prepare-nightly.outputs.nightly_label }}
     needs: [prepare-nightly, publish-nightly]
-    if: ${{ always() && needs.prepare-nightly.outputs.should_publish == 'true' && needs.publish-nightly.result == 'success' }}
+    if: ${{ always() && needs.prepare-nightly.outputs.should_publish_aur == 'true' && (needs.publish-nightly.result == 'success' || needs.prepare-nightly.outputs.aur_asset_source == 'release') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.prepare-nightly.outputs.nightly_tag }}
+          ref: ${{ needs.prepare-nightly.outputs.source_commit }}
           fetch-depth: 0
 
-      - name: Download signed nightly assets
+      - name: Download signed nightly assets from this run
+        if: ${{ needs.prepare-nightly.outputs.aur_asset_source == 'artifact' }}
         uses: actions/download-artifact@v4
         with:
           name: signed-nightly-assets-amd64
           path: signed-nightly-assets
 
+      - name: Download signed nightly assets from existing prerelease
+        if: ${{ needs.prepare-nightly.outputs.aur_asset_source == 'release' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p signed-nightly-assets
+          gh release download "${{ needs.prepare-nightly.outputs.aur_nightly_tag }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir signed-nightly-assets \
+            --pattern "linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz" \
+            --pattern "linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz.asc"
+
       - name: Calculate nightly checksums
         id: checksums
         run: |
-          tarball_path="signed-nightly-assets/linglong-store-${{ needs.prepare-nightly.outputs.nightly_label }}-linux-amd64.tar.gz"
+          tarball_path="signed-nightly-assets/linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz"
           if [[ ! -f "$tarball_path" ]]; then
             echo "Missing expected signed nightly tarball: $tarball_path" >&2
             exit 1
           fi
 
-          sig_path="signed-nightly-assets/linglong-store-${{ needs.prepare-nightly.outputs.nightly_label }}-linux-amd64.tar.gz.asc"
+          sig_path="signed-nightly-assets/linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz.asc"
           if [[ ! -f "$sig_path" ]]; then
             echo "Missing expected signed nightly tarball signature: $sig_path" >&2
             exit 1
@@ -327,7 +469,7 @@ jobs:
       - name: Normalize nightly AUR version
         id: aur-version
         run: |
-          aur_version="$(bash build/scripts/normalize-nightly-aur-version.sh "${{ needs.prepare-nightly.outputs.nightly_label }}")"
+          aur_version="$(bash build/scripts/normalize-nightly-aur-version.sh "${{ needs.prepare-nightly.outputs.aur_nightly_label }}")"
           echo "aur_version=$aur_version" >> "$GITHUB_OUTPUT"
 
       - name: Render nightly AUR metadata with publish inputs
@@ -337,12 +479,12 @@ jobs:
           metadata_dir="$(mktemp -d)"
           trap 'rm -rf "$metadata_dir"' EXIT
 
-          expected_tarball_url="https://github.com/HanHan666666/flutter-linglong-store/releases/download/${{ needs.prepare-nightly.outputs.nightly_tag }}/linglong-store-${{ needs.prepare-nightly.outputs.nightly_label }}-linux-amd64.tar.gz"
+          expected_tarball_url="https://github.com/HanHan666666/flutter-linglong-store/releases/download/${{ needs.prepare-nightly.outputs.aur_nightly_tag }}/linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz"
           expected_signature_url="${expected_tarball_url}.asc"
 
           bash build/scripts/render-packaging-templates.sh \
             --inner \
-            --version "${{ needs.prepare-nightly.outputs.nightly_label }}" \
+            --version "${{ needs.prepare-nightly.outputs.aur_nightly_label }}" \
             --arch amd64 \
             --output-dir "$metadata_dir" \
             --channel nightly \
@@ -354,8 +496,8 @@ jobs:
           grep -Fqx "pkgname=linglong-store-nightly-bin" "$pkgbuild"
           grep -Fqx "pkgver=${{ steps.aur-version.outputs.aur_version }}" "$pkgbuild"
           grep -Fqx "validpgpkeys=('${GPG_KEY_ID}')" "$pkgbuild"
-          grep -Fqx "  \"linglong-store-${{ needs.prepare-nightly.outputs.nightly_label }}-linux-amd64.tar.gz::${expected_tarball_url}\"" "$pkgbuild"
-          grep -Fqx "  \"linglong-store-${{ needs.prepare-nightly.outputs.nightly_label }}-linux-amd64.tar.gz.asc::${expected_signature_url}\"" "$pkgbuild"
+          grep -Fqx "  \"linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz::${expected_tarball_url}\"" "$pkgbuild"
+          grep -Fqx "  \"linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz.asc::${expected_signature_url}\"" "$pkgbuild"
           grep -Fqx "  '${{ steps.checksums.outputs.sha_amd64 }}'" "$pkgbuild"
           grep -Fqx "  '${{ steps.checksums.outputs.sha_sig_amd64 }}'" "$pkgbuild"
 
@@ -379,7 +521,7 @@ jobs:
           GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
         run: |
           bash build/scripts/validate-aur-package.sh \
-            --version "${{ needs.prepare-nightly.outputs.nightly_label }}" \
+            --version "${{ needs.prepare-nightly.outputs.aur_nightly_label }}" \
             --channel nightly \
             --package-name linglong-store-nightly-bin \
             --aur-version "${{ steps.aur-version.outputs.aur_version }}" \
@@ -394,7 +536,7 @@ jobs:
           GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
         run: |
           bash build/scripts/publish-aur.sh \
-            --version "${{ needs.prepare-nightly.outputs.nightly_label }}" \
+            --version "${{ needs.prepare-nightly.outputs.aur_nightly_label }}" \
             --channel nightly \
             --package-name linglong-store-nightly-bin \
             --repo-url "ssh://aur@aur.archlinux.org/linglong-store-nightly-bin.git" \

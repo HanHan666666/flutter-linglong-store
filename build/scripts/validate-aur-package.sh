@@ -31,9 +31,8 @@ EOF
 
 compute_release_sha256() {
   local url="$1"
-  local attempt
 
-  for attempt in 1 2 3; do
+  for _ in 1 2 3; do
     if curl -LfsS "$url" | sha256sum | awk '{print $1}'; then
       return 0
     fi
@@ -44,10 +43,14 @@ compute_release_sha256() {
   return 1
 }
 
-run_with_retries() {
-  local attempt
+placeholder_sha256() {
+  local label="$1"
 
-  for attempt in 1 2 3; do
+  printf '%s' "$label" | sha256sum | awk '{print $1}'
+}
+
+run_with_retries() {
+  for _ in 1 2 3; do
     if "$@"; then
       return 0
     fi
@@ -218,48 +221,66 @@ run_inner_validation() {
   local pkg_contents
   local desktop_filename
   local changelog_filename
-  local expected_conflict
+  local expected_conflicts=()
   local expected_pkginfo_pkgver
   local expected_arch_line_primary
   local expected_arch_line_secondary
   local makepkg_cmd
+  local pacman_packages=(base-devel namcap)
 
-  run_with_retries pacman -Sy --noconfirm --needed base-devel namcap curl gnupg >/dev/null
+  if [[ "$verification_mode" == "online" ]]; then
+    # Online source verification needs curl for checksum fetching and gnupg for
+    # importing the release signing key inside the Arch builder container.
+    pacman_packages+=(curl gnupg)
+  fi
+
+  run_with_retries pacman -Sy --noconfirm --needed "${pacman_packages[@]}" >/dev/null
   useradd -m builder >/dev/null 2>&1 || true
 
   metadata_dir="$(mktemp -d)"
   trap 'rm -rf "$metadata_dir"' RETURN
   build_dir="$metadata_dir/aur-build"
 
-  if [[ -z "$sha256_amd64" ]]; then
-    sha256_amd64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-amd64.tar.gz")")"
-  fi
+  if [[ "$verification_mode" == "online" ]]; then
+    if [[ -z "$sha256_amd64" ]]; then
+      sha256_amd64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-amd64.tar.gz")")"
+    fi
 
-  if [[ "$channel" == "stable" && -z "$sha256_arm64" ]]; then
-    sha256_arm64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-arm64.tar.gz")")"
-  fi
+    if [[ "$channel" == "stable" && -z "$sha256_arm64" ]]; then
+      sha256_arm64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-arm64.tar.gz")")"
+    fi
 
-  # Compute signature SHA256 if not provided
-  if [[ -z "$sha256_sig_amd64" ]]; then
-    sha256_sig_amd64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-amd64.tar.gz.asc")")"
-  fi
+    if [[ -z "$sha256_sig_amd64" ]]; then
+      sha256_sig_amd64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-amd64.tar.gz.asc")")"
+    fi
 
-  if [[ "$channel" == "stable" && -z "$sha256_sig_arm64" ]]; then
-    sha256_sig_arm64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-arm64.tar.gz.asc")")"
+    if [[ "$channel" == "stable" && -z "$sha256_sig_arm64" ]]; then
+      sha256_sig_arm64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-arm64.tar.gz.asc")")"
+    fi
+  else
+    # Offline validation only checks rendered structure and package layout, so
+    # deterministic placeholder digests avoid any accidental network access.
+    : "${sha256_amd64:=$(placeholder_sha256 "${channel}:${release_version}:amd64:bundle")}"
+    : "${sha256_sig_amd64:=$(placeholder_sha256 "${channel}:${release_version}:amd64:signature")}"
+
+    if [[ "$channel" == "stable" ]]; then
+      : "${sha256_arm64:=$(placeholder_sha256 "${channel}:${release_version}:arm64:bundle")}"
+      : "${sha256_sig_arm64:=$(placeholder_sha256 "${channel}:${release_version}:arm64:signature")}"
+    fi
   fi
 
   case "$channel" in
     stable)
       desktop_filename="linglong-store.desktop"
       changelog_filename="linglong-store-bin.changelog"
-      expected_conflict="linglong-store"
+      expected_conflicts=("linglong-store")
       expected_arch_line_primary="arch = x86_64"
       expected_arch_line_secondary="arch = aarch64"
       ;;
     nightly)
       desktop_filename="linglong-store-nightly.desktop"
       changelog_filename="${package_name}.changelog"
-      expected_conflict="linglong-store-bin"
+      expected_conflicts=("linglong-store" "linglong-store-bin")
       expected_arch_line_primary="arch = x86_64"
       expected_arch_line_secondary="arch = aarch64"
       ;;
@@ -354,10 +375,14 @@ EOF
     "AUR metadata did not render the expected desktop filename."
   assert_file_contains "$metadata_dir/aur/.SRCINFO" "provides = linglong-store" \
     "AUR metadata did not render the expected provides entry."
-  assert_file_contains "$metadata_dir/aur/.SRCINFO" "conflicts = ${expected_conflict}" \
-    "AUR metadata did not render the expected conflicts entry."
   assert_file_contains "$metadata_dir/aur/.SRCINFO" "$expected_arch_line_primary" \
     "AUR metadata did not render the expected primary architecture."
+
+  local expected_conflict
+  for expected_conflict in "${expected_conflicts[@]}"; do
+    assert_file_contains "$metadata_dir/aur/.SRCINFO" "conflicts = ${expected_conflict}" \
+      "AUR metadata did not render the expected conflicts entry ${expected_conflict}."
+  done
 
   if [[ "$channel" == "stable" ]]; then
     assert_file_contains "$metadata_dir/aur/.SRCINFO" "$expected_arch_line_secondary" \
@@ -379,12 +404,15 @@ EOF
     "AUR package metadata is still missing the bash runtime dependency."
   assert_output_contains "$pkginfo" "provides = linglong-store" \
     "Built AUR package did not keep the expected provides entry."
-  assert_output_contains "$pkginfo" "conflict = ${expected_conflict}" \
-    "Built AUR package did not keep the expected conflicts entry."
   assert_output_contains "$pkg_contents" "usr/share/applications/${desktop_filename}" \
     "Built AUR package did not install the expected desktop file."
   assert_output_contains "$pkg_contents" "opt/linglong-store/linglong_store" \
     "Built AUR package did not install the expected application payload."
+
+  for expected_conflict in "${expected_conflicts[@]}"; do
+    assert_output_contains "$pkginfo" "conflict = ${expected_conflict}" \
+      "Built AUR package did not keep the expected conflicts entry ${expected_conflict}."
+  done
 
   echo "AUR package validation passed."
 }

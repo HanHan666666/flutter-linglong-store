@@ -179,7 +179,9 @@ case "$channel" in
     launchable_desktop_id="$desktop_filename"
     aur_pkgname="linglong-store-nightly-bin"
     aur_arch_values="'x86_64'"
-    aur_conflicts_values="'linglong-store-bin'"
+    # Nightly reuses the stable install paths, so both the concrete stable
+    # package name and the shared virtual package must be treated as conflicts.
+    aur_conflicts_values="'linglong-store' 'linglong-store-bin'"
     aur_changelog_filename="linglong-store-nightly-bin.changelog"
     aur_source_aarch64_block=""
     aur_sha256sums_aarch64_block=""

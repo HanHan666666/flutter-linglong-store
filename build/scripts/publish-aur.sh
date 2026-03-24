@@ -16,6 +16,7 @@ sha256_arm64="${SHA256_ARM64:-}"
 sha256_sig_amd64="${SHA256_SIG_AMD64:-}"
 sha256_sig_arm64="${SHA256_SIG_ARM64:-}"
 gpg_key_id="${GPG_KEY_ID:-}"
+aur_srcinfo_container_image="${AUR_SRCINFO_CONTAINER_IMAGE:-archlinux:latest}"
 
 extract_repo_name() {
   local repo_url="$1"
@@ -28,6 +29,42 @@ extract_repo_name() {
 
   repo_basename="${repo_basename%.git}"
   printf '%s\n' "$repo_basename"
+}
+
+generate_srcinfo() {
+  local repo_dir="$1"
+
+  if command -v makepkg >/dev/null 2>&1; then
+    (
+      cd "$repo_dir"
+      makepkg --printsrcinfo > .SRCINFO
+    )
+    return 0
+  fi
+
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "Generating .SRCINFO requires makepkg or a Docker-based Arch Linux fallback." >&2
+    exit 1
+  fi
+
+  # GitHub's Ubuntu runners do not ship makepkg, so fall back to a short-lived
+  # Arch container to keep AUR metadata generation consistent with validation.
+  docker run --rm \
+    -v "$repo_dir:/aur" \
+    -w /aur \
+    "$aur_srcinfo_container_image" \
+    /bin/bash -lc '
+      set -euo pipefail
+      pacman -Sy --noconfirm --needed base-devel >/dev/null
+      useradd -m builder >/dev/null 2>&1 || true
+      work_dir="$(mktemp -d)"
+      trap "rm -rf \"$work_dir\"" EXIT
+      cp -a /aur/. "$work_dir/"
+      chown -R builder:builder "$work_dir"
+      runuser -u builder -- /bin/bash -lc "cd \"$work_dir\" && makepkg --printsrcinfo > .SRCINFO"
+      install -m 644 "$work_dir/.SRCINFO" /aur/.SRCINFO
+      chown --reference=/aur/PKGBUILD /aur/.SRCINFO
+    '
 }
 
 while [[ $# -gt 0 ]]; do
@@ -219,8 +256,9 @@ update_aur_repo() {
     cp "$metadata_dir/aur/linglong-store.metainfo.xml" linglong-store.metainfo.xml
     cp "$metadata_dir/aur/linglong-store.svg" linglong-store.svg
 
-    # Generate .SRCINFO
-    makepkg --printsrcinfo > .SRCINFO
+    # Keep .SRCINFO generation aligned with the same Arch tooling that validates
+    # the PKGBUILD, even when the host runner is Ubuntu.
+    generate_srcinfo "$work_dir"
 
     # Validate with namcap if available
     if command -v namcap &>/dev/null; then

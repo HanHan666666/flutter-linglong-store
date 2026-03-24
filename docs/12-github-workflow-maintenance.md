@@ -57,7 +57,10 @@
 运行约束：
 
 - 只允许默认分支真正发布 nightly
-- 如果默认分支 `HEAD` 与当前 nightly 已发布 SHA 相同，则直接 skip
+- 如果默认分支 `HEAD` 与某个已存在 nightly prerelease 的 `Nightly source commit` 相同，则首轮执行跳过 prerelease；只有 `run_attempt > 1` 或手动 `force_aur_publish=true` 时，才允许复用那次 prerelease 资产补发 AUR
+- 手动补发时可额外传 `aur_release_tag`，显式指定要复用的历史 nightly tag；这种恢复路径以该 tag 对应的 prerelease 为准，不要求它的 `Nightly source commit` 仍等于当前 `HEAD`
+- 如果手动补发未传 `aur_release_tag`，workflow 会回退到按 `Nightly source commit` 扫描现有 nightly prerelease
+- 无论补发的是当前还是历史 prerelease，`publish-aur-nightly` 都必须继续使用触发本次 workflow 的当前代码版本执行渲染、校验与发布脚本；只允许资产下载 URL 与版本标签指向历史 prerelease
 - nightly 只构建 `amd64`
 
 ### `release.yml`
@@ -259,13 +262,15 @@ nightly 在 GitHub prerelease 发布成功后，必须继续执行 AUR 发布，
 约束如下：
 
 - `linglong-store-nightly-bin` 只发布 `x86_64`
-- `linglong-store-nightly-bin` 必须声明 `conflicts=('linglong-store-bin')`，按替换稳定版处理，不允许 side-by-side install
+- `linglong-store-nightly-bin` 必须声明 `conflicts=('linglong-store' 'linglong-store-bin')`，因为它复用稳定版安装路径，既要拦住稳定包名，也要拦住共享虚拟包名
 - nightly AUR `pkgver` 必须把 `<base_version>-nightly.<YYYYMMDD>+<short_sha>` 归一成 `<base_version>_nightly.<YYYYMMDD>.<short_sha>`
 - nightly 桌面与 metainfo 命名必须显式带 nightly 变体：
   - desktop 文件：`linglong-store-nightly.desktop`
   - AppStream launchable：`linglong-store-nightly.desktop`
   - 用户可见名称必须带 `Nightly`
 - `nightly.yml` 当前发布顺序固定为：生成并签名 nightly 资产 → 发布 GitHub prerelease → 发布 nightly AUR；不要把 AUR 发布提前到 prerelease 之前
+- `publish-aur.sh` 在宿主机没有 `makepkg` 时，必须通过临时 Arch 容器生成 `.SRCINFO`，不要假定 Ubuntu runner 自带 Arch 打包工具
+- 容器兜底只允许在容器内部临时工作目录生成 `.SRCINFO` 后再拷回结果，禁止对挂载进来的宿主 AUR 仓库执行递归 `chown`
 
 ## Action 名称与版本展示
 

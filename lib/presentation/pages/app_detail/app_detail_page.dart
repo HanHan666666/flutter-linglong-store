@@ -22,6 +22,7 @@ import '../../../core/di/providers.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/utils/format_utils.dart';
 import '../../../core/config/theme.dart';
+import '../../notifications/app_notification_helpers.dart';
 import 'screenshot_preview_lightbox.dart';
 
 part 'app_detail_page.g.dart';
@@ -1049,20 +1050,17 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       if (!context.mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n?.commentSubmitSuccess ?? '评论已提交')),
+      showSuccessNotification(
+        context,
+        message: l10n?.commentSubmitSuccess ?? '评论已提交',
       );
     } catch (e) {
       if (!context.mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n?.commentSubmitFailed(e.toString()) ?? '评论提交失败: $e',
-          ),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
+      showErrorNotification(
+        context,
+        message: l10n?.commentSubmitFailed(e.toString()) ?? '评论提交失败: $e',
       );
     }
   }
@@ -1120,25 +1118,20 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       await cliRepo.runApp(app.appId);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
+        showInfoNotification(
+          context,
+          message:
               AppLocalizations.of(context)?.launching(app.name) ??
-                  '正在启动 ${app.name}',
-            ),
-          ),
+              '正在启动 ${app.name}',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
+        showErrorNotification(
+          context,
+          message:
               AppLocalizations.of(context)?.launchFailed(e.toString()) ??
-                  '启动失败: $e',
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
+              '启动失败: $e',
         );
       }
     }
@@ -1204,7 +1197,22 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   /// - kill 进程
   /// - 执行卸载
   Future<void> _showUninstallDialog(InstalledApp app) async {
-    await ref.read(appUninstallServiceProvider).uninstall(context, app);
+    final result = await ref
+        .read(appUninstallServiceProvider)
+        .uninstall(
+          app,
+          ({required isRunning, appName}) => isRunning
+              ? ConfirmDialog.showUninstallRunning(context, appName: appName)
+              : ConfirmDialog.showUninstall(context, appName: appName),
+        );
+    if (!mounted) {
+      return;
+    }
+    showAppUninstallResultNotification(
+      context,
+      appName: app.name,
+      result: result,
+    );
   }
 
   /// 在主窗口内以灯箱形式预览截图
@@ -1213,9 +1221,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     List<String> screenshots,
     int initialIndex,
   ) async {
-    final messenger = ScaffoldMessenger.of(context);
     final loadFailedText = AppLocalizations.of(context)?.loadFailed ?? '加载失败';
-    final errorColor = Theme.of(context).colorScheme.error;
 
     try {
       await showScreenshotPreviewLightbox(
@@ -1229,12 +1235,10 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         error,
         stackTrace,
       );
-      if (!mounted) {
+      if (!context.mounted) {
         return;
       }
-      messenger.showSnackBar(
-        SnackBar(content: Text(loadFailedText), backgroundColor: errorColor),
-      );
+      showErrorNotification(context, message: loadFailedText);
     }
   }
 
@@ -1245,26 +1249,20 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       await cliRepo.createDesktopShortcut(app.appId);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.shortcutCreated ?? '快捷方式已创建',
-            ),
-          ),
+        showSuccessNotification(
+          context,
+          message: AppLocalizations.of(context)?.shortcutCreated ?? '快捷方式已创建',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
+        showErrorNotification(
+          context,
+          message:
               AppLocalizations.of(
-                    context,
-                  )?.shortcutCreateFailed(e.toString()) ??
-                  '创建失败: $e',
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
+                context,
+              )?.shortcutCreateFailed(e.toString()) ??
+              '创建失败: $e',
         );
       }
     }

@@ -10,6 +10,8 @@ import '../../core/config/app_config.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/network/api_client.dart';
+import '../notifications/app_notification_helpers.dart';
+import '../notifications/app_notification_viewport.dart';
 
 /// 反馈问题类型选项
 const _kFeedbackCategories = ['商店缺陷', '应用更新', '应用故障'];
@@ -51,97 +53,102 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
     final categories =
         l10n?.feedbackCategories.split(',') ?? _kFeedbackCategories;
 
-    return AlertDialog(
-      title: Text(l10n?.feedbackTitle ?? '意见反馈'),
-      content: SizedBox(
-        width: 440,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 问题分类多选
-              Text(
-                l10n?.feedbackCategory ?? '问题分类',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 4,
-                children: categories.map((cat) {
-                  final selected = _selectedCategories.contains(cat);
-                  return FilterChip(
-                    label: Text(cat),
-                    selected: selected,
-                    onSelected: (value) {
-                      setState(() {
-                        if (value) {
-                          _selectedCategories.add(cat);
-                        } else {
-                          _selectedCategories.remove(cat);
-                        }
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 16),
+    return Stack(
+      children: [
+        AlertDialog(
+          title: Text(l10n?.feedbackTitle ?? '意见反馈'),
+          content: SizedBox(
+            width: 440,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 问题分类多选
+                  Text(
+                    l10n?.feedbackCategory ?? '问题分类',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: categories.map((cat) {
+                      final selected = _selectedCategories.contains(cat);
+                      return FilterChip(
+                        label: Text(cat),
+                        selected: selected,
+                        onSelected: (value) {
+                          setState(() {
+                            if (value) {
+                              _selectedCategories.add(cat);
+                            } else {
+                              _selectedCategories.remove(cat);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
 
-              // 概述输入框
-              TextField(
-                controller: _overviewController,
-                decoration: InputDecoration(
-                  labelText: l10n?.overview ?? '概述',
-                  hintText: l10n?.overviewHint ?? '请简要描述问题',
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
+                  // 概述输入框
+                  TextField(
+                    controller: _overviewController,
+                    decoration: InputDecoration(
+                      labelText: l10n?.overview ?? '概述',
+                      hintText: l10n?.overviewHint ?? '请简要描述问题',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
 
-              // 详细描述
-              TextField(
-                controller: _descriptionController,
-                maxLines: 5,
-                decoration: InputDecoration(
-                  labelText: l10n?.detailDescription ?? '详细描述',
-                  hintText: l10n?.detailDescriptionHint ?? '请详细描述您遇到的问题',
-                  alignLabelWithHint: true,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 8),
+                  // 详细描述
+                  TextField(
+                    controller: _descriptionController,
+                    maxLines: 5,
+                    decoration: InputDecoration(
+                      labelText: l10n?.detailDescription ?? '详细描述',
+                      hintText: l10n?.detailDescriptionHint ?? '请详细描述您遇到的问题',
+                      alignLabelWithHint: true,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
 
-              // 上传日志复选框
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n?.uploadLog ?? '同时上传日志文件'),
-                subtitle: Text(l10n?.noPrivacyInfo ?? '日志中不包含个人隐私信息'),
-                value: _uploadLogFile,
-                onChanged: (value) =>
-                    setState(() => _uploadLogFile = value ?? false),
+                  // 上传日志复选框
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n?.uploadLog ?? '同时上传日志文件'),
+                    subtitle: Text(l10n?.noPrivacyInfo ?? '日志中不包含个人隐私信息'),
+                    value: _uploadLogFile,
+                    onChanged: (value) =>
+                        setState(() => _uploadLogFile = value ?? false),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+              child: Text(l10n?.cancel ?? '取消'),
+            ),
+            FilledButton(
+              onPressed: _isSubmitting ? null : _submit,
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(l10n?.submitFeedback ?? '提交'),
+            ),
+          ],
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-          child: Text(l10n?.cancel ?? '取消'),
-        ),
-        FilledButton(
-          onPressed: _isSubmitting ? null : _submit,
-          child: _isSubmitting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(l10n?.submitFeedback ?? '提交'),
-        ),
+        const AppNotificationViewport(topOffset: 12, rightOffset: 12, priority: 1),
       ],
     );
   }
@@ -152,12 +159,9 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
     final description = _descriptionController.text.trim();
 
     if (overview.isEmpty && description.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)?.feedbackHint ?? '请填写问题概述或描述',
-          ),
-        ),
+      showWarningNotification(
+        context,
+        message: AppLocalizations.of(context)?.feedbackHint ?? '请填写问题概述或描述',
       );
       return;
     }
@@ -167,6 +171,10 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
     // 提前捕获 context 相关引用，避免跨 async 间隙使用 BuildContext
     final l10n = AppLocalizations.of(context);
     final noneText = l10n?.none ?? '无';
+    final navigator = Navigator.of(context);
+    final notificationContext = navigator.context;
+    final feedbackSuccessText = l10n?.feedbackSuccess ?? '感谢您的反馈！';
+    final feedbackFailedText = l10n?.feedbackFailed ?? '反馈提交失败，请稍后重试';
 
     try {
       String? logFileUrl;
@@ -175,8 +183,6 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
       if (_uploadLogFile) {
         logFileUrl = await _uploadLog();
       }
-
-      // 构建消息体（与旧版格式保持一致）
       final categories = _selectedCategories.isEmpty
           ? noneText
           : _selectedCategories.join(', ');
@@ -199,26 +205,18 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
 
       await ApiClient.instance.post('/visit/suggest', data: body);
 
-      if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.feedbackSuccess ?? '感谢您的反馈！',
-            ),
-          ),
-        );
+      if (!context.mounted) {
+        return;
       }
+      navigator.pop();
+      showSuccessNotification(
+        notificationContext,
+        message: feedbackSuccessText,
+      );
     } catch (e, s) {
       AppLogger.error('提交反馈失败', e, s);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.feedbackFailed ?? '反馈提交失败，请稍后重试',
-            ),
-          ),
-        );
+        showErrorNotification(notificationContext, message: feedbackFailedText);
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);

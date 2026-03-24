@@ -7,6 +7,8 @@ import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/platform/window_service.dart';
 import '../../domain/models/linglong_env_check_result.dart';
+import '../notifications/app_notification_helpers.dart';
+import '../notifications/app_notification_viewport.dart';
 
 /// 玲珑环境检测对话框
 ///
@@ -30,44 +32,49 @@ class LinglongEnvDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final envState = ref.watch(linglongEnvProvider);
 
-    return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: AppRadius.smRadius,
-        side: const BorderSide(color: AppColors.modalBorder),
-      ),
-      elevation: 0,
-      backgroundColor: context.appColors.surface,
-      title: Row(
-        children: [
-          Icon(
-            envState.checkState == LinglongEnvCheckState.checking
-                ? Icons.info_outline
-                : (envState.result?.isOk ?? false
-                      ? Icons.check_circle_outline
-                      : Icons.warning_amber_rounded),
-            color: envState.checkState == LinglongEnvCheckState.checking
-                ? AppColors.info
-                : (envState.result?.isOk ?? false
-                      ? AppColors.success
-                      : AppColors.warning),
-            size: 24,
+    return Stack(
+      children: [
+        AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: AppRadius.smRadius,
+            side: const BorderSide(color: AppColors.modalBorder),
           ),
-          const SizedBox(width: AppSpacing.sm),
-          Text(
-            AppLocalizations.of(context)?.envCheckTitle ?? '环境检测',
-            style: AppTextStyles.title3.copyWith(
-              color: context.appColors.textPrimary,
-            ),
+          elevation: 0,
+          backgroundColor: context.appColors.surface,
+          title: Row(
+            children: [
+              Icon(
+                envState.checkState == LinglongEnvCheckState.checking
+                    ? Icons.info_outline
+                    : (envState.result?.isOk ?? false
+                          ? Icons.check_circle_outline
+                          : Icons.warning_amber_rounded),
+                color: envState.checkState == LinglongEnvCheckState.checking
+                    ? AppColors.info
+                    : (envState.result?.isOk ?? false
+                          ? AppColors.success
+                          : AppColors.warning),
+                size: 24,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                AppLocalizations.of(context)?.envCheckTitle ?? '环境检测',
+                style: AppTextStyles.title3.copyWith(
+                  color: context.appColors.textPrimary,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      content: SizedBox(
-        width: 420,
-        child: _buildContent(context, ref, envState),
-      ),
-      actions: envState.isInstalling
-          ? null
-          : _buildActions(context, ref, envState),
+          content: SizedBox(
+            width: 420,
+            child: _buildContent(context, ref, envState),
+          ),
+          actions: envState.isInstalling
+              ? null
+              : _buildActions(context, ref, envState),
+        ),
+        const AppNotificationViewport(topOffset: 12, rightOffset: 12, priority: 1),
+      ],
     );
   }
 
@@ -183,7 +190,11 @@ class LinglongEnvDialog extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.error_outline, color: AppColors.error, size: 16),
+                    const Icon(
+                      Icons.error_outline,
+                      color: AppColors.error,
+                      size: 16,
+                    ),
                     const SizedBox(width: AppSpacing.sm),
                     Text(
                       AppLocalizations.of(context)?.errorMessage ?? '错误信息',
@@ -280,7 +291,9 @@ class LinglongEnvDialog extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         Text(
-          envState.installMessage ?? AppLocalizations.of(context)?.installingLinglong ?? '正在安装...',
+          envState.installMessage ??
+              AppLocalizations.of(context)?.installingLinglong ??
+              '正在安装...',
           style: AppTextStyles.body.copyWith(
             color: context.appColors.textSecondary,
           ),
@@ -370,14 +383,11 @@ class LinglongEnvDialog extends ConsumerWidget {
       await launchUrl(uri);
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
+        showErrorNotification(
+          context,
+          message:
               AppLocalizations.of(context)?.cannotOpenLink(url) ??
-                  '无法打开链接: $url',
-            ),
-            backgroundColor: AppColors.error,
-          ),
+              '无法打开链接: $url',
         );
       }
     }
@@ -385,6 +395,10 @@ class LinglongEnvDialog extends ConsumerWidget {
 
   /// 处理自动安装
   Future<void> _handleAutoInstall(BuildContext context, WidgetRef ref) async {
+    final notificationContext = Navigator.of(context).context;
+    final l10n = AppLocalizations.of(context);
+    final envCheckPassedText = l10n?.envCheckPassed ?? '安装完成，环境检测通过';
+    final envCheckFailedText = l10n?.envCheckFailed ?? '安装完成，但环境仍异常，请检查';
     final success = await ref
         .read(linglongEnvProvider.notifier)
         .performAutoInstall();
@@ -395,23 +409,15 @@ class LinglongEnvDialog extends ConsumerWidget {
       if (envState.result?.isOk ?? false) {
         // 环境正常，关闭对话框，由 launch_page 继续启动流程
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.envCheckPassed ?? '安装完成，环境检测通过',
-            ),
-            backgroundColor: AppColors.success,
-          ),
+        showSuccessNotification(
+          notificationContext,
+          message: envCheckPassedText,
         );
       } else {
         // 环境仍异常，提示用户
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.envCheckFailed ?? '安装完成，但环境仍异常，请检查',
-            ),
-            backgroundColor: AppColors.warning,
-          ),
+        showWarningNotification(
+          context,
+          message: envCheckFailedText,
         );
       }
     }

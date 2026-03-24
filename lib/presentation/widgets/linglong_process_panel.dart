@@ -9,6 +9,7 @@ import '../../application/providers/running_process_provider.dart';
 import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../domain/models/running_app.dart';
+import '../notifications/app_notification_helpers.dart';
 import 'app_icon.dart';
 import 'empty_state.dart';
 
@@ -43,10 +44,8 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
         ),
         MenuItem(
           label: l10n?.copyAppId ?? '复制应用 ID',
-          onClick: (_) => _copyText(
-            app.appId,
-            l10n?.copied(app.appId) ?? '已复制应用 ID',
-          ),
+          onClick: (_) =>
+              _copyText(app.appId, l10n?.copied(app.appId) ?? '已复制应用 ID'),
         ),
         MenuItem(
           label: l10n?.copyPid ?? '复制 PID',
@@ -99,9 +98,7 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
     await Clipboard.setData(ClipboardData(text: value));
     if (!mounted) return;
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    showInfoNotification(context, message: message);
   }
 
   Future<void> _stopProcess(RunningApp app) async {
@@ -111,16 +108,15 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
     if (!mounted) return;
 
     final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? (l10n?.stopSuccess(app.name) ?? '${app.name} 已停止')
-              : (l10n?.stopFailed ?? '停止失败'),
-        ),
-        backgroundColor: success ? null : Theme.of(context).colorScheme.error,
-      ),
-    );
+    if (success) {
+      showSuccessNotification(
+        context,
+        message: l10n?.stopSuccess(app.name) ?? '${app.name} 已停止',
+      );
+      return;
+    }
+
+    showErrorNotification(context, message: l10n?.stopFailed ?? '停止失败');
   }
 
   @override
@@ -151,8 +147,7 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    l10n?.processRefreshFailed ??
-                        '进程列表刷新失败，当前显示的是上次成功获取的数据',
+                    l10n?.processRefreshFailed ?? '进程列表刷新失败，当前显示的是上次成功获取的数据',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: const Color(0xFF8C5A00),
                     ),
@@ -323,10 +318,7 @@ class _ProcessTableHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _ProcessHeaderCell(
-            label: l10n?.appName ?? '应用名称',
-            width: 240,
-          ),
+          _ProcessHeaderCell(label: l10n?.appName ?? '应用名称', width: 240),
           _ProcessHeaderCell(
             label: l10n?.versionNo ?? '版本号',
             width: 120,
@@ -347,15 +339,8 @@ class _ProcessTableHeader extends StatelessWidget {
             width: 110,
             centered: true,
           ),
-          const _ProcessHeaderCell(
-            label: 'PID',
-            width: 90,
-            centered: true,
-          ),
-          _ProcessHeaderCell(
-            label: l10n?.containerId ?? '容器 ID',
-            width: 210,
-          ),
+          const _ProcessHeaderCell(label: 'PID', width: 90, centered: true),
+          _ProcessHeaderCell(label: l10n?.containerId ?? '容器 ID', width: 210),
           const SizedBox(width: 48),
         ],
       ),
@@ -540,8 +525,8 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.more_horiz),
-                      tooltip: AppLocalizations.of(context)?.moreActions ??
-                          '更多操作',
+                      tooltip:
+                          AppLocalizations.of(context)?.moreActions ?? '更多操作',
                     ),
                   ),
                 ),

@@ -1,13 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-
-import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/network/api_exceptions.dart';
 import '../../domain/models/installed_app.dart';
 import '../../domain/models/running_app.dart';
-import '../../presentation/widgets/confirm_dialog.dart';
 
 typedef RunningAppsReader = List<RunningApp> Function();
 typedef RunningAppKiller = Future<bool> Function(RunningApp app);
@@ -17,8 +13,31 @@ typedef InstalledAppRemover = void Function(String appId, String version);
 typedef AppCollectionSyncer = Future<void> Function();
 typedef UninstallReporter =
     Future<void> Function(String appId, String version, {String? appName});
-typedef UninstallConfirmDialog =
-    Future<bool?> Function(BuildContext context, {String? appName});
+typedef UninstallConfirm =
+    Future<bool?> Function({required bool isRunning, String? appName});
+
+enum AppUninstallResultType { success, cancelled, stopFailed, failed }
+
+class AppUninstallResult {
+  const AppUninstallResult({required this.type, this.detail});
+
+  const AppUninstallResult.success()
+    : this(type: AppUninstallResultType.success);
+
+  const AppUninstallResult.cancelled()
+    : this(type: AppUninstallResultType.cancelled);
+
+  const AppUninstallResult.stopFailed({String? detail})
+    : this(type: AppUninstallResultType.stopFailed, detail: detail);
+
+  const AppUninstallResult.failed({String? detail})
+    : this(type: AppUninstallResultType.failed, detail: detail);
+
+  final AppUninstallResultType type;
+  final String? detail;
+
+  bool get didSucceed => type == AppUninstallResultType.success;
+}
 
 /// 应用卸载服务
 ///
@@ -40,17 +59,12 @@ class AppUninstallService {
     required InstalledAppRemover removeInstalledApp,
     required AppCollectionSyncer syncAfterUninstall,
     required UninstallReporter reportUninstall,
-    UninstallConfirmDialog confirmUninstall = ConfirmDialog.showUninstall,
-    UninstallConfirmDialog confirmUninstallRunning =
-        ConfirmDialog.showUninstallRunning,
   }) : _readRunningApps = readRunningApps,
        _killRunningApp = killRunningApp,
        _uninstallApp = uninstallApp,
        _removeInstalledApp = removeInstalledApp,
        _syncAfterUninstall = syncAfterUninstall,
-       _reportUninstall = reportUninstall,
-       _confirmUninstall = confirmUninstall,
-       _confirmUninstallRunning = confirmUninstallRunning;
+       _reportUninstall = reportUninstall;
 
   final RunningAppsReader _readRunningApps;
   final RunningAppKiller _killRunningApp;
@@ -58,20 +72,14 @@ class AppUninstallService {
   final InstalledAppRemover _removeInstalledApp;
   final AppCollectionSyncer _syncAfterUninstall;
   final UninstallReporter _reportUninstall;
-  final UninstallConfirmDialog _confirmUninstall;
-  final UninstallConfirmDialog _confirmUninstallRunning;
 
   /// 执行卸载流程
   ///
-  /// [context] BuildContext，用于显示弹窗和 SnackBar
   /// [app] 要卸载的应用信息
-  ///
-  /// 返回：
-  /// - `true` - 卸载成功
-  /// - `false` - 用户取消或卸载失败
-  Future<bool> uninstall(BuildContext context, InstalledApp app) async {
-    if (!context.mounted) return false;
-
+  Future<AppUninstallResult> uninstall(
+    InstalledApp app,
+    UninstallConfirm confirm,
+  ) async {
     // 1. 检查应用是否正在运行
     final runningApps = _readRunningApps();
     final runningInstances = runningApps
@@ -79,27 +87,22 @@ class AppUninstallService {
         .toList();
 
     // 2. 显示确认弹窗
-    bool? confirmed;
-    if (runningInstances.isNotEmpty) {
-      // 应用运行中，显示强制关闭确认弹窗
-      confirmed = await _confirmUninstallRunning(context, appName: app.name);
-    } else {
-      confirmed = await _confirmUninstall(context, appName: app.name);
-    }
+    final confirmed = await confirm(
+      isRunning: runningInstances.isNotEmpty,
+      appName: app.name,
+    );
 
-    if (confirmed != true || !context.mounted) return false;
+    if (confirmed != true) {
+      return const AppUninstallResult.cancelled();
+    }
 
     // 3. 若运行中，先强制关闭所有运行实例
     if (runningInstances.isNotEmpty) {
       for (final running in runningInstances) {
         final success = await _killRunningApp(running);
         if (!success) {
-          // kill 失败，中止卸载
           AppLogger.warning('[AppUninstall] killApp 失败: ${running.appId}');
-          if (context.mounted) {
-            _showErrorSnackBar(context, '无法停止应用，卸载已取消');
-          }
-          return false;
+          return const AppUninstallResult.stopFailed(detail: '无法停止应用，卸载已取消');
         }
       }
     }
@@ -115,38 +118,13 @@ class AppUninstallService {
       // 6. 上报卸载统计记录（fire-and-forget）
       unawaited(_reportUninstallSafely(app));
 
-      // 7. 显示成功提示
-      if (context.mounted) {
-        _showSuccessSnackBar(
-          context,
-          AppLocalizations.of(context)?.uninstallSuccess(app.name) ??
-              '${app.name} 已卸载',
-        );
-      }
-
-      return true;
+      return const AppUninstallResult.success();
     } on UninstallException catch (e) {
-      // 卸载失败（包括 PKExec 取消）
       AppLogger.warning('[AppUninstall] 卸载失败: ${e.message}');
-      if (context.mounted) {
-        _showErrorSnackBar(
-          context,
-          AppLocalizations.of(context)?.uninstallFailed(e.message) ??
-              '卸载失败: ${e.message}',
-        );
-      }
-      return false;
+      return AppUninstallResult.failed(detail: e.message);
     } catch (e) {
-      // 其他异常
       AppLogger.error('[AppUninstall] 卸载异常', e);
-      if (context.mounted) {
-        _showErrorSnackBar(
-          context,
-          AppLocalizations.of(context)?.uninstallError(e.toString()) ??
-              '卸载异常: $e',
-        );
-      }
-      return false;
+      return AppUninstallResult.failed(detail: e.toString());
     }
   }
 
@@ -157,22 +135,5 @@ class AppUninstallService {
     } catch (e) {
       AppLogger.warning('[AppUninstall] 上报卸载统计失败: $e');
     }
-  }
-
-  void _showSuccessSnackBar(BuildContext context, String message) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  void _showErrorSnackBar(BuildContext context, String message) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ),
-    );
   }
 }

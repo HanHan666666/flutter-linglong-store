@@ -12,6 +12,7 @@ import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../data/datasources/remote/app_api_service.dart';
 import '../../../data/models/api_dto.dart';
+import '../../notifications/app_notification_helpers.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/feedback_dialog.dart';
 
@@ -122,7 +123,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       final tagName = response.data['tag_name'] as String?;
       if (!mounted) return;
       if (tagName == null) {
-        _showSnackBar(
+        _showMessage(
           AppLocalizations.of(context)?.cannotGetVersion ?? '无法获取版本信息',
         );
         return;
@@ -165,7 +166,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       );
     } catch (e) {
       if (mounted) {
-        _showSnackBar(
+        _showMessage(
           AppLocalizations.of(context)?.updateCheckFailed ?? '检查更新失败，请检查网络连接',
         );
       }
@@ -195,10 +196,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     return l.$3 > c.$3;
   }
 
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+  void _showMessage(String message) {
+    showInfoNotification(context, message: message);
   }
 
   @override
@@ -481,18 +480,12 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
     if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? (l10n?.cacheCleared ?? '缓存已清除')
-              : (l10n?.clearCacheFailed ?? '清除缓存失败'),
-        ),
-        backgroundColor: success
-            ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.error,
-      ),
-    );
+    if (success) {
+      showSuccessNotification(context, message: l10n?.cacheCleared ?? '缓存已清除');
+      return;
+    }
+
+    showErrorNotification(context, message: l10n?.clearCacheFailed ?? '清除缓存失败');
   }
 
   /// 构建商店选项部分
@@ -609,18 +602,15 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
     if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? (l10n?.baseServiceCleaned ?? '废弃基础服务已清理')
-              : (l10n?.cleanFailed ?? '清理失败，请稍后重试'),
-        ),
-        backgroundColor: success
-            ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.error,
-      ),
-    );
+    if (success) {
+      showSuccessNotification(
+        context,
+        message: l10n?.baseServiceCleaned ?? '废弃基础服务已清理',
+      );
+      return;
+    }
+
+    showErrorNotification(context, message: l10n?.cleanFailed ?? '清理失败，请稍后重试');
   }
 
   /// 构建关于部分
@@ -819,7 +809,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (mounted) {
-      _showSnackBar(
+      _showMessage(
         AppLocalizations.of(context)?.cannotOpenLink(url) ?? '无法打开链接: $url',
       );
     }

@@ -8,6 +8,7 @@ import '../../../application/providers/linglong_env_provider.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
+import '../../notifications/app_notification_viewport.dart';
 import '../../widgets/linglong_env_dialog.dart';
 
 /// 启动页面
@@ -115,20 +116,25 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
 
     return Scaffold(
       backgroundColor: context.appColors.background,
-      body: Center(
-        child: AnimatedBuilder(
-          animation: _animationController,
-          builder: (context, child) {
-            return Opacity(
-              opacity: _logoOpacityAnimation.value,
-              child: Transform.scale(
-                scale: _logoScaleAnimation.value,
-                child: child,
-              ),
-            );
-          },
-          child: _buildContent(context, launchState, envState),
-        ),
+      body: Stack(
+        children: [
+          Center(
+            child: AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                return Opacity(
+                  opacity: _logoOpacityAnimation.value,
+                  child: Transform.scale(
+                    scale: _logoScaleAnimation.value,
+                    child: child,
+                  ),
+                );
+              },
+              child: _buildContent(context, launchState, envState),
+            ),
+          ),
+          const AppNotificationViewport(topOffset: 16, rightOffset: 16),
+        ],
       ),
     );
   }

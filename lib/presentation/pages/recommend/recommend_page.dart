@@ -14,6 +14,7 @@ import '../../../core/config/page_visibility.dart';
 import '../../../core/config/visibility_aware_mixin.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/recommend_models.dart';
+import '../../notifications/app_notification_helpers.dart';
 import 'widgets/recommend_banner_background.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/widgets.dart';
@@ -485,13 +486,11 @@ class _BannerSectionState extends State<_BannerSection> {
     } else {
       // 无法打开链接时显示错误提示
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
+        showErrorNotification(
+          context,
+          message:
               AppLocalizations.of(context)?.cannotOpenLink(url) ??
-                  '无法打开链接: $url',
-            ),
-          ),
+              '无法打开链接: $url',
         );
       }
     }

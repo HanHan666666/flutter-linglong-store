@@ -12,6 +12,7 @@ import '../../../core/config/visibility_aware_mixin.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/utils/version_compare.dart';
 import '../../../domain/models/installed_app.dart';
+import '../../notifications/app_notification_helpers.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/linglong_process_panel.dart';
 import '../../widgets/widgets.dart';
@@ -114,7 +115,22 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
 
   /// 卸载应用（使用统一的卸载服务）
   Future<void> _uninstallApp(InstalledApp app) async {
-    await ref.read(appUninstallServiceProvider).uninstall(context, app);
+    final result = await ref
+        .read(appUninstallServiceProvider)
+        .uninstall(
+          app,
+          ({required isRunning, appName}) => isRunning
+              ? ConfirmDialog.showUninstallRunning(context, appName: appName)
+              : ConfirmDialog.showUninstall(context, appName: appName),
+        );
+    if (!mounted) {
+      return;
+    }
+    showAppUninstallResultNotification(
+      context,
+      appName: app.name,
+      result: result,
+    );
   }
 
   @override
@@ -186,8 +202,8 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
           });
         },
         decoration: InputDecoration(
-          hintText: AppLocalizations.of(context)?.searchInstalledApps ??
-              '搜索已安装的应用',
+          hintText:
+              AppLocalizations.of(context)?.searchInstalledApps ?? '搜索已安装的应用',
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
@@ -234,7 +250,8 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
       return EmptyState(
         icon: Icons.apps_outage,
         title: AppLocalizations.of(context)?.noInstalledApps ?? '暂无已安装应用',
-        description: AppLocalizations.of(context)?.noInstalledAppsHint ??
+        description:
+            AppLocalizations.of(context)?.noInstalledAppsHint ??
             '您还没有安装任何玲珑应用，去推荐页看看吧',
       );
     }
@@ -244,7 +261,8 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
       return EmptyState(
         icon: Icons.search_off,
         title: l10n?.noMatchingApp ?? '未找到匹配的应用',
-        description: l10n?.noMatchingAppHint(_searchQuery) ??
+        description:
+            l10n?.noMatchingAppHint(_searchQuery) ??
             '没有找到 "$_searchQuery" 相关的应用',
         retryText: l10n?.clearSearch ?? '清除搜索',
         onRetry: () {

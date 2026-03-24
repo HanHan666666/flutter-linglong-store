@@ -14,6 +14,7 @@ import '../../core/logging/app_logger.dart';
 import '../../core/platform/window_service.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_task.dart';
+import '../notifications/app_notification_viewport.dart';
 import 'sidebar.dart';
 import 'title_bar.dart';
 
@@ -184,10 +185,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
                 child: Row(
                   children: [
                     // 左侧导航栏
-                    Sidebar(
-                      currentPath: currentPath,
-                      updateCount: updateCount,
-                    ),
+                    Sidebar(currentPath: currentPath, updateCount: updateCount),
                     // 右侧内容区域，背景跟随主题
                     Expanded(
                       child: Container(
@@ -209,6 +207,10 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
                 ),
               ),
             ],
+          ),
+          const AppNotificationViewport(
+            topOffset: CustomTitleBar.height + 16,
+            rightOffset: 16,
           ),
           KeepAliveVisibilitySync(currentPath: currentPath),
         ],

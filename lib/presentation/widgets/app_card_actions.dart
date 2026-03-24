@@ -5,6 +5,7 @@ import '../../application/providers/app_operation_queue_provider.dart';
 import '../../application/providers/install_queue_provider.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../domain/models/install_task.dart';
+import '../notifications/app_notification_helpers.dart';
 import 'install_button.dart';
 
 /// 统一处理列表卡片主按钮动作，保证各列表页行为一致。
@@ -51,26 +52,21 @@ Future<void> handleAppCardPrimaryAction({
         if (!context.mounted) {
           return;
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
+        showInfoNotification(
+          context,
+          message:
               AppLocalizations.of(context)?.launching(appName) ??
-                  '正在启动 $appName...',
-            ),
-          ),
+              '正在启动 $appName...',
         );
       } catch (error) {
         if (!context.mounted) {
           return;
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
+        showErrorNotification(
+          context,
+          message:
               AppLocalizations.of(context)?.launchFailed(error.toString()) ??
-                  '启动失败: $error',
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
+              '启动失败: $error',
         );
       }
       return;

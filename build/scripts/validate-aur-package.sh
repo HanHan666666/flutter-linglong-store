@@ -367,7 +367,7 @@ EOF
     "AUR metadata did not render the expected package name."
   assert_file_contains "$metadata_dir/aur/.SRCINFO" "pkgver = ${aur_version}" \
     "AUR metadata did not render the expected pkgver."
-  assert_file_contains "$metadata_dir/aur/.SRCINFO" "pkgdesc = Community store for browsing and installing Linglong applications" \
+  assert_file_contains "$metadata_dir/aur/.SRCINFO" "pkgdesc = Community store for browsing and installing Linyaps applications" \
     "AUR metadata did not render the expected package description."
   assert_file_contains "$metadata_dir/aur/.SRCINFO" "changelog = ${changelog_filename}" \
     "AUR metadata did not render the expected changelog filename."

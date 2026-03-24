@@ -2,7 +2,7 @@
 pkgname=@AUR_PKGNAME@
 pkgver=@AUR_PKGVER@
 pkgrel=1
-pkgdesc="Community store for browsing and installing Linglong applications"
+pkgdesc="Community store for browsing and installing Linyaps applications"
 arch=(@AUR_ARCH_VALUES@)
 url="@PROJECT_URL@"
 license=('MIT')

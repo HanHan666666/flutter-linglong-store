@@ -39,11 +39,14 @@ require_grep "workflow_dispatch" .github/workflows/nightly.yml
 require_grep "package-smoke-test.sh" .github/workflows/nightly.yml
 require_grep "nightly" .github/workflows/nightly.yml
 require_grep "publish-aur-nightly:" .github/workflows/nightly.yml
-require_grep "needs: [prepare-nightly, publish-nightly]" .github/workflows/nightly.yml
 require_grep "needs.prepare-nightly.outputs.should_publish == 'true'" .github/workflows/nightly.yml
 require_grep "needs.publish-nightly.result == 'success'" .github/workflows/nightly.yml
 require_grep "signed-nightly-assets-amd64" .github/workflows/nightly.yml
+require_grep 'linglong-store-${{ needs.prepare-nightly.outputs.nightly_label }}-linux-amd64.tar.gz' .github/workflows/nightly.yml
+require_grep 'linglong-store-${{ needs.prepare-nightly.outputs.nightly_label }}-linux-amd64.tar.gz.asc' .github/workflows/nightly.yml
 require_grep "normalize-nightly-aur-version.sh" .github/workflows/nightly.yml
+require_grep "render-packaging-templates.sh" .github/workflows/nightly.yml
+require_grep "Render nightly AUR metadata with publish inputs" .github/workflows/nightly.yml
 require_grep "validate-aur-package.sh" .github/workflows/nightly.yml
 require_grep "publish-aur.sh" .github/workflows/nightly.yml
 require_grep "linglong-store-nightly-bin" .github/workflows/nightly.yml

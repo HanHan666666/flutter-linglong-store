@@ -221,6 +221,7 @@ render_file() {
   content="${content//@DESCRIPTION@/$description_text}"
   content="${content//@EXECUTABLE_NAME@/$executable_name}"
   content="${content//@ICON_NAME@/$icon_name}"
+  content="${content//@DESKTOP_FILENAME@/$desktop_filename}"
   content="${content//@WM_CLASS@/$wm_class}"
   content="${content//@LAUNCHABLE_DESKTOP_ID@/$launchable_desktop_id}"
   content="${content//@VERSION@/$release_version}"

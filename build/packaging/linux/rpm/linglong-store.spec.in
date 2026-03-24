@@ -28,6 +28,6 @@ cp -a "@PAYLOAD_DIR@/usr/share/metainfo/." "%{buildroot}/usr/share/metainfo/"
 %files
 /opt/@PACKAGE_NAME@
 /usr/bin/@PACKAGE_NAME@
-/usr/share/applications/@PACKAGE_NAME@.desktop
+/usr/share/applications/@DESKTOP_FILENAME@
 /usr/share/icons/hicolor/256x256/apps/@PACKAGE_NAME@.png
 /usr/share/metainfo/@PACKAGE_NAME@.appdata.xml

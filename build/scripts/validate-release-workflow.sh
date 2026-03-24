@@ -8,7 +8,7 @@ require_grep() {
   local pattern="$1"
   local file="$2"
 
-  if ! grep -Fq "$pattern" "$file"; then
+  if ! grep -Fq -- "$pattern" "$file"; then
     echo "Missing expected pattern '$pattern' in $file" >&2
     exit 1
   fi
@@ -18,7 +18,7 @@ require_no_grep() {
   local pattern="$1"
   local file="$2"
 
-  if grep -Fq "$pattern" "$file"; then
+  if grep -Fq -- "$pattern" "$file"; then
     echo "Unexpected pattern '$pattern' found in $file" >&2
     exit 1
   fi
@@ -37,6 +37,7 @@ require_grep "release-cli-smoke-test.sh" .github/workflows/ci.yml
 require_grep "schedule" .github/workflows/nightly.yml
 require_grep "workflow_dispatch" .github/workflows/nightly.yml
 require_grep "package-smoke-test.sh" .github/workflows/nightly.yml
+require_grep "PACKAGE_CHANNEL: nightly" .github/workflows/nightly.yml
 require_grep "nightly" .github/workflows/nightly.yml
 require_grep "publish-aur-nightly:" .github/workflows/nightly.yml
 require_grep "needs.prepare-nightly.outputs.should_publish == 'true'" .github/workflows/nightly.yml
@@ -51,5 +52,9 @@ require_grep "validate-aur-package.sh" .github/workflows/nightly.yml
 require_grep "publish-aur.sh" .github/workflows/nightly.yml
 require_grep "linglong-store-nightly-bin" .github/workflows/nightly.yml
 require_grep "ssh://aur@aur.archlinux.org/linglong-store-nightly-bin.git" .github/workflows/nightly.yml
+require_grep 'PACKAGE_CHANNEL="${PACKAGE_CHANNEL:-stable}"' build/scripts/package-smoke-test.sh
+require_grep '--channel "$PACKAGE_CHANNEL"' build/scripts/package-smoke-test.sh
+require_grep "linglong-store-nightly.desktop" build/scripts/package-smoke-test.sh
+require_grep "git diff --cached --quiet" build/scripts/publish-aur.sh
 
 echo "Release workflow validation passed."

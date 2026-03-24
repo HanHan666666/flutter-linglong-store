@@ -108,6 +108,8 @@ jobs:
 
       # Nightly keeps the full packaging smoke test that CI no longer runs.
       - name: Run Debian 10 packaging smoke test
+        env:
+          PACKAGE_CHANNEL: nightly
         run: bash build/scripts/package-smoke-test.sh
 
       - name: Stage nightly assets

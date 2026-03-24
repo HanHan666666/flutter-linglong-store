@@ -221,5 +221,6 @@ time ./build/package-deb.sh
 - 2026-03-22：安装/更新进度链路必须先在仓储层把 `ll-cli --json` 输出正规化，再写入队列；`task.message` 只允许承载可直接展示的规范化文案，原始后端 message 只能放在 `rawMessage/errorDetail` 这类诊断字段里，禁止任何页面直接渲染整段 JSON 原文。
 - 2026-03-23：应用详情页评论区统一对接 `/app/getAppCommentList` 与 `/app/saveAppComment`；当前只支持匿名文本评论和只读的帮助数展示，不允许前端擅自增加评分、头像、点赞提交等后端不存在的交互。评论提交成功后必须回源刷新最新评论，不能本地伪造一条临时评论。
 - 2026-03-23：评论区“关联版本”禁止继续使用承载大量版本的桌面下拉框；统一改为横向胶囊选择，默认只展示前 `8` 个版本，超出部分通过“展开全部 / 收起”切换。提交评论时使用当前胶囊选中的版本值。
+- 2026-03-23：全局提示统一迁移为 `AppShell` 内容区右上角通知中心：页面/组件只能通过 `app_notification_helpers.dart` 触发提示，业务服务层不得直接依赖通知 UI；涉及卸载等应用层流程时，服务返回 typed result，由页面决定展示文案，`lib/` 内禁止继续新增 `ScaffoldMessenger/showSnackBar`。
 - 2026-03-23：正式 `release.yml` 必须先完成版本文件产物化、双架构构建与签名，再进入独立 `finalize-release-state` job 推送 release commit 和 tag；禁止在 `prepare-release` 阶段提前改远端分支或打 tag。
 - 2026-03-23：release 工具链禁止再硬编码 `/home/han/flutter` 一类维护者本机路径；统一优先使用显式环境变量，其次使用 runner `PATH` 或容器标准路径解析 Dart/Flutter。

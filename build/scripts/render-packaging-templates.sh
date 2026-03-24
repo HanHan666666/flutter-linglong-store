@@ -249,6 +249,10 @@ render_aur_template() {
   content="$(<"$input_path")"
   content="${content//@PACKAGE_NAME@/$package_name}"
   content="${content//@DESKTOP_FILENAME@/$desktop_filename}"
+  # Expand optional architecture blocks before substituting the values they
+  # reference, otherwise nested placeholders leak into the rendered PKGBUILD.
+  content="${content//@AUR_SOURCE_AARCH64_BLOCK@/$aur_source_aarch64_block}"
+  content="${content//@AUR_SHA256SUMS_AARCH64_BLOCK@/$aur_sha256sums_aarch64_block}"
   content="${content//@VERSION@/$release_version}"
   content="${content//@MAINTAINER_NAME@/$maintainer_name}"
   content="${content//@MAINTAINER_EMAIL@/$maintainer_email}"
@@ -271,8 +275,6 @@ render_aur_template() {
   content="${content//@AUR_CHANGELOG_FILENAME@/$aur_changelog_filename}"
   content="${content//@AUR_SOURCE_VERSION@/$aur_source_version}"
   content="${content//@AUR_SOURCE_TAG_ROOT@/$aur_source_tag_root}"
-  content="${content//@AUR_SOURCE_AARCH64_BLOCK@/$aur_source_aarch64_block}"
-  content="${content//@AUR_SHA256SUMS_AARCH64_BLOCK@/$aur_sha256sums_aarch64_block}"
   printf '%s\n' "$content" > "$output_path"
 }
 

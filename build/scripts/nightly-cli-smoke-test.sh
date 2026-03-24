@@ -5,6 +5,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/linglong-nightly-smoke.XXXXXX")"
 FAKE_SOURCE_DIR="$TMP_ROOT/source"
 RENDER_OUTPUT_DIR="$TMP_ROOT/render"
+STABLE_AUR_OUTPUT_DIR="$TMP_ROOT/stable-aur-render"
+NIGHTLY_AUR_OUTPUT_DIR="$TMP_ROOT/nightly-aur-render"
 OUTPUT_DIR="$TMP_ROOT/output"
 
 cleanup() {
@@ -12,6 +14,15 @@ cleanup() {
 }
 
 trap cleanup EXIT
+
+assert_no_template_placeholders() {
+  local file_path="$1"
+
+  if grep -n '@[A-Z0-9_]\+@' "$file_path" >&2; then
+    echo "Unexpected unresolved template placeholder in $file_path" >&2
+    exit 1
+  fi
+}
 
 metadata_output="$(bash "$ROOT_DIR/build/scripts/resolve-nightly-metadata.sh")"
 eval "$metadata_output"
@@ -24,6 +35,8 @@ fi
 normalized_aur_version="$(bash "$ROOT_DIR/build/scripts/normalize-nightly-aur-version.sh" \
   "3.0.2-nightly.20260324+8190b89")"
 test "$normalized_aur_version" = "3.0.2_nightly.20260324.8190b89"
+current_nightly_aur_version="$(bash "$ROOT_DIR/build/scripts/normalize-nightly-aur-version.sh" \
+  "$nightly_label")"
 
 mkdir -p "$FAKE_SOURCE_DIR"
 touch "$FAKE_SOURCE_DIR/linglong-store-${base_version}-linux-amd64.tar.gz"
@@ -35,8 +48,48 @@ bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
   --inner \
   --version "$base_version" \
   --arch amd64 \
+  --output-dir "$STABLE_AUR_OUTPUT_DIR" \
+  --sha256-amd64 deadbeef \
+  --sha256-arm64 deadbeef \
+  --sha256-sig-amd64 deadbeef \
+  --sha256-sig-arm64 deadbeef \
+  --gpg-key-id TESTKEY
+
+test -f "$STABLE_AUR_OUTPUT_DIR/aur/PKGBUILD"
+assert_no_template_placeholders "$STABLE_AUR_OUTPUT_DIR/aur/PKGBUILD"
+grep -q '^pkgname=linglong-store-bin$' "$STABLE_AUR_OUTPUT_DIR/aur/PKGBUILD"
+grep -q "^arch=('x86_64' 'aarch64')$" "$STABLE_AUR_OUTPUT_DIR/aur/PKGBUILD"
+grep -q 'linglong-store-'"$base_version"'-linux-arm64.tar.gz::https://github.com/HanHan666666/flutter-linglong-store/releases/download/v'"$base_version"'/linglong-store-'"$base_version"'-linux-arm64.tar.gz' \
+  "$STABLE_AUR_OUTPUT_DIR/aur/PKGBUILD"
+grep -q "^  'deadbeef'$" "$STABLE_AUR_OUTPUT_DIR/aur/PKGBUILD"
+
+bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
+  --inner \
+  --version "$nightly_label" \
+  --arch amd64 \
   --output-dir "$RENDER_OUTPUT_DIR" \
   --channel nightly
+
+bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
+  --inner \
+  --version "$nightly_label" \
+  --arch amd64 \
+  --output-dir "$NIGHTLY_AUR_OUTPUT_DIR" \
+  --channel nightly \
+  --sha256-amd64 deadbeef \
+  --sha256-sig-amd64 deadbeef \
+  --gpg-key-id TESTKEY
+
+test -f "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
+assert_no_template_placeholders "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
+grep -q '^pkgname=linglong-store-nightly-bin$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
+grep -q "^pkgver=${current_nightly_aur_version}$" "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
+grep -q "^arch=('x86_64')$" "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
+grep -q '^conflicts=('"'linglong-store-bin'"')$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
+if grep -q '^source_aarch64=' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"; then
+  echo "Nightly PKGBUILD unexpectedly rendered source_aarch64 block." >&2
+  exit 1
+fi
 
 desktop_count="$(find "$RENDER_OUTPUT_DIR" -maxdepth 1 -type f -name '*.desktop' | awk 'END { print NR }')"
 test "$desktop_count" = "1"

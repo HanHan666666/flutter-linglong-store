@@ -225,3 +225,4 @@ time ./build/package-deb.sh
 - 2026-03-23：正式 `release.yml` 必须先完成版本文件产物化、双架构构建与签名，再进入独立 `finalize-release-state` job 推送 release commit 和 tag；禁止在 `prepare-release` 阶段提前改远端分支或打 tag。
 - 2026-03-23：release 工具链禁止再硬编码 `/home/han/flutter` 一类维护者本机路径；统一优先使用显式环境变量，其次使用 runner `PATH` 或容器标准路径解析 Dart/Flutter。
 - 2026-03-24：GitHub Actions 中的 RPM 签名禁止继续使用 `echo "$GPG_PASSPHRASE" | rpmsign --addsign ...`；`nightly.yml` / `release.yml` 必须在 `~/.rpmmacros` 里显式覆盖 `%__gpg_sign_cmd`，统一走 `gpg --batch --pinentry-mode loopback --passphrase-file ...`，并在签名前先校验 `GPG_KEY_ID` 对应 secret key 已导入。
+- 2026-03-24：`linglong-store-nightly-bin` 是替换稳定版的 nightly AUR 包，不允许与 `linglong-store-bin` 并装；nightly 的桌面项、AppStream 和其他用户可见元数据必须显式渲染为 `Nightly`。

@@ -252,6 +252,21 @@ Nightly version label: <nightly_label>
 
 如果这些元数据缺失，nightly 应按“无法确认已发布 SHA”处理，重新构建并重写 body，而不是静默跳过。
 
+## Nightly AUR 规则
+
+nightly 在 GitHub prerelease 发布成功后，必须继续执行 AUR 发布，当前目标仓库固定为 `linglong-store-nightly-bin`。
+
+约束如下：
+
+- `linglong-store-nightly-bin` 只发布 `x86_64`
+- `linglong-store-nightly-bin` 必须声明 `conflicts=('linglong-store-bin')`，按替换稳定版处理，不允许 side-by-side install
+- nightly AUR `pkgver` 必须把 `<base_version>-nightly.<YYYYMMDD>+<short_sha>` 归一成 `<base_version>_nightly.<YYYYMMDD>.<short_sha>`
+- nightly 桌面与 metainfo 命名必须显式带 nightly 变体：
+  - desktop 文件：`linglong-store-nightly.desktop`
+  - AppStream launchable：`linglong-store-nightly.desktop`
+  - 用户可见名称必须带 `Nightly`
+- `nightly.yml` 当前发布顺序固定为：生成并签名 nightly 资产 → 发布 GitHub prerelease → 发布 nightly AUR；不要把 AUR 发布提前到 prerelease 之前
+
 ## Action 名称与版本展示
 
 GitHub Actions 顶层 `run-name` 无法引用运行时求值得到的 nightly 版本输出，因此当前策略是分层展示：

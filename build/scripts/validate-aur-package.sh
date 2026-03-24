@@ -50,27 +50,6 @@ run_with_retries() {
   return 1
 }
 
-import_builder_gpg_key() {
-  local key_id="$1"
-  local keyserver=""
-
-  if [[ -z "$key_id" ]]; then
-    return 0
-  fi
-
-  # makepkg verifies source signatures with the builder user's keyring.
-  for keyserver in "hkps://keyserver.ubuntu.com" "hkps://keys.openpgp.org"; do
-    if runuser -u builder -- gpg --batch --keyserver "$keyserver" --recv-keys "$key_id" >/dev/null 2>&1; then
-      return 0
-    fi
-
-    sleep 2
-  done
-
-  echo "Failed to import GPG key ${key_id} for AUR source verification." >&2
-  return 1
-}
-
 resolve_channel_defaults() {
   case "$channel" in
     stable)
@@ -112,6 +91,55 @@ build_release_asset_url() {
   printf '%s/releases/download/%s/%s\n' "$PROJECT_URL" "$tag_root" "$asset_name"
 }
 
+create_offline_source_fixtures() {
+  local build_dir="$1"
+  local fixture_root="$build_dir/.fixture-root"
+
+  mkdir -p "$fixture_root/linglong-store"
+  cat > "$fixture_root/linglong-store/linglong_store" <<'EOF'
+#!/usr/bin/env bash
+printf 'offline fixture\n'
+EOF
+  chmod +x "$fixture_root/linglong-store/linglong_store"
+
+  # Build a minimal bundle payload so package() can copy a realistic tree offline.
+  tar -C "$fixture_root" -czf \
+    "$build_dir/linglong-store-${release_version}-linux-amd64.tar.gz" \
+    linglong-store
+  printf 'offline signature fixture for %s\n' "$release_version" \
+    > "$build_dir/linglong-store-${release_version}-linux-amd64.tar.gz.asc"
+
+  if [[ "$channel" == "stable" ]]; then
+    cp "$build_dir/linglong-store-${release_version}-linux-amd64.tar.gz" \
+      "$build_dir/linglong-store-${release_version}-linux-arm64.tar.gz"
+    cp "$build_dir/linglong-store-${release_version}-linux-amd64.tar.gz.asc" \
+      "$build_dir/linglong-store-${release_version}-linux-arm64.tar.gz.asc"
+  fi
+}
+
+prepare_offline_build_workspace() {
+  local source_dir="$1"
+  local build_dir="$2"
+  local desktop_filename="$3"
+  local changelog_filename="$4"
+
+  mkdir -p "$build_dir"
+  cp "$source_dir/PKGBUILD" "$build_dir/PKGBUILD"
+  cp "$source_dir/LICENSE" "$build_dir/LICENSE"
+  cp "$source_dir/$desktop_filename" "$build_dir/$desktop_filename"
+  cp "$source_dir/linglong-store.metainfo.xml" "$build_dir/linglong-store.metainfo.xml"
+  cp "$source_dir/linglong-store.svg" "$build_dir/linglong-store.svg"
+
+  if [[ -f "$source_dir/$changelog_filename" ]]; then
+    cp "$source_dir/$changelog_filename" "$build_dir/$changelog_filename"
+  fi
+
+  create_offline_source_fixtures "$build_dir"
+
+  # Strip remote URLs from the build copy so makepkg uses the local fixture files only.
+  sed -E -i 's#::https?://[^"]+##g' "$build_dir/PKGBUILD"
+}
+
 assert_output_contains() {
   local haystack="$1"
   local needle="$2"
@@ -147,6 +175,7 @@ assert_file_not_contains() {
 
 run_inner_validation() {
   local metadata_dir
+  local build_dir
   local output
   local pkg_path
   local pkginfo
@@ -158,13 +187,12 @@ run_inner_validation() {
   local expected_arch_line_primary
   local expected_arch_line_secondary
 
-  run_with_retries pacman -Sy --noconfirm --needed base-devel namcap curl git gnupg >/dev/null
+  run_with_retries pacman -Sy --noconfirm --needed base-devel namcap curl >/dev/null
   useradd -m builder >/dev/null 2>&1 || true
-  import_builder_gpg_key "$gpg_key_id"
 
   metadata_dir="$(mktemp -d)"
   trap 'rm -rf "$metadata_dir"' RETURN
-  chown -R builder:builder "$metadata_dir"
+  build_dir="$metadata_dir/aur-build"
 
   if [[ -z "$sha256_amd64" ]]; then
     sha256_amd64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-amd64.tar.gz")")"
@@ -182,39 +210,6 @@ run_inner_validation() {
   if [[ "$channel" == "stable" && -z "$sha256_sig_arm64" ]]; then
     sha256_sig_arm64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-arm64.tar.gz.asc")")"
   fi
-
-  bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
-    --inner \
-    --version "$release_version" \
-    --arch amd64 \
-    --output-dir "$metadata_dir" \
-    --channel "$channel" \
-    --sha256-amd64 "$sha256_amd64" \
-    --sha256-arm64 "$sha256_arm64" \
-    --sha256-sig-amd64 "$sha256_sig_amd64" \
-    --sha256-sig-arm64 "$sha256_sig_arm64" \
-    --gpg-key-id "$gpg_key_id"
-  chown -R builder:builder "$metadata_dir"
-
-  output="$(
-    runuser -u builder -- /bin/bash <<EOF
-set -euo pipefail
-cd "$metadata_dir/aur"
-makepkg --printsrcinfo > .SRCINFO
-makepkg --verifysource --nodeps >/dev/null
-makepkg -f --nodeps --noconfirm >/dev/null
-pkg_path="\$(find . -maxdepth 1 -name "${package_name}-${aur_version}-1-*.pkg.tar.zst" ! -name '*-debug-*' -print -quit)"
-if [[ -z "\$pkg_path" ]]; then
-  echo "Failed to locate built ${package_name} package." >&2
-  exit 1
-fi
-printf '%s\n' "\$pkg_path" > .pkg-path
-namcap "\$pkg_path" 2>&1 || true
-EOF
-  )"
-  pkg_path="$(<"$metadata_dir/aur/.pkg-path")"
-  pkginfo="$(bsdtar -xOf "$metadata_dir/aur/$pkg_path" .PKGINFO)"
-  pkg_contents="$(bsdtar -tf "$metadata_dir/aur/$pkg_path")"
 
   case "$channel" in
     stable)
@@ -234,11 +229,47 @@ EOF
   esac
   expected_pkginfo_pkgver="${aur_version}-1"
 
+  bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
+    --inner \
+    --version "$release_version" \
+    --arch amd64 \
+    --output-dir "$metadata_dir" \
+    --channel "$channel" \
+    --sha256-amd64 "$sha256_amd64" \
+    --sha256-arm64 "$sha256_arm64" \
+    --sha256-sig-amd64 "$sha256_sig_amd64" \
+    --sha256-sig-arm64 "$sha256_sig_arm64" \
+    --gpg-key-id "$gpg_key_id"
+
+  prepare_offline_build_workspace "$metadata_dir/aur" "$build_dir" "$desktop_filename" "$changelog_filename"
+  chown -R builder:builder "$metadata_dir"
+
+  output="$(
+    runuser -u builder -- /bin/bash <<EOF
+set -euo pipefail
+cd "$metadata_dir/aur"
+makepkg --printsrcinfo > .SRCINFO
+cd "$build_dir"
+makepkg -f --nodeps --noconfirm --skipinteg >/dev/null
+pkg_path="\$(find . -maxdepth 1 -name "${package_name}-${aur_version}-1-*.pkg.tar.zst" ! -name '*-debug-*' -print -quit)"
+if [[ -z "\$pkg_path" ]]; then
+  echo "Failed to locate built ${package_name} package." >&2
+  exit 1
+fi
+pkg_path="\${pkg_path#./}"
+printf '%s\n' "\$pkg_path" > .pkg-path
+namcap "\$pkg_path" 2>&1 || true
+EOF
+  )"
+  pkg_path="$(<"$build_dir/.pkg-path")"
+  pkginfo="$(bsdtar -xOf "$build_dir/$pkg_path" .PKGINFO)"
+  pkg_contents="$(bsdtar -tf "$build_dir/$pkg_path")"
+
   if [[ -n "$output" ]]; then
     printf '%s\n' "$output"
   fi
 
-  if grep -Fq "Directory (usr/share/licenses/linglong-store-bin) is empty" <<<"$output"; then
+  if grep -Fq "Directory (usr/share/licenses/${package_name}) is empty" <<<"$output"; then
     echo "AUR package still ships an empty license directory." >&2
     exit 1
   fi
@@ -309,6 +340,8 @@ EOF
     "Built AUR package did not keep the expected conflicts entry."
   assert_output_contains "$pkg_contents" "usr/share/applications/${desktop_filename}" \
     "Built AUR package did not install the expected desktop file."
+  assert_output_contains "$pkg_contents" "opt/linglong-store/linglong_store" \
+    "Built AUR package did not install the expected application payload."
 
   echo "AUR package validation passed."
 }

@@ -165,7 +165,7 @@ RPM 包必须在构建后使用 `rpmsign` 添加内嵌 GPG 签名：
 # 配置 ~/.rpmmacros
 %_signature gpg
 %_gpg_name <GPG_KEY_ID>
-%_gpg_path ~/.gnupg
+%_gpg_path $HOME/.gnupg
 %__gpg /usr/bin/gpg
 %_gpg_digest_algo sha256
 %__gpg_sign_cmd %{__gpg} \

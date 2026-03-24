@@ -17,6 +17,19 @@ sha256_sig_amd64="${SHA256_SIG_AMD64:-}"
 sha256_sig_arm64="${SHA256_SIG_ARM64:-}"
 gpg_key_id="${GPG_KEY_ID:-}"
 
+extract_repo_name() {
+  local repo_url="$1"
+  local repo_basename=""
+
+  repo_basename="${repo_url##*/}"
+  if [[ "$repo_basename" == "$repo_url" ]]; then
+    repo_basename="${repo_url##*:}"
+  fi
+
+  repo_basename="${repo_basename%.git}"
+  printf '%s\n' "$repo_basename"
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --version)
@@ -128,8 +141,16 @@ update_aur_repo() {
   local work_dir
   local desktop_filename
   local changelog_filename
+  local rendered_pkgname
   local rendered_pkgver
+  local repo_name
   work_dir="$(mktemp -d)"
+
+  repo_name="$(extract_repo_name "$aur_repo_url")"
+  if [[ "$repo_name" != "$package_name" ]]; then
+    echo "AUR repo ${repo_name} does not match package name ${package_name}." >&2
+    exit 64
+  fi
 
   echo "Cloning AUR repository..."
   git clone --depth 1 "$aur_repo_url" "$work_dir"
@@ -157,6 +178,12 @@ update_aur_repo() {
     --sha256-sig-arm64 "$sha256_sig_arm64" \
     --gpg-key-id "$gpg_key_id"
 
+  rendered_pkgname="$(sed -n 's/^pkgname=//p' "$metadata_dir/aur/PKGBUILD")"
+  if [[ "$rendered_pkgname" != "$package_name" ]]; then
+    echo "Rendered PKGBUILD pkgname $rendered_pkgname did not match expected package name $package_name." >&2
+    exit 1
+  fi
+
   rendered_pkgver="$(sed -n 's/^pkgver=//p' "$metadata_dir/aur/PKGBUILD")"
   if [[ "$rendered_pkgver" != "$aur_version" ]]; then
     echo "Rendered PKGBUILD pkgver $rendered_pkgver did not match expected AUR version $aur_version." >&2
@@ -179,6 +206,9 @@ update_aur_repo() {
 
   changelog_filename="$(basename "${rendered_changelog_files[0]}")"
 
+  find . -maxdepth 1 -type f -name '*.desktop' ! -name "$desktop_filename" -delete
+  find . -maxdepth 1 -type f -name '*.changelog' ! -name "$changelog_filename" -delete
+
   # Copy rendered AUR files.
   cp "$metadata_dir/aur/PKGBUILD" PKGBUILD
   cp "$metadata_dir/aur/$changelog_filename" "$changelog_filename"
@@ -197,7 +227,7 @@ update_aur_repo() {
   fi
 
   # Commit and push
-  git add PKGBUILD .SRCINFO "$changelog_filename" LICENSE "$desktop_filename" linglong-store.metainfo.xml linglong-store.svg
+  git add -A
   git -c user.name="HanHan666666" -c user.email="tar.zip@outlook.com" commit -m "Update to version $aur_version"
   git push origin master
 

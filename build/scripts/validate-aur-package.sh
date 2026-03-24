@@ -14,10 +14,18 @@ sha256_sig_amd64="${SHA256_SIG_AMD64:-}"
 sha256_sig_arm64="${SHA256_SIG_ARM64:-}"
 gpg_key_id="${GPG_KEY_ID:-}"
 run_inner="false"
+verification_mode="offline"
 
 usage() {
   cat <<'EOF' >&2
-Usage: validate-aur-package.sh --version <version> [--channel stable|nightly] [--package-name <pkgname>] [--aur-version <pkgver>] [--sha256-amd64 <sha>] [--sha256-arm64 <sha>] [--sha256-sig-amd64 <sha>] [--sha256-sig-arm64 <sha>] [--gpg-key-id <keyid>] [--inner]
+Usage: validate-aur-package.sh --version <version> [--channel stable|nightly] [--package-name <pkgname>] [--aur-version <pkgver>] [--sha256-amd64 <sha>] [--sha256-arm64 <sha>] [--sha256-sig-amd64 <sha>] [--sha256-sig-arm64 <sha>] [--gpg-key-id <keyid>] [--verify-source|--online] [--inner]
+
+Default mode is offline structural validation: render PKGBUILD/.SRCINFO, build against
+local synthetic fixtures, and assert package metadata/layout without depending on live
+release assets or GPG keyservers.
+
+Use --verify-source / --online to enable source URL + signature verification against the
+rendered PKGBUILD when real release assets and a real signing key are available.
 EOF
 }
 
@@ -47,6 +55,27 @@ run_with_retries() {
     sleep 2
   done
 
+  return 1
+}
+
+import_builder_gpg_key() {
+  local key_id="$1"
+  local keyserver=""
+
+  if [[ -z "$key_id" ]]; then
+    echo "Online source verification requires --gpg-key-id." >&2
+    exit 64
+  fi
+
+  for keyserver in "hkps://keyserver.ubuntu.com" "hkps://keys.openpgp.org"; do
+    if runuser -u builder -- gpg --batch --keyserver "$keyserver" --recv-keys "$key_id" >/dev/null 2>&1; then
+      return 0
+    fi
+
+    sleep 2
+  done
+
+  echo "Online source verification failed while importing GPG key ${key_id}." >&2
   return 1
 }
 
@@ -140,6 +169,13 @@ prepare_offline_build_workspace() {
   sed -E -i 's#::https?://[^"]+##g' "$build_dir/PKGBUILD"
 }
 
+prepare_online_build_workspace() {
+  local build_dir="$1"
+
+  import_builder_gpg_key "$gpg_key_id"
+  printf '%s\n' "$build_dir"
+}
+
 assert_output_contains() {
   local haystack="$1"
   local needle="$2"
@@ -186,8 +222,9 @@ run_inner_validation() {
   local expected_pkginfo_pkgver
   local expected_arch_line_primary
   local expected_arch_line_secondary
+  local makepkg_cmd
 
-  run_with_retries pacman -Sy --noconfirm --needed base-devel namcap curl >/dev/null
+  run_with_retries pacman -Sy --noconfirm --needed base-devel namcap curl gnupg >/dev/null
   useradd -m builder >/dev/null 2>&1 || true
 
   metadata_dir="$(mktemp -d)"
@@ -241,7 +278,13 @@ run_inner_validation() {
     --sha256-sig-arm64 "$sha256_sig_arm64" \
     --gpg-key-id "$gpg_key_id"
 
-  prepare_offline_build_workspace "$metadata_dir/aur" "$build_dir" "$desktop_filename" "$changelog_filename"
+  if [[ "$verification_mode" == "online" ]]; then
+    build_dir="$(prepare_online_build_workspace "$metadata_dir/aur")"
+    makepkg_cmd=$'if ! makepkg --verifysource --nodeps >/dev/null; then\n  echo "Online source verification failed against rendered PKGBUILD sources." >&2\n  exit 1\nfi\nmakepkg -f --nodeps --noconfirm >/dev/null'
+  else
+    prepare_offline_build_workspace "$metadata_dir/aur" "$build_dir" "$desktop_filename" "$changelog_filename"
+    makepkg_cmd="makepkg -f --nodeps --noconfirm --skipinteg >/dev/null"
+  fi
   chown -R builder:builder "$metadata_dir"
 
   output="$(
@@ -250,7 +293,7 @@ set -euo pipefail
 cd "$metadata_dir/aur"
 makepkg --printsrcinfo > .SRCINFO
 cd "$build_dir"
-makepkg -f --nodeps --noconfirm --skipinteg >/dev/null
+$makepkg_cmd
 pkg_path="\$(find . -maxdepth 1 -name "${package_name}-${aur_version}-1-*.pkg.tar.zst" ! -name '*-debug-*' -print -quit)"
 if [[ -z "\$pkg_path" ]]; then
   echo "Failed to locate built ${package_name} package." >&2
@@ -384,6 +427,10 @@ while [[ $# -gt 0 ]]; do
       gpg_key_id="$2"
       shift 2
       ;;
+    --verify-source|--online)
+      verification_mode="online"
+      shift
+      ;;
     --inner)
       run_inner="true"
       shift
@@ -407,18 +454,26 @@ if [[ "$run_inner" == "true" ]]; then
   exit 0
 fi
 
-docker run --rm \
-  -v "$ROOT_DIR:/workspace" \
-  -w /workspace \
-  -e SHA256_AMD64="$sha256_amd64" \
-  -e SHA256_ARM64="$sha256_arm64" \
-  -e SHA256_SIG_AMD64="$sha256_sig_amd64" \
-  -e SHA256_SIG_ARM64="$sha256_sig_arm64" \
-  -e GPG_KEY_ID="$gpg_key_id" \
-  archlinux:latest \
-  /bin/bash build/scripts/validate-aur-package.sh \
-    --inner \
-    --version "$release_version" \
-    --channel "$channel" \
-    --package-name "$package_name" \
-    --aur-version "$aur_version"
+docker_cmd=(
+  docker run --rm
+  -v "$ROOT_DIR:/workspace"
+  -w /workspace
+  -e "SHA256_AMD64=$sha256_amd64"
+  -e "SHA256_ARM64=$sha256_arm64"
+  -e "SHA256_SIG_AMD64=$sha256_sig_amd64"
+  -e "SHA256_SIG_ARM64=$sha256_sig_arm64"
+  -e "GPG_KEY_ID=$gpg_key_id"
+  archlinux:latest
+  /bin/bash build/scripts/validate-aur-package.sh
+  --inner
+  --version "$release_version"
+  --channel "$channel"
+  --package-name "$package_name"
+  --aur-version "$aur_version"
+)
+
+if [[ "$verification_mode" == "online" ]]; then
+  docker_cmd+=(--verify-source)
+fi
+
+"${docker_cmd[@]}"

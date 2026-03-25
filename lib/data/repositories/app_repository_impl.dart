@@ -98,10 +98,11 @@ class AppRepositoryImpl implements AppRepository {
     String? category,
   }) async {
     try {
-      // 使用搜索接口获取全部应用
+      // 使用搜索接口获取全部应用，透传 categoryId（null 表示全部分类）
       final response = await _apiService.getSearchAppList(
         SearchAppListRequest(
           keyword: '',
+          categoryId: category,
           pageNo: page,
           pageSize: pageSize,
           lan: _resolveLang(ApiClient.getLocale?.call()),

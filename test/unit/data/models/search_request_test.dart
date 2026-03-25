@@ -212,4 +212,36 @@ void main() {
       //   -d '{"name":"wps","pageNo":1,"pageSize":10,"repoName":"stable"}'
     });
   });
+
+  group('SearchAppListRequest categoryId Contract', () {
+    test('should serialize categoryId when provided', () {
+      const request = SearchAppListRequest(
+        keyword: '',
+        categoryId: '07',
+        pageNo: 1,
+        pageSize: 30,
+        repoName: 'stable',
+      );
+
+      final json = request.toJson();
+
+      expect(json['name'], equals(''));
+      expect(json['categoryId'], equals('07'));
+      expect(json['pageSize'], equals(30));
+    });
+
+    test('should omit categoryId when null', () {
+      const request = SearchAppListRequest(
+        keyword: '',
+        pageNo: 1,
+        pageSize: 30,
+        repoName: 'stable',
+      );
+
+      final json = request.toJson();
+
+      // null \u5b57\u6bb5\u4e0d\u5e94\u51fa\u73b0\u5728 JSON \u4e2d\uff0c\u4e0e\u540e\u7aef "\u7a7a\u503c\u8868\u793a\u5168\u90e8\u5e94\u7528" \u7684\u8bed\u4e49\u4e00\u81f4
+      expect(json.containsKey('categoryId'), isFalse);
+    });
+  });
 }

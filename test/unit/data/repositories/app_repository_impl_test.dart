@@ -203,6 +203,72 @@ void main() {
         expect(captured.pageNo, equals(2));
         expect(captured.pageSize, equals(50));
       });
+
+      test('passes category to getSearchAppList when requesting filtered all apps', () async {
+        // Arrange
+        final mockResponse = HttpResponse(
+          const AppListResponse(
+            code: 200,
+            data: AppListPagedData(
+              records: [],
+              total: 0,
+              size: 30,
+              current: 1,
+              pages: 1,
+            ),
+          ),
+          Response(
+            requestOptions: RequestOptions(path: '/visit/getSearchAppList'),
+          ),
+        );
+
+        when(
+          mockApiService.getSearchAppList(any),
+        ).thenAnswer((_) async => mockResponse);
+
+        // Act
+        await repository.getAllApps(category: '07', page: 1, pageSize: 30);
+
+        // Assert - categoryId \u5fc5\u987b\u900f\u4f20\u5230\u8bf7\u6c42\u4e2d
+        final captured =
+            verify(mockApiService.getSearchAppList(captureAny)).captured.single
+                as SearchAppListRequest;
+        expect(captured.keyword, equals(''));
+        expect(captured.categoryId, equals('07'));
+        expect(captured.pageSize, equals(30));
+      });
+
+      test('omits categoryId when category is null (full catalog)', () async {
+        // Arrange
+        final mockResponse = HttpResponse(
+          const AppListResponse(
+            code: 200,
+            data: AppListPagedData(
+              records: [],
+              total: 0,
+              size: 30,
+              current: 1,
+              pages: 1,
+            ),
+          ),
+          Response(
+            requestOptions: RequestOptions(path: '/visit/getSearchAppList'),
+          ),
+        );
+
+        when(
+          mockApiService.getSearchAppList(any),
+        ).thenAnswer((_) async => mockResponse);
+
+        // Act: \u4e0d\u4f20 category \u65f6\uff0c\u5e94\u5c06 categoryId \u7f6e\u4e3a null
+        await repository.getAllApps(page: 1, pageSize: 30);
+
+        // Assert
+        final captured =
+            verify(mockApiService.getSearchAppList(captureAny)).captured.single
+                as SearchAppListRequest;
+        expect(captured.categoryId, isNull);
+      });
     });
 
     group('searchApps', () {

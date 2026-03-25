@@ -43,6 +43,9 @@ sealed class AllAppsState with _$AllAppsState {
   }) = _AllAppsState;
 }
 
+/// 全部应用页分页大小，与 Rust 旧版保持一致
+const int _allAppsPageSize = 30;
+
 /// 全部应用页状态 Provider
 @riverpod
 class AllApps extends _$AllApps {
@@ -68,15 +71,15 @@ class AllApps extends _$AllApps {
     try {
       final apiService = ref.read(appApiServiceProvider);
 
-      // 获取选中的分类
-      final categoryCode = _getSelectedCategoryCode();
+      // 获取选中的分类 ID
+      final categoryId = _getSelectedCategoryId();
 
       // 获取分类列表
       final categoryResponse = await apiService.getDisCategoryList();
       final categories = _convertCategories(categoryResponse.data.data);
 
       // 获取应用列表
-      final apps = await _fetchApps(1, categoryCode);
+      final apps = await _fetchApps(1, categoryId);
 
       state = state.copyWith(
         isLoading: false,
@@ -89,11 +92,12 @@ class AllApps extends _$AllApps {
     }
   }
 
-  /// 获取选中的分类代码
-  String? _getSelectedCategoryCode() {
+  /// 获取选中的分类 ID（来自 getDisCategoryList 返回的 categoryId）
+  String? _getSelectedCategoryId() {
     final categories = state.data?.categories ?? [];
+    // index=0 是"全部"虚拟项，返回 null 表示全部应用
     if (categories.isEmpty || state.selectedCategoryIndex == 0) {
-      return null; // 全部分类
+      return null;
     }
     if (state.selectedCategoryIndex < categories.length) {
       return categories[state.selectedCategoryIndex].code;
@@ -116,8 +120,8 @@ class AllApps extends _$AllApps {
 
     try {
       final nextPage = state.currentPage + 1;
-      final categoryCode = _getSelectedCategoryCode();
-      final newApps = await _fetchApps(nextPage, categoryCode);
+      final categoryId = _getSelectedCategoryId();
+      final newApps = await _fetchApps(nextPage, categoryId);
 
       final currentApps = state.data?.apps.items ?? [];
       final mergedApps = <RecommendAppInfo>[...currentApps, ...newApps.items];
@@ -130,7 +134,7 @@ class AllApps extends _$AllApps {
             items: mergedApps,
             total: newApps.total,
             page: nextPage,
-            pageSize: 20,
+            pageSize: _allAppsPageSize,
             hasMore: newApps.hasMore,
           ),
         ),
@@ -151,30 +155,22 @@ class AllApps extends _$AllApps {
   }
 
   /// 获取应用列表
+  ///
+  /// 统一使用 `/visit/getSearchAppList`，与 Rust 旧版行为一致：
+  /// - [categoryId] == null：查询全部应用
+  /// - [categoryId] != null：按真实 categoryId 过滤
   Future<PaginatedResponse<RecommendAppInfo>> _fetchApps(
     int page,
-    String? categoryCode,
+    String? categoryId,
   ) async {
     final apiService = ref.read(appApiServiceProvider);
 
-    // 如果选择了分类，使用侧边栏应用接口
-    if (categoryCode != null && categoryCode != 'all') {
-      final response = await apiService.getSidebarApps(
-        SidebarAppsRequest(
-          menuCode: categoryCode,
-          pageNo: page,
-          pageSize: 20,
-          lan: _resolveApiLang(ApiClient.getLocale?.call()),
-        ),
-      );
-      return _convertApps(response.data.data);
-    }
-
-    // 全部分类：使用推荐应用接口
-    final response = await apiService.getWelcomeAppList(
-      PageParams(
+    final response = await apiService.getSearchAppList(
+      SearchAppListRequest(
+        keyword: '',
+        categoryId: categoryId,
         pageNo: page,
-        pageSize: 20,
+        pageSize: _allAppsPageSize,
         lan: _resolveApiLang(ApiClient.getLocale?.call()),
       ),
     );
@@ -209,7 +205,7 @@ class AllApps extends _$AllApps {
         items: [],
         total: 0,
         page: 1,
-        pageSize: 20,
+        pageSize: _allAppsPageSize,
         hasMore: false,
       );
     }

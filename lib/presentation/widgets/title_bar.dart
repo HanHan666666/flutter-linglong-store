@@ -91,11 +91,11 @@ class CustomTitleBar extends StatelessWidget {
           height: AppSpacing.x2l,
         ),
         const SizedBox(width: AppSpacing.sm),
-        // 应用名称
+        // 应用名称（标题栏级别：16px shell 文字）
         Text(
           l10n?.appTitle ?? '玲珑应用商店社区版',
           style: const TextStyle(
-            fontSize: 14,
+            fontSize: 16,
             fontWeight: FontWeight.w400,
             // 标题区文字颜色跟随主题变化，需在生成时通过 context 获取
           ),
@@ -227,8 +227,8 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
                 maxLines: 1,
                 decoration: InputDecoration(
                   hintText: l10n?.searchPlaceholder ?? '在这里搜索你想搜索的应用',
-                  hintStyle: AppTextStyles.caption.copyWith(
-                    fontSize: 13,
+                  // 搜索框 placeholder：14px 常规说明文字
+                  hintStyle: AppTextStyles.bodyMedium.copyWith(
                     color: context.appColors.textTertiary,
                   ),
                   border: InputBorder.none,
@@ -259,8 +259,8 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
                         )
                       : null,
                 ),
-                style: AppTextStyles.caption.copyWith(
-                  fontSize: 13,
+                // 搜索框输入文字：14px 常规说明文字
+                style: AppTextStyles.bodyMedium.copyWith(
                   color: context.appColors.textPrimary,
                 ),
                 textAlignVertical: TextAlignVertical.center,

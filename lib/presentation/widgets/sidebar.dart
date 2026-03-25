@@ -192,7 +192,8 @@ class _MenuItemTileState extends State<_MenuItemTile> {
             onTap: () => context.go(widget.item.route),
             child: AnimatedContainer(
               duration: AppAnimation.fast,
-              height: 36,
+              // 菜单行高 40px ：适配 16px 菜单文字的桌面可读性密度
+              height: 40,
               padding: EdgeInsets.symmetric(
                 horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
               ),
@@ -417,7 +418,8 @@ class _DynamicMenuItemTileState extends State<_DynamicMenuItemTile> {
             onTap: () => context.go(route),
             child: AnimatedContainer(
               duration: AppAnimation.fast,
-              height: 36,
+              // 菜单行高 40px ：适配 16px 菜单文字的桌面可读性密度
+              height: 40,
               padding: EdgeInsets.symmetric(
                 horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
               ),

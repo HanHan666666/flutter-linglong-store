@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/di/providers.dart';
+import '../../domain/models/install_task.dart';
 import '../../presentation/widgets/download_manager_dialog.dart';
 import 'app_collection_sync_provider.dart';
 import 'install_queue_provider.dart';

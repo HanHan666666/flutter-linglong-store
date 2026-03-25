@@ -8,6 +8,7 @@ import '../../core/network/api_exceptions.dart';
 import '../../domain/models/installed_app.dart';
 import '../../domain/models/running_app.dart';
 import '../../presentation/widgets/confirm_dialog.dart';
+import '../../presentation/widgets/uninstall_blocked_dialog.dart';
 
 typedef RunningAppsReader = List<RunningApp> Function();
 typedef RunningAppKiller = Future<bool> Function(RunningApp app);
@@ -20,9 +21,24 @@ typedef UninstallReporter =
 typedef UninstallConfirmDialog =
     Future<bool?> Function(BuildContext context, {String? appName});
 
+/// 活跃安装任务读取器：返回 (appName, appId) 元组，无任务时返回 null
+typedef ActiveInstallTaskReader = (String appName, String appId)? Function();
+
+/// 安装中卸载拦截弹窗回调（可注入以便测试替换）
+typedef UninstallInterceptDialog =
+    Future<UninstallBlockedAction> Function(
+      BuildContext context, {
+      required String activeTaskName,
+      String fallbackAppId,
+    });
+
+/// 打开下载管理界面的回调（可注入以便测试替换）
+typedef OpenDownloadManagerCallback = void Function(BuildContext context);
+
 /// 应用卸载服务
 ///
 /// 统一封装卸载逻辑，确保所有卸载入口行为一致：
+/// 0. 当有活跃安装/更新任务时，显示拦截弹窗并中止卸载
 /// 1. 检查应用是否正在运行
 /// 2. 显示确认弹窗（普通/运行中两种）
 /// 3. 先 kill 运行中的实例
@@ -43,6 +59,12 @@ class AppUninstallService {
     UninstallConfirmDialog confirmUninstall = ConfirmDialog.showUninstall,
     UninstallConfirmDialog confirmUninstallRunning =
         ConfirmDialog.showUninstallRunning,
+    // 活跃安装任务读取器；为 null 时视为无活跃任务（兼容现有调用方）
+    ActiveInstallTaskReader? readActiveInstallTask,
+    // 拦截弹窗回调；为 null 时使用默认实现
+    UninstallInterceptDialog? interceptDialog,
+    // 下载管理打开回调；为 null 时不执行任何操作
+    OpenDownloadManagerCallback? openDownloadManager,
   }) : _readRunningApps = readRunningApps,
        _killRunningApp = killRunningApp,
        _uninstallApp = uninstallApp,
@@ -50,7 +72,10 @@ class AppUninstallService {
        _syncAfterUninstall = syncAfterUninstall,
        _reportUninstall = reportUninstall,
        _confirmUninstall = confirmUninstall,
-       _confirmUninstallRunning = confirmUninstallRunning;
+       _confirmUninstallRunning = confirmUninstallRunning,
+       _readActiveInstallTask = readActiveInstallTask,
+       _interceptDialog = interceptDialog ?? showUninstallBlockedDialog,
+       _openDownloadManager = openDownloadManager;
 
   final RunningAppsReader _readRunningApps;
   final RunningAppKiller _killRunningApp;
@@ -60,6 +85,9 @@ class AppUninstallService {
   final UninstallReporter _reportUninstall;
   final UninstallConfirmDialog _confirmUninstall;
   final UninstallConfirmDialog _confirmUninstallRunning;
+  final ActiveInstallTaskReader? _readActiveInstallTask;
+  final UninstallInterceptDialog _interceptDialog;
+  final OpenDownloadManagerCallback? _openDownloadManager;
 
   /// 执行卸载流程
   ///
@@ -71,6 +99,30 @@ class AppUninstallService {
   /// - `false` - 用户取消或卸载失败
   Future<bool> uninstall(BuildContext context, InstalledApp app) async {
     if (!context.mounted) return false;
+
+    // 0. 活跃安装/更新任务拦截：ll-package-manager 为串行单队列，
+    //    不支持同时执行安装和卸载。只有 currentTask（运行中任务）才触发拦截，
+    //    排队中的任务不在此阻断范围内。
+    final activeTask = _readActiveInstallTask?.call();
+    if (activeTask != null) {
+      final (taskName, taskId) = activeTask;
+      if (!context.mounted) return false;
+
+      final action = await _interceptDialog(
+        context,
+        activeTaskName: taskName,
+        fallbackAppId: taskId,
+      );
+
+      if (!context.mounted) return false;
+
+      // 用户选择「查看下载管理」：关闭弹窗后再打开下载管理
+      if (action == UninstallBlockedAction.openDownloadManager) {
+        _openDownloadManager?.call(context);
+      }
+
+      return false;
+    }
 
     // 1. 检查应用是否正在运行
     final runningApps = _readRunningApps();
@@ -176,3 +228,4 @@ class AppUninstallService {
     );
   }
 }
+

@@ -69,27 +69,34 @@ font-family: Inter, Avenir, Helvetica, Arial, sans-serif
 
 Flutter 中使用系统默认字体即可（Linux 下通常为 Noto Sans CJK），如需严格一致可嵌入 Inter 字体。
 
-#### 字号层级（基准 16px = 1rem）
+#### 字号层级（基准 16px = 1rem，桌面端可读性规范）
 
-| 层级 | 原值 | px | Flutter TextStyle | 使用场景 |
-|------|------|-----|-------------------|---------|
-| Display | `2rem` | 32 | `displayLarge` / 自定义 | 启动页应用名 |
-| H1 | `1.625rem` | 26 | `headlineLarge` | 详情页应用名 |
-| H2 | `1.5rem` | 24 | `headlineMedium` | 详情页 section 标题、关于/更新页标题 |
-| H3 | `1.25rem` | 20 | `titleLarge` | 推荐标题、搜索结果标题、启动步骤 |
-| Body | `1rem` | 16 | `titleMedium` | 正文、轮播详情、Tab 文字 |
-| Caption | `0.875rem` | 14 | `bodyLarge` | 菜单文字、加载提示、说明文字 |
-| Small | `0.75rem` | 12 | `bodyMedium` | 描述、搜索输入、速度显示、版本 |
-| XSmall | `0.625rem` | 10 | `bodySmall` | 下载状态文字、底栏 |
-| Tiny | `10px` | 10 | 自定义 `TextStyle(fontSize: 10)` | "精品/TOP" 标签 |
+> **全局约定**：  
+> - `16px` 是桌面端主正文最低可读底线，所有页面正文不得低于此值  
+> - `14px` 为常规说明文字（菜单、搜索、卡片描述）  
+> - `13px` 仅用于次级辅助元信息（版本、仓库、时间戳）  
+> - `12px` 严格保留给标签/胶囊/角标，禁止用于承载主读内容  
+
+| 层级 | px | Flutter TextTheme | AppTextStyles | 使用场景 |
+|------|----|-------------------|---------------|---------|
+| Display | 32 | `displayLarge` | `display` | 启动页应用名 |
+| H1 | 28 | `headlineLarge` | `title1` | 应用详情主标题、页面 Hero 标题 |
+| H2 | 24 | `headlineMedium` | `title2` | 大区块标题 |
+| H3 | 22 | `headlineSmall` | ─ | 次级区块标题 |
+| Title | 20 | `titleLarge` | `title3` | 页面主标题、重要列表标题 |
+| SubTitle | 18 | `titleMedium` | ─ | 弹窗标题、分组标题 |
+| Body Large | 16 | `titleSmall` / `bodyLarge` | `body`, `menuActive` | 正文、设置页说明、侧边栏菜单 |
+| Body | 14 | `bodyMedium` / `labelLarge` | `bodyMedium` | 菜单文字、搜索输入、卡片描述 |
+| Caption | 13 | `bodySmall` / `labelMedium` | `caption` | 版本、仓库、辅助元信息 |
+| Tiny | 12 | `labelSmall` | `tiny` | 标签、胶囊、角标 (**禁止承载主读内容**) |
 
 #### 字重
 
 | 场景 | font-weight | FontWeight |
 |------|-------------|------------|
-| 标题 (display/h1/h2) | 500~600 | `FontWeight.w500` / `FontWeight.w600` |
-| 正文 | 400 | `FontWeight.w400` |
-| 菜单激活 | 500 | `FontWeight.w500` |
+| 标题 (H1/H2/H3) | 600~700 | `FontWeight.w600` / `FontWeight.w700` |
+| 正文、说明 | 400 | `FontWeight.w400` |
+| 菜单激活/按钮 | 500 | `FontWeight.w500` |
 | 进程表格应用名 | 500 | `FontWeight.w500` |
 
 #### 行高

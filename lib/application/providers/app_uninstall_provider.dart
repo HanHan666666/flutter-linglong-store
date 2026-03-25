@@ -4,7 +4,6 @@ import '../../core/di/providers.dart';
 import '../../domain/models/install_task.dart';
 import '../../presentation/widgets/download_manager_dialog.dart';
 import 'app_collection_sync_provider.dart';
-import 'install_queue_provider.dart';
 import 'installed_apps_provider.dart';
 import 'running_process_provider.dart';
 import '../services/app_uninstall_service.dart';

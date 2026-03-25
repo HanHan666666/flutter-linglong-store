@@ -434,6 +434,10 @@ sealed class SearchAppListRequest with _$SearchAppListRequest {
   const factory SearchAppListRequest({
     /// 搜索关键词，后端字段名为 `name`
     @JsonKey(name: 'name') required String keyword,
+    /// 分类 ID，来自 getDisCategoryList 返回的 categoryId；
+    /// null 表示全部应用，与 Rust 旧版语义一致。
+    /// includeIfNull: false 确保 null 时不向后端发送该字段。
+    @JsonKey(includeIfNull: false) String? categoryId,
     @JsonKey(name: 'pageNo') @Default(1) int pageNo,
     @JsonKey(name: 'pageSize') @Default(20) int pageSize,
     @JsonKey(name: 'repoName')

@@ -420,6 +420,7 @@ _SearchAppListRequest _$SearchAppListRequestFromJson(
   Map<String, dynamic> json,
 ) => _SearchAppListRequest(
   keyword: json['name'] as String,
+  categoryId: json['categoryId'] as String?,
   pageNo: (json['pageNo'] as num?)?.toInt() ?? 1,
   pageSize: (json['pageSize'] as num?)?.toInt() ?? 20,
   repoName: json['repoName'] as String? ?? AppConfig.defaultStoreRepoName,
@@ -433,6 +434,7 @@ Map<String, dynamic> _$SearchAppListRequestToJson(
   _SearchAppListRequest instance,
 ) => <String, dynamic>{
   'name': instance.keyword,
+  'categoryId': ?instance.categoryId,
   'pageNo': instance.pageNo,
   'pageSize': instance.pageSize,
   'repoName': instance.repoName,

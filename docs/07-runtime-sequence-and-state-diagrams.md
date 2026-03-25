@@ -386,29 +386,46 @@ sequenceDiagram
     autonumber
     participant User as 用户
     participant UI as AppDetail/MyApps
-    participant Uninstall as AppUninstallController
+    participant Uninstall as AppUninstallService
+    participant Queue as InstallQueueProvider
     participant Process as RunningProcessProvider
+    participant DL as DownloadManagerDialog
     participant CLI as LinglongCliRepository
     participant Stores as installedApps/updates/cache
 
-    User->>UI: 点击“卸载”
-    UI->>Uninstall: uninstall(appInfo)
-    Uninstall->>Process: 检查应用是否正在运行
+    User->>UI: 点击"卸载"
+    UI->>Uninstall: uninstall(appInfo, context)
 
-    alt 正在运行
-        Uninstall->>UI: 弹出确认 / 先停止应用
-    end
+    %% 新增：安装中拦截前置检查
+    Uninstall->>Queue: readActiveInstallTask()
+    Queue-->>Uninstall: currentTask (或 null)
 
-    Uninstall->>CLI: uninstallApp(appId, version)
-    CLI-->>Uninstall: result
+    alt 有正在执行的安装/更新任务 (isProcessing=true)
+        Uninstall->>UI: showUninstallBlockedDialog(activeTaskName)
+        UI-->>User: 弹出拦截弹窗（暂时无法卸载）
+        User-->>UI: 选择"我知道了" 或 "查看下载管理"
+        alt 用户点击"查看下载管理"
+            UI->>DL: showDownloadManagerDialog(context)
+        end
+        Uninstall-->>UI: return false（不继续卸载）
+    else 无活跃安装任务
+        Uninstall->>Process: 检查应用是否正在运行
 
-    alt success
-        Uninstall->>Stores: remove installed app
-        Uninstall->>Stores: refresh updates
-        Uninstall->>Stores: invalidate caches
-        Uninstall->>UI: button => 安装
-    else failed
-        Uninstall->>UI: error toast / dialog
+        alt 正在运行
+            Uninstall->>UI: 弹出确认 / 先停止应用
+        end
+
+        Uninstall->>CLI: uninstallApp(appId, version)
+        CLI-->>Uninstall: result
+
+        alt success
+            Uninstall->>Stores: remove installed app（乐观更新）
+            Uninstall->>Stores: refresh updates
+            Uninstall->>Stores: invalidate caches
+            Uninstall->>UI: button => 安装
+        else failed
+            Uninstall->>UI: error toast / dialog
+        end
     end
 ```
 

@@ -226,3 +226,4 @@ time ./build/package-deb.sh
 - 2026-03-23：release 工具链禁止再硬编码 `/home/han/flutter` 一类维护者本机路径；统一优先使用显式环境变量，其次使用 runner `PATH` 或容器标准路径解析 Dart/Flutter。
 - 2026-03-24：GitHub Actions 中的 RPM 签名禁止继续使用 `echo "$GPG_PASSPHRASE" | rpmsign --addsign ...`；`nightly.yml` / `release.yml` 必须在 `~/.rpmmacros` 里显式覆盖 `%__gpg_sign_cmd`，统一走 `gpg --batch --pinentry-mode loopback --passphrase-file ...`，并在签名前先校验 `GPG_KEY_ID` 对应 secret key 已导入。
 - 2026-03-24：`linglong-store-nightly-bin` 是替换稳定版的 nightly AUR 包，不允许与 `linglong-store-bin` 并装；nightly 的桌面项、AppStream 和其他用户可见元数据必须显式渲染为 `Nightly`。
+- 2026-03-25：卸载拦截约定——所有卸载入口必须通过 `AppUninstallService`（`appUninstallServiceProvider`）；当 `installQueueProvider.currentTask` 存在且 `isProcessing=true` 时，卸载操作必须显示 `UninstallBlockedDialog` 拦截弹窗，不得直接进入卸载确认流程；"查看下载管理"必须复用 `showDownloadManagerDialog(context)`，不允许重复实现下载管理界面；仅运行中任务（`isProcessing=true`）触发拦截，排队等待的任务不阻断卸载。

@@ -98,7 +98,9 @@ void main() {
         );
 
         // 相同接口，按 categoryId 返回不同应用
-        when(mockApiService.getSearchAppList(any)).thenAnswer((invocation) async {
+        when(mockApiService.getSearchAppList(any)).thenAnswer((
+          invocation,
+        ) async {
           final request =
               invocation.positionalArguments.single as SearchAppListRequest;
           if (request.categoryId == '07') {
@@ -144,39 +146,38 @@ void main() {
       },
     );
 
-    testWidgets(
-      'initial load uses getSearchAppList not getWelcomeAppList',
-      (tester) async {
-        final mockApiService = MockAppApiService();
+    testWidgets('initial load uses getSearchAppList not getWelcomeAppList', (
+      tester,
+    ) async {
+      final mockApiService = MockAppApiService();
 
-        when(mockApiService.getDisCategoryList()).thenAnswer(
-          (_) async => _buildCategoryResponse(const [
-            CategoryDTO(categoryId: '07', categoryName: '效率办公'),
-          ]),
-        );
-        when(mockApiService.getSearchAppList(any)).thenAnswer(
-          (_) async => _buildSearchResponse(const [
-            AppListItemDTO(
-              appId: 'test.app',
-              appName: 'Test App',
-              appVersion: '1.0.0',
-            ),
-          ]),
-        );
+      when(mockApiService.getDisCategoryList()).thenAnswer(
+        (_) async => _buildCategoryResponse(const [
+          CategoryDTO(categoryId: '07', categoryName: '效率办公'),
+        ]),
+      );
+      when(mockApiService.getSearchAppList(any)).thenAnswer(
+        (_) async => _buildSearchResponse(const [
+          AppListItemDTO(
+            appId: 'test.app',
+            appName: 'Test App',
+            appVersion: '1.0.0',
+          ),
+        ]),
+      );
 
-        await tester.binding.setSurfaceSize(const Size(1280, 800));
-        addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(1280, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
 
-        await tester.pumpWidget(_buildTestApp(mockApiService));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 50));
-        await tester.pump(const Duration(milliseconds: 50));
+      await tester.pumpWidget(_buildTestApp(mockApiService));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump(const Duration(milliseconds: 50));
 
-        // 验证使用了正确的 API
-        verify(mockApiService.getSearchAppList(any)).called(greaterThan(0));
-        verifyNever(mockApiService.getWelcomeAppList(any));
-        verifyNever(mockApiService.getSidebarApps(any));
-      },
-    );
+      // 验证使用了正确的 API
+      verify(mockApiService.getSearchAppList(any)).called(greaterThan(0));
+      verifyNever(mockApiService.getWelcomeAppList(any));
+      verifyNever(mockApiService.getSidebarApps(any));
+    });
   });
 }

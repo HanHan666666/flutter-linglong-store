@@ -108,14 +108,14 @@ void main() {
               'order': null,
               'iconNoShow': null,
               'lan': null,
-              'filter': null
-            }
+              'filter': null,
+            },
           ],
           'total': 1,
           'size': 10,
           'current': 1,
-          'pages': 1
-        }
+          'pages': 1,
+        },
       };
 
       // Act
@@ -135,7 +135,10 @@ void main() {
       // zhName 应该被读取为 appName (通过 _readAppName)
       expect(app.appName, equals('WPS 2023 个人版'));
       // icon 应该被读取为 appIcon (通过 _readAppIcon)
-      expect(app.appIcon, equals('https://app-store-files.uniontech.com/icon/test'));
+      expect(
+        app.appIcon,
+        equals('https://app-store-files.uniontech.com/icon/test'),
+      );
       // description 应该被读取为 appDesc (通过 _readAppDescription)
       expect(app.appDesc, equals('WPS 2023是国内领先的办公软件'));
       // installCount 应该被读取为 downloadTimes (通过 _readDownloadCount)
@@ -158,22 +161,22 @@ void main() {
           'records': [
             {
               'appId': 'com.test.app',
-              'name': 'Test App Name',  // name field should fallback to appName
-              'appName': 'App Name Override',  // This takes priority over name
-              'zhName': 'Chinese Name',  // zhName has highest priority
+              'name': 'Test App Name', // name field should fallback to appName
+              'appName': 'App Name Override', // This takes priority over name
+              'zhName': 'Chinese Name', // zhName has highest priority
               'version': '1.0.0',
               'icon': 'https://example.com/icon.png',
               'description': 'Test description',
               'devName': 'Test Developer',
               'installCount': 500,
               'size': '123456',
-            }
+            },
           ],
           'total': 1,
           'size': 10,
           'current': 1,
-          'pages': 1
-        }
+          'pages': 1,
+        },
       };
 
       // Act

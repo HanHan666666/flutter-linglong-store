@@ -137,9 +137,9 @@ void main() {
 
       setUp(() {
         mockApiService = MockAppApiService();
-        when(mockApiService.getDisCategoryList()).thenAnswer(
-          (_) async => _buildCategoryResponse(),
-        );
+        when(
+          mockApiService.getDisCategoryList(),
+        ).thenAnswer((_) async => _buildCategoryResponse());
         when(mockApiService.getSearchAppList(any)).thenAnswer(
           (_) async => _buildSearchResponse(const [
             AppListItemDTO(
@@ -179,9 +179,9 @@ void main() {
 
           // 重置计数，只跟踪切换分类后的调用
           clearInteractions(mockApiService);
-          when(mockApiService.getDisCategoryList()).thenAnswer(
-            (_) async => _buildCategoryResponse(),
-          );
+          when(
+            mockApiService.getDisCategoryList(),
+          ).thenAnswer((_) async => _buildCategoryResponse());
           when(mockApiService.getSearchAppList(any)).thenAnswer(
             (_) async => _buildSearchResponse(const [
               AppListItemDTO(
@@ -196,10 +196,9 @@ void main() {
           container.read(allAppsProvider.notifier).selectCategory(1);
           await _flushAsyncWork();
 
-          final captured =
-              verify(
-                mockApiService.getSearchAppList(captureAny),
-              ).captured.cast<SearchAppListRequest>();
+          final captured = verify(
+            mockApiService.getSearchAppList(captureAny),
+          ).captured.cast<SearchAppListRequest>();
           // 最后一次请求必须携带真实 categoryId
           expect(captured.last.categoryId, equals('07'));
           expect(captured.last.pageSize, equals(30));
@@ -229,9 +228,9 @@ void main() {
 
           // 切换分类
           clearInteractions(mockApiService);
-          when(mockApiService.getDisCategoryList()).thenAnswer(
-            (_) async => _buildCategoryResponse(),
-          );
+          when(
+            mockApiService.getDisCategoryList(),
+          ).thenAnswer((_) async => _buildCategoryResponse());
           when(mockApiService.getSearchAppList(any)).thenAnswer(
             (_) async => _buildSearchResponse(
               const [
@@ -252,25 +251,21 @@ void main() {
 
           // 加载更多
           when(mockApiService.getSearchAppList(any)).thenAnswer(
-            (_) async => _buildSearchResponse(
-              const [
-                AppListItemDTO(
-                  appId: 'office2.app',
-                  appName: 'Office App 2',
-                  appVersion: '1.0.0',
-                ),
-              ],
-              currentPage: 2,
-            ),
+            (_) async => _buildSearchResponse(const [
+              AppListItemDTO(
+                appId: 'office2.app',
+                appName: 'Office App 2',
+                appVersion: '1.0.0',
+              ),
+            ], currentPage: 2),
           );
 
           container.read(allAppsProvider.notifier).loadMore();
           await _flushAsyncWork();
 
-          final captured =
-              verify(
-                mockApiService.getSearchAppList(captureAny),
-              ).captured.cast<SearchAppListRequest>();
+          final captured = verify(
+            mockApiService.getSearchAppList(captureAny),
+          ).captured.cast<SearchAppListRequest>();
           // loadMore 必须保留当前 categoryId 并继续使用 pageSize=30
           expect(captured.last.categoryId, equals('07'));
           expect(captured.last.pageSize, equals(30));

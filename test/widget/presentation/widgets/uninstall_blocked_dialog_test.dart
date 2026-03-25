@@ -30,10 +30,7 @@ void main() {
       );
 
       // 展示弹窗（不等待结果）
-      showUninstallBlockedDialog(
-        capturedContext,
-        activeTaskName: '测试应用',
-      );
+      showUninstallBlockedDialog(capturedContext, activeTaskName: '测试应用');
 
       await tester.pumpAndSettle();
 
@@ -74,8 +71,9 @@ void main() {
       expect(result, UninstallBlockedAction.acknowledge);
     });
 
-    testWidgets('returns openDownloadManager when tapping 查看下载管理',
-        (tester) async {
+    testWidgets('returns openDownloadManager when tapping 查看下载管理', (
+      tester,
+    ) async {
       late BuildContext capturedContext;
       UninstallBlockedAction? result;
 
@@ -103,8 +101,9 @@ void main() {
       expect(result, UninstallBlockedAction.openDownloadManager);
     });
 
-    testWidgets('falls back to appId when activeTaskName is empty',
-        (tester) async {
+    testWidgets('falls back to appId when activeTaskName is empty', (
+      tester,
+    ) async {
       late BuildContext capturedContext;
 
       await tester.pumpWidget(

@@ -21,8 +21,9 @@ Future<UninstallBlockedAction> showUninstallBlockedDialog(
   required String activeTaskName,
   String fallbackAppId = '',
 }) {
-  final displayName =
-      activeTaskName.isNotEmpty ? activeTaskName : fallbackAppId;
+  final displayName = activeTaskName.isNotEmpty
+      ? activeTaskName
+      : fallbackAppId;
 
   return showDialog<UninstallBlockedAction>(
     context: context,
@@ -54,8 +55,9 @@ class _UninstallBlockedDialog extends StatelessWidget {
         ),
         // 主要按钮：查看下载管理
         FilledButton(
-          onPressed: () => Navigator.of(context)
-              .pop(UninstallBlockedAction.openDownloadManager),
+          onPressed: () => Navigator.of(
+            context,
+          ).pop(UninstallBlockedAction.openDownloadManager),
           child: Text(l10n.viewDownloadManager),
         ),
       ],

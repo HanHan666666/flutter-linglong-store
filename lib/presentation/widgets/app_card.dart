@@ -211,7 +211,8 @@ class _AppCardState extends State<AppCard> {
         Text(
           widget.name,
           style: TextStyle(
-            fontSize: 14,
+            // 卡片标题：16px ，桌面端主可读层级
+            fontSize: 16,
             fontWeight: FontWeight.w500,
             color: context.appColors.textPrimary,
           ),
@@ -221,7 +222,8 @@ class _AppCardState extends State<AppCard> {
         const SizedBox(height: 2),
         Text(
           widget.description ?? '',
-          style: TextStyle(fontSize: 12, color: context.appColors.textTertiary),
+          // 卡片描述：14px 常规说明文字
+          style: TextStyle(fontSize: 14, color: context.appColors.textTertiary),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

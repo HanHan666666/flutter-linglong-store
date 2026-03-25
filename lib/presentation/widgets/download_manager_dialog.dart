@@ -427,10 +427,11 @@ class _TaskCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             task.appName,
+                            // featured 用 16px 正文级别，普通用 14px 说明级别
                             style:
                                 (featured
-                                        ? AppTextStyles.bodyMedium
-                                        : AppTextStyles.body)
+                                        ? AppTextStyles.body
+                                        : AppTextStyles.bodyMedium)
                                     .copyWith(fontWeight: FontWeight.w600),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

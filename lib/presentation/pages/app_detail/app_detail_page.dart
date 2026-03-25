@@ -456,10 +456,10 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 应用名称
+                // 应用名称 - 使用 headlineLarge(28px) 作为详情页主标题
                 Text(
                   app.name,
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: theme.textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                   maxLines: 2,

@@ -409,7 +409,7 @@ class _NoMoreDataItem extends StatelessWidget {
       child: Center(
         child: Text(
           l10n?.noMore ?? '没有更多了',
-          style: TextStyle(fontSize: 12, color: context.appColors.textTertiary),
+          style: TextStyle(fontSize: 13, color: context.appColors.textTertiary),
         ),
       ),
     );

@@ -219,7 +219,7 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
       child: Text(
         message,
         key: ValueKey(message),
-        style: AppTextStyles.bodyMedium.copyWith(
+        style: AppTextStyles.body.copyWith(
           color: context.appColors.textSecondary,
         ),
         textAlign: TextAlign.center,

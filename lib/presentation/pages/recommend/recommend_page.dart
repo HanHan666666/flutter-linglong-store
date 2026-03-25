@@ -572,7 +572,8 @@ class _BannerItem extends StatelessWidget {
                                 ? banner.description!
                                 : '应用描述',
                             style: TextStyle(
-                              fontSize: 13,
+                              // banner 描述：14px 常规说明文字
+                              fontSize: 14,
                               color: Colors.white.withValues(alpha: 0.86),
                               height: 1.35,
                             ),

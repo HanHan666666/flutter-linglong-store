@@ -2081,6 +2081,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'取消安装'**
   String get cancelInstall;
+
+  /// No description provided for @uninstallBlockedTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂时无法卸载'**
+  String get uninstallBlockedTitle;
+
+  /// No description provided for @uninstallBlockedMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前正在安装/更新「{activeTaskName}」。玲珑暂不支持同时执行安装和卸载。请等待当前任务完成，或先取消当前任务后再卸载。'**
+  String uninstallBlockedMessage(String activeTaskName);
+
+  /// No description provided for @iKnow.
+  ///
+  /// In zh, this message translates to:
+  /// **'我知道了'**
+  String get iKnow;
+
+  /// No description provided for @viewDownloadManager.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看下载管理'**
+  String get viewDownloadManager;
 }
 
 class _AppLocalizationsDelegate

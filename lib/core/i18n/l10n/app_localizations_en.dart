@@ -1118,4 +1118,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancelInstall => 'Cancel';
+
+  @override
+  String get uninstallBlockedTitle => 'Cannot Uninstall Now';
+
+  @override
+  String uninstallBlockedMessage(String activeTaskName) {
+    return 'Installing/updating \u300c$activeTaskName\u300d is in progress. Linglong does not support running install and uninstall at the same time. Please wait for the current task to finish, or cancel it first.';
+  }
+
+  @override
+  String get iKnow => 'Got It';
+
+  @override
+  String get viewDownloadManager => 'View Downloads';
 }

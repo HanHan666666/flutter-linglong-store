@@ -1085,4 +1085,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cancelInstall => '取消安装';
+
+  @override
+  String get uninstallBlockedTitle => '暂时无法卸载';
+
+  @override
+  String uninstallBlockedMessage(String activeTaskName) {
+    return '当前正在安装/更新「$activeTaskName」。玲珑暂不支持同时执行安装和卸载。请等待当前任务完成，或先取消当前任务后再卸载。';
+  }
+
+  @override
+  String get iKnow => '我知道了';
+
+  @override
+  String get viewDownloadManager => '查看下载管理';
 }

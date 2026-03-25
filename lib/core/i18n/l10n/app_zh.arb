@@ -640,5 +640,16 @@
     }
   },
   "waitingForInstall": "等待安装",
-  "cancelInstall": "取消安装"
+  "cancelInstall": "取消安装",
+  "uninstallBlockedTitle": "暂时无法卸载",
+  "uninstallBlockedMessage": "当前正在安装/更新「{activeTaskName}」。玲珑暂不支持同时执行安装和卸载。请等待当前任务完成，或先取消当前任务后再卸载。",
+  "@uninstallBlockedMessage": {
+    "placeholders": {
+      "activeTaskName": {
+        "type": "String"
+      }
+    }
+  },
+  "iKnow": "我知道了",
+  "viewDownloadManager": "查看下载管理"
 }

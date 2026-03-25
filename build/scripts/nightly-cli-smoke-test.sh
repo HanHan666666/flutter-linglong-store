@@ -24,7 +24,20 @@ assert_no_template_placeholders() {
   fi
 }
 
+assert_file_contains() {
+  local file_path="$1"
+  local pattern="$2"
+
+  if ! grep -Fq -- "$pattern" "$file_path"; then
+    echo "Expected $file_path to contain: $pattern" >&2
+    exit 1
+  fi
+}
+
 metadata_output="$(bash "$ROOT_DIR/build/scripts/resolve-nightly-metadata.sh")"
+base_version=""
+nightly_date=""
+nightly_label=""
 eval "$metadata_output"
 
 if [[ ! "$nightly_label" =~ ^[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]{8}\+[0-9a-f]+$ ]]; then
@@ -121,5 +134,73 @@ test -f "$OUTPUT_DIR/linglong-store-${nightly_label}-linux-amd64.tar.gz"
 test -f "$OUTPUT_DIR/linglong-store-${nightly_label}-amd64.deb"
 test -f "$OUTPUT_DIR/linglong-store-${nightly_label}-x86_64.rpm"
 test -f "$OUTPUT_DIR/linglong-store-${nightly_label}-amd64.AppImage"
+
+NOTES_FIXTURE_REPO="$TMP_ROOT/notes-repo"
+NOTES_OUTPUT_WITH_HISTORY="$TMP_ROOT/nightly-release-notes-with-history.md"
+NOTES_OUTPUT_FIRST_RELEASE="$TMP_ROOT/nightly-release-notes-first.md"
+NOTES_OUTPUT_INVALID_BASELINE="$TMP_ROOT/nightly-release-notes-invalid-baseline.md"
+
+mkdir -p "$NOTES_FIXTURE_REPO"
+git init "$NOTES_FIXTURE_REPO" >/dev/null 2>&1
+git -C "$NOTES_FIXTURE_REPO" config user.name "Nightly Smoke"
+git -C "$NOTES_FIXTURE_REPO" config user.email "nightly-smoke@example.com"
+
+cat > "$NOTES_FIXTURE_REPO/notes.txt" <<'EOF'
+initial
+EOF
+git -C "$NOTES_FIXTURE_REPO" add notes.txt
+git -C "$NOTES_FIXTURE_REPO" commit -m "feat: initial nightly baseline" >/dev/null 2>&1
+previous_source_commit="$(git -C "$NOTES_FIXTURE_REPO" rev-parse HEAD)"
+
+cat > "$NOTES_FIXTURE_REPO/notes.txt" <<'EOF'
+current
+EOF
+git -C "$NOTES_FIXTURE_REPO" add notes.txt
+git -C "$NOTES_FIXTURE_REPO" commit -m "fix: append nightly changelog" >/dev/null 2>&1
+current_source_commit="$(git -C "$NOTES_FIXTURE_REPO" rev-parse HEAD)"
+
+(
+  cd "$NOTES_FIXTURE_REPO"
+  bash "$ROOT_DIR/build/scripts/generate-nightly-release-notes.sh" \
+    --nightly-label "$nightly_label" \
+    --nightly-date "$nightly_date" \
+    --source-commit "$current_source_commit" \
+    --previous-source-commit "$previous_source_commit" \
+    --output "$NOTES_OUTPUT_WITH_HISTORY"
+)
+
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Release Notes"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## fix"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- append nightly changelog"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly source commit: $current_source_commit"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly source date: $nightly_date"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly version label: $nightly_label"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Download"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Requirements"
+
+(
+  cd "$NOTES_FIXTURE_REPO"
+  bash "$ROOT_DIR/build/scripts/generate-nightly-release-notes.sh" \
+    --nightly-label "$nightly_label" \
+    --nightly-date "$nightly_date" \
+    --source-commit "$current_source_commit" \
+    --output "$NOTES_OUTPUT_FIRST_RELEASE"
+)
+
+assert_file_contains "$NOTES_OUTPUT_FIRST_RELEASE" "## Release Notes"
+assert_file_contains "$NOTES_OUTPUT_FIRST_RELEASE" "这是首个 Nightly Release，后续 Nightly 将从上一版 Nightly source commit 自动生成变更日志。"
+
+(
+  cd "$NOTES_FIXTURE_REPO"
+  bash "$ROOT_DIR/build/scripts/generate-nightly-release-notes.sh" \
+    --nightly-label "$nightly_label" \
+    --nightly-date "$nightly_date" \
+    --source-commit "$current_source_commit" \
+    --previous-source-commit deadbeef \
+    --output "$NOTES_OUTPUT_INVALID_BASELINE"
+)
+
+assert_file_contains "$NOTES_OUTPUT_INVALID_BASELINE" "## Release Notes"
+assert_file_contains "$NOTES_OUTPUT_INVALID_BASELINE" "这是首个 Nightly Release，后续 Nightly 将从上一版 Nightly source commit 自动生成变更日志。"
 
 echo "Nightly CLI smoke test passed."

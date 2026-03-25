@@ -62,6 +62,8 @@
 - 如果手动补发未传 `aur_release_tag`，workflow 会回退到按 `Nightly source commit` 扫描现有 nightly prerelease
 - 无论补发的是当前还是历史 prerelease，`publish-aur-nightly` 都必须继续使用触发本次 workflow 的当前代码版本执行渲染、校验与发布脚本；只允许资产下载 URL 与版本标签指向历史 prerelease
 - nightly 只构建 `amd64`
+- nightly Release notes 必须通过 `build/scripts/generate-nightly-release-notes.sh` 生成，禁止再把 changelog / 下载说明 / metadata 直接内联写回 workflow heredoc
+- nightly changelog 的范围固定为“最近一次 nightly prerelease 的 `Nightly source commit` → 当前 `source_commit`”；如果没有上一版 nightly，则必须输出明确的首版兜底文案
 
 ### `release.yml`
 
@@ -236,14 +238,14 @@ linglong-store-<version>-arm64.AppImage
 
 ## Nightly Release 规则
 
-nightly 固定维护一个滚动预发布：
+nightly 当前按日期维护 prerelease：
 
-- tag: `nightly`
+- tag: `nightly-<YYYYMMDD>`
 - prerelease title 前缀: `Nightly Build`
 - `prerelease: true`
 - `latest: false`
 
-不要改成“每天创建一个新 Release”，否则 release 列表会被 nightly 淹没。
+同一天内重跑可以覆盖同一个 nightly tag 的 assets / body；不要再额外引入第二套固定 `nightly` tag 规则，以免 AUR 恢复与 changelog 基线判断出现歧义。
 
 nightly release body 必须保留以下元数据行，供下次执行判断是否需要发布：
 

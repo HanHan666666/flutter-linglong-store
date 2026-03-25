@@ -47,8 +47,10 @@ require_grep "should_publish_aur" .github/workflows/nightly.yml
 require_grep "aur_asset_source" .github/workflows/nightly.yml
 require_grep "aur_nightly_label" .github/workflows/nightly.yml
 require_grep "aur_nightly_tag" .github/workflows/nightly.yml
+require_grep "previous_nightly_source_commit" .github/workflows/nightly.yml
 require_grep "needs.prepare-nightly.outputs.should_publish_release == 'true'" .github/workflows/nightly.yml
 require_grep "needs.prepare-nightly.outputs.should_publish_aur == 'true'" .github/workflows/nightly.yml
+require_grep "generate-nightly-release-notes.sh" .github/workflows/nightly.yml
 require_grep "gh release download" .github/workflows/nightly.yml
 require_grep "signed-nightly-assets-amd64" .github/workflows/nightly.yml
 require_grep 'linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz' .github/workflows/nightly.yml

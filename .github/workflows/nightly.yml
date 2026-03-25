@@ -30,6 +30,7 @@ jobs:
       aur_asset_source: ${{ steps.decide.outputs.aur_asset_source }}
       aur_nightly_label: ${{ steps.decide.outputs.aur_nightly_label }}
       aur_nightly_tag: ${{ steps.decide.outputs.aur_nightly_tag }}
+      previous_nightly_source_commit: ${{ steps.existing.outputs.latest_published_sha }}
       base_version: ${{ steps.metadata.outputs.base_version }}
       nightly_label: ${{ steps.metadata.outputs.nightly_label }}
       nightly_tag: ${{ steps.metadata.outputs.nightly_tag }}
@@ -92,6 +93,28 @@ jobs:
               core.setOutput('published_label', publishedLabel || '');
             };
 
+            const isLikelyCommitSha = (value) => /^[0-9a-f]{7,40}$/i.test(value || '');
+
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            });
+
+            const nightlyReleases = releases
+              .filter((release) => release.prerelease && release.tag_name.startsWith('nightly-'))
+              .map((release) => ({ release, metadata: parseMetadata(release) }));
+
+            const latestNightlyWithValidSha = nightlyReleases.find(({ metadata }) =>
+              isLikelyCommitSha(metadata.publishedSha),
+            );
+
+            // 额外暴露最近一次 nightly prerelease 的 source commit，供 changelog 生成做范围基线。
+            core.setOutput(
+              'latest_published_sha',
+              latestNightlyWithValidSha?.metadata.publishedSha || '',
+            );
+
             try {
               const { data } = await github.rest.repos.getReleaseByTag({
                 owner: context.repo.owner,
@@ -104,15 +127,7 @@ jobs:
                 throw error;
               }
 
-              const releases = await github.paginate(github.rest.repos.listReleases, {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                per_page: 100,
-              });
-
-              const matchedRelease = releases
-                .filter((release) => release.prerelease && release.tag_name.startsWith('nightly-'))
-                .map((release) => ({ release, metadata: parseMetadata(release) }))
+              const matchedRelease = nightlyReleases
                 .find(({ metadata }) => metadata.publishedSha === sourceCommit);
 
               if (matchedRelease) {
@@ -380,25 +395,23 @@ jobs:
 
       - name: Render nightly release notes
         run: |
-          cat > nightly-release-notes.md <<EOF
-          ## Nightly Build
+          cmd=(
+            bash build/scripts/generate-nightly-release-notes.sh
+            --nightly-label "${{ needs.prepare-nightly.outputs.nightly_label }}"
+            --nightly-date "${{ needs.prepare-nightly.outputs.nightly_date }}"
+            --source-commit "${{ needs.prepare-nightly.outputs.source_commit }}"
+            --output nightly-release-notes.md
+          )
 
-          - Version label: ${{ needs.prepare-nightly.outputs.nightly_label }}
-          - Architecture: amd64
-          - Trigger: ${{ github.event_name }}
+          # 只有拿到了上一版 nightly source commit 时才传递范围基线；首次 nightly 走脚本内的兜底文案。
+          if [[ -n "${{ needs.prepare-nightly.outputs.previous_nightly_source_commit }}" ]]; then
+            cmd+=(
+              --previous-source-commit
+              "${{ needs.prepare-nightly.outputs.previous_nightly_source_commit }}"
+            )
+          fi
 
-          ## Download
-          - amd64: bundle / deb / rpm / AppImage
-
-          ## Requirements
-          - Linux
-          - GTK 3
-          - 玲珑运行环境
-
-          Nightly source commit: ${{ needs.prepare-nightly.outputs.source_commit }}
-          Nightly source date: ${{ needs.prepare-nightly.outputs.nightly_date }}
-          Nightly version label: ${{ needs.prepare-nightly.outputs.nightly_label }}
-          EOF
+          "${cmd[@]}"
 
       - name: Publish nightly prerelease
         uses: softprops/action-gh-release@v2

@@ -393,6 +393,9 @@ jobs:
           git tag -f "${{ needs.prepare-nightly.outputs.nightly_tag }}" "${{ needs.prepare-nightly.outputs.source_commit }}"
           git push origin "refs/tags/${{ needs.prepare-nightly.outputs.nightly_tag }}" --force
 
+      - name: Set up Dart SDK
+        uses: dart-lang/setup-dart@v1
+
       - name: Render nightly release notes
         run: |
           cmd=(

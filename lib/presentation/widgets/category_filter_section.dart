@@ -28,29 +28,33 @@ class CategoryFilterSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SliverMainAxisGroup(
-      slivers: [
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: CategoryFilterHeaderDelegate(
+    if (isExpanded) {
+      // 展开时直接复用顶部同一容器，避免额外插入第二块独立分类面板。
+      return SliverToBoxAdapter(
+        child: ColoredBox(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: CategoryFilterHeaderBox(
             categories: categories,
             selectedIndex: selectedIndex,
             onSelected: onSelected,
             showCount: showCount,
-            isExpanded: isExpanded,
+            isExpanded: true,
             onToggleExpand: onToggleExpand,
           ),
         ),
-        if (isExpanded)
-          SliverToBoxAdapter(
-            child: CategoryFilterExpandedPanel(
-              categories: categories,
-              selectedIndex: selectedIndex,
-              onSelected: onSelected,
-              showCount: showCount,
-            ),
-          ),
-      ],
+      );
+    }
+
+    return SliverPersistentHeader(
+      pinned: true,
+      delegate: CategoryFilterHeaderDelegate(
+        categories: categories,
+        selectedIndex: selectedIndex,
+        onSelected: onSelected,
+        showCount: showCount,
+        isExpanded: false,
+        onToggleExpand: onToggleExpand,
+      ),
     );
   }
 }

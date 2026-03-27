@@ -39,45 +39,17 @@ class CategoryFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     final showShadow = overlapsContent || shrinkOffset > 0;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ColoredBox(
       color: Theme.of(context).scaffoldBackgroundColor,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.sm,
-          AppSpacing.lg,
-          AppSpacing.sm,
-        ),
-        child: AnimatedContainer(
-          duration: AppAnimation.fast,
-          curve: AppAnimation.ease,
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF8F9FB),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isDark ? const Color(0xFF3A3A3A) : const Color(0xFFE7EBF0),
-            ),
-            boxShadow: showShadow
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ]
-                : AppShadows.none,
-          ),
-          child: _CategoryFilterBar(
-            categories: categories,
-            selectedIndex: selectedIndex,
-            onSelected: onSelected,
-            showCount: showCount,
-            isExpanded: isExpanded,
-            onToggleExpand: onToggleExpand,
-          ),
-        ),
+      child: CategoryFilterHeaderBox(
+        categories: categories,
+        selectedIndex: selectedIndex,
+        onSelected: onSelected,
+        showCount: showCount,
+        isExpanded: isExpanded,
+        onToggleExpand: onToggleExpand,
+        showShadow: showShadow,
       ),
     );
   }
@@ -91,14 +63,19 @@ class CategoryFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-class _CategoryFilterBar extends StatelessWidget {
-  const _CategoryFilterBar({
+/// 分类筛选栏可复用容器。
+///
+/// 折叠态与展开态共用同一套视觉外壳，避免展开后出现第二块重复分类面板。
+class CategoryFilterHeaderBox extends StatelessWidget {
+  const CategoryFilterHeaderBox({
     required this.categories,
     required this.selectedIndex,
     required this.onSelected,
     required this.showCount,
     required this.isExpanded,
+    this.showShadow = false,
     this.onToggleExpand,
+    super.key,
   });
 
   final List<CategoryInfo> categories;
@@ -106,11 +83,45 @@ class _CategoryFilterBar extends StatelessWidget {
   final ValueChanged<int> onSelected;
   final bool showCount;
   final bool isExpanded;
+  final bool showShadow;
   final VoidCallback? onToggleExpand;
 
   @override
   Widget build(BuildContext context) {
-    return _buildCollapsedLayout(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.sm,
+      ),
+      child: AnimatedContainer(
+        key: const ValueKey('category-filter-container'),
+        duration: AppAnimation.fast,
+        curve: AppAnimation.ease,
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF8F9FB),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3A3A3A) : const Color(0xFFE7EBF0),
+          ),
+          boxShadow: showShadow
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : AppShadows.none,
+        ),
+        child: isExpanded
+            ? _buildExpandedLayout(context)
+            : _buildCollapsedLayout(context),
+      ),
+    );
   }
 
   /// 折叠态：横向滚动 + 末尾展开按钮
@@ -164,65 +175,58 @@ class _CategoryFilterBar extends StatelessWidget {
       ],
     );
   }
-}
 
-/// 展开态分类面板。
-///
-/// 该面板交给页面主滚动容器承载，避免在分类区域内再次出现滚动条。
-class CategoryFilterExpandedPanel extends StatelessWidget {
-  const CategoryFilterExpandedPanel({
-    required this.categories,
-    required this.selectedIndex,
-    required this.onSelected,
-    this.showCount = false,
-    super.key,
-  });
-
-  final List<CategoryInfo> categories;
-  final int selectedIndex;
-  final ValueChanged<int> onSelected;
-  final bool showCount;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+  /// 展开态：复用顶部同一容器，直接在内部使用多行 Wrap 展示完整分类。
+  Widget _buildExpandedLayout(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        0,
-        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.sm,
+        AppSpacing.xs,
         AppSpacing.sm,
       ),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF8F9FB),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isDark ? const Color(0xFF3A3A3A) : const Color(0xFFE7EBF0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: List.generate(categories.length, (index) {
+                final category = categories[index];
+                return Tooltip(
+                  message: category.name,
+                  waitDuration: const Duration(milliseconds: 300),
+                  child: _CategoryChip(
+                    label: category.name,
+                    count: showCount ? category.appCount : null,
+                    isSelected: index == selectedIndex,
+                    onTap: () => onSelected(index),
+                  ),
+                );
+              }),
+            ),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          child: Wrap(
-            key: const ValueKey('category-filter-expanded-panel'),
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: List.generate(categories.length, (index) {
-              final category = categories[index];
-              return Tooltip(
-                message: category.name,
-                waitDuration: const Duration(milliseconds: 300),
-                child: _CategoryChip(
-                  label: category.name,
-                  count: showCount ? category.appCount : null,
-                  isSelected: index == selectedIndex,
-                  onTap: () => onSelected(index),
+          if (onToggleExpand != null)
+            Padding(
+              padding: const EdgeInsets.only(left: AppSpacing.xs),
+              child: Tooltip(
+                message: '收起分类',
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: onToggleExpand,
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(
+                      Icons.expand_less,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
-              );
-            }),
-          ),
-        ),
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -707,19 +707,11 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             ),
             _buildDivider(context),
 
-            // 玲珑版本
+            // 玲珑版本（即 ll-cli 版本，二者相同）
             _buildInfoRow(
               context,
               label: l10n?.linglongVersion ?? '玲珑版本',
               value: globalState.llVersion ?? (l10n?.unknown ?? '未知'),
-            ),
-            _buildDivider(context),
-
-            // ll-cli 版本
-            _buildInfoRow(
-              context,
-              label: l10n?.llCliVersion ?? 'll-cli 版本',
-              value: globalState.llBinVersion ?? (l10n?.unknown ?? '未知'),
             ),
 
             const SizedBox(height: 16),

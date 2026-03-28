@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../application/providers/global_provider.dart';
 import '../../application/providers/setting_provider.dart';
 import '../../core/config/app_config.dart';
+import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/network/api_client.dart';
@@ -76,6 +77,17 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
                   return FilterChip(
                     label: Text(cat),
                     selected: selected,
+                    // 显式指定文字颜色，确保浅灰背景上文字清晰可读
+                    labelStyle: AppTextStyles.caption.copyWith(
+                      color: selected
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                    ),
+                    // 选中态使用主色浅底，未选中态使用卡片灰色底
+                    backgroundColor: AppColors.cardBackground,
+                    selectedColor: AppColors.primaryLight,
+                    // 未选中态边框
+                    side: const BorderSide(color: AppColors.border),
                     onSelected: (value) {
                       setState(() {
                         if (value) {
@@ -191,7 +203,6 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
       final body = <String, dynamic>{
         'message': message,
         'llVersion': globalState.llVersion ?? '',
-        'llBinVersion': globalState.llBinVersion ?? '',
         'appVersion': settingState.appVersion ?? AppConfig.appVersion,
         'arch': globalState.arch ?? '',
         if (logFileUrl != null) 'logFileUrl': logFileUrl,

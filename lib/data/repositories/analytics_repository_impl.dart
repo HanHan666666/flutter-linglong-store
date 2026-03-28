@@ -48,7 +48,6 @@ class AnalyticsRepositoryImpl implements AnalyticsRepository {
   Future<void> reportVisit({
     String? arch,
     String? llVersion,
-    String? llBinVersion,
     String? osVersion,
     String? repoName,
     String? appVersion,
@@ -59,7 +58,8 @@ class AnalyticsRepositoryImpl implements AnalyticsRepository {
         visitorId: visitorId,
         arch: arch,
         llVersion: llVersion,
-        llBinVersion: llBinVersion,
+        // llBinVersion 与 llVersion 相同，保留 API 字段兼容后端
+        llBinVersion: llVersion,
         osVersion: osVersion,
         repoName: repoName,
         appVersion: appVersion,

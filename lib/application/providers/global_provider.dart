@@ -73,7 +73,6 @@ class GlobalAppState {
     this.reason,
     this.osVersion,
     this.llVersion,
-    this.llBinVersion,
   });
 
   /// 当前语言
@@ -112,11 +111,8 @@ class GlobalAppState {
   /// 操作系统版本
   final String? osVersion;
 
-  /// 玲珑版本
+  /// 玲珑版本（即 ll-cli 版本）
   final String? llVersion;
-
-  /// ll-cli 版本
-  final String? llBinVersion;
 
   /// 复制并更新
   GlobalAppState copyWith({
@@ -133,7 +129,6 @@ class GlobalAppState {
     String? reason,
     String? osVersion,
     String? llVersion,
-    String? llBinVersion,
     bool clearReason = false,
   }) {
     return GlobalAppState(
@@ -150,7 +145,6 @@ class GlobalAppState {
       reason: clearReason ? null : (reason ?? this.reason),
       osVersion: osVersion ?? this.osVersion,
       llVersion: llVersion ?? this.llVersion,
-      llBinVersion: llBinVersion ?? this.llBinVersion,
     );
   }
 }
@@ -387,10 +381,6 @@ class GlobalApp extends _$GlobalApp {
   /// 设置玲珑版本
   void setLlVersion(String version) =>
       state = state.copyWith(llVersion: version);
-
-  /// 设置ll-cli版本
-  void setLlBinVersion(String version) =>
-      state = state.copyWith(llBinVersion: version);
 
   /// 重置环境状态
   void resetEnvironmentState() {

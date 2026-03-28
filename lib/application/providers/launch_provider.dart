@@ -314,6 +314,12 @@ class LaunchSequence extends _$LaunchSequence {
               .setOsVersion(match.group(1)!.trim());
         }
       }
+
+      // 将环境检测中获取的 ll-cli 版本同步到全局状态
+      final envResult = ref.read(linglongEnvProvider).result;
+      if (envResult?.llCliVersion != null) {
+        ref.read(globalAppProvider.notifier).setLlVersion(envResult!.llCliVersion!);
+      }
     } catch (e) {
       AppLogger.warning('Failed to fetch environment info: $e');
     }
@@ -467,7 +473,6 @@ class LaunchSequence extends _$LaunchSequence {
         .reportVisit(
           arch: globalApp.arch,
           llVersion: globalApp.llVersion,
-          llBinVersion: globalApp.llBinVersion,
           osVersion: globalApp.osVersion,
           // 仓库配置不再允许用户切换，埋点统一记录默认仓库即可。
           repoName: AppConfig.defaultStoreRepoName,

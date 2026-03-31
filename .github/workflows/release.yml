@@ -319,14 +319,17 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           cd artifacts
-          for tarball in **/*.tar.gz; do
+          for tarball in *.tar.gz; do
             if [[ -f "$tarball" ]]; then
               echo "Signing $tarball..."
               echo "$GPG_PASSPHRASE" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
                 --armor --detach-sign "$tarball"
             fi
           done
-          ls -la **/*.asc || echo "No signature files created"
+          if ! ls -la *.tar.gz.asc; then
+            echo "No tarball signature files were created under $(pwd)" >&2
+            exit 1
+          fi
 
       - name: Sign release RPM packages
         run: |
@@ -508,19 +511,38 @@ jobs:
           sha_sig_amd64=""
           sha_sig_arm64=""
 
+          tarball_amd64=$(find signed-assets -name "*amd64.tar.gz" | head -1)
+          tarball_arm64=$(find signed-assets -name "*arm64.tar.gz" | head -1)
+
+          if [[ -z "$tarball_amd64" || ! -f "$tarball_amd64" ]]; then
+            echo "Missing expected signed amd64 tarball in signed-assets" >&2
+            exit 1
+          fi
+
+          if [[ -z "$tarball_arm64" || ! -f "$tarball_arm64" ]]; then
+            echo "Missing expected signed arm64 tarball in signed-assets" >&2
+            exit 1
+          fi
+
           # Find signature files
           sig_amd64=$(find signed-assets -name "*amd64.tar.gz.asc" | head -1)
           sig_arm64=$(find signed-assets -name "*arm64.tar.gz.asc" | head -1)
 
-          if [[ -n "$sig_amd64" && -f "$sig_amd64" ]]; then
-            sha_sig_amd64=$(sha256sum "$sig_amd64" | awk '{print $1}')
-            echo "AMD64 signature SHA256: $sha_sig_amd64"
+          if [[ -z "$sig_amd64" || ! -f "$sig_amd64" ]]; then
+            echo "Missing expected signed amd64 tarball signature in signed-assets" >&2
+            exit 1
           fi
 
-          if [[ -n "$sig_arm64" && -f "$sig_arm64" ]]; then
-            sha_sig_arm64=$(sha256sum "$sig_arm64" | awk '{print $1}')
-            echo "ARM64 signature SHA256: $sha_sig_arm64"
+          if [[ -z "$sig_arm64" || ! -f "$sig_arm64" ]]; then
+            echo "Missing expected signed arm64 tarball signature in signed-assets" >&2
+            exit 1
           fi
+
+          sha_sig_amd64=$(sha256sum "$sig_amd64" | awk '{print $1}')
+          echo "AMD64 signature SHA256: $sha_sig_amd64"
+
+          sha_sig_arm64=$(sha256sum "$sig_arm64" | awk '{print $1}')
+          echo "ARM64 signature SHA256: $sha_sig_arm64"
 
           echo "sha_amd64=$sha_amd64" >> "$GITHUB_OUTPUT"
           echo "sha_arm64=$sha_arm64" >> "$GITHUB_OUTPUT"

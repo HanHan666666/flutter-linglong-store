@@ -90,6 +90,8 @@
 - `publish-release` 必须依赖 `finalize-release-state`，不要在 tag 尚未落库时抢先创建 GitHub Release
 - release notes 的 `SHA256 Hashes of the release artifacts` 段落只能在 `publish-release` 下载最终签名资产后追加，并与同一份 `hashes.sha256` 一起发布，避免展示未签名产物的旧哈希
 - `sign-release` 上传 `signed-release-assets` 时只能匹配单层 `artifacts/*.tar.gz(.asc)/.deb/.rpm/.AppImage` 文件；不要对已 `merge-multiple` 的下载目录继续使用递归 `**`，否则 `.asc` 可能在 artifact 阶段被漏掉
+- `sign-release` 生成 tarball 签名时同样只能遍历单层 `artifacts/*.tar.gz`；GitHub runner 默认 `globstar` 关闭，`**/*.tar.gz` 在平铺目录下不会命中任何文件，必须在签名步骤里显式校验 `*.tar.gz.asc` 已生成
+- `publish-aur` 的 `Calculate checksums` 必须在缺少 tarball 或 `.tar.gz.asc` 时直接失败并给出明确错误，不能再让空输出拖到 `publish-aur.sh` 才暴露成缺失环境变量
 - `publish-release` 下载 `signed-release-assets` 后必须先通过 `build/scripts/normalize-release-assets.sh` 规整为单层目录，再交给 `softprops/action-gh-release` 上传；不要直接依赖 artifact 下载后的原始目录层级做 glob 匹配，避免 `*.tar.gz.asc` 因路径结构变化漏传
 
 工具链约束：

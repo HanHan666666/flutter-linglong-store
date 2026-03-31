@@ -33,7 +33,9 @@ require_grep "finalize-release-state" .github/workflows/release.yml
 require_grep "Checkout repository for release note hashes" .github/workflows/release.yml
 require_grep "Download versioned release files" .github/workflows/release.yml
 require_grep "append-release-asset-hashes.sh" .github/workflows/release.yml
-require_grep "artifacts/hashes.sha256" .github/workflows/release.yml
+require_grep "normalize-release-assets.sh" .github/workflows/release.yml
+require_grep "release-assets/hashes.sha256" .github/workflows/release.yml
+require_grep "release-assets/*" .github/workflows/release.yml
 require_no_grep "/home/han/flutter" .github/workflows/release.yml
 require_grep "pull_request" .github/workflows/ci.yml
 require_grep "release-cli-smoke-test.sh" .github/workflows/ci.yml

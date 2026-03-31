@@ -439,12 +439,18 @@ jobs:
           name: signed-release-assets
           path: artifacts
 
+      - name: Normalize downloaded release assets
+        run: |
+          bash build/scripts/normalize-release-assets.sh \
+            --input-dir artifacts \
+            --output-dir release-assets
+
       - name: Append release artifact hashes to notes
         run: |
           bash build/scripts/append-release-asset-hashes.sh \
-            --assets-dir artifacts \
+            --assets-dir release-assets \
             --notes-file release-notes/release-notes.md \
-            --hashes-output artifacts/hashes.sha256
+            --hashes-output release-assets/hashes.sha256
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -454,12 +460,7 @@ jobs:
           body_path: release-notes/release-notes.md
           fail_on_unmatched_files: true
           files: |
-            artifacts/**/*.tar.gz
-            artifacts/**/*.tar.gz.asc
-            artifacts/**/*.deb
-            artifacts/**/*.rpm
-            artifacts/**/*.AppImage
-            artifacts/hashes.sha256
+            release-assets/*
 
   publish-aur:
     name: Publish to AUR ${{ needs.prepare-release.outputs.version }}

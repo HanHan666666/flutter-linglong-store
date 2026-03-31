@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:linglong_store/application/providers/sidebar_config_provider.dart';
+import 'package:linglong_store/core/config/local_sidebar_menu_catalog.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
 import 'package:linglong_store/presentation/widgets/sidebar.dart';
@@ -37,15 +38,26 @@ void main() {
 
         await tester.pumpAndSettle();
 
+        final officeLabel = resolveSidebarMenuLabel(
+          menuCode: 'office',
+          locale: const Locale('zh'),
+          fallbackName: '办公',
+        );
+        final systemLabel = resolveSidebarMenuLabel(
+          menuCode: 'system',
+          locale: const Locale('zh'),
+          fallbackName: '系统',
+        );
+
         expect(find.text('推 荐'), findsOneWidget);
         expect(find.text('全 部'), findsOneWidget);
         expect(find.text('排 行'), findsOneWidget);
         expect(find.text('更 新'), findsNothing);
 
-        expect(find.text('办公'), findsOneWidget);
-        expect(find.text('系统'), findsOneWidget);
-        final officeY = tester.getTopLeft(find.text('办公')).dy;
-        final systemY = tester.getTopLeft(find.text('系统')).dy;
+        expect(find.text(officeLabel), findsOneWidget);
+        expect(find.text(systemLabel), findsOneWidget);
+        final officeY = tester.getTopLeft(find.text(officeLabel)).dy;
+        final systemY = tester.getTopLeft(find.text(systemLabel)).dy;
         final myAppsY = tester.getTopLeft(find.byTooltip('我的应用')).dy;
         final downloadsY = tester.getTopLeft(find.byTooltip('下载管理')).dy;
         final settingY = tester.getTopLeft(find.byTooltip('设置')).dy;

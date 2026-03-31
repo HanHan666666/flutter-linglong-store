@@ -14,8 +14,7 @@ import 'download_manager_dialog.dart';
 enum SidebarMenuItem {
   recommend(Icons.favorite_border, Icons.favorite, AppRoutes.recommend),
   allApps(Icons.apps_outlined, Icons.apps, AppRoutes.allApps),
-  ranking(Icons.leaderboard_outlined, Icons.leaderboard, AppRoutes.ranking),
-  update(Icons.update_outlined, Icons.update, AppRoutes.updateApps);
+  ranking(Icons.leaderboard_outlined, Icons.leaderboard, AppRoutes.ranking);
 
   const SidebarMenuItem(this.icon, this.selectedIcon, this.route);
 
@@ -29,7 +28,6 @@ enum SidebarMenuItem {
       SidebarMenuItem.recommend => l10n.recommend,
       SidebarMenuItem.allApps => l10n.sidebarAllApps,
       SidebarMenuItem.ranking => l10n.sidebarRanking,
-      SidebarMenuItem.update => l10n.update,
     };
   }
 }
@@ -41,20 +39,16 @@ enum SidebarMenuItem {
 class Sidebar extends ConsumerWidget {
   const Sidebar({
     required this.currentPath,
-    this.updateCount = 0,
     super.key,
   });
 
   /// 当前路由路径
   final String currentPath;
 
-  /// 更新数量（用于红点显示）
-  final int updateCount;
-
   /// 侧边栏默认宽度 - 176px
   ///
   /// 为英文展开态菜单预留稳定单行空间，避免 `Recommend` 等文案换行。
-  static const double defaultWidth = 164.0;
+  static const double defaultWidth = 176.0;
 
   /// 侧边栏折叠宽度 - 56px (3.5rem)
   static const double collapsedWidth = 56.0;
@@ -83,12 +77,11 @@ class Sidebar extends ConsumerWidget {
           Expanded(
             child: _MenuSection(
               currentPath: currentPath,
-              updateCount: updateCount,
               isCollapsed: isCollapsed,
               dynamicMenus: dynamicMenus,
             ),
           ),
-          // 底部固定入口使用和主菜单一致的纵向结构，避免额外的横向布局层级。
+          // 底部固定入口保持“展开态横排、折叠态竖排”的既定桌面交互。
           _BottomSection(currentPath: currentPath, isCollapsed: isCollapsed),
         ],
       ),
@@ -100,13 +93,11 @@ class Sidebar extends ConsumerWidget {
 class _MenuSection extends StatelessWidget {
   const _MenuSection({
     required this.currentPath,
-    required this.updateCount,
     required this.isCollapsed,
     required this.dynamicMenus,
   });
 
   final String currentPath;
-  final int updateCount;
   final bool isCollapsed;
 
   /// 服务端下发的动态菜单列表
@@ -132,7 +123,6 @@ class _MenuSection extends StatelessWidget {
             return _MenuItemTile(
               item: item,
               isSelected: currentPath == item.route,
-              updateCount: item == SidebarMenuItem.update ? updateCount : 0,
               isCollapsed: isCollapsed,
             );
           }),
@@ -159,13 +149,11 @@ class _MenuItemTile extends StatefulWidget {
     required this.item,
     required this.isSelected,
     required this.isCollapsed,
-    this.updateCount = 0,
   });
 
   final SidebarMenuItem item;
   final bool isSelected;
   final bool isCollapsed;
-  final int updateCount;
 
   @override
   State<_MenuItemTile> createState() => _MenuItemTileState();
@@ -258,46 +246,8 @@ class _MenuItemTileState extends State<_MenuItemTile> {
                         ),
                       ),
                     ),
-                    // 红点徽章
-                    if (widget.updateCount > 0) _Badge(count: widget.updateCount),
                   ],
                 ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// 红点/徽章组件
-class _Badge extends StatelessWidget {
-  const _Badge({required this.count});
-
-  final int count;
-  static const double _badgeSize = 20;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: _badgeSize,
-      height: _badgeSize,
-      decoration: const BoxDecoration(
-        color: AppColors.error,
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        // 固定直径并缩放文字，确保 1 位和 2 位数字都保持圆形徽章。
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Text(
-              count > 99 ? '99+' : count.toString(),
-              style: AppTextStyles.tiny.copyWith(
-                color: AppColors.textLight,
-                fontWeight: FontWeight.w500,
               ),
             ),
           ),

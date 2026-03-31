@@ -422,6 +422,11 @@ jobs:
     if: ${{ always() && needs.sign-release.result == 'success' && needs.finalize-release-state.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository for release note hashes
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-release.outputs.source_commit }}
+
       - name: Download release notes
         uses: actions/download-artifact@v4
         with:
@@ -433,6 +438,13 @@ jobs:
         with:
           name: signed-release-assets
           path: artifacts
+
+      - name: Append release artifact hashes to notes
+        run: |
+          bash build/scripts/append-release-asset-hashes.sh \
+            --assets-dir artifacts \
+            --notes-file release-notes/release-notes.md \
+            --hashes-output artifacts/hashes.sha256
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -447,6 +459,7 @@ jobs:
             artifacts/**/*.deb
             artifacts/**/*.rpm
             artifacts/**/*.AppImage
+            artifacts/hashes.sha256
 
   publish-aur:
     name: Publish to AUR ${{ needs.prepare-release.outputs.version }}

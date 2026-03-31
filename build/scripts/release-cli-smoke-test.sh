@@ -4,6 +4,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/linglong-release-smoke.XXXXXX")"
 RENDER_OUTPUT_DIR="$TMP_ROOT/render"
+RELEASE_ASSET_FIXTURE_DIR="$TMP_ROOT/release-assets"
+RELEASE_NOTES_FIXTURE_PATH="$TMP_ROOT/release-notes.md"
+HASHES_OUTPUT_PATH="$RELEASE_ASSET_FIXTURE_DIR/hashes.sha256"
 
 cleanup() {
   rm -rf "$TMP_ROOT"
@@ -43,5 +46,42 @@ grep -q '^Comment=Linglong Store Community Edition$' "$RENDER_OUTPUT_DIR/linglon
 grep -q '<name>玲珑应用商店社区版</name>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 grep -q '<summary>Linglong Store Community Edition</summary>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 grep -q '<launchable type="desktop-id">linglong-store.desktop</launchable>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
+
+mkdir -p "$RELEASE_ASSET_FIXTURE_DIR"
+
+# 构造正式 release 已发布的双架构资产，校验 notes 哈希段落与 hashes.sha256 的最终格式。
+cat > "$RELEASE_NOTES_FIXTURE_PATH" <<'EOF'
+## Release Notes
+
+Smoke test body.
+EOF
+
+printf 'amd64 bundle\n' > "$RELEASE_ASSET_FIXTURE_DIR/linglong-store-${version_output}-linux-amd64.tar.gz"
+printf 'amd64 bundle signature\n' > "$RELEASE_ASSET_FIXTURE_DIR/linglong-store-${version_output}-linux-amd64.tar.gz.asc"
+printf 'arm64 bundle\n' > "$RELEASE_ASSET_FIXTURE_DIR/linglong-store-${version_output}-linux-arm64.tar.gz"
+printf 'arm64 bundle signature\n' > "$RELEASE_ASSET_FIXTURE_DIR/linglong-store-${version_output}-linux-arm64.tar.gz.asc"
+printf 'amd64 deb\n' > "$RELEASE_ASSET_FIXTURE_DIR/linglong-store_${version_output}_amd64.deb"
+printf 'arm64 deb\n' > "$RELEASE_ASSET_FIXTURE_DIR/linglong-store_${version_output}_arm64.deb"
+printf 'amd64 rpm\n' > "$RELEASE_ASSET_FIXTURE_DIR/linglong-store-${version_output}-1.x86_64.rpm"
+printf 'arm64 rpm\n' > "$RELEASE_ASSET_FIXTURE_DIR/linglong-store-${version_output}-1.aarch64.rpm"
+printf 'amd64 appimage\n' > "$RELEASE_ASSET_FIXTURE_DIR/linglong-store-${version_output}-amd64.AppImage"
+printf 'arm64 appimage\n' > "$RELEASE_ASSET_FIXTURE_DIR/linglong-store-${version_output}-arm64.AppImage"
+
+bash build/scripts/append-release-asset-hashes.sh \
+  --assets-dir "$RELEASE_ASSET_FIXTURE_DIR" \
+  --notes-file "$RELEASE_NOTES_FIXTURE_PATH" \
+  --hashes-output "$HASHES_OUTPUT_PATH"
+
+test -f "$HASHES_OUTPUT_PATH"
+notes_hash="$(sha256sum "$HASHES_OUTPUT_PATH" | awk '{print toupper($1)}')"
+amd64_bundle_hash="$(sha256sum "$RELEASE_ASSET_FIXTURE_DIR/linglong-store-${version_output}-linux-amd64.tar.gz" | awk '{print toupper($1)}')"
+
+grep -q '^## SHA256 Hashes of the release artifacts$' "$RELEASE_NOTES_FIXTURE_PATH"
+grep -q '^- hashes.sha256$' "$RELEASE_NOTES_FIXTURE_PATH"
+grep -q "$notes_hash" "$RELEASE_NOTES_FIXTURE_PATH"
+grep -q 'linglong-store-'"$version_output"'-linux-amd64.tar.gz' "$RELEASE_NOTES_FIXTURE_PATH"
+grep -q "$amd64_bundle_hash" "$RELEASE_NOTES_FIXTURE_PATH"
+grep -q 'linglong-store_'"$version_output"'_arm64.deb$' "$HASHES_OUTPUT_PATH"
+grep -q 'linglong-store-'"$version_output"'-1.aarch64.rpm$' "$HASHES_OUTPUT_PATH"
 
 echo "Release CLI smoke test passed."

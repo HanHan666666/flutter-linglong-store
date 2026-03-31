@@ -416,6 +416,13 @@ jobs:
 
           "${cmd[@]}"
 
+      - name: Append nightly artifact hashes to notes
+        run: |
+          bash build/scripts/append-release-asset-hashes.sh \
+            --assets-dir nightly-artifacts \
+            --notes-file nightly-release-notes.md \
+            --hashes-output nightly-artifacts/hashes.sha256
+
       - name: Publish nightly prerelease
         uses: softprops/action-gh-release@v2
         with:

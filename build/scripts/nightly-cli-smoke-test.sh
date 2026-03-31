@@ -8,6 +8,8 @@ RENDER_OUTPUT_DIR="$TMP_ROOT/render"
 STABLE_AUR_OUTPUT_DIR="$TMP_ROOT/stable-aur-render"
 NIGHTLY_AUR_OUTPUT_DIR="$TMP_ROOT/nightly-aur-render"
 OUTPUT_DIR="$TMP_ROOT/output"
+NIGHTLY_ASSET_FIXTURE_DIR="$TMP_ROOT/nightly-assets"
+NIGHTLY_HASHES_OUTPUT_PATH="$NIGHTLY_ASSET_FIXTURE_DIR/hashes.sha256"
 
 cleanup() {
   rm -rf "$TMP_ROOT"
@@ -202,5 +204,31 @@ assert_file_contains "$NOTES_OUTPUT_FIRST_RELEASE" "这是首个 Nightly Release
 
 assert_file_contains "$NOTES_OUTPUT_INVALID_BASELINE" "## Release Notes"
 assert_file_contains "$NOTES_OUTPUT_INVALID_BASELINE" "这是首个 Nightly Release，后续 Nightly 将从上一版 Nightly source commit 自动生成变更日志。"
+
+mkdir -p "$NIGHTLY_ASSET_FIXTURE_DIR"
+
+# 构造 nightly prerelease 的对外发布资产，确保哈希段落和 hashes.sha256 会一起生成。
+printf 'nightly bundle\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-linux-amd64.tar.gz"
+printf 'nightly bundle signature\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-linux-amd64.tar.gz.asc"
+printf 'nightly deb\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-amd64.deb"
+printf 'nightly rpm\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-x86_64.rpm"
+printf 'nightly appimage\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-amd64.AppImage"
+
+bash "$ROOT_DIR/build/scripts/append-release-asset-hashes.sh" \
+  --assets-dir "$NIGHTLY_ASSET_FIXTURE_DIR" \
+  --notes-file "$NOTES_OUTPUT_WITH_HISTORY" \
+  --hashes-output "$NIGHTLY_HASHES_OUTPUT_PATH"
+
+test -f "$NIGHTLY_HASHES_OUTPUT_PATH"
+nightly_hashes_hash="$(sha256sum "$NIGHTLY_HASHES_OUTPUT_PATH" | awk '{print toupper($1)}')"
+nightly_bundle_hash="$(sha256sum "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-linux-amd64.tar.gz" | awk '{print toupper($1)}')"
+
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## SHA256 Hashes of the release artifacts"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- hashes.sha256"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "$nightly_hashes_hash"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "linglong-store-${nightly_label}-linux-amd64.tar.gz"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "$nightly_bundle_hash"
+grep -q 'linglong-store-'"$nightly_label"'-amd64.AppImage$' "$NIGHTLY_HASHES_OUTPUT_PATH"
+grep -q 'linglong-store-'"$nightly_label"'-x86_64.rpm$' "$NIGHTLY_HASHES_OUTPUT_PATH"
 
 echo "Nightly CLI smoke test passed."

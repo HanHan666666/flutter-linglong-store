@@ -18,18 +18,8 @@ Future<void> showScreenshotPreviewLightbox(
     barrierDismissible: true,
     barrierLabel: 'screenshot_preview',
     barrierColor: Colors.black.withValues(alpha: 0.72),
-    transitionDuration: const Duration(milliseconds: 220),
-    transitionBuilder: (ctx, animation, _, child) {
-      return FadeTransition(
-        opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-        child: ScaleTransition(
-          scale: Tween<double>(begin: 0.93, end: 1.0).animate(
-            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-          ),
-          child: child,
-        ),
-      );
-    },
+    // 零动画模式：灯箱瞬切
+    transitionDuration: Duration.zero,
     pageBuilder: (ctx, _, __) {
       return ScreenshotPreviewLightbox(
         screenshots: screenshots,

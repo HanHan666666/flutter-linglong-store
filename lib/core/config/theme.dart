@@ -490,13 +490,13 @@ class AppShadows {
 class AppAnimation {
   AppAnimation._();
 
-  /// 快速动画时长 - 200ms
+  /// 快速动画时长 - 瞬切（全局零动画模式）
   /// 用于: 侧边栏宽度切换、菜单项 hover 背景、分类栏折叠
-  static const Duration fast = Duration(milliseconds: 200);
+  static const Duration fast = Duration.zero;
 
-  /// 标准动画时长 - 300ms
+  /// 标准动画时长 - 瞬切（全局零动画模式）
   /// 用于: 卡片透明度过渡
-  static const Duration normal = Duration(milliseconds: 300);
+  static const Duration normal = Duration.zero;
 
   /// Shimmer 动画时长 - 1500ms
   static const Duration shimmer = Duration(milliseconds: 1500);
@@ -711,9 +711,23 @@ extension AppColorsExtension on BuildContext {
 class AppTheme {
   AppTheme._();
 
+  /// 零动画页面转场构建器
+  static const _noTransitionTheme = PageTransitionsTheme(
+    builders: {
+      TargetPlatform.linux: _NoTransitionBuilder(),
+      TargetPlatform.android: _NoTransitionBuilder(),
+      TargetPlatform.iOS: _NoTransitionBuilder(),
+      TargetPlatform.macOS: _NoTransitionBuilder(),
+      TargetPlatform.windows: _NoTransitionBuilder(),
+      TargetPlatform.fuchsia: _NoTransitionBuilder(),
+    },
+  );
+
   /// 浅色主题
   static ThemeData get lightTheme => ThemeData(
     useMaterial3: true,
+    // 全局禁用页面路由转场动画
+    pageTransitionsTheme: _noTransitionTheme,
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       primary: AppColors.primary,
@@ -907,6 +921,8 @@ class AppTheme {
     const palette = AppColorPalette.dark;
     return ThemeData(
       useMaterial3: true,
+      // 全局禁用页面路由转场动画
+      pageTransitionsTheme: _noTransitionTheme,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         primary: AppColors.primary,
@@ -1076,5 +1092,23 @@ class AppTheme {
         circularTrackColor: palette.cardBackground,
       ),
     );
+  }
+}
+
+/// 零动画页面转场构建器
+///
+/// 所有路由切换瞬切，无 slide/fade 过渡
+class _NoTransitionBuilder extends PageTransitionsBuilder {
+  const _NoTransitionBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return child;
   }
 }

@@ -42,9 +42,9 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
   void initState() {
     super.initState();
 
-    // 初始化动画
+    // 初始化动画（零动画模式：瞬切）
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: Duration.zero,
       vsync: this,
     );
 

@@ -1,12 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:linglong_store/application/providers/app_operation_queue_provider.dart';
-import 'package:linglong_store/application/providers/install_queue_provider.dart';
+import 'package:linglong_store/core/di/providers.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/domain/models/running_app.dart';
+import 'package:linglong_store/domain/repositories/analytics_repository.dart';
 import 'package:linglong_store/domain/repositories/linglong_cli_repository.dart';
 
 class _FakeLinglongCliRepository implements LinglongCliRepository {
@@ -82,6 +84,51 @@ class _FakeLinglongCliRepository implements LinglongCliRepository {
   }
 }
 
+class _FakeAnalyticsRepository implements AnalyticsRepository {
+  const _FakeAnalyticsRepository();
+
+  @override
+  Future<void> reportInstall(
+    String appId,
+    String version, {
+    String? appName,
+  }) async {}
+
+  @override
+  Future<void> reportUninstall(
+    String appId,
+    String version, {
+    String? appName,
+  }) async {}
+
+  @override
+  Future<void> reportVisit({
+    String? arch,
+    String? llVersion,
+    String? osVersion,
+    String? repoName,
+    String? appVersion,
+  }) async {}
+}
+
+Future<ProviderContainer> _createTestContainer(
+  _FakeLinglongCliRepository fakeRepo,
+) async {
+  SharedPreferences.setMockInitialValues({});
+  final prefs = await SharedPreferences.getInstance();
+
+  // 入队链路会读取 locale 与匿名统计相关 Provider，测试需显式注入最小依赖。
+  return ProviderContainer(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      analyticsRepositoryProvider.overrideWithValue(
+        const _FakeAnalyticsRepository(),
+      ),
+      linglongCliRepositoryProvider.overrideWith((ref) => fakeRepo),
+    ],
+  );
+}
+
 void main() {
   setUpAll(() async {
     await AppLogger.init();
@@ -90,11 +137,7 @@ void main() {
   group('AppOperationQueueController', () {
     test('routes update operations to updateApp and records update task kind', () async {
       final fakeRepo = _FakeLinglongCliRepository();
-      final container = ProviderContainer(
-        overrides: [
-          linglongCliRepositoryProvider.overrideWith((ref) => fakeRepo),
-        ],
-      );
+      final container = await _createTestContainer(fakeRepo);
       addTearDown(container.dispose);
 
       container.read(appOperationQueueControllerProvider).enqueueBatchOperations([
@@ -117,11 +160,7 @@ void main() {
 
     test('routes install operations to installApp and records install task kind', () async {
       final fakeRepo = _FakeLinglongCliRepository();
-      final container = ProviderContainer(
-        overrides: [
-          linglongCliRepositoryProvider.overrideWith((ref) => fakeRepo),
-        ],
-      );
+      final container = await _createTestContainer(fakeRepo);
       addTearDown(container.dispose);
 
       container.read(appOperationQueueControllerProvider).enqueueAppOperation(

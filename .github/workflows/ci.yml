@@ -35,3 +35,6 @@ jobs:
       # Packaging smoke tests moved to nightly to keep PR feedback fast.
       - name: Run release CLI smoke test
         run: bash build/scripts/release-cli-smoke-test.sh
+
+      - name: Run nightly CLI smoke test
+        run: bash build/scripts/nightly-cli-smoke-test.sh

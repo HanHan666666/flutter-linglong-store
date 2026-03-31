@@ -9,7 +9,7 @@ class AppConstants {
   static const String appName = '玲珑应用商店社区版';
 
   /// 应用版本
-  static const String appVersion = '3.0.2';
+  static const String appVersion = '3.1.2';
 
   /// 默认仓库
   static const String defaultRepo = 'repo';

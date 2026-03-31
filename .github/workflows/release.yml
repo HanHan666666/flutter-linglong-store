@@ -351,11 +351,11 @@ jobs:
         with:
           name: signed-release-assets
           path: |
-            artifacts/**/*.tar.gz
-            artifacts/**/*.tar.gz.asc
-            artifacts/**/*.deb
-            artifacts/**/*.rpm
-            artifacts/**/*.AppImage
+            artifacts/*.tar.gz
+            artifacts/*.tar.gz.asc
+            artifacts/*.deb
+            artifacts/*.rpm
+            artifacts/*.AppImage
           if-no-files-found: error
 
   finalize-release-state:

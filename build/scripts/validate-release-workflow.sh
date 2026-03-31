@@ -36,6 +36,7 @@ require_grep "append-release-asset-hashes.sh" .github/workflows/release.yml
 require_grep "normalize-release-assets.sh" .github/workflows/release.yml
 require_grep "release-assets/hashes.sha256" .github/workflows/release.yml
 require_grep "release-assets/*" .github/workflows/release.yml
+require_grep "artifacts/*.tar.gz.asc" .github/workflows/release.yml
 require_no_grep "/home/han/flutter" .github/workflows/release.yml
 require_grep "pull_request" .github/workflows/ci.yml
 require_grep "release-cli-smoke-test.sh" .github/workflows/ci.yml

@@ -89,6 +89,7 @@
 - 只有在正式构建与签名成功后，才允许进入独立的 `finalize-release-state` job 推送 release commit 并创建正式 tag
 - `publish-release` 必须依赖 `finalize-release-state`，不要在 tag 尚未落库时抢先创建 GitHub Release
 - release notes 的 `SHA256 Hashes of the release artifacts` 段落只能在 `publish-release` 下载最终签名资产后追加，并与同一份 `hashes.sha256` 一起发布，避免展示未签名产物的旧哈希
+- `sign-release` 上传 `signed-release-assets` 时只能匹配单层 `artifacts/*.tar.gz(.asc)/.deb/.rpm/.AppImage` 文件；不要对已 `merge-multiple` 的下载目录继续使用递归 `**`，否则 `.asc` 可能在 artifact 阶段被漏掉
 - `publish-release` 下载 `signed-release-assets` 后必须先通过 `build/scripts/normalize-release-assets.sh` 规整为单层目录，再交给 `softprops/action-gh-release` 上传；不要直接依赖 artifact 下载后的原始目录层级做 glob 匹配，避免 `*.tar.gz.asc` 因路径结构变化漏传
 
 工具链约束：

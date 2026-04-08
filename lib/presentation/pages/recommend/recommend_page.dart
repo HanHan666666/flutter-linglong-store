@@ -125,6 +125,7 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
     super.build(context);
 
     final state = ref.watch(recommendProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     // 标记已加载数据
     if (state.data != null && !_hasLoadedData) {
@@ -133,9 +134,12 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
 
     _scheduleAutoLoadCheck(state);
 
-    return RefreshIndicator(
-      onRefresh: () => ref.read(recommendProvider.notifier).refresh(),
-      child: _buildBody(state),
+    return Semantics(
+      label: l10n.a11yRecommendPage,
+      child: RefreshIndicator(
+        onRefresh: () => ref.read(recommendProvider.notifier).refresh(),
+        child: _buildBody(state),
+      ),
     );
   }
 
@@ -185,6 +189,8 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
   }
 
   Widget _buildBody(RecommendState state) {
+    final l10n = AppLocalizations.of(context)!;
+    
     // 加载中状态（仅在首次加载且无数据时显示骨架屏）
     if (state.isLoading && state.data == null) {
       return _buildLoadingState();
@@ -226,9 +232,13 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
             ),
           ),
         ),
+        // 推荐列表区添加无障碍语义标注
         SliverPadding(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          sliver: _AppsGrid(apps: state.data!.apps.items),
+          sliver: Semantics(
+            label: l10n.a11yAppListArea,
+            child: _AppsGrid(apps: state.data!.apps.items),
+          ),
         ),
         SliverToBoxAdapter(
           child: _RecommendListFooter(
@@ -414,6 +424,8 @@ class _BannerSectionState extends State<_BannerSection> {
       return const SizedBox.shrink();
     }
 
+    final l10n = AppLocalizations.of(context)!;
+
     return Container(
       height: _recommendBannerHeight,
       margin: const EdgeInsets.all(AppSpacing.lg),
@@ -443,6 +455,66 @@ class _BannerSectionState extends State<_BannerSection> {
                   );
                 },
               ),
+              // 左侧切换按钮
+              if (widget.banners.length > 1)
+                Positioned(
+                  left: 8,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: Semantics(
+                      button: true,
+                      label: l10n.a11yPrevious,
+                      child: SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: Material(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          borderRadius: AppRadius.fullRadius,
+                          child: InkWell(
+                            borderRadius: AppRadius.fullRadius,
+                            onTap: _goToPrevious,
+                            child: const Icon(
+                              Icons.chevron_left,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              // 右侧切换按钮
+              if (widget.banners.length > 1)
+                Positioned(
+                  right: 8,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: Semantics(
+                      button: true,
+                      label: l10n.a11yNext,
+                      child: SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: Material(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          borderRadius: AppRadius.fullRadius,
+                          child: InkWell(
+                            borderRadius: AppRadius.fullRadius,
+                            onTap: _goToNext,
+                            child: const Icon(
+                              Icons.chevron_right,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               Positioned(
                 left: 0,
                 right: 0,
@@ -464,6 +536,29 @@ class _BannerSectionState extends State<_BannerSection> {
           ),
         ),
       ),
+    );
+  }
+
+  /// 切换到上一张轮播图
+  void _goToPrevious() {
+    if (_disposed || !mounted || !_pageController.hasClients) return;
+    final previousIndex =
+        (_currentIndex - 1 + widget.banners.length) % widget.banners.length;
+    _pageController.animateToPage(
+      previousIndex,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  /// 切换到下一张轮播图
+  void _goToNext() {
+    if (_disposed || !mounted || !_pageController.hasClients) return;
+    final nextIndex = (_currentIndex + 1) % widget.banners.length;
+    _pageController.animateToPage(
+      nextIndex,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
     );
   }
 
@@ -617,7 +712,6 @@ class _BannerDetailButton extends StatelessWidget {
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           shape: const StadiumBorder(),
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           visualDensity: VisualDensity.compact,
         ),
         child: Text(
@@ -649,16 +743,21 @@ class _BannerIndicators extends StatelessWidget {
         final isActive = index == currentIndex;
         return GestureDetector(
           onTap: () => onTap?.call(index),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            margin: const EdgeInsets.symmetric(horizontal: 4),
-            width: isActive ? 20 : 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: isActive
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.5),
-              borderRadius: AppRadius.fullRadius,
+          child: Semantics(
+            button: true,
+            label: '${index + 1}',
+            selected: isActive,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              width: isActive ? 20 : 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: isActive
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.5),
+                borderRadius: AppRadius.fullRadius,
+              ),
             ),
           ),
         );

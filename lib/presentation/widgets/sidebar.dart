@@ -165,6 +165,7 @@ class _MenuItemTileState extends State<_MenuItemTile> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final label = widget.item.localizedLabel(l10n);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -172,19 +173,23 @@ class _MenuItemTileState extends State<_MenuItemTile> {
         vertical: AppSpacing.xs / 2,
       ),
       child: Tooltip(
-        message: widget.item.localizedLabel(l10n),
-        child: MouseRegion(
-          onEnter: (_) => setState(() => _isHovered = true),
-          onExit: (_) => setState(() => _isHovered = false),
-          child: GestureDetector(
-            onTap: () => context.go(widget.item.route),
-            child: AnimatedContainer(
-              duration: AppAnimation.fast,
-              // 菜单行高 40px ：适配 16px 菜单文字的桌面可读性密度
-              height: 40,
-              padding: EdgeInsets.symmetric(
-                horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
-              ),
+        message: label,
+        child: Semantics(
+          button: true,
+          label: label,
+          selected: widget.isSelected,
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _isHovered = true),
+            onExit: (_) => setState(() => _isHovered = false),
+            child: GestureDetector(
+              onTap: () => context.go(widget.item.route),
+              child: AnimatedContainer(
+                duration: AppAnimation.fast,
+                // 菜单行高 48px：满足无障碍最小交互尺寸
+                height: 48,
+                padding: EdgeInsets.symmetric(
+                  horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
+                ),
               decoration: BoxDecoration(
                 // 默认态使用目标色的透明版本，避免 Colors.transparent（透明黑）
                 // 在动画插值时产生深色闪烁
@@ -253,6 +258,7 @@ class _MenuItemTileState extends State<_MenuItemTile> {
           ),
         ),
       ),
+    ),
     );
   }
 }

@@ -415,6 +415,7 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final rowColor = widget.isMenuSelected
         ? context.appColors.primaryLight
@@ -427,9 +428,14 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
               ? theme.colorScheme.outline
               : theme.colorScheme.outlineVariant);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: MouseRegion(
+    return Semantics(
+      label: l10n.a11yProcessItem(
+        widget.app.name,
+        widget.app.pid?.toString() ?? '',
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        child: MouseRegion(
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: GestureDetector(
@@ -550,6 +556,7 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
           ),
         ),
       ),
+    ),
     );
   }
 }

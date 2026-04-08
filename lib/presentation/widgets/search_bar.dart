@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/accessibility/accessibility.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 
 /// 搜索栏组件
@@ -193,8 +194,7 @@ class _SearchBarState extends ConsumerState<SearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final hintText = widget.hintText ?? (l10n?.searchPlaceholder ?? '搜索应用...');
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -210,7 +210,7 @@ class _SearchBarState extends ConsumerState<SearchBar> {
             onSubmitted: _performSearch,
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
-              hintText: hintText,
+              hintText: l10n.a11ySearchInputHint,
               prefixIcon: const Icon(Icons.search),
               suffixIcon: _inputText.isNotEmpty
                   ? IconButton(
@@ -231,13 +231,13 @@ class _SearchBarState extends ConsumerState<SearchBar> {
 
         // 搜索建议列表
         if (_showSuggestionList && _filteredSuggestions.isNotEmpty)
-          _buildSuggestionsList(context),
+          _buildSuggestionsList(context, l10n),
       ],
     );
   }
 
   /// 构建建议列表
-  Widget _buildSuggestionsList(BuildContext context) {
+  Widget _buildSuggestionsList(BuildContext context, AppLocalizations l10n) {
     return Container(
       margin: const EdgeInsets.only(top: 4),
       decoration: BoxDecoration(
@@ -257,9 +257,13 @@ class _SearchBarState extends ConsumerState<SearchBar> {
         itemCount: _filteredSuggestions.length,
         itemBuilder: (context, index) {
           final suggestion = _filteredSuggestions[index];
-          return ListTile(
-            title: Text(suggestion),
+          // 使用建议文本作为语义标签，屏幕阅读器会朗读"搜索建议: xxx"
+          return A11yListItem(
+            semanticsLabel: '${l10n.a11ySearchBox}: $suggestion',
             onTap: () => _selectSuggestion(suggestion),
+            child: ListTile(
+              title: Text(suggestion),
+            ),
           );
         },
       ),

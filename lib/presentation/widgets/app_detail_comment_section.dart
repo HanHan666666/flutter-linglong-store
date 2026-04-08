@@ -202,10 +202,12 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
                 if (comment.createTime?.isNotEmpty ?? false) comment.createTime!,
               ];
 
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
+              return Semantics(
+                label: metaItems.join(', '),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: theme.colorScheme.outlineVariant),
                 ),
@@ -252,6 +254,7 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
                     ),
                   ],
                 ),
+              ),
               );
             },
           ),

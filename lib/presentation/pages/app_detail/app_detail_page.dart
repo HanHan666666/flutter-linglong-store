@@ -294,13 +294,15 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         .map((app) => app.version)
         .toSet();
     final hasInstalledInstance = installedVersions.isNotEmpty;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          detailState.app?.name ??
-              AppLocalizations.of(context)?.appDetailTitle ??
-              'App Details',
+        title: Semantics(
+          label: l10n.a11yAppDetailPage,
+          child: Text(
+            detailState.app?.name ?? l10n.appDetailTitle,
+          ),
         ),
       ),
       body: _buildBody(
@@ -392,30 +394,34 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     BuildContext context,
     AppDetailState detailState,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final versionOptions = _buildCommentVersionOptions(detailState);
     final selectedVersion = _resolveSelectedCommentVersion(
       detailState,
       versionOptions,
     );
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: AppDetailCommentSection(
-        comments: detailState.comments,
-        versionOptions: versionOptions,
-        selectedVersion: selectedVersion,
-        isLoading: detailState.isLoadingComments,
-        isSubmitting: detailState.isSubmittingComment,
-        errorMessage: detailState.commentsError,
-        onVersionChanged: (value) {
-          setState(() {
-            _selectedCommentVersion = value;
-          });
-        },
-        onRetry: () {
-          ref.read(appDetailProvider(widget.appId).notifier).retryComments();
-        },
-        onSubmit: (remark, version) => _submitComment(context, remark, version),
+    return Semantics(
+      label: l10n.a11yCommentSection,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: AppDetailCommentSection(
+          comments: detailState.comments,
+          versionOptions: versionOptions,
+          selectedVersion: selectedVersion,
+          isLoading: detailState.isLoadingComments,
+          isSubmitting: detailState.isSubmittingComment,
+          errorMessage: detailState.commentsError,
+          onVersionChanged: (value) {
+            setState(() {
+              _selectedCommentVersion = value;
+            });
+          },
+          onRetry: () {
+            ref.read(appDetailProvider(widget.appId).notifier).retryComments();
+          },
+          onSubmit: (remark, version) => _submitComment(context, remark, version),
+        ),
       ),
     );
   }
@@ -577,76 +583,79 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
   /// 构建截图轮播区（使用真实截图数据）
   Widget _buildScreenshots(BuildContext context, AppDetailState detailState) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final screenshots = detailState.screenshots;
 
     if (screenshots.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              l10n?.screenShots ?? '屏幕截图',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+    return Semantics(
+      label: l10n.a11yScreenshotArea,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Text(
+                l10n.screenShots,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 180,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: screenshots.length,
-              itemBuilder: (context, index) {
-                final screenshot = screenshots[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: GestureDetector(
-                    onTap: () => _showScreenshotPreview(
-                      context,
-                      detailState.screenshotUrls,
-                      index,
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        screenshot.screenshotUrl,
-                        width: 280,
-                        height: 180,
-                        fit: BoxFit.cover,
-                        // 限制解码尺寸，避免原图 1920x1080 全量解码到内存
-                        cacheWidth:
-                            (280 * MediaQuery.devicePixelRatioOf(context))
-                                .toInt(),
-                        cacheHeight:
-                            (180 * MediaQuery.devicePixelRatioOf(context))
-                                .toInt(),
-                        errorBuilder: (_, __, ___) => Container(
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 180,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                itemCount: screenshots.length,
+                itemBuilder: (context, index) {
+                  final screenshot = screenshots[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: GestureDetector(
+                      onTap: () => _showScreenshotPreview(
+                        context,
+                        detailState.screenshotUrls,
+                        index,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          screenshot.screenshotUrl,
                           width: 280,
                           height: 180,
-                          color: Colors.grey[300],
-                          child: const Icon(
-                            Icons.image,
-                            size: 48,
-                            color: Colors.grey,
+                          fit: BoxFit.cover,
+                          // 限制解码尺寸，避免原图 1920x1080 全量解码到内存
+                          cacheWidth:
+                              (280 * MediaQuery.devicePixelRatioOf(context))
+                                  .toInt(),
+                          cacheHeight:
+                              (180 * MediaQuery.devicePixelRatioOf(context))
+                                  .toInt(),
+                          errorBuilder: (_, __, ___) => Container(
+                            width: 280,
+                            height: 180,
+                            color: Colors.grey[300],
+                            child: const Icon(
+                              Icons.image,
+                              size: 48,
+                              color: Colors.grey,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

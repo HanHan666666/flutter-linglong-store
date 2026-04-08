@@ -152,20 +152,23 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
   }
 
   Widget _buildHeader(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       alignment: Alignment.centerLeft,
       child: Row(
         children: [
-          _TabTitle(
-            label: l10n?.myApps ?? '我的应用',
-            isActive: _activeTab == _MyAppsTab.app,
-            onTap: () => _setActiveTab(_MyAppsTab.app),
+          Semantics(
+            label: l10n.a11yMyAppsPage,
+            child: _TabTitle(
+              label: l10n.myApps,
+              isActive: _activeTab == _MyAppsTab.app,
+              onTap: () => _setActiveTab(_MyAppsTab.app),
+            ),
           ),
           const SizedBox(width: 24),
           _TabTitle(
-            label: l10n?.linglongProcess ?? '玲珑进程',
+            label: l10n.linglongProcess,
             isActive: _activeTab == _MyAppsTab.process,
             onTap: () => _setActiveTab(_MyAppsTab.process),
           ),
@@ -256,45 +259,48 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: () => ref.read(installedAppsProvider.notifier).refresh(),
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: filteredApps.length,
-        itemBuilder: (context, index) {
-          final app = filteredApps[index];
-          final cardState = cardStateIndex.resolve(
-            appId: app.appId,
-            latestVersion: app.version,
-          );
-          final l10n = AppLocalizations.of(context);
-          return AppCard(
-            appId: app.appId,
-            name: app.name,
-            description: app.description ?? 'v${app.version}',
-            iconUrl: app.icon,
-            buttonState: cardState.buttonState,
-            progress: cardState.progress,
-            isInstalling: cardState.isInstalling,
-            onPrimaryPressed: () => handleAppCardPrimaryAction(
-              context: context,
-              ref: ref,
-              buttonState: cardState.buttonState,
+    final l10n = AppLocalizations.of(context)!;
+    return Semantics(
+      label: l10n.a11yAppListArea,
+      child: RefreshIndicator(
+        onRefresh: () => ref.read(installedAppsProvider.notifier).refresh(),
+        child: ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          itemCount: filteredApps.length,
+          itemBuilder: (context, index) {
+            final app = filteredApps[index];
+            final cardState = cardStateIndex.resolve(
               appId: app.appId,
-              appName: app.name,
-              icon: app.icon,
-              version: app.version,
-            ),
-            menuActions: [
-              AppCardMenuAction(
-                value: 'uninstall',
-                label: l10n?.uninstall ?? '卸载',
-                icon: Icons.delete_outline,
-                onSelected: () => _uninstallApp(app),
+              latestVersion: app.version,
+            );
+            return AppCard(
+              appId: app.appId,
+              name: app.name,
+              description: app.description ?? 'v${app.version}',
+              iconUrl: app.icon,
+              buttonState: cardState.buttonState,
+              progress: cardState.progress,
+              isInstalling: cardState.isInstalling,
+              onPrimaryPressed: () => handleAppCardPrimaryAction(
+                context: context,
+                ref: ref,
+                buttonState: cardState.buttonState,
+                appId: app.appId,
+                appName: app.name,
+                icon: app.icon,
+                version: app.version,
               ),
-            ],
-          );
-        },
+              menuActions: [
+                AppCardMenuAction(
+                  value: 'uninstall',
+                  label: l10n.uninstall,
+                  icon: Icons.delete_outline,
+                  onSelected: () => _uninstallApp(app),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

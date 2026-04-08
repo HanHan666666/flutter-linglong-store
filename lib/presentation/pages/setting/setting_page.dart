@@ -205,7 +205,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(settingProvider);
     final globalState = ref.watch(globalAppProvider);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -213,31 +213,37 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 语言设置
-          _buildSectionTitle(context, l10n?.languageSettings ?? '语言设置'),
+          Semantics(
+            label: l10n.a11ySettingsPage,
+            child: _buildSectionTitle(context, l10n.languageSettings),
+          ),
           _buildLanguageSection(context, state),
 
           const SizedBox(height: 24),
 
           // 主题设置
-          _buildSectionTitle(context, l10n?.themeSettings ?? '主题设置'),
+          _buildSectionTitle(context, l10n.themeSettings),
           _buildThemeSection(context, state),
 
           const SizedBox(height: 24),
 
           // 缓存管理
-          _buildSectionTitle(context, l10n?.cacheManagement ?? '缓存管理'),
+          _buildSectionTitle(context, l10n.cacheManagement),
           _buildCacheSection(context, state),
 
           const SizedBox(height: 24),
 
           // 商店选项
-          _buildSectionTitle(context, l10n?.storeOptions ?? '商店选项'),
+          _buildSectionTitle(context, l10n.storeOptions),
           _buildStoreOptionsSection(context, state),
 
           const SizedBox(height: 24),
 
           // 关于
-          _buildSectionTitle(context, l10n?.about ?? '关于'),
+          Semantics(
+            label: l10n.about,
+            child: _buildSectionTitle(context, l10n.about),
+          ),
           _buildAboutSection(context, state, globalState),
         ],
       ),

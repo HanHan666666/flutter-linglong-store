@@ -374,28 +374,34 @@ class _WindowButtonState extends State<_WindowButton> {
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: widget.tooltip,
-      waitDuration: const Duration(milliseconds: 500),
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
-        child: GestureDetector(
-          onTap: widget.onPressed,
-          child: Container(
-            width: 46,
-            height: CustomTitleBar.height,
-            color: _isHovered
-                ? (widget.isClose
-                      ? AppColors.error
-                      : context.appColors.surfaceContainerLow)
-                : Colors.transparent,
-            child: Icon(
-              widget.icon,
-              size: AppSpacing.windowControlIconSize,
-              color: _isHovered && widget.isClose
-                  ? AppColors.textLight
-                  : context.appColors.textSecondary,
+    return Semantics(
+      button: true,
+      label: widget.tooltip,
+      child: Tooltip(
+        message: widget.tooltip,
+        waitDuration: const Duration(milliseconds: 500),
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          child: GestureDetector(
+            onTap: widget.onPressed,
+            child: Container(
+              width: 46,
+              height: CustomTitleBar.height,
+              color: _isHovered
+                  ? (widget.isClose
+                        ? AppColors.error
+                        : context.appColors.surfaceContainerLow)
+                  : Colors.transparent,
+              child: ExcludeSemantics(
+                child: Icon(
+                  widget.icon,
+                  size: AppSpacing.windowControlIconSize,
+                  color: _isHovered && widget.isClose
+                      ? AppColors.textLight
+                      : context.appColors.textSecondary,
+                ),
+              ),
             ),
           ),
         ),

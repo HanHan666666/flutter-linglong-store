@@ -300,6 +300,7 @@ class _UpdatableAppItem extends ConsumerWidget {
 
                 // 更新按鈕
                 InstallButton(
+                  appName: app.name,
                   state: buttonState,
                   progress: progress,
                   // 正在安装/更新时显示实时网络速度

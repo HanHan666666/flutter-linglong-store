@@ -508,6 +508,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     InstallButton(
+                      appName: app.name,
                       state: buttonState,
                       progress: progress,
                       // 下载中显示实时网络速度

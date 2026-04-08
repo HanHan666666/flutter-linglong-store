@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../../core/accessibility/accessibility.dart';
 import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../domain/models/install_task.dart';
@@ -86,52 +87,64 @@ class _AppCardState extends State<AppCard> {
       return _buildSkeletonCard(context);
     }
 
+    final l10n = AppLocalizations.of(context)!;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: widget.onTap,
-          borderRadius: AppRadius.smRadius,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            decoration: BoxDecoration(
-              color: context.appColors.surface,
-              borderRadius: AppRadius.smRadius,
-              boxShadow: _isHovered
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+      child: A11yCard(
+        semanticsLabel: l10n.a11yAppCard(
+          widget.name,
+          '', // version 信息在卡片中不展示
+          _resolveStatusText(l10n, widget.buttonState),
+        ),
+        onTap: widget.onTap,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: AppRadius.smRadius,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              decoration: BoxDecoration(
+                color: context.appColors.surface,
+                borderRadius: AppRadius.smRadius,
+                boxShadow: _isHovered
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                child: Row(
+                  children: [
+                    if (widget.rank != null) ...[
+                      ExcludeSemantics(child: _RankBadge(rank: widget.rank!)),
+                      const SizedBox(width: AppSpacing.sm),
+                    ],
+                    ExcludeSemantics(
+                      child: AppIcon(
+                        iconUrl: widget.iconUrl,
+                        size: 48,
+                        borderRadius: 8,
+                        appName: widget.name,
                       ),
-                    ]
-                  : null,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              child: Row(
-                children: [
-                  if (widget.rank != null) ...[
-                    _RankBadge(rank: widget.rank!),
+                    ),
                     const SizedBox(width: AppSpacing.sm),
+                    Expanded(child: _buildInfo(context)),
+                    const SizedBox(width: AppSpacing.sm),
+                    _buildPrimaryButton(context),
+                    if (widget.menuActions.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      _buildOverflowMenu(),
+                    ],
                   ],
-                  AppIcon(
-                    iconUrl: widget.iconUrl,
-                    size: 48,
-                    borderRadius: 8,
-                    appName: widget.name,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(child: _buildInfo(context)),
-                  const SizedBox(width: AppSpacing.sm),
-                  _buildPrimaryButton(context),
-                  if (widget.menuActions.isNotEmpty) ...[
-                    const SizedBox(width: 8),
-                    _buildOverflowMenu(),
-                  ],
-                ],
+                ),
               ),
             ),
           ),
@@ -232,67 +245,93 @@ class _AppCardState extends State<AppCard> {
   }
 
   Widget _buildPrimaryButton(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isLoading = widget.buttonState == InstallButtonState.installing;
     final isPending = widget.buttonState == InstallButtonState.pending;
     final label = _resolveLabel(l10n, widget.buttonState, isLoading);
 
+    // 构建语义标签
+    final semanticsLabel = switch (widget.buttonState) {
+      InstallButtonState.notInstalled => l10n.a11yInstallApp(widget.name),
+      InstallButtonState.update => l10n.a11yUpdateApp(widget.name),
+      InstallButtonState.installed => l10n.a11yOpenApp(widget.name),
+      InstallButtonState.open => l10n.a11yOpenApp(widget.name),
+      InstallButtonState.installing => l10n.installing,
+      InstallButtonState.pending => l10n.waitingForInstall,
+      InstallButtonState.uninstall => l10n.a11yUninstallApp(widget.name),
+    };
+
+    // 安装中/排队中时按钮禁用
+    final isEnabled = !isLoading && !isPending;
+
     if (widget.buttonState == InstallButtonState.open ||
         widget.buttonState == InstallButtonState.installed) {
-      return SizedBox(
-        height: 28,
-        child: OutlinedButton(
-          onPressed: widget.onPrimaryPressed,
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size(56, 28),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
-            backgroundColor: context.appColors.openButtonBackground,
-            foregroundColor: context.appColors.openButtonText,
-            side: BorderSide(color: context.appColors.openButtonBorder),
-            shape: const StadiumBorder(),
+      return A11yButton(
+        semanticsLabel: semanticsLabel,
+        onTap: widget.onPrimaryPressed ?? () {},
+        enabled: isEnabled,
+        child: SizedBox(
+          height: 28,
+          child: OutlinedButton(
+            onPressed: isEnabled ? widget.onPrimaryPressed : null,
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(56, 28),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+              backgroundColor: context.appColors.openButtonBackground,
+              foregroundColor: context.appColors.openButtonText,
+              side: BorderSide(color: context.appColors.openButtonBorder),
+              shape: const StadiumBorder(),
+            ),
+            child: Text(label),
           ),
-          child: Text(label),
         ),
       );
     }
 
-    return SizedBox(
-      height: 28,
-      child: FilledButton(
-        onPressed: isLoading || isPending ? null : widget.onPrimaryPressed,
-        style: FilledButton.styleFrom(
-          minimumSize: const Size(56, 28),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          visualDensity: VisualDensity.compact,
-          shape: const StadiumBorder(),
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.65),
-          disabledForegroundColor: Colors.white,
-        ),
-        child: isLoading
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 12,
-                    height: 12,
-                    child: CircularProgressIndicator(
-                      value: widget.progress > 0 ? widget.progress : null,
-                      strokeWidth: 2,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Colors.white,
+    return A11yButton(
+      semanticsLabel: semanticsLabel,
+      onTap: widget.onPrimaryPressed ?? () {},
+      enabled: isEnabled,
+      child: SizedBox(
+        height: 28,
+        child: FilledButton(
+          onPressed: isEnabled ? widget.onPrimaryPressed : null,
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(56, 28),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            shape: const StadiumBorder(),
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.65),
+            disabledForegroundColor: Colors.white,
+          ),
+          child: isLoading
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ExcludeSemantics(
+                      child: SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          value: widget.progress > 0 ? widget.progress : null,
+                          strokeWidth: 2,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(label),
-                ],
-              )
-            : Text(label),
+                    const SizedBox(width: 6),
+                    Text(label),
+                  ],
+                )
+              : Text(label),
+        ),
       ),
     );
   }
@@ -352,6 +391,22 @@ class _AppCardState extends State<AppCard> {
       InstallButtonState.installing => l10n?.installing ?? '安装中',
       InstallButtonState.pending => l10n?.waitingForInstall ?? '等待安装',
       InstallButtonState.uninstall => l10n?.uninstall ?? '卸载',
+    };
+  }
+
+  /// 解析按钮状态对应的无障碍状态文本。
+  String _resolveStatusText(
+    AppLocalizations l10n,
+    InstallButtonState state,
+  ) {
+    return switch (state) {
+      InstallButtonState.notInstalled => l10n.a11yStatusNotInstalled,
+      InstallButtonState.installing ||
+      InstallButtonState.pending => l10n.installing,
+      InstallButtonState.installed => l10n.a11yStatusInstalled,
+      InstallButtonState.update => l10n.a11yStatusUpdatable,
+      InstallButtonState.open => l10n.a11yStatusInstalled,
+      InstallButtonState.uninstall => l10n.a11yStatusNotInstalled,
     };
   }
 }

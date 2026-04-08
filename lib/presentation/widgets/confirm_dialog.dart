@@ -223,14 +223,22 @@ class ConfirmDialog extends StatelessWidget {
       content: content ?? (message != null ? Text(message!) : null),
       actions: [
         if (showCancelButton)
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(false);
-              onCancel?.call();
-            },
-            child: Text(defaultCancelText),
+          Semantics(
+            button: true,
+            label: l10n.cancel,
+            child: TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+                onCancel?.call();
+              },
+              child: Text(defaultCancelText),
+            ),
           ),
-        _buildConfirmButton(context, defaultConfirmText),
+        Semantics(
+          button: true,
+          label: l10n.confirm,
+          child: _buildConfirmButton(context, defaultConfirmText),
+        ),
       ],
     );
   }

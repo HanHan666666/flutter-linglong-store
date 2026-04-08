@@ -268,33 +268,36 @@ class _CategoryChipState extends State<_CategoryChip> {
         ? (isDark ? const Color(0xFF353535) : Colors.white)
         : (isDark ? const Color(0xFF2E2E2E) : const Color(0xFFFDFDFE));
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: AppAnimation.fast,
-        curve: AppAnimation.ease,
-        transform: Matrix4.translationValues(0, _isHovered ? -2 : 0, 0),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: AppRadius.fullRadius,
-          border: Border.all(color: borderColor),
-          boxShadow: AppShadows.none,
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
+    return Semantics(
+      selected: isSelected,
+      label: widget.label,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: AnimatedContainer(
+          duration: AppAnimation.fast,
+          curve: AppAnimation.ease,
+          transform: Matrix4.translationValues(0, _isHovered ? -2 : 0, 0),
+          decoration: BoxDecoration(
+            color: backgroundColor,
             borderRadius: AppRadius.fullRadius,
-            onTap: widget.onTap,
-            hoverColor: Colors.transparent,
-            splashColor: const Color(0x14000000),
-            highlightColor: Colors.transparent,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minWidth: showBadge ? 108 : 92,
-                minHeight: 36,
-              ),
+            border: Border.all(color: borderColor),
+            boxShadow: AppShadows.none,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: AppRadius.fullRadius,
+              onTap: widget.onTap,
+              hoverColor: Colors.transparent,
+              splashColor: const Color(0x14000000),
+              highlightColor: Colors.transparent,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: showBadge ? 108 : 92,
+                  minHeight: 48,
+                ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -364,6 +367,7 @@ class _CategoryChipState extends State<_CategoryChip> {
           ),
         ),
       ),
+    ),
     );
   }
 }

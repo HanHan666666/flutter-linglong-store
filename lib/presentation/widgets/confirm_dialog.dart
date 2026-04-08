@@ -225,7 +225,7 @@ class ConfirmDialog extends StatelessWidget {
         if (showCancelButton)
           Semantics(
             button: true,
-            label: l10n.cancel,
+            label: l10n?.cancel ?? '取消',
             child: TextButton(
               onPressed: () {
                 Navigator.of(context).pop(false);
@@ -236,7 +236,7 @@ class ConfirmDialog extends StatelessWidget {
           ),
         Semantics(
           button: true,
-          label: l10n.confirm,
+          label: l10n?.confirm ?? '确认',
           child: _buildConfirmButton(context, defaultConfirmText),
         ),
       ],

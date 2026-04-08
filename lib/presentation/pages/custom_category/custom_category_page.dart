@@ -9,6 +9,7 @@ import '../../../core/config/page_visibility.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/config/visibility_aware_mixin.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/recommend_models.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/widgets.dart';
@@ -78,20 +79,21 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final l10n = AppLocalizations.of(context)!;
 
     final state = ref.watch(customCategoryProvider(widget.code));
 
     return RefreshIndicator(
       onRefresh: () =>
           ref.read(customCategoryProvider(widget.code).notifier).refresh(),
-      child: _buildBody(state),
+      child: _buildBody(state, l10n),
     );
   }
 
-  Widget _buildBody(CustomCategoryState state) {
+  Widget _buildBody(CustomCategoryState state, AppLocalizations l10n) {
     // 加载中状态
     if (state.isLoading && state.data == null) {
-      return _buildLoadingState();
+      return _buildLoadingState(l10n);
     }
 
     // 错误状态
@@ -109,57 +111,63 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
     }
 
     // 正常显示
-    return CustomScrollView(
-      controller: _scrollController,
-      slivers: [
-        // 标题栏
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: _CategoryHeaderDelegate(
-            categoryName: state.data!.categoryInfo.name,
-            appCount: state.data!.categoryInfo.appCount,
+    return Semantics(
+      label: l10n.a11yAppListArea,
+      child: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          // 标题栏
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _CategoryHeaderDelegate(
+              categoryName: state.data!.categoryInfo.name,
+              appCount: state.data!.categoryInfo.appCount,
+            ),
           ),
-        ),
 
-        // 应用卡片网格
-        SliverPadding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          sliver: _AppsGrid(
-            apps: state.data!.apps.items,
-            isLoadingMore: state.isLoadingMore,
-            hasMore: state.data!.apps.hasMore,
+          // 应用卡片网格
+          SliverPadding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            sliver: _AppsGrid(
+              apps: state.data!.apps.items,
+              isLoadingMore: state.isLoadingMore,
+              hasMore: state.data!.apps.hasMore,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildLoadingState() {
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Shimmer.fromColors(
-          baseColor: context.appColors.skeletonBackground,
-          highlightColor: context.appColors.skeletonHighlight,
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 400,
-              mainAxisSpacing: AppSpacing.sm,
-              crossAxisSpacing: AppSpacing.sm,
-              childAspectRatio: 3.5,
+  Widget _buildLoadingState(AppLocalizations l10n) {
+    return Semantics(
+      label: l10n.a11yAppListArea,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Shimmer.fromColors(
+            baseColor: context.appColors.skeletonBackground,
+            highlightColor: context.appColors.skeletonHighlight,
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 400,
+                mainAxisSpacing: AppSpacing.sm,
+                crossAxisSpacing: AppSpacing.sm,
+                childAspectRatio: 3.5,
+              ),
+              itemCount: 12,
+              itemBuilder: (_, __) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: AppRadius.smRadius,
+                  ),
+                );
+              },
             ),
-            itemCount: 12,
-            itemBuilder: (_, __) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: AppRadius.smRadius,
-                ),
-              );
-            },
           ),
         ),
       ),

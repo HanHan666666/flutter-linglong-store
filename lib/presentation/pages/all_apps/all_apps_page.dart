@@ -9,6 +9,7 @@ import '../../../core/config/page_visibility.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/config/visibility_aware_mixin.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/recommend_models.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/widgets.dart';
@@ -70,19 +71,20 @@ class _AllAppsPageState extends ConsumerState<AllAppsPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final l10n = AppLocalizations.of(context)!;
 
     final state = ref.watch(allAppsProvider);
 
     return RefreshIndicator(
       onRefresh: () => ref.read(allAppsProvider.notifier).refresh(),
-      child: _buildBody(state),
+      child: _buildBody(state, l10n),
     );
   }
 
-  Widget _buildBody(AllAppsState state) {
+  Widget _buildBody(AllAppsState state, AppLocalizations l10n) {
     // 加载中状态
     if (state.isLoading && state.data == null) {
-      return _buildLoadingState();
+      return _buildLoadingState(l10n);
     }
 
     // 错误状态
@@ -99,47 +101,53 @@ class _AllAppsPageState extends ConsumerState<AllAppsPage>
     }
 
     // 正常显示
-    return CustomScrollView(
-      controller: _scrollController,
-      slivers: [
-        // 分类筛选栏
-        CategoryFilterSection(
-          categories: state.data!.categories,
-          selectedIndex: state.selectedCategoryIndex,
-          onSelected: (index) {
-            ref.read(allAppsProvider.notifier).selectCategory(index);
-          },
-          showCount: true,
-          isExpanded: _isCategoryExpanded,
-          onToggleExpand: () => setState(() {
-            _isCategoryExpanded = !_isCategoryExpanded;
-          }),
-        ),
-
-        // 应用卡片网格
-        SliverPadding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          sliver: _AppsGrid(
-            apps: state.data!.apps.items,
-            isLoadingMore: state.isLoadingMore,
-            hasMore: state.data!.apps.hasMore,
+    return Semantics(
+      label: l10n.a11yAppListArea,
+      child: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          // 分类筛选栏
+          CategoryFilterSection(
+            categories: state.data!.categories,
+            selectedIndex: state.selectedCategoryIndex,
+            onSelected: (index) {
+              ref.read(allAppsProvider.notifier).selectCategory(index);
+            },
+            showCount: true,
+            isExpanded: _isCategoryExpanded,
+            onToggleExpand: () => setState(() {
+              _isCategoryExpanded = !_isCategoryExpanded;
+            }),
           ),
-        ),
-      ],
+
+          // 应用卡片网格
+          SliverPadding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            sliver: _AppsGrid(
+              apps: state.data!.apps.items,
+              isLoadingMore: state.isLoadingMore,
+              hasMore: state.data!.apps.hasMore,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildLoadingState() {
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: Column(
-        children: [
-          // 分类骨架屏
-          const CategoryFilterSkeleton(itemCount: 8, chipWidth: 96),
-          const SizedBox(height: AppSpacing.lg),
-          // 应用网格骨架屏
-          _buildAppsSkeleton(),
-        ],
+  Widget _buildLoadingState(AppLocalizations l10n) {
+    return Semantics(
+      label: l10n.a11yAppListArea,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            // 分类骨架屏
+            const CategoryFilterSkeleton(itemCount: 8, chipWidth: 96),
+            const SizedBox(height: AppSpacing.lg),
+            // 应用网格骨架屏
+            _buildAppsSkeleton(),
+          ],
+        ),
       ),
     );
   }

@@ -9,6 +9,7 @@ import '../../../core/config/page_visibility.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/config/visibility_aware_mixin.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/ranking_models.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/widgets.dart';
@@ -139,9 +140,11 @@ class _RankingTabContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
     // 加载中状态
     if (state.isLoading && state.data == null) {
-      return _buildLoadingState(context);
+      return _buildLoadingState(context, l10n);
     }
 
     // 错误状态
@@ -160,36 +163,42 @@ class _RankingTabContent extends ConsumerWidget {
     // 正常显示
     return RefreshIndicator(
       onRefresh: () => ref.read(rankingProvider.notifier).refresh(),
-      child: _AppsGrid(apps: state.data!.apps),
+      child: Semantics(
+        label: l10n.a11yAppListArea,
+        child: _AppsGrid(apps: state.data!.apps),
+      ),
     );
   }
 
-  Widget _buildLoadingState(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Shimmer.fromColors(
-          baseColor: context.appColors.skeletonBackground,
-          highlightColor: context.appColors.skeletonHighlight,
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 400,
-              mainAxisSpacing: AppSpacing.sm,
-              crossAxisSpacing: AppSpacing.sm,
-              childAspectRatio: 3.5,
+  Widget _buildLoadingState(BuildContext context, AppLocalizations l10n) {
+    return Semantics(
+      label: l10n.a11yAppListArea,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Shimmer.fromColors(
+            baseColor: context.appColors.skeletonBackground,
+            highlightColor: context.appColors.skeletonHighlight,
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 400,
+                mainAxisSpacing: AppSpacing.sm,
+                crossAxisSpacing: AppSpacing.sm,
+                childAspectRatio: 3.5,
+              ),
+              itemCount: 8,
+              itemBuilder: (_, __) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: AppRadius.smRadius,
+                  ),
+                );
+              },
             ),
-            itemCount: 8,
-            itemBuilder: (_, __) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: AppRadius.smRadius,
-                ),
-              );
-            },
           ),
         ),
       ),

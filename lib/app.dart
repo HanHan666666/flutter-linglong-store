@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'application/providers/global_provider.dart';
+import 'core/accessibility/accessibility.dart';
 import 'core/config/routes.dart';
 import 'core/config/theme.dart';
 import 'core/i18n/l10n/app_localizations.dart';
@@ -18,38 +19,42 @@ class LinglongStoreApp extends ConsumerWidget {
     final themeMode = ref.watch(currentThemeModeProvider);
     final router = ref.watch(routerProvider);
 
-    return MaterialApp.router(
-      title: '玲珑应用商店社区版',
-      debugShowCheckedModeBanner: false,
+    return A11yKeyboardHandler(
+      child: MaterialApp.router(
+        title: '玲珑应用商店社区版',
+        debugShowCheckedModeBanner: false,
 
-      // 国际化配置
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+        // 国际化配置
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
 
-      // 语言配置
-      locale: locale,
-      supportedLocales: AppLocalizations.supportedLocales,
+        // 语言配置
+        locale: locale,
+        supportedLocales: AppLocalizations.supportedLocales,
 
-      // 主题配置
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: themeMode,
-      builder: (context, child) {
-        final systemIsDark =
-            MediaQuery.platformBrightnessOf(context) == Brightness.dark;
-        final effectiveIsDark = switch (themeMode) {
-          ThemeMode.system => systemIsDark,
-          ThemeMode.light => false,
-          ThemeMode.dark => true,
-        };
+        // 主题配置
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeMode,
+        builder: (context, child) {
+          final systemIsDark =
+              MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+          final effectiveIsDark = switch (themeMode) {
+            ThemeMode.system => systemIsDark,
+            ThemeMode.light => false,
+            ThemeMode.dark => true,
+          };
 
-        return NativeMenuThemeSync(
-          isDark: effectiveIsDark,
-          child: child ?? const SizedBox.shrink(),
-        );
-      },
+          return NativeMenuThemeSync(
+            isDark: effectiveIsDark,
+            child: A11yFocusScope(
+              child: child ?? const SizedBox.shrink(),
+            ),
+          );
+        },
 
-      // 路由配置
-      routerConfig: router,
+        // 路由配置
+        routerConfig: router,
+      ),
     );
   }
 }

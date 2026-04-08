@@ -391,21 +391,28 @@ class _TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final appColors = context.appColors;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: EdgeInsets.all(featured ? AppSpacing.lg : AppSpacing.md),
-      decoration: BoxDecoration(
-        color: featured
-            ? appColors.primaryLight.withValues(alpha: 0.6)
-            : appColors.cardBackground.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(featured ? 18 : 16),
-        border: Border.all(
-          color: featured ? appColors.primaryLight : appColors.borderSecondary,
-        ),
+    return Semantics(
+      label: l10n.a11yDownloadItem(
+        task.appName,
+        task.progressPercentLabel,
       ),
-      child: Column(
+      value: task.isProcessing ? '${task.progressPercentLabel}' : null,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: EdgeInsets.all(featured ? AppSpacing.lg : AppSpacing.md),
+        decoration: BoxDecoration(
+          color: featured
+              ? appColors.primaryLight.withValues(alpha: 0.6)
+              : appColors.cardBackground.withValues(alpha: 0.7),
+          borderRadius: BorderRadius.circular(featured ? 18 : 16),
+          border: Border.all(
+            color: featured ? appColors.primaryLight : appColors.borderSecondary,
+          ),
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -474,6 +481,7 @@ class _TaskCard extends StatelessWidget {
           ],
         ],
       ),
+    ),
     );
   }
 

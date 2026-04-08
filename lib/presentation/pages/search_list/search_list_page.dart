@@ -196,20 +196,24 @@ class _SearchListPageState extends ConsumerState<SearchListPage> {
   }
 
   Widget _buildLoadingState() {
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          children: [
-            // 加载提示
-            const Padding(
-              padding: EdgeInsets.all(AppSpacing.lg),
-              child: CircularProgressIndicator(),
-            ),
-            // 骨架屏
-            ...List.generate(3, (_) => _buildSkeletonCard()),
-          ],
+    final l10n = AppLocalizations.of(context);
+    return Semantics(
+      label: l10n?.loading ?? '加载中',
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            children: [
+              // 加载提示
+              const Padding(
+                padding: EdgeInsets.all(AppSpacing.lg),
+                child: CircularProgressIndicator(),
+              ),
+              // 骨架屏
+              ...List.generate(3, (_) => _buildSkeletonCard()),
+            ],
+          ),
         ),
       ),
     );

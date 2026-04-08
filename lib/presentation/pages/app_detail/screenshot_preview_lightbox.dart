@@ -216,10 +216,12 @@ class _TitleBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.photo_library_outlined,
-            color: secondaryText,
-            size: 17,
+          ExcludeSemantics(
+            child: Icon(
+              Icons.photo_library_outlined,
+              color: secondaryText,
+              size: 17,
+            ),
           ),
           const SizedBox(width: 8),
           Text(
@@ -279,6 +281,7 @@ class _ImageStage extends StatelessWidget {
     final iconColor = theme.colorScheme.onSurface.withValues(
       alpha: isDark ? 0.24 : 0.32,
     );
+    final l10n = AppLocalizations.of(context);
 
     return Stack(
       children: [
@@ -287,23 +290,28 @@ class _ImageStage extends StatelessWidget {
           itemCount: screenshots.length,
           onPageChanged: onPageChanged,
           itemBuilder: (context, index) {
-            return InteractiveViewer(
-              minScale: 0.5,
-              maxScale: 5.0,
-              child: Center(
-                child: Image.network(
-                  screenshots[index],
-                  fit: BoxFit.contain,
-                  cacheWidth:
-                      (MediaQuery.sizeOf(context).width *
-                              MediaQuery.devicePixelRatioOf(context) *
-                              0.84)
-                          .toInt(),
-                  errorBuilder: (_, __, ___) => Center(
-                    child: Icon(
-                      Icons.broken_image_outlined,
-                      color: iconColor,
-                      size: 64,
+            return Semantics(
+              label: '${l10n?.screenShots ?? '屏幕截图'} ${index + 1}',
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 5.0,
+                child: Center(
+                  child: Image.network(
+                    screenshots[index],
+                    fit: BoxFit.contain,
+                    cacheWidth:
+                        (MediaQuery.sizeOf(context).width *
+                                MediaQuery.devicePixelRatioOf(context) *
+                                0.84)
+                            .toInt(),
+                    errorBuilder: (_, __, ___) => Center(
+                      child: ExcludeSemantics(
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          color: iconColor,
+                          size: 64,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -364,6 +372,7 @@ class _ThumbnailBar extends StatelessWidget {
     final borderColor = isDark ? Colors.white10 : AppColors.borderSecondary;
     final placeholderColor = colors.onSurface.withValues(alpha: isDark ? 0.10 : 0.08);
     final placeholderIconColor = colors.onSurface.withValues(alpha: isDark ? 0.24 : 0.32);
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       key: containerKey,
@@ -378,37 +387,42 @@ class _ThumbnailBar extends StatelessWidget {
         itemCount: screenshots.length,
         itemBuilder: (context, index) {
           final selected = index == currentIndex;
-          return GestureDetector(
-            onTap: () => onTapThumbnail(index),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              margin: const EdgeInsets.only(right: 6),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(5),
-                border: Border.all(
-                  color: selected
-                      ? colors.primary.withValues(alpha: isDark ? 0.88 : 0.72)
-                      : Colors.transparent,
-                  width: 2,
+          return Semantics(
+            label: '${l10n?.screenShots ?? '屏幕截图'} ${index + 1}',
+            child: GestureDetector(
+              onTap: () => onTapThumbnail(index),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                margin: const EdgeInsets.only(right: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(5),
+                  border: Border.all(
+                    color: selected
+                        ? colors.primary.withValues(alpha: isDark ? 0.88 : 0.72)
+                        : Colors.transparent,
+                    width: 2,
+                  ),
                 ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: Image.network(
-                  screenshots[index],
-                  width: 82,
-                  height: 60,
-                  fit: BoxFit.cover,
-                  cacheWidth: 164,
-                  cacheHeight: 120,
-                  errorBuilder: (_, __, ___) => Container(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: Image.network(
+                    screenshots[index],
                     width: 82,
                     height: 60,
-                    color: placeholderColor,
-                    child: Icon(
-                      Icons.image_outlined,
-                      color: placeholderIconColor,
-                      size: 24,
+                    fit: BoxFit.cover,
+                    cacheWidth: 164,
+                    cacheHeight: 120,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 82,
+                      height: 60,
+                      color: placeholderColor,
+                      child: ExcludeSemantics(
+                        child: Icon(
+                          Icons.image_outlined,
+                          color: placeholderIconColor,
+                          size: 24,
+                        ),
+                      ),
                     ),
                   ),
                 ),

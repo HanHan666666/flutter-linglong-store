@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../../core/i18n/l10n/app_localizations.dart';
+
 /// 应用卡片骨架屏组件
 ///
 /// 用于在应用数据加载时显示占位效果
@@ -42,10 +44,15 @@ class LoadingShimmer extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Column(
-      children: List.generate(
-        count,
-        (index) => _buildShimmerItem(context, index),
+    final l10n = AppLocalizations.of(context);
+
+    return Semantics(
+      label: l10n?.loading ?? '加载中',
+      child: Column(
+        children: List.generate(
+          count,
+          (index) => _buildShimmerItem(context, index),
+        ),
       ),
     );
   }

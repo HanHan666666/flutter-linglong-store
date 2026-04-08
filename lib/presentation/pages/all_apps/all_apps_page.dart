@@ -136,7 +136,7 @@ class _AllAppsPageState extends ConsumerState<AllAppsPage>
 
   Widget _buildLoadingState(AppLocalizations l10n) {
     return Semantics(
-      label: l10n.a11yAppListArea,
+      label: l10n.loading,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
@@ -153,29 +153,32 @@ class _AllAppsPageState extends ConsumerState<AllAppsPage>
   }
 
   Widget _buildAppsSkeleton() {
-    return Shimmer.fromColors(
-      baseColor: context.appColors.skeletonBackground,
-      highlightColor: context.appColors.skeletonHighlight,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        child: GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 400,
-            mainAxisSpacing: AppSpacing.sm,
-            crossAxisSpacing: AppSpacing.sm,
-            childAspectRatio: 3.5,
+    return Semantics(
+      label: AppLocalizations.of(context)?.loading ?? '加载中',
+      child: Shimmer.fromColors(
+        baseColor: context.appColors.skeletonBackground,
+        highlightColor: context.appColors.skeletonHighlight,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 400,
+              mainAxisSpacing: AppSpacing.sm,
+              crossAxisSpacing: AppSpacing.sm,
+              childAspectRatio: 3.5,
+            ),
+            itemCount: 12,
+            itemBuilder: (_, __) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: AppRadius.smRadius,
+                ),
+              );
+            },
           ),
-          itemCount: 12,
-          itemBuilder: (_, __) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: AppRadius.smRadius,
-              ),
-            );
-          },
         ),
       ),
     );

@@ -103,15 +103,17 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 图标
-            Icon(
-              defaultIcon,
-              size: iconSize,
-              color:
-                  iconColor ??
-                  Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.color?.withValues(alpha: 0.3),
+            // 图标（装饰性）
+            ExcludeSemantics(
+              child: Icon(
+                defaultIcon,
+                size: iconSize,
+                color:
+                    iconColor ??
+                    Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.color?.withValues(alpha: 0.3),
+              ),
             ),
 
             const SizedBox(height: 16),

@@ -252,16 +252,20 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
   }
 
   Widget _buildLoadingState() {
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: Column(
-        children: [
-          _buildBannerSkeleton(),
-          const SizedBox(height: AppSpacing.lg),
-          _buildTitleSkeleton(),
-          const SizedBox(height: AppSpacing.md),
-          _buildAppsSkeleton(),
-        ],
+    final l10n = AppLocalizations.of(context);
+    return Semantics(
+      label: l10n?.loading ?? '加载中',
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            _buildBannerSkeleton(),
+            const SizedBox(height: AppSpacing.lg),
+            _buildTitleSkeleton(),
+            const SizedBox(height: AppSpacing.md),
+            _buildAppsSkeleton(),
+          ],
+        ),
       ),
     );
   }
@@ -295,29 +299,32 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
   }
 
   Widget _buildAppsSkeleton() {
-    return Shimmer.fromColors(
-      baseColor: context.appColors.skeletonBackground,
-      highlightColor: context.appColors.skeletonHighlight,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        child: GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 400,
-            mainAxisSpacing: AppSpacing.sm,
-            crossAxisSpacing: AppSpacing.sm,
-            childAspectRatio: 3.5,
+    return Semantics(
+      label: AppLocalizations.of(context)?.loading ?? '加载中',
+      child: Shimmer.fromColors(
+        baseColor: context.appColors.skeletonBackground,
+        highlightColor: context.appColors.skeletonHighlight,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 400,
+              mainAxisSpacing: AppSpacing.sm,
+              crossAxisSpacing: AppSpacing.sm,
+              childAspectRatio: 3.5,
+            ),
+            itemCount: 8,
+            itemBuilder: (_, __) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: AppRadius.smRadius,
+                ),
+              );
+            },
           ),
-          itemCount: 8,
-          itemBuilder: (_, __) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: AppRadius.smRadius,
-              ),
-            );
-          },
         ),
       ),
     );

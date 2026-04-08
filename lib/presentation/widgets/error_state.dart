@@ -111,11 +111,13 @@ class ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 错误图标
-            Icon(
-              defaultIcon,
-              size: iconSize,
-              color: defaultIconColor.withValues(alpha: 0.6),
+            // 错误图标（装饰性）
+            ExcludeSemantics(
+              child: Icon(
+                defaultIcon,
+                size: iconSize,
+                color: defaultIconColor.withValues(alpha: 0.6),
+              ),
             ),
 
             const SizedBox(height: 16),

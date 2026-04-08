@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../core/config/theme.dart';
+import '../../core/i18n/l10n/app_localizations.dart';
 import '../../domain/models/recommend_models.dart';
 import 'category_filter_header.dart';
 
@@ -72,29 +73,33 @@ class CategoryFilterSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Shimmer.fromColors(
-      baseColor: context.appColors.skeletonBackground,
-      highlightColor: context.appColors.skeletonHighlight,
-      child: SizedBox(
-        height: 56,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-          itemCount: itemCount,
-          separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-          itemBuilder: (_, __) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-              child: Container(
-                width: chipWidth,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: AppRadius.fullRadius,
+    final l10n = AppLocalizations.of(context);
+    return Semantics(
+      label: l10n?.loading ?? '加载中',
+      child: Shimmer.fromColors(
+        baseColor: context.appColors.skeletonBackground,
+        highlightColor: context.appColors.skeletonHighlight,
+        child: SizedBox(
+          height: 56,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            itemCount: itemCount,
+            separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+            itemBuilder: (_, __) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                child: Container(
+                  width: chipWidth,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: AppRadius.fullRadius,
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

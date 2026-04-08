@@ -141,32 +141,35 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
 
   Widget _buildLoadingState(AppLocalizations l10n) {
     return Semantics(
-      label: l10n.a11yAppListArea,
+      label: l10n.loading,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Shimmer.fromColors(
-            baseColor: context.appColors.skeletonBackground,
-            highlightColor: context.appColors.skeletonHighlight,
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 400,
-                mainAxisSpacing: AppSpacing.sm,
-                crossAxisSpacing: AppSpacing.sm,
-                childAspectRatio: 3.5,
+          child: Semantics(
+            label: l10n.loading,
+            child: Shimmer.fromColors(
+              baseColor: context.appColors.skeletonBackground,
+              highlightColor: context.appColors.skeletonHighlight,
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 400,
+                  mainAxisSpacing: AppSpacing.sm,
+                  crossAxisSpacing: AppSpacing.sm,
+                  childAspectRatio: 3.5,
+                ),
+                itemCount: 12,
+                itemBuilder: (_, __) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: AppRadius.smRadius,
+                    ),
+                  );
+                },
               ),
-              itemCount: 12,
-              itemBuilder: (_, __) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: AppRadius.smRadius,
-                  ),
-                );
-              },
             ),
           ),
         ),

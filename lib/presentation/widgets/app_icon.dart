@@ -153,12 +153,14 @@ class AppIcon extends StatelessWidget {
   ///
   /// 使用玲珑应用商店的默认应用图标
   Widget _buildDefaultIcon(BuildContext context) {
-    return Icon(
-      Icons.apps,
-      size: size * 0.5,
-      color: Theme.of(
-        context,
-      ).textTheme.bodyLarge?.color?.withValues(alpha: 0.3),
+    return ExcludeSemantics(
+      child: Icon(
+        Icons.apps,
+        size: size * 0.5,
+        color: Theme.of(
+          context,
+        ).textTheme.bodyLarge?.color?.withValues(alpha: 0.3),
+      ),
     );
   }
 
@@ -172,12 +174,14 @@ class AppIcon extends StatelessWidget {
         color: errorBg,
         borderRadius: BorderRadius.circular(borderRadius),
       ),
-      child: Icon(
-        Icons.broken_image,
-        size: size * 0.4,
-        color: Theme.of(
-          context,
-        ).textTheme.bodyLarge?.color?.withValues(alpha: 0.3),
+      child: ExcludeSemantics(
+        child: Icon(
+          Icons.broken_image,
+          size: size * 0.4,
+          color: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.color?.withValues(alpha: 0.3),
+        ),
       ),
     );
   }

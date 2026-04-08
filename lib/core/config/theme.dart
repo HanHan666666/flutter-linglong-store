@@ -46,8 +46,8 @@ class AppColors {
   /// 次级文字色 - #666666
   static const Color textSecondary = Color(0xFF666666);
 
-  /// 三级文字色
-  static const Color textTertiary = Color(0xFF999999);
+  /// 三级文字色 - #767676（对比度 4.54:1，满足 WCAG AA 4.5:1 要求）
+  static const Color textTertiary = Color(0xFF767676);
 
   /// 标题深色 (推荐页标题)
   static const Color titleDark = Color(0xFF383838);
@@ -84,8 +84,8 @@ class AppColors {
   /// "打开"按钮文字色 - #2C2C2C
   static const Color openButtonText = Color(0xFF2C2C2C);
 
-  /// "精品/TOP" 标签颜色 - #CDA354
-  static const Color topLabel = Color(0xFFCDA354);
+  /// "精品/TOP" 标签颜色 - #8B6914（对比度 4.6:1，满足 WCAG AA 要求）
+  static const Color topLabel = Color(0xFF8B6914);
 
   /// SVG Logo 蓝色方块背景 - #025BFF
   static const Color logoBlue = Color(0xFF025BFF);
@@ -560,7 +560,7 @@ class AppColorPalette {
     primaryLight: Color(0xFFE6F0FF),
     textPrimary: Color(0xFF1A1A1A),
     textSecondary: Color(0xFF666666),
-    textTertiary: Color(0xFF999999),
+    textTertiary: Color(0xFF767676),
     titleDark: Color(0xFF383838),
     openButtonBackground: Color(0xFFFFFFFF),
     openButtonBorder: Color(0xFFD8D8D8),

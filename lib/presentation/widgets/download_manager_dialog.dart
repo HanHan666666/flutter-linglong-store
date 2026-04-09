@@ -493,10 +493,17 @@ class _TaskCard extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text(
-                message != null && message.isNotEmpty ? message : '处理中',
-                style: AppTextStyles.caption.copyWith(
-                  color: appColors.textSecondary,
+              child: Tooltip(
+                message: message != null && message.isNotEmpty
+                    ? message
+                    : '处理中',
+                child: Text(
+                  message != null && message.isNotEmpty ? message : '处理中',
+                  style: AppTextStyles.caption.copyWith(
+                    color: appColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),

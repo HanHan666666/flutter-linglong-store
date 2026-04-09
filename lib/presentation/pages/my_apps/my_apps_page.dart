@@ -243,7 +243,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
     }
 
     if (filteredApps.isEmpty) {
-      final l10n = AppLocalizations.of(context);
+      final l10n = AppLocalizations.of(context)!;
       return EmptyState(
         icon: Icons.search_off,
         title: l10n?.noMatchingApp ?? '未找到匹配的应用',

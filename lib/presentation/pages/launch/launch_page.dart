@@ -253,7 +253,7 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
 
   /// 构建步骤指示器
   Widget _buildStepIndicators(BuildContext context, LaunchState launchState) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final steps = [
       (LaunchStep.environmentCheck, l10n?.stepEnvCheck ?? '环境检测'),
       (LaunchStep.installedAppsInit, l10n?.stepAppLoad ?? '应用加载'),

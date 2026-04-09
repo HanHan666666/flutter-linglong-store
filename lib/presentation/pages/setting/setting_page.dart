@@ -131,7 +131,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           ref.read(settingProvider).appVersion ?? AppConfig.appVersion;
       final isNewer = _isVersionNewer(currentVersion, tagName);
       if (!mounted) return;
-      final l10n = AppLocalizations.of(context);
+      final l10n = AppLocalizations.of(context)!;
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -265,7 +265,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
   /// 构建语言设置部分
   Widget _buildLanguageSection(BuildContext context, SettingState state) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -320,7 +320,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
   /// 构建主题设置部分
   Widget _buildThemeSection(BuildContext context, SettingState state) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -393,7 +393,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
   /// 构建缓存管理部分
   Widget _buildCacheSection(BuildContext context, SettingState state) {
     final cacheSizeText = formatBytes(state.cacheSize);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Card(
       elevation: 0,
@@ -472,7 +472,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
   /// 清除缓存
   Future<void> _clearCache(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await ConfirmDialog.show(
       context,
       title: l10n?.clearCacheConfirm ?? '确认清除缓存',
@@ -598,7 +598,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
   /// 执行清理废弃基础服务
   Future<void> _pruneBaseService(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await ConfirmDialog.show(
       context,
       title: l10n?.cleanDeprecatedServices ?? '清理废弃基础服务',
@@ -635,7 +635,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     SettingState state,
     GlobalAppState globalState,
   ) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(

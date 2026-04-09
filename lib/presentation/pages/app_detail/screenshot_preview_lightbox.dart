@@ -204,7 +204,7 @@ class _TitleBar extends StatelessWidget {
     final counterBackground = isDark
         ? Colors.white.withValues(alpha: 0.08)
         : colors.primary.withValues(alpha: 0.10);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       key: containerKey,
@@ -281,7 +281,7 @@ class _ImageStage extends StatelessWidget {
     final iconColor = theme.colorScheme.onSurface.withValues(
       alpha: isDark ? 0.24 : 0.32,
     );
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Stack(
       children: [
@@ -372,7 +372,7 @@ class _ThumbnailBar extends StatelessWidget {
     final borderColor = isDark ? Colors.white10 : AppColors.borderSecondary;
     final placeholderColor = colors.onSurface.withValues(alpha: isDark ? 0.10 : 0.08);
     final placeholderIconColor = colors.onSurface.withValues(alpha: isDark ? 0.24 : 0.32);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       key: containerKey,

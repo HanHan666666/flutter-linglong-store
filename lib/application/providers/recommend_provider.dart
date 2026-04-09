@@ -4,6 +4,8 @@ import '../../core/logging/app_logger.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_exceptions.dart';
 import '../../core/storage/recommend_page_cache.dart';
+import '../../core/utils/locale_utils.dart';
+import '../../data/mappers/app_list_mapper.dart';
 import '../../data/models/api_dto.dart';
 import '../../domain/models/recommend_models.dart';
 import 'api_provider.dart';
@@ -14,14 +16,6 @@ part 'recommend_provider.g.dart';
 @riverpod
 class Recommend extends _$Recommend {
   static const int _pageSize = 10;
-
-  /// 将 Flutter locale 归一成后端约定的语言值（zh_CN / en_US）
-  static String _resolveApiLang(String? locale) {
-    final norm = locale?.trim().replaceAll('-', '_').toLowerCase();
-    if (norm == null || norm.isEmpty) return 'zh_CN';
-    if (norm.startsWith('en')) return 'en_US';
-    return 'zh_CN';
-  }
 
   @override
   RecommendState build() {
@@ -41,7 +35,7 @@ class Recommend extends _$Recommend {
       try {
         final carouselResponse = await apiService.getWelcomeCarouselList(
           AppWelcomeSearchRequest(
-            lan: _resolveApiLang(ApiClient.getLocale?.call()),
+            lan: resolveApiLang(ApiClient.getLocale?.call()),
           ),
         );
         banners = _convertBanners(carouselResponse.data.data);
@@ -53,10 +47,10 @@ class Recommend extends _$Recommend {
         PageParams(
           pageNo: 1,
           pageSize: _pageSize,
-          lan: _resolveApiLang(ApiClient.getLocale?.call()),
+          lan: resolveApiLang(ApiClient.getLocale?.call()),
         ),
       );
-      final apps = _convertApps(appResponse.data.data);
+      final apps = mapAppListToRecommendApps(appResponse.data.data, pageSize: _pageSize);
       final data = RecommendData(
         banners: banners,
         categories: const [],
@@ -101,12 +95,12 @@ class Recommend extends _$Recommend {
         PageParams(
           pageNo: nextPage,
           pageSize: _pageSize,
-          lan: _resolveApiLang(ApiClient.getLocale?.call()),
+          lan: resolveApiLang(ApiClient.getLocale?.call()),
         ),
       );
 
       final currentApps = state.data!.apps.items;
-      final newApps = _convertApps(response.data.data);
+      final newApps = mapAppListToRecommendApps(response.data.data, pageSize: _pageSize);
       final mergedApps = <RecommendAppInfo>[...currentApps, ...newApps.items];
       final mergedData = state.data!.copyWith(
         apps: PaginatedResponse<RecommendAppInfo>(
@@ -131,7 +125,7 @@ class Recommend extends _$Recommend {
   }
 
   Future<void> _hydrateFromCacheIfPresent() async {
-    final locale = _resolveApiLang(ApiClient.getLocale?.call());
+    final locale = resolveApiLang(ApiClient.getLocale?.call());
     final cacheStore = ref.read(recommendPageCacheStoreProvider);
     final snapshot = await cacheStore.read(locale);
     if (snapshot == null) {
@@ -153,7 +147,7 @@ class Recommend extends _$Recommend {
     required RecommendData data,
     required int currentPage,
   }) async {
-    final locale = _resolveApiLang(ApiClient.getLocale?.call());
+    final locale = resolveApiLang(ApiClient.getLocale?.call());
     final cacheStore = ref.read(recommendPageCacheStoreProvider);
     await cacheStore.write(
       RecommendPageCacheSnapshot(
@@ -187,41 +181,5 @@ class Recommend extends _$Recommend {
               banner.imageUrl.isNotEmpty,
         )
         .toList();
-  }
-
-  PaginatedResponse<RecommendAppInfo> _convertApps(AppListPagedData? data) {
-    if (data == null) {
-      return const PaginatedResponse<RecommendAppInfo>(
-        items: [],
-        total: 0,
-        page: 1,
-        pageSize: _pageSize,
-        hasMore: false,
-      );
-    }
-
-    final apps = data.records
-        .map(
-          (dto) => RecommendAppInfo(
-            appId: dto.appId,
-            name: dto.appName,
-            version: dto.appVersion ?? '',
-            description: dto.appDesc,
-            icon: dto.appIcon,
-            developer: dto.developerName,
-            category: dto.categoryName,
-            size: dto.packageSize,
-            downloadCount: dto.downloadTimes,
-          ),
-        )
-        .toList();
-
-    return PaginatedResponse<RecommendAppInfo>(
-      items: apps,
-      total: data.total,
-      page: data.current,
-      pageSize: data.size,
-      hasMore: data.current < data.pages,
-    );
   }
 }

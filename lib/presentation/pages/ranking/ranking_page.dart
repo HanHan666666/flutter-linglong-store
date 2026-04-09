@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shimmer/shimmer.dart';
 
-import '../../../application/providers/application_card_state_provider.dart';
 import '../../../application/providers/ranking_provider.dart';
 import '../../../core/config/page_visibility.dart';
 import '../../../core/config/routes.dart';
@@ -105,6 +103,7 @@ class _RankingPageState extends ConsumerState<RankingPage>
   Widget _buildTabBar(RankingType selectedType) {
     // Tab 内容区和分隔线颜色跟随主题
     final palette = context.appColors;
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: palette.background,
@@ -137,12 +136,26 @@ class _RankingPageState extends ConsumerState<RankingPage>
         overlayColor: WidgetStateProperty.all(Colors.transparent),
         tabs: RankingType.values.map((type) {
           return _roundedTab(
-            text: type.label,
+            text: _rankingTypeLabel(type, l10n),
             isSelected: type == selectedType,
           );
         }).toList(),
       ),
     );
+  }
+
+  /// 获取排行榜类型的国际化标签
+  String _rankingTypeLabel(RankingType type, AppLocalizations l10n) {
+    switch (type) {
+      case RankingType.download:
+        return l10n.rankingTabDownload;
+      case RankingType.rising:
+        return l10n.rankingTabRising;
+      case RankingType.update:
+        return l10n.rankingTabUpdate;
+      case RankingType.hot:
+        return l10n.rankingTabHot;
+    }
   }
 
   /// 胶囊形 Tab，悬浮态保持与 active 一致的整块范围，但只使用极简弱高亮。
@@ -274,7 +287,10 @@ class _RankingTabContent extends ConsumerWidget {
 
     // 空数据状态
     if (state.data == null || state.data!.apps.isEmpty) {
-      return const EmptyState.noData(title: '暂无排行', description: '请检查网络连接后重试');
+      return EmptyState.noData(
+        title: l10n.noRanking,
+        description: l10n.errorNetworkDetail,
+      );
     }
 
     // 正常显示
@@ -282,7 +298,14 @@ class _RankingTabContent extends ConsumerWidget {
       onRefresh: () => ref.read(rankingProvider.notifier).refresh(),
       child: Semantics(
         label: l10n.a11yAppListArea,
-        child: _AppsGrid(apps: state.data!.apps),
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              sliver: _AppsGrid(apps: state.data!.apps),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -290,124 +313,49 @@ class _RankingTabContent extends ConsumerWidget {
   Widget _buildLoadingState(BuildContext context, AppLocalizations l10n) {
     return Semantics(
       label: l10n.loading,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
+      child: const SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Semantics(
-            label: l10n.loading,
-            child: Shimmer.fromColors(
-              baseColor: context.appColors.skeletonBackground,
-              highlightColor: context.appColors.skeletonHighlight,
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 400,
-                  mainAxisSpacing: AppSpacing.sm,
-                  crossAxisSpacing: AppSpacing.sm,
-                  childAspectRatio: 3.5,
-                ),
-                itemCount: 8,
-                itemBuilder: (_, __) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: AppRadius.smRadius,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
+          padding: EdgeInsets.all(AppSpacing.lg),
+          child: AppGridShimmer(itemCount: 8),
         ),
       ),
     );
   }
 }
 
-/// 应用网格
-class _AppsGrid extends ConsumerWidget {
+/// 应用网格（已迁移到共享 ResponsiveAppGrid）
+class _AppsGrid extends StatelessWidget {
   const _AppsGrid({required this.apps});
 
   final List<RankingAppInfo> apps;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final cardStateIndex = ref.watch(applicationCardStateIndexProvider);
-
-    // 预先计算所有卡片状态，避免 builder 循环中重复调用 resolve()
-    final resolvedStates = apps
-        .map(
-          (app) => cardStateIndex.resolve(
+  Widget build(BuildContext context) {
+    return ResponsiveAppGrid<RankingAppInfo>(
+      items: apps,
+      itemBuilder: (ref, index, app, cardState) {
+        return AppCard(
+          appId: app.appId,
+          name: app.name,
+          description: app.description,
+          iconUrl: app.icon,
+          rank: app.rank,
+          buttonState: cardState.buttonState,
+          progress: cardState.progress,
+          isInstalling: cardState.isInstalling,
+          onTap: () => context.push('/app/${app.appId}'),
+          onPrimaryPressed: () => handleAppCardPrimaryAction(
+            context: context,
+            ref: ref,
+            buttonState: cardState.buttonState,
             appId: app.appId,
-            latestVersion: app.version,
+            appName: app.name,
+            icon: app.icon,
+            version: app.version,
           ),
-        )
-        .toList(growable: false);
-
-    return CustomScrollView(
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          sliver: SliverLayoutBuilder(
-            builder: (context, constraints) {
-              final crossAxisCount = _calculateCrossAxisCount(
-                constraints.crossAxisExtent,
-              );
-
-              return SliverGrid(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  mainAxisSpacing: AppSpacing.sm,
-                  crossAxisSpacing: AppSpacing.sm,
-                  childAspectRatio: _calculateChildAspectRatio(
-                    constraints.crossAxisExtent,
-                  ),
-                ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final app = apps[index];
-                  final cardState = resolvedStates[index];
-                  return AppCard(
-                    appId: app.appId,
-                    name: app.name,
-                    description: app.description,
-                    iconUrl: app.icon,
-                    rank: app.rank,
-                    buttonState: cardState.buttonState,
-                    progress: cardState.progress,
-                    isInstalling: cardState.isInstalling,
-                    onTap: () => context.push('/app/${app.appId}'),
-                    onPrimaryPressed: () => handleAppCardPrimaryAction(
-                      context: context,
-                      ref: ref,
-                      buttonState: cardState.buttonState,
-                      appId: app.appId,
-                      appName: app.name,
-                      icon: app.icon,
-                      version: app.version,
-                    ),
-                  );
-                }, childCount: apps.length),
-              );
-            },
-          ),
-        ),
-      ],
+        );
+      },
     );
-  }
-
-  int _calculateCrossAxisCount(double width) {
-    if (width < 600) return 1;
-    if (width < 900) return 2;
-    if (width < 1200) return 3;
-    return 4;
-  }
-
-  double _calculateChildAspectRatio(double width) {
-    final crossAxisCount = _calculateCrossAxisCount(width);
-    return (width - (crossAxisCount - 1) * AppSpacing.sm) /
-        crossAxisCount /
-        80; // 80 是卡片高度
   }
 }

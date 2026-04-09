@@ -2,8 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import '../../core/i18n/install_messages.dart';
-import '../../core/network/api_exceptions.dart'
-    hide CliTimeoutException, CliExecutionException;
+import '../../core/network/api_exceptions.dart';
 import '../../domain/models/installed_app.dart';
 import '../../domain/models/running_app.dart';
 import '../../domain/models/install_progress.dart';

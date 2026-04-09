@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
+import 'package:linglong_store/domain/models/install_queue_state.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 
 void main() {
@@ -46,9 +47,7 @@ void main() {
       expect(successTask.isCompleted, true);
       expect(successTask.isSuccess, true);
 
-      final failedTask = installingTask.copyWith(
-        status: InstallStatus.failed,
-      );
+      final failedTask = installingTask.copyWith(status: InstallStatus.failed);
       expect(failedTask.isProcessing, false);
       expect(failedTask.isCompleted, true);
       expect(failedTask.isFailed, true);
@@ -68,10 +67,7 @@ void main() {
         createdAt: DateTime.now().millisecondsSinceEpoch,
       );
 
-      final state = InstallQueueState(
-        queue: [task2],
-        currentTask: task1,
-      );
+      final state = InstallQueueState(queue: [task2], currentTask: task1);
 
       expect(state.isAppInQueue('com.example.app1'), true);
       expect(state.isAppInQueue('com.example.app2'), true);

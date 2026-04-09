@@ -10,6 +10,7 @@ import '../../core/logging/app_logger.dart';
 import '../../core/di/providers.dart'
     show analyticsRepositoryProvider, currentLocaleProvider;
 import '../../domain/models/install_progress.dart';
+import '../../domain/models/install_queue_state.dart';
 import '../../domain/models/install_state_machine.dart';
 import '../../domain/models/install_task.dart';
 import '../../domain/repositories/linglong_cli_repository.dart';
@@ -17,12 +18,22 @@ import '../../data/repositories/linglong_cli_repository_impl.dart';
 
 part 'install_queue_provider.g.dart';
 
-/// 本地存储 key
+// ---------------------------------------------------------------------------
+// 本地存储 key
+// ---------------------------------------------------------------------------
+
+/// 本地存储 key：当前正在处理的任务
 const String _kCurrentTaskKey = 'linglong-store-current-install-task';
+
+/// 本地存储 key：待处理队列
 const String _kQueueKey = 'linglong-store-install-queue';
 
 /// 历史记录最大保留条数
 const int _maxHistorySize = 50;
+
+// ---------------------------------------------------------------------------
+// 基础 Provider
+// ---------------------------------------------------------------------------
 
 /// SharedPreferences Provider
 @Riverpod(keepAlive: true)
@@ -44,152 +55,23 @@ LinglongCliRepository linglongCliRepository(Ref ref) {
   return LinglongCliRepositoryImpl(messages);
 }
 
-/// 安装队列状态
-class InstallQueueState {
-  const InstallQueueState({
-    this.queue = const [],
-    this.currentTask,
-    this.history = const [],
-    this.isProcessing = false,
-  });
+// ---------------------------------------------------------------------------
+// 持久化 Mixin
+// ---------------------------------------------------------------------------
 
-  /// 待处理队列
-  final List<InstallTask> queue;
-
-  /// 当前正在处理的任务
-  final InstallTask? currentTask;
-
-  /// 历史记录（成功/失败）
-  final List<InstallTask> history;
-
-  /// 是否正在处理中
-  final bool isProcessing;
-
-  /// 检查应用是否在队列中
-  bool isAppInQueue(String appId) {
-    if (currentTask?.appId == appId) return true;
-    return queue.any((t) => t.appId == appId);
-  }
-
-  /// 获取应用的安装状态
-  InstallTask? getAppInstallStatus(String appId) {
-    if (currentTask?.appId == appId) return currentTask;
-    for (final task in queue) {
-      if (task.appId == appId) return task;
-    }
-    for (final task in history) {
-      if (task.appId == appId) return task;
-    }
-    return null;
-  }
-
-  /// 是否有活跃任务
-  bool hasActiveTasks() => currentTask != null || queue.isNotEmpty;
-
-  /// 复制并更新
-  InstallQueueState copyWith({
-    List<InstallTask>? queue,
-    InstallTask? currentTask,
-    List<InstallTask>? history,
-    bool? isProcessing,
-    bool clearCurrentTask = false,
-  }) {
-    return InstallQueueState(
-      queue: queue ?? this.queue,
-      currentTask: clearCurrentTask ? null : (currentTask ?? this.currentTask),
-      history: history ?? this.history,
-      isProcessing: isProcessing ?? this.isProcessing,
-    );
-  }
-}
-
-/// 安装队列状态机 Provider
+/// 安装队列持久化能力 mixin。
 ///
-/// 核心功能：
-/// 1. 严格串行安装：一次只处理一个安装任务
-/// 2. 持久化存储：应用崩溃后可恢复队列
-/// 3. 状态持久：保存到 SharedPreferences
-/// 4. 错误恢复：重试机制
-/// 5. 取消状态管理：区分"用户取消"和"真正失败"
-@Riverpod(keepAlive: true)
-class InstallQueue extends _$InstallQueue {
-  @override
-  InstallQueueState build() {
-    _prefs ??= _readSharedPreferences();
-
-    // 在 build 阶段直接同步恢复本地状态，避免未初始化 _prefs 时触发异步读取，
-    // 同时规避 Provider 在首帧构建期间被再次写入导致的生命周期告警。
-    return _restorePersistedState();
-  }
+/// 提供队列和当前任务的读写能力，供 [InstallQueue] 混入使用。
+mixin _InstallQueuePersistence {
+  /// Riverpod ref，由混入类提供。
+  Ref get ref;
 
   SharedPreferences? _prefs;
-  final _uuid = const Uuid();
 
-  /// 安装状态机（用于超时检测）
-  InstallStateMachine? _stateMachine;
+  SharedPreferences? get prefs => _prefs;
+  set prefs(SharedPreferences? value) => _prefs = value;
 
-  /// 超时检查定时器
-  Timer? _timeoutCheckTimer;
-
-  /// 用户取消标志（区分"用户取消"和"真正失败"）
-  /// 参考 Rust 版本 InstallSlot.is_cancelled
-  bool _isUserCancelled = false;
-
-  /// 启动超时检查定时器
-  void _startTimeoutCheck(String appId) {
-    _stopTimeoutCheck();
-    // 每隔超时时间的一半检查一次
-    final checkInterval = Duration(
-      seconds: (_stateMachine?.progressTimeoutSecs ?? 360) ~/ 2,
-    );
-    _timeoutCheckTimer = Timer.periodic(checkInterval, (_) {
-      if (_stateMachine?.checkTimeout() == true) {
-        AppLogger.warning('Install timeout for $appId');
-        _stateMachine?.onFailure();
-        markFailed(
-          appId,
-          '安装超时：长时间未收到进度更新',
-          errorCode: -2, // 超时错误码
-        );
-      }
-    });
-  }
-
-  /// 停止超时检查定时器
-  void _stopTimeoutCheck() {
-    _timeoutCheckTimer?.cancel();
-    _timeoutCheckTimer = null;
-  }
-
-  /// 标记当前安装为用户取消
-  ///
-  /// 参考 Rust 版本 InstallSlot.mark_cancelled()
-  /// 在用户主动取消安装时调用
-  void markUserCancelled() {
-    _isUserCancelled = true;
-    AppLogger.info('[InstallQueue] 已标记用户取消');
-  }
-
-  /// 检查当前安装是否被用户取消
-  ///
-  /// 参考 Rust 版本 InstallSlot.is_cancelled()
-  /// 读取后会重置标志
-  bool isUserCancelled() {
-    final result = _isUserCancelled;
-    _isUserCancelled = false;
-    return result;
-  }
-
-  /// 重置取消标志
-  void _resetCancelFlag() {
-    _isUserCancelled = false;
-  }
-
-  /// 初始化（需要在应用启动时调用）
-  Future<void> init(SharedPreferences prefs) async {
-    _prefs = prefs;
-  }
-
+  /// 读取 SharedPreferences（安全兜底，失败返回 null）
   SharedPreferences? _readSharedPreferences() {
     try {
       return ref.read(sharedPreferencesProvider);
@@ -198,11 +80,16 @@ class InstallQueue extends _$InstallQueue {
     }
   }
 
-  InstallQueueState _restorePersistedState() {
-    final prefs = _prefs;
+  /// 从 SharedPreferences 恢复队列状态（同步）。
+  ///
+  /// 在 Provider build 阶段直接调用，避免异步读取导致首帧状态不一致。
+  InstallQueueState restorePersistedState() {
+    final prefs = _prefs ?? _readSharedPreferences();
     if (prefs == null) {
       return const InstallQueueState();
     }
+
+    _prefs = prefs;
 
     try {
       InstallTask? currentTask;
@@ -234,6 +121,145 @@ class InstallQueue extends _$InstallQueue {
       return const InstallQueueState();
     }
   }
+
+  /// 持久化待处理队列到 SharedPreferences。
+  Future<void> persistQueue(List<InstallTask> queue) async {
+    final prefs = _prefs ?? _readSharedPreferences();
+    if (prefs == null) return;
+
+    _prefs = prefs;
+
+    try {
+      await prefs.setString(
+        _kQueueKey,
+        jsonEncode(queue.map((t) => t.toJson()).toList()),
+      );
+      AppLogger.debug('Queue persisted: ${queue.length} tasks');
+    } catch (e, s) {
+      AppLogger.error('Failed to persist queue', e, s);
+    }
+  }
+
+  /// 持久化当前任务到 SharedPreferences。
+  void persistCurrentTask(InstallTask? task) {
+    final prefs = _prefs ?? _readSharedPreferences();
+    if (prefs == null) return;
+
+    _prefs = prefs;
+
+    if (task != null) {
+      try {
+        prefs.setString(_kCurrentTaskKey, jsonEncode(task.toJson()));
+      } catch (e, s) {
+        AppLogger.error('Failed to persist current task', e, s);
+      }
+    }
+  }
+
+  /// 清除持久化的当前任务。
+  void clearPersistedCurrentTask() {
+    final prefs = _prefs ?? _readSharedPreferences();
+    if (prefs == null) return;
+
+    _prefs = prefs;
+    prefs.remove(_kCurrentTaskKey);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 安装队列 Provider
+// ---------------------------------------------------------------------------
+
+/// 安装队列状态机 Provider
+///
+/// 核心功能：
+/// 1. 严格串行安装：一次只处理一个安装任务
+/// 2. 持久化存储：应用崩溃后可恢复队列
+/// 3. 状态持久：保存到 SharedPreferences
+/// 4. 错误恢复：重试机制
+/// 5. 取消状态管理：区分"用户取消"和"真正失败"
+@Riverpod(keepAlive: true)
+class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
+  @override
+  InstallQueueState build() {
+    // 在 build 阶段直接同步恢复本地状态，避免未初始化 _prefs 时触发异步读取，
+    // 同时规避 Provider 在首帧构建期间被再次写入导致的生命周期告警。
+    return restorePersistedState();
+  }
+
+  final _uuid = const Uuid();
+
+  /// 安装状态机（用于超时检测）
+  InstallStateMachine? _stateMachine;
+
+  /// 超时检查定时器
+  Timer? _timeoutCheckTimer;
+
+  /// 用户取消标志（区分"用户取消"和"真正失败"）
+  /// 参考 Rust 版本 InstallSlot.is_cancelled
+  bool _isUserCancelled = false;
+
+  // -----------------------------------------------------------------------
+  // 超时检查
+  // -----------------------------------------------------------------------
+
+  /// 启动超时检查定时器
+  void _startTimeoutCheck(String appId) {
+    _stopTimeoutCheck();
+    // 每隔超时时间的一半检查一次
+    final checkInterval = Duration(
+      seconds: (_stateMachine?.progressTimeoutSecs ?? 360) ~/ 2,
+    );
+    _timeoutCheckTimer = Timer.periodic(checkInterval, (_) {
+      if (_stateMachine?.checkTimeout() == true) {
+        AppLogger.warning('Install timeout for $appId');
+        _stateMachine?.onFailure();
+        markFailed(
+          appId,
+          '安装超时：长时间未收到进度更新',
+          errorCode: -2, // 超时错误码
+        );
+      }
+    });
+  }
+
+  /// 停止超时检查定时器
+  void _stopTimeoutCheck() {
+    _timeoutCheckTimer?.cancel();
+    _timeoutCheckTimer = null;
+  }
+
+  // -----------------------------------------------------------------------
+  // 取消标志管理
+  // -----------------------------------------------------------------------
+
+  /// 标记当前安装为用户取消
+  ///
+  /// 参考 Rust 版本 InstallSlot.mark_cancelled()
+  /// 在用户主动取消安装时调用
+  void markUserCancelled() {
+    _isUserCancelled = true;
+    AppLogger.info('[InstallQueue] 已标记用户取消');
+  }
+
+  /// 检查当前安装是否被用户取消
+  ///
+  /// 参考 Rust 版本 InstallSlot.is_cancelled()
+  /// 读取后会重置标志
+  bool isUserCancelled() {
+    final result = _isUserCancelled;
+    _isUserCancelled = false;
+    return result;
+  }
+
+  /// 重置取消标志
+  void _resetCancelFlag() {
+    _isUserCancelled = false;
+  }
+
+  // -----------------------------------------------------------------------
+  // 入队操作
+  // -----------------------------------------------------------------------
 
   /// 入队安装任务
   ///
@@ -302,7 +328,7 @@ class InstallQueue extends _$InstallQueue {
     );
 
     state = state.copyWith(queue: [...state.queue, task]);
-    persistQueue();
+    unawaited(persistQueue(state.queue));
 
     AppLogger.info('Enqueued task: ${task.id} for app: $appId');
 
@@ -312,11 +338,6 @@ class InstallQueue extends _$InstallQueue {
     }
 
     return task.id;
-  }
-
-  /// 批量入队
-  List<String> enqueueBatch(List<EnqueueTaskParams> tasksParams) {
-    return enqueueBatchOperations(tasksParams);
   }
 
   /// 批量入队安装/更新任务。
@@ -351,7 +372,7 @@ class InstallQueue extends _$InstallQueue {
 
     if (newTasks.isNotEmpty) {
       state = state.copyWith(queue: [...state.queue, ...newTasks]);
-      persistQueue();
+      unawaited(persistQueue(state.queue));
       AppLogger.info('Enqueued ${newTasks.length} tasks in batch');
 
       if (!state.isProcessing && state.currentTask == null) {
@@ -361,6 +382,10 @@ class InstallQueue extends _$InstallQueue {
 
     return taskIds;
   }
+
+  // -----------------------------------------------------------------------
+  // 队列处理
+  // -----------------------------------------------------------------------
 
   /// 开始处理队列中的下一个任务
   ///
@@ -415,8 +440,8 @@ class InstallQueue extends _$InstallQueue {
       currentTask: installingTask,
     );
 
-    _persistCurrentTask();
-    persistQueue();
+    persistCurrentTask(installingTask);
+    unawaited(persistQueue(remainingQueue));
 
     // 启动状态机和超时检查
     _stateMachine = InstallStateMachine();
@@ -463,6 +488,10 @@ class InstallQueue extends _$InstallQueue {
     }
   }
 
+  // -----------------------------------------------------------------------
+  // 进度处理
+  // -----------------------------------------------------------------------
+
   /// 处理安装进度
   void _handleProgress(String appId, InstallProgress progress) {
     if (state.currentTask?.appId != appId) return;
@@ -490,11 +519,11 @@ class InstallQueue extends _$InstallQueue {
       rawMessage: progress.rawMessage,
       errorMessage: progress.error,
       errorCode: progress.errorCode,
-      errorDetail: progress.errorDetail,
+      errorDetail: progress.errorDetail ?? progress.rawMessage,
     );
 
     state = state.copyWith(currentTask: updatedTask);
-    _persistCurrentTask();
+    persistCurrentTask(updatedTask);
 
     // 检查是否完成
     if (progress.status == InstallStatus.success) {
@@ -539,27 +568,16 @@ class InstallQueue extends _$InstallQueue {
       history: [cancelledTask, ...state.history].take(_maxHistorySize).toList(),
     );
 
-    _clearPersistedCurrentTask();
+    clearPersistedCurrentTask();
     AppLogger.info('[InstallQueue] 任务已从流中标记取消: $appId');
 
     // 处理下一个任务
     Future.delayed(const Duration(milliseconds: 100), () => startProcessing());
   }
 
-  /// 更新进度
-  ///
-  /// 更新当前任务的进度和消息
-  void updateProgress(String appId, double progress, String message) {
-    if (state.currentTask?.appId != appId) return;
-
-    state = state.copyWith(
-      currentTask: state.currentTask!.copyWith(
-        progress: progress,
-        message: message,
-      ),
-    );
-    _persistCurrentTask();
-  }
+  // -----------------------------------------------------------------------
+  // 任务完成 / 失败
+  // -----------------------------------------------------------------------
 
   /// 标记成功
   ///
@@ -596,7 +614,7 @@ class InstallQueue extends _$InstallQueue {
       history: [completedTask, ...state.history].take(_maxHistorySize).toList(),
     );
 
-    _clearPersistedCurrentTask();
+    clearPersistedCurrentTask();
     AppLogger.info('Task completed successfully: $appId');
 
     // 上报安装/更新统计记录（fire-and-forget）
@@ -660,7 +678,7 @@ class InstallQueue extends _$InstallQueue {
       history: [failedTask, ...state.history].take(_maxHistorySize).toList(),
     );
 
-    _clearPersistedCurrentTask();
+    clearPersistedCurrentTask();
 
     if (wasCancelled) {
       AppLogger.info('Task cancelled by user: $appId');
@@ -671,6 +689,10 @@ class InstallQueue extends _$InstallQueue {
     // 继续处理下一个任务（失败不阻塞队列）
     Future.delayed(const Duration(milliseconds: 100), () => startProcessing());
   }
+
+  // -----------------------------------------------------------------------
+  // 取消 / 移除 / 清空
+  // -----------------------------------------------------------------------
 
   /// 取消任务
   ///
@@ -722,7 +744,7 @@ class InstallQueue extends _$InstallQueue {
         ].take(_maxHistorySize).toList(),
       );
 
-      _clearPersistedCurrentTask();
+      clearPersistedCurrentTask();
 
       if (cancelSuccess) {
         AppLogger.info('[InstallQueue] 任务已取消: $appId');
@@ -756,7 +778,7 @@ class InstallQueue extends _$InstallQueue {
       queue: state.queue.where((t) => t.appId != appId).toList(),
       history: state.history.where((t) => t.appId != appId).toList(),
     );
-    persistQueue();
+    unawaited(persistQueue(state.queue));
   }
 
   /// 清空历史记录
@@ -767,35 +789,13 @@ class InstallQueue extends _$InstallQueue {
   /// 清空队列
   void clearQueue() {
     state = state.copyWith(queue: []);
-    persistQueue();
+    unawaited(persistQueue(state.queue));
     AppLogger.info('Queue cleared');
   }
 
-  /// 持久化队列到 SharedPreferences
-  ///
-  /// 将当前待处理队列保存到本地存储
-  Future<void> persistQueue() async {
-    final prefs = _prefs ?? _readSharedPreferences();
-    if (prefs == null) return;
-
-    _prefs = prefs;
-
-    try {
-      await prefs.setString(
-        _kQueueKey,
-        jsonEncode(state.queue.map((t) => t.toJson()).toList()),
-      );
-      AppLogger.debug('Queue persisted: ${state.queue.length} tasks');
-    } catch (e, s) {
-      AppLogger.error('Failed to persist queue', e, s);
-    }
-  }
-
-  /// 从 SharedPreferences 恢复队列
-  ///
-  /// 队列已在 build() 阶段通过 _restorePersistedState() 同步恢复，
-  /// 此方法保留为兼容接口，无需重复执行。
-  Future<void> restoreQueue() async {}
+  // -----------------------------------------------------------------------
+  // 崩溃恢复 / 重试
+  // -----------------------------------------------------------------------
 
   /// 崩溃恢复检查
   ///
@@ -856,7 +856,7 @@ class InstallQueue extends _$InstallQueue {
       );
     }
 
-    _clearPersistedCurrentTask();
+    clearPersistedCurrentTask();
   }
 
   /// 重试失败的任务
@@ -887,39 +887,19 @@ class InstallQueue extends _$InstallQueue {
     );
   }
 
+  // -----------------------------------------------------------------------
+  // 内部工具方法
+  // -----------------------------------------------------------------------
+
   /// 生成唯一任务ID
   String _generateTaskId() {
     return '${DateTime.now().millisecondsSinceEpoch}-${_uuid.v4().substring(0, 8)}';
   }
-
-  /// 持久化当前任务
-  void _persistCurrentTask() {
-    final prefs = _prefs ?? _readSharedPreferences();
-    if (prefs == null) return;
-
-    _prefs = prefs;
-
-    if (state.currentTask != null) {
-      try {
-        prefs.setString(
-          _kCurrentTaskKey,
-          jsonEncode(state.currentTask!.toJson()),
-        );
-      } catch (e, s) {
-        AppLogger.error('Failed to persist current task', e, s);
-      }
-    }
-  }
-
-  /// 清除持久化的当前任务
-  void _clearPersistedCurrentTask() {
-    final prefs = _prefs ?? _readSharedPreferences();
-    if (prefs == null) return;
-
-    _prefs = prefs;
-    prefs.remove(_kCurrentTaskKey);
-  }
 }
+
+// ---------------------------------------------------------------------------
+// 入队任务参数 DTO
+// ---------------------------------------------------------------------------
 
 /// 入队任务参数
 class EnqueueTaskParams {
@@ -939,6 +919,10 @@ class EnqueueTaskParams {
   final String? version;
   final bool force;
 }
+
+// ---------------------------------------------------------------------------
+// 便捷访问 Provider
+// ---------------------------------------------------------------------------
 
 /// 便捷访问 Provider
 @riverpod

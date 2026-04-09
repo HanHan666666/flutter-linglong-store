@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:convert';
 
 import '../logging/app_logger.dart';
+import '../network/api_exceptions.dart';
 
 /// ll-cli 命令路径
 const String kLlCliPath = 'll-cli';
@@ -205,9 +206,9 @@ class CliExecutor {
     } on TimeoutException {
       AppLogger.error('[CLI] 命令超时: $commandStr');
       process?.kill(ProcessSignal.sigkill);
-      throw CliTimeoutException(
-        '命令执行超时 (${timeout.inSeconds}s)',
-        commandStr,
+      throw const CliTimeoutException(
+        '命令执行超时',
+        'll-cli',
       );
     } catch (e, stack) {
       AppLogger.error('[CLI] 命令执行异常', e, stack);
@@ -368,7 +369,7 @@ class CliExecutor {
       throw CliExecutionException(
         output.stderr.isNotEmpty ? output.stderr : '命令执行失败',
         output.exitCode,
-        'll-cli ${args.join(' ')}',
+        'll-cli',
       );
     }
 
@@ -519,37 +520,4 @@ class CliExecutor {
 
     return result;
   }
-}
-
-/// CLI 执行超时异常
-class CliTimeoutException implements Exception {
-  const CliTimeoutException(this.message, this.command);
-
-  final String message;
-  final String command;
-
-  @override
-  String toString() => 'CliTimeoutException: $message (command: $command)';
-}
-
-/// CLI 执行失败异常
-class CliExecutionException implements Exception {
-  const CliExecutionException(this.message, this.exitCode, this.command);
-
-  final String message;
-  final int exitCode;
-  final String command;
-
-  @override
-  String toString() => 'CliExecutionException: $message (exitCode: $exitCode, command: $command)';
-}
-
-/// CLI 取消异常
-class CliCancelledException implements Exception {
-  const CliCancelledException(this.message);
-
-  final String message;
-
-  @override
-  String toString() => 'CliCancelledException: $message';
 }

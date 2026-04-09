@@ -7,9 +7,10 @@ import 'package:linglong_store/application/providers/network_speed_provider.dart
 import 'package:linglong_store/application/providers/sidebar_config_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
-import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
+import 'package:linglong_store/domain/models/install_queue_state.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
+import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/presentation/pages/update_app/update_app_page.dart';
 import 'package:linglong_store/presentation/widgets/app_icon.dart';
 import 'package:linglong_store/presentation/widgets/download_manager_dialog.dart';

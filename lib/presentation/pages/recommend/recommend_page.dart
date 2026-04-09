@@ -4,15 +4,14 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../application/providers/application_card_state_provider.dart';
 import '../../../application/providers/recommend_provider.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/config/page_visibility.dart';
 import '../../../core/config/visibility_aware_mixin.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
+import '../../../core/utils/app_notification_helpers.dart';
 import '../../../domain/models/recommend_models.dart';
 import 'widgets/recommend_banner_background.dart';
 import '../../widgets/app_card_actions.dart';
@@ -138,7 +137,7 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
       label: l10n.a11yRecommendPage,
       child: RefreshIndicator(
         onRefresh: () => ref.read(recommendProvider.notifier).refresh(),
-        child: _buildBody(state),
+        child: _buildBody(state, context),
       ),
     );
   }
@@ -188,7 +187,8 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
     }
   }
 
-  Widget _buildBody(RecommendState state) {
+  Widget _buildBody(RecommendState state, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     // 加载中状态（仅在首次加载且无数据时显示骨架屏）
     if (state.isLoading && state.data == null) {
       return _buildLoadingState();
@@ -204,7 +204,10 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
 
     // 空数据状态
     if (state.data == null) {
-      return const EmptyState.noData(title: '暂无推荐', description: '请检查网络连接后重试');
+      return EmptyState.noData(
+        title: l10n.noRecommend,
+        description: l10n.errorNetworkDetail,
+      );
     }
 
     // 正常显示
@@ -249,7 +252,7 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
   Widget _buildLoadingState() {
     final l10n = AppLocalizations.of(context);
     return Semantics(
-      label: l10n?.loading ?? '加载中',
+      label: l10n?.loading ?? 'Loading',
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
@@ -294,35 +297,7 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
   }
 
   Widget _buildAppsSkeleton() {
-    return Semantics(
-      label: AppLocalizations.of(context)?.loading ?? '加载中',
-      child: Shimmer.fromColors(
-        baseColor: context.appColors.skeletonBackground,
-        highlightColor: context.appColors.skeletonHighlight,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 400,
-              mainAxisSpacing: AppSpacing.sm,
-              crossAxisSpacing: AppSpacing.sm,
-              childAspectRatio: 3.5,
-            ),
-            itemCount: 8,
-            itemBuilder: (_, __) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: AppRadius.smRadius,
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-    );
+    return const AppGridShimmer(itemCount: 8);
   }
 }
 
@@ -582,14 +557,7 @@ class _BannerSectionState extends State<_BannerSection> {
     } else {
       // 无法打开链接时显示错误提示
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.cannotOpenLink(url) ??
-                  '无法打开链接: $url',
-            ),
-          ),
-        );
+        showLinkOpenError(context, url);
       }
     }
   }
@@ -667,7 +635,7 @@ class _BannerItem extends StatelessWidget {
                           Text(
                             banner.description?.trim().isNotEmpty == true
                                 ? banner.description!
-                                : '应用描述',
+                                : l10n.appDescriptionPlaceholder,
                             style: TextStyle(
                               // banner 描述：14px 常规说明文字
                               fontSize: 14,
@@ -768,84 +736,38 @@ class _BannerIndicators extends StatelessWidget {
   }
 }
 
-/// 应用网格
-class _AppsGrid extends ConsumerWidget {
+/// 应用网格（已迁移到共享 ResponsiveAppGrid）
+class _AppsGrid extends StatelessWidget {
   const _AppsGrid({required this.apps});
 
   final List<RecommendAppInfo> apps;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (apps.isEmpty) {
-      return const SliverToBoxAdapter(
-        child: EmptyState.noData(title: '暂无应用', description: '暂无推荐应用'),
-      );
-    }
-
-    final cardStateIndex = ref.watch(applicationCardStateIndexProvider);
-
-    return SliverLayoutBuilder(
-      builder: (context, constraints) {
-        // 响应式列数计算
-        final crossAxisCount = _calculateCrossAxisCount(
-          constraints.crossAxisExtent,
-        );
-
-        return SliverGrid(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            mainAxisSpacing: AppSpacing.sm,
-            crossAxisSpacing: AppSpacing.sm,
-            childAspectRatio: _calculateChildAspectRatio(
-              constraints.crossAxisExtent,
-            ),
+  Widget build(BuildContext context) {
+    return ResponsiveAppGrid<RecommendAppInfo>(
+      items: apps,
+      itemBuilder: (ref, index, app, cardState) {
+        return AppCard(
+          appId: app.appId,
+          name: app.name,
+          description: app.description,
+          iconUrl: app.icon,
+          buttonState: cardState.buttonState,
+          progress: cardState.progress,
+          isInstalling: cardState.isInstalling,
+          onTap: () => context.push('/app/${app.appId}'),
+          onPrimaryPressed: () => handleAppCardPrimaryAction(
+            context: context,
+            ref: ref,
+            buttonState: cardState.buttonState,
+            appId: app.appId,
+            appName: app.name,
+            icon: app.icon,
+            version: app.version,
           ),
-          delegate: SliverChildBuilderDelegate((context, index) {
-            if (index < apps.length) {
-              final app = apps[index];
-              final cardState = cardStateIndex.resolve(
-                appId: app.appId,
-                latestVersion: app.version,
-              );
-              return AppCard(
-                appId: app.appId,
-                name: app.name,
-                description: app.description,
-                iconUrl: app.icon,
-                buttonState: cardState.buttonState,
-                progress: cardState.progress,
-                isInstalling: cardState.isInstalling,
-                onTap: () => context.push('/app/${app.appId}'),
-                onPrimaryPressed: () => handleAppCardPrimaryAction(
-                  context: context,
-                  ref: ref,
-                  buttonState: cardState.buttonState,
-                  appId: app.appId,
-                  appName: app.name,
-                  icon: app.icon,
-                  version: app.version,
-                ),
-              );
-            }
-            return null;
-          }, childCount: apps.length),
         );
       },
     );
-  }
-
-  int _calculateCrossAxisCount(double width) {
-    if (width < 600) return 1;
-    if (width < 900) return 2;
-    if (width < 1200) return 3;
-    return 4;
-  }
-
-  double _calculateChildAspectRatio(double width) {
-    final crossAxisCount = _calculateCrossAxisCount(width);
-    return (width - (crossAxisCount - 1) * AppSpacing.sm) /
-        crossAxisCount /
-        80; // 80 是卡片高度
   }
 }
 
@@ -862,6 +784,8 @@ class _RecommendListFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     if (!hasItems) {
       return const SizedBox.shrink();
     }
@@ -871,7 +795,7 @@ class _RecommendListFooter extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: AppSpacing.xl),
         child: Center(
           child: Text(
-            '加载中...',
+            l10n.loading,
             style: TextStyle(
               fontSize: 14,
               color: context.appColors.textSecondary,
@@ -889,7 +813,7 @@ class _RecommendListFooter extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.xl),
       child: Center(
         child: Text(
-          '没有更多数据了',
+          l10n.noMoreData,
           style: TextStyle(fontSize: 14, color: context.appColors.textTertiary),
         ),
       ),

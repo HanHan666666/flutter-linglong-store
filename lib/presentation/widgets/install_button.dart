@@ -2,31 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../core/accessibility/accessibility.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
+import '../../domain/models/install_button_state.dart';
 import '../../domain/models/install_task.dart';
 
-/// 安装按钮状态枚举
-enum InstallButtonState {
-  /// 未安装
-  notInstalled,
-
-  /// 安装中
-  installing,
-
-  /// 等待安装（排队中）
-  pending,
-
-  /// 已安装
-  installed,
-
-  /// 需要更新
-  update,
-
-  /// 打开应用
-  open,
-
-  /// 卸载
-  uninstall,
-}
+export '../../domain/models/install_button_state.dart' show InstallButtonState;
 
 /// 安装按钮组件
 ///

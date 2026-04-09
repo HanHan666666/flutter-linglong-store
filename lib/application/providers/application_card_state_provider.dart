@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/version_compare.dart';
+import '../../domain/models/install_button_state.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_task.dart';
-import '../../presentation/widgets/install_button.dart';
 import 'install_queue_provider.dart';
 import 'installed_apps_provider.dart';
 import 'update_apps_provider.dart';

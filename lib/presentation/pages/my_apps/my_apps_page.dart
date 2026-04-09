@@ -10,8 +10,10 @@ import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/config/visibility_aware_mixin.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
+import '../../../core/utils/app_notification_helpers.dart';
 import '../../../core/utils/version_compare.dart';
 import '../../../domain/models/installed_app.dart';
+import '../../helpers/app_uninstall_flow.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/linglong_process_panel.dart';
 import '../../widgets/widgets.dart';
@@ -112,9 +114,15 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
         .setProcessTabActive(tab == _MyAppsTab.process);
   }
 
-  /// 卸载应用（使用统一的卸载服务）
+  /// 卸载应用（使用统一的卸载流程）
   Future<void> _uninstallApp(InstalledApp app) async {
-    await ref.read(appUninstallServiceProvider).uninstall(context, app);
+    final service = ref.read(appUninstallServiceProvider);
+    final success = await AppUninstallFlow.run(context, app, service);
+    if (!context.mounted) return;
+
+    if (success) {
+      showAppSuccess(context, '${app.name} 已卸载');
+    }
   }
 
   @override

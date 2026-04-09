@@ -2,11 +2,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/logging/app_logger.dart';
 import '../../core/network/api_exceptions.dart';
-import '../../data/models/api_dto.dart';
+import '../../core/di/repository_provider.dart';
+import '../../domain/models/app_detail.dart';
 import '../../domain/models/installed_app.dart';
-import 'global_provider.dart';
 import 'installed_apps_provider.dart';
-import 'api_provider.dart';
 
 part 'update_apps_provider.g.dart';
 
@@ -94,9 +93,6 @@ class UpdateApps extends _$UpdateApps {
     return const UpdateAppsState();
   }
 
-  /// 获取当前架构
-  String get _arch => ref.read(globalAppProvider).arch ?? 'x86_64';
-
   /// 检查更新
   ///
   /// 比较已安装应用与远程最新版本，返回可更新列表
@@ -138,39 +134,25 @@ class UpdateApps extends _$UpdateApps {
   ) async {
     if (installedApps.isEmpty) return [];
 
-    final apiService = ref.read(appApiServiceProvider);
+    // 通过 Repository 检查更新，返回领域模型 AppDetail
+    final appRepo = ref.read(appRepositoryProvider);
+    final updateDetails = await appRepo.checkAppUpdates(installedApps);
+
     final updatableApps = <UpdatableApp>[];
 
-    // 构建批量检查更新请求
-    final checkList = installedApps
-        .map(
-          (app) => AppCheckVersionBO(
-            appId: app.appId,
-            arch: app.arch ?? _arch,
-            version: app.version,
-          ),
-        )
-        .toList();
-
-    // 调用检查更新接口 - 后端期望数组格式
-    final response = await apiService.appCheckUpdate(checkList);
-
-    // 解析响应 - 后端返回 List<AppDetailDTO>
-    final updateInfoList = response.data.data;
-
-    for (final appDetail in updateInfoList) {
+    for (final appDetail in updateDetails) {
       // 找到对应的已安装应用
       final installedApp = installedApps.firstWhere(
         (app) => app.appId == appDetail.appId,
         orElse: () => installedApps.first,
       );
 
-      // 如果版本不同，说明有更新
-      if (appDetail.appVersion != installedApp.version) {
+      // 如果版本不同，说明有更新（使用领域模型的 version 字段）
+      if (appDetail.version != installedApp.version) {
         updatableApps.add(
           UpdatableApp(
             installedApp: installedApp,
-            latestVersion: appDetail.appVersion,
+            latestVersion: appDetail.version,
             latestVersionDescription:
                 appDetail.releaseNote ?? appDetail.detailDescription,
             latestVersionSize: appDetail.packageSize,

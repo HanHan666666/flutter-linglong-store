@@ -11,6 +11,7 @@ import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/network/api_client.dart';
+import '../../core/utils/app_notification_helpers.dart';
 
 /// 日志文件相对路径（相对于 $HOME）
 const _kLogFileRelative =
@@ -161,11 +162,7 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
     final description = _descriptionController.text.trim();
 
     if (overview.isEmpty && description.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.feedbackHint),
-        ),
-      );
+      showAppNotification(context, l10n.feedbackHint);
       return;
     }
 
@@ -205,20 +202,12 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.feedbackSuccess),
-          ),
-        );
+        showAppSuccess(context, l10n.feedbackSuccess);
       }
     } catch (e, s) {
       AppLogger.error('提交反馈失败', e, s);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.feedbackFailed),
-          ),
-        );
+        showAppError(context, l10n.feedbackFailed);
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);

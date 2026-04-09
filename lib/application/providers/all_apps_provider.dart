@@ -1,9 +1,12 @@
+import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/logging/app_logger.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_exceptions.dart';
+import '../../core/utils/locale_utils.dart';
+import '../../data/mappers/app_list_mapper.dart';
 import '../../data/models/api_dto.dart';
 import '../../domain/models/recommend_models.dart';
 import 'api_provider.dart';
@@ -49,14 +52,6 @@ const int _allAppsPageSize = 30;
 /// 全部应用页状态 Provider
 @riverpod
 class AllApps extends _$AllApps {
-  /// 将 Flutter locale 归一成后端约定的语言值（zh_CN / en_US）
-  static String _resolveApiLang(String? locale) {
-    final norm = locale?.trim().replaceAll('-', '_').toLowerCase();
-    if (norm == null || norm.isEmpty) return 'zh_CN';
-    if (norm.startsWith('en')) return 'en_US';
-    return 'zh_CN';
-  }
-
   @override
   AllAppsState build() {
     // 初始化时加载数据
@@ -171,10 +166,10 @@ class AllApps extends _$AllApps {
         categoryId: categoryId,
         pageNo: page,
         pageSize: _allAppsPageSize,
-        lan: _resolveApiLang(ApiClient.getLocale?.call()),
+        lan: resolveApiLang(ApiClient.getLocale?.call()),
       ),
     );
-    return _convertApps(response.data.data);
+    return mapAppListToRecommendApps(response.data.data, pageSize: _allAppsPageSize);
   }
 
   /// 转换分类数据
@@ -196,42 +191,5 @@ class AllApps extends _$AllApps {
     );
 
     return categories;
-  }
-
-  /// 转换应用列表数据
-  PaginatedResponse<RecommendAppInfo> _convertApps(AppListPagedData? data) {
-    if (data == null) {
-      return const PaginatedResponse<RecommendAppInfo>(
-        items: [],
-        total: 0,
-        page: 1,
-        pageSize: _allAppsPageSize,
-        hasMore: false,
-      );
-    }
-
-    final apps = data.records
-        .map(
-          (dto) => RecommendAppInfo(
-            appId: dto.appId,
-            name: dto.appName,
-            version: dto.appVersion ?? '',
-            description: dto.appDesc,
-            icon: dto.appIcon,
-            developer: dto.developerName,
-            category: dto.categoryName,
-            size: dto.packageSize,
-            downloadCount: dto.downloadTimes,
-          ),
-        )
-        .toList();
-
-    return PaginatedResponse<RecommendAppInfo>(
-      items: apps,
-      total: data.total,
-      page: data.current,
-      pageSize: data.size,
-      hasMore: data.current < data.pages,
-    );
   }
 }

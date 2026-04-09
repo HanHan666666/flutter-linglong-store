@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/providers/app_operation_queue_provider.dart';
 import '../../application/providers/install_queue_provider.dart';
-import '../../core/i18n/l10n/app_localizations.dart';
+import '../../core/utils/app_notification_helpers.dart';
 import '../../domain/models/install_task.dart';
 import 'install_button.dart';
 
@@ -51,27 +51,12 @@ Future<void> handleAppCardPrimaryAction({
         if (!context.mounted) {
           return;
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.launching(appName) ??
-                  '正在启动 $appName...',
-            ),
-          ),
-        );
+        showAppLaunching(context, appName);
       } catch (error) {
         if (!context.mounted) {
           return;
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.launchFailed(error.toString()) ??
-                  '启动失败: $error',
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        showAppLaunchFailed(context, error.toString());
       }
       return;
     case InstallButtonState.installing:

@@ -696,5 +696,11 @@
   "a11yTabNotSelected": "未选中",
   "a11yStatusInstalled": "已安装",
   "a11yStatusUpdatable": "可更新",
-  "a11yStatusNotInstalled": "未安装"
+  "a11yStatusNotInstalled": "未安装",
+  "noAppsInCategory": "该分类下暂无应用",
+  "noRanking": "暂无排行",
+  "noRecommend": "暂无推荐",
+  "installTimeout": "安装超时：长时间未收到进度更新",
+  "loadingInstalledApps": "正在加载已安装应用...",
+  "appDescriptionPlaceholder": "应用描述"
 }

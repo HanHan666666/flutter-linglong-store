@@ -695,5 +695,11 @@
   "a11yTabNotSelected": "not selected",
   "a11yStatusInstalled": "installed",
   "a11yStatusUpdatable": "update available",
-  "a11yStatusNotInstalled": "not installed"
+  "a11yStatusNotInstalled": "not installed",
+  "noAppsInCategory": "No apps in this category",
+  "noRanking": "No rankings available",
+  "noRecommend": "No recommendations available",
+  "installTimeout": "Installation timeout: No progress updates for an extended period",
+  "loadingInstalledApps": "Loading installed apps...",
+  "appDescriptionPlaceholder": "App description"
 }

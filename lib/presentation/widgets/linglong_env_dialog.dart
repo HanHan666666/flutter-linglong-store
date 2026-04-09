@@ -6,6 +6,7 @@ import '../../application/providers/linglong_env_provider.dart';
 import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/platform/window_service.dart';
+import '../../core/utils/app_notification_helpers.dart';
 import '../../domain/models/linglong_env_check_result.dart';
 
 /// 玲珑环境检测对话框
@@ -370,14 +371,10 @@ class LinglongEnvDialog extends ConsumerWidget {
       await launchUrl(uri);
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.cannotOpenLink(url) ??
-                  '无法打开链接: $url',
-            ),
-            backgroundColor: AppColors.error,
-          ),
+        showAppError(
+          context,
+          AppLocalizations.of(context)?.cannotOpenLink(url) ??
+              '无法打开链接: $url',
         );
       }
     }
@@ -395,23 +392,15 @@ class LinglongEnvDialog extends ConsumerWidget {
       if (envState.result?.isOk ?? false) {
         // 环境正常，关闭对话框，由 launch_page 继续启动流程
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.envCheckPassed ?? '安装完成，环境检测通过',
-            ),
-            backgroundColor: AppColors.success,
-          ),
+        showAppSuccess(
+          context,
+          AppLocalizations.of(context)?.envCheckPassed ?? '安装完成，环境检测通过',
         );
       } else {
         // 环境仍异常，提示用户
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.envCheckFailed ?? '安装完成，但环境仍异常，请检查',
-            ),
-            backgroundColor: AppColors.warning,
-          ),
+        showAppWarning(
+          context,
+          AppLocalizations.of(context)?.envCheckFailed ?? '安装完成，但环境仍异常，请检查',
         );
       }
     }

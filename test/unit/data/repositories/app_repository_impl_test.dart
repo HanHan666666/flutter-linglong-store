@@ -383,8 +383,8 @@ void main() {
 
         // Assert
         expect(result.appId, equals('com.example.app'));
-        expect(result.appName, equals('Test App'));
-        expect(result.screenshotList?.length, equals(1));
+        expect(result.name, equals('Test App'));
+        expect(result.screenshots.length, equals(1));
       });
 
       test('should throw exception when app not found', () async {

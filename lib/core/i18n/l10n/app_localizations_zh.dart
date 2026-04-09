@@ -1223,4 +1223,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get a11yStatusNotInstalled => '未安装';
+
+  @override
+  String get noAppsInCategory => '该分类下暂无应用';
+
+  @override
+  String get noRanking => '暂无排行';
+
+  @override
+  String get noRecommend => '暂无推荐';
+
+  @override
+  String get installTimeout => '安装超时：长时间未收到进度更新';
+
+  @override
+  String get loadingInstalledApps => '正在加载已安装应用...';
+
+  @override
+  String get appDescriptionPlaceholder => '应用描述';
 }

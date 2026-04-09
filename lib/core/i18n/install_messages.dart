@@ -210,6 +210,9 @@ class InstallMessages {
   /// 创建快捷方式失败
   String shortcutCreateException(String error) =>
       _l10n.shortcutCreateException(error);
+
+  /// 安装超时
+  String get installTimeout => _l10n.installTimeout;
 }
 
 /// 安装阶段判断（纯逻辑，不依赖 i18n）

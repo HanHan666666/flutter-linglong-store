@@ -1,5 +1,7 @@
 import '../models/installed_app.dart';
-import '../../data/models/api_dto.dart';
+import '../models/app_detail.dart';
+import '../models/app_comment.dart';
+import '../models/app_version.dart';
 
 /// 应用相关 API Repository 接口
 abstract class AppRepository {
@@ -24,10 +26,10 @@ abstract class AppRepository {
   });
 
   /// 获取应用详情（含截图）
-  Future<AppDetailDTO> getAppDetail(String appId, {String? arch});
+  Future<AppDetail> getAppDetail(String appId, {String? arch});
 
   /// 获取应用评论列表
-  Future<List<AppCommentDTO>> getAppComments(String appId);
+  Future<List<AppComment>> getAppComments(String appId);
 
   /// 提交应用评论
   Future<bool> saveAppComment({
@@ -37,7 +39,7 @@ abstract class AppRepository {
   });
 
   /// 获取应用历史版本列表
-  Future<List<AppVersionDTO>> getVersions(
+  Future<List<AppVersion>> getVersions(
     String appId, {
     String? repoName,
     String? arch,
@@ -55,4 +57,10 @@ abstract class AppRepository {
   Future<List<InstalledApp>> enrichInstalledAppsWithDetails(
     List<InstalledApp> apps,
   );
+
+  /// 批量检查应用更新
+  ///
+  /// [apps] 需要检查更新的已安装应用列表
+  /// 返回有更新的应用的详情列表（领域模型），仅包含版本号比已安装版本新的应用
+  Future<List<AppDetail>> checkAppUpdates(List<InstalledApp> apps);
 }

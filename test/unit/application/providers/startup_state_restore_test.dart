@@ -52,12 +52,14 @@ void main() {
     );
 
     test(
-      'setting provider restores locale and theme without reviving repo preference',
+      'setting provider restores only setting-specific preferences without locale/theme',
       () async {
         SharedPreferences.setMockInitialValues({
           'linglong-store-language': 'en',
           'linglong-store-theme-mode': ThemeMode.light.index,
           'repo_name': 'repo:test',
+          'setting_check_version_on_startup': true,
+          'setting_show_base_service': true,
         });
         final prefs = await SharedPreferences.getInstance();
         final container = ProviderContainer(
@@ -67,11 +69,12 @@ void main() {
 
         final state = container.read(settingProvider);
 
-        expect(state.locale, const Locale('en'));
-        expect(state.themeMode, ThemeMode.light);
+        // locale/theme moved to GlobalAppState; SettingState no longer has them.
+        expect(state.cacheSize, 0);
+        expect(state.checkVersionOnStartup, isTrue);
+        expect(state.showBaseService, isTrue);
         // 仓库配置能力已移除，旧偏好键不应再污染设置状态。
         expect(state.toString(), isNot(contains('repo:test')));
-        expect(state.cacheSize, 0);
       },
     );
   });

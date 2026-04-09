@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:linglong_store/application/providers/app_detail_provider.dart';
 import 'package:linglong_store/core/di/providers.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
 import 'package:linglong_store/data/repositories/app_repository_impl.dart';
-import 'package:linglong_store/presentation/pages/app_detail/app_detail_page.dart';
 import 'package:mockito/mockito.dart';
 import 'package:retrofit/retrofit.dart';
 
@@ -57,7 +57,9 @@ void main() {
         (_) async => HttpResponse(
           const VersionListResponse(code: 200, data: []),
           Response(
-            requestOptions: RequestOptions(path: '/visit/getSearchAppVersionList'),
+            requestOptions: RequestOptions(
+              path: '/visit/getSearchAppVersionList',
+            ),
           ),
         ),
       );
@@ -94,9 +96,7 @@ void main() {
       when(mockApiService.saveAppComment(any)).thenAnswer(
         (_) async => HttpResponse(
           const BooleanResponse(code: 200, data: true),
-          Response(
-            requestOptions: RequestOptions(path: '/app/saveAppComment'),
-          ),
+          Response(requestOptions: RequestOptions(path: '/app/saveAppComment')),
         ),
       );
       when(mockApiService.getAppCommentList(any)).thenAnswer(

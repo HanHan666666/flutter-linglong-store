@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../application/providers/app_detail_provider.dart';
 import '../../../application/providers/app_uninstall_provider.dart';
 import '../../../application/providers/installed_apps_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
-import '../../../core/logging/app_logger.dart';
-import '../../../core/utils/version_compare.dart';
 import '../../../domain/models/installed_app.dart';
 import '../../../domain/models/install_task.dart';
 import '../../../domain/models/install_progress.dart';
-import '../../../data/models/api_dto.dart';
+import '../../../core/logging/app_logger.dart';
+import '../../../domain/models/app_detail.dart' as dm;
 import '../../../data/repositories/app_repository_impl.dart';
+import '../../helpers/app_uninstall_flow.dart';
 import '../../widgets/app_icon.dart';
 import '../../widgets/app_detail_comment_section.dart';
 import '../../widgets/app_detail_secondary_actions.dart';
@@ -22,238 +22,10 @@ import '../../widgets/confirm_dialog.dart';
 import '../../../core/di/providers.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/utils/format_utils.dart';
+import '../../../core/utils/app_notification_helpers.dart';
 import '../../../core/config/theme.dart';
+import '../../../core/utils/version_compare.dart';
 import 'screenshot_preview_lightbox.dart';
-
-part 'app_detail_page.g.dart';
-
-/// 应用详情状态
-class AppDetailState {
-  const AppDetailState({
-    this.app,
-    this.appDetail,
-    this.screenshots = const [],
-    this.comments = const [],
-    this.versions = const [],
-    this.isLoading = false,
-    this.isLoadingComments = false,
-    this.isLoadingVersions = false,
-    this.commentsError,
-    this.versionsError,
-    this.error,
-    this.isSubmittingComment = false,
-    this.isDescriptionExpanded = false,
-  });
-
-  final InstalledApp? app;
-  final AppDetailDTO? appDetail;
-  final List<AppScreenshotDTO> screenshots;
-  final List<AppCommentDTO> comments;
-  final List<AppVersionDTO> versions;
-  final bool isLoading;
-  final bool isLoadingComments;
-  final bool isLoadingVersions;
-  final String? commentsError;
-  final String? versionsError;
-  final String? error;
-  final bool isSubmittingComment;
-  final bool isDescriptionExpanded;
-
-  /// 获取截图 URL 列表
-  List<String> get screenshotUrls =>
-      screenshots.map((s) => s.screenshotUrl).toList();
-
-  AppDetailState copyWith({
-    InstalledApp? app,
-    AppDetailDTO? appDetail,
-    List<AppScreenshotDTO>? screenshots,
-    List<AppCommentDTO>? comments,
-    List<AppVersionDTO>? versions,
-    bool? isLoading,
-    bool? isLoadingComments,
-    bool? isLoadingVersions,
-    String? commentsError,
-    String? versionsError,
-    String? error,
-    bool? isSubmittingComment,
-    bool? isDescriptionExpanded,
-    bool clearError = false,
-    bool clearCommentsError = false,
-    bool clearVersionsError = false,
-    bool clearAppDetail = false,
-  }) {
-    return AppDetailState(
-      app: app ?? this.app,
-      appDetail: clearAppDetail ? null : (appDetail ?? this.appDetail),
-      screenshots: screenshots ?? this.screenshots,
-      comments: comments ?? this.comments,
-      versions: versions ?? this.versions,
-      isLoading: isLoading ?? this.isLoading,
-      isLoadingComments: isLoadingComments ?? this.isLoadingComments,
-      isLoadingVersions: isLoadingVersions ?? this.isLoadingVersions,
-      commentsError: clearCommentsError
-          ? null
-          : (commentsError ?? this.commentsError),
-      versionsError: clearVersionsError
-          ? null
-          : (versionsError ?? this.versionsError),
-      error: clearError ? null : (error ?? this.error),
-      isSubmittingComment: isSubmittingComment ?? this.isSubmittingComment,
-      isDescriptionExpanded:
-          isDescriptionExpanded ?? this.isDescriptionExpanded,
-    );
-  }
-}
-
-/// 应用详情 Provider
-@riverpod
-class AppDetail extends _$AppDetail {
-  @override
-  AppDetailState build(String appId) {
-    return const AppDetailState();
-  }
-
-  /// 加载应用详情
-  ///
-  /// [initialApp] 可选的初始应用信息，从列表页传递时可用于快速显示
-  Future<void> loadDetail(InstalledApp? initialApp) async {
-    // 如果有初始数据，先显示
-    if (initialApp != null) {
-      state = AppDetailState(app: initialApp);
-    } else {
-      state = state.copyWith(isLoading: true, clearError: true);
-    }
-
-    try {
-      final repository = ref.read(appRepositoryProvider);
-
-      // 调用真实 API 获取应用详情
-      final appDetail = await repository.getAppDetail(appId);
-
-      // 将详情转换为 InstalledApp 模型
-      final repo = ref.read(appRepositoryProvider) as AppRepositoryImpl;
-      final app = repo.mapDetailToInstalledApp(appDetail);
-
-      // 更新状态，包含截图列表
-      state = state.copyWith(
-        app: app,
-        appDetail: appDetail,
-        screenshots: appDetail.screenshotList ?? [],
-        isLoading: false,
-        clearCommentsError: true,
-        clearVersionsError: true,
-      );
-
-      // 评论区在版本列表之前展示，优先等待评论加载完成，版本列表继续异步补齐。
-      await _loadComments();
-      _loadVersions();
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
-    }
-  }
-
-  Future<void> _loadComments() async {
-    state = state.copyWith(isLoadingComments: true, clearCommentsError: true);
-
-    try {
-      final repository = ref.read(appRepositoryProvider);
-      final comments = await repository.getAppComments(appId);
-      state = state.copyWith(
-        comments: comments,
-        isLoadingComments: false,
-        clearCommentsError: true,
-      );
-    } catch (e) {
-      AppLogger.warning('[AppDetail] 评论列表加载失败: $appId - $e');
-      state = state.copyWith(
-        isLoadingComments: false,
-        commentsError: e.toString(),
-      );
-    }
-  }
-
-  /// 加载版本历史列表
-  Future<void> _loadVersions() async {
-    state = state.copyWith(isLoadingVersions: true, clearVersionsError: true);
-
-    try {
-      final repository = ref.read(appRepositoryProvider);
-      final versions = await repository.getVersions(
-        appId,
-        // 版本列表接口必须沿用详情页当前应用的仓库与架构，避免后端默认值查到错误仓库。
-        repoName: state.appDetail?.repoName ?? state.app?.repoName,
-        arch: state.appDetail?.arch ?? state.app?.arch,
-      );
-
-      state = state.copyWith(
-        versions: versions,
-        isLoadingVersions: false,
-        clearVersionsError: true,
-      );
-    } catch (e) {
-      // 版本列表失败不阻塞详情页主体，但要保留轻量错误态供用户重试和排查。
-      AppLogger.warning('[AppDetail] 版本历史加载失败: $appId - $e');
-      state = state.copyWith(
-        isLoadingVersions: false,
-        versionsError: e.toString(),
-      );
-    }
-  }
-
-  /// 刷新详情
-  Future<void> refresh() async {
-    await loadDetail(null);
-  }
-
-  /// 仅重试版本列表，避免因为局部失败重置整个详情页主体。
-  Future<void> retryVersions() async {
-    await _loadVersions();
-  }
-
-  Future<void> retryComments() async {
-    await _loadComments();
-  }
-
-  Future<void> submitComment(String remark, {String? version}) async {
-    final normalizedRemark = remark.trim();
-    if (normalizedRemark.isEmpty) {
-      return;
-    }
-
-    state = state.copyWith(isSubmittingComment: true, clearCommentsError: true);
-
-    try {
-      final repository = ref.read(appRepositoryProvider);
-      final success = await repository.saveAppComment(
-        appId: appId,
-        remark: normalizedRemark,
-        version: version,
-      );
-      if (!success) {
-        throw Exception('评论提交失败');
-      }
-
-      final comments = await repository.getAppComments(appId);
-      state = state.copyWith(
-        comments: comments,
-        isLoadingComments: false,
-        isSubmittingComment: false,
-        clearCommentsError: true,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isSubmittingComment: false,
-        commentsError: e.toString(),
-      );
-      rethrow;
-    }
-  }
-
-  /// 切换描述展开状态
-  void toggleDescription() {
-    state = state.copyWith(isDescriptionExpanded: !state.isDescriptionExpanded);
-  }
-}
 
 /// 应用详情页
 class AppDetailPage extends ConsumerStatefulWidget {
@@ -301,9 +73,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       appBar: AppBar(
         title: Semantics(
           label: l10n.a11yAppDetailPage,
-          child: Text(
-            detailState.app?.name ?? l10n.appDetailTitle,
-          ),
+          child: Text(detailState.app?.name ?? l10n.appDetailTitle),
         ),
       ),
       body: _buildBody(
@@ -421,7 +191,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           onRetry: () {
             ref.read(appDetailProvider(widget.appId).notifier).retryComments();
           },
-          onSubmit: (remark, version) => _submitComment(context, remark, version),
+          onSubmit: (remark, version) =>
+              _submitComment(context, remark, version),
         ),
       ),
     );
@@ -475,10 +246,10 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 ),
                 const SizedBox(height: 4),
                 // 简短描述（在应用名称下方）
-                if (appDetail?.appDesc != null &&
-                    appDetail!.appDesc!.isNotEmpty)
+                if (appDetail?.description != null &&
+                    appDetail!.description!.isNotEmpty)
                   Text(
-                    appDetail.appDesc!,
+                    appDetail.description!,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -486,10 +257,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 // 标签列表（Chip 样式）
-                if (appDetail?.tagList != null &&
-                    appDetail!.tagList!.isNotEmpty) ...[
+                if (appDetail?.tags.isNotEmpty ?? false) ...[
                   const SizedBox(height: 8),
-                  _buildTags(context, appDetail.tagList!),
+                  _buildTags(context, appDetail!.tags),
                 ],
                 const SizedBox(height: 4),
                 // 版本信息
@@ -562,16 +332,21 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                         label: l10n?.copyErrorMessage ?? 'Copy error message',
                         button: true,
                         child: Tooltip(
-                          message: l10n?.copyErrorMessage ?? 'Copy error message',
+                          message:
+                              l10n?.copyErrorMessage ?? 'Copy error message',
                           waitDuration: const Duration(milliseconds: 500),
                           child: TextButton(
                             onPressed: () {
                               Clipboard.setData(
-                                ClipboardData(text: installTask.displayMessage!),
+                                ClipboardData(
+                                  text: installTask.displayMessage!,
+                                ),
                               );
                             },
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
@@ -597,7 +372,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   }
 
   /// 构建标签列表（Chip 样式）
-  Widget _buildTags(BuildContext context, List<AppTagDTO> tags) {
+  Widget _buildTags(BuildContext context, List<dm.AppTag> tags) {
     return Wrap(
       spacing: 8,
       runSpacing: 4,
@@ -668,7 +443,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
-                          screenshot.screenshotUrl,
+                          screenshot.url,
                           width: 280,
                           height: 180,
                           fit: BoxFit.cover,
@@ -715,7 +490,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     final description =
         detailState.appDetail?.detailDescription?.isNotEmpty == true
         ? detailState.appDetail!.detailDescription!
-        : (detailState.appDetail?.appDesc ??
+        : (detailState.appDetail?.description ??
               app.description ??
               l10n?.noDescription ??
               '暂无描述');
@@ -1092,8 +867,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     String remark,
     String? version,
   ) async {
-    final l10n = AppLocalizations.of(context);
-
     try {
       await ref
           .read(appDetailProvider(widget.appId).notifier)
@@ -1101,20 +874,18 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       if (!context.mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n?.commentSubmitSuccess ?? '评论已提交')),
+      showAppNotification(
+        context,
+        AppLocalizations.of(context)?.commentSubmitSuccess ?? '评论已提交',
       );
     } catch (e) {
       if (!context.mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n?.commentSubmitFailed(e.toString()) ?? '评论提交失败: $e',
-          ),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
+      showAppError(
+        context,
+        AppLocalizations.of(context)?.commentSubmitFailed(e.toString()) ??
+            '评论提交失败: $e',
       );
     }
   }
@@ -1172,26 +943,11 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       await cliRepo.runApp(app.appId);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.launching(app.name) ??
-                  '正在启动 ${app.name}',
-            ),
-          ),
-        );
+        showAppLaunching(context, app.name);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.launchFailed(e.toString()) ??
-                  '启动失败: $e',
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        showAppLaunchFailed(context, e.toString());
       }
     }
   }
@@ -1250,13 +1006,19 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
   /// 显示卸载确认对话框
   ///
-  /// 使用统一的卸载服务处理所有逻辑：
+  /// 使用统一的卸载流程处理所有逻辑：
   /// - 运行中检测
   /// - 确认弹窗
   /// - kill 进程
   /// - 执行卸载
   Future<void> _showUninstallDialog(InstalledApp app) async {
-    await ref.read(appUninstallServiceProvider).uninstall(context, app);
+    final service = ref.read(appUninstallServiceProvider);
+    final success = await AppUninstallFlow.run(context, app, service);
+    if (!context.mounted) return;
+
+    if (success) {
+      showAppSuccess(context, '${app.name} 已卸载');
+    }
   }
 
   /// 在主窗口内以灯箱形式预览截图
@@ -1265,10 +1027,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     List<String> screenshots,
     int initialIndex,
   ) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final loadFailedText = AppLocalizations.of(context)?.loadFailed ?? '加载失败';
-    final errorColor = Theme.of(context).colorScheme.error;
-
     try {
       await showScreenshotPreviewLightbox(
         context,
@@ -1284,9 +1042,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       if (!mounted) {
         return;
       }
-      messenger.showSnackBar(
-        SnackBar(content: Text(loadFailedText), backgroundColor: errorColor),
-      );
+      showAppError(context, AppLocalizations.of(context)?.loadFailed ?? '加载失败');
     }
   }
 
@@ -1297,26 +1053,17 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       await cliRepo.createDesktopShortcut(app.appId);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.shortcutCreated ?? '快捷方式已创建',
-            ),
-          ),
+        showAppSuccess(
+          context,
+          AppLocalizations.of(context)?.shortcutCreated ?? '快捷方式已创建',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(
-                    context,
-                  )?.shortcutCreateFailed(e.toString()) ??
-                  '创建失败: $e',
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
+        showAppError(
+          context,
+          AppLocalizations.of(context)?.shortcutCreateFailed(e.toString()) ??
+              '创建失败: $e',
         );
       }
     }

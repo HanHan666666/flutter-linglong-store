@@ -208,10 +208,15 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
     LaunchState launchState,
     LinglongEnvState envState,
   ) {
+    final l10n = AppLocalizations.of(context)!;
+
     // 如果环境正在检测，显示环境检测状态
-    String message = launchState.stepInfo.message;
+    String message;
     if (envState.isChecking) {
-      message = AppLocalizations.of(context)?.detectingEnv ?? '正在检测玲珑环境...';
+      message = l10n.detectingEnv;
+    } else {
+      // 根据当前步骤获取国际化步骤标签
+      message = _stepLabel(launchState.currentStep, l10n);
     }
 
     return AnimatedSwitcher(
@@ -225,6 +230,24 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
         textAlign: TextAlign.center,
       ),
     );
+  }
+
+  /// 根据启动步骤获取国际化标签
+  String _stepLabel(LaunchStep step, AppLocalizations l10n) {
+    switch (step) {
+      case LaunchStep.environmentCheck:
+        return l10n.detectingEnv;
+      case LaunchStep.installedAppsInit:
+        return l10n.loadingInstalledApps;
+      case LaunchStep.updateCheck:
+        return l10n.checkingUpdate;
+      case LaunchStep.queueRecovery:
+        return l10n.stepQueueRecovery;
+      case LaunchStep.completed:
+        return l10n.success;
+      case LaunchStep.error:
+        return l10n.launchFailedTitle;
+    }
   }
 
   /// 构建进度区域

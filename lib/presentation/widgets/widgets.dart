@@ -11,6 +11,7 @@ export 'error_state.dart';
 export 'confirm_dialog.dart';
 export 'category_filter_header.dart';
 export 'category_filter_section.dart';
+export 'responsive_app_grid.dart';
 
 // 布局组件
 export 'app_shell.dart';

@@ -1,289 +1,239 @@
-import 'dart:async';
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/application/services/app_uninstall_service.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
-import 'package:linglong_store/presentation/widgets/uninstall_blocked_dialog.dart';
-
-import '../../../test_utils.dart';
-
-/// 创建一个没有活跃安装任务的卸载服务
-AppUninstallService _makeService({
-  required List<String> events,
-  required Completer<void> uninstallCompleter,
-  UninstallConfirmDialog? confirmUninstall,
-  UninstallInterceptDialog? interceptDialog,
-  OpenDownloadManagerCallback? openDownloadManager,
-}) {
-  return AppUninstallService(
-    readRunningApps: () => const [],
-    killRunningApp: (_) async => true,
-    uninstallApp: (appId, version) async {
-      events.add('uninstall:$appId@$version:start');
-      await uninstallCompleter.future;
-      events.add('uninstall:$appId@$version:end');
-      return 'ok';
-    },
-    removeInstalledApp: (appId, version) {
-      events.add('remove:$appId@$version');
-    },
-    syncAfterUninstall: () async {
-      events.add('sync');
-    },
-    reportUninstall: (appId, version, {appName}) async {
-      events.add('report:$appId@$version:$appName');
-    },
-    confirmUninstall:
-        confirmUninstall ??
-        (_, {appName}) async {
-          events.add('confirm:$appName');
-          return true;
-        },
-    interceptDialog: interceptDialog,
-    openDownloadManager: openDownloadManager,
-  );
-}
+import 'package:linglong_store/domain/models/running_app.dart';
+import 'package:linglong_store/domain/models/uninstall_result.dart';
 
 void main() {
   group('AppUninstallService', () {
-    testWidgets('keeps uninstall flow working across async gaps', (
-      tester,
-    ) async {
-      late BuildContext context;
-      final events = <String>[];
-      final uninstallCompleter = Completer<void>();
-
-      await tester.pumpWidget(
-        createTestApp(
-          Builder(
-            builder: (buildContext) {
-              context = buildContext;
-              return const SizedBox.shrink();
-            },
-          ),
-        ),
-      );
-
-      final service = _makeService(
-        events: events,
-        uninstallCompleter: uninstallCompleter,
-      );
-
-      final future = service.uninstall(
-        context,
-        const InstalledApp(
-          appId: 'org.example.demo',
-          name: 'Demo',
-          version: '1.0.0',
-        ),
-      );
-
-      await tester.pump();
-      uninstallCompleter.complete();
-
-      await expectLater(future, completion(isTrue));
-      await tester.pump();
-
-      expect(events, [
-        'confirm:Demo',
-        'uninstall:org.example.demo@1.0.0:start',
-        'uninstall:org.example.demo@1.0.0:end',
-        'remove:org.example.demo@1.0.0',
-        'sync',
-        'report:org.example.demo@1.0.0:Demo',
-      ]);
-      expect(find.text('Demo 已卸载'), findsOneWidget);
-    });
-
-    testWidgets('blocks uninstall when an active install task exists', (
-      tester,
-    ) async {
-      late BuildContext context;
-      final events = <String>[];
-      bool interceptDialogShown = false;
-
-      await tester.pumpWidget(
-        createTestApp(
-          Builder(
-            builder: (buildContext) {
-              context = buildContext;
-              return const SizedBox.shrink();
-            },
-          ),
-        ),
-      );
-
+    test('getActiveBlockingTask returns null when no active task', () {
       final service = AppUninstallService(
-        // 注入活跃安装任务读取器（返回非 null 表示有活跃任务）
-        readActiveInstallTask: () => ('正在安装中的应用', 'org.active.app'),
-        readRunningApps: () => const [],
-        killRunningApp: (_) async => true,
-        uninstallApp: (appId, version) async {
-          events.add('uninstall:$appId');
-          return 'ok';
-        },
-        removeInstalledApp: (appId, version) {
-          events.add('remove:$appId');
-        },
-        syncAfterUninstall: () async {
-          events.add('sync');
-        },
-        reportUninstall: (appId, version, {appName}) async {
-          events.add('report:$appId');
-        },
-        confirmUninstall: (_, {appName}) async {
-          events.add('confirm:$appName');
-          return true;
-        },
-        interceptDialog:
-            (context, {required activeTaskName, fallbackAppId = ''}) async {
-              interceptDialogShown = true;
-              events.add('intercept:$activeTaskName');
-              return UninstallBlockedAction.acknowledge;
-            },
-      );
-
-      final result = await service.uninstall(
-        context,
-        const InstalledApp(
-          appId: 'org.example.demo',
-          name: 'Demo',
-          version: '1.0.0',
-        ),
-      );
-
-      // 卸载被阻止
-      expect(result, isFalse);
-      expect(interceptDialogShown, isTrue);
-      // 卸载执行器、移除和同步均未被调用
-      expect(events, contains('intercept:正在安装中的应用'));
-      expect(events, isNot(contains('uninstall:org.example.demo')));
-      expect(events, isNot(contains('remove:org.example.demo')));
-      expect(events, isNot(contains('sync')));
-      expect(events, isNot(contains('confirm:Demo')));
-    });
-
-    testWidgets('opens download manager when user chooses 查看下载管理', (
-      tester,
-    ) async {
-      late BuildContext context;
-      bool downloadManagerOpened = false;
-
-      await tester.pumpWidget(
-        createTestApp(
-          Builder(
-            builder: (buildContext) {
-              context = buildContext;
-              return const SizedBox.shrink();
-            },
-          ),
-        ),
-      );
-
-      final service = AppUninstallService(
-        readActiveInstallTask: () => ('活跃应用', 'org.active.app'),
         readRunningApps: () => const [],
         killRunningApp: (_) async => true,
         uninstallApp: (appId, version) async => 'ok',
         removeInstalledApp: (appId, version) {},
         syncAfterUninstall: () async {},
         reportUninstall: (appId, version, {appName}) async {},
-        confirmUninstall: (_, {appName}) async => false,
-        interceptDialog:
-            (context, {required activeTaskName, fallbackAppId = ''}) async {
-              return UninstallBlockedAction.openDownloadManager;
-            },
-        openDownloadManager: (context) {
-          downloadManagerOpened = true;
+        readActiveInstallTask: () => null,
+      );
+
+      expect(service.getActiveBlockingTask(), isNull);
+    });
+
+    test('getActiveBlockingTask returns task info when active', () {
+      final service = AppUninstallService(
+        readRunningApps: () => const [],
+        killRunningApp: (_) async => true,
+        uninstallApp: (appId, version) async => 'ok',
+        removeInstalledApp: (appId, version) {},
+        syncAfterUninstall: () async {},
+        reportUninstall: (appId, version, {appName}) async {},
+        readActiveInstallTask: () => ('My App', 'org.active.app'),
+      );
+
+      final result = service.getActiveBlockingTask();
+      expect(result, isNotNull);
+      expect(result!.$1, 'My App');
+      expect(result.$2, 'org.active.app');
+    });
+
+    test('getRunningInstances returns matching apps', () {
+      final runningApps = [
+        const RunningApp(
+          id: '1',
+          appId: 'org.foo',
+          name: 'Foo',
+          version: '1.0.0',
+          arch: 'x86_64',
+          channel: 'main',
+          source: 'linglong',
+          pid: 1234,
+          containerId: 'c1',
+        ),
+        const RunningApp(
+          id: '2',
+          appId: 'org.bar',
+          name: 'Bar',
+          version: '1.0.0',
+          arch: 'x86_64',
+          channel: 'main',
+          source: 'linglong',
+          pid: 5678,
+          containerId: 'c2',
+        ),
+        const RunningApp(
+          id: '3',
+          appId: 'org.foo',
+          name: 'Foo',
+          version: '1.0.0',
+          arch: 'x86_64',
+          channel: 'main',
+          source: 'linglong',
+          pid: 9999,
+          containerId: 'c3',
+        ),
+      ];
+
+      final service = AppUninstallService(
+        readRunningApps: () => runningApps,
+        killRunningApp: (_) async => true,
+        uninstallApp: (appId, version) async => 'ok',
+        removeInstalledApp: (appId, version) {},
+        syncAfterUninstall: () async {},
+        reportUninstall: (appId, version, {appName}) async {},
+      );
+
+      final instances = service.getRunningInstances('org.foo');
+      expect(instances.length, 2);
+      expect(instances.every((a) => a.appId == 'org.foo'), isTrue);
+    });
+
+    test('executeUninstall returns success on normal flow', () async {
+      final events = <String>[];
+
+      final service = AppUninstallService(
+        readRunningApps: () => const [],
+        killRunningApp: (_) async => true,
+        uninstallApp: (appId, version) async {
+          events.add('uninstall:$appId@$version');
+          return 'ok';
+        },
+        removeInstalledApp: (appId, version) {
+          events.add('remove:$appId@$version');
+        },
+        syncAfterUninstall: () async {
+          events.add('sync');
+        },
+        reportUninstall: (appId, version, {appName}) async {
+          events.add('report:$appId@$version:$appName');
         },
       );
 
-      final result = await service.uninstall(
-        context,
-        const InstalledApp(
-          appId: 'org.example.demo',
-          name: 'Demo',
-          version: '1.0.0',
-        ),
+      final app = const InstalledApp(
+        appId: 'org.example.demo',
+        name: 'Demo',
+        version: '1.0.0',
       );
 
-      expect(result, isFalse);
-      expect(downloadManagerOpened, isTrue);
+      final result = await service.executeUninstall(app);
+
+      expect(result, isA<UninstallResultSuccess>());
+      expect(events, [
+        'uninstall:org.example.demo@1.0.0',
+        'remove:org.example.demo@1.0.0',
+        'sync',
+        'report:org.example.demo@1.0.0:Demo',
+      ]);
     });
 
-    testWidgets(
-      'continues normal uninstall flow when there is no active task',
-      (tester) async {
-        late BuildContext context;
-        bool interceptCalled = false;
-        final events = <String>[];
-        final completer = Completer<void>();
+    test('executeUninstall kills running instances first', () async {
+      final events = <String>[];
 
-        await tester.pumpWidget(
-          createTestApp(
-            Builder(
-              builder: (buildContext) {
-                context = buildContext;
-                return const SizedBox.shrink();
-              },
-            ),
-          ),
-        );
-
-        final service = AppUninstallService(
-          // 无活跃任务
-          readActiveInstallTask: () => null,
-          readRunningApps: () => const [],
-          killRunningApp: (_) async => true,
-          uninstallApp: (appId, version) async {
-            events.add('uninstall:$appId');
-            completer.complete();
-            return 'ok';
-          },
-          removeInstalledApp: (appId, version) {
-            events.add('remove:$appId');
-          },
-          syncAfterUninstall: () async {
-            events.add('sync');
-          },
-          reportUninstall: (appId, version, {appName}) async {},
-          confirmUninstall: (_, {appName}) async {
-            events.add('confirm');
-            return true;
-          },
-          interceptDialog:
-              (context, {required activeTaskName, fallbackAppId = ''}) async {
-                interceptCalled = true;
-                return UninstallBlockedAction.acknowledge;
-              },
-        );
-
-        final future = service.uninstall(
-          context,
-          const InstalledApp(
+      final service = AppUninstallService(
+        readRunningApps: () => [
+          const RunningApp(
+            id: '1',
             appId: 'org.example.demo',
             name: 'Demo',
             version: '1.0.0',
+            arch: 'x86_64',
+            channel: 'main',
+            source: 'linglong',
+            pid: 1234,
+            containerId: 'c1',
           ),
-        );
+        ],
+        killRunningApp: (app) async {
+          events.add('kill:${app.appId}');
+          return true;
+        },
+        uninstallApp: (appId, version) async {
+          events.add('uninstall:$appId@$version');
+          return 'ok';
+        },
+        removeInstalledApp: (appId, version) {
+          events.add('remove:$appId@$version');
+        },
+        syncAfterUninstall: () async {
+          events.add('sync');
+        },
+        reportUninstall: (appId, version, {appName}) async {},
+      );
 
-        await tester.pump();
-        await future;
+      final app = const InstalledApp(
+        appId: 'org.example.demo',
+        name: 'Demo',
+        version: '1.0.0',
+      );
 
-        // 拦截弹窗未被调用
-        expect(interceptCalled, isFalse);
-        // 正常卸载流程已执行
-        expect(
-          events,
-          containsAll([
-            'confirm',
-            'uninstall:org.example.demo',
-            'remove:org.example.demo',
-            'sync',
-          ]),
-        );
-      },
-    );
+      final result = await service.executeUninstall(app);
+
+      expect(result, isA<UninstallResultSuccess>());
+      expect(events, [
+        'kill:org.example.demo',
+        'uninstall:org.example.demo@1.0.0',
+        'remove:org.example.demo@1.0.0',
+        'sync',
+      ]);
+    });
+
+    test('executeUninstall returns kill failure result', () async {
+      final service = AppUninstallService(
+        readRunningApps: () => [
+          const RunningApp(
+            id: '1',
+            appId: 'org.example.demo',
+            name: 'Demo',
+            version: '1.0.0',
+            arch: 'x86_64',
+            channel: 'main',
+            source: 'linglong',
+            pid: 1234,
+            containerId: 'c1',
+          ),
+        ],
+        killRunningApp: (_) async => false,
+        uninstallApp: (appId, version) async => 'ok',
+        removeInstalledApp: (appId, version) {},
+        syncAfterUninstall: () async {},
+        reportUninstall: (appId, version, {appName}) async {},
+      );
+
+      final app = const InstalledApp(
+        appId: 'org.example.demo',
+        name: 'Demo',
+        version: '1.0.0',
+      );
+
+      final result = await service.executeUninstall(app);
+
+      expect(result, isA<UninstallResultKillFailed>());
+      expect((result as UninstallResultKillFailed).appId, 'org.example.demo');
+    });
+
+    test('executeUninstall returns error result on uninstall failure',
+        () async {
+      final service = AppUninstallService(
+        readRunningApps: () => const [],
+        killRunningApp: (_) async => true,
+        uninstallApp: (appId, version) async {
+          throw Exception('uninstall failed');
+        },
+        removeInstalledApp: (appId, version) {},
+        syncAfterUninstall: () async {},
+        reportUninstall: (appId, version, {appName}) async {},
+      );
+
+      final app = const InstalledApp(
+        appId: 'org.example.demo',
+        name: 'Demo',
+        version: '1.0.0',
+      );
+
+      final result = await service.executeUninstall(app);
+
+      expect(result, isA<UninstallResultError>());
+      expect((result as UninstallResultError).message, contains('uninstall failed'));
+    });
   });
 }

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shimmer/shimmer.dart';
 
-import '../../../application/providers/application_card_state_provider.dart';
 import '../../../application/providers/custom_category_provider.dart';
 import '../../../core/config/page_visibility.dart';
 import '../../../core/config/routes.dart';
@@ -107,7 +105,10 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
 
     // 空数据状态
     if (state.data == null) {
-      return const EmptyState.noData(title: '暂无应用', description: '该分类下暂无应用');
+      return EmptyState.noData(
+        title: l10n.noApps,
+        description: l10n.noAppsInCategory,
+      );
     }
 
     // 正常显示
@@ -142,36 +143,11 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
   Widget _buildLoadingState(AppLocalizations l10n) {
     return Semantics(
       label: l10n.loading,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
+      child: const SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Semantics(
-            label: l10n.loading,
-            child: Shimmer.fromColors(
-              baseColor: context.appColors.skeletonBackground,
-              highlightColor: context.appColors.skeletonHighlight,
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 400,
-                  mainAxisSpacing: AppSpacing.sm,
-                  crossAxisSpacing: AppSpacing.sm,
-                  childAspectRatio: 3.5,
-                ),
-                itemCount: 12,
-                itemBuilder: (_, __) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: AppRadius.smRadius,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
+          padding: EdgeInsets.all(AppSpacing.lg),
+          child: AppGridShimmer(),
         ),
       ),
     );
@@ -241,8 +217,8 @@ class _CategoryHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-/// 应用网格
-class _AppsGrid extends ConsumerWidget {
+/// 应用网格（已迁移到共享 ResponsiveAppGrid）
+class _AppsGrid extends StatelessWidget {
   const _AppsGrid({
     required this.apps,
     required this.isLoadingMore,
@@ -254,121 +230,32 @@ class _AppsGrid extends ConsumerWidget {
   final bool hasMore;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (apps.isEmpty) {
-      return const SliverToBoxAdapter(
-        child: EmptyState.noData(title: '暂无应用', description: '该分类下暂无应用'),
-      );
-    }
-
-    final cardStateIndex = ref.watch(applicationCardStateIndexProvider);
-
-    return SliverLayoutBuilder(
-      builder: (context, constraints) {
-        // 响应式列数计算
-        final crossAxisCount = _calculateCrossAxisCount(
-          constraints.crossAxisExtent,
-        );
-
-        return SliverGrid(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            mainAxisSpacing: AppSpacing.sm,
-            crossAxisSpacing: AppSpacing.sm,
-            childAspectRatio: _calculateChildAspectRatio(
-              constraints.crossAxisExtent,
-            ),
+  Widget build(BuildContext context) {
+    return ResponsiveAppGrid<RecommendAppInfo>(
+      items: apps,
+      isLoadingMore: isLoadingMore,
+      hasMore: hasMore,
+      itemBuilder: (ref, index, app, cardState) {
+        return AppCard(
+          appId: app.appId,
+          name: app.name,
+          description: app.description,
+          iconUrl: app.icon,
+          buttonState: cardState.buttonState,
+          progress: cardState.progress,
+          isInstalling: cardState.isInstalling,
+          onTap: () => context.push('/app/${app.appId}'),
+          onPrimaryPressed: () => handleAppCardPrimaryAction(
+            context: context,
+            ref: ref,
+            buttonState: cardState.buttonState,
+            appId: app.appId,
+            appName: app.name,
+            icon: app.icon,
+            version: app.version,
           ),
-          delegate: SliverChildBuilderDelegate((context, index) {
-            if (index < apps.length) {
-              final app = apps[index];
-              final cardState = cardStateIndex.resolve(
-                appId: app.appId,
-                latestVersion: app.version,
-              );
-              return AppCard(
-                appId: app.appId,
-                name: app.name,
-                description: app.description,
-                iconUrl: app.icon,
-                buttonState: cardState.buttonState,
-                progress: cardState.progress,
-                isInstalling: cardState.isInstalling,
-                onTap: () => context.push('/app/${app.appId}'),
-                onPrimaryPressed: () => handleAppCardPrimaryAction(
-                  context: context,
-                  ref: ref,
-                  buttonState: cardState.buttonState,
-                  appId: app.appId,
-                  appName: app.name,
-                  icon: app.icon,
-                  version: app.version,
-                ),
-              );
-            }
-            // 加载更多指示器
-            if (isLoadingMore) {
-              return const _LoadingMoreItem();
-            }
-            // 没有更多数据提示
-            if (!hasMore && apps.isNotEmpty) {
-              return const _NoMoreDataItem();
-            }
-            return null;
-          }, childCount: apps.length + (isLoadingMore || !hasMore ? 1 : 0)),
         );
       },
-    );
-  }
-
-  int _calculateCrossAxisCount(double width) {
-    if (width < 600) return 1;
-    if (width < 900) return 2;
-    if (width < 1200) return 3;
-    return 4;
-  }
-
-  double _calculateChildAspectRatio(double width) {
-    final crossAxisCount = _calculateCrossAxisCount(width);
-    return (width - (crossAxisCount - 1) * AppSpacing.sm) /
-        crossAxisCount /
-        80; // 80 是卡片高度
-  }
-}
-
-/// 加载更多指示器
-class _LoadingMoreItem extends StatelessWidget {
-  const _LoadingMoreItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: const Center(
-        child: SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      ),
-    );
-  }
-}
-
-/// 没有更多数据提示
-class _NoMoreDataItem extends StatelessWidget {
-  const _NoMoreDataItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Center(
-        child: Text(
-          '没有更多了',
-          style: TextStyle(fontSize: 13, color: context.appColors.textTertiary),
-        ),
-      ),
     );
   }
 }

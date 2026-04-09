@@ -1,8 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
-import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
+import 'package:linglong_store/domain/models/install_queue_state.dart';
+import 'package:linglong_store/domain/models/install_task.dart';
 
 void main() {
   group('InstallQueueState', () {
@@ -44,9 +45,7 @@ void main() {
         createdAt: DateTime.now().millisecondsSinceEpoch,
       );
 
-      final state = InstallQueueState(
-        queue: [task],
-      );
+      final state = InstallQueueState(queue: [task]);
 
       expect(state.isAppInQueue('com.example.test'), isTrue);
       expect(state.isAppInQueue('com.example.other'), isFalse);
@@ -60,9 +59,7 @@ void main() {
         createdAt: DateTime.now().millisecondsSinceEpoch,
       );
 
-      final state = InstallQueueState(
-        queue: [task],
-      );
+      final state = InstallQueueState(queue: [task]);
 
       final status = state.getAppInstallStatus('com.example.test');
       expect(status, isNotNull);
@@ -151,9 +148,7 @@ void main() {
       expect(successTask.isCompleted, isTrue);
       expect(successTask.isSuccess, isTrue);
 
-      final failedTask = installingTask.copyWith(
-        status: InstallStatus.failed,
-      );
+      final failedTask = installingTask.copyWith(status: InstallStatus.failed);
       expect(failedTask.isProcessing, isFalse);
       expect(failedTask.isCompleted, isTrue);
       expect(failedTask.isFailed, isTrue);

@@ -80,6 +80,17 @@ class InstallException extends AppException {
   String get userMessage => '安装失败：$message';
 }
 
+/// CLI 取消异常
+class CliCancelledException extends AppException {
+  const CliCancelledException(this.message);
+
+  @override
+  final String message;
+
+  @override
+  String get userMessage => '命令已取消';
+}
+
 /// CLI 命令不存在异常
 class CliNotFoundException extends AppException {
   const CliNotFoundException([this.message = 'll-cli 命令未找到']);

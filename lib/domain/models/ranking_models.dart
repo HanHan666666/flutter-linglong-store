@@ -19,13 +19,6 @@ enum RankingType {
   const RankingType(this.code);
 
   final String code;
-
-  String get label => switch (this) {
-        RankingType.download => '下载榜',
-        RankingType.rising => '新秀榜',
-        RankingType.update => '更新榜',
-        RankingType.hot => '热门榜',
-      };
 }
 
 /// 排行榜应用信息
@@ -50,22 +43,13 @@ sealed class RankingAppInfo with _$RankingAppInfo {
 
 /// 排行榜数据
 class RankingData {
-  const RankingData({
-    required this.type,
-    required this.apps,
-  });
+  const RankingData({required this.type, required this.apps});
 
   final RankingType type;
   final List<RankingAppInfo> apps;
 
-  RankingData copyWith({
-    RankingType? type,
-    List<RankingAppInfo>? apps,
-  }) {
-    return RankingData(
-      type: type ?? this.type,
-      apps: apps ?? this.apps,
-    );
+  RankingData copyWith({RankingType? type, List<RankingAppInfo>? apps}) {
+    return RankingData(type: type ?? this.type, apps: apps ?? this.apps);
   }
 }
 

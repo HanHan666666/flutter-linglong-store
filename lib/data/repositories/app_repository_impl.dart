@@ -5,9 +5,13 @@ import 'package:linglong_store/core/config/app_config.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/core/network/api_client.dart';
 import 'package:linglong_store/core/storage/cache_service.dart';
+import 'package:linglong_store/core/utils/locale_utils.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
 
 import '../../domain/models/installed_app.dart';
+import '../../domain/models/app_detail.dart';
+import '../../domain/models/app_comment.dart';
+import '../../domain/models/app_version.dart';
 import '../../domain/repositories/app_repository.dart';
 import '../datasources/remote/app_api_service.dart';
 
@@ -16,7 +20,6 @@ import '../datasources/remote/app_api_service.dart';
 /// 负责调用 API 服务并处理数据转换
 class AppRepositoryImpl implements AppRepository {
   static const _detailsCachePrefix = 'app_details';
-  static const _detailDefaultLang = 'zh_CN';
 
   /// 默认构造函数，使用 ApiClient 创建 AppApiService
   AppRepositoryImpl() : _apiService = AppApiService(ApiClient.instance);
@@ -76,7 +79,7 @@ class AppRepositoryImpl implements AppRepository {
         PageParams(
           pageNo: page,
           pageSize: pageSize,
-          lan: _resolveLang(ApiClient.getLocale?.call()),
+          lan: resolveApiLang(ApiClient.getLocale?.call()),
         ),
       );
 
@@ -105,7 +108,7 @@ class AppRepositoryImpl implements AppRepository {
           categoryId: category,
           pageNo: page,
           pageSize: pageSize,
-          lan: _resolveLang(ApiClient.getLocale?.call()),
+          lan: resolveApiLang(ApiClient.getLocale?.call()),
         ),
       );
 
@@ -132,7 +135,7 @@ class AppRepositoryImpl implements AppRepository {
           keyword: keyword,
           pageNo: page,
           pageSize: pageSize,
-          lan: _resolveLang(ApiClient.getLocale?.call()),
+          lan: resolveApiLang(ApiClient.getLocale?.call()),
         ),
       );
 
@@ -148,10 +151,10 @@ class AppRepositoryImpl implements AppRepository {
   }
 
   @override
-  Future<AppDetailDTO> getAppDetail(String appId, {String? arch}) async {
+  Future<AppDetail> getAppDetail(String appId, {String? arch}) async {
     try {
       AppLogger.info('获取应用详情: $appId');
-      final detailLang = _resolveLang(ApiClient.getLocale?.call());
+      final detailLang = resolveApiLang(ApiClient.getLocale?.call());
 
       // /app/getAppDetail 需要显式 lang 才会按语言过滤截图和标签。
       final response = await _apiService.getAppDetail([
@@ -175,8 +178,11 @@ class AppRepositoryImpl implements AppRepository {
         throw Exception('应用详情不存在: $appId');
       }
 
-      // 返回第一个版本（通常是最新版本）
-      return AppDetailDTO.fromJson(detailList.first as Map<String, dynamic>);
+      // 返回第一个版本（通常是最新版本），转换为领域模型
+      final dto = AppDetailDTO.fromJson(
+        detailList.first as Map<String, dynamic>,
+      );
+      return _mapToAppDetail(dto);
     } catch (e, s) {
       AppLogger.error('获取应用详情失败: $appId', e, s);
       rethrow;
@@ -184,13 +190,13 @@ class AppRepositoryImpl implements AppRepository {
   }
 
   @override
-  Future<List<AppCommentDTO>> getAppComments(String appId) async {
+  Future<List<AppComment>> getAppComments(String appId) async {
     try {
       AppLogger.info('获取应用评论列表: $appId');
       final response = await _apiService.getAppCommentList(
         AppCommentSearchBO(appId: appId),
       );
-      return response.data.data;
+      return response.data.data.map(_mapToAppComment).toList();
     } catch (e, s) {
       AppLogger.error('获取应用评论失败: $appId', e, s);
       rethrow;
@@ -224,20 +230,8 @@ class AppRepositoryImpl implements AppRepository {
     }
   }
 
-  /// 将 Flutter locale 归一成后端 API 约定的语言值（zh_CN / en_US）。
-  String _resolveLang(String? locale) {
-    final normalized = locale?.trim().replaceAll('-', '_').toLowerCase();
-    if (normalized == null || normalized.isEmpty) {
-      return _detailDefaultLang;
-    }
-    if (normalized.startsWith('en')) {
-      return 'en_US';
-    }
-    return _detailDefaultLang; // 默认 zh_CN
-  }
-
   @override
-  Future<List<AppVersionDTO>> getVersions(
+  Future<List<AppVersion>> getVersions(
     String appId, {
     String? repoName,
     String? arch,
@@ -254,7 +248,7 @@ class AppRepositoryImpl implements AppRepository {
           arch: arch ?? _currentArch,
           pageNo: page,
           pageSize: pageSize,
-          lan: _resolveLang(ApiClient.getLocale?.call()),
+          lan: resolveApiLang(ApiClient.getLocale?.call()),
         ),
       );
 
@@ -272,7 +266,7 @@ class AppRepositoryImpl implements AppRepository {
     int limit = 100,
   }) async {
     try {
-      final lan = _resolveLang(ApiClient.getLocale?.call());
+      final lan = resolveApiLang(ApiClient.getLocale?.call());
       final response = type == 'new'
           ? await _apiService.getNewAppList(
               PageParams(pageNo: 1, pageSize: limit, lan: lan),
@@ -288,6 +282,36 @@ class AppRepositoryImpl implements AppRepository {
           .toList();
     } catch (e, s) {
       AppLogger.error('获取排行榜失败: $type', e, s);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<AppDetail>> checkAppUpdates(List<InstalledApp> apps) async {
+    if (apps.isEmpty) return [];
+
+    try {
+      AppLogger.info('批量检查应用更新');
+
+      // 构建批量检查更新请求
+      final checkList = apps
+          .map(
+            (app) => AppCheckVersionBO(
+              appId: app.appId,
+              arch: app.arch ?? _currentArch,
+              version: app.version,
+            ),
+          )
+          .toList();
+
+      // 调用检查更新接口 - 后端返回 List<AppDetailDTO>
+      final response = await _apiService.appCheckUpdate(checkList);
+      final updateInfoList = response.data.data;
+
+      // 将 DTO 转换为领域模型
+      return updateInfoList.map(_mapToAppDetail).toList();
+    } catch (e, s) {
+      AppLogger.error('批量检查更新失败', e, s);
       rethrow;
     }
   }
@@ -323,6 +347,26 @@ class AppRepositoryImpl implements AppRepository {
       runtime: dto.appRuntime,
       size: dto.packageSize,
       repoName: dto.repoName,
+    );
+  }
+
+  /// 将领域模型 AppDetail 转换为 InstalledApp 模型
+  ///
+  /// 便捷重载，避免在页面层需要再持有 DTO 引用。
+  InstalledApp mapDetailToInstalledAppFromDomain(AppDetail detail) {
+    return InstalledApp(
+      appId: detail.appId,
+      name: detail.name,
+      version: detail.version,
+      arch: detail.arch ?? _currentArch,
+      channel: detail.channel ?? 'stable',
+      description: detail.description,
+      icon: detail.icon,
+      kind: detail.kind,
+      module: detail.module,
+      runtime: detail.runtime,
+      size: detail.packageSize,
+      repoName: detail.repoName,
     );
   }
 
@@ -441,7 +485,7 @@ class AppRepositoryImpl implements AppRepository {
     }
   }
 
-  List<AppVersionDTO> _normalizeVersionList(
+  List<AppVersion> _normalizeVersionList(
     List<AppVersionDTO> versions, {
     required String fallbackAppId,
   }) {
@@ -463,7 +507,7 @@ class AppRepositoryImpl implements AppRepository {
     result.sort(
       (left, right) => _compareVersions(right.versionNo, left.versionNo),
     );
-    return result;
+    return result.map(_mapToAppVersion).toList();
   }
 
   int _compareVersions(String left, String right) {
@@ -503,5 +547,77 @@ class AppRepositoryImpl implements AppRepository {
       final numericValue = int.tryParse(part);
       return numericValue ?? part;
     }).toList();
+  }
+
+  // ============== Domain model mapping ==============
+
+  /// 将 AppDetailDTO 映射为领域模型 AppDetail
+  AppDetail _mapToAppDetail(AppDetailDTO dto) {
+    return AppDetail(
+      appId: dto.appId,
+      name: dto.appName,
+      version: dto.appVersion,
+      icon: dto.appIcon,
+      description: dto.appDesc,
+      detailDescription: dto.detailDescription,
+      kind: dto.appKind,
+      runtime: dto.appRuntime,
+      module: dto.appModule,
+      base: dto.appBase,
+      arch: dto.arch,
+      channel: dto.channel,
+      developerName: dto.developerName,
+      categoryName: dto.categoryName,
+      categoryId: dto.categoryId,
+      downloadTimes: dto.downloadTimes,
+      packageSize: dto.packageSize,
+      screenshots: (dto.screenshotList ?? [])
+          .map(
+            (s) => AppScreenshot(
+              url: s.screenshotUrl,
+              description: null, // DTO 无 description 字段
+            ),
+          )
+          .toList(),
+      tags: (dto.tagList ?? []).map((t) => AppTag(name: t.name)).toList(),
+      repoName: dto.repoName,
+      repoUrl: dto.repoUrl,
+      homePage: dto.homePage,
+      license: dto.license,
+      releaseNote: dto.releaseNote,
+    );
+  }
+
+  /// 将 AppCommentDTO 映射为领域模型 AppComment
+  AppComment _mapToAppComment(AppCommentDTO dto) {
+    return AppComment(
+      id: dto.id,
+      appId: dto.appId,
+      version: dto.version,
+      remark: dto.remark,
+      agreeNum: dto.agreeNum,
+      disagreeNum: dto.disagreeNum,
+      createTime: dto.createTime,
+    );
+  }
+
+  /// 将 AppVersionDTO 映射为领域模型 AppVersion
+  AppVersion _mapToAppVersion(AppVersionDTO dto) {
+    return AppVersion(
+      versionId: dto.versionId,
+      versionNo: dto.versionNo,
+      versionName: dto.versionName,
+      description: dto.description,
+      releaseTime: dto.releaseTime,
+      packageSize: dto.packageSize,
+      appId: dto.appId,
+      icon: dto.icon,
+      kind: dto.kind,
+      module: dto.module,
+      channel: dto.channel,
+      arch: dto.arch,
+      repoName: dto.repoName,
+      installCount: dto.installCount,
+    );
   }
 }

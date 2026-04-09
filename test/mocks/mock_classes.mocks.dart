@@ -5,21 +5,24 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
 
-import 'package:linglong_store/core/network/api_client.dart' as _i13;
-import 'package:linglong_store/core/storage/cache_service.dart' as _i15;
-import 'package:linglong_store/core/storage/preferences_service.dart' as _i14;
+import 'package:linglong_store/core/network/api_client.dart' as _i15;
+import 'package:linglong_store/core/storage/cache_service.dart' as _i17;
+import 'package:linglong_store/core/storage/preferences_service.dart' as _i16;
 import 'package:linglong_store/data/datasources/remote/app_api_service.dart'
-    as _i16;
-import 'package:linglong_store/data/models/api_dto.dart' as _i6;
-import 'package:linglong_store/domain/models/install_progress.dart' as _i10;
-import 'package:linglong_store/domain/models/install_task.dart' as _i11;
+    as _i18;
+import 'package:linglong_store/data/models/api_dto.dart' as _i19;
+import 'package:linglong_store/domain/models/app_comment.dart' as _i8;
+import 'package:linglong_store/domain/models/app_detail.dart' as _i6;
+import 'package:linglong_store/domain/models/app_version.dart' as _i9;
+import 'package:linglong_store/domain/models/install_progress.dart' as _i12;
+import 'package:linglong_store/domain/models/install_task.dart' as _i13;
 import 'package:linglong_store/domain/models/installed_app.dart' as _i5;
-import 'package:linglong_store/domain/models/running_app.dart' as _i9;
+import 'package:linglong_store/domain/models/running_app.dart' as _i11;
 import 'package:linglong_store/domain/repositories/analytics_repository.dart'
-    as _i12;
+    as _i14;
 import 'package:linglong_store/domain/repositories/app_repository.dart' as _i3;
 import 'package:linglong_store/domain/repositories/linglong_cli_repository.dart'
-    as _i8;
+    as _i10;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i7;
 import 'package:retrofit/retrofit.dart' as _i2;
@@ -106,27 +109,27 @@ class MockAppRepository extends _i1.Mock implements _i3.AppRepository {
           as _i4.Future<List<_i5.InstalledApp>>);
 
   @override
-  _i4.Future<_i6.AppDetailDTO> getAppDetail(String? appId, {String? arch}) =>
+  _i4.Future<_i6.AppDetail> getAppDetail(String? appId, {String? arch}) =>
       (super.noSuchMethod(
             Invocation.method(#getAppDetail, [appId], {#arch: arch}),
-            returnValue: _i4.Future<_i6.AppDetailDTO>.value(
-              _i7.dummyValue<_i6.AppDetailDTO>(
+            returnValue: _i4.Future<_i6.AppDetail>.value(
+              _i7.dummyValue<_i6.AppDetail>(
                 this,
                 Invocation.method(#getAppDetail, [appId], {#arch: arch}),
               ),
             ),
           )
-          as _i4.Future<_i6.AppDetailDTO>);
+          as _i4.Future<_i6.AppDetail>);
 
   @override
-  _i4.Future<List<_i6.AppCommentDTO>> getAppComments(String? appId) =>
+  _i4.Future<List<_i8.AppComment>> getAppComments(String? appId) =>
       (super.noSuchMethod(
             Invocation.method(#getAppComments, [appId]),
-            returnValue: _i4.Future<List<_i6.AppCommentDTO>>.value(
-              <_i6.AppCommentDTO>[],
+            returnValue: _i4.Future<List<_i8.AppComment>>.value(
+              <_i8.AppComment>[],
             ),
           )
-          as _i4.Future<List<_i6.AppCommentDTO>>);
+          as _i4.Future<List<_i8.AppComment>>);
 
   @override
   _i4.Future<bool> saveAppComment({
@@ -145,7 +148,7 @@ class MockAppRepository extends _i1.Mock implements _i3.AppRepository {
           as _i4.Future<bool>);
 
   @override
-  _i4.Future<List<_i6.AppVersionDTO>> getVersions(
+  _i4.Future<List<_i9.AppVersion>> getVersions(
     String? appId, {
     String? repoName,
     String? arch,
@@ -163,11 +166,11 @@ class MockAppRepository extends _i1.Mock implements _i3.AppRepository {
                 #pageSize: pageSize,
               },
             ),
-            returnValue: _i4.Future<List<_i6.AppVersionDTO>>.value(
-              <_i6.AppVersionDTO>[],
+            returnValue: _i4.Future<List<_i9.AppVersion>>.value(
+              <_i9.AppVersion>[],
             ),
           )
-          as _i4.Future<List<_i6.AppVersionDTO>>);
+          as _i4.Future<List<_i9.AppVersion>>);
 
   @override
   _i4.Future<List<_i5.InstalledApp>> getRanking({
@@ -199,7 +202,7 @@ class MockAppRepository extends _i1.Mock implements _i3.AppRepository {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockLinglongCliRepository extends _i1.Mock
-    implements _i8.LinglongCliRepository {
+    implements _i10.LinglongCliRepository {
   MockLinglongCliRepository() {
     _i1.throwOnMissingStub(this);
   }
@@ -219,17 +222,17 @@ class MockLinglongCliRepository extends _i1.Mock
           as _i4.Future<List<_i5.InstalledApp>>);
 
   @override
-  _i4.Future<List<_i9.RunningApp>> getRunningApps() =>
+  _i4.Future<List<_i11.RunningApp>> getRunningApps() =>
       (super.noSuchMethod(
             Invocation.method(#getRunningApps, []),
-            returnValue: _i4.Future<List<_i9.RunningApp>>.value(
-              <_i9.RunningApp>[],
+            returnValue: _i4.Future<List<_i11.RunningApp>>.value(
+              <_i11.RunningApp>[],
             ),
           )
-          as _i4.Future<List<_i9.RunningApp>>);
+          as _i4.Future<List<_i11.RunningApp>>);
 
   @override
-  _i4.Stream<_i10.InstallProgress> installApp(
+  _i4.Stream<_i12.InstallProgress> installApp(
     String? appId, {
     String? version,
     bool? force = false,
@@ -240,25 +243,25 @@ class MockLinglongCliRepository extends _i1.Mock
               [appId],
               {#version: version, #force: force},
             ),
-            returnValue: _i4.Stream<_i10.InstallProgress>.empty(),
+            returnValue: _i4.Stream<_i12.InstallProgress>.empty(),
           )
-          as _i4.Stream<_i10.InstallProgress>);
+          as _i4.Stream<_i12.InstallProgress>);
 
   @override
-  _i4.Stream<_i10.InstallProgress> updateApp(
+  _i4.Stream<_i12.InstallProgress> updateApp(
     String? appId, {
     String? version,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#updateApp, [appId], {#version: version}),
-            returnValue: _i4.Stream<_i10.InstallProgress>.empty(),
+            returnValue: _i4.Stream<_i12.InstallProgress>.empty(),
           )
-          as _i4.Stream<_i10.InstallProgress>);
+          as _i4.Stream<_i12.InstallProgress>);
 
   @override
   _i4.Future<bool> cancelOperation(
     String? appId, {
-    required _i11.InstallTaskKind? kind,
+    required _i13.InstallTaskKind? kind,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#cancelOperation, [appId], {#kind: kind}),
@@ -360,7 +363,7 @@ class MockLinglongCliRepository extends _i1.Mock
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockAnalyticsRepository extends _i1.Mock
-    implements _i12.AnalyticsRepository {
+    implements _i14.AnalyticsRepository {
   MockAnalyticsRepository() {
     _i1.throwOnMissingStub(this);
   }
@@ -424,7 +427,7 @@ class MockAnalyticsRepository extends _i1.Mock
 /// A class which mocks [ApiClient].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockApiClient extends _i1.Mock implements _i13.ApiClient {
+class MockApiClient extends _i1.Mock implements _i15.ApiClient {
   MockApiClient() {
     _i1.throwOnMissingStub(this);
   }
@@ -434,7 +437,7 @@ class MockApiClient extends _i1.Mock implements _i13.ApiClient {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockPreferencesService extends _i1.Mock
-    implements _i14.PreferencesService {
+    implements _i16.PreferencesService {
   MockPreferencesService() {
     _i1.throwOnMissingStub(this);
   }
@@ -443,7 +446,7 @@ class MockPreferencesService extends _i1.Mock
 /// A class which mocks [CacheService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockCacheService extends _i1.Mock implements _i15.CacheService {
+class MockCacheService extends _i1.Mock implements _i17.CacheService {
   MockCacheService() {
     _i1.throwOnMissingStub(this);
   }
@@ -452,234 +455,233 @@ class MockCacheService extends _i1.Mock implements _i15.CacheService {
 /// A class which mocks [AppApiService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockAppApiService extends _i1.Mock implements _i16.AppApiService {
+class MockAppApiService extends _i1.Mock implements _i18.AppApiService {
   MockAppApiService() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i4.Future<_i2.HttpResponse<_i6.CategoryListResponse>> getDisCategoryList() =>
+  _i4.Future<_i2.HttpResponse<_i19.CategoryListResponse>>
+  getDisCategoryList() =>
       (super.noSuchMethod(
             Invocation.method(#getDisCategoryList, []),
             returnValue:
-                _i4.Future<_i2.HttpResponse<_i6.CategoryListResponse>>.value(
-                  _FakeHttpResponse_0<_i6.CategoryListResponse>(
+                _i4.Future<_i2.HttpResponse<_i19.CategoryListResponse>>.value(
+                  _FakeHttpResponse_0<_i19.CategoryListResponse>(
                     this,
                     Invocation.method(#getDisCategoryList, []),
                   ),
                 ),
           )
-          as _i4.Future<_i2.HttpResponse<_i6.CategoryListResponse>>);
+          as _i4.Future<_i2.HttpResponse<_i19.CategoryListResponse>>);
 
   @override
-  _i4.Future<_i2.HttpResponse<_i6.AppListResponse>> getSearchAppList(
-    _i6.SearchAppListRequest? request,
+  _i4.Future<_i2.HttpResponse<_i19.AppListResponse>> getSearchAppList(
+    _i19.SearchAppListRequest? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getSearchAppList, [request]),
             returnValue:
-                _i4.Future<_i2.HttpResponse<_i6.AppListResponse>>.value(
-                  _FakeHttpResponse_0<_i6.AppListResponse>(
+                _i4.Future<_i2.HttpResponse<_i19.AppListResponse>>.value(
+                  _FakeHttpResponse_0<_i19.AppListResponse>(
                     this,
                     Invocation.method(#getSearchAppList, [request]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.HttpResponse<_i6.AppListResponse>>);
+          as _i4.Future<_i2.HttpResponse<_i19.AppListResponse>>);
 
   @override
-  _i4.Future<_i2.HttpResponse<_i6.AppListArrayResponse>> getAppDetails(
-    List<_i6.AppDetailsBO>? body,
+  _i4.Future<_i2.HttpResponse<_i19.AppListArrayResponse>> getAppDetails(
+    List<_i19.AppDetailsBO>? body,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getAppDetails, [body]),
             returnValue:
-                _i4.Future<_i2.HttpResponse<_i6.AppListArrayResponse>>.value(
-                  _FakeHttpResponse_0<_i6.AppListArrayResponse>(
+                _i4.Future<_i2.HttpResponse<_i19.AppListArrayResponse>>.value(
+                  _FakeHttpResponse_0<_i19.AppListArrayResponse>(
                     this,
                     Invocation.method(#getAppDetails, [body]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.HttpResponse<_i6.AppListArrayResponse>>);
+          as _i4.Future<_i2.HttpResponse<_i19.AppListArrayResponse>>);
 
   @override
-  _i4.Future<_i2.HttpResponse<_i6.AppDetailResponse>> getAppDetail(
-    List<_i6.AppDetailSearchBO>? request,
+  _i4.Future<_i2.HttpResponse<_i19.AppDetailResponse>> getAppDetail(
+    List<_i19.AppDetailSearchBO>? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getAppDetail, [request]),
             returnValue:
-                _i4.Future<_i2.HttpResponse<_i6.AppDetailResponse>>.value(
-                  _FakeHttpResponse_0<_i6.AppDetailResponse>(
+                _i4.Future<_i2.HttpResponse<_i19.AppDetailResponse>>.value(
+                  _FakeHttpResponse_0<_i19.AppDetailResponse>(
                     this,
                     Invocation.method(#getAppDetail, [request]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.HttpResponse<_i6.AppDetailResponse>>);
+          as _i4.Future<_i2.HttpResponse<_i19.AppDetailResponse>>);
 
   @override
-  _i4.Future<_i2.HttpResponse<_i6.AppCommentListResponse>> getAppCommentList(
-    _i6.AppCommentSearchBO? request,
+  _i4.Future<_i2.HttpResponse<_i19.AppCommentListResponse>> getAppCommentList(
+    _i19.AppCommentSearchBO? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getAppCommentList, [request]),
             returnValue:
-                _i4.Future<_i2.HttpResponse<_i6.AppCommentListResponse>>.value(
-                  _FakeHttpResponse_0<_i6.AppCommentListResponse>(
+                _i4.Future<_i2.HttpResponse<_i19.AppCommentListResponse>>.value(
+                  _FakeHttpResponse_0<_i19.AppCommentListResponse>(
                     this,
                     Invocation.method(#getAppCommentList, [request]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.HttpResponse<_i6.AppCommentListResponse>>);
+          as _i4.Future<_i2.HttpResponse<_i19.AppCommentListResponse>>);
 
   @override
-  _i4.Future<_i2.HttpResponse<_i6.BooleanResponse>> saveAppComment(
-    _i6.AppCommentSaveBO? request,
+  _i4.Future<_i2.HttpResponse<_i19.BooleanResponse>> saveAppComment(
+    _i19.AppCommentSaveBO? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#saveAppComment, [request]),
             returnValue:
-                _i4.Future<_i2.HttpResponse<_i6.BooleanResponse>>.value(
-                  _FakeHttpResponse_0<_i6.BooleanResponse>(
+                _i4.Future<_i2.HttpResponse<_i19.BooleanResponse>>.value(
+                  _FakeHttpResponse_0<_i19.BooleanResponse>(
                     this,
                     Invocation.method(#saveAppComment, [request]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.HttpResponse<_i6.BooleanResponse>>);
+          as _i4.Future<_i2.HttpResponse<_i19.BooleanResponse>>);
 
   @override
-  _i4.Future<_i2.HttpResponse<_i6.AppListArrayResponse>> getWelcomeCarouselList(
-    _i6.AppWelcomeSearchRequest? request,
-  ) =>
+  _i4.Future<_i2.HttpResponse<_i19.AppListArrayResponse>>
+  getWelcomeCarouselList(_i19.AppWelcomeSearchRequest? request) =>
       (super.noSuchMethod(
             Invocation.method(#getWelcomeCarouselList, [request]),
             returnValue:
-                _i4.Future<_i2.HttpResponse<_i6.AppListArrayResponse>>.value(
-                  _FakeHttpResponse_0<_i6.AppListArrayResponse>(
+                _i4.Future<_i2.HttpResponse<_i19.AppListArrayResponse>>.value(
+                  _FakeHttpResponse_0<_i19.AppListArrayResponse>(
                     this,
                     Invocation.method(#getWelcomeCarouselList, [request]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.HttpResponse<_i6.AppListArrayResponse>>);
+          as _i4.Future<_i2.HttpResponse<_i19.AppListArrayResponse>>);
 
   @override
-  _i4.Future<_i2.HttpResponse<_i6.AppListResponse>> getWelcomeAppList(
-    _i6.PageParams? request,
+  _i4.Future<_i2.HttpResponse<_i19.AppListResponse>> getWelcomeAppList(
+    _i19.PageParams? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getWelcomeAppList, [request]),
             returnValue:
-                _i4.Future<_i2.HttpResponse<_i6.AppListResponse>>.value(
-                  _FakeHttpResponse_0<_i6.AppListResponse>(
+                _i4.Future<_i2.HttpResponse<_i19.AppListResponse>>.value(
+                  _FakeHttpResponse_0<_i19.AppListResponse>(
                     this,
                     Invocation.method(#getWelcomeAppList, [request]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.HttpResponse<_i6.AppListResponse>>);
+          as _i4.Future<_i2.HttpResponse<_i19.AppListResponse>>);
 
   @override
-  _i4.Future<_i2.HttpResponse<_i6.AppDetailListResponse>> appCheckUpdate(
-    List<_i6.AppCheckVersionBO>? request,
+  _i4.Future<_i2.HttpResponse<_i19.AppDetailListResponse>> appCheckUpdate(
+    List<_i19.AppCheckVersionBO>? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#appCheckUpdate, [request]),
             returnValue:
-                _i4.Future<_i2.HttpResponse<_i6.AppDetailListResponse>>.value(
-                  _FakeHttpResponse_0<_i6.AppDetailListResponse>(
+                _i4.Future<_i2.HttpResponse<_i19.AppDetailListResponse>>.value(
+                  _FakeHttpResponse_0<_i19.AppDetailListResponse>(
                     this,
                     Invocation.method(#appCheckUpdate, [request]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.HttpResponse<_i6.AppDetailListResponse>>);
+          as _i4.Future<_i2.HttpResponse<_i19.AppDetailListResponse>>);
 
   @override
-  _i4.Future<_i2.HttpResponse<_i6.AppListResponse>> getNewAppList(
-    _i6.PageParams? request,
+  _i4.Future<_i2.HttpResponse<_i19.AppListResponse>> getNewAppList(
+    _i19.PageParams? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getNewAppList, [request]),
             returnValue:
-                _i4.Future<_i2.HttpResponse<_i6.AppListResponse>>.value(
-                  _FakeHttpResponse_0<_i6.AppListResponse>(
+                _i4.Future<_i2.HttpResponse<_i19.AppListResponse>>.value(
+                  _FakeHttpResponse_0<_i19.AppListResponse>(
                     this,
                     Invocation.method(#getNewAppList, [request]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.HttpResponse<_i6.AppListResponse>>);
+          as _i4.Future<_i2.HttpResponse<_i19.AppListResponse>>);
 
   @override
-  _i4.Future<_i2.HttpResponse<_i6.AppListResponse>> getInstallAppList(
-    _i6.PageParams? request,
+  _i4.Future<_i2.HttpResponse<_i19.AppListResponse>> getInstallAppList(
+    _i19.PageParams? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getInstallAppList, [request]),
             returnValue:
-                _i4.Future<_i2.HttpResponse<_i6.AppListResponse>>.value(
-                  _FakeHttpResponse_0<_i6.AppListResponse>(
+                _i4.Future<_i2.HttpResponse<_i19.AppListResponse>>.value(
+                  _FakeHttpResponse_0<_i19.AppListResponse>(
                     this,
                     Invocation.method(#getInstallAppList, [request]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.HttpResponse<_i6.AppListResponse>>);
+          as _i4.Future<_i2.HttpResponse<_i19.AppListResponse>>);
 
   @override
-  _i4.Future<_i2.HttpResponse<_i6.VersionListResponse>> getSearchAppVersionList(
-    _i6.AppVersionListRequest? request,
-  ) =>
+  _i4.Future<_i2.HttpResponse<_i19.VersionListResponse>>
+  getSearchAppVersionList(_i19.AppVersionListRequest? request) =>
       (super.noSuchMethod(
             Invocation.method(#getSearchAppVersionList, [request]),
             returnValue:
-                _i4.Future<_i2.HttpResponse<_i6.VersionListResponse>>.value(
-                  _FakeHttpResponse_0<_i6.VersionListResponse>(
+                _i4.Future<_i2.HttpResponse<_i19.VersionListResponse>>.value(
+                  _FakeHttpResponse_0<_i19.VersionListResponse>(
                     this,
                     Invocation.method(#getSearchAppVersionList, [request]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.HttpResponse<_i6.VersionListResponse>>);
+          as _i4.Future<_i2.HttpResponse<_i19.VersionListResponse>>);
 
   @override
-  _i4.Future<_i2.HttpResponse<_i6.SidebarConfigResponse>> getSidebarConfig() =>
+  _i4.Future<_i2.HttpResponse<_i19.SidebarConfigResponse>> getSidebarConfig() =>
       (super.noSuchMethod(
             Invocation.method(#getSidebarConfig, []),
             returnValue:
-                _i4.Future<_i2.HttpResponse<_i6.SidebarConfigResponse>>.value(
-                  _FakeHttpResponse_0<_i6.SidebarConfigResponse>(
+                _i4.Future<_i2.HttpResponse<_i19.SidebarConfigResponse>>.value(
+                  _FakeHttpResponse_0<_i19.SidebarConfigResponse>(
                     this,
                     Invocation.method(#getSidebarConfig, []),
                   ),
                 ),
           )
-          as _i4.Future<_i2.HttpResponse<_i6.SidebarConfigResponse>>);
+          as _i4.Future<_i2.HttpResponse<_i19.SidebarConfigResponse>>);
 
   @override
-  _i4.Future<_i2.HttpResponse<_i6.AppListResponse>> getSidebarApps(
-    _i6.SidebarAppsRequest? request,
+  _i4.Future<_i2.HttpResponse<_i19.AppListResponse>> getSidebarApps(
+    _i19.SidebarAppsRequest? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getSidebarApps, [request]),
             returnValue:
-                _i4.Future<_i2.HttpResponse<_i6.AppListResponse>>.value(
-                  _FakeHttpResponse_0<_i6.AppListResponse>(
+                _i4.Future<_i2.HttpResponse<_i19.AppListResponse>>.value(
+                  _FakeHttpResponse_0<_i19.AppListResponse>(
                     this,
                     Invocation.method(#getSidebarApps, [request]),
                   ),
                 ),
           )
-          as _i4.Future<_i2.HttpResponse<_i6.AppListResponse>>);
+          as _i4.Future<_i2.HttpResponse<_i19.AppListResponse>>);
 
   @override
   _i4.Future<_i2.HttpResponse<dynamic>> saveVisitRecord(
-    _i6.SaveVisitRecordRequest? request,
+    _i19.SaveVisitRecordRequest? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#saveVisitRecord, [request]),
@@ -694,7 +696,7 @@ class MockAppApiService extends _i1.Mock implements _i16.AppApiService {
 
   @override
   _i4.Future<_i2.HttpResponse<dynamic>> saveInstalledRecord(
-    _i6.SaveInstalledRecordRequest? request,
+    _i19.SaveInstalledRecordRequest? request,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#saveInstalledRecord, [request]),

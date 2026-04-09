@@ -2321,6 +2321,42 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'未安装'**
   String get a11yStatusNotInstalled;
+
+  /// No description provided for @noAppsInCategory.
+  ///
+  /// In zh, this message translates to:
+  /// **'该分类下暂无应用'**
+  String get noAppsInCategory;
+
+  /// No description provided for @noRanking.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无排行'**
+  String get noRanking;
+
+  /// No description provided for @noRecommend.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无推荐'**
+  String get noRecommend;
+
+  /// No description provided for @installTimeout.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装超时：长时间未收到进度更新'**
+  String get installTimeout;
+
+  /// No description provided for @loadingInstalledApps.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在加载已安装应用...'**
+  String get loadingInstalledApps;
+
+  /// No description provided for @appDescriptionPlaceholder.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用描述'**
+  String get appDescriptionPlaceholder;
 }
 
 class _AppLocalizationsDelegate

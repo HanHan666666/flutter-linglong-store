@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../application/providers/running_process_provider.dart';
 import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
+import '../../core/utils/app_notification_helpers.dart';
 import '../../domain/models/running_app.dart';
 import 'app_icon.dart';
 import 'empty_state.dart';
@@ -99,9 +100,7 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
     await Clipboard.setData(ClipboardData(text: value));
     if (!mounted) return;
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    showAppNotification(context, message);
   }
 
   Future<void> _stopProcess(RunningApp app) async {
@@ -111,16 +110,11 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
     if (!mounted) return;
 
     final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? l10n.stopSuccess(app.name)
-              : l10n.stopFailed,
-        ),
-        backgroundColor: success ? null : Theme.of(context).colorScheme.error,
-      ),
-    );
+    if (success) {
+      showAppSuccess(context, l10n.stopSuccess(app.name));
+    } else {
+      showAppError(context, l10n.stopFailed);
+    }
   }
 
   @override

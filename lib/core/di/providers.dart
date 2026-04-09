@@ -3,6 +3,11 @@
 // 此文件导出所有应用级别的 Provider，便于在需要时统一导入。
 // 使用方式：import 'package:linglong_store/core/di/providers.dart';
 
+// ==================== 领域模型导出 ====================
+
+// 安装队列状态（领域模型，由 provider 层引用）
+export '../../domain/models/install_queue_state.dart' show InstallQueueState;
+
 // ==================== 基础设施 Provider ====================
 
 // SharedPreferences - 需要在 main.dart 中初始化
@@ -29,7 +34,6 @@ export '../../application/providers/install_queue_provider.dart'
         installHistoryProvider,
         hasActiveInstallTasksProvider,
         InstallQueue,
-        InstallQueueState,
         EnqueueTaskParams;
 
 // 全局状态

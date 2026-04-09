@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:linglong_store/data/models/api_dto.dart';
+import 'package:linglong_store/domain/models/app_comment.dart';
 import 'package:linglong_store/presentation/widgets/app_detail_comment_section.dart';
 
 import '../../../test_utils.dart';
@@ -8,7 +8,7 @@ import '../../../test_utils.dart';
 void main() {
   Future<void> pumpCommentSection(
     WidgetTester tester, {
-    List<AppCommentDTO> comments = const [],
+    List<AppComment> comments = const [],
     List<String> versionOptions = const ['1.2.3'],
     String? selectedVersion = '1.2.3',
     bool isLoading = false,
@@ -47,7 +47,7 @@ void main() {
       versionOptions: const ['1.2.3', '1.2.2', '1.2.1'],
       selectedVersion: '1.2.2',
       comments: const [
-        AppCommentDTO(
+        AppComment(
           id: 'comment-1',
           appId: 'org.deepin.album',
           version: '6.0.49.1',
@@ -69,9 +69,18 @@ void main() {
     expect(find.text('有帮助 12'), findsOneWidget);
     expect(find.text('没帮助 1'), findsOneWidget);
     expect(find.byType(DropdownButtonFormField<String>), findsNothing);
-    expect(find.byKey(const ValueKey('comment-version-pill-1.2.3')), findsOneWidget);
-    expect(find.byKey(const ValueKey('comment-version-pill-1.2.2')), findsOneWidget);
-    expect(find.byKey(const ValueKey('comment-version-pill-1.2.1')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('comment-version-pill-1.2.3')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('comment-version-pill-1.2.2')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('comment-version-pill-1.2.1')),
+      findsOneWidget,
+    );
 
     await tester.enterText(
       find.byKey(const ValueKey('app-detail-comment-input')),
@@ -104,7 +113,10 @@ void main() {
 
   testWidgets('关联版本胶囊默认展示前 8 个并支持展开', (tester) async {
     String? selectedVersion;
-    final versions = List<String>.generate(10, (index) => '4.1.1.${10 - index}');
+    final versions = List<String>.generate(
+      10,
+      (index) => '4.1.1.${10 - index}',
+    );
 
     await pumpCommentSection(
       tester,
@@ -116,16 +128,31 @@ void main() {
       onSubmit: (_, __) async {},
     );
 
-    expect(find.byKey(const ValueKey('comment-version-pill-4.1.1.10')), findsOneWidget);
-    expect(find.byKey(const ValueKey('comment-version-pill-4.1.1.3')), findsOneWidget);
-    expect(find.byKey(const ValueKey('comment-version-pill-4.1.1.2')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('comment-version-pill-4.1.1.10')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('comment-version-pill-4.1.1.3')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('comment-version-pill-4.1.1.2')),
+      findsNothing,
+    );
     expect(find.text('展开全部'), findsOneWidget);
 
     await tester.tap(find.text('展开全部'));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('comment-version-pill-4.1.1.2')), findsOneWidget);
-    expect(find.byKey(const ValueKey('comment-version-pill-4.1.1.1')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('comment-version-pill-4.1.1.2')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('comment-version-pill-4.1.1.1')),
+      findsOneWidget,
+    );
     expect(find.text('收起'), findsOneWidget);
 
     await pumpCommentSection(
@@ -139,7 +166,9 @@ void main() {
         selectedVersion = version;
       },
     );
-    await tester.tap(find.byKey(const ValueKey('comment-version-pill-4.1.1.9')));
+    await tester.tap(
+      find.byKey(const ValueKey('comment-version-pill-4.1.1.9')),
+    );
     await tester.enterText(
       find.byKey(const ValueKey('app-detail-comment-input')),
       '新的评论',

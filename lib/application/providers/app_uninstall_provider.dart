@@ -2,7 +2,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/di/providers.dart';
 import '../../domain/models/install_task.dart';
-import '../../presentation/widgets/download_manager_dialog.dart';
 import 'app_collection_sync_provider.dart';
 import 'installed_apps_provider.dart';
 import 'running_process_provider.dart';
@@ -36,7 +35,5 @@ AppUninstallService appUninstallService(Ref ref) {
           : currentTask.appId;
       return (name, currentTask.appId);
     },
-    // 打开下载管理弹窗（在拦截后由用户选择触发）
-    openDownloadManager: showDownloadManagerDialog,
   );
 }

@@ -13,13 +13,9 @@ void main() {
         // Assert
         expect(RankingType.values.length, equals(4));
         expect(RankingType.download.code, equals('download'));
-        expect(RankingType.download.label, equals('下载榜'));
         expect(RankingType.rising.code, equals('rising'));
-        expect(RankingType.rising.label, equals('新秀榜'));
         expect(RankingType.update.code, equals('update'));
-        expect(RankingType.update.label, equals('更新榜'));
         expect(RankingType.hot.code, equals('hot'));
-        expect(RankingType.hot.label, equals('热门榜'));
       });
     });
 

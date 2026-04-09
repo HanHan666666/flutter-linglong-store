@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:linglong_store/core/platform/cli_executor.dart';
+import 'package:linglong_store/core/network/api_exceptions.dart';
 
 void main() {
   group('CliOutput', () {
@@ -59,22 +60,22 @@ void main() {
 
   group('CliTimeoutException', () {
     test('should create exception with correct properties', () {
-      const exception = CliTimeoutException('执行超时', 'install');
+      const exception = CliTimeoutException('执行超时', 'll-cli');
 
       expect(exception.message, equals('执行超时'));
-      expect(exception.command, equals('install'));
-      expect(exception.toString(), contains('执行超时'));
+      expect(exception.label, equals('ll-cli'));
+      expect(exception.userMessage, contains('执行超时'));
     });
   });
 
   group('CliExecutionException', () {
     test('should create exception with correct properties', () {
-      const exception = CliExecutionException('执行失败', 1, 'install');
+      const exception = CliExecutionException('执行失败', 1, 'll-cli');
 
       expect(exception.message, equals('执行失败'));
       expect(exception.exitCode, equals(1));
-      expect(exception.command, equals('install'));
-      expect(exception.toString(), contains('执行失败'));
+      expect(exception.label, equals('ll-cli'));
+      expect(exception.userMessage, contains('执行失败'));
     });
   });
 

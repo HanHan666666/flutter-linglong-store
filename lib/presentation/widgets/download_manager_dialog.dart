@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../application/providers/install_queue_provider.dart';
 import '../../application/providers/network_speed_provider.dart';
 import '../../core/config/theme.dart';
 import '../../core/di/providers.dart';
@@ -392,10 +391,7 @@ class _TaskCard extends StatelessWidget {
     final appColors = context.appColors;
 
     return Semantics(
-      label: l10n.a11yDownloadItem(
-        task.appName,
-        task.progressPercentLabel,
-      ),
+      label: l10n.a11yDownloadItem(task.appName, task.progressPercentLabel),
       value: task.isProcessing ? '${task.progressPercentLabel}' : null,
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -406,79 +402,81 @@ class _TaskCard extends StatelessWidget {
               : appColors.cardBackground.withValues(alpha: 0.7),
           borderRadius: BorderRadius.circular(featured ? 18 : 16),
           border: Border.all(
-            color: featured ? appColors.primaryLight : appColors.borderSecondary,
+            color: featured
+                ? appColors.primaryLight
+                : appColors.borderSecondary,
           ),
         ),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppIcon(
-                iconUrl: task.icon,
-                size: featured ? 48 : 42,
-                borderRadius: featured ? 16 : 14,
-                appName: task.appName,
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            task.appName,
-                            // featured 用 16px 正文级别，普通用 14px 说明级别
-                            style:
-                                (featured
-                                        ? AppTextStyles.body
-                                        : AppTextStyles.bodyMedium)
-                                    .copyWith(fontWeight: FontWeight.w600),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        _buildStatusPill(context),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      _buildSubtitle(context),
-                      style: AppTextStyles.caption.copyWith(
-                        color: appColors.textSecondary,
-                      ),
-                      maxLines: compact ? 1 : 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppIcon(
+                  iconUrl: task.icon,
+                  size: featured ? 48 : 42,
+                  borderRadius: featured ? 16 : 14,
+                  appName: task.appName,
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              _buildActionButtons(context),
-            ],
-          ),
-          if (showProgress &&
-              (task.isProcessing ||
-                  task.status == InstallStatus.downloading)) ...[
-            const SizedBox(height: AppSpacing.md),
-            _buildProgressBar(context),
-          ],
-          if (task.isFailed && task.errorMessage != null) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              task.errorMessage!,
-              style: AppTextStyles.caption.copyWith(color: AppColors.error),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              task.appName,
+                              // featured 用 16px 正文级别，普通用 14px 说明级别
+                              style:
+                                  (featured
+                                          ? AppTextStyles.body
+                                          : AppTextStyles.bodyMedium)
+                                      .copyWith(fontWeight: FontWeight.w600),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          _buildStatusPill(context),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        _buildSubtitle(context),
+                        style: AppTextStyles.caption.copyWith(
+                          color: appColors.textSecondary,
+                        ),
+                        maxLines: compact ? 1 : 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                _buildActionButtons(context),
+              ],
             ),
+            if (showProgress &&
+                (task.isProcessing ||
+                    task.status == InstallStatus.downloading)) ...[
+              const SizedBox(height: AppSpacing.md),
+              _buildProgressBar(context),
+            ],
+            if (task.isFailed && task.errorMessage != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                task.errorMessage!,
+                style: AppTextStyles.caption.copyWith(color: AppColors.error),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
-    ),
     );
   }
 

@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/config/app_config.dart';
 import '../../core/logging/app_logger.dart';
+import '../../core/network/api_exceptions.dart';
 import '../../core/platform/cli_executor.dart';
 import '../../domain/models/linglong_env_check_result.dart';
 

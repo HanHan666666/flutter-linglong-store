@@ -1,6 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/utils/locale_utils.dart';
+import '../../data/mappers/app_list_mapper.dart';
 import '../../domain/models/recommend_models.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/network/api_exceptions.dart';
@@ -80,7 +82,7 @@ class Search extends _$Search {
         ),
       );
 
-      final results = _convertApps(response.data.data);
+      final results = mapAppListToRecommendApps(response.data.data, pageSize: 20);
 
       state = state.copyWith(
         isLoading: false,
@@ -116,7 +118,7 @@ class Search extends _$Search {
         ),
       );
 
-      final newResults = _convertApps(response.data.data);
+      final newResults = mapAppListToRecommendApps(response.data.data, pageSize: 20);
 
       state = state.copyWith(
         isLoadingMore: false,
@@ -139,42 +141,5 @@ class Search extends _$Search {
   /// 刷新搜索
   Future<void> refresh() async {
     await search(state.query);
-  }
-
-  /// 转换应用列表数据
-  PaginatedResponse<RecommendAppInfo> _convertApps(AppListPagedData? data) {
-    if (data == null) {
-      return const PaginatedResponse<RecommendAppInfo>(
-        items: [],
-        total: 0,
-        page: 1,
-        pageSize: 20,
-        hasMore: false,
-      );
-    }
-
-    final apps = data.records
-        .map(
-          (dto) => RecommendAppInfo(
-            appId: dto.appId,
-            name: dto.appName,
-            version: dto.appVersion ?? '',
-            description: dto.appDesc,
-            icon: dto.appIcon,
-            developer: dto.developerName,
-            category: dto.categoryName,
-            size: dto.packageSize,
-            downloadCount: dto.downloadTimes,
-          ),
-        )
-        .toList();
-
-    return PaginatedResponse<RecommendAppInfo>(
-      items: apps,
-      total: data.total,
-      page: data.current,
-      pageSize: data.size,
-      hasMore: data.current < data.pages,
-    );
   }
 }

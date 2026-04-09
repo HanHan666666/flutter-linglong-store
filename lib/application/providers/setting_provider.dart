@@ -7,13 +7,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging/app_logger.dart';
-import 'all_apps_provider.dart';
+import '../../core/di/repository_provider.dart';
+import 'global_provider.dart';
 import 'install_queue_provider.dart';
 import 'installed_apps_provider.dart';
-import 'ranking_provider.dart';
-import 'recommend_provider.dart';
-import 'search_provider.dart';
-import 'sidebar_config_provider.dart';
 
 part 'setting_provider.freezed.dart';
 part 'setting_provider.g.dart';
@@ -22,12 +19,6 @@ part 'setting_provider.g.dart';
 @freezed
 sealed class SettingState with _$SettingState {
   const factory SettingState({
-    /// 当前语言
-    @Default(Locale('zh')) Locale locale,
-
-    /// 主题模式
-    @Default(ThemeMode.system) ThemeMode themeMode,
-
     /// 缓存大小（字节）
     @Default(0) int cacheSize,
 
@@ -66,20 +57,6 @@ class Setting extends _$Setting {
   SettingState _restorePersistedSettings() {
     try {
       var restoredState = const SettingState();
-
-      // 加载语言设置
-      final languageCode = _prefs.getString('linglong-store-language');
-      if (languageCode != null) {
-        restoredState = restoredState.copyWith(locale: Locale(languageCode));
-      }
-
-      // 加载主题模式
-      final themeModeIndex = _prefs.getInt('linglong-store-theme-mode');
-      if (themeModeIndex != null && themeModeIndex < ThemeMode.values.length) {
-        restoredState = restoredState.copyWith(
-          themeMode: ThemeMode.values[themeModeIndex],
-        );
-      }
 
       // 加载启动时检查版本更新开关
       final checkVersion = _prefs.getBool('setting_check_version_on_startup');
@@ -166,44 +143,6 @@ class Setting extends _$Setting {
       // 忽略权限错误
     }
     return size;
-  }
-
-  /// 设置语言
-  Future<void> setLocale(Locale locale) async {
-    state = state.copyWith(locale: locale);
-    await _prefs.setString('linglong-store-language', locale.languageCode);
-    AppLogger.info('Locale changed to: ${locale.languageCode}');
-
-    // 刷新所有依赖语言的数据 Provider
-    _invalidateLocaleDependentProviders();
-  }
-
-  /// 刷新所有依赖语言的数据 Provider
-  ///
-  /// 语言切换后，需要刷新以下 Provider 以获取对应语言的数据：
-  /// - 推荐列表
-  /// - 全部应用列表
-  /// - 排行榜
-  /// - 搜索结果
-  /// - 侧边栏菜单配置（驱动自定义分类 family 重新加载）
-  void _invalidateLocaleDependentProviders() {
-    // 刷新推荐列表
-    ref.invalidate(recommendProvider);
-    // 刷新全部应用列表
-    ref.invalidate(allAppsProvider);
-    // 刷新排行榜
-    ref.invalidate(rankingProvider);
-    // 刷新搜索结果
-    ref.invalidate(searchProvider);
-    // 刷新侧边栏菜单配置，当前分类页 family 会基于此重新加载
-    ref.invalidate(sidebarConfigProvider);
-  }
-
-  /// 设置主题模式
-  Future<void> setThemeMode(ThemeMode mode) async {
-    state = state.copyWith(themeMode: mode);
-    await _prefs.setInt('linglong-store-theme-mode', mode.index);
-    AppLogger.info('Theme mode changed to: ${mode.name}');
   }
 
   /// 设置应用版本

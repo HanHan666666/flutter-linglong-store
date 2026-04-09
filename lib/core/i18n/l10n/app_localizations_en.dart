@@ -1256,4 +1256,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get a11yStatusNotInstalled => 'not installed';
+
+  @override
+  String get noAppsInCategory => 'No apps in this category';
+
+  @override
+  String get noRanking => 'No rankings available';
+
+  @override
+  String get noRecommend => 'No recommendations available';
+
+  @override
+  String get installTimeout =>
+      'Installation timeout: No progress updates for an extended period';
+
+  @override
+  String get loadingInstalledApps => 'Loading installed apps...';
+
+  @override
+  String get appDescriptionPlaceholder => 'App description';
 }

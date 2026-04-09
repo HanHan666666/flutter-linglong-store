@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../data/models/api_dto.dart';
+import '../../domain/models/app_comment.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/config/theme.dart';
 
@@ -18,7 +18,7 @@ class AppDetailCommentSection extends StatefulWidget {
     super.key,
   });
 
-  final List<AppCommentDTO> comments;
+  final List<AppComment> comments;
   final List<String> versionOptions;
   final String? selectedVersion;
   final bool isLoading;
@@ -108,9 +108,7 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
               alpha: 0.28,
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant,
-            ),
+            border: Border.all(color: theme.colorScheme.outlineVariant),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,10 +173,7 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
                   ),
                 ),
               ),
-              TextButton(
-                onPressed: widget.onRetry,
-                child: Text(retryLabel),
-              ),
+              TextButton(onPressed: widget.onRetry, child: Text(retryLabel)),
             ],
           )
         else if (widget.comments.isEmpty)
@@ -199,7 +194,8 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
               final metaItems = <String>[
                 anonymousLabel,
                 if (comment.version?.isNotEmpty ?? false) comment.version!,
-                if (comment.createTime?.isNotEmpty ?? false) comment.createTime!,
+                if (comment.createTime?.isNotEmpty ?? false)
+                  comment.createTime!,
               ];
 
               return Semantics(
@@ -208,53 +204,50 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: theme.colorScheme.outlineVariant),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: metaItems
-                          .map(
-                            (item) => Text(
-                              item,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: theme.colorScheme.outlineVariant),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: metaItems
+                            .map(
+                              (item) => Text(
+                                item,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
                               ),
+                            )
+                            .toList(),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(comment.remark, style: theme.textTheme.bodyMedium),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 8,
+                        children: [
+                          Text(
+                            '$helpfulLabel ${comment.agreeNum}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
-                          )
-                          .toList(),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      comment.remark,
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 8,
-                      children: [
-                        Text(
-                          '$helpfulLabel ${comment.agreeNum}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                        ),
-                        Text(
-                          '$notHelpfulLabel ${comment.disagreeNum}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                          Text(
+                            '$notHelpfulLabel ${comment.disagreeNum}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               );
             },
           ),
@@ -265,7 +258,8 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
   Widget _buildVersionPills(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final versions = _isVersionExpanded ||
+    final versions =
+        _isVersionExpanded ||
             widget.versionOptions.length <= _collapsedVersionCount
         ? widget.versionOptions
         : widget.versionOptions.take(_collapsedVersionCount).toList();
@@ -305,12 +299,10 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               foregroundColor: theme.colorScheme.primary,
             ),
-            icon: Icon(_isVersionExpanded ? Icons.expand_less : Icons.expand_more),
-            label: Text(
-              _isVersionExpanded
-                  ? l10n.collapse
-                  : l10n.expandAll,
+            icon: Icon(
+              _isVersionExpanded ? Icons.expand_less : Icons.expand_more,
             ),
+            label: Text(_isVersionExpanded ? l10n.collapse : l10n.expandAll),
           ),
         ],
       ],
@@ -376,8 +368,9 @@ class _CommentVersionPillState extends State<_CommentVersionPill> {
                 widget.label,
                 style: theme.textTheme.bodySmall?.copyWith(
                   height: 1,
-                  fontWeight:
-                      widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                  fontWeight: widget.isSelected
+                      ? FontWeight.w600
+                      : FontWeight.w500,
                   color: widget.isSelected
                       ? theme.colorScheme.primary
                       : theme.colorScheme.onSurface,

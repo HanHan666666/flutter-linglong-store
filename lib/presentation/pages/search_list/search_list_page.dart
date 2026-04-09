@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shimmer/shimmer.dart';
 
-import '../../../application/providers/application_card_state_provider.dart';
 import '../../../application/providers/search_provider.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
@@ -199,93 +197,27 @@ class _SearchListPageState extends ConsumerState<SearchListPage> {
     final l10n = AppLocalizations.of(context);
     return Semantics(
       label: l10n?.loading ?? '加载中',
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
+      child: const SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(AppSpacing.lg),
           child: Column(
             children: [
-              // 加载提示
-              const Padding(
+              Padding(
                 padding: EdgeInsets.all(AppSpacing.lg),
                 child: CircularProgressIndicator(),
               ),
-              // 骨架屏
-              ...List.generate(3, (_) => _buildSkeletonCard()),
+              AppGridShimmer(itemCount: 3),
             ],
           ),
         ),
       ),
     );
   }
-
-  Widget _buildSkeletonCard() {
-    return Shimmer.fromColors(
-      baseColor: context.appColors.skeletonBackground,
-      highlightColor: context.appColors.skeletonHighlight,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: AppRadius.smRadius,
-        ),
-        child: Row(
-          children: [
-            // 图标占位
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: AppRadius.xsRadius,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            // 内容占位
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    height: 14,
-                    width: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: AppRadius.xsRadius,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    height: 12,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: AppRadius.xsRadius,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            // 按钮占位
-            Container(
-              width: 56,
-              height: 28,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: AppRadius.fullRadius,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
-/// 应用网格
-class _AppsGrid extends ConsumerWidget {
+/// 应用网格（已迁移到共享 ResponsiveAppGrid）
+class _AppsGrid extends StatelessWidget {
   const _AppsGrid({
     required this.apps,
     required this.isLoadingMore,
@@ -299,123 +231,35 @@ class _AppsGrid extends ConsumerWidget {
   final int total;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    if (apps.isEmpty) {
-      return SliverToBoxAdapter(
-        child: EmptyState.search(
-          title: l10n?.searchNotFound ?? '未找到相关应用',
-          description: l10n?.searchTryOtherKeywords ?? '尝试使用其他关键词搜索',
-        ),
-      );
-    }
-
-    final cardStateIndex = ref.watch(applicationCardStateIndexProvider);
-
-    return SliverLayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = _calculateCrossAxisCount(
-          constraints.crossAxisExtent,
-        );
-
-        return SliverGrid(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            mainAxisSpacing: AppSpacing.sm,
-            crossAxisSpacing: AppSpacing.sm,
-            childAspectRatio: _calculateChildAspectRatio(
-              constraints.crossAxisExtent,
-            ),
+    return ResponsiveAppGrid<RecommendAppInfo>(
+      items: apps,
+      isLoadingMore: isLoadingMore,
+      hasMore: hasMore,
+      emptyTitle: l10n?.searchNotFound ?? '未找到相关应用',
+      emptyDescription: l10n?.searchTryOtherKeywords ?? '尝试使用其他关键词搜索',
+      itemBuilder: (ref, index, app, cardState) {
+        return AppCard(
+          appId: app.appId,
+          name: app.name,
+          description: app.description,
+          iconUrl: app.icon,
+          buttonState: cardState.buttonState,
+          progress: cardState.progress,
+          isInstalling: cardState.isInstalling,
+          onTap: () => context.push('/app/${app.appId}'),
+          onPrimaryPressed: () => handleAppCardPrimaryAction(
+            context: context,
+            ref: ref,
+            buttonState: cardState.buttonState,
+            appId: app.appId,
+            appName: app.name,
+            icon: app.icon,
+            version: app.version,
           ),
-          delegate: SliverChildBuilderDelegate((context, index) {
-            if (index < apps.length) {
-              final app = apps[index];
-              final cardState = cardStateIndex.resolve(
-                appId: app.appId,
-                latestVersion: app.version,
-              );
-              return AppCard(
-                appId: app.appId,
-                name: app.name,
-                description: app.description,
-                iconUrl: app.icon,
-                buttonState: cardState.buttonState,
-                progress: cardState.progress,
-                isInstalling: cardState.isInstalling,
-                onTap: () => context.push('/app/${app.appId}'),
-                onPrimaryPressed: () => handleAppCardPrimaryAction(
-                  context: context,
-                  ref: ref,
-                  buttonState: cardState.buttonState,
-                  appId: app.appId,
-                  appName: app.name,
-                  icon: app.icon,
-                  version: app.version,
-                ),
-              );
-            }
-            // 加载更多指示器
-            if (isLoadingMore) {
-              return const _LoadingMoreItem();
-            }
-            // 没有更多数据提示
-            if (!hasMore && apps.isNotEmpty) {
-              return const _NoMoreDataItem();
-            }
-            return null;
-          }, childCount: apps.length + (isLoadingMore || !hasMore ? 1 : 0)),
         );
       },
-    );
-  }
-
-  int _calculateCrossAxisCount(double width) {
-    if (width < 600) return 1;
-    if (width < 900) return 2;
-    if (width < 1200) return 3;
-    return 4;
-  }
-
-  double _calculateChildAspectRatio(double width) {
-    final crossAxisCount = _calculateCrossAxisCount(width);
-    return (width - (crossAxisCount - 1) * AppSpacing.sm) / crossAxisCount / 80;
-  }
-}
-
-/// 加载更多指示器
-class _LoadingMoreItem extends StatelessWidget {
-  const _LoadingMoreItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: const Center(
-        child: SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      ),
-    );
-  }
-}
-
-/// 没有更多数据提示
-class _NoMoreDataItem extends StatelessWidget {
-  const _NoMoreDataItem();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Center(
-        child: Text(
-          l10n?.noMore ?? '没有更多了',
-          style: TextStyle(fontSize: 13, color: context.appColors.textTertiary),
-        ),
-      ),
     );
   }
 }

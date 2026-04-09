@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -7,9 +6,11 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../application/providers/api_provider.dart';
 import '../../../application/providers/global_provider.dart';
 import '../../../application/providers/setting_provider.dart';
+import '../../../application/services/version_check_service.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/logging/app_logger.dart';
+import '../../../core/utils/app_notification_helpers.dart';
 import '../../../data/datasources/remote/app_api_service.dart';
 import '../../../data/models/api_dto.dart';
 import '../../widgets/confirm_dialog.dart';
@@ -22,10 +23,6 @@ class SettingPage extends ConsumerStatefulWidget {
   @override
   ConsumerState<SettingPage> createState() => _SettingPageState();
 }
-
-/// Gitee Latest Release API
-const _kGiteeLatestApi =
-    'https://gitee.com/api/v5/repos/Shirosu/linglong-store/releases/latest';
 
 @visibleForTesting
 Future<void> runSettingPageInitialization({
@@ -111,88 +108,60 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     if (_isCheckingUpdate) return;
     setState(() => _isCheckingUpdate = true);
     try {
-      final dio = Dio();
-      final response = await dio.get(
-        _kGiteeLatestApi,
-        options: Options(
-          receiveTimeout: const Duration(seconds: 10),
-          sendTimeout: const Duration(seconds: 10),
-        ),
-      );
-      final tagName = response.data['tag_name'] as String?;
-      if (!mounted) return;
-      if (tagName == null) {
-        _showSnackBar(
-          AppLocalizations.of(context)?.cannotGetVersion ?? '无法获取版本信息',
-        );
-        return;
-      }
+      final service = VersionCheckService();
       final currentVersion =
           ref.read(settingProvider).appVersion ?? AppConfig.appVersion;
-      final isNewer = _isVersionNewer(currentVersion, tagName);
+      final result = await service.checkForUpdate(currentVersion);
+
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(l10n.checkUpdate),
-          content: isNewer
-              ? Text(l10n.newVersionFound(tagName, currentVersion))
-              : Text(l10n.alreadyLatest(currentVersion)),
-          actions: [
-            if (isNewer)
-              TextButton(
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                  _openUrl(
-                    'https://gitee.com/Shirosu/linglong-store/releases/latest',
-                  );
-                },
-                child: Text(l10n.goDownload),
+
+      switch (result) {
+        case VersionCheckResultNoUpdate(:final currentVersion):
+          showAppNotification(context, l10n.alreadyLatest(currentVersion));
+        case VersionCheckResultUpdateAvailable(
+          :final latestVersion,
+          :final currentVersion,
+        ):
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: Text(l10n.checkUpdate),
+              content: Text(
+                l10n.newVersionFound(latestVersion, currentVersion),
               ),
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(l10n.confirm),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    _openUrl(
+                      'https://gitee.com/Shirosu/linglong-store/releases/latest',
+                    );
+                  },
+                  child: Text(l10n.goDownload),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(l10n.confirm),
+                ),
+              ],
             ),
-          ],
-        ),
-      );
+          );
+        case VersionCheckResultVersionInfoMissing():
+          showAppError(context, l10n.cannotGetVersion);
+        case VersionCheckResultNetworkError():
+          showAppError(context, l10n.checkUpdateNetworkError);
+      }
     } catch (e) {
       if (mounted) {
-        _showSnackBar(
-          AppLocalizations.of(context)?.updateCheckFailed ?? '检查更新失败，请检查网络连接',
+        showAppError(
+          context,
+          AppLocalizations.of(context)?.checkUpdateNetworkError ?? '检查更新失败，请检查网络连接',
         );
       }
     } finally {
       if (mounted) setState(() => _isCheckingUpdate = false);
     }
-  }
-
-  /// 简单 semver 比较，返回 latest 是否比 current 新
-  bool _isVersionNewer(String current, String latest) {
-    (int, int, int)? parse(String s) {
-      s = s.replaceAll(RegExp(r'^v'), '');
-      final parts = s.split('.');
-      if (parts.length < 3) return null;
-      final major = int.tryParse(parts[0]);
-      final minor = int.tryParse(parts[1]);
-      final patch = int.tryParse(parts[2].split(RegExp(r'[^0-9]')).first);
-      if (major == null || minor == null || patch == null) return null;
-      return (major, minor, patch);
-    }
-
-    final c = parse(current);
-    final l = parse(latest);
-    if (c == null || l == null) return false;
-    if (l.$1 != c.$1) return l.$1 > c.$1;
-    if (l.$2 != c.$2) return l.$2 > c.$2;
-    return l.$3 > c.$3;
-  }
-
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -211,13 +180,13 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             label: l10n.a11ySettingsPage,
             child: _buildSectionTitle(context, l10n.languageSettings),
           ),
-          _buildLanguageSection(context, state),
+          _buildLanguageSection(context, globalState),
 
           const SizedBox(height: 24),
 
           // 主题设置
           _buildSectionTitle(context, l10n.themeSettings),
-          _buildThemeSection(context, state),
+          _buildThemeSection(context, globalState),
 
           const SizedBox(height: 24),
 
@@ -258,7 +227,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
   }
 
   /// 构建语言设置部分
-  Widget _buildLanguageSection(BuildContext context, SettingState state) {
+  Widget _buildLanguageSection(BuildContext context, GlobalAppState state) {
     final l10n = AppLocalizations.of(context)!;
     return Card(
       elevation: 0,
@@ -303,8 +272,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       // ignore: deprecated_member_use
       onChanged: (value) {
         if (value != null) {
-          // 同时更新两个 Provider
-          ref.read(settingProvider.notifier).setLocale(value);
           ref.read(globalAppProvider.notifier).setLocale(value);
         }
       },
@@ -313,7 +280,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
   }
 
   /// 构建主题设置部分
-  Widget _buildThemeSection(BuildContext context, SettingState state) {
+  Widget _buildThemeSection(BuildContext context, GlobalAppState state) {
     final l10n = AppLocalizations.of(context)!;
     return Card(
       elevation: 0,
@@ -377,8 +344,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             )
           : null,
       onTap: () {
-        // 同时更新两个 Provider
-        ref.read(settingProvider.notifier).setThemeMode(mode);
         ref.read(globalAppProvider.notifier).setThemeMode(mode);
       },
     );
@@ -481,20 +446,18 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
     if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(success ? (l10n.cacheCleared) : (l10n.clearCacheFailed)),
-        backgroundColor: success
-            ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.error,
-      ),
-    );
+    if (success) {
+      showAppSuccess(context, l10n.cacheCleared);
+    } else {
+      showAppError(context, l10n.clearCacheFailed);
+    }
   }
 
   /// 构建商店选项部分
   ///
   /// 包含三个行为开关和一个清理废弃基础服务的操作按钮。
   Widget _buildStoreOptionsSection(BuildContext context, SettingState state) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -508,13 +471,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         children: [
           // 启动时检查商店版本更新
           SwitchListTile(
-            title: Text(
-              AppLocalizations.of(context)?.startupCheckUpdate ?? '启动时检查商店版本更新',
-            ),
-            subtitle: Text(
-              AppLocalizations.of(context)?.startupCheckUpdateDesc ??
-                  '每次启动时检测是否有新版本可用',
-            ),
+            title: Text(l10n.startupCheckUpdate),
+            subtitle: Text(l10n.startupCheckUpdateDesc),
             value: state.checkVersionOnStartup,
             onChanged: (value) {
               ref
@@ -525,14 +483,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           _buildDivider(context),
           // 容器内自动更新商店本体
           SwitchListTile(
-            title: Text(
-              AppLocalizations.of(context)?.autoUpdateInContainer ??
-                  '容器内自动更新商店本体',
-            ),
-            subtitle: Text(
-              AppLocalizations.of(context)?.autoUpdateInContainerDesc ??
-                  '在玲珑容器内运行时自动更新商店应用',
-            ),
+            title: Text(l10n.autoUpdateInContainer),
+            subtitle: Text(l10n.autoUpdateInContainerDesc),
             value: state.autoUpdateStoreInContainer,
             onChanged: (value) {
               ref
@@ -543,13 +495,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           _buildDivider(context),
           // 已安装列表中显示基础运行服务
           SwitchListTile(
-            title: Text(
-              AppLocalizations.of(context)?.showBaseServices ?? '显示基础运行服务',
-            ),
-            subtitle: Text(
-              AppLocalizations.of(context)?.showBaseServicesDesc ??
-                  '在已安装列表中显示底层基础运行服务',
-            ),
+            title: Text(l10n.showBaseServices),
+            subtitle: Text(l10n.showBaseServicesDesc),
             value: state.showBaseService,
             onChanged: (value) {
               ref.read(settingProvider.notifier).setShowBaseService(value);
@@ -562,14 +509,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               Icons.cleaning_services_outlined,
               color: Theme.of(context).colorScheme.secondary,
             ),
-            title: Text(
-              AppLocalizations.of(context)?.cleanDeprecatedServices ??
-                  '清理废弃基础服务',
-            ),
-            subtitle: Text(
-              AppLocalizations.of(context)?.cleanDeprecatedServicesDesc ??
-                  '移除已不再使用的基础运行服务，释放磁盘空间',
-            ),
+            title: Text(l10n.cleanDeprecatedServices),
+            subtitle: Text(l10n.cleanDeprecatedServicesDesc),
             trailing: state.isPruningBaseService
                 ? const SizedBox(
                     width: 20,
@@ -603,14 +544,11 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
     if (!context.mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(success ? (l10n.baseServiceCleaned) : (l10n.cleanFailed)),
-        backgroundColor: success
-            ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.error,
-      ),
-    );
+    if (success) {
+      showAppSuccess(context, l10n.baseServiceCleaned);
+    } else {
+      showAppError(context, l10n.cleanFailed);
+    }
   }
 
   /// 构建关于部分
@@ -803,9 +741,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else if (mounted) {
-      _showSnackBar(
-        AppLocalizations.of(context)?.cannotOpenLink(url) ?? '无法打开链接: $url',
-      );
+      showLinkOpenError(context, url);
     }
   }
 }

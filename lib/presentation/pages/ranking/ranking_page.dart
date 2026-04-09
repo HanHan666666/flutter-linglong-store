@@ -132,9 +132,60 @@ class _RankingPageState extends ConsumerState<RankingPage>
           vertical: 6,
         ),
         dividerColor: Colors.transparent,
+        // 禁用默认矩形 splash，用自定义胶囊形 InkWell 包裹每个 Tab
+        splashFactory: NoSplash.splashFactory,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
         tabs: RankingType.values.map((type) {
-          return Tab(text: type.label);
+          return _roundedTab(text: type.label);
         }).toList(),
+      ),
+    );
+  }
+
+  /// 胶囊形 Tab，悬浮/按下时为圆角高亮
+  Widget _roundedTab({required String text}) {
+    return _HoverableTab(text: text);
+  }
+}
+
+/// 可交互的胶囊形 Tab 组件
+class _HoverableTab extends StatefulWidget {
+  const _HoverableTab({required this.text});
+
+  final String text;
+
+  @override
+  State<_HoverableTab> createState() => _HoverableTabState();
+}
+
+class _HoverableTabState extends State<_HoverableTab> {
+  bool _isHovered = false;
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.appColors;
+    final isActive = _isHovered || _isPressed;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      // 用 Listener 而不是 GestureDetector，这样不会吸收点击事件
+      child: Listener(
+        onPointerDown: (_) => setState(() => _isPressed = true),
+        onPointerUp: (_) => setState(() => _isPressed = false),
+        onPointerCancel: (_) => setState(() => _isPressed = false),
+        behavior: HitTestBehavior.translucent,
+        child: AnimatedContainer(
+          duration: AppAnimation.fast,
+          decoration: BoxDecoration(
+            color: isActive
+                ? palette.primaryLight.withValues(alpha: 0.5)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(48),
+          ),
+          child: Tab(text: widget.text),
+        ),
       ),
     );
   }

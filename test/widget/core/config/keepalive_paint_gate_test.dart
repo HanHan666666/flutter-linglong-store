@@ -67,5 +67,47 @@ void main() {
 
       expect(tapped, isTrue);
     });
+
+    testWidgets('hidden children cannot take keyboard focus', (tester) async {
+      final hiddenFocusNode = FocusNode(debugLabel: 'hidden-node');
+      addTearDown(hiddenFocusNode.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: KeepAlivePaintGate(
+            isVisible: false,
+            child: Focus(
+              focusNode: hiddenFocusNode,
+              child: const SizedBox(width: 10, height: 10),
+            ),
+          ),
+        ),
+      );
+
+      hiddenFocusNode.requestFocus();
+      await tester.pump();
+
+      expect(hiddenFocusNode.hasFocus, isFalse);
+
+      final visibleFocusNode = FocusNode(debugLabel: 'visible-node');
+      addTearDown(visibleFocusNode.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: KeepAlivePaintGate(
+            isVisible: true,
+            child: Focus(
+              focusNode: visibleFocusNode,
+              child: const SizedBox(width: 10, height: 10),
+            ),
+          ),
+        ),
+      );
+
+      visibleFocusNode.requestFocus();
+      await tester.pump();
+
+      expect(visibleFocusNode.hasFocus, isTrue);
+    });
   });
 }

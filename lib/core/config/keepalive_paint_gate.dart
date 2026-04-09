@@ -19,9 +19,12 @@ class KeepAlivePaintGate extends StatelessWidget {
   Widget build(BuildContext context) {
     return TickerMode(
       enabled: isVisible,
-      child: IgnorePointer(
-        ignoring: !isVisible,
-        child: Offstage(offstage: !isVisible, child: child),
+      child: ExcludeFocus(
+        excluding: !isVisible,
+        child: IgnorePointer(
+          ignoring: !isVisible,
+          child: Offstage(offstage: !isVisible, child: child),
+        ),
       ),
     );
   }

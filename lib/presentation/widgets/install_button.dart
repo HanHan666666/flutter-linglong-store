@@ -241,6 +241,10 @@ class _InstallButtonState extends State<InstallButton> {
   }) {
     final l10n = AppLocalizations.of(context)!;
     final buttonHeight = _getButtonHeight();
+    final theme = Theme.of(context);
+    final progressTrackColor = theme.colorScheme.surfaceContainerHighest;
+    final progressFillColor = theme.colorScheme.primaryContainer;
+    final progressForegroundColor = theme.colorScheme.onSurface;
     final task = InstallTask(
       id: 'install-button-preview',
       appId: 'install-button-preview',
@@ -263,15 +267,19 @@ class _InstallButtonState extends State<InstallButton> {
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.1),
+                  // 进度填充和前景文案必须分离到不同色阶，避免蓝底蓝字融在一起。
+                  color: progressTrackColor,
                   borderRadius: BorderRadius.circular(buttonHeight / 2),
+                  border: Border.all(
+                    color: theme.colorScheme.outlineVariant,
+                    width: 1,
+                  ),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(buttonHeight / 2),
                   child: LinearProgressIndicator(
                     value: task.progressValue,
+                    color: progressFillColor,
                     backgroundColor: Colors.transparent,
                     minHeight: buttonHeight,
                   ),
@@ -293,7 +301,7 @@ class _InstallButtonState extends State<InstallButton> {
                         : task.progressPercentLabel,
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: progressForegroundColor,
                     ),
                   ),
                   if (widget.onCancel != null) ...[
@@ -306,7 +314,7 @@ class _InstallButtonState extends State<InstallButton> {
                           child: Icon(
                             Icons.close,
                             size: _getIconSize(),
-                            color: Theme.of(context).colorScheme.primary,
+                            color: progressForegroundColor,
                           ),
                         ),
                       ),

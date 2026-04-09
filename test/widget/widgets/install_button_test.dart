@@ -139,6 +139,40 @@ void main() {
 
         expect(find.textContaining('2.5 MB/s'), findsNothing);
       });
+
+      testWidgets('should keep progress label and cancel icon distinct from progress fill color', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: InstallButton(
+                state: InstallButtonState.installing,
+                progress: 0.5,
+                downloadSpeed: '2.5 MB/s',
+                onCancel: () {},
+              ),
+            ),
+          ),
+        );
+
+        final theme = Theme.of(
+          tester.element(find.byType(InstallButton)),
+        ).colorScheme;
+        final progressLabel = tester.widget<Text>(find.textContaining('50%'));
+        final cancelIcon = tester.widget<Icon>(find.byIcon(Icons.close));
+        final progressIndicator = tester.widget<LinearProgressIndicator>(
+          find.byType(LinearProgressIndicator),
+        );
+
+        expect(progressLabel.style?.color, isNot(theme.primary));
+        expect(cancelIcon.color, isNot(theme.primary));
+        expect(progressIndicator.color, isNot(progressLabel.style?.color));
+        expect(progressIndicator.color, isNot(cancelIcon.color));
+      });
     });
 
     group('Pending state', () {

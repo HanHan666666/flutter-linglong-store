@@ -17,6 +17,7 @@ import '../../presentation/pages/setting/setting_page.dart';
 import '../../presentation/pages/update_app/update_app_page.dart';
 import '../../domain/models/installed_app.dart';
 import '../../application/providers/launch_provider.dart';
+import 'keepalive_paint_gate.dart';
 import 'keepalive_visibility_sync.dart';
 import 'page_visibility.dart';
 
@@ -420,11 +421,14 @@ class KeepAlivePageWrapperState extends State<KeepAlivePageWrapper>
   Widget build(BuildContext context) {
     super.build(context);
 
-    // 使用 InheritedWidget 传递可见性状态
-    return _VisibilityInherited(
+    // 使用 InheritedWidget 传递可见性状态，并确保隐藏页退出绘制层。
+    return KeepAlivePaintGate(
       isVisible: _isVisible,
-      routePath: widget.routePath,
-      child: widget.child,
+      child: _VisibilityInherited(
+        isVisible: _isVisible,
+        routePath: widget.routePath,
+        child: widget.child,
+      ),
     );
   }
 }

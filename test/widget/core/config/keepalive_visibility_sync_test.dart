@@ -100,6 +100,37 @@ void main() {
       expect(myAppsKey.currentState!.isVisible, isFalse);
       expect(rankingKey.currentState!.isVisible, isTrue);
     });
+
+    testWidgets('hidden keepalive pages stay out of the paint tree', (
+      tester,
+    ) async {
+      final myAppsKey = GlobalKey<KeepAlivePageWrapperState>();
+      final rankingKey = GlobalKey<KeepAlivePageWrapperState>();
+
+      await tester.pumpWidget(
+        _StackedVisibilitySyncHarness(
+          currentPath: AppRoutes.myApps,
+          myAppsKey: myAppsKey,
+          rankingKey: rankingKey,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('my-apps-content'), findsOneWidget);
+      expect(find.text('ranking-content'), findsNothing);
+
+      await tester.pumpWidget(
+        _StackedVisibilitySyncHarness(
+          currentPath: AppRoutes.ranking,
+          myAppsKey: myAppsKey,
+          rankingKey: rankingKey,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('my-apps-content'), findsNothing);
+      expect(find.text('ranking-content'), findsOneWidget);
+    });
   });
 }
 
@@ -136,6 +167,49 @@ class _VisibilitySyncHarness extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          KeepAliveVisibilitySync(currentPath: currentPath),
+        ],
+      ),
+    );
+  }
+}
+
+class _StackedVisibilitySyncHarness extends StatelessWidget {
+  const _StackedVisibilitySyncHarness({
+    required this.currentPath,
+    required this.myAppsKey,
+    required this.rankingKey,
+  });
+
+  final String currentPath;
+  final GlobalKey<KeepAlivePageWrapperState> myAppsKey;
+  final GlobalKey<KeepAlivePageWrapperState> rankingKey;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Stack(
+        children: [
+          Positioned.fill(
+            child: KeepAlivePageWrapper(
+              key: myAppsKey,
+              routePath: AppRoutes.myApps,
+              child: const ColoredBox(
+                color: Colors.blue,
+                child: Center(child: Text('my-apps-content')),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: KeepAlivePageWrapper(
+              key: rankingKey,
+              routePath: AppRoutes.ranking,
+              child: const ColoredBox(
+                color: Colors.orange,
+                child: Center(child: Text('ranking-content')),
+              ),
+            ),
           ),
           KeepAliveVisibilitySync(currentPath: currentPath),
         ],

@@ -137,12 +137,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         builder: (ctx) => AlertDialog(
           title: Text(l10n.checkUpdate),
           content: isNewer
-              ? Text(
-                  l10n.newVersionFound(tagName, currentVersion),
-                )
-              : Text(
-                  l10n.alreadyLatest(currentVersion),
-                ),
+              ? Text(l10n.newVersionFound(tagName, currentVersion))
+              : Text(l10n.alreadyLatest(currentVersion)),
           actions: [
             if (isNewer)
               TextButton(
@@ -487,11 +483,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          success
-              ? (l10n.cacheCleared)
-              : (l10n.clearCacheFailed),
-        ),
+        content: Text(success ? (l10n.cacheCleared) : (l10n.clearCacheFailed)),
         backgroundColor: success
             ? Theme.of(context).colorScheme.primary
             : Theme.of(context).colorScheme.error,
@@ -600,8 +592,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     final confirmed = await ConfirmDialog.show(
       context,
       title: l10n.cleanDeprecatedServices,
-      message:
-          l10n.pruneBaseServiceMessage,
+      message: l10n.pruneBaseServiceMessage,
       confirmText: l10n.clean,
       cancelText: l10n.cancel,
     );
@@ -614,11 +605,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          success
-              ? (l10n.baseServiceCleaned)
-              : (l10n.cleanFailed),
-        ),
+        content: Text(success ? (l10n.baseServiceCleaned) : (l10n.cleanFailed)),
         backgroundColor: success
             ? Theme.of(context).colorScheme.primary
             : Theme.of(context).colorScheme.error,
@@ -753,13 +740,15 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton.icon(
-                  onPressed: () => _openUrl('https://github.com/linglong-dev'),
+                  onPressed: () => _openUrl(
+                    'https://github.com/HanHan666666/flutter-linglong-store',
+                  ),
                   icon: const Icon(Icons.code, size: 18),
                   label: const Text('GitHub'),
                 ),
                 const SizedBox(width: 16),
                 TextButton.icon(
-                  onPressed: () => _openUrl('https://linglong.dev'),
+                  onPressed: () => _openUrl('https://linyaps.org.cn/'),
                   icon: const Icon(Icons.language, size: 18),
                   label: Text(l10n.officialWebsite),
                 ),

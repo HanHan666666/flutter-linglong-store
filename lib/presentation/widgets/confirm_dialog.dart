@@ -213,10 +213,10 @@ class ConfirmDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final defaultTitle = title ?? (l10n?.confirm ?? '确认');
-    final defaultConfirmText = confirmText ?? (l10n?.confirm ?? '确认');
-    final defaultCancelText = cancelText ?? (l10n?.cancel ?? '取消');
+    final l10n = AppLocalizations.of(context)!;
+    final defaultTitle = title ?? l10n.confirm;
+    final defaultConfirmText = confirmText ?? l10n.confirm;
+    final defaultCancelText = cancelText ?? l10n.cancel;
 
     return AlertDialog(
       title: Text(defaultTitle),
@@ -225,7 +225,7 @@ class ConfirmDialog extends StatelessWidget {
         if (showCancelButton)
           Semantics(
             button: true,
-            label: l10n?.cancel ?? '取消',
+            label: l10n.cancel,
             child: TextButton(
               onPressed: () {
                 Navigator.of(context).pop(false);
@@ -236,7 +236,7 @@ class ConfirmDialog extends StatelessWidget {
           ),
         Semantics(
           button: true,
-          label: l10n?.confirm ?? '确认',
+          label: l10n.confirm,
           child: _buildConfirmButton(context, defaultConfirmText),
         ),
       ],

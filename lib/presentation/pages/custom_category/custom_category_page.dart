@@ -3,10 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../application/providers/custom_category_provider.dart';
-import '../../../core/config/page_visibility.dart';
-import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
-import '../../../core/config/visibility_aware_mixin.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/recommend_models.dart';
 import '../../widgets/app_card_actions.dart';
@@ -22,18 +19,8 @@ class CustomCategoryPage extends ConsumerStatefulWidget {
   ConsumerState<CustomCategoryPage> createState() => _CustomCategoryPageState();
 }
 
-class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
-    with AutomaticKeepAliveClientMixin, VisibilityAwareMixin {
+class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage> {
   final ScrollController _scrollController = ScrollController();
-
-  /// 页面是否可见（用于控制副作用）
-  bool _isPageVisible = true;
-
-  @override
-  bool get wantKeepAlive => true;
-
-  @override
-  String get routePath => AppRoutes.customCategory;
 
   @override
   void initState() {
@@ -56,27 +43,14 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
   }
 
   void _onScroll() {
-    // 页面不可见时跳过滚动加载，避免无效网络请求和内存占用
-    if (!_isPageVisible) return;
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       ref.read(customCategoryProvider(widget.code).notifier).loadMore();
     }
   }
 
-  /// 可见性变更回调：隐藏时暂停滚动加载
-  @override
-  void onVisibilityChanged(PageVisibilityEvent event) {
-    if (event.becameHidden) {
-      _isPageVisible = false;
-    } else if (event.becameVisible) {
-      _isPageVisible = true;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     final l10n = AppLocalizations.of(context)!;
 
     final state = ref.watch(customCategoryProvider(widget.code));

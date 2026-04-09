@@ -3,10 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../application/providers/all_apps_provider.dart';
-import '../../../core/config/page_visibility.dart';
-import '../../../core/config/routes.dart';
+import '../../../core/config/shell_primary_route.dart';
+import '../../../core/config/shell_branch_visibility.dart';
 import '../../../core/config/theme.dart';
-import '../../../core/config/visibility_aware_mixin.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/recommend_models.dart';
 import '../../widgets/app_card_actions.dart';
@@ -21,7 +20,7 @@ class AllAppsPage extends ConsumerStatefulWidget {
 }
 
 class _AllAppsPageState extends ConsumerState<AllAppsPage>
-    with AutomaticKeepAliveClientMixin, VisibilityAwareMixin {
+    with ShellBranchVisibilityMixin<AllAppsPage> {
   final ScrollController _scrollController = ScrollController();
   bool _isCategoryExpanded = false;
 
@@ -29,10 +28,7 @@ class _AllAppsPageState extends ConsumerState<AllAppsPage>
   bool _isPageVisible = true;
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
-  String get routePath => AppRoutes.allApps;
+  ShellPrimaryRoute get watchedPrimaryRoute => ShellPrimaryRoute.allApps;
 
   @override
   void initState() {
@@ -49,12 +45,15 @@ class _AllAppsPageState extends ConsumerState<AllAppsPage>
 
   /// 可见性变更回调：隐藏时暂停滚动加载
   @override
-  void onVisibilityChanged(PageVisibilityEvent event) {
-    if (event.becameHidden) {
-      _isPageVisible = false;
-    } else if (event.becameVisible) {
+  void onPrimaryRouteVisibilityChanged({
+    required bool isActive,
+    required bool isInitial,
+  }) {
+    if (isActive) {
       _isPageVisible = true;
+      return;
     }
+    _isPageVisible = false;
   }
 
   void _onScroll() {
@@ -68,7 +67,6 @@ class _AllAppsPageState extends ConsumerState<AllAppsPage>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     final l10n = AppLocalizations.of(context)!;
 
     final state = ref.watch(allAppsProvider);

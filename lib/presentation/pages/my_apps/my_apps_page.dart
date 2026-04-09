@@ -5,10 +5,9 @@ import '../../../application/providers/app_uninstall_provider.dart';
 import '../../../application/providers/application_card_state_provider.dart';
 import '../../../application/providers/installed_apps_provider.dart';
 import '../../../application/providers/running_process_provider.dart';
-import '../../../core/config/page_visibility.dart';
-import '../../../core/config/routes.dart';
+import '../../../core/config/shell_primary_route.dart';
+import '../../../core/config/shell_branch_visibility.dart';
 import '../../../core/config/theme.dart';
-import '../../../core/config/visibility_aware_mixin.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/utils/app_notification_helpers.dart';
 import '../../../core/utils/version_compare.dart';
@@ -29,7 +28,7 @@ class MyAppsPage extends ConsumerStatefulWidget {
 }
 
 class _MyAppsPageState extends ConsumerState<MyAppsPage>
-    with AutomaticKeepAliveClientMixin, VisibilityAwareMixin {
+    with ShellBranchVisibilityMixin<MyAppsPage> {
   /// 搜索关键词
   String _searchQuery = '';
 
@@ -39,10 +38,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
   _MyAppsTab _activeTab = _MyAppsTab.app;
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
-  String get routePath => AppRoutes.myApps;
+  ShellPrimaryRoute get watchedPrimaryRoute => ShellPrimaryRoute.myApps;
 
   @override
   void initState() {
@@ -60,15 +56,11 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
   }
 
   @override
-  void onVisibilityChanged(PageVisibilityEvent event) {
-    if (event.becameVisible) {
-      ref.read(runningProcessProvider.notifier).setPageVisible(true);
-      return;
-    }
-
-    if (event.becameHidden) {
-      ref.read(runningProcessProvider.notifier).setPageVisible(false);
-    }
+  void onPrimaryRouteVisibilityChanged({
+    required bool isActive,
+    required bool isInitial,
+  }) {
+    ref.read(runningProcessProvider.notifier).setPageVisible(isActive);
   }
 
   /// 过滤应用列表
@@ -127,8 +119,6 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-
     final state = ref.watch(installedAppsProvider);
     final cardStateIndex = ref.watch(applicationCardStateIndexProvider);
     final filteredApps = _filterApps(_mergeApps(state.apps));

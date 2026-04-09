@@ -8,8 +8,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../application/providers/recommend_provider.dart';
 import '../../../core/config/theme.dart';
-import '../../../core/config/page_visibility.dart';
-import '../../../core/config/visibility_aware_mixin.dart';
+import '../../../core/config/shell_primary_route.dart';
+import '../../../core/config/shell_branch_visibility.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/utils/app_notification_helpers.dart';
 import '../../../domain/models/recommend_models.dart';
@@ -35,7 +35,7 @@ class RecommendPage extends ConsumerStatefulWidget {
 }
 
 class _RecommendPageState extends ConsumerState<RecommendPage>
-    with AutomaticKeepAliveClientMixin, VisibilityAwareMixin {
+    with ShellBranchVisibilityMixin<RecommendPage> {
   final ScrollController _scrollController = ScrollController();
 
   /// 避免同一帧重复安排“内容不足一屏自动补页”检查。
@@ -48,10 +48,7 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
   bool _hasLoadedData = false;
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
-  String get routePath => '/';
+  ShellPrimaryRoute get watchedPrimaryRoute => ShellPrimaryRoute.recommend;
 
   @override
   void initState() {
@@ -68,19 +65,21 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
 
   /// 可见性变更回调
   @override
-  void onVisibilityChanged(PageVisibilityEvent event) {
-    if (event.becameHidden) {
-      // 页面隐藏：暂停所有副作用
-      _pauseSideEffects();
-    } else if (event.becameVisible) {
+  void onPrimaryRouteVisibilityChanged({
+    required bool isActive,
+    required bool isInitial,
+  }) {
+    if (isActive) {
       // 页面可见：恢复副作用
       _resumeSideEffects();
-
       // 恢复时只进行轻量刷新，不重新加载首屏
-      if (_hasLoadedData && !event.isFirstVisible) {
+      if (_hasLoadedData && !isInitial) {
         performLightweightRefresh();
       }
+      return;
     }
+    // 页面隐藏：暂停所有副作用
+    _pauseSideEffects();
   }
 
   /// 暂停副作用
@@ -101,7 +100,6 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
   /// - 不重新加载首屏数据
   /// - 不重置滚动位置
   /// - 不显示骨架屏
-  @override
   void performLightweightRefresh() {
     // 仅在需要时刷新（例如检查更新状态等轻量操作）
     // 当前实现：不做任何操作，保持现有状态
@@ -121,8 +119,6 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-
     final state = ref.watch(recommendProvider);
     final l10n = AppLocalizations.of(context)!;
 

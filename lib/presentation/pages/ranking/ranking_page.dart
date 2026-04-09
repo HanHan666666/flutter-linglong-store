@@ -3,10 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../application/providers/ranking_provider.dart';
-import '../../../core/config/page_visibility.dart';
-import '../../../core/config/routes.dart';
+import '../../../core/config/shell_primary_route.dart';
+import '../../../core/config/shell_branch_visibility.dart';
 import '../../../core/config/theme.dart';
-import '../../../core/config/visibility_aware_mixin.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/ranking_models.dart';
 import '../../widgets/app_card_actions.dart';
@@ -21,20 +20,14 @@ class RankingPage extends ConsumerStatefulWidget {
 }
 
 class _RankingPageState extends ConsumerState<RankingPage>
-    with
-        AutomaticKeepAliveClientMixin,
-        SingleTickerProviderStateMixin,
-        VisibilityAwareMixin {
+    with SingleTickerProviderStateMixin, ShellBranchVisibilityMixin<RankingPage> {
   late TabController _tabController;
 
   /// 页面是否可见（用于控制副作用）
   bool _isPageVisible = true;
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
-  String get routePath => AppRoutes.ranking;
+  ShellPrimaryRoute get watchedPrimaryRoute => ShellPrimaryRoute.ranking;
 
   @override
   void initState() {
@@ -64,18 +57,19 @@ class _RankingPageState extends ConsumerState<RankingPage>
 
   /// 可见性变更回调
   @override
-  void onVisibilityChanged(PageVisibilityEvent event) {
-    if (event.becameHidden) {
-      _isPageVisible = false;
-    } else if (event.becameVisible) {
+  void onPrimaryRouteVisibilityChanged({
+    required bool isActive,
+    required bool isInitial,
+  }) {
+    if (isActive) {
       _isPageVisible = true;
+      return;
     }
+    _isPageVisible = false;
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-
     // watch selectedType 建立 provider 依赖，保证 Tab 切换时触发 rebuild。
     // 不在 build() 中设置 _tabController.index，避免 build 副作用触发额外 listener 回调。
     final selectedType = ref.watch(

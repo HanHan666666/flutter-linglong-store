@@ -14,27 +14,28 @@ void main() {
     await AppLogger.init();
   });
 
-  testWidgets('setting page no longer renders repository configuration section', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
+  testWidgets(
+    'setting page no longer renders repository configuration section',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-        child: MaterialApp(
-          theme: AppTheme.lightTheme,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(body: SettingPage()),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: SettingPage()),
+          ),
         ),
-      ),
-    );
-    await tester.pump();
+      );
+      await tester.pump();
 
-    expect(find.text('仓库配置'), findsNothing);
-    expect(find.text('当前仓库源'), findsNothing);
-    expect(find.text('可选仓库'), findsNothing);
-  });
+      expect(find.text('仓库配置'), findsNothing);
+      expect(find.text('当前仓库源'), findsNothing);
+      expect(find.text('可选仓库'), findsNothing);
+    },
+  );
 }

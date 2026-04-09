@@ -156,7 +156,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       if (mounted) {
         showAppError(
           context,
-          AppLocalizations.of(context)?.checkUpdateNetworkError ?? '检查更新失败，请检查网络连接',
+          AppLocalizations.of(context)?.checkUpdateNetworkError ??
+              '检查更新失败，请检查网络连接',
         );
       }
     } finally {

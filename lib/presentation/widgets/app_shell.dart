@@ -242,7 +242,10 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
             child: Row(
               children: [
                 // 左侧导航栏
-                Sidebar(currentPath: widget.currentPath, updateCount: updateCount),
+                Sidebar(
+                  currentPath: widget.currentPath,
+                  updateCount: updateCount,
+                ),
                 // 右侧内容区域，背景跟随主题
                 Expanded(
                   child: Container(
@@ -278,6 +281,9 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     final activeRoute = showOverlay ? null : _activePrimaryRoute;
 
     return Stack(
+      // 二级路由显示时，Offstage 会让主页面栈尺寸变成 0；
+      // 这里显式 expand，避免 Stack 被 0 尺寸子节点“带瘦”，导致覆盖层视口塌成空白页。
+      fit: StackFit.expand,
       children: [
         // 主页面 IndexedStack（始终在树中，二级路由时隐藏）
         Offstage(

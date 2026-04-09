@@ -418,6 +418,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Command copied to clipboard, paste and run in terminal';
 
   @override
+  String get copy => 'Copy';
+
+  @override
+  String get copyErrorMessage => 'Copy error message';
+
+  @override
   String get skipCheck => 'Skip Check';
 
   @override

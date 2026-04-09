@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -434,6 +435,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     InstallTask? installTask, {
     required bool hasInstalledInstance,
   }) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final appDetail = detailState.appDetail;
 
@@ -537,13 +539,53 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 if (installTask != null &&
                     installTask.displayMessage != null) ...[
                   const SizedBox(height: 8),
-                  Text(
-                    installTask.displayMessage!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: installTask.isFailed
-                          ? theme.colorScheme.error
-                          : theme.colorScheme.onSurfaceVariant,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Tooltip(
+                          message: installTask.displayMessage!,
+                          waitDuration: const Duration(milliseconds: 500),
+                          child: Text(
+                            installTask.displayMessage!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: installTask.isFailed
+                                  ? theme.colorScheme.error
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Semantics(
+                        label: l10n?.copyErrorMessage ?? 'Copy error message',
+                        button: true,
+                        child: Tooltip(
+                          message: l10n?.copyErrorMessage ?? 'Copy error message',
+                          waitDuration: const Duration(milliseconds: 500),
+                          child: TextButton(
+                            onPressed: () {
+                              Clipboard.setData(
+                                ClipboardData(text: installTask.displayMessage!),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(
+                              l10n?.copy ?? 'Copy',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ],

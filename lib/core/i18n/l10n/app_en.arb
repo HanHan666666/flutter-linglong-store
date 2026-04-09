@@ -198,6 +198,8 @@
     }
   },
   "commandCopied": "Command copied to clipboard, paste and run in terminal",
+  "copy": "Copy",
+  "copyErrorMessage": "Copy error message",
   "skipCheck": "Skip Check",
   "loadFailed": "Load Failed",
   "shortcutCreated": "Shortcut Created",

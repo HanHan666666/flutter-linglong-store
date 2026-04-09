@@ -404,6 +404,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commandCopied => '命令已复制到剪贴板，请粘贴到终端中执行';
 
   @override
+  String get copy => '复制';
+
+  @override
+  String get copyErrorMessage => '复制错误信息';
+
+  @override
   String get skipCheck => '跳过检测';
 
   @override

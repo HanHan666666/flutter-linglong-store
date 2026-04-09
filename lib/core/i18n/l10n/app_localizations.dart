@@ -848,6 +848,18 @@ abstract class AppLocalizations {
   /// **'命令已复制到剪贴板，请粘贴到终端中执行'**
   String get commandCopied;
 
+  /// No description provided for @copy.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制'**
+  String get copy;
+
+  /// No description provided for @copyErrorMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制错误信息'**
+  String get copyErrorMessage;
+
   /// No description provided for @skipCheck.
   ///
   /// In zh, this message translates to:

@@ -73,9 +73,9 @@ class CategoryFilterSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Semantics(
-      label: l10n?.loading ?? '加载中',
+      label: l10n.loading,
       child: Shimmer.fromColors(
         baseColor: context.appColors.skeletonBackground,
         highlightColor: context.appColors.skeletonHighlight,

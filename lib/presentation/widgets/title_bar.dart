@@ -80,7 +80,7 @@ class CustomTitleBar extends StatelessWidget {
 
   /// 构建 Logo 区域
   Widget _buildLogoSection(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -93,7 +93,7 @@ class CustomTitleBar extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm),
         // 应用名称（标题栏级别：16px shell 文字）
         Text(
-          l10n?.appTitle ?? '玲珑应用商店社区版',
+          l10n.appTitle,
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w400,
@@ -189,7 +189,7 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       constraints: const BoxConstraints(maxWidth: 534),
       height: 32,
@@ -226,7 +226,7 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
                 focusNode: _focusNode,
                 maxLines: 1,
                 decoration: InputDecoration(
-                  hintText: l10n?.searchPlaceholder ?? '在这里搜索你想搜索的应用',
+                  hintText: l10n.searchPlaceholder,
                   // 搜索框 placeholder：14px 常规说明文字
                   hintStyle: AppTextStyles.bodyMedium.copyWith(
                     color: context.appColors.textTertiary,
@@ -255,7 +255,7 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
                           onPressed: _clearSearch,
                           splashRadius: 14,
                           padding: EdgeInsets.zero,
-                          tooltip: l10n?.clearSearch ?? '清除搜索词',
+                          tooltip: l10n.clearSearch,
                         )
                       : null,
                 ),
@@ -324,26 +324,26 @@ class _WindowControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         _WindowButton(
           icon: Icons.remove,
           onPressed: onMinimize,
-          tooltip: l10n?.minimize ?? '最小化',
+          tooltip: l10n.minimize,
         ),
         _WindowButton(
           icon: isMaximized ? Icons.filter_none : Icons.crop_square,
           onPressed: onMaximize,
           tooltip: isMaximized
-              ? (l10n?.restore ?? '还原')
-              : (l10n?.maximize ?? '最大化'),
+              ? l10n.restore
+              : l10n.maximize,
         ),
         _WindowButton(
           icon: Icons.close,
           onPressed: onClose,
-          tooltip: l10n?.close ?? '关闭',
+          tooltip: l10n.close,
           isClose: true,
         ),
       ],

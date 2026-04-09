@@ -24,7 +24,7 @@ class AppDetailSecondaryActions extends StatelessWidget {
     }
 
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final errorColor = theme.colorScheme.error;
 
     // 按钮高度与 InstallButton.large (40px) 保持一致
@@ -40,7 +40,7 @@ class AppDetailSecondaryActions extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: onCreateShortcut,
             icon: const Icon(Icons.shortcut_outlined, size: iconSize),
-            label: Text(l10n?.createDesktopShortcut ?? '创建桌面快捷方式'),
+            label: Text(l10n.createDesktopShortcut),
           ),
         ),
         const SizedBox(width: 12),
@@ -54,7 +54,7 @@ class AppDetailSecondaryActions extends StatelessWidget {
               color: errorColor,
             ),
             label: Text(
-              l10n?.uninstall ?? '卸载',
+              l10n.uninstall,
               style: TextStyle(color: errorColor),
             ),
             style: OutlinedButton.styleFrom(

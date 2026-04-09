@@ -12,9 +12,6 @@ import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/network/api_client.dart';
 
-/// 反馈问题类型选项
-const _kFeedbackCategories = ['商店缺陷', '应用更新', '应用故障'];
-
 /// 日志文件相对路径（相对于 $HOME）
 const _kLogFileRelative =
     '.local/share/com.dongpl.linglong-store.v2/logs/linglong-store.log';
@@ -47,13 +44,12 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    // 从国际化获取分类列表，如果不存在则使用默认值
-    final categories =
-        l10n?.feedbackCategories.split(',') ?? _kFeedbackCategories;
+    final l10n = AppLocalizations.of(context)!;
+    // 从国际化获取分类列表
+    final categories = l10n.feedbackCategories.split(',');
 
     return AlertDialog(
-      title: Text(l10n?.feedbackTitle ?? '意见反馈'),
+      title: Text(l10n.feedbackTitle),
       content: SizedBox(
         width: 440,
         child: SingleChildScrollView(
@@ -63,7 +59,7 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
             children: [
               // 问题分类多选
               Text(
-                l10n?.feedbackCategory ?? '问题分类',
+                l10n.feedbackCategory,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -106,8 +102,8 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
               TextField(
                 controller: _overviewController,
                 decoration: InputDecoration(
-                  labelText: l10n?.overview ?? '概述',
-                  hintText: l10n?.overviewHint ?? '请简要描述问题',
+                  labelText: l10n.overview,
+                  hintText: l10n.overviewHint,
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -118,8 +114,8 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
                 controller: _descriptionController,
                 maxLines: 5,
                 decoration: InputDecoration(
-                  labelText: l10n?.detailDescription ?? '详细描述',
-                  hintText: l10n?.detailDescriptionHint ?? '请详细描述您遇到的问题',
+                  labelText: l10n.detailDescription,
+                  hintText: l10n.detailDescriptionHint,
                   alignLabelWithHint: true,
                   border: const OutlineInputBorder(),
                 ),
@@ -129,8 +125,8 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
               // 上传日志复选框
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text(l10n?.uploadLog ?? '同时上传日志文件'),
-                subtitle: Text(l10n?.noPrivacyInfo ?? '日志中不包含个人隐私信息'),
+                title: Text(l10n.uploadLog),
+                subtitle: Text(l10n.noPrivacyInfo),
                 value: _uploadLogFile,
                 onChanged: (value) =>
                     setState(() => _uploadLogFile = value ?? false),
@@ -142,7 +138,7 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
       actions: [
         TextButton(
           onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
-          child: Text(l10n?.cancel ?? '取消'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: _isSubmitting ? null : _submit,
@@ -152,7 +148,7 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text(l10n?.submitFeedback ?? '提交'),
+              : Text(l10n.submitFeedback),
         ),
       ],
     );
@@ -160,15 +156,14 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
 
   /// 提交反馈
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     final overview = _overviewController.text.trim();
     final description = _descriptionController.text.trim();
 
     if (overview.isEmpty && description.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            AppLocalizations.of(context)?.feedbackHint ?? '请填写问题概述或描述',
-          ),
+          content: Text(l10n.feedbackHint),
         ),
       );
       return;
@@ -176,9 +171,7 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
 
     setState(() => _isSubmitting = true);
 
-    // 提前捕获 context 相关引用，避免跨 async 间隙使用 BuildContext
-    final l10n = AppLocalizations.of(context);
-    final noneText = l10n?.none ?? '无';
+    final noneText = l10n.none;
 
     try {
       String? logFileUrl;
@@ -214,9 +207,7 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.feedbackSuccess ?? '感谢您的反馈！',
-            ),
+            content: Text(l10n.feedbackSuccess),
           ),
         );
       }
@@ -225,9 +216,7 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context)?.feedbackFailed ?? '反馈提交失败，请稍后重试',
-            ),
+            content: Text(l10n.feedbackFailed),
           ),
         );
       }

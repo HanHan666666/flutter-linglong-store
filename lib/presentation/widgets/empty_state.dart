@@ -91,10 +91,9 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final defaultTitle = title ?? (l10n?.noData ?? '暂无数据');
-    final defaultDescription =
-        description ?? (l10n?.noDataDescription ?? '这里还没有任何内容');
+    final l10n = AppLocalizations.of(context)!;
+    final defaultTitle = title ?? l10n.noData;
+    final defaultDescription = description ?? l10n.noDataDescription;
     final defaultIcon = icon ?? Icons.inbox;
 
     return Center(
@@ -149,7 +148,7 @@ class EmptyState extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: Text(retryText ?? (l10n?.retry ?? '重试')),
+                label: Text(retryText ?? l10n.retry),
               ),
             ],
           ],

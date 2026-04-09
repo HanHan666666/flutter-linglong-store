@@ -44,10 +44,10 @@ class LoadingShimmer extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Semantics(
-      label: l10n?.loading ?? '加载中',
+      label: l10n.loading,
       child: Column(
         children: List.generate(
           count,

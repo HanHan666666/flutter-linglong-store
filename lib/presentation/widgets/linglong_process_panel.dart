@@ -31,45 +31,45 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
         .contains(app.id);
 
     // 获取国际化实例用于菜单项标签
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final menu = Menu(
       items: [
         MenuItem(
-          label: l10n?.copyContainerCommand ?? '复制进入容器命令',
+          label: l10n.copyContainerCommand,
           onClick: (_) => _copyText(
             'll-cli enter ${app.appId}',
-            l10n?.commandCopied ?? '命令已复制到剪贴板，请粘贴到终端中执行',
+            l10n.commandCopied,
           ),
         ),
         MenuItem(
-          label: l10n?.copyAppId ?? '复制应用 ID',
+          label: l10n.copyAppId,
           onClick: (_) => _copyText(
             app.appId,
-            l10n?.copied(app.appId) ?? '已复制应用 ID',
+            l10n.copied(app.appId),
           ),
         ),
         MenuItem(
-          label: l10n?.copyPid ?? '复制 PID',
+          label: l10n.copyPid,
           onClick: (_) => _copyText(
             app.pid.toString(),
-            l10n?.copied(app.pid.toString()) ?? '已复制 PID',
+            l10n.copied(app.pid.toString()),
           ),
         ),
         MenuItem(
-          label: l10n?.copyContainerId ?? '复制容器 ID',
+          label: l10n.copyContainerId,
           onClick: (_) => _copyText(
             app.containerId,
-            l10n?.copied(app.containerId) ?? '已复制容器 ID',
+            l10n.copied(app.containerId),
           ),
         ),
         MenuItem.separator(),
         MenuItem(
-          label: l10n?.refreshProcessList ?? '刷新进程列表',
+          label: l10n.refreshProcessList,
           onClick: (_) => ref.read(runningProcessProvider.notifier).refresh(),
         ),
         MenuItem.separator(),
         MenuItem(
-          label: l10n?.stopProcess ?? '停止进程',
+          label: l10n.stopProcess,
           disabled: isKilling,
           onClick: (_) => _stopProcess(app),
         ),
@@ -110,13 +110,13 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
         .killApp(app);
     if (!mounted) return;
 
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           success
-              ? (l10n?.stopSuccess(app.name) ?? '${app.name} 已停止')
-              : (l10n?.stopFailed ?? '停止失败'),
+              ? l10n.stopSuccess(app.name)
+              : l10n.stopFailed,
         ),
         backgroundColor: success ? null : Theme.of(context).colorScheme.error,
       ),
@@ -126,7 +126,7 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(runningProcessProvider);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       children: [
@@ -151,8 +151,7 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    l10n?.processRefreshFailed ??
-                        '进程列表刷新失败，当前显示的是上次成功获取的数据',
+                    l10n.processRefreshFailed,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: const Color(0xFF8C5A00),
                     ),
@@ -169,7 +168,7 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
   Widget _buildContent(
     BuildContext context,
     RunningProcessState state,
-    AppLocalizations? l10n,
+    AppLocalizations l10n,
   ) {
     if (state.isInitialLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -178,9 +177,9 @@ class _LinglongProcessPanelState extends ConsumerState<LinglongProcessPanel> {
     if (state.apps.isEmpty) {
       return EmptyState(
         icon: Icons.layers_clear,
-        title: l10n?.linglongProcess ?? '玲珑进程',
-        description: l10n?.noRunningApps ?? '当前没有运行中的玲珑应用',
-        retryText: l10n?.refresh ?? '刷新',
+        title: l10n.linglongProcess,
+        description: l10n.noRunningApps,
+        retryText: l10n.refresh,
         onRetry: () => ref.read(runningProcessProvider.notifier).refresh(),
       );
     }
@@ -232,17 +231,17 @@ class _ProcessToolbar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final lastRefreshedText = state.lastRefreshedAt == null
-        ? (l10n?.notRefreshed ?? '尚未刷新')
-        : '${l10n?.lastRefresh ?? '上次刷新'} ${_formatTime(state.lastRefreshedAt!)}';
+        ? l10n.notRefreshed
+        : '${l10n.lastRefresh} ${_formatTime(state.lastRefreshedAt!)}';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       child: Row(
         children: [
           Text(
-            l10n?.linglongProcess ?? '玲珑进程',
+            l10n.linglongProcess,
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -264,7 +263,7 @@ class _ProcessToolbar extends ConsumerWidget {
           const Spacer(),
           if (state.isRefreshing) ...[
             Text(
-              l10n?.refreshing ?? '刷新中',
+              l10n.refreshing,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.outline,
               ),
@@ -291,7 +290,7 @@ class _ProcessToolbar extends ConsumerWidget {
             onPressed: () =>
                 ref.read(runningProcessProvider.notifier).refresh(),
             icon: const Icon(Icons.refresh),
-            tooltip: l10n?.refresh ?? '刷新',
+            tooltip: l10n.refresh,
           ),
         ],
       ),
@@ -311,7 +310,7 @@ class _ProcessTableHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       height: 44,
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -324,26 +323,26 @@ class _ProcessTableHeader extends StatelessWidget {
       child: Row(
         children: [
           _ProcessHeaderCell(
-            label: l10n?.appName ?? '应用名称',
+            label: l10n.appName,
             width: 240,
           ),
           _ProcessHeaderCell(
-            label: l10n?.versionNo ?? '版本号',
+            label: l10n.versionNo,
             width: 120,
             centered: true,
           ),
           _ProcessHeaderCell(
-            label: l10n?.architecture ?? '架构',
+            label: l10n.architecture,
             width: 100,
             centered: true,
           ),
           _ProcessHeaderCell(
-            label: l10n?.channelLabel ?? '渠道',
+            label: l10n.channelLabel,
             width: 90,
             centered: true,
           ),
           _ProcessHeaderCell(
-            label: l10n?.source ?? '来源',
+            label: l10n.source,
             width: 110,
             centered: true,
           ),
@@ -353,7 +352,7 @@ class _ProcessTableHeader extends StatelessWidget {
             centered: true,
           ),
           _ProcessHeaderCell(
-            label: l10n?.containerId ?? '容器 ID',
+            label: l10n.containerId,
             width: 210,
           ),
           const SizedBox(width: 48),

@@ -154,13 +154,13 @@ class _AppCardState extends State<AppCard> {
   }
 
   Widget _buildSkeletonCard(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
     final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
 
     return Semantics(
-      label: l10n?.loading ?? '加载中',
+      label: l10n.loading,
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(12),

@@ -113,7 +113,7 @@ class DownloadManagerDialog extends ConsumerWidget {
   }
 
   Widget _buildOverview(BuildContext context, InstallQueueState queueState) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final activeCount = queueState.currentTask == null ? 0 : 1;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -126,7 +126,7 @@ class DownloadManagerDialog extends ConsumerWidget {
         children: [
           Expanded(
             child: _OverviewPill(
-              label: l10n?.downloading ?? '下载中...',
+              label: l10n.downloading,
               count: activeCount,
               highlighted: activeCount > 0,
             ),
@@ -134,16 +134,14 @@ class DownloadManagerDialog extends ConsumerWidget {
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: _OverviewPill(
-              label:
-                  l10n?.waitingCount(queueState.queue.length) ??
-                  '等待中 (${queueState.queue.length})',
+              label: l10n.waitingCount(queueState.queue.length),
               count: queueState.queue.length,
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: _OverviewPill(
-              label: l10n?.completed ?? '已完成',
+              label: l10n.completed,
               count: queueState.history.length,
             ),
           ),
@@ -158,7 +156,7 @@ class DownloadManagerDialog extends ConsumerWidget {
     WidgetRef ref,
     InstallQueueState queueState,
   ) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final hasActiveTasks = queueState.hasActiveTasks();
     final hasHistory = queueState.history.isNotEmpty;
 
@@ -178,15 +176,14 @@ class DownloadManagerDialog extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (queueState.currentTask != null) ...[
-              _buildSectionTitle(context, l10n?.installingLabel ?? '正在安装'),
+              _buildSectionTitle(context, l10n.installingLabel),
               _buildCurrentTask(context, ref, queueState.currentTask!),
               const SizedBox(height: AppSpacing.md),
             ],
             if (queueState.queue.isNotEmpty) ...[
               _buildSectionTitle(
                 context,
-                l10n?.waitingCount(queueState.queue.length) ??
-                    '等待中 (${queueState.queue.length})',
+                l10n.waitingCount(queueState.queue.length),
               ),
               ...queueState.queue.map(
                 (task) => _buildQueueItem(context, ref, task),
@@ -194,7 +191,7 @@ class DownloadManagerDialog extends ConsumerWidget {
               const SizedBox(height: AppSpacing.md),
             ],
             if (queueState.history.isNotEmpty) ...[
-              _buildSectionTitle(context, l10n?.completed ?? '已完成'),
+              _buildSectionTitle(context, l10n.completed),
               ...queueState.history.map(
                 (task) => _buildHistoryItem(context, ref, task),
               ),
@@ -359,7 +356,7 @@ class DownloadManagerDialog extends ConsumerWidget {
       parts.add('${queueState.history.length} 条最近记录');
     }
     if (parts.isEmpty) {
-      return AppLocalizations.of(context)?.noDownloadTasks ?? '暂无下载任务';
+      return AppLocalizations.of(context)!.noDownloadTasks;
     }
     return parts.join('，');
   }

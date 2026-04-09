@@ -79,17 +79,17 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final title = l10n?.appComments ?? '评论区';
-    final hint = l10n?.commentInputHint ?? '说说这个应用的使用体验';
-    final emptyText = l10n?.appCommentsEmpty ?? '还没有评论，来写第一条吧';
-    final retryLabel = l10n?.retry ?? '重试';
-    final submitLabel = l10n?.submitComment ?? '发表评论';
-    final versionLabel = l10n?.commentVersionLabel ?? '关联版本';
-    final anonymousLabel = l10n?.anonymousComment ?? '匿名访客';
-    final helpfulLabel = l10n?.commentHelpful ?? '有帮助';
-    final notHelpfulLabel = l10n?.commentNotHelpful ?? '没帮助';
-    final helperText = l10n?.commentAnonymousHint ?? '匿名评论，按最新时间排序展示';
+    final l10n = AppLocalizations.of(context)!;
+    final title = l10n.appComments;
+    final hint = l10n.commentInputHint;
+    final emptyText = l10n.appCommentsEmpty;
+    final retryLabel = l10n.retry;
+    final submitLabel = l10n.submitComment;
+    final versionLabel = l10n.commentVersionLabel;
+    final anonymousLabel = l10n.anonymousComment;
+    final helpfulLabel = l10n.commentHelpful;
+    final notHelpfulLabel = l10n.commentNotHelpful;
+    final helperText = l10n.commentAnonymousHint;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,7 +264,7 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
 
   Widget _buildVersionPills(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final versions = _isVersionExpanded ||
             widget.versionOptions.length <= _collapsedVersionCount
         ? widget.versionOptions
@@ -308,8 +308,8 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
             icon: Icon(_isVersionExpanded ? Icons.expand_less : Icons.expand_more),
             label: Text(
               _isVersionExpanded
-                  ? (l10n?.collapse ?? '收起')
-                  : (l10n?.expandAll ?? '展开全部'),
+                  ? l10n.collapse
+                  : l10n.expandAll,
             ),
           ),
         ],

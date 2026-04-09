@@ -99,9 +99,9 @@ class ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final defaultTitle = title ?? (l10n?.errorUnknown ?? '出错了');
-    final defaultDescription = description ?? (l10n?.errorNetworkDetail ?? '请稍后重试');
+    final l10n = AppLocalizations.of(context)!;
+    final defaultTitle = title ?? l10n.errorUnknown;
+    final defaultDescription = description ?? l10n.errorNetworkDetail;
     final defaultIcon = icon ?? Icons.error_outline;
     final defaultIconColor = iconColor ?? Theme.of(context).colorScheme.error;
 
@@ -169,7 +169,7 @@ class ErrorState extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: Text(retryText ?? (l10n?.retry ?? '重试')),
+                label: Text(retryText ?? l10n.retry),
               ),
             ],
           ],

@@ -135,21 +135,21 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     showDialog<bool>(
       context: context,
       builder: (context) {
-        final l10n = AppLocalizations.of(context);
+        final l10n = AppLocalizations.of(context)!;
         return AlertDialog(
-          title: Text(l10n?.confirmExit ?? '确认退出'),
-          content: Text(l10n?.exitWithInstalling ?? '有正在进行的安装任务，确定要退出吗？'),
+          title: Text(l10n.confirmExit),
+          content: Text(l10n.exitWithInstalling),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text(l10n?.cancel ?? '取消'),
+              child: Text(l10n.cancel),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop(true);
                 WindowService.close();
               },
-              child: Text(l10n?.exitBtn ?? '退出'),
+              child: Text(l10n.exitBtn),
             ),
           ],
         );

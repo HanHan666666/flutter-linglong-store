@@ -189,8 +189,6 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
   }
 
   Widget _buildBody(RecommendState state) {
-    final l10n = AppLocalizations.of(context)!;
-    
     // 加载中状态（仅在首次加载且无数据时显示骨架屏）
     if (state.isLoading && state.data == null) {
       return _buildLoadingState();
@@ -232,13 +230,10 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
             ),
           ),
         ),
-        // 推荐列表区添加无障碍语义标注
+        // 推荐列表区
         SliverPadding(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          sliver: Semantics(
-            label: l10n.a11yAppListArea,
-            child: _AppsGrid(apps: state.data!.apps.items),
-          ),
+          sliver: _AppsGrid(apps: state.data!.apps.items),
         ),
         SliverToBoxAdapter(
           child: _RecommendListFooter(

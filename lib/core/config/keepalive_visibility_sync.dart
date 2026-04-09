@@ -15,6 +15,31 @@ class KeepAliveVisibilityBinding {
   final bool Function() isMounted;
 }
 
+/// Shell 当前激活路由作用域。
+///
+/// 让 Shell 子路由在 build 阶段就能感知当前匹配路径，
+/// 从而在切页首帧立即退出绘制/命中测试/焦点树，避免旧页透到新页下面。
+class ShellRouteVisibilityScope extends InheritedWidget {
+  const ShellRouteVisibilityScope({
+    required this.currentPath,
+    required super.child,
+    super.key,
+  });
+
+  final String currentPath;
+
+  static ShellRouteVisibilityScope? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<
+      ShellRouteVisibilityScope
+    >();
+  }
+
+  @override
+  bool updateShouldNotify(ShellRouteVisibilityScope oldWidget) {
+    return currentPath != oldWidget.currentPath;
+  }
+}
+
 /// KeepAlive 页面注册表。
 ///
 /// 路由切换时由当前路由统一驱动 visible/hidden，同步到所有仍挂载的

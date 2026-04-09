@@ -131,6 +131,41 @@ void main() {
       expect(find.text('my-apps-content'), findsNothing);
       expect(find.text('ranking-content'), findsOneWidget);
     });
+
+    testWidgets('route switch hides previous page on the first frame', (
+      tester,
+    ) async {
+      final updateKey = GlobalKey<KeepAlivePageWrapperState>();
+      final rankingKey = GlobalKey<KeepAlivePageWrapperState>();
+
+      await tester.pumpWidget(
+        _CrossRouteVisibilityHarness(
+          currentPath: AppRoutes.updateApps,
+          updateKey: updateKey,
+          rankingKey: rankingKey,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('update-content'), findsOneWidget);
+      expect(find.text('ranking-content'), findsNothing);
+
+      await tester.pumpWidget(
+        _CrossRouteVisibilityHarness(
+          currentPath: AppRoutes.ranking,
+          updateKey: updateKey,
+          rankingKey: rankingKey,
+        ),
+      );
+
+      expect(find.text('update-content'), findsNothing);
+      expect(find.text('ranking-content'), findsOneWidget);
+
+      await tester.pumpAndSettle();
+
+      expect(updateKey.currentState!.isVisible, isFalse);
+      expect(rankingKey.currentState!.isVisible, isTrue);
+    });
   });
 }
 
@@ -148,28 +183,31 @@ class _VisibilitySyncHarness extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Stack(
-        children: [
-          Column(
-            children: [
-              Expanded(
-                child: KeepAlivePageWrapper(
-                  key: myAppsKey,
-                  routePath: AppRoutes.myApps,
-                  child: const SizedBox.expand(),
+      home: ShellRouteVisibilityScope(
+        currentPath: currentPath,
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                Expanded(
+                  child: KeepAlivePageWrapper(
+                    key: myAppsKey,
+                    routePath: AppRoutes.myApps,
+                    child: const SizedBox.expand(),
+                  ),
                 ),
-              ),
-              Expanded(
-                child: KeepAlivePageWrapper(
-                  key: rankingKey,
-                  routePath: AppRoutes.ranking,
-                  child: const SizedBox.expand(),
+                Expanded(
+                  child: KeepAlivePageWrapper(
+                    key: rankingKey,
+                    routePath: AppRoutes.ranking,
+                    child: const SizedBox.expand(),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          KeepAliveVisibilitySync(currentPath: currentPath),
-        ],
+              ],
+            ),
+            KeepAliveVisibilitySync(currentPath: currentPath),
+          ],
+        ),
       ),
     );
   }
@@ -189,30 +227,79 @@ class _StackedVisibilitySyncHarness extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Stack(
-        children: [
-          Positioned.fill(
-            child: KeepAlivePageWrapper(
-              key: myAppsKey,
-              routePath: AppRoutes.myApps,
-              child: const ColoredBox(
-                color: Colors.blue,
-                child: Center(child: Text('my-apps-content')),
+      home: ShellRouteVisibilityScope(
+        currentPath: currentPath,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: KeepAlivePageWrapper(
+                key: myAppsKey,
+                routePath: AppRoutes.myApps,
+                child: const ColoredBox(
+                  color: Colors.blue,
+                  child: Center(child: Text('my-apps-content')),
+                ),
               ),
             ),
-          ),
-          Positioned.fill(
-            child: KeepAlivePageWrapper(
-              key: rankingKey,
-              routePath: AppRoutes.ranking,
-              child: const ColoredBox(
-                color: Colors.orange,
-                child: Center(child: Text('ranking-content')),
+            Positioned.fill(
+              child: KeepAlivePageWrapper(
+                key: rankingKey,
+                routePath: AppRoutes.ranking,
+                child: const ColoredBox(
+                  color: Colors.orange,
+                  child: Center(child: Text('ranking-content')),
+                ),
               ),
             ),
-          ),
-          KeepAliveVisibilitySync(currentPath: currentPath),
-        ],
+            KeepAliveVisibilitySync(currentPath: currentPath),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CrossRouteVisibilityHarness extends StatelessWidget {
+  const _CrossRouteVisibilityHarness({
+    required this.currentPath,
+    required this.updateKey,
+    required this.rankingKey,
+  });
+
+  final String currentPath;
+  final GlobalKey<KeepAlivePageWrapperState> updateKey;
+  final GlobalKey<KeepAlivePageWrapperState> rankingKey;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: ShellRouteVisibilityScope(
+        currentPath: currentPath,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: KeepAlivePageWrapper(
+                key: updateKey,
+                routePath: AppRoutes.updateApps,
+                child: const ColoredBox(
+                  color: Colors.green,
+                  child: Center(child: Text('update-content')),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: KeepAlivePageWrapper(
+                key: rankingKey,
+                routePath: AppRoutes.ranking,
+                child: const ColoredBox(
+                  color: Colors.orange,
+                  child: Center(child: Text('ranking-content')),
+                ),
+              ),
+            ),
+            KeepAliveVisibilitySync(currentPath: currentPath),
+          ],
+        ),
       ),
     );
   }

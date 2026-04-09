@@ -198,7 +198,12 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(AppRadius.sm),
                           ),
-                          child: widget.child,
+                          // 把当前 Shell 匹配路径下发到嵌套路由树，
+                          // 让所有页面在切换当帧就能同步可见性。
+                          child: ShellRouteVisibilityScope(
+                            currentPath: currentPath,
+                            child: widget.child,
+                          ),
                         ),
                       ),
                     ),

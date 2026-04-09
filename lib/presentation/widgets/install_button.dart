@@ -170,7 +170,7 @@ class _InstallButtonState extends State<InstallButton> {
     return A11yButton(
       semanticsLabel: semanticsLabel,
       onTap: widget.onPressed ?? () {},
-      enabled: enabled,
+      enabled: enabled && !widget.disabled,
       child: SizedBox(
         height: buttonHeight,
         child: ElevatedButton.icon(
@@ -201,7 +201,7 @@ class _InstallButtonState extends State<InstallButton> {
     return A11yButton(
       semanticsLabel: semanticsLabel,
       onTap: widget.onPressed ?? () {},
-      enabled: enabled,
+      enabled: enabled && !widget.disabled,
       child: SizedBox(
         height: buttonHeight,
         child: OutlinedButton.icon(
@@ -232,7 +232,7 @@ class _InstallButtonState extends State<InstallButton> {
     return A11yButton(
       semanticsLabel: semanticsLabel,
       onTap: widget.onPressed ?? () {},
-      enabled: enabled,
+      enabled: enabled && !widget.disabled,
       child: SizedBox(
         height: buttonHeight,
         child: OutlinedButton.icon(

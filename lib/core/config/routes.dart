@@ -160,28 +160,42 @@ List<RouteBase> _buildShellRoutes() {
           name: 'searchList',
           builder: (context, state) {
             final query = state.uri.queryParameters['q']?.trim() ?? '';
-            return SearchListPage(
+            return KeepAlivePageWrapper(
               key: ValueKey('searchList:$query'),
-              initialQuery: query,
+              routePath: state.matchedLocation,
+              child: SearchListPage(
+                key: ValueKey('searchList:$query'),
+                initialQuery: query,
+              ),
             );
           },
         ),
         GoRoute(
           path: AppRoutes.setting,
           name: 'setting',
-          builder: (context, state) => const SettingPage(),
+          builder: (context, state) => const KeepAlivePageWrapper(
+            routePath: AppRoutes.setting,
+            child: SettingPage(),
+          ),
         ),
         GoRoute(
           path: AppRoutes.updateApps,
           name: 'updateApps',
-          builder: (context, state) => const UpdateAppPage(),
+          builder: (context, state) => const KeepAlivePageWrapper(
+            routePath: AppRoutes.updateApps,
+            child: UpdateAppPage(),
+          ),
         ),
         GoRoute(
           path: AppRoutes.customCategory,
           name: 'customCategory',
           builder: (context, state) {
             final code = state.pathParameters['code']!;
-            return CustomCategoryPage(code: code);
+            return KeepAlivePageWrapper(
+              key: ValueKey('customCategory:$code'),
+              routePath: state.matchedLocation,
+              child: CustomCategoryPage(code: code),
+            );
           },
         ),
         GoRoute(
@@ -196,7 +210,11 @@ List<RouteBase> _buildShellRoutes() {
               appInfo = extra;
             }
 
-            return AppDetailPage(appId: appId, appInfo: appInfo);
+            return KeepAlivePageWrapper(
+              key: ValueKey('appDetail:$appId'),
+              routePath: state.matchedLocation,
+              child: AppDetailPage(appId: appId, appInfo: appInfo),
+            );
           },
         ),
       ],
@@ -421,11 +439,17 @@ class KeepAlivePageWrapperState extends State<KeepAlivePageWrapper>
   Widget build(BuildContext context) {
     super.build(context);
 
-    // 使用 InheritedWidget 传递可见性状态，并确保隐藏页退出绘制层。
+    final visibilityScope = ShellRouteVisibilityScope.maybeOf(context);
+    final effectiveVisibility = visibilityScope == null
+        ? _isVisible
+        : visibilityScope.currentPath == widget.routePath;
+
+    // 使用 InheritedWidget 传递可见性状态，并让当前激活路由在 build 当帧就生效，
+    // 避免旧页在可见性同步的下一帧之前先透出来。
     return KeepAlivePaintGate(
-      isVisible: _isVisible,
+      isVisible: effectiveVisibility,
       child: _VisibilityInherited(
-        isVisible: _isVisible,
+        isVisible: effectiveVisibility,
         routePath: widget.routePath,
         child: widget.child,
       ),

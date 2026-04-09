@@ -51,6 +51,30 @@ void main() {
         expect(newState.error, equals('Test error'));
         expect(newState.selectedType, equals(RankingType.rising));
       });
+
+      test('should preserve data when copyWith does not override it', () {
+        // Arrange
+        final apps = [
+          const RankingAppInfo(
+            appId: 'com.app1',
+            name: 'App 1',
+            version: '1.0.0',
+            rank: 1,
+          ),
+        ];
+        final data = RankingData(type: RankingType.download, apps: apps);
+        final state = RankingState(
+          data: data,
+          selectedType: RankingType.download,
+        );
+
+        // Act - 只修改 selectedType，保留 data
+        final newState = state.copyWith(selectedType: RankingType.rising);
+
+        // Assert - data 应该被保留
+        expect(newState.data, equals(data));
+        expect(newState.selectedType, equals(RankingType.rising));
+      });
     });
 
     group('RankingData', () {
@@ -76,15 +100,10 @@ void main() {
 
       test('should support copyWith', () {
         // Arrange
-        const data = RankingData(
-          type: RankingType.download,
-          apps: [],
-        );
+        const data = RankingData(type: RankingType.download, apps: []);
 
         // Act
-        final newData = data.copyWith(
-          type: RankingType.hot,
-        );
+        final newData = data.copyWith(type: RankingType.hot);
 
         // Assert
         expect(newData.type, equals(RankingType.hot));

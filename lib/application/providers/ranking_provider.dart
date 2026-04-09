@@ -8,9 +8,43 @@ import 'api_provider.dart';
 
 part 'ranking_provider.g.dart';
 
+/// 单个排行榜类型的缓存数据
+class _RankingTypeCache {
+  const _RankingTypeCache({
+    this.data,
+    this.isLoading = false,
+    this.error,
+    this.hasLoadedOnce = false,
+  });
+
+  final RankingData? data;
+  final bool isLoading;
+  final String? error;
+  final bool hasLoadedOnce;
+
+  _RankingTypeCache copyWith({
+    RankingData? data,
+    bool? isLoading,
+    String? error,
+    bool? hasLoadedOnce,
+  }) {
+    return _RankingTypeCache(
+      data: data ?? this.data,
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
+      hasLoadedOnce: hasLoadedOnce ?? this.hasLoadedOnce,
+    );
+  }
+}
+
 /// 排行榜状态 Provider
 @riverpod
 class Ranking extends _$Ranking {
+  /// 为每个 RankingType 分别缓存数据，切换 Tab 时立即展示旧数据。
+  final Map<RankingType, _RankingTypeCache> _typeCaches = {
+    for (final type in RankingType.values) type: const _RankingTypeCache(),
+  };
+
   @override
   RankingState build() {
     // 初始化时加载数据
@@ -20,18 +54,31 @@ class Ranking extends _$Ranking {
 
   /// 加载数据
   Future<void> loadData() async {
-    state = state.copyWith(isLoading: true, error: null);
+    final type = state.selectedType;
+    final cache = _typeCaches[type]!;
+
+    // 标记加载中，但保留旧数据供 UI 展示
+    _typeCaches[type] = cache.copyWith(isLoading: true, error: null);
+    _syncStateToCurrentType();
 
     try {
-      final apps = await _fetchRankingApps(state.selectedType);
+      final apps = await _fetchRankingApps(type);
+      final data = RankingData(type: type, apps: apps);
 
-      state = state.copyWith(
+      _typeCaches[type] = cache.copyWith(
         isLoading: false,
-        data: RankingData(type: state.selectedType, apps: apps),
+        data: data,
+        hasLoadedOnce: true,
       );
+      _syncStateToCurrentType();
     } catch (e, s) {
       AppLogger.error('加载排行榜数据失败', e, s);
-      state = state.copyWith(isLoading: false, error: presentAppError(e));
+      _typeCaches[type] = cache.copyWith(
+        isLoading: false,
+        error: presentAppError(e),
+        hasLoadedOnce: cache.hasLoadedOnce || cache.data != null,
+      );
+      _syncStateToCurrentType();
     }
   }
 
@@ -44,8 +91,25 @@ class Ranking extends _$Ranking {
   Future<void> selectType(RankingType type) async {
     if (type == state.selectedType) return;
 
+    // 立即切换 selectedType，UI 先展示该类型的旧缓存数据
     state = state.copyWith(selectedType: type);
+    _syncStateToCurrentType();
+
+    // 后台刷新新类型的数据
     await loadData();
+  }
+
+  /// 将当前选中类型的缓存同步到 RankingState
+  void _syncStateToCurrentType() {
+    final type = state.selectedType;
+    final cache = _typeCaches[type]!;
+
+    state = RankingState(
+      isLoading: cache.isLoading,
+      error: cache.error,
+      data: cache.data,
+      selectedType: type,
+    );
   }
 
   /// 获取排行榜应用

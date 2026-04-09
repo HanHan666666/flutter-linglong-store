@@ -78,19 +78,23 @@ class _RankingPageState extends ConsumerState<RankingPage>
   Widget build(BuildContext context) {
     super.build(context);
 
-    final state = ref.watch(rankingProvider);
+    // 只 watch selectedType，避免其他字段变化导致整个 TabBarView 重建
+    final selectedType = ref.watch(
+      rankingProvider.select((s) => s.selectedType),
+    );
+    _tabController.index = RankingType.values.indexOf(selectedType);
 
     return Column(
       children: [
         // Tab 栏
         _buildTabBar(),
 
-        // Tab 内容
+        // Tab 内容：每个 Tab 独立管理自己的状态 watch
         Expanded(
           child: TabBarView(
             controller: _tabController,
             children: RankingType.values.map((type) {
-              return _RankingTabContent(type: type, state: state);
+              return _RankingTabContent(type: type);
             }).toList(),
           ),
         ),
@@ -111,16 +115,21 @@ class _RankingPageState extends ConsumerState<RankingPage>
         isScrollable: false,
         labelColor: AppColors.primary,
         unselectedLabelColor: palette.textSecondary,
-        labelStyle: AppTextStyles.body.copyWith(fontWeight: FontWeight.w500),
-        unselectedLabelStyle: AppTextStyles.body,
+        // 使用 14px 字号 + 紧凑行高，保证文字在按钮内垂直居中
+        labelStyle: AppTextStyles.bodyMedium.copyWith(
+          fontWeight: FontWeight.w500,
+          height: 1.0,
+        ),
+        unselectedLabelStyle: AppTextStyles.bodyMedium.copyWith(height: 1.0),
         indicator: BoxDecoration(
           color: palette.primaryLight,
-          borderRadius: AppRadius.lgRadius,
+          borderRadius: BorderRadius.circular(48), // 胶囊形圆角，与 Tab 高度匹配
         ),
         indicatorSize: TabBarIndicatorSize.tab,
+        // 收紧内边距：水平 12px、垂直 6px，indicator 更紧凑不溢出
         indicatorPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.sm,
+          horizontal: 12,
+          vertical: 6,
         ),
         dividerColor: Colors.transparent,
         tabs: RankingType.values.map((type) {
@@ -132,22 +141,32 @@ class _RankingPageState extends ConsumerState<RankingPage>
 }
 
 /// 排行榜 Tab 内容
+///
+/// 每个 Tab 独立 watch 自己类型的数据，避免整个 RankingState 变化导致其他 Tab 重建。
 class _RankingTabContent extends ConsumerWidget {
-  const _RankingTabContent({required this.type, required this.state});
+  const _RankingTabContent({required this.type});
 
   final RankingType type;
-  final RankingState state;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
 
-    // 加载中状态
+    // 只 watch 当前 Tab 对应的类型数据
+    final state = ref.watch(
+      rankingProvider.select(
+        (s) => s.selectedType == type
+            ? s
+            : s.copyWith(data: null, isLoading: false, error: null),
+      ),
+    );
+
+    // 加载中状态（仅在从未加载过时显示）
     if (state.isLoading && state.data == null) {
       return _buildLoadingState(context, l10n);
     }
 
-    // 错误状态
+    // 错误状态（仅在从未加载过时显示）
     if (state.error != null && state.data == null) {
       return ErrorState.generic(
         description: state.error,
@@ -219,6 +238,16 @@ class _AppsGrid extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cardStateIndex = ref.watch(applicationCardStateIndexProvider);
 
+    // 预先计算所有卡片状态，避免 builder 循环中重复调用 resolve()
+    final resolvedStates = apps
+        .map(
+          (app) => cardStateIndex.resolve(
+            appId: app.appId,
+            latestVersion: app.version,
+          ),
+        )
+        .toList(growable: false);
+
     return CustomScrollView(
       slivers: [
         SliverPadding(
@@ -240,10 +269,7 @@ class _AppsGrid extends ConsumerWidget {
                 ),
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final app = apps[index];
-                  final cardState = cardStateIndex.resolve(
-                    appId: app.appId,
-                    latestVersion: app.version,
-                  );
+                  final cardState = resolvedStates[index];
                   return AppCard(
                     appId: app.appId,
                     name: app.name,

@@ -340,5 +340,5 @@ Flutter 实现要点：
 - 最多缓存 10 个页面（LRU 淘汰）
 - 通过 `display: none/block` 切换（Flutter 中用 `Offstage` 或 `IndexedStack`）
 - 每个缓存页注入 `KeepAliveVisibilityContext`（`isVisible`, `pathname`, `isVisibleRef`）
-- 隐藏缓存页除了同步 `isVisible` 外，还必须同步退出绘制树、命中测试树与 ticker 树，避免切页时旧页面内容透到新页面骨架屏下方
+- 隐藏缓存页除了同步 `isVisible` 外，还必须同步退出绘制树、命中测试树、焦点树与 ticker 树，避免切页时旧页面内容透到新页面骨架屏下方
 - 隐藏页面必须暂停所有副作用（定时器、滚动监听、ResizeObserver）

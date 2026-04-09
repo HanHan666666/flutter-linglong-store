@@ -80,12 +80,14 @@ class _RankingPageState extends ConsumerState<RankingPage>
 
     // watch selectedType 建立 provider 依赖，保证 Tab 切换时触发 rebuild。
     // 不在 build() 中设置 _tabController.index，避免 build 副作用触发额外 listener 回调。
-    ref.watch(rankingProvider.select((s) => s.selectedType));
+    final selectedType = ref.watch(
+      rankingProvider.select((s) => s.selectedType),
+    );
 
     return Column(
       children: [
         // Tab 栏
-        _buildTabBar(),
+        _buildTabBar(selectedType),
 
         // Tab 内容：每个 Tab 独立管理自己的状态 watch
         Expanded(
@@ -100,7 +102,7 @@ class _RankingPageState extends ConsumerState<RankingPage>
     );
   }
 
-  Widget _buildTabBar() {
+  Widget _buildTabBar(RankingType selectedType) {
     // Tab 内容区和分隔线颜色跟随主题
     final palette = context.appColors;
     return Container(
@@ -134,54 +136,100 @@ class _RankingPageState extends ConsumerState<RankingPage>
         splashFactory: NoSplash.splashFactory,
         overlayColor: WidgetStateProperty.all(Colors.transparent),
         tabs: RankingType.values.map((type) {
-          return _roundedTab(text: type.label);
+          return _roundedTab(
+            text: type.label,
+            isSelected: type == selectedType,
+          );
         }).toList(),
       ),
     );
   }
 
-  /// 胶囊形 Tab，悬浮/按下时为圆角高亮
-  Widget _roundedTab({required String text}) {
-    return _HoverableTab(text: text);
+  /// 胶囊形 Tab，悬浮态保持与 active 一致的整块范围，但只使用极简弱高亮。
+  Widget _roundedTab({required String text, required bool isSelected}) {
+    return _HoverableTab(text: text, isSelected: isSelected);
   }
 }
 
 /// 可交互的胶囊形 Tab 组件
 class _HoverableTab extends StatefulWidget {
-  const _HoverableTab({required this.text});
+  const _HoverableTab({required this.text, required this.isSelected});
 
   final String text;
+  final bool isSelected;
 
   @override
   State<_HoverableTab> createState() => _HoverableTabState();
 }
 
 class _HoverableTabState extends State<_HoverableTab> {
+  static const _kHoverHighlightPadding = EdgeInsets.symmetric(
+    horizontal: 12,
+    vertical: 6,
+  );
+  static const _kTabHeight = 46.0;
+
   bool _isHovered = false;
   bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
     final palette = context.appColors;
-    final isActive = _isHovered || _isPressed;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final showHoverHighlight = !widget.isSelected && (_isHovered || _isPressed);
+    final hoverBackground = _isPressed
+        ? AppColors.primary.withValues(alpha: isDark ? 0.24 : 0.10)
+        : AppColors.primary.withValues(alpha: isDark ? 0.18 : 0.06);
+    final textColor = widget.isSelected || _isHovered || _isPressed
+        ? AppColors.primary
+        : palette.textSecondary;
 
     return MouseRegion(
+      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onExit: (_) => setState(() {
+        _isHovered = false;
+        _isPressed = false;
+      }),
       // 用 Listener 而不是 GestureDetector，这样不会吸收点击事件
       child: Listener(
         onPointerDown: (_) => setState(() => _isPressed = true),
         onPointerUp: (_) => setState(() => _isPressed = false),
         onPointerCancel: (_) => setState(() => _isPressed = false),
         behavior: HitTestBehavior.translucent,
-        child: AnimatedContainer(
-          duration: AppAnimation.fast,
-          decoration: BoxDecoration(
-            // 悬浮/按下时使用与 indicator 相同的 primaryLight 全不透明色，视觉统一
-            color: isActive ? palette.primaryLight : Colors.transparent,
-            borderRadius: BorderRadius.circular(48),
+        child: SizedBox(
+          height: _kTabHeight,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Padding(
+                // 与 active indicator 使用同一组边距，保证 hover 是完整胶囊而不是小圆鼓包。
+                padding: _kHoverHighlightPadding,
+                child: AnimatedContainer(
+                  duration: AppAnimation.fast,
+                  curve: AppAnimation.ease,
+                  decoration: BoxDecoration(
+                    color: showHoverHighlight
+                        ? hoverBackground
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(48),
+                  ),
+                ),
+              ),
+              Center(
+                child: Text(
+                  widget.text,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w500,
+                    height: 1.0,
+                    color: textColor,
+                  ),
+                ),
+              ),
+            ],
           ),
-          child: Tab(text: widget.text),
         ),
       ),
     );

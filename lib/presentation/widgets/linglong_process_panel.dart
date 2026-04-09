@@ -430,7 +430,7 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
     return Semantics(
       label: l10n.a11yProcessItem(
         widget.app.name,
-        widget.app.pid?.toString() ?? '',
+        widget.app.pid.toString(),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),

@@ -225,7 +225,7 @@ class _TitleBar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            l10n?.screenShots ?? '屏幕截图',
+            l10n.screenShots,
             style: TextStyle(
               color: primaryText,
               fontSize: 13,
@@ -250,7 +250,7 @@ class _TitleBar extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Tooltip(
-            message: l10n?.close ?? '关闭',
+            message: l10n.close,
             child: _CloseButton(onTap: onClose),
           ),
         ],
@@ -291,7 +291,7 @@ class _ImageStage extends StatelessWidget {
           onPageChanged: onPageChanged,
           itemBuilder: (context, index) {
             return Semantics(
-              label: '${l10n?.screenShots ?? '屏幕截图'} ${index + 1}',
+              label: '${l10n.screenShots} ${index + 1}',
               child: InteractiveViewer(
                 minScale: 0.5,
                 maxScale: 5.0,
@@ -388,7 +388,7 @@ class _ThumbnailBar extends StatelessWidget {
         itemBuilder: (context, index) {
           final selected = index == currentIndex;
           return Semantics(
-            label: '${l10n?.screenShots ?? '屏幕截图'} ${index + 1}',
+            label: '${l10n.screenShots} ${index + 1}',
             child: GestureDetector(
               onTap: () => onTapThumbnail(index),
               child: AnimatedContainer(

@@ -1132,4 +1132,122 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get viewDownloadManager => 'View Downloads';
+
+  @override
+  String a11yInstallApp(Object appName) {
+    return 'Install $appName';
+  }
+
+  @override
+  String a11yUpdateApp(Object appName) {
+    return 'Update $appName';
+  }
+
+  @override
+  String a11yOpenApp(Object appName) {
+    return 'Open $appName';
+  }
+
+  @override
+  String a11yUninstallApp(Object appName) {
+    return 'Uninstall $appName';
+  }
+
+  @override
+  String get a11ySearchBox => 'Search apps';
+
+  @override
+  String get a11ySearchInputHint => 'Enter keywords to search';
+
+  @override
+  String get a11yCommentInputHint => 'Enter your comment';
+
+  @override
+  String get a11ySidebarNav => 'Sidebar navigation';
+
+  @override
+  String a11yAppCard(Object appName, Object version, Object status) {
+    return '$appName, version $version, $status';
+  }
+
+  @override
+  String a11yRankingItem(Object rank, Object appName) {
+    return 'Rank #$rank, $appName';
+  }
+
+  @override
+  String a11yProcessItem(Object name, Object pid) {
+    return 'Process $name, PID $pid';
+  }
+
+  @override
+  String a11yDownloadItem(Object appName, Object percent) {
+    return 'Downloading $appName, $percent%';
+  }
+
+  @override
+  String get a11yRecommendPage => 'Recommend';
+
+  @override
+  String get a11yAllAppsPage => 'All Apps';
+
+  @override
+  String get a11yRankingPage => 'Ranking';
+
+  @override
+  String get a11yMyAppsPage => 'My Apps';
+
+  @override
+  String get a11ySettingsPage => 'Settings';
+
+  @override
+  String get a11yAppDetailPage => 'App Details';
+
+  @override
+  String get a11yScreenshotArea => 'Screenshots';
+
+  @override
+  String get a11yCommentSection => 'Comments';
+
+  @override
+  String get a11yCarouselArea => 'Carousel';
+
+  @override
+  String get a11yAppListArea => 'App list';
+
+  @override
+  String get a11ySidebarArea => 'Sidebar';
+
+  @override
+  String get a11yMinimize => 'Minimize';
+
+  @override
+  String get a11yMaximize => 'Maximize';
+
+  @override
+  String get a11yRestore => 'Restore';
+
+  @override
+  String get a11yClose => 'Close';
+
+  @override
+  String get a11yPrevious => 'Previous';
+
+  @override
+  String get a11yNext => 'Next';
+
+  @override
+  String get a11yTabSelected => 'selected';
+
+  @override
+  String get a11yTabNotSelected => 'not selected';
+
+  @override
+  String get a11yStatusInstalled => 'installed';
+
+  @override
+  String get a11yStatusUpdatable => 'update available';
+
+  @override
+  String get a11yStatusNotInstalled => 'not installed';
 }

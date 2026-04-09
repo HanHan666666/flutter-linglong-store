@@ -135,15 +135,13 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: Text(l10n?.checkUpdate ?? '检查更新'),
+          title: Text(l10n.checkUpdate),
           content: isNewer
               ? Text(
-                  l10n?.newVersionFound(tagName, currentVersion) ??
-                      '发现新版本 $tagName！\n当前版本：$currentVersion',
+                  l10n.newVersionFound(tagName, currentVersion),
                 )
               : Text(
-                  l10n?.alreadyLatest(currentVersion) ??
-                      '当前已是最新版本 ($currentVersion)',
+                  l10n.alreadyLatest(currentVersion),
                 ),
           actions: [
             if (isNewer)
@@ -154,11 +152,11 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                     'https://gitee.com/Shirosu/linglong-store/releases/latest',
                   );
                 },
-                child: Text(l10n?.goDownload ?? '前往下载'),
+                child: Text(l10n.goDownload),
               ),
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(l10n?.confirm ?? '确定'),
+              child: Text(l10n.confirm),
             ),
           ],
         ),
@@ -280,7 +278,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           _buildLanguageTile(
             context,
             locale: const Locale('zh'),
-            label: l10n?.languageZh ?? '中文',
+            label: l10n.languageZh,
             isSelected: state.locale.languageCode == 'zh',
           ),
           _buildDivider(context),
@@ -335,7 +333,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           _buildThemeTile(
             context,
             mode: ThemeMode.system,
-            label: l10n?.themeFollowSystem ?? '跟随系统',
+            label: l10n.themeFollowSystem,
             icon: Icons.brightness_auto,
             isSelected: state.themeMode == ThemeMode.system,
           ),
@@ -343,7 +341,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           _buildThemeTile(
             context,
             mode: ThemeMode.light,
-            label: l10n?.themeLight ?? '浅色模式',
+            label: l10n.themeLight,
             icon: Icons.light_mode,
             isSelected: state.themeMode == ThemeMode.light,
           ),
@@ -351,7 +349,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           _buildThemeTile(
             context,
             mode: ThemeMode.dark,
-            label: l10n?.themeDark ?? '深色模式',
+            label: l10n.themeDark,
             icon: Icons.dark_mode,
             isSelected: state.themeMode == ThemeMode.dark,
           ),
@@ -416,7 +414,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l10n?.cacheSize ?? '缓存大小',
+                      l10n.cacheSize,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 4),
@@ -443,8 +441,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                       : const Icon(Icons.cleaning_services, size: 18),
                   label: Text(
                     state.isClearingCache
-                        ? (l10n?.clearingCache ?? '清除中...')
-                        : (l10n?.clearCache ?? '清除缓存'),
+                        ? (l10n.clearingCache)
+                        : (l10n.clearCache),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(
@@ -459,7 +457,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              l10n?.clearCacheHint ?? '清除缓存可以释放存储空间，但可能会导致应用需要重新加载数据。',
+              l10n.clearCacheHint,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -475,10 +473,10 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await ConfirmDialog.show(
       context,
-      title: l10n?.clearCacheConfirm ?? '确认清除缓存',
-      message: l10n?.clearCacheMessage ?? '确定要清除所有缓存数据吗？这可能会影响应用的加载速度。',
-      confirmText: l10n?.clearCache ?? '清除',
-      cancelText: l10n?.cancel ?? '取消',
+      title: l10n.clearCacheConfirm,
+      message: l10n.clearCacheMessage,
+      confirmText: l10n.clearCache,
+      cancelText: l10n.cancel,
     );
 
     if (confirmed != true) return;
@@ -491,8 +489,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       SnackBar(
         content: Text(
           success
-              ? (l10n?.cacheCleared ?? '缓存已清除')
-              : (l10n?.clearCacheFailed ?? '清除缓存失败'),
+              ? (l10n.cacheCleared)
+              : (l10n.clearCacheFailed),
         ),
         backgroundColor: success
             ? Theme.of(context).colorScheme.primary
@@ -601,12 +599,11 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await ConfirmDialog.show(
       context,
-      title: l10n?.cleanDeprecatedServices ?? '清理废弃基础服务',
+      title: l10n.cleanDeprecatedServices,
       message:
-          l10n?.pruneBaseServiceMessage ??
-          '将执行 ll-cli prune 命令，移除所有已不再被任何应用依赖的基础运行服务。\n\n清理后可节省磁盘空间，但如进行中有其他操作可能需要重新下载。',
-      confirmText: l10n?.clean ?? '清理',
-      cancelText: l10n?.cancel ?? '取消',
+          l10n.pruneBaseServiceMessage,
+      confirmText: l10n.clean,
+      cancelText: l10n.cancel,
     );
 
     if (confirmed != true) return;
@@ -619,8 +616,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       SnackBar(
         content: Text(
           success
-              ? (l10n?.baseServiceCleaned ?? '废弃基础服务已清理')
-              : (l10n?.cleanFailed ?? '清理失败，请稍后重试'),
+              ? (l10n.baseServiceCleaned)
+              : (l10n.cleanFailed),
         ),
         backgroundColor: success
             ? Theme.of(context).colorScheme.primary
@@ -682,7 +679,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             // 版本信息
             _buildInfoRow(
               context,
-              label: l10n?.appVersion ?? '应用版本',
+              label: l10n.appVersion,
               value: state.appVersion ?? AppConfig.appVersion,
             ),
             _buildDivider(context),
@@ -690,34 +687,34 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             // 开发者信息
             _buildInfoRow(
               context,
-              label: l10n?.developer ?? '开发者',
-              value: l10n?.linglongCommunity ?? '玲珑社区',
+              label: l10n.developer,
+              value: l10n.linglongCommunity,
             ),
             _buildDivider(context),
 
             // 已收录应用数量
             _buildInfoRow(
               context,
-              label: l10n?.appCount ?? '已收录应用数量',
+              label: l10n.appCount,
               value: _appTotalCount < 0
-                  ? (l10n?.loading ?? '加载中...')
-                  : l10n?.appCountValue(_appTotalCount) ?? '$_appTotalCount 个',
+                  ? (l10n.loading)
+                  : l10n.appCountValue(_appTotalCount),
             ),
             _buildDivider(context),
 
             // 系统架构
             _buildInfoRow(
               context,
-              label: l10n?.systemArch ?? '系统架构',
-              value: globalState.arch ?? (l10n?.unknown ?? '未知'),
+              label: l10n.systemArch,
+              value: globalState.arch ?? (l10n.unknown),
             ),
             _buildDivider(context),
 
             // 玲珑版本（即 ll-cli 版本，二者相同）
             _buildInfoRow(
               context,
-              label: l10n?.linglongVersion ?? '玲珑版本',
-              value: globalState.llVersion ?? (l10n?.unknown ?? '未知'),
+              label: l10n.linglongVersion,
+              value: globalState.llVersion ?? (l10n.unknown),
             ),
 
             const SizedBox(height: 16),
@@ -735,7 +732,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.system_update_alt, size: 18),
-                  label: Text(l10n?.checkNewVersion ?? '检查新版本'),
+                  label: Text(l10n.checkNewVersion),
                 ),
                 const SizedBox(width: 12),
                 OutlinedButton.icon(
@@ -744,7 +741,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                     builder: (_) => const FeedbackDialog(),
                   ),
                   icon: const Icon(Icons.feedback_outlined, size: 18),
-                  label: Text(l10n?.feedbackMenu ?? '意见反馈'),
+                  label: Text(l10n.feedbackMenu),
                 ),
               ],
             ),
@@ -764,7 +761,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                 TextButton.icon(
                   onPressed: () => _openUrl('https://linglong.dev'),
                   icon: const Icon(Icons.language, size: 18),
-                  label: Text(l10n?.officialWebsite ?? '官网'),
+                  label: Text(l10n.officialWebsite),
                 ),
               ],
             ),

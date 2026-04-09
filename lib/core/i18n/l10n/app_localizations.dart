@@ -2105,6 +2105,210 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'查看下载管理'**
   String get viewDownloadManager;
+
+  /// No description provided for @a11yInstallApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装 {appName}'**
+  String a11yInstallApp(Object appName);
+
+  /// No description provided for @a11yUpdateApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新 {appName}'**
+  String a11yUpdateApp(Object appName);
+
+  /// No description provided for @a11yOpenApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开 {appName}'**
+  String a11yOpenApp(Object appName);
+
+  /// No description provided for @a11yUninstallApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'卸载 {appName}'**
+  String a11yUninstallApp(Object appName);
+
+  /// No description provided for @a11ySearchBox.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索应用'**
+  String get a11ySearchBox;
+
+  /// No description provided for @a11ySearchInputHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入关键词搜索'**
+  String get a11ySearchInputHint;
+
+  /// No description provided for @a11yCommentInputHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入评论内容'**
+  String get a11yCommentInputHint;
+
+  /// No description provided for @a11ySidebarNav.
+  ///
+  /// In zh, this message translates to:
+  /// **'侧边栏导航'**
+  String get a11ySidebarNav;
+
+  /// No description provided for @a11yAppCard.
+  ///
+  /// In zh, this message translates to:
+  /// **'{appName}，版本 {version}，{status}'**
+  String a11yAppCard(Object appName, Object version, Object status);
+
+  /// No description provided for @a11yRankingItem.
+  ///
+  /// In zh, this message translates to:
+  /// **'排名第 {rank}，{appName}'**
+  String a11yRankingItem(Object rank, Object appName);
+
+  /// No description provided for @a11yProcessItem.
+  ///
+  /// In zh, this message translates to:
+  /// **'进程 {name}，PID {pid}'**
+  String a11yProcessItem(Object name, Object pid);
+
+  /// No description provided for @a11yDownloadItem.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载 {appName}，进度 {percent}%'**
+  String a11yDownloadItem(Object appName, Object percent);
+
+  /// No description provided for @a11yRecommendPage.
+  ///
+  /// In zh, this message translates to:
+  /// **'推荐'**
+  String get a11yRecommendPage;
+
+  /// No description provided for @a11yAllAppsPage.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部应用'**
+  String get a11yAllAppsPage;
+
+  /// No description provided for @a11yRankingPage.
+  ///
+  /// In zh, this message translates to:
+  /// **'排行榜'**
+  String get a11yRankingPage;
+
+  /// No description provided for @a11yMyAppsPage.
+  ///
+  /// In zh, this message translates to:
+  /// **'我的应用'**
+  String get a11yMyAppsPage;
+
+  /// No description provided for @a11ySettingsPage.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置'**
+  String get a11ySettingsPage;
+
+  /// No description provided for @a11yAppDetailPage.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用详情'**
+  String get a11yAppDetailPage;
+
+  /// No description provided for @a11yScreenshotArea.
+  ///
+  /// In zh, this message translates to:
+  /// **'截图区域'**
+  String get a11yScreenshotArea;
+
+  /// No description provided for @a11yCommentSection.
+  ///
+  /// In zh, this message translates to:
+  /// **'评论区'**
+  String get a11yCommentSection;
+
+  /// No description provided for @a11yCarouselArea.
+  ///
+  /// In zh, this message translates to:
+  /// **'轮播区域'**
+  String get a11yCarouselArea;
+
+  /// No description provided for @a11yAppListArea.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用列表'**
+  String get a11yAppListArea;
+
+  /// No description provided for @a11ySidebarArea.
+  ///
+  /// In zh, this message translates to:
+  /// **'侧边栏'**
+  String get a11ySidebarArea;
+
+  /// No description provided for @a11yMinimize.
+  ///
+  /// In zh, this message translates to:
+  /// **'最小化'**
+  String get a11yMinimize;
+
+  /// No description provided for @a11yMaximize.
+  ///
+  /// In zh, this message translates to:
+  /// **'最大化'**
+  String get a11yMaximize;
+
+  /// No description provided for @a11yRestore.
+  ///
+  /// In zh, this message translates to:
+  /// **'还原'**
+  String get a11yRestore;
+
+  /// No description provided for @a11yClose.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭'**
+  String get a11yClose;
+
+  /// No description provided for @a11yPrevious.
+  ///
+  /// In zh, this message translates to:
+  /// **'上一个'**
+  String get a11yPrevious;
+
+  /// No description provided for @a11yNext.
+  ///
+  /// In zh, this message translates to:
+  /// **'下一个'**
+  String get a11yNext;
+
+  /// No description provided for @a11yTabSelected.
+  ///
+  /// In zh, this message translates to:
+  /// **'已选中'**
+  String get a11yTabSelected;
+
+  /// No description provided for @a11yTabNotSelected.
+  ///
+  /// In zh, this message translates to:
+  /// **'未选中'**
+  String get a11yTabNotSelected;
+
+  /// No description provided for @a11yStatusInstalled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已安装'**
+  String get a11yStatusInstalled;
+
+  /// No description provided for @a11yStatusUpdatable.
+  ///
+  /// In zh, this message translates to:
+  /// **'可更新'**
+  String get a11yStatusUpdatable;
+
+  /// No description provided for @a11yStatusNotInstalled.
+  ///
+  /// In zh, this message translates to:
+  /// **'未安装'**
+  String get a11yStatusNotInstalled;
 }
 
 class _AppLocalizationsDelegate

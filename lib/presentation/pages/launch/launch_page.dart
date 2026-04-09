@@ -255,10 +255,10 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
   Widget _buildStepIndicators(BuildContext context, LaunchState launchState) {
     final l10n = AppLocalizations.of(context)!;
     final steps = [
-      (LaunchStep.environmentCheck, l10n?.stepEnvCheck ?? '环境检测'),
-      (LaunchStep.installedAppsInit, l10n?.stepAppLoad ?? '应用加载'),
-      (LaunchStep.updateCheck, l10n?.stepUpdateCheck ?? '更新检查'),
-      (LaunchStep.queueRecovery, l10n?.stepQueueRecovery ?? '队列恢复'),
+      (LaunchStep.environmentCheck, l10n.stepEnvCheck),
+      (LaunchStep.installedAppsInit, l10n.stepAppLoad),
+      (LaunchStep.updateCheck, l10n.stepUpdateCheck),
+      (LaunchStep.queueRecovery, l10n.stepQueueRecovery),
     ];
 
     return Row(

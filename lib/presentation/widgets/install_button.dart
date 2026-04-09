@@ -260,7 +260,7 @@ class _InstallButtonState extends State<InstallButton> {
     required String semanticsLabel,
     required bool enabled,
   }) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final buttonHeight = _getButtonHeight();
     final task = InstallTask(
       id: 'install-button-preview',
@@ -269,7 +269,7 @@ class _InstallButtonState extends State<InstallButton> {
       progress: widget.progress,
       createdAt: 0,
     );
-    final cancelLabel = l10n?.cancel ?? '取消';
+    final cancelLabel = l10n.cancel;
 
     return Semantics(
       button: true,
@@ -350,15 +350,15 @@ class _InstallButtonState extends State<InstallButton> {
     required String semanticsLabel,
     required bool enabled,
   }) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final buttonHeight = _getButtonHeight();
     final theme = Theme.of(context);
 
     // 悬停时显示取消，否则显示等待
     final isHovering = _isHovering && widget.onCancel != null;
     final label = isHovering
-        ? (l10n?.cancelInstall ?? '取消安装')
-        : (l10n?.waitingForInstall ?? '等待安装');
+        ? l10n.cancelInstall
+        : l10n.waitingForInstall;
 
     return Semantics(
       button: true,

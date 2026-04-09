@@ -246,10 +246,9 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
       final l10n = AppLocalizations.of(context)!;
       return EmptyState(
         icon: Icons.search_off,
-        title: l10n?.noMatchingApp ?? '未找到匹配的应用',
-        description: l10n?.noMatchingAppHint(_searchQuery) ??
-            '没有找到 "$_searchQuery" 相关的应用',
-        retryText: l10n?.clearSearch ?? '清除搜索',
+        title: l10n.noMatchingApp,
+        description: l10n.noMatchingAppHint(_searchQuery),
+        retryText: l10n.clearSearch,
         onRetry: () {
           _searchController.clear();
           setState(() {

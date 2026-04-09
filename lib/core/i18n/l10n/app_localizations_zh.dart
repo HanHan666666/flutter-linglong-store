@@ -1099,4 +1099,122 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get viewDownloadManager => '查看下载管理';
+
+  @override
+  String a11yInstallApp(Object appName) {
+    return '安装 $appName';
+  }
+
+  @override
+  String a11yUpdateApp(Object appName) {
+    return '更新 $appName';
+  }
+
+  @override
+  String a11yOpenApp(Object appName) {
+    return '打开 $appName';
+  }
+
+  @override
+  String a11yUninstallApp(Object appName) {
+    return '卸载 $appName';
+  }
+
+  @override
+  String get a11ySearchBox => '搜索应用';
+
+  @override
+  String get a11ySearchInputHint => '输入关键词搜索';
+
+  @override
+  String get a11yCommentInputHint => '输入评论内容';
+
+  @override
+  String get a11ySidebarNav => '侧边栏导航';
+
+  @override
+  String a11yAppCard(Object appName, Object version, Object status) {
+    return '$appName，版本 $version，$status';
+  }
+
+  @override
+  String a11yRankingItem(Object rank, Object appName) {
+    return '排名第 $rank，$appName';
+  }
+
+  @override
+  String a11yProcessItem(Object name, Object pid) {
+    return '进程 $name，PID $pid';
+  }
+
+  @override
+  String a11yDownloadItem(Object appName, Object percent) {
+    return '下载 $appName，进度 $percent%';
+  }
+
+  @override
+  String get a11yRecommendPage => '推荐';
+
+  @override
+  String get a11yAllAppsPage => '全部应用';
+
+  @override
+  String get a11yRankingPage => '排行榜';
+
+  @override
+  String get a11yMyAppsPage => '我的应用';
+
+  @override
+  String get a11ySettingsPage => '设置';
+
+  @override
+  String get a11yAppDetailPage => '应用详情';
+
+  @override
+  String get a11yScreenshotArea => '截图区域';
+
+  @override
+  String get a11yCommentSection => '评论区';
+
+  @override
+  String get a11yCarouselArea => '轮播区域';
+
+  @override
+  String get a11yAppListArea => '应用列表';
+
+  @override
+  String get a11ySidebarArea => '侧边栏';
+
+  @override
+  String get a11yMinimize => '最小化';
+
+  @override
+  String get a11yMaximize => '最大化';
+
+  @override
+  String get a11yRestore => '还原';
+
+  @override
+  String get a11yClose => '关闭';
+
+  @override
+  String get a11yPrevious => '上一个';
+
+  @override
+  String get a11yNext => '下一个';
+
+  @override
+  String get a11yTabSelected => '已选中';
+
+  @override
+  String get a11yTabNotSelected => '未选中';
+
+  @override
+  String get a11yStatusInstalled => '已安装';
+
+  @override
+  String get a11yStatusUpdatable => '可更新';
+
+  @override
+  String get a11yStatusNotInstalled => '未安装';
 }

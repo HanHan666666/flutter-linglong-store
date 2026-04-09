@@ -78,11 +78,9 @@ class _RankingPageState extends ConsumerState<RankingPage>
   Widget build(BuildContext context) {
     super.build(context);
 
-    // 只 watch selectedType，避免其他字段变化导致整个 TabBarView 重建
-    final selectedType = ref.watch(
-      rankingProvider.select((s) => s.selectedType),
-    );
-    _tabController.index = RankingType.values.indexOf(selectedType);
+    // watch selectedType 建立 provider 依赖，保证 Tab 切换时触发 rebuild。
+    // 不在 build() 中设置 _tabController.index，避免 build 副作用触发额外 listener 回调。
+    ref.watch(rankingProvider.select((s) => s.selectedType));
 
     return Column(
       children: [
@@ -179,9 +177,8 @@ class _HoverableTabState extends State<_HoverableTab> {
         child: AnimatedContainer(
           duration: AppAnimation.fast,
           decoration: BoxDecoration(
-            color: isActive
-                ? palette.primaryLight.withValues(alpha: 0.5)
-                : Colors.transparent,
+            // 悬浮/按下时使用与 indicator 相同的 primaryLight 全不透明色，视觉统一
+            color: isActive ? palette.primaryLight : Colors.transparent,
             borderRadius: BorderRadius.circular(48),
           ),
           child: Tab(text: widget.text),
@@ -190,6 +187,9 @@ class _HoverableTabState extends State<_HoverableTab> {
     );
   }
 }
+
+/// 非活跃 Tab 使用的常量空状态，避免 copyWith 创建新对象导致误触发重建。
+const _kInactiveRankingState = RankingState();
 
 /// 排行榜 Tab 内容
 ///
@@ -204,11 +204,10 @@ class _RankingTabContent extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
 
     // 只 watch 当前 Tab 对应的类型数据
+    // 非活跃 Tab 返回常量引用，避免 copyWith 创建新对象误触发重建
     final state = ref.watch(
       rankingProvider.select(
-        (s) => s.selectedType == type
-            ? s
-            : s.copyWith(data: null, isLoading: false, error: null),
+        (s) => s.selectedType == type ? s : _kInactiveRankingState,
       ),
     );
 

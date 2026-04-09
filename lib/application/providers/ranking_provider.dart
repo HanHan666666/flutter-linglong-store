@@ -88,12 +88,19 @@ class Ranking extends _$Ranking {
   }
 
   /// 切换排行榜类型
+  ///
+  /// 一次性合并 selectedType + 缓存数据到 state，避免多次赋值触发不必要的重建。
   Future<void> selectType(RankingType type) async {
     if (type == state.selectedType) return;
 
-    // 立即切换 selectedType，UI 先展示该类型的旧缓存数据
-    state = state.copyWith(selectedType: type);
-    _syncStateToCurrentType();
+    // 从缓存中取出目标类型的旧数据，与 selectedType 一起一次性写入
+    final cache = _typeCaches[type]!;
+    state = RankingState(
+      isLoading: false,
+      error: null,
+      data: cache.data,
+      selectedType: type,
+    );
 
     // 后台刷新新类型的数据
     await loadData();

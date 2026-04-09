@@ -9,6 +9,7 @@ import '../../core/config/local_sidebar_menu_catalog.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../data/models/api_dto.dart';
 import 'download_manager_dialog.dart';
+import 'sidebar_interaction_surface.dart';
 
 /// 侧边栏菜单项定义
 enum SidebarMenuItem {
@@ -150,7 +151,10 @@ class _MenuSection extends StatelessWidget {
 }
 
 /// 菜单项组件
-class _MenuItemTile extends StatefulWidget {
+///
+/// 使用 [SidebarInteractionSurface] 封装 hover/tap 交互，
+/// 组件内部只负责内容布局和语义标注。
+class _MenuItemTile extends StatelessWidget {
   const _MenuItemTile({
     required this.item,
     required this.isSelected,
@@ -164,16 +168,9 @@ class _MenuItemTile extends StatefulWidget {
   final int updateCount;
 
   @override
-  State<_MenuItemTile> createState() => _MenuItemTileState();
-}
-
-class _MenuItemTileState extends State<_MenuItemTile> {
-  bool _isHovered = false;
-
-  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final label = widget.item.localizedLabel(l10n);
+    final label = item.localizedLabel(l10n);
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -185,88 +182,63 @@ class _MenuItemTileState extends State<_MenuItemTile> {
         child: Semantics(
           button: true,
           label: label,
-          selected: widget.isSelected,
-          child: MouseRegion(
-            onEnter: (_) => setState(() => _isHovered = true),
-            onExit: (_) => setState(() => _isHovered = false),
-            child: GestureDetector(
-              onTap: () => context.go(widget.item.route),
-              child: AnimatedContainer(
-                duration: AppAnimation.fast,
-                // 菜单行高 48px：满足无障碍最小交互尺寸
-                height: 48,
-                padding: EdgeInsets.symmetric(
-                  horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
-                ),
-                decoration: BoxDecoration(
-                  // 默认态使用目标色的透明版本，避免 Colors.transparent（透明黑）
-                  // 在动画插值时产生深色闪烁
-                  color: widget.isSelected
-                      ? context.appColors.primaryLight
-                      : (_isHovered
-                            ? context.appColors.surfaceContainerLow
-                            : context.appColors.surfaceContainerLow.withAlpha(
-                                0,
-                              )),
-                  borderRadius: AppRadius.xsRadius,
-                ),
-                child: Row(
-                  mainAxisAlignment: widget.isCollapsed
-                      ? MainAxisAlignment.center
-                      : MainAxisAlignment.start,
-                  children: [
-                    // 选中指示器
-                    if (!widget.isCollapsed) ...[
-                      AnimatedContainer(
-                        duration: AppAnimation.fast,
-                        width: widget.isSelected ? 3 : 0,
-                        height: widget.isSelected ? 16 : 0,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
+          selected: isSelected,
+          child: SidebarInteractionSurface(
+            isSelected: isSelected,
+            onTap: () => context.go(item.route),
+            height: 48,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isCollapsed ? 0 : AppSpacing.md,
+              ),
+              child: Row(
+                mainAxisAlignment:
+                    isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
+                children: [
+                  // 选中指示器（左侧 3px 竖条）
+                  if (!isCollapsed) ...[
+                    AnimatedContainer(
+                      duration: AppAnimation.fast,
+                      width: isSelected ? 3 : 0,
+                      height: isSelected ? 16 : 0,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                      SizedBox(
-                        width: widget.isSelected
-                            ? AppSpacing.sm
-                            : AppSpacing.sm + 3,
-                      ),
-                    ],
-                    // 图标
-                    Icon(
-                      widget.isSelected
-                          ? widget.item.selectedIcon
-                          : widget.item.icon,
-                      size: 20,
-                      color: widget.isSelected
-                          ? AppColors.primary
-                          : context.appColors.textSecondary,
                     ),
-                    // 文字
-                    if (!widget.isCollapsed) ...[
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          widget.item.localizedLabel(l10n),
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.menuActive.copyWith(
-                            color: widget.isSelected
-                                ? AppColors.primary
-                                : context.appColors.textPrimary,
-                            fontWeight: widget.isSelected
-                                ? FontWeight.w500
-                                : FontWeight.w400,
-                          ),
+                    SizedBox(width: isSelected ? AppSpacing.sm : AppSpacing.sm + 3),
+                  ],
+                  // 图标
+                  Icon(
+                    isSelected ? item.selectedIcon : item.icon,
+                    size: 20,
+                    color: isSelected
+                        ? AppColors.primary
+                        : context.appColors.textSecondary,
+                  ),
+                  // 文字
+                  if (!isCollapsed) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        item.localizedLabel(l10n),
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.menuActive.copyWith(
+                          color: isSelected
+                              ? AppColors.primary
+                              : context.appColors.textPrimary,
+                          fontWeight: isSelected
+                              ? FontWeight.w500
+                              : FontWeight.w400,
                         ),
                       ),
-                    ],
-                    // 红点徽章
-                    if (widget.updateCount > 0)
-                      _Badge(count: widget.updateCount),
+                    ),
                   ],
-                ),
+                  // 红点徽章
+                  if (updateCount > 0) _Badge(count: updateCount),
+                ],
               ),
             ),
           ),
@@ -383,7 +355,8 @@ class _BottomSection extends StatelessWidget {
 /// 服务端下发的动态菜单项
 ///
 /// 点击后导航至对应的自定义专题页 `/custom_category/:code`。
-class _DynamicMenuItemTile extends StatefulWidget {
+/// 使用 [SidebarInteractionSurface] 封装 hover/tap 交互。
+class _DynamicMenuItemTile extends StatelessWidget {
   const _DynamicMenuItemTile({
     required this.menu,
     required this.isSelected,
@@ -395,20 +368,13 @@ class _DynamicMenuItemTile extends StatefulWidget {
   final bool isCollapsed;
 
   @override
-  State<_DynamicMenuItemTile> createState() => _DynamicMenuItemTileState();
-}
-
-class _DynamicMenuItemTileState extends State<_DynamicMenuItemTile> {
-  bool _isHovered = false;
-
-  @override
   Widget build(BuildContext context) {
-    final route = '/custom_category/${widget.menu.menuCode}';
+    final route = '/custom_category/${menu.menuCode}';
     final locale = Localizations.localeOf(context);
     final presentation = buildSidebarMenuPresentation(
-      menuCode: widget.menu.menuCode,
+      menuCode: menu.menuCode,
       locale: locale,
-      fallbackName: widget.menu.menuName,
+      fallbackName: menu.menuName,
     );
 
     return Padding(
@@ -418,79 +384,59 @@ class _DynamicMenuItemTileState extends State<_DynamicMenuItemTile> {
       ),
       child: Tooltip(
         message: presentation.label,
-        child: MouseRegion(
-          onEnter: (_) => setState(() => _isHovered = true),
-          onExit: (_) => setState(() => _isHovered = false),
-          child: GestureDetector(
-            onTap: () => context.go(route),
-            child: AnimatedContainer(
-              duration: AppAnimation.fast,
-              // 菜单行高 40px ：适配 16px 菜单文字的桌面可读性密度
-              height: 40,
-              padding: EdgeInsets.symmetric(
-                horizontal: widget.isCollapsed ? 0 : AppSpacing.md,
-              ),
-              decoration: BoxDecoration(
-                color: widget.isSelected
-                    ? context.appColors.primaryLight
-                    : (_isHovered
-                          ? context.appColors.surfaceContainerLow
-                          // 默认态使用目标色的透明版本，避免 Colors.transparent（透明黑）
-                          // 在动画插值时产生深色闪烁
-                          : context.appColors.surfaceContainerLow.withAlpha(0)),
-                borderRadius: AppRadius.xsRadius,
-              ),
-              child: Row(
-                mainAxisAlignment: widget.isCollapsed
-                    ? MainAxisAlignment.center
-                    : MainAxisAlignment.start,
-                children: [
-                  if (!widget.isCollapsed) ...[
-                    AnimatedContainer(
-                      duration: AppAnimation.fast,
-                      width: widget.isSelected ? 3 : 0,
-                      height: widget.isSelected ? 16 : 0,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+        child: SidebarInteractionSurface(
+          isSelected: isSelected,
+          onTap: () => context.go(route),
+          // 菜单行高 40px ：适配 16px 菜单文字的桌面可读性密度
+          height: 40,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isCollapsed ? 0 : AppSpacing.md,
+            ),
+            child: Row(
+              mainAxisAlignment:
+                  isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
+              children: [
+                // 选中指示器（左侧 3px 竖条）
+                if (!isCollapsed) ...[
+                  AnimatedContainer(
+                    duration: AppAnimation.fast,
+                    width: isSelected ? 3 : 0,
+                    height: isSelected ? 16 : 0,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    SizedBox(
-                      width: widget.isSelected
-                          ? AppSpacing.sm
-                          : AppSpacing.sm + 3,
-                    ),
-                  ],
-                  Icon(
-                    widget.isSelected
-                        ? presentation.selectedIcon
-                        : presentation.icon,
-                    size: 20,
-                    color: widget.isSelected
-                        ? AppColors.primary
-                        : context.appColors.textSecondary,
                   ),
-                  if (!widget.isCollapsed) ...[
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        presentation.label,
-                        maxLines: 1,
-                        softWrap: false,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.menuActive.copyWith(
-                          color: widget.isSelected
-                              ? AppColors.primary
-                              : context.appColors.textPrimary,
-                          fontWeight: widget.isSelected
-                              ? FontWeight.w500
-                              : FontWeight.w400,
-                        ),
+                  SizedBox(width: isSelected ? AppSpacing.sm : AppSpacing.sm + 3),
+                ],
+                Icon(
+                  isSelected ? presentation.selectedIcon : presentation.icon,
+                  size: 20,
+                  color: isSelected
+                      ? AppColors.primary
+                      : context.appColors.textSecondary,
+                ),
+                if (!isCollapsed) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      presentation.label,
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.menuActive.copyWith(
+                        color: isSelected
+                            ? AppColors.primary
+                            : context.appColors.textPrimary,
+                        fontWeight: isSelected
+                            ? FontWeight.w500
+                            : FontWeight.w400,
                       ),
                     ),
-                  ],
+                  ),
                 ],
-              ),
+              ],
             ),
           ),
         ),
@@ -500,26 +446,22 @@ class _DynamicMenuItemTileState extends State<_DynamicMenuItemTile> {
 }
 
 /// 底部动作图标按钮
-class _BottomIconButton extends StatefulWidget {
+///
+/// 使用 [SidebarInteractionSurface] 封装 hover/tap 交互。
+/// 固定 48x48 尺寸（AppSpacing.x2l），图标颜色在 hover 时变化。
+class _BottomIconButton extends StatelessWidget {
   const _BottomIconButton({required this.item, required this.isSelected});
 
   final _BottomSidebarItem item;
   final bool isSelected;
 
-  @override
-  State<_BottomIconButton> createState() => _BottomIconButtonState();
-}
-
-class _BottomIconButtonState extends State<_BottomIconButton> {
-  bool _isHovered = false;
-
   void _handleTap(BuildContext context) {
-    if (widget.item == _BottomSidebarItem.downloadManager) {
+    if (item == _BottomSidebarItem.downloadManager) {
       showDownloadManagerDialog(context);
       return;
     }
 
-    final route = widget.item.route;
+    final route = item.route;
     if (route != null) {
       context.go(route);
     }
@@ -530,34 +472,49 @@ class _BottomIconButtonState extends State<_BottomIconButton> {
     final l10n = AppLocalizations.of(context)!;
 
     return Tooltip(
-      message: widget.item.localizedLabel(l10n),
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
-        child: GestureDetector(
-          onTap: () => _handleTap(context),
-          child: Container(
-            width: AppSpacing.x2l,
-            height: AppSpacing.x2l,
-            decoration: BoxDecoration(
-              color: widget.isSelected
-                  ? context.appColors.primaryLight
-                  : (_isHovered
-                        ? context.appColors.surfaceContainerLow
-                        : context.appColors.surfaceContainerLow.withAlpha(0)),
-              borderRadius: AppRadius.xsRadius,
-            ),
-            child: Icon(
-              widget.isSelected ? widget.item.selectedIcon : widget.item.icon,
-              size: 20,
-              color: widget.isSelected
-                  ? AppColors.primary
-                  : (_isHovered
-                        ? AppColors.primary
-                        : context.appColors.textSecondary),
-            ),
-          ),
-        ),
+      message: item.localizedLabel(l10n),
+      child: SidebarInteractionSurface(
+        isSelected: isSelected,
+        onTap: () => _handleTap(context),
+        width: AppSpacing.x2l,
+        height: AppSpacing.x2l,
+        child: _BottomIconContent(item: item, isSelected: isSelected),
+      ),
+    );
+  }
+}
+
+/// 底部图标内容组件
+///
+/// 封装图标颜色的 hover 状态变化逻辑。
+/// 与菜单项不同，底部图标在 hover 时图标颜色也会变为 primary。
+class _BottomIconContent extends StatefulWidget {
+  const _BottomIconContent({required this.item, required this.isSelected});
+
+  final _BottomSidebarItem item;
+  final bool isSelected;
+
+  @override
+  State<_BottomIconContent> createState() => _BottomIconContentState();
+}
+
+class _BottomIconContentState extends State<_BottomIconContent> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    // 监听父级 SidebarInteractionSurface 的 hover 状态变化
+    // 通过 MouseRegion 捕获 hover 状态，实现图标颜色变化
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      hitTestBehavior: HitTestBehavior.translucent,
+      child: Icon(
+        widget.isSelected ? widget.item.selectedIcon : widget.item.icon,
+        size: 20,
+        color: widget.isSelected
+            ? AppColors.primary
+            : (_isHovered ? AppColors.primary : context.appColors.textSecondary),
       ),
     );
   }

@@ -70,7 +70,8 @@ class _InstallButtonState extends State<InstallButton> {
     };
 
     // 安装中/排队中时按钮禁用
-    final isEnabled = widget.state != InstallButtonState.installing &&
+    final isEnabled =
+        widget.state != InstallButtonState.installing &&
         widget.state != InstallButtonState.pending;
 
     // 根据状态构建不同的按钮样式
@@ -242,9 +243,12 @@ class _InstallButtonState extends State<InstallButton> {
     final l10n = AppLocalizations.of(context)!;
     final buttonHeight = _getButtonHeight();
     final theme = Theme.of(context);
-    final progressTrackColor = theme.colorScheme.surfaceContainerHighest;
-    final progressFillColor = theme.colorScheme.primaryContainer;
-    final progressForegroundColor = theme.colorScheme.onSurface;
+    final progressTrackColor = theme.colorScheme.primary.withValues(
+      alpha: 0.12,
+    );
+    final progressFillColor = theme.colorScheme.primary;
+    final progressBaseForegroundColor = theme.colorScheme.primary;
+    final progressFilledForegroundColor = theme.colorScheme.onPrimary;
     final task = InstallTask(
       id: 'install-button-preview',
       appId: 'install-button-preview',
@@ -253,6 +257,11 @@ class _InstallButtonState extends State<InstallButton> {
       createdAt: 0,
     );
     final cancelLabel = l10n.cancel;
+    final progressLabel =
+        widget.downloadSpeed != null && widget.downloadSpeed!.isNotEmpty
+        ? '${task.progressPercentLabel} · ${widget.downloadSpeed}'
+        : task.progressPercentLabel;
+    final progressValue = task.progressValue.clamp(0.0, 1.0);
 
     return Semantics(
       button: true,
@@ -267,11 +276,11 @@ class _InstallButtonState extends State<InstallButton> {
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  // 进度填充和前景文案必须分离到不同色阶，避免蓝底蓝字融在一起。
+                  // 轨道保持浅主色，既保留进度存在感，又不会把未覆盖区文字吞掉。
                   color: progressTrackColor,
                   borderRadius: BorderRadius.circular(buttonHeight / 2),
                   border: Border.all(
-                    color: theme.colorScheme.outlineVariant,
+                    color: theme.colorScheme.primary.withValues(alpha: 0.18),
                     width: 1,
                   ),
                 ),
@@ -291,38 +300,72 @@ class _InstallButtonState extends State<InstallButton> {
               padding: EdgeInsets.symmetric(
                 horizontal: _getHorizontalPadding(),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+              child: Stack(
                 children: [
-                  Text(
-                    // 有速度时显示 "xx% · 2.5 MB/s"，否则仅显示进度
-                    widget.downloadSpeed != null && widget.downloadSpeed!.isNotEmpty
-                        ? '${task.progressPercentLabel} · ${widget.downloadSpeed}'
-                        : task.progressPercentLabel,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      color: progressForegroundColor,
+                  ExcludeSemantics(
+                    child: _buildProgressForegroundLayer(
+                      label: progressLabel,
+                      cancelLabel: cancelLabel,
+                      foregroundColor: progressBaseForegroundColor,
                     ),
                   ),
-                  if (widget.onCancel != null) ...[
-                    const SizedBox(width: 8),
-                    Tooltip(
-                      message: cancelLabel,
-                      child: GestureDetector(
-                        onTap: widget.onCancel,
-                        child: ExcludeSemantics(
-                          child: Icon(
-                            Icons.close,
-                            size: _getIconSize(),
-                            color: progressForegroundColor,
-                          ),
+                  // 用与进度同宽的裁剪层覆盖白色前景，实现进度区黑白切换。
+                  ClipRect(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: progressValue,
+                      child: ExcludeSemantics(
+                        child: _buildProgressForegroundLayer(
+                          label: progressLabel,
+                          cancelLabel: cancelLabel,
+                          foregroundColor: progressFilledForegroundColor,
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 构建安装中按钮的前景层。
+  ///
+  /// 该前景层会被渲染两次：一层深色用于未覆盖区，一层白色并按进度裁剪用于已填充区。
+  Widget _buildProgressForegroundLayer({
+    required String label,
+    required String cancelLabel,
+    required Color foregroundColor,
+  }) {
+    return SizedBox.expand(
+      child: Center(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: foregroundColor,
+              ),
+            ),
+            if (widget.onCancel != null) ...[
+              const SizedBox(width: 8),
+              Tooltip(
+                message: cancelLabel,
+                child: GestureDetector(
+                  onTap: widget.onCancel,
+                  child: Icon(
+                    Icons.close,
+                    size: _getIconSize(),
+                    color: foregroundColor,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -343,9 +386,7 @@ class _InstallButtonState extends State<InstallButton> {
 
     // 悬停时显示取消，否则显示等待
     final isHovering = _isHovering && widget.onCancel != null;
-    final label = isHovering
-        ? l10n.cancelInstall
-        : l10n.waitingForInstall;
+    final label = isHovering ? l10n.cancelInstall : l10n.waitingForInstall;
 
     return Semantics(
       button: true,

@@ -196,6 +196,18 @@ class MockAppRepository extends _i1.Mock implements _i3.AppRepository {
             ),
           )
           as _i4.Future<List<_i5.InstalledApp>>);
+
+  @override
+  _i4.Future<List<_i6.AppDetail>> checkAppUpdates(
+    List<_i5.InstalledApp>? apps,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#checkAppUpdates, [apps]),
+            returnValue: _i4.Future<List<_i6.AppDetail>>.value(
+              <_i6.AppDetail>[],
+            ),
+          )
+          as _i4.Future<List<_i6.AppDetail>>);
 }
 
 /// A class which mocks [LinglongCliRepository].

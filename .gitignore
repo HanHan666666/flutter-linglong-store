@@ -20,6 +20,7 @@ build/native_assets/
 .vscode/
 *.iml
 .worktrees/
+.claude/worktrees/
 
 # Generated
 *.g.dart

@@ -59,12 +59,10 @@ jobs:
           rm -rf "$stage_dir"
           mkdir -p \
             "$stage_dir/linux" \
-            "$stage_dir/lib/core/config" \
-            "$stage_dir/lib/core/constants"
+            "$stage_dir/lib/core/config"
           cp pubspec.yaml "$stage_dir/pubspec.yaml"
           cp linux/pubspec.yaml "$stage_dir/linux/pubspec.yaml"
           cp lib/core/config/app_config.dart "$stage_dir/lib/core/config/app_config.dart"
-          cp lib/core/constants/app_constants.dart "$stage_dir/lib/core/constants/app_constants.dart"
 
       - name: Upload versioned release files
         uses: actions/upload-artifact@v4
@@ -124,7 +122,6 @@ jobs:
           cp release-version-files/pubspec.yaml pubspec.yaml
           cp release-version-files/linux/pubspec.yaml linux/pubspec.yaml
           cp release-version-files/lib/core/config/app_config.dart lib/core/config/app_config.dart
-          cp release-version-files/lib/core/constants/app_constants.dart lib/core/constants/app_constants.dart
 
       - name: Build bundle
         run: bash build/scripts/package-bundle.sh --version "${{ needs.prepare-release.outputs.version }}" --arch amd64
@@ -174,7 +171,6 @@ jobs:
           cp release-version-files/pubspec.yaml pubspec.yaml
           cp release-version-files/linux/pubspec.yaml linux/pubspec.yaml
           cp release-version-files/lib/core/config/app_config.dart lib/core/config/app_config.dart
-          cp release-version-files/lib/core/constants/app_constants.dart lib/core/constants/app_constants.dart
 
       - name: Build bundle
         run: bash build/scripts/package-bundle.sh --version "${{ needs.prepare-release.outputs.version }}" --arch arm64
@@ -227,7 +223,6 @@ jobs:
           cp release-version-files/pubspec.yaml pubspec.yaml
           cp release-version-files/linux/pubspec.yaml linux/pubspec.yaml
           cp release-version-files/lib/core/config/app_config.dart lib/core/config/app_config.dart
-          cp release-version-files/lib/core/constants/app_constants.dart lib/core/constants/app_constants.dart
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -396,7 +391,6 @@ jobs:
           cp release-version-files/pubspec.yaml pubspec.yaml
           cp release-version-files/linux/pubspec.yaml linux/pubspec.yaml
           cp release-version-files/lib/core/config/app_config.dart lib/core/config/app_config.dart
-          cp release-version-files/lib/core/constants/app_constants.dart lib/core/constants/app_constants.dart
 
       - name: Configure git identity
         run: |
@@ -405,7 +399,7 @@ jobs:
 
       - name: Commit release version bump
         run: |
-          git add pubspec.yaml linux/pubspec.yaml lib/core/config/app_config.dart lib/core/constants/app_constants.dart
+          git add pubspec.yaml linux/pubspec.yaml lib/core/config/app_config.dart
           git commit -m "chore: release ${{ needs.prepare-release.outputs.version }}"
 
       - name: Push release commit

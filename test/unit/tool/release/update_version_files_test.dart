@@ -48,19 +48,12 @@ flutter:
       );
     });
 
-    test('rewrites app version constants as exact source snapshots', () {
+    test('rewrites app config version constant as exact source snapshot', () {
       final appConfig = File(
         'test/fixtures/release/sample_app_config.dart',
       ).readAsStringSync();
-      final appConstants = File(
-        'test/fixtures/release/sample_app_constants.dart',
-      ).readAsStringSync();
 
       final updatedAppConfig = updateAppConfigVersion(appConfig, '3.0.7');
-      final updatedAppConstants = updateAppConstantsVersion(
-        appConstants,
-        '3.0.7',
-      );
 
       expect(
         updatedAppConfig,
@@ -76,16 +69,45 @@ class AppConfig {
 }
 '''),
       );
-      expect(
-        updatedAppConstants,
-        equals('''/// 应用常量
-class AppConstants {
-  AppConstants._();
+    });
 
-  /// 应用版本
-  static const String appVersion = '3.0.7';
-}
-'''),
+    test('rewrites current release version files without legacy app constants', () {
+      final tempDir = Directory.systemTemp.createTempSync(
+        'update_version_files_test.',
+      );
+      addTearDown(() => tempDir.deleteSync(recursive: true));
+
+      Directory('${tempDir.path}/linux').createSync(recursive: true);
+      Directory('${tempDir.path}/lib/core/config').createSync(recursive: true);
+
+      File('${tempDir.path}/pubspec.yaml').writeAsStringSync(
+        File('test/fixtures/release/sample_pubspec.yaml').readAsStringSync(),
+      );
+      File('${tempDir.path}/linux/pubspec.yaml').writeAsStringSync(
+        File('test/fixtures/release/sample_linux_pubspec.yaml')
+            .readAsStringSync(),
+      );
+      File('${tempDir.path}/lib/core/config/app_config.dart').writeAsStringSync(
+        File('test/fixtures/release/sample_app_config.dart').readAsStringSync(),
+      );
+
+      rewriteVersionFiles('3.0.7', rootPath: tempDir.path);
+
+      expect(
+        File('${tempDir.path}/pubspec.yaml').readAsStringSync(),
+        contains('version: 3.0.7+1'),
+      );
+      expect(
+        File('${tempDir.path}/linux/pubspec.yaml').readAsStringSync(),
+        contains('version: 3.0.7+1'),
+      );
+      expect(
+        File('${tempDir.path}/lib/core/config/app_config.dart').readAsStringSync(),
+        contains("static const String appVersion = '3.0.7';"),
+      );
+      expect(
+        File('${tempDir.path}/lib/core/constants/app_constants.dart').existsSync(),
+        isFalse,
       );
     });
   });

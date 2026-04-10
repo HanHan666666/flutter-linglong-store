@@ -40,6 +40,7 @@ require_grep "artifacts/*.tar.gz.asc" .github/workflows/release.yml
 require_grep "for tarball in *.tar.gz; do" .github/workflows/release.yml
 require_grep "Missing expected signed amd64 tarball signature in signed-assets" .github/workflows/release.yml
 require_no_grep "/home/han/flutter" .github/workflows/release.yml
+require_no_grep "app_constants.dart" .github/workflows/release.yml
 require_grep "pull_request" .github/workflows/ci.yml
 require_grep "release-cli-smoke-test.sh" .github/workflows/ci.yml
 require_grep "nightly-cli-smoke-test.sh" .github/workflows/ci.yml

@@ -20,6 +20,8 @@ import '../../widgets/widgets.dart';
 // 推荐页轮播保持略高于当前信息卡内容，给底部指示器预留稳定安全区。
 const double _recommendBannerHeight = 236;
 const double _recommendBannerIndicatorBottom = 4;
+// 为左侧轮播切换按钮预留安全距离，避免与信息区图标发生重叠。
+const double _recommendBannerInfoDockLeftInset = 72;
 
 /// 推荐页
 ///
@@ -578,7 +580,12 @@ class _BannerItem extends StatelessWidget {
     return RecommendBannerBackground(
       banner: banner,
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg + _recommendBannerInfoDockLeftInset,
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.lg,
+        ),
         child: Align(
           alignment: Alignment.bottomLeft,
           child: ClipRRect(

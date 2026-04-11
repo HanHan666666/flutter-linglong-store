@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -26,6 +27,26 @@ import '../../../core/utils/app_notification_helpers.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/utils/version_compare.dart';
 import 'screenshot_preview_lightbox.dart';
+
+bool shouldShowDescriptionExpandButton({
+  required String text,
+  required double maxWidth,
+  required TextStyle? style,
+  required TextDirection textDirection,
+  int maxLines = 3,
+}) {
+  if (text.trim().isEmpty || maxWidth <= 0) {
+    return false;
+  }
+
+  final textPainter = TextPainter(
+    text: TextSpan(text: text, style: style),
+    textDirection: textDirection,
+    maxLines: maxLines,
+  )..layout(maxWidth: maxWidth);
+
+  return textPainter.didExceedMaxLines;
+}
 
 /// 应用详情页
 class AppDetailPage extends ConsumerStatefulWidget {
@@ -497,45 +518,60 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppLocalizations.of(context)?.appIntroduction ?? '应用介绍',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          AnimatedCrossFade(
-            firstChild: Text(
-              description,
-              style: theme.textTheme.bodyMedium,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-            secondChild: Text(description, style: theme.textTheme.bodyMedium),
-            crossFadeState: detailState.isDescriptionExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 200),
-          ),
-          const SizedBox(height: 8),
-          // 展开/收起按钮（超过3行时显示）
-          if (_shouldShowExpandButton(description))
-            TextButton(
-              onPressed: () {
-                ref
-                    .read(appDetailProvider(widget.appId).notifier)
-                    .toggleDescription();
-              },
-              child: Text(
-                detailState.isDescriptionExpanded
-                    ? (AppLocalizations.of(context)?.collapse ?? '收起')
-                    : (AppLocalizations.of(context)?.expandAll ?? '展开全部'),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final shouldShowExpandButton = shouldShowDescriptionExpandButton(
+            text: description,
+            maxWidth: constraints.maxWidth,
+            style: theme.textTheme.bodyMedium,
+            textDirection: Directionality.of(context),
+          );
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppLocalizations.of(context)?.appIntroduction ?? '应用介绍',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-        ],
+              const SizedBox(height: 12),
+              AnimatedCrossFade(
+                firstChild: Text(
+                  description,
+                  style: theme.textTheme.bodyMedium,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                secondChild: Text(
+                  description,
+                  style: theme.textTheme.bodyMedium,
+                ),
+                crossFadeState: detailState.isDescriptionExpanded
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
+                duration: const Duration(milliseconds: 200),
+              ),
+              if (shouldShowExpandButton) ...[
+                const SizedBox(height: 8),
+                // 展开/收起按钮只在文本真实超过三行时显示，避免短文本被字符阈值误判。
+                TextButton(
+                  onPressed: () {
+                    ref
+                        .read(appDetailProvider(widget.appId).notifier)
+                        .toggleDescription();
+                  },
+                  child: Text(
+                    detailState.isDescriptionExpanded
+                        ? (AppLocalizations.of(context)?.collapse ?? '收起')
+                        : (AppLocalizations.of(context)?.expandAll ?? '展开全部'),
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -822,12 +858,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     }
 
     return InstallButtonState.notInstalled;
-  }
-
-  /// 判断是否显示展开按钮
-  bool _shouldShowExpandButton(String text) {
-    // 超过150个字符时显示展开按钮
-    return text.length > 150;
   }
 
   List<String> _buildCommentVersionOptions(AppDetailState detailState) {

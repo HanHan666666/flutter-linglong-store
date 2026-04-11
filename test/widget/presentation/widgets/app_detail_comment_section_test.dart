@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/domain/models/app_comment.dart';
 import 'package:linglong_store/presentation/widgets/app_detail_comment_section.dart';
-
-import '../../../test_utils.dart';
 
 void main() {
   Future<void> pumpCommentSection(
@@ -13,25 +12,33 @@ void main() {
     String? selectedVersion = '1.2.3',
     bool isLoading = false,
     bool isSubmitting = false,
+    bool canSubmitComment = true,
     String? errorMessage,
     Future<void> Function(String remark, String? version)? onSubmit,
     VoidCallback? onRetry,
     ValueChanged<String?>? onVersionChanged,
   }) async {
     await tester.pumpWidget(
-      createTestApp(
-        SizedBox(
-          width: 960,
-          child: AppDetailCommentSection(
-            comments: comments,
-            versionOptions: versionOptions,
-            selectedVersion: selectedVersion,
-            isLoading: isLoading,
-            isSubmitting: isSubmitting,
-            errorMessage: errorMessage,
-            onSubmit: onSubmit ?? (_, __) async {},
-            onRetry: onRetry ?? () {},
-            onVersionChanged: onVersionChanged,
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        locale: const Locale('zh'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: Scaffold(
+          body: SizedBox(
+            width: 960,
+            child: AppDetailCommentSection(
+              comments: comments,
+              versionOptions: versionOptions,
+              selectedVersion: selectedVersion,
+              isLoading: isLoading,
+              isSubmitting: isSubmitting,
+              canSubmitComment: canSubmitComment,
+              errorMessage: errorMessage,
+              onSubmit: onSubmit ?? (_, __) async {},
+              onRetry: onRetry ?? () {},
+              onVersionChanged: onVersionChanged,
+            ),
           ),
         ),
       ),
@@ -91,6 +98,43 @@ void main() {
 
     expect(submittedRemark, equals('新版详情页做得更清楚了'));
     expect(submittedVersion, equals('1.2.2'));
+  });
+
+  testWidgets('未安装时隐藏评论表单但保留评论列表', (tester) async {
+    await pumpCommentSection(
+      tester,
+      canSubmitComment: false,
+      comments: const [
+        AppComment(
+          id: 'comment-1',
+          appId: 'org.deepin.album',
+          version: '6.0.49.1',
+          remark: '未安装用户也应该能看到这条评论。',
+          agreeNum: 8,
+          disagreeNum: 0,
+          createTime: '2026-04-11 10:00:00',
+        ),
+      ],
+    );
+
+    expect(
+      find.byKey(const ValueKey('app-detail-comment-input')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('app-detail-comment-submit')),
+      findsNothing,
+    );
+    expect(find.text('未安装用户也应该能看到这条评论。'), findsOneWidget);
+    expect(find.text('有帮助 8'), findsOneWidget);
+  });
+
+  testWidgets('未安装且暂无评论时展示暂无评论文案', (tester) async {
+    await pumpCommentSection(tester, canSubmitComment: false);
+
+    expect(find.text('暂无评论'), findsOneWidget);
+    expect(find.text('暂不评论'), findsNothing);
+    expect(find.text('还没有评论，来写第一条吧'), findsNothing);
   });
 
   testWidgets('加载失败且暂无评论时展示重试入口', (tester) async {

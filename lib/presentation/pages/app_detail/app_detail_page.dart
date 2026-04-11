@@ -164,7 +164,11 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           const Divider(height: 1),
 
           // 评论区
-          _buildCommentSection(context, detailState),
+          _buildCommentSection(
+            context,
+            detailState,
+            hasInstalledInstance: hasInstalledInstance,
+          ),
 
           const Divider(height: 1),
 
@@ -184,8 +188,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
   Widget _buildCommentSection(
     BuildContext context,
-    AppDetailState detailState,
-  ) {
+    AppDetailState detailState, {
+    required bool hasInstalledInstance,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final versionOptions = _buildCommentVersionOptions(detailState);
     final selectedVersion = _resolveSelectedCommentVersion(
@@ -203,6 +208,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           selectedVersion: selectedVersion,
           isLoading: detailState.isLoadingComments,
           isSubmitting: detailState.isSubmittingComment,
+          canSubmitComment: hasInstalledInstance,
           errorMessage: detailState.commentsError,
           onVersionChanged: (value) {
             setState(() {

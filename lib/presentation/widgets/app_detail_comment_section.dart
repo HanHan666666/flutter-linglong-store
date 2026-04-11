@@ -11,6 +11,7 @@ class AppDetailCommentSection extends StatefulWidget {
     required this.selectedVersion,
     required this.isLoading,
     required this.isSubmitting,
+    required this.canSubmitComment,
     required this.onSubmit,
     required this.onRetry,
     this.errorMessage,
@@ -23,6 +24,7 @@ class AppDetailCommentSection extends StatefulWidget {
   final String? selectedVersion;
   final bool isLoading;
   final bool isSubmitting;
+  final bool canSubmitComment;
   final String? errorMessage;
   final Future<void> Function(String remark, String? version) onSubmit;
   final VoidCallback onRetry;
@@ -82,7 +84,7 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
     final l10n = AppLocalizations.of(context)!;
     final title = l10n.appComments;
     final hint = l10n.commentInputHint;
-    final emptyText = l10n.appCommentsEmpty;
+    final emptyText = widget.canSubmitComment ? l10n.appCommentsEmpty : '暂无评论';
     final retryLabel = l10n.retry;
     final submitLabel = l10n.submitComment;
     final versionLabel = l10n.commentVersionLabel;
@@ -101,65 +103,67 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
           ),
         ),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(
-              alpha: 0.28,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: theme.colorScheme.outlineVariant),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                key: const ValueKey('app-detail-comment-input'),
-                controller: _commentController,
-                minLines: 3,
-                maxLines: 5,
-                decoration: InputDecoration(
-                  hintText: hint,
-                  border: const OutlineInputBorder(),
-                ),
+        if (widget.canSubmitComment) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.28,
               ),
-              const SizedBox(height: 12),
-              if (widget.versionOptions.isNotEmpty) ...[
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: theme.colorScheme.outlineVariant),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  key: const ValueKey('app-detail-comment-input'),
+                  controller: _commentController,
+                  minLines: 3,
+                  maxLines: 5,
+                  decoration: InputDecoration(
+                    hintText: hint,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (widget.versionOptions.isNotEmpty) ...[
+                  Text(
+                    versionLabel,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildVersionPills(context),
+                  const SizedBox(height: 12),
+                ],
+                FilledButton(
+                  key: const ValueKey('app-detail-comment-submit'),
+                  onPressed: widget.isSubmitting ? null : _handleSubmit,
+                  child: widget.isSubmitting
+                      ? SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: theme.colorScheme.onPrimary,
+                          ),
+                        )
+                      : Text(submitLabel),
+                ),
+                const SizedBox(height: 8),
                 Text(
-                  versionLabel,
+                  helperText,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 8),
-                _buildVersionPills(context),
-                const SizedBox(height: 12),
               ],
-              FilledButton(
-                key: const ValueKey('app-detail-comment-submit'),
-                onPressed: widget.isSubmitting ? null : _handleSubmit,
-                child: widget.isSubmitting
-                    ? SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: theme.colorScheme.onPrimary,
-                        ),
-                      )
-                    : Text(submitLabel),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                helperText,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
+          const SizedBox(height: 16),
+        ],
         if (widget.isLoading && widget.comments.isEmpty)
           const Center(child: CircularProgressIndicator())
         else if (widget.errorMessage != null && widget.comments.isEmpty)

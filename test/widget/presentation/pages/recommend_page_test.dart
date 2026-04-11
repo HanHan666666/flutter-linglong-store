@@ -133,6 +133,66 @@ void main() {
       );
     });
 
+    testWidgets('offsets banner info dock to avoid left carousel control', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildTestApp(
+          const RecommendState(
+            data: RecommendData(
+              banners: [
+                BannerInfo(
+                  id: 'banner-1',
+                  title: 'Banner App',
+                  imageUrl: '',
+                  targetAppId: 'banner.app',
+                  description: 'Banner description',
+                ),
+                BannerInfo(
+                  id: 'banner-2',
+                  title: 'Banner App 2',
+                  imageUrl: '',
+                  targetAppId: 'banner.app.2',
+                  description: 'Banner description 2',
+                ),
+              ],
+              categories: [CategoryInfo(code: 'all', name: '全部')],
+              apps: PaginatedResponse<RecommendAppInfo>(
+                items: [
+                  RecommendAppInfo(
+                    appId: 'app.one',
+                    name: 'App One',
+                    version: '1.0.0',
+                  ),
+                ],
+                total: 1,
+                page: 1,
+                pageSize: 10,
+                hasMore: false,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final backgroundRect = tester.getRect(
+        find.byKey(const Key('recommend-banner-background')),
+      );
+      final infoDockRect = tester.getRect(
+        find.byKey(const Key('recommend-banner-info-dock')),
+      );
+      final leftControlRect = tester.getRect(
+        find.ancestor(
+          of: find.byIcon(Icons.chevron_left),
+          matching: find.byType(SizedBox),
+        ),
+      );
+
+      expect(infoDockRect.left, greaterThan(leftControlRect.right + 8));
+      expect(infoDockRect.left, greaterThan(backgroundRect.left + 80));
+    });
+
     testWidgets('shows rust no-more copy', (tester) async {
       await tester.pumpWidget(
         _buildTestApp(

@@ -96,7 +96,7 @@ void main() {
           ),
         );
 
-        expect(find.textContaining('75%'), findsOneWidget);
+        expect(find.textContaining('75%'), findsNWidgets(2));
       });
 
       testWidgets('should display download speed when provided', (
@@ -117,7 +117,7 @@ void main() {
           ),
         );
 
-        expect(find.textContaining('2.5 MB/s'), findsOneWidget);
+        expect(find.textContaining('2.5 MB/s'), findsNWidgets(2));
       });
 
       testWidgets('should not display speed when state is not installing', (
@@ -139,6 +139,52 @@ void main() {
 
         expect(find.textContaining('2.5 MB/s'), findsNothing);
       });
+
+      testWidgets(
+        'should render dark base foreground and white overlay on filled progress area',
+        (tester) async {
+          await tester.pumpWidget(
+            MaterialApp(
+              locale: const Locale('zh'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: InstallButton(
+                  state: InstallButtonState.installing,
+                  progress: 0.5,
+                  downloadSpeed: '2.5 MB/s',
+                  onCancel: () {},
+                ),
+              ),
+            ),
+          );
+
+          final theme = Theme.of(
+            tester.element(find.byType(InstallButton)),
+          ).colorScheme;
+          final progressLabels = tester
+              .widgetList<Text>(find.textContaining('50%'))
+              .toList();
+          final cancelIcons = tester
+              .widgetList<Icon>(find.byIcon(Icons.close))
+              .toList();
+          final progressIndicator = tester.widget<LinearProgressIndicator>(
+            find.byType(LinearProgressIndicator),
+          );
+
+          expect(progressLabels, hasLength(2));
+          expect(
+            progressLabels.map((label) => label.style?.color),
+            containsAll(<Color?>[theme.primary, theme.onPrimary]),
+          );
+          expect(cancelIcons, hasLength(2));
+          expect(
+            cancelIcons.map((icon) => icon.color),
+            containsAll(<Color?>[theme.primary, theme.onPrimary]),
+          );
+          expect(progressIndicator.color, theme.primary);
+        },
+      );
     });
 
     group('Pending state', () {

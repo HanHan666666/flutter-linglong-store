@@ -160,13 +160,13 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
   ) {
     final l10n = AppLocalizations.of(context);
 
-    // 加载中状态
-    if (state.isLoading) {
+    // 加载中状态 — 仅在首次加载（列表为空）时显示全屏加载
+    if (state.isLoading && state.apps.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    // 错误状态
-    if (state.error != null) {
+    // 错误状态 — 仅在列表为空时显示
+    if (state.error != null && state.apps.isEmpty) {
       return EmptyState(
         icon: Icons.error_outline,
         title: l10n?.updateCheckFailed ?? '检查更新失败',

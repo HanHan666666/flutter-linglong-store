@@ -37,11 +37,8 @@ class RecommendPage extends ConsumerStatefulWidget {
 }
 
 class _RecommendPageState extends ConsumerState<RecommendPage>
-    with ShellBranchVisibilityMixin<RecommendPage> {
+    with ShellBranchVisibilityMixin<RecommendPage>, AutoLoadWhenNotScrollable {
   final ScrollController _scrollController = ScrollController();
-
-  /// 避免同一帧重复安排“内容不足一屏自动补页”检查。
-  bool _autoLoadCheckScheduled = false;
 
   /// 页面是否可见（用于控制副作用）
   bool _isPageVisible = true;
@@ -52,15 +49,38 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
   @override
   ShellPrimaryRoute get watchedPrimaryRoute => ShellPrimaryRoute.recommend;
 
+  // ==================== AutoLoadWhenNotScrollable 实现 ====================
+
+  @override
+  ScrollController get scrollController => _scrollController;
+
+  @override
+  bool get isPageVisible => _isPageVisible;
+
+  @override
+  bool get isLoading => ref.read(recommendProvider).isLoading;
+
+  @override
+  bool get isLoadingMore => ref.read(recommendProvider).isLoadingMore;
+
+  @override
+  bool get hasMore => ref.read(recommendProvider).data?.apps.hasMore ?? false;
+
+  @override
+  VoidCallback get onLoadMore =>
+      () => ref.read(recommendProvider.notifier).loadMore();
+
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
+    initAutoLoad();
+    _scrollController.addListener(onScroll);
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
+    disposeAutoLoad();
+    _scrollController.removeListener(onScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -87,13 +107,13 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
   /// 暂停副作用
   void _pauseSideEffects() {
     _isPageVisible = false;
-    // 滚动监听会通过 _isPageVisible 标志自动跳过
+    onVisibilityChanged(false);
   }
 
   /// 恢复副作用
   void _resumeSideEffects() {
     _isPageVisible = true;
-    _scheduleAutoLoadCheck(ref.read(recommendProvider));
+    onVisibilityChanged(true);
   }
 
   /// 轻量刷新
@@ -108,17 +128,6 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
     // 如果需要，可以在这里添加轻量级检查逻辑
   }
 
-  void _onScroll() {
-    // 页面隐藏时跳过滚动处理
-    if (!_isPageVisible) return;
-    if (!_scrollController.hasClients) return;
-
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      ref.read(recommendProvider.notifier).loadMore();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(recommendProvider);
@@ -129,7 +138,13 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
       _hasLoadedData = true;
     }
 
-    _scheduleAutoLoadCheck(state);
+    // 数据加载完成后，检查是否需要自动补页
+    // 始终调用 onVisibilityChanged(true) 触发检查
+    // mixin 内部的 _shouldAutoLoadWhenNotScrollable 会检查实际的 isPageVisible
+    // 当页面不可见时会自动短路，不会重复安排
+    if (state.data != null) {
+      onVisibilityChanged(true);
+    }
 
     return Semantics(
       label: l10n.a11yRecommendPage,
@@ -138,51 +153,6 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
         child: _buildBody(state, context),
       ),
     );
-  }
-
-  void _scheduleAutoLoadCheck(RecommendState state) {
-    if (_autoLoadCheckScheduled || !_shouldAutoLoadWhenNotScrollable(state)) {
-      return;
-    }
-
-    _autoLoadCheckScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _autoLoadCheckScheduled = false;
-      if (!mounted) {
-        return;
-      }
-      _maybeLoadMoreWhenNotScrollable(ref.read(recommendProvider));
-    });
-  }
-
-  bool _shouldAutoLoadWhenNotScrollable(RecommendState state) {
-    return _isPageVisible &&
-        !state.isLoading &&
-        !state.isLoadingMore &&
-        state.data != null &&
-        state.data!.apps.hasMore;
-  }
-
-  void _maybeLoadMoreWhenNotScrollable(RecommendState state) {
-    if (!_shouldAutoLoadWhenNotScrollable(state)) {
-      return;
-    }
-
-    if (!_scrollController.hasClients) {
-      _scheduleAutoLoadCheck(state);
-      return;
-    }
-
-    final position = _scrollController.position;
-    if (!position.hasContentDimensions || position.viewportDimension <= 0) {
-      _scheduleAutoLoadCheck(state);
-      return;
-    }
-
-    final notScrollable = position.maxScrollExtent <= 1;
-    if (notScrollable) {
-      ref.read(recommendProvider.notifier).loadMore();
-    }
   }
 
   Widget _buildBody(RecommendState state, BuildContext context) {

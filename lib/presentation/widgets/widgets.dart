@@ -17,3 +17,6 @@ export 'responsive_app_grid.dart';
 export 'app_shell.dart';
 export 'title_bar.dart';
 export 'sidebar.dart';
+
+// Mixins
+export '../mixins/auto_load_when_not_scrollable.dart';

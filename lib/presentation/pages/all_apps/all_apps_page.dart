@@ -20,7 +20,7 @@ class AllAppsPage extends ConsumerStatefulWidget {
 }
 
 class _AllAppsPageState extends ConsumerState<AllAppsPage>
-    with ShellBranchVisibilityMixin<AllAppsPage> {
+    with ShellBranchVisibilityMixin<AllAppsPage>, AutoLoadWhenNotScrollable {
   final ScrollController _scrollController = ScrollController();
   bool _isCategoryExpanded = false;
 
@@ -30,15 +30,38 @@ class _AllAppsPageState extends ConsumerState<AllAppsPage>
   @override
   ShellPrimaryRoute get watchedPrimaryRoute => ShellPrimaryRoute.allApps;
 
+  // ==================== AutoLoadWhenNotScrollable 实现 ====================
+
+  @override
+  ScrollController get scrollController => _scrollController;
+
+  @override
+  bool get isPageVisible => _isPageVisible;
+
+  @override
+  bool get isLoading => ref.read(allAppsProvider).isLoading;
+
+  @override
+  bool get isLoadingMore => ref.read(allAppsProvider).isLoadingMore;
+
+  @override
+  bool get hasMore => ref.read(allAppsProvider).data?.apps.hasMore ?? false;
+
+  @override
+  VoidCallback get onLoadMore =>
+      () => ref.read(allAppsProvider.notifier).loadMore();
+
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
+    initAutoLoad();
+    _scrollController.addListener(onScroll);
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
+    disposeAutoLoad();
+    _scrollController.removeListener(onScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -51,18 +74,11 @@ class _AllAppsPageState extends ConsumerState<AllAppsPage>
   }) {
     if (isActive) {
       _isPageVisible = true;
+      onVisibilityChanged(true);
       return;
     }
     _isPageVisible = false;
-  }
-
-  void _onScroll() {
-    // 页面不可见时跳过滚动加载，避免无效网络请求和内存占用
-    if (!_isPageVisible) return;
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      ref.read(allAppsProvider.notifier).loadMore();
-    }
+    onVisibilityChanged(false);
   }
 
   @override

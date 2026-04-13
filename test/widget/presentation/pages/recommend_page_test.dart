@@ -9,6 +9,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:linglong_store/application/providers/api_provider.dart';
 import 'package:linglong_store/application/providers/application_card_state_provider.dart';
 import 'package:linglong_store/application/providers/recommend_provider.dart';
+import 'package:linglong_store/core/config/shell_branch_visibility.dart';
+import 'package:linglong_store/core/config/shell_primary_route.dart';
 import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/core/storage/recommend_page_cache.dart';
@@ -364,13 +366,17 @@ Widget _buildTestApp(
 Widget _buildProviderDrivenTestApp({required List<Override> overrides}) {
   return ProviderScope(
     overrides: overrides,
-    child: MaterialApp(
-      locale: const Locale('zh'),
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: const Scaffold(body: RecommendPage()),
+    child: ShellBranchVisibilityScope(
+      activeRoute: ShellPrimaryRoute.recommend,
+      currentRoute: ShellPrimaryRoute.recommend,
+      child: MaterialApp(
+        locale: const Locale('zh'),
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const Scaffold(body: RecommendPage()),
+      ),
     ),
   );
 }

@@ -46,6 +46,6 @@ class AppConfig {
   /// 可通过编译时环境变量覆盖：-DINSTALL_DOC_URL=https://...
   static const String installDocUrl = String.fromEnvironment(
     'INSTALL_DOC_URL',
-    defaultValue: 'https://linglong.dev/docs/install',
+    defaultValue: 'https://linyaps.org.cn/guide/start/install.html',
   );
 }

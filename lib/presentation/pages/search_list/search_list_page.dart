@@ -20,13 +20,36 @@ class SearchListPage extends ConsumerStatefulWidget {
   ConsumerState<SearchListPage> createState() => _SearchListPageState();
 }
 
-class _SearchListPageState extends ConsumerState<SearchListPage> {
+class _SearchListPageState extends ConsumerState<SearchListPage>
+    with AutoLoadWhenNotScrollable {
   final ScrollController _scrollController = ScrollController();
+
+  // ==================== AutoLoadWhenNotScrollable 实现 ====================
+
+  @override
+  ScrollController get scrollController => _scrollController;
+
+  @override
+  bool get isPageVisible => true; // 搜索页不参与路由可见性管理
+
+  @override
+  bool get isLoading => ref.read(searchProvider).isLoading;
+
+  @override
+  bool get isLoadingMore => ref.read(searchProvider).isLoadingMore;
+
+  @override
+  bool get hasMore => ref.read(searchProvider).hasMore;
+
+  @override
+  VoidCallback get onLoadMore =>
+      () => ref.read(searchProvider.notifier).loadMore();
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
+    initAutoLoad();
+    _scrollController.addListener(onScroll);
     _syncSearchQuery();
   }
 
@@ -40,7 +63,8 @@ class _SearchListPageState extends ConsumerState<SearchListPage> {
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
+    disposeAutoLoad();
+    _scrollController.removeListener(onScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -61,13 +85,6 @@ class _SearchListPageState extends ConsumerState<SearchListPage> {
       }
       notifier.search(query);
     });
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      ref.read(searchProvider.notifier).loadMore();
-    }
   }
 
   @override

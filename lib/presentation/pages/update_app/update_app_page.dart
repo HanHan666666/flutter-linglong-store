@@ -5,6 +5,8 @@ import '../../../application/providers/app_operation_queue_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
 import '../../../application/providers/update_apps_provider.dart';
+import '../../../core/config/routes.dart';
+import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/install_progress.dart';
 import '../../../domain/models/install_queue_state.dart';
@@ -199,6 +201,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
             app: app,
             installTask: installTask,
             hasActiveTasks: installState.hasActiveTasks(),
+            onTap: () => context.goToAppDetail(app.appId, appInfo: app.installedApp),
             onUpdate: () => _updateApp(app),
             onCancel: installTask != null
                 ? () => _cancelAppInstall(app.appId)
@@ -211,12 +214,13 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
 }
 
 /// 可更新应用列表项
-class _UpdatableAppItem extends ConsumerWidget {
+class _UpdatableAppItem extends ConsumerStatefulWidget {
   const _UpdatableAppItem({
     super.key,
     required this.app,
     required this.installTask,
     required this.hasActiveTasks,
+    required this.onTap,
     required this.onUpdate,
     required this.onCancel,
   });
@@ -224,11 +228,20 @@ class _UpdatableAppItem extends ConsumerWidget {
   final UpdatableApp app;
   final InstallTask? installTask;
   final bool hasActiveTasks;
+  final VoidCallback onTap;
   final VoidCallback onUpdate;
   final VoidCallback? onCancel;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_UpdatableAppItem> createState() =>
+      _UpdatableAppItemState();
+}
+
+class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     // 确定按钮状态
@@ -236,120 +249,140 @@ class _UpdatableAppItem extends ConsumerWidget {
     // 刚完成的任务还留在 history 里时，列表可能短暂显示旧更新项；
     // 队列仍活跃期间先禁用再次点击，避免同一 app 被重复入队。
     final disableUpdateAction =
-        hasActiveTasks &&
-        installTask != null &&
-        (installTask!.status == InstallStatus.success ||
-            installTask!.status == InstallStatus.failed ||
-            installTask!.status == InstallStatus.cancelled);
-    final progress = installTask?.progress ?? 0.0;
+        widget.hasActiveTasks &&
+        widget.installTask != null &&
+        (widget.installTask!.status == InstallStatus.success ||
+            widget.installTask!.status == InstallStatus.failed ||
+            widget.installTask!.status == InstallStatus.cancelled);
+    final progress = widget.installTask?.progress ?? 0.0;
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 主行：图标、信息、按钮
-            Row(
-              children: [
-                // 应用图标
-                AppIcon(
-                  iconUrl: app.icon,
-                  size: 48,
-                  borderRadius: 8,
-                  appName: app.name,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Card(
+        // 保持 Card 默认外边距，避免压缩列表项之间的既有布局密度。
+        margin: const EdgeInsets.all(4.0),
+        elevation: 0,
+        color: Colors.transparent,
+        // 关闭 Card 裁剪，避免 hover 阴影被父级裁掉；圆角观感由内层装饰负责。
+        clipBehavior: Clip.none,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: AppRadius.smRadius,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              decoration: BoxDecoration(
+                color: context.appColors.surface,
+                borderRadius: AppRadius.smRadius,
+                // 非 hover 态保留很轻的边界层次，避免回到之前明显灰框描边感。
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
                 ),
-
-                const SizedBox(width: 12),
-
-                // 应用信息
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 应用名称
-                      Text(
-                        app.name,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w500,
+                boxShadow: _isHovered
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      ]
+                    : null,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                // 主行：图标、信息、按钮
+                Row(
+                  children: [
+                    // 应用图标
+                    AppIcon(
+                      iconUrl: widget.app.icon,
+                      size: 48,
+                      borderRadius: AppRadius.sm,
+                      appName: widget.app.name,
+                    ),
 
-                      const SizedBox(height: 4),
+                    const SizedBox(width: AppSpacing.md),
 
-                      // 版本信息
-                      Text(
-                        '${app.currentVersion} → ${app.latestVersion}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                        ),
+                    // 应用信息
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 应用名称
+                          Text(
+                            widget.app.name,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+
+                          const SizedBox(height: AppSpacing.xs),
+
+                          // 版本信息
+                          Text(
+                            '${widget.app.currentVersion} → ${widget.app.latestVersion}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+
+                    const SizedBox(width: AppSpacing.md),
+
+                    // 更新按鈕
+                    InstallButton(
+                      appName: widget.app.name,
+                      state: buttonState,
+                      progress: progress,
+                      // 正在安装/更新时显示实时网络速度
+                      downloadSpeed: buttonState == InstallButtonState.installing
+                          ? ref.watch(networkSpeedProvider).formatted
+                          : null,
+                      onPressed: widget.onUpdate,
+                      disabled: disableUpdateAction,
+                      onCancel: widget.onCancel,
+                      size: ButtonSize.small,
+                    ),
+                  ],
                 ),
 
-                const SizedBox(width: 12),
-
-                // 更新按鈕
-                InstallButton(
-                  appName: app.name,
-                  state: buttonState,
-                  progress: progress,
-                  // 正在安装/更新时显示实时网络速度
-                  downloadSpeed: buttonState == InstallButtonState.installing
-                      ? ref.watch(networkSpeedProvider).formatted
-                      : null,
-                  onPressed: onUpdate,
-                  disabled: disableUpdateAction,
-                  onCancel: onCancel,
-                  size: ButtonSize.small,
-                ),
-              ],
+                  // 安装进度消息
+                  if (widget.installTask != null &&
+                      widget.installTask!.displayMessage != null) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      widget.installTask!.displayMessage!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: widget.installTask!.isFailed
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
-
-            // 安装进度消息
-            if (installTask != null && installTask!.displayMessage != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                installTask!.displayMessage!,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: installTask!.isFailed
-                      ? theme.colorScheme.error
-                      : theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-
-            // 更新说明
-            if (app.latestVersionDescription != null &&
-                installTask == null) ...[
-              const SizedBox(height: 8),
-              Text(
-                app.latestVersionDescription!,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ],
+          ),
         ),
       ),
+    ),
     );
   }
 
   /// 获取按钮状态
   InstallButtonState _getButtonState() {
-    if (installTask != null) {
-      switch (installTask!.status) {
+    if (widget.installTask != null) {
+      switch (widget.installTask!.status) {
         case InstallStatus.pending:
           return InstallButtonState.pending;
         case InstallStatus.downloading:

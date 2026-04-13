@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../application/providers/app_uninstall_provider.dart';
 import '../../../application/providers/application_card_state_provider.dart';
@@ -35,6 +36,10 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
   /// 搜索控制器
   final _searchController = TextEditingController();
 
+  /// 缓存 Provider notifier，避免在 dispose 阶段再通过 ref.read 访问已卸载的上下文。
+  late final InstalledApps _installedAppsNotifier;
+  late final RunningProcess _runningProcessNotifier;
+
   _MyAppsTab _activeTab = _MyAppsTab.app;
 
   @override
@@ -43,14 +48,16 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
   @override
   void initState() {
     super.initState();
+    _installedAppsNotifier = ref.read(installedAppsProvider.notifier);
+    _runningProcessNotifier = ref.read(runningProcessProvider.notifier);
     Future.microtask(() {
-      ref.read(installedAppsProvider.notifier).refresh();
+      _installedAppsNotifier.refresh();
     });
   }
 
   @override
   void dispose() {
-    ref.read(runningProcessProvider.notifier).setProcessTabActive(false);
+    _runningProcessNotifier.setProcessTabActive(false);
     _searchController.dispose();
     super.dispose();
   }
@@ -60,7 +67,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
     required bool isActive,
     required bool isInitial,
   }) {
-    ref.read(runningProcessProvider.notifier).setPageVisible(isActive);
+    _runningProcessNotifier.setPageVisible(isActive);
   }
 
   /// 过滤应用列表
@@ -262,9 +269,11 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
       label: l10n.a11yAppListArea,
       child: RefreshIndicator(
         onRefresh: () => ref.read(installedAppsProvider.notifier).refresh(),
-        child: ListView.builder(
+        child: ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           itemCount: filteredApps.length,
+          // 为卡片 hover 阴影和圆角留出稳定呼吸感，避免视觉上像上下粘连。
+          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
           itemBuilder: (context, index) {
             final app = filteredApps[index];
             final cardState = cardStateIndex.resolve(
@@ -279,6 +288,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
               buttonState: cardState.buttonState,
               progress: cardState.progress,
               isInstalling: cardState.isInstalling,
+              onTap: () => context.push('/app/${app.appId}'),
               onPrimaryPressed: () => handleAppCardPrimaryAction(
                 context: context,
                 ref: ref,

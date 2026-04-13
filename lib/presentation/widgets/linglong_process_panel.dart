@@ -305,52 +305,60 @@ class _ProcessTableHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Container(
-      height: 44,
+    return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-      ),
-      child: Row(
-        children: [
-          _ProcessHeaderCell(
-            label: l10n.appName,
-            width: 240,
+      elevation: 0,
+      color: Colors.transparent,
+      clipBehavior: Clip.none,
+      shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+      child: Container(
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: context.appColors.surface,
+          borderRadius: AppRadius.smRadius,
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.35),
           ),
-          _ProcessHeaderCell(
-            label: l10n.versionNo,
-            width: 120,
-            centered: true,
-          ),
-          _ProcessHeaderCell(
-            label: l10n.architecture,
-            width: 100,
-            centered: true,
-          ),
-          _ProcessHeaderCell(
-            label: l10n.channelLabel,
-            width: 90,
-            centered: true,
-          ),
-          _ProcessHeaderCell(
-            label: l10n.source,
-            width: 110,
-            centered: true,
-          ),
-          const _ProcessHeaderCell(
-            label: 'PID',
-            width: 90,
-            centered: true,
-          ),
-          _ProcessHeaderCell(
-            label: l10n.containerId,
-            width: 210,
-          ),
-          const SizedBox(width: 48),
-        ],
+        ),
+        child: Row(
+          children: [
+            _ProcessHeaderCell(
+              label: l10n.appName,
+              width: 240,
+            ),
+            _ProcessHeaderCell(
+              label: l10n.versionNo,
+              width: 120,
+              centered: true,
+            ),
+            _ProcessHeaderCell(
+              label: l10n.architecture,
+              width: 100,
+              centered: true,
+            ),
+            _ProcessHeaderCell(
+              label: l10n.channelLabel,
+              width: 90,
+              centered: true,
+            ),
+            _ProcessHeaderCell(
+              label: l10n.source,
+              width: 110,
+              centered: true,
+            ),
+            const _ProcessHeaderCell(
+              label: 'PID',
+              width: 90,
+              centered: true,
+            ),
+            _ProcessHeaderCell(
+              label: l10n.containerId,
+              width: 210,
+            ),
+            const SizedBox(width: 48),
+          ],
+        ),
       ),
     );
   }
@@ -412,14 +420,10 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
     final theme = Theme.of(context);
     final rowColor = widget.isMenuSelected
         ? context.appColors.primaryLight
-        : (_isHovered
-              ? context.appColors.surfaceContainerLow
-              : Colors.transparent);
+        : context.appColors.surface;
     final borderColor = widget.isMenuSelected
         ? AppColors.primary
-        : (_isHovered
-              ? theme.colorScheme.outline
-              : theme.colorScheme.outlineVariant);
+        : theme.colorScheme.outlineVariant.withValues(alpha: 0.35);
 
     return Semantics(
       label: l10n.a11yProcessItem(
@@ -429,127 +433,146 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
         child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          // 必须等右键抬起后再弹菜单，否则 GTK 会把同一次抬起事件当成
-          // 一次“点空白处关闭菜单”，表现就是菜单闪一下立即消失。
-          onSecondaryTapUp: (details) =>
-              widget.onShowMenu(details.globalPosition),
-          child: Container(
-            height: 72,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: rowColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: borderColor),
-            ),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 240,
-                  child: Row(
-                    children: [
-                      AppIcon(
-                        iconUrl: widget.app.icon,
-                        size: 36,
-                        borderRadius: 8,
-                        appName: widget.app.name,
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          child: Card(
+            margin: EdgeInsets.zero,
+            elevation: 0,
+            color: Colors.transparent,
+            clipBehavior: Clip.none,
+            shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              height: 72,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: rowColor,
+                borderRadius: AppRadius.smRadius,
+                border: Border.all(color: borderColor),
+                boxShadow: _isHovered
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                // 必须等右键抬起后再弹菜单，否则 GTK 会把同一次抬起事件当成
+                // 一次“点空白处关闭菜单”，表现就是菜单闪一下立即消失。
+                onSecondaryTapUp: (details) =>
+                    widget.onShowMenu(details.globalPosition),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 240,
+                      child: Row(
+                        children: [
+                          AppIcon(
+                            iconUrl: widget.app.icon,
+                            size: 36,
+                            borderRadius: 8,
+                            appName: widget.app.name,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.app.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(fontWeight: FontWeight.w500),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  widget.app.appId,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.outline,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.app.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w500),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              widget.app.appId,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.outline,
+                    ),
+                    _ProcessValueCell(
+                      value: widget.app.version,
+                      width: 120,
+                      centered: true,
+                    ),
+                    _ProcessValueCell(
+                      value: widget.app.arch,
+                      width: 100,
+                      centered: true,
+                    ),
+                    _ProcessValueCell(
+                      value: widget.app.channel,
+                      width: 90,
+                      centered: true,
+                    ),
+                    _ProcessValueCell(
+                      value: widget.app.source,
+                      width: 110,
+                      centered: true,
+                    ),
+                    _ProcessValueCell(
+                      value: widget.app.pid.toString(),
+                      width: 90,
+                      centered: true,
+                      monospace: true,
+                    ),
+                    _ProcessValueCell(
+                      value: widget.app.containerId,
+                      width: 210,
+                      monospace: true,
+                    ),
+                    SizedBox(
+                      width: 48,
+                      child: GestureDetector(
+                        onTapDown: (details) =>
+                            _lastTapPosition = details.globalPosition,
+                        child: IconButton(
+                          onPressed: widget.isKilling
+                              ? null
+                              : () {
+                                  final position =
+                                      _lastTapPosition ?? const Offset(0, 0);
+                                  widget.onShowMenu(position);
+                                },
+                          icon: widget.isKilling
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
                                   ),
-                            ),
-                          ],
+                                )
+                              : const Icon(Icons.more_horiz),
+                          tooltip: AppLocalizations.of(context)?.moreActions ??
+                              '更多操作',
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                _ProcessValueCell(
-                  value: widget.app.version,
-                  width: 120,
-                  centered: true,
-                ),
-                _ProcessValueCell(
-                  value: widget.app.arch,
-                  width: 100,
-                  centered: true,
-                ),
-                _ProcessValueCell(
-                  value: widget.app.channel,
-                  width: 90,
-                  centered: true,
-                ),
-                _ProcessValueCell(
-                  value: widget.app.source,
-                  width: 110,
-                  centered: true,
-                ),
-                _ProcessValueCell(
-                  value: widget.app.pid.toString(),
-                  width: 90,
-                  centered: true,
-                  monospace: true,
-                ),
-                _ProcessValueCell(
-                  value: widget.app.containerId,
-                  width: 210,
-                  monospace: true,
-                ),
-                SizedBox(
-                  width: 48,
-                  child: GestureDetector(
-                    onTapDown: (details) =>
-                        _lastTapPosition = details.globalPosition,
-                    child: IconButton(
-                      onPressed: widget.isKilling
-                          ? null
-                          : () {
-                              final position =
-                                  _lastTapPosition ?? const Offset(0, 0);
-                              widget.onShowMenu(position);
-                            },
-                      icon: widget.isKilling
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.more_horiz),
-                      tooltip: AppLocalizations.of(context)?.moreActions ??
-                          '更多操作',
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
       ),
-    ),
     );
   }
 }

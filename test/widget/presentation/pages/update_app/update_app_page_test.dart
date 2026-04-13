@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -5,15 +7,77 @@ import 'package:linglong_store/application/providers/app_operation_queue_provide
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/network_speed_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
+import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/presentation/pages/update_app/update_app_page.dart';
+import 'package:linglong_store/presentation/widgets/install_button.dart';
 
 void main() {
   group('UpdateAppPage', () {
+    testWidgets(
+      'renders installing update row in Row layout without infinite width exception',
+      (tester) async {
+        final installQueue = TestInstallQueue(
+          initialState: InstallQueueState(
+            currentTask: InstallTask(
+              id: 'task-installing',
+              appId: 'org.example.demo',
+              appName: 'Demo',
+              kind: InstallTaskKind.update,
+              status: InstallStatus.installing,
+              progress: 0.4,
+              message: 'Updating demo app',
+              createdAt: DateTime.now().millisecondsSinceEpoch,
+            ),
+            isProcessing: true,
+          ),
+        );
+        final updateApps = TestUpdateApps(
+          apps: const [
+            UpdatableApp(
+              installedApp: InstalledApp(
+                appId: 'org.example.demo',
+                name: 'Demo',
+                version: '1.0.0',
+              ),
+              latestVersion: '1.1.0',
+              latestVersionDescription: 'Bug fixes',
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              installQueueProvider.overrideWith(() => installQueue),
+              updateAppsProvider.overrideWith(() => updateApps),
+              networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+              appOperationQueueControllerProvider.overrideWith(
+                (ref) => RecordingAppOperationQueueController(ref),
+              ),
+            ],
+            child: const MaterialApp(
+              locale: Locale('zh'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(body: UpdateAppPage()),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(find.byType(UpdateAppPage), findsOneWidget);
+        expect(find.byType(InstallButton), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
     testWidgets(
       'does not trigger another update for a stale successful row while queue is active',
       (tester) async {
@@ -89,6 +153,85 @@ void main() {
         await tester.pump();
 
         expect(recordedSingles, isEmpty);
+      },
+    );
+
+    testWidgets(
+      'keeps layout density while using surface-style update cards with hover shadow',
+      (tester) async {
+        final installQueue = TestInstallQueue(
+          initialState: const InstallQueueState(),
+        );
+        final updateApps = TestUpdateApps(
+          apps: const [
+            UpdatableApp(
+              installedApp: InstalledApp(
+                appId: 'org.example.demo',
+                name: 'Demo',
+                version: '1.0.0',
+              ),
+              latestVersion: '1.1.0',
+              latestVersionDescription: 'Bug fixes',
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              installQueueProvider.overrideWith(() => installQueue),
+              updateAppsProvider.overrideWith(() => updateApps),
+              networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+              appOperationQueueControllerProvider.overrideWith(
+                (ref) => RecordingAppOperationQueueController(ref),
+              ),
+            ],
+            child: const MaterialApp(
+              locale: Locale('zh'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(body: UpdateAppPage()),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(find.text('1.0.0 → 1.1.0'), findsOneWidget);
+        expect(find.byType(Card), findsOneWidget);
+        expect(find.byType(AnimatedContainer), findsOneWidget);
+
+        final card = tester.widget<Card>(find.byType(Card).first);
+        expect(card.margin, const EdgeInsets.all(4.0));
+        expect(card.clipBehavior, Clip.none);
+        expect(card.color, Colors.transparent);
+
+        final animatedContainerFinder = find.byType(AnimatedContainer).first;
+        final animatedContainer = tester.widget<AnimatedContainer>(
+          animatedContainerFinder,
+        );
+        final decoration = animatedContainer.decoration! as BoxDecoration;
+        final BuildContext containerContext = tester.element(
+          animatedContainerFinder,
+        );
+        expect(decoration.color, containerContext.appColors.surface);
+        expect(decoration.border, isNotNull);
+        expect(decoration.boxShadow, isNull);
+
+        final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+        addTearDown(mouse.removePointer);
+        await mouse.addPointer();
+        await mouse.moveTo(tester.getCenter(find.byType(Card)));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+
+        final hoveredContainer = tester.widget<AnimatedContainer>(
+          find.byType(AnimatedContainer).first,
+        );
+        final hoveredDecoration = hoveredContainer.decoration! as BoxDecoration;
+        expect(hoveredDecoration.boxShadow, isNotNull);
+        expect(hoveredDecoration.boxShadow, isNotEmpty);
       },
     );
 

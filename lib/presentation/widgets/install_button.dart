@@ -340,34 +340,33 @@ class _InstallButtonState extends State<InstallButton> {
     required String cancelLabel,
     required Color foregroundColor,
   }) {
-    return SizedBox.expand(
-      child: Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: foregroundColor,
-              ),
+    // 仅按内容尺寸布局前景层，避免在 Row 提供的无界宽度约束中向外请求无限宽度。
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              color: foregroundColor,
             ),
-            if (widget.onCancel != null) ...[
-              const SizedBox(width: 8),
-              Tooltip(
-                message: cancelLabel,
-                child: GestureDetector(
-                  onTap: widget.onCancel,
-                  child: Icon(
-                    Icons.close,
-                    size: _getIconSize(),
-                    color: foregroundColor,
-                  ),
+          ),
+          if (widget.onCancel != null) ...[
+            const SizedBox(width: 8),
+            Tooltip(
+              message: cancelLabel,
+              child: GestureDetector(
+                onTap: widget.onCancel,
+                child: Icon(
+                  Icons.close,
+                  size: _getIconSize(),
+                  color: foregroundColor,
                 ),
               ),
-            ],
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

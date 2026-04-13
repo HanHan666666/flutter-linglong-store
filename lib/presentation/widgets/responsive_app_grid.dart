@@ -7,8 +7,9 @@ import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import 'widgets.dart';
 
-/// 卡片固定高度，用于计算宽高比。
-const kAppCardHeight = 80.0;
+/// 卡片网格按 96px 视觉高度计算，给图标、按钮和 hover 安全区留出稳定空间，
+/// 避免列表项在桌面端显得拥挤或上下贴边。
+const kAppCardHeight = 96.0;
 
 /// 单个物品的构建回调。
 ///

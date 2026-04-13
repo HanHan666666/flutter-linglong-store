@@ -19,13 +19,38 @@ class CustomCategoryPage extends ConsumerStatefulWidget {
   ConsumerState<CustomCategoryPage> createState() => _CustomCategoryPageState();
 }
 
-class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage> {
+class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
+    with AutoLoadWhenNotScrollable {
   final ScrollController _scrollController = ScrollController();
+
+  // ==================== AutoLoadWhenNotScrollable 实现 ====================
+
+  @override
+  ScrollController get scrollController => _scrollController;
+
+  @override
+  bool get isPageVisible => true; // 自定义分类页不参与路由可见性管理
+
+  @override
+  bool get isLoading => ref.read(customCategoryProvider(widget.code)).isLoading;
+
+  @override
+  bool get isLoadingMore =>
+      ref.read(customCategoryProvider(widget.code)).isLoadingMore;
+
+  @override
+  bool get hasMore =>
+      ref.read(customCategoryProvider(widget.code)).data?.apps.hasMore ?? false;
+
+  @override
+  VoidCallback get onLoadMore =>
+      () => ref.read(customCategoryProvider(widget.code).notifier).loadMore();
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
+    initAutoLoad();
+    _scrollController.addListener(onScroll);
     // family provider 会自动根据 code 参数初始化，无需手动调用 initCategory
   }
 
@@ -37,16 +62,10 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage> {
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
+    disposeAutoLoad();
+    _scrollController.removeListener(onScroll);
     _scrollController.dispose();
     super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      ref.read(customCategoryProvider(widget.code).notifier).loadMore();
-    }
   }
 
   @override

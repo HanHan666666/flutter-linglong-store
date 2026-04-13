@@ -377,6 +377,7 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
           ),
         ),
       ),
+    ),
     );
   }
 

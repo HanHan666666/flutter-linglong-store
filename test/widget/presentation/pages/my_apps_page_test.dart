@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:linglong_store/application/providers/app_uninstall_provider.dart';
@@ -76,6 +77,55 @@ void main() {
       final secondRect = tester.getRect(cardFinder.at(1));
       expect(secondRect.top - firstRect.bottom, AppSpacing.sm);
     });
+
+    testWidgets('tapping an installed app card opens detail route', (
+      tester,
+    ) async {
+      final installedApps = _StaticInstalledApps(
+        apps: const [
+          InstalledApp(
+            appId: 'app.one',
+            name: 'App One',
+            version: '1.0.0',
+            description: 'First app',
+          ),
+        ],
+      );
+
+      await tester.binding.setSurfaceSize(const Size(1280, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        _buildNavigationTestApp(
+          overrides: [
+            installedAppsProvider.overrideWith(() => installedApps),
+            runningProcessProvider.overrideWith(() => _StaticRunningProcess()),
+            applicationCardStateIndexProvider.overrideWithValue(
+              const ApplicationCardStateIndex(
+                installedVersionByAppId: {'app.one': '1.0.0'},
+                updateAppIds: {},
+                activeTasksByAppId: {},
+              ),
+            ),
+            appUninstallServiceProvider.overrideWithValue(
+              _NoopAppUninstallService(),
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      final cardFinder = find.byType(AppCard);
+      expect(cardFinder, findsOneWidget);
+
+      final cardRect = tester.getRect(cardFinder);
+      final nonTextTapOffset = Offset(cardRect.left + 24, cardRect.center.dy);
+      await tester.tapAt(nonTextTapOffset);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Detail: app.one'), findsOneWidget);
+    });
   });
 }
 
@@ -92,6 +142,38 @@ Widget _buildTestApp({required List<Override> overrides}) {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const Scaffold(body: MyAppsPage()),
+      ),
+    ),
+  );
+}
+
+Widget _buildNavigationTestApp({required List<Override> overrides}) {
+  final router = GoRouter(
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (_, __) => const Scaffold(body: MyAppsPage()),
+      ),
+      GoRoute(
+        path: '/app/:appId',
+        builder: (_, state) =>
+            Scaffold(body: Text('Detail: ${state.pathParameters['appId']}')),
+      ),
+    ],
+  );
+
+  return ProviderScope(
+    overrides: overrides,
+    child: ShellBranchVisibilityScope(
+      activeRoute: ShellPrimaryRoute.myApps,
+      currentRoute: ShellPrimaryRoute.myApps,
+      child: MaterialApp.router(
+        locale: const Locale('zh'),
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router,
       ),
     ),
   );

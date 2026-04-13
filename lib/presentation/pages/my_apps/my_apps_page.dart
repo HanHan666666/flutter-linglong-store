@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../application/providers/app_uninstall_provider.dart';
 import '../../../application/providers/application_card_state_provider.dart';
@@ -287,6 +288,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
               buttonState: cardState.buttonState,
               progress: cardState.progress,
               isInstalling: cardState.isInstalling,
+              onTap: () => context.push('/app/${app.appId}'),
               onPrimaryPressed: () => handleAppCardPrimaryAction(
                 context: context,
                 ref: ref,

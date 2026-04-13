@@ -5,6 +5,7 @@ import '../../../application/providers/app_operation_queue_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
 import '../../../application/providers/update_apps_provider.dart';
+import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/install_progress.dart';
@@ -202,6 +203,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
             app: app,
             installTask: installTask,
             hasActiveTasks: installState.hasActiveTasks(),
+            onTap: () => context.goToAppDetail(app.appId, appInfo: app.installedApp),
             onUpdate: () => _updateApp(app),
             onCancel: installTask != null
                 ? () => _cancelAppInstall(app.appId)
@@ -220,6 +222,7 @@ class _UpdatableAppItem extends ConsumerStatefulWidget {
     required this.app,
     required this.installTask,
     required this.hasActiveTasks,
+    required this.onTap,
     required this.onUpdate,
     required this.onCancel,
   });
@@ -227,6 +230,7 @@ class _UpdatableAppItem extends ConsumerStatefulWidget {
   final UpdatableApp app;
   final InstallTask? installTask;
   final bool hasActiveTasks;
+  final VoidCallback onTap;
   final VoidCallback onUpdate;
   final VoidCallback? onCancel;
 
@@ -265,30 +269,35 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
         // 关闭 Card 裁剪，避免 hover 阴影被父级裁掉；圆角观感由内层装饰负责。
         clipBehavior: Clip.none,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          decoration: BoxDecoration(
-            color: context.appColors.surface,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTap,
             borderRadius: AppRadius.smRadius,
-            // 非 hover 态保留很轻的边界层次，避免回到之前明显灰框描边感。
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
-            ),
-            boxShadow: _isHovered
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              decoration: BoxDecoration(
+                color: context.appColors.surface,
+                borderRadius: AppRadius.smRadius,
+                // 非 hover 态保留很轻的边界层次，避免回到之前明显灰框描边感。
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
+                ),
+                boxShadow: _isHovered
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                 // 主行：图标、信息、按钮
                 Row(
                   children: [
@@ -349,21 +358,21 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
                   ],
                 ),
 
-                // 安装进度消息
-                if (widget.installTask != null &&
-                    widget.installTask!.displayMessage != null) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    widget.installTask!.displayMessage!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: widget.installTask!.isFailed
-                          ? theme.colorScheme.error
-                          : theme.colorScheme.onSurfaceVariant,
+                  // 安装进度消息
+                  if (widget.installTask != null &&
+                      widget.installTask!.displayMessage != null) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      widget.installTask!.displayMessage!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: widget.installTask!.isFailed
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
-
-              ],
+              ),
             ),
           ),
         ),

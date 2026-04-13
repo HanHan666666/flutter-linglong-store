@@ -187,8 +187,8 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
           });
         },
         decoration: InputDecoration(
-          hintText: AppLocalizations.of(context)?.searchInstalledApps ??
-              '搜索已安装的应用',
+          hintText:
+              AppLocalizations.of(context)?.searchInstalledApps ?? '搜索已安装的应用',
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
@@ -235,7 +235,8 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
       return EmptyState(
         icon: Icons.apps_outage,
         title: AppLocalizations.of(context)?.noInstalledApps ?? '暂无已安装应用',
-        description: AppLocalizations.of(context)?.noInstalledAppsHint ??
+        description:
+            AppLocalizations.of(context)?.noInstalledAppsHint ??
             '您还没有安装任何玲珑应用，去推荐页看看吧',
       );
     }
@@ -285,7 +286,6 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
                 appId: app.appId,
                 appName: app.name,
                 icon: app.icon,
-                version: app.version,
               ),
               menuActions: [
                 AppCardMenuAction(

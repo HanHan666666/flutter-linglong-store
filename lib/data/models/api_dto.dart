@@ -694,33 +694,6 @@ sealed class SidebarAppsRequest with _$SidebarAppsRequest {
       _$SidebarAppsRequestFromJson(json);
 }
 
-/// 自定义分类菜单 DTO（保留旧接口兼容）
-@freezed
-sealed class CustomMenuCategoryDTO with _$CustomMenuCategoryDTO {
-  const factory CustomMenuCategoryDTO({
-    @JsonKey(name: 'menuId') required String menuId,
-    @JsonKey(name: 'menuName') required String menuName,
-    @JsonKey(name: 'menuIcon') String? menuIcon,
-    @JsonKey(name: 'categoryIds') required List<String> categoryIds,
-    @JsonKey(name: 'sort') int? sort,
-  }) = _CustomMenuCategoryDTO;
-
-  factory CustomMenuCategoryDTO.fromJson(Map<String, dynamic> json) =>
-      _$CustomMenuCategoryDTOFromJson(json);
-}
-
-/// 自定义分类菜单响应
-@freezed
-sealed class CustomMenuCategoryResponse with _$CustomMenuCategoryResponse {
-  const factory CustomMenuCategoryResponse({
-    required int code,
-    String? message,
-    required List<CustomMenuCategoryDTO> data,
-  }) = _CustomMenuCategoryResponse;
-
-  factory CustomMenuCategoryResponse.fromJson(Map<String, dynamic> json) =>
-      _$CustomMenuCategoryResponseFromJson(json);
-}
 
 /// 按分类ID获取应用请求
 @freezed

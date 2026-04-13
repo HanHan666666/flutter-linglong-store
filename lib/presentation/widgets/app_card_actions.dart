@@ -15,9 +15,9 @@ Future<void> handleAppCardPrimaryAction({
   required String appId,
   required String appName,
   String? icon,
-  String? version,
 }) async {
   switch (buttonState) {
+    // 列表卡片入口一律走默认安装/升级，不在这里绑定具体版本。
     case InstallButtonState.notInstalled:
       ref
           .read(appOperationQueueControllerProvider)
@@ -27,7 +27,6 @@ Future<void> handleAppCardPrimaryAction({
               appId: appId,
               appName: appName,
               icon: icon,
-              version: _normalizeVersion(version),
             ),
           );
       return;
@@ -40,7 +39,6 @@ Future<void> handleAppCardPrimaryAction({
               appId: appId,
               appName: appName,
               icon: icon,
-              version: _normalizeVersion(version),
             ),
           );
       return;
@@ -64,11 +62,4 @@ Future<void> handleAppCardPrimaryAction({
     case InstallButtonState.uninstall:
       return;
   }
-}
-
-String? _normalizeVersion(String? version) {
-  if (version == null || version.isEmpty) {
-    return null;
-  }
-  return version;
 }

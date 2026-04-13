@@ -12,11 +12,50 @@ import '../../core/platform/cli_executor.dart';
 import '../../core/logging/app_logger.dart';
 import '../mappers/cli_output_parser.dart';
 
+typedef CliExecuteFn =
+    Future<CliOutput> Function(
+      List<String> args, {
+      Duration timeout,
+      String? processId,
+      String? locale,
+    });
+
+typedef CliExecuteWithProgressAndProcessFn =
+    Stream<ProgressEvent> Function(
+      List<String> args, {
+      String? processId,
+      String? locale,
+      void Function(Process process)? onProcessCreated,
+    });
+
+typedef CliCancelWithSystemKillFn =
+    Future<bool> Function(
+      String processId, {
+      bool force,
+      bool killPackageMananger,
+    });
+
 /// ll-cli Repository 实现
 class LinglongCliRepositoryImpl implements LinglongCliRepository {
-  LinglongCliRepositoryImpl(this._messages);
+  LinglongCliRepositoryImpl(this._messages)
+    : _execute = CliExecutor.execute,
+      _executeWithProgressAndProcess =
+          CliExecutor.executeWithProgressAndProcess,
+      _cancelWithSystemKill = CliExecutor.cancelWithSystemKill;
+
+  LinglongCliRepositoryImpl.withExecutor(
+    this._messages, {
+    required CliExecuteFn execute,
+    required CliExecuteWithProgressAndProcessFn executeWithProgressAndProcess,
+    required CliCancelWithSystemKillFn cancelWithSystemKill,
+  }) : _execute = execute,
+       _executeWithProgressAndProcess = executeWithProgressAndProcess,
+       _cancelWithSystemKill = cancelWithSystemKill;
 
   final InstallMessages _messages;
+  final CliExecuteFn _execute;
+  final CliExecuteWithProgressAndProcessFn _executeWithProgressAndProcess;
+  final CliCancelWithSystemKillFn _cancelWithSystemKill;
 
   /// 活跃的安装任务进程 PID（用于取消）
   final Map<String, int> _activeProcessPids = {};
@@ -82,9 +121,15 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
     );
 
     try {
-      // ll-cli install 指定版本格式为 appId/version。
-      final installTarget = version != null ? '$appId/$version' : appId;
-      final args = ['install', '--json', installTarget];
+      // 只有显式指定版本的安装才拼接 appId/version；升级统一走 ll-cli upgrade。
+      final args = <String>[
+        kind == InstallTaskKind.update ? 'upgrade' : 'install',
+        '--json',
+        if (kind == InstallTaskKind.install)
+          version != null ? '$appId/$version' : appId
+        else
+          appId,
+      ];
       if (force && kind == InstallTaskKind.install) {
         args.add('--force');
       }
@@ -93,7 +138,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         '[LinglongCli] 开始$operationLabel: ll-cli ${args.join(' ')}',
       );
 
-      await for (final event in CliExecutor.executeWithProgressAndProcess(
+      await for (final event in _executeWithProgressAndProcess(
         args,
         processId: processId,
         onProcessCreated: (process) {
@@ -173,10 +218,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         }
       }
 
-      final output = await CliExecutor.execute([
-        'info',
-        appId,
-      ], timeout: kQueryTimeout);
+      final output = await _execute(['info', appId], timeout: kQueryTimeout);
 
       if (output.success) {
         yield InstallProgress(
@@ -239,7 +281,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
     bool includeBaseService = false,
   }) async {
     try {
-      final output = await CliExecutor.execute(
+      final output = await _execute(
         includeBaseService
             ? ['list', '--json', '--type=all']
             : ['list', '--json'],
@@ -270,9 +312,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
   @override
   Future<List<RunningApp>> getRunningApps() async {
     try {
-      final psOutput = await CliExecutor.execute([
-        'ps',
-      ], timeout: kQueryTimeout);
+      final psOutput = await _execute(['ps'], timeout: kQueryTimeout);
 
       if (!psOutput.success) {
         AppLogger.warning('[LinglongCli] 获取运行中进程失败: ${psOutput.stderr}');
@@ -339,7 +379,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
     // 这里同时标记 install / update 两类流为已取消，避免流结束前继续上报。
     _setOperationCancelled(appId);
 
-    final success = await CliExecutor.cancelWithSystemKill(
+    final success = await _cancelWithSystemKill(
       processId,
       force: true,
       killPackageMananger: true,
@@ -359,17 +399,8 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
   }
 
   @override
-  Future<bool> cancelInstall(String appId) {
-    return cancelOperation(appId, kind: InstallTaskKind.install);
-  }
-
-  @override
-  Stream<InstallProgress> updateApp(String appId, {String? version}) async* {
-    yield* _runInstallLikeOperation(
-      appId,
-      kind: InstallTaskKind.update,
-      version: version,
-    );
+  Stream<InstallProgress> updateApp(String appId) async* {
+    yield* _runInstallLikeOperation(appId, kind: InstallTaskKind.update);
   }
 
   @override
@@ -378,7 +409,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       AppLogger.info('[LinglongCli] 卸载应用: $appId@$version');
 
       // ll-cli uninstall 只接受 APP 参数，不接受 version 参数
-      final output = await CliExecutor.execute([
+      final output = await _execute([
         'uninstall',
         appId,
       ], timeout: const Duration(minutes: 5));
@@ -400,10 +431,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       rethrow;
     } catch (e, stack) {
       AppLogger.error('[LinglongCli] 卸载异常: $appId', e, stack);
-      throw UninstallException(
-        e.toString(),
-        appId: appId,
-      );
+      throw UninstallException(e.toString(), appId: appId);
     }
   }
 
@@ -440,7 +468,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
           return 'Successfully stopped $appName';
         }
 
-        final output = await CliExecutor.execute([
+        final output = await _execute([
           'kill',
           '-s',
           '9',
@@ -513,7 +541,9 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         final userDirsFile = File('$home/.config/user-dirs.dirs');
         if (await userDirsFile.exists()) {
           final content = await userDirsFile.readAsString();
-          final match = RegExp(r'XDG_DESKTOP_DIR="([^"]+)"').firstMatch(content);
+          final match = RegExp(
+            r'XDG_DESKTOP_DIR="([^"]+)"',
+          ).firstMatch(content);
           if (match != null) {
             final rawPath = match.group(1)!;
             final path = rawPath
@@ -554,7 +584,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       }
 
       // 2. 使用 ll-cli content 获取应用导出的文件列表
-      final output = await CliExecutor.execute([
+      final output = await _execute([
         'content',
         appId,
       ], timeout: const Duration(seconds: 10));
@@ -607,9 +637,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       // 9. 设置可执行权限 (0o755)
       await Process.run('chmod', ['755', targetPath]);
 
-      AppLogger.info(
-        '[LinglongCli] 桌面快捷方式创建成功: $appId -> $targetPath',
-      );
+      AppLogger.info('[LinglongCli] 桌面快捷方式创建成功: $appId -> $targetPath');
 
       return '已创建桌面快捷方式: $targetPath';
     } catch (e, stack) {
@@ -621,10 +649,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
   @override
   Future<List<InstalledApp>> searchVersions(String appId) async {
     try {
-      final output = await CliExecutor.execute([
-        'search',
-        appId,
-      ], timeout: kQueryTimeout);
+      final output = await _execute(['search', appId], timeout: kQueryTimeout);
 
       if (!output.success) {
         return [];
@@ -642,7 +667,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
     try {
       AppLogger.info('[LinglongCli] 开始清理废弃服务');
 
-      final output = await CliExecutor.execute([
+      final output = await _execute([
         'prune',
       ], timeout: const Duration(minutes: 5));
 
@@ -660,7 +685,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
   @override
   Future<String> getLlCliVersion() async {
     try {
-      final output = await CliExecutor.execute([
+      final output = await _execute([
         '--version',
       ], timeout: const Duration(seconds: 5));
 
@@ -673,5 +698,4 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       return _messages.llCliNotInstalled;
     }
   }
-
-  }
+}

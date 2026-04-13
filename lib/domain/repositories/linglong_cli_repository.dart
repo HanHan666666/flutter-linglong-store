@@ -26,12 +26,8 @@ abstract class LinglongCliRepository {
 
   /// 更新应用（返回进度流）
   ///
-  /// [appId] 应用ID
-  /// [version] 目标版本，不指定则更新到最新版
-  Stream<InstallProgress> updateApp(
-    String appId, {
-    String? version,
-  });
+  /// 始终更新到最新版，不接受版本参数。
+  Stream<InstallProgress> updateApp(String appId);
 
   /// 取消安装/更新任务
   ///
@@ -43,15 +39,7 @@ abstract class LinglongCliRepository {
   /// 1. 标记取消状态
   /// 2. 通过 pkexec killall 终止 ll-cli 和 ll-package-manager
   /// 3. 发送取消事件
-  Future<bool> cancelOperation(
-    String appId, {
-    required InstallTaskKind kind,
-  });
-
-  /// 兼容旧接口：默认按安装任务取消。
-  Future<bool> cancelInstall(String appId) {
-    return cancelOperation(appId, kind: InstallTaskKind.install);
-  }
+  Future<bool> cancelOperation(String appId, {required InstallTaskKind kind});
 
   /// 卸载应用
   Future<String> uninstallApp(String appId, String version);

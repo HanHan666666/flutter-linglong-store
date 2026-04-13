@@ -746,46 +746,6 @@ Map<String, dynamic> _$SidebarAppsRequestToJson(_SidebarAppsRequest instance) =>
       'filter': instance.filter,
     };
 
-_CustomMenuCategoryDTO _$CustomMenuCategoryDTOFromJson(
-  Map<String, dynamic> json,
-) => _CustomMenuCategoryDTO(
-  menuId: json['menuId'] as String,
-  menuName: json['menuName'] as String,
-  menuIcon: json['menuIcon'] as String?,
-  categoryIds: (json['categoryIds'] as List<dynamic>)
-      .map((e) => e as String)
-      .toList(),
-  sort: (json['sort'] as num?)?.toInt(),
-);
-
-Map<String, dynamic> _$CustomMenuCategoryDTOToJson(
-  _CustomMenuCategoryDTO instance,
-) => <String, dynamic>{
-  'menuId': instance.menuId,
-  'menuName': instance.menuName,
-  'menuIcon': instance.menuIcon,
-  'categoryIds': instance.categoryIds,
-  'sort': instance.sort,
-};
-
-_CustomMenuCategoryResponse _$CustomMenuCategoryResponseFromJson(
-  Map<String, dynamic> json,
-) => _CustomMenuCategoryResponse(
-  code: (json['code'] as num).toInt(),
-  message: json['message'] as String?,
-  data: (json['data'] as List<dynamic>)
-      .map((e) => CustomMenuCategoryDTO.fromJson(e as Map<String, dynamic>))
-      .toList(),
-);
-
-Map<String, dynamic> _$CustomMenuCategoryResponseToJson(
-  _CustomMenuCategoryResponse instance,
-) => <String, dynamic>{
-  'code': instance.code,
-  'message': instance.message,
-  'data': instance.data,
-};
-
 _AppsByCategoryRequest _$AppsByCategoryRequestFromJson(
   Map<String, dynamic> json,
 ) => _AppsByCategoryRequest(

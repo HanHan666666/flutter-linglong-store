@@ -399,11 +399,6 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
   }
 
   @override
-  Future<bool> cancelInstall(String appId) {
-    return cancelOperation(appId, kind: InstallTaskKind.install);
-  }
-
-  @override
   Stream<InstallProgress> updateApp(String appId) async* {
     yield* _runInstallLikeOperation(appId, kind: InstallTaskKind.update);
   }

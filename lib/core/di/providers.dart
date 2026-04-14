@@ -61,10 +61,7 @@ export '../../application/providers/update_apps_provider.dart'
         UpdateAppsState,
         UpdatableApp;
 
-// ==================== 旧版兼容 Provider ====================
-// 以下 Provider 保持向后兼容，后续版本将移除
-// 注意：由于 export 和使用在同一个文件中无法直接引用，
-// 请在使用处直接导入并使用新的 Provider 名称
+// ==================== 设置 Provider ====================
 
 // 设置页面
 export '../../application/providers/setting_provider.dart'

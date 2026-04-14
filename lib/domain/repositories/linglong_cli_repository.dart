@@ -41,11 +41,6 @@ abstract class LinglongCliRepository {
   /// 3. 发送取消事件
   Future<bool> cancelOperation(String appId, {required InstallTaskKind kind});
 
-  /// 兼容旧接口：默认按安装任务取消。
-  Future<bool> cancelInstall(String appId) {
-    return cancelOperation(appId, kind: InstallTaskKind.install);
-  }
-
   /// 卸载应用
   Future<String> uninstallApp(String appId, String version);
 

@@ -775,12 +775,6 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
     }
   }
 
-  /// 取消安装（兼容旧接口）
-  @Deprecated('Use cancelTask instead')
-  Future<bool> cancelInstall(String appId) async {
-    return await cancelTask(appId);
-  }
-
   /// 从队列中移除任务
   void removeFromQueue(String appId) {
     state = state.copyWith(

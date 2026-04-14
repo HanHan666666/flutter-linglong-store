@@ -47,16 +47,13 @@ sealed class InstallTask with _$InstallTask {
     /// 当前状态
     @Default(InstallStatus.pending) InstallStatus status,
 
-    /// 安装进度。
-    ///
-    /// 新链路统一使用 `0.0..1.0` 比例值；为兼容旧展示链路，这里仍容忍
-    /// 历史上的 `0..100` 百分比值，并在 Presentation 层通过辅助方法归一化。
+    /// 安装进度（`0.0..1.0` 比例值，由 [progressValue] 归一化后供 UI 消费）。
     @Default(0.0) double progress,
 
     /// 状态消息
     String? message,
 
-    /// 安装链路中保留的原始 message 文本，用于诊断与兼容展示。
+    /// 安装链路中保留的原始 message 文本，用于诊断。
     String? rawMessage,
 
     /// 错误消息
@@ -109,7 +106,7 @@ extension InstallTaskX on InstallTask {
     return normalized.clamp(0.0, 1.0);
   }
 
-  /// 统一百分比文案，兼容比例值和旧的百分比值。
+  /// 百分比文案（基于归一化后的 [progressValue] 计算）。
   String get progressPercentLabel =>
       '${(progressValue * 100).round().clamp(0, 100)}%';
 

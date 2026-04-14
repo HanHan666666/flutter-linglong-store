@@ -968,7 +968,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
   /// 处理取消安装
   void _handleCancelInstall(InstalledApp app) {
-    ref.read(installQueueProvider.notifier).cancelInstall(app.appId);
+    ref.read(installQueueProvider.notifier).cancelTask(app.appId);
   }
 
   /// 打开应用

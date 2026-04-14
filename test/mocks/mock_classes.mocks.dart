@@ -260,12 +260,9 @@ class MockLinglongCliRepository extends _i1.Mock
           as _i4.Stream<_i12.InstallProgress>);
 
   @override
-  _i4.Stream<_i12.InstallProgress> updateApp(
-    String? appId, {
-    String? version,
-  }) =>
+  _i4.Stream<_i12.InstallProgress> updateApp(String? appId) =>
       (super.noSuchMethod(
-            Invocation.method(#updateApp, [appId], {#version: version}),
+            Invocation.method(#updateApp, [appId]),
             returnValue: _i4.Stream<_i12.InstallProgress>.empty(),
           )
           as _i4.Stream<_i12.InstallProgress>);
@@ -277,14 +274,6 @@ class MockLinglongCliRepository extends _i1.Mock
   }) =>
       (super.noSuchMethod(
             Invocation.method(#cancelOperation, [appId], {#kind: kind}),
-            returnValue: _i4.Future<bool>.value(false),
-          )
-          as _i4.Future<bool>);
-
-  @override
-  _i4.Future<bool> cancelInstall(String? appId) =>
-      (super.noSuchMethod(
-            Invocation.method(#cancelInstall, [appId]),
             returnValue: _i4.Future<bool>.value(false),
           )
           as _i4.Future<bool>);

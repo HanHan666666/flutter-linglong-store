@@ -20,7 +20,9 @@ class RankingPage extends ConsumerStatefulWidget {
 }
 
 class _RankingPageState extends ConsumerState<RankingPage>
-    with SingleTickerProviderStateMixin, ShellBranchVisibilityMixin<RankingPage> {
+    with
+        SingleTickerProviderStateMixin,
+        ShellBranchVisibilityMixin<RankingPage> {
   late TabController _tabController;
 
   /// 页面是否可见（用于控制副作用）
@@ -346,7 +348,6 @@ class _AppsGrid extends StatelessWidget {
             appId: app.appId,
             appName: app.name,
             icon: app.icon,
-            version: app.version,
           ),
         );
       },

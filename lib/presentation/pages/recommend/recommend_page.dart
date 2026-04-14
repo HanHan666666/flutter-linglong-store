@@ -766,7 +766,6 @@ class _AppsGrid extends StatelessWidget {
             appId: app.appId,
             appName: app.name,
             icon: app.icon,
-            version: app.version,
           ),
         );
       },

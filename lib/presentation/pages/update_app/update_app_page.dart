@@ -50,7 +50,6 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
             appId: app.appId,
             appName: app.name,
             icon: app.icon,
-            version: app.latestVersion,
           ),
         )
         .toList();
@@ -69,7 +68,6 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
             appId: app.appId,
             appName: app.name,
             icon: app.icon,
-            version: app.latestVersion,
           ),
         );
   }

@@ -930,25 +930,24 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   void _handleInstallAction(InstalledApp app, InstallButtonState currentState) {
     switch (currentState) {
       case InstallButtonState.notInstalled:
-        // 添加到安装队列
+        // 详情页主按钮走默认安装，不指定版本；只有版本列表入口才允许传版本。
         ref
             .read(installQueueProvider.notifier)
             .enqueueInstall(
               appId: app.appId,
               appName: app.name,
               icon: app.icon,
-              version: app.version,
             );
         break;
       case InstallButtonState.update:
-        // 更新应用
+        // 详情页更新统一走 update 队列，不再伪装成带版本安装。
         ref
             .read(installQueueProvider.notifier)
-            .enqueueInstall(
+            .enqueueOperation(
+              kind: InstallTaskKind.update,
               appId: app.appId,
               appName: app.name,
               icon: app.icon,
-              version: app.version,
             );
         break;
       case InstallButtonState.installed:

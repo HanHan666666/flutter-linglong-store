@@ -284,6 +284,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
   /// 入队安装/更新任务。
   ///
   /// 统一入口保证 Presentation 层不需要直接关心底层队列状态写入细节。
+  /// 更新任务不允许携带 version，升级命令不接受版本号。
   String enqueueOperation({
     required InstallTaskKind kind,
     required String appId,
@@ -298,13 +299,17 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       return '';
     }
 
+    // 升级任务必须不带版本号，否则后续命令构造会出错。
+    final effectiveVersion =
+        kind == InstallTaskKind.update ? null : version;
+
     final kindTask = InstallTask(
       id: _generateTaskId(),
       appId: appId,
       appName: appName,
       icon: icon,
       kind: kind,
-      version: version,
+      version: effectiveVersion,
       force: force,
       status: InstallStatus.pending,
       createdAt: DateTime.now().millisecondsSinceEpoch,
@@ -351,13 +356,17 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
         continue;
       }
 
+      // 批量更新同样禁止携带版本号。
+      final batchVersion =
+          params.kind == InstallTaskKind.update ? null : params.version;
+
       final task = InstallTask(
         id: _generateTaskId(),
         appId: params.appId,
         appName: params.appName,
         icon: params.icon,
         kind: params.kind,
-        version: params.version,
+        version: batchVersion,
         force: params.force,
         status: InstallStatus.pending,
         createdAt: DateTime.now().millisecondsSinceEpoch,
@@ -456,7 +465,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
 
       // 监听安装进度流
       final progressStream = task.kind == InstallTaskKind.update
-          ? cliRepo.updateApp(task.appId, version: task.version)
+          ? cliRepo.updateApp(task.appId)
           : cliRepo.installApp(
               task.appId,
               version: task.version,

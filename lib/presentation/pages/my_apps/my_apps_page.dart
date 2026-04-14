@@ -278,7 +278,6 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
             final app = filteredApps[index];
             final cardState = cardStateIndex.resolve(
               appId: app.appId,
-              latestVersion: app.version,
             );
             return AppCard(
               appId: app.appId,

@@ -128,7 +128,6 @@ class ResponsiveAppGrid<T> extends ConsumerWidget {
         .map(
           (item) => cardStateIndex.resolve(
             appId: (item as dynamic).appId as String,
-            latestVersion: (item as dynamic).version as String?,
           ),
         )
         .toList(growable: false);

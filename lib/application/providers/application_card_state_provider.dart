@@ -11,6 +11,9 @@ import 'update_apps_provider.dart';
 /// 页面级卡片状态索引。
 ///
 /// 只聚合已安装列表、更新列表和安装队列的轻量索引，避免卡片组件直接订阅多个全局 Provider。
+///
+/// 是否有更新完全依赖 [updateAppsProvider] 的检查结果，
+/// 不再使用列表 API 返回的版本号做本地比较。
 class ApplicationCardStateIndex {
   const ApplicationCardStateIndex({
     required this.installedVersionByAppId,
@@ -25,7 +28,6 @@ class ApplicationCardStateIndex {
   /// 解析单个应用卡片需要展示的状态。
   ResolvedApplicationCardState resolve({
     required String appId,
-    String? latestVersion,
   }) {
     if (appId.isEmpty) {
       return const ResolvedApplicationCardState(
@@ -35,29 +37,24 @@ class ApplicationCardStateIndex {
 
     final installedVersion = installedVersionByAppId[appId];
     final isInstalled = installedVersion != null;
-    final hasVersionUpdate =
-        latestVersion != null &&
-        latestVersion.isNotEmpty &&
-        installedVersion != null &&
-        VersionCompare.greaterThan(latestVersion, installedVersion);
-    final hasUpdate = updateAppIds.contains(appId) || hasVersionUpdate;
+    final hasUpdate = updateAppIds.contains(appId);
     final activeTask = activeTasksByAppId[appId];
     final isInstalling = activeTask != null;
     final activeButtonState = switch (activeTask?.status) {
       InstallStatus.pending => InstallButtonState.pending,
       InstallStatus.downloading ||
-      InstallStatus.installing => InstallButtonState.installing,
+          InstallStatus.installing => InstallButtonState.installing,
       _ => null,
     };
 
     return ResolvedApplicationCardState(
       buttonState:
           activeButtonState ??
-          (!isInstalled
-              ? InstallButtonState.notInstalled
-              : (hasUpdate
-                    ? InstallButtonState.update
-                    : InstallButtonState.open)),
+              (!isInstalled
+                  ? InstallButtonState.notInstalled
+                  : (hasUpdate
+                        ? InstallButtonState.update
+                        : InstallButtonState.open)),
       isInstalled: isInstalled,
       hasUpdate: hasUpdate,
       isInstalling: isInstalling,

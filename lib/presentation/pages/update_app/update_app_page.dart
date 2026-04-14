@@ -5,12 +5,12 @@ import '../../../application/providers/app_operation_queue_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
 import '../../../application/providers/update_apps_provider.dart';
-import '../../../core/config/routes.dart';
-import '../../../core/config/theme.dart';
-import '../../../core/i18n/l10n/app_localizations.dart';
-import '../../../domain/models/install_progress.dart';
-import '../../../domain/models/install_queue_state.dart';
-import '../../../domain/models/install_task.dart';
+import '../../core/config/routes.dart';
+import '../../core/config/theme.dart';
+import '../../core/i18n/l10n/app_localizations.dart';
+import '../../domain/models/install_progress.dart';
+import '../../domain/models/install_queue_state.dart';
+import '../../domain/models/install_task.dart';
 import '../../widgets/app_icon.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/install_button.dart';
@@ -200,7 +200,6 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
             key: ValueKey(app.appId),
             app: app,
             installTask: installTask,
-            hasActiveTasks: installState.hasActiveTasks(),
             onTap: () => context.goToAppDetail(app.appId, appInfo: app.installedApp),
             onUpdate: () => _updateApp(app),
             onCancel: installTask != null
@@ -219,7 +218,6 @@ class _UpdatableAppItem extends ConsumerStatefulWidget {
     super.key,
     required this.app,
     required this.installTask,
-    required this.hasActiveTasks,
     required this.onTap,
     required this.onUpdate,
     required this.onCancel,
@@ -227,7 +225,6 @@ class _UpdatableAppItem extends ConsumerStatefulWidget {
 
   final UpdatableApp app;
   final InstallTask? installTask;
-  final bool hasActiveTasks;
   final VoidCallback onTap;
   final VoidCallback onUpdate;
   final VoidCallback? onCancel;
@@ -244,27 +241,17 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // 确定按钮状态
+    // 确定按钮状态：仅处理活跃任务，其余均显示"更新"
     final buttonState = _getButtonState();
-    // 刚完成的任务还留在 history 里时，列表可能短暂显示旧更新项；
-    // 队列仍活跃期间先禁用再次点击，避免同一 app 被重复入队。
-    final disableUpdateAction =
-        widget.hasActiveTasks &&
-        widget.installTask != null &&
-        (widget.installTask!.status == InstallStatus.success ||
-            widget.installTask!.status == InstallStatus.failed ||
-            widget.installTask!.status == InstallStatus.cancelled);
     final progress = widget.installTask?.progress ?? 0.0;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: Card(
-        // 保持 Card 默认外边距，避免压缩列表项之间的既有布局密度。
         margin: const EdgeInsets.all(4.0),
         elevation: 0,
         color: Colors.transparent,
-        // 关闭 Card 裁剪，避免 hover 阴影被父级裁掉；圆角观感由内层装饰负责。
         clipBehavior: Clip.none,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
         child: Material(
@@ -277,7 +264,6 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
               decoration: BoxDecoration(
                 color: context.appColors.surface,
                 borderRadius: AppRadius.smRadius,
-                // 非 hover 态保留很轻的边界层次，避免回到之前明显灰框描边感。
                 border: Border.all(
                   color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
                 ),
@@ -293,11 +279,7 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                // 主行：图标、信息、按钮
-                Row(
+                child: Row(
                   children: [
                     // 应用图标
                     AppIcon(
@@ -306,15 +288,13 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
                       borderRadius: AppRadius.sm,
                       appName: widget.app.name,
                     ),
-
                     const SizedBox(width: AppSpacing.md),
 
-                    // 应用信息
+                    // 应用信息（名称 + 版本）
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // 应用名称
                           Text(
                             widget.app.name,
                             style: theme.textTheme.titleSmall?.copyWith(
@@ -323,10 +303,7 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-
                           const SizedBox(height: AppSpacing.xs),
-
-                          // 版本信息
                           Text(
                             '${widget.app.currentVersion} → ${widget.app.latestVersion}',
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -336,63 +313,42 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
                         ],
                       ),
                     ),
-
                     const SizedBox(width: AppSpacing.md),
 
-                    // 更新按鈕
+                    // 更新按钮
                     InstallButton(
                       appName: widget.app.name,
                       state: buttonState,
                       progress: progress,
-                      // 正在安装/更新时显示实时网络速度
-                      downloadSpeed: buttonState == InstallButtonState.installing
-                          ? ref.watch(networkSpeedProvider).formatted
-                          : null,
+                      downloadSpeed:
+                          buttonState == InstallButtonState.installing
+                              ? ref.watch(networkSpeedProvider).formatted
+                              : null,
                       onPressed: widget.onUpdate,
-                      disabled: disableUpdateAction,
                       onCancel: widget.onCancel,
                       size: ButtonSize.small,
                     ),
                   ],
                 ),
-
-                  // 安装进度消息
-                  if (widget.installTask != null &&
-                      widget.installTask!.displayMessage != null) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      widget.installTask!.displayMessage!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: widget.installTask!.isFailed
-                            ? theme.colorScheme.error
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ],
               ),
             ),
           ),
         ),
       ),
-    ),
     );
   }
 
   /// 获取按钮状态
+  ///
+  /// 仅处理活跃任务状态（pending/installing），其余情况均显示"更新"。
+  /// 已完成的任务会通过乐观移除从列表中清除，不会走到这里。
   InstallButtonState _getButtonState() {
-    if (widget.installTask != null) {
-      switch (widget.installTask!.status) {
-        case InstallStatus.pending:
-          return InstallButtonState.pending;
-        case InstallStatus.downloading:
-        case InstallStatus.installing:
-          return InstallButtonState.installing;
-        case InstallStatus.success:
-        case InstallStatus.failed:
-        case InstallStatus.cancelled:
-          break;
-      }
+    final status = widget.installTask?.status;
+    if (status == InstallStatus.pending) {
+      return InstallButtonState.pending;
+    }
+    if (status == InstallStatus.downloading || status == InstallStatus.installing) {
+      return InstallButtonState.installing;
     }
     return InstallButtonState.update;
   }

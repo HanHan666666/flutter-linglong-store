@@ -168,6 +168,19 @@ class UpdateApps extends _$UpdateApps {
   Future<void> refresh() async {
     await checkUpdates();
   }
+
+  /// 乐观移除指定应用（更新/安装成功后立即调用，不等异步刷新）。
+  ///
+  /// 用于在任务完成时立即从 UI 列表中移除已更新的应用，
+  /// 避免用户看到过时的"待更新"条目。后续 [checkUpdates()] 会
+  /// 基于最新版本重新计算，作为最终一致性兜底。
+  void removeApp(String appId) {
+    if (state.apps.any((app) => app.appId == appId)) {
+      state = state.copyWith(
+        apps: state.apps.where((app) => app.appId != appId).toList(),
+      );
+    }
+  }
 }
 
 /// 便捷访问 Provider

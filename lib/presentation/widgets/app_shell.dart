@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../application/providers/app_collection_sync_provider.dart';
+import '../../application/providers/update_apps_provider.dart';
 import '../../core/config/shell_branch_visibility.dart';
 import '../../core/config/shell_primary_route.dart';
 import '../../core/config/theme.dart';
@@ -76,6 +77,10 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
         if (previous?.currentTask != null && next.currentTask == null) {
           final completedTask = next.history.firstOrNull;
           if (completedTask?.status == InstallStatus.success) {
+            // 乐观移除：立即从待更新列表中移除已完成的应用，
+            // 不等异步刷新，避免 UI 显示过时条目。
+            ref.read(updateAppsProvider.notifier).removeApp(completedTask!.appId);
+
             unawaited(
               ref
                   .read(appCollectionSyncServiceProvider)

@@ -384,6 +384,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get shareLink => 'Share';
+
+  @override
+  String shareMessage(String name) {
+    return 'Take a look at "$name"';
+  }
+
+  @override
+  String get linkCopied => 'Link copied — share away';
+
+  @override
+  String get shareFailed => 'Share failed';
+
+  @override
   String get createDesktopShortcut => 'Create Desktop Shortcut';
 
   @override

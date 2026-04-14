@@ -371,6 +371,20 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get shareLink => '分享';
+
+  @override
+  String shareMessage(String name) {
+    return '来看看「$name」这个应用';
+  }
+
+  @override
+  String get linkCopied => '链接已复制，快去分享吧';
+
+  @override
+  String get shareFailed => '分享失败';
+
+  @override
   String get createDesktopShortcut => '创建桌面快捷方式';
 
   @override

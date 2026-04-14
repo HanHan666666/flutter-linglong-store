@@ -794,6 +794,30 @@ abstract class AppLocalizations {
   /// **'已复制：{value}'**
   String copied(String value);
 
+  /// No description provided for @shareLink.
+  ///
+  /// In zh, this message translates to:
+  /// **'分享'**
+  String get shareLink;
+
+  /// No description provided for @shareMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'来看看「{name}」这个应用'**
+  String shareMessage(String name);
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'链接已复制，快去分享吧'**
+  String get linkCopied;
+
+  /// No description provided for @shareFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'分享失败'**
+  String get shareFailed;
+
   /// No description provided for @createDesktopShortcut.
   ///
   /// In zh, this message translates to:

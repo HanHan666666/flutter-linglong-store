@@ -41,6 +41,7 @@ dependencies:
   shimmer: ^3.0.0
 
   # 工具
+  share_plus: ^10.1.2
   url_launcher: ^6.3.1
   device_info_plus: ^10.1.2
   package_info_plus: ^8.1.3

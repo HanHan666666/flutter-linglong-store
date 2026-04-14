@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../application/providers/app_detail_provider.dart';
 import '../../../application/providers/app_uninstall_provider.dart';
+import '../../../application/providers/global_provider.dart';
 import '../../../application/providers/installed_apps_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
 import '../../../domain/models/installed_app.dart';
@@ -330,6 +332,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                       onCreateShortcut: () => _createShortcut(app),
                       onUninstall: () => _showUninstallDialog(app),
                     ),
+                    // 分享按钮：始终可见，不受安装状态影响
+                    _buildShareButton(context, app),
                   ],
                 ),
                 // 安装状态消息
@@ -1037,6 +1041,56 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           icon: app.icon,
           version: version,
         );
+  }
+
+  /// 构建分享按钮。
+  ///
+  /// 始终可见，不受应用安装状态影响。
+  /// 图标按钮风格，视觉上轻量不抢主操作焦点。
+  Widget _buildShareButton(BuildContext context, InstalledApp app) {
+    final l10n = AppLocalizations.of(context);
+
+    return IconButton(
+      onPressed: () => _shareApp(context, app),
+      tooltip: l10n?.shareLink ?? '分享',
+      icon: const Icon(Icons.share_outlined, size: 20),
+      // 与 InstallButton.large (40px) 高度对齐
+      constraints: const BoxConstraints(
+        minWidth: 40,
+        minHeight: 40,
+      ),
+    );
+  }
+
+  /// 分享应用链接。
+  ///
+  /// 优先调用系统原生分享（通过 XDG portal），
+  /// 不可用时 fallback 到复制链接到剪贴板。
+  Future<void> _shareApp(BuildContext context, InstalledApp app) async {
+    final l10n = AppLocalizations.of(context);
+    // 从全局状态获取当前系统架构，不写死
+    final arch = ref.read(globalAppProvider).arch ?? 'x86_64';
+    final shareUrl =
+        'https://store.linyaps.org.cn/apps/${app.appId}?arch=$arch';
+
+    try {
+      await Share.shareUri(Uri.parse(shareUrl));
+      // Share.shareUri 在 Linux 上可能静默失败（无分享面板），
+      // 不抛异常但也不执行任何操作，所以需要额外检查
+      return;
+    } catch (_) {
+      // 原生分享不可用，fallback 到剪贴板
+    }
+
+    // Fallback：复制到剪贴板
+    try {
+      await Clipboard.setData(ClipboardData(text: shareUrl));
+      if (!mounted) return;
+      showAppSuccess(context, l10n?.linkCopied ?? '链接已复制');
+    } catch (_) {
+      if (!mounted) return;
+      showAppError(context, l10n?.shareFailed ?? '分享失败');
+    }
   }
 
   /// 显示卸载确认对话框

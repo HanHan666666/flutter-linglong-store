@@ -297,6 +297,25 @@ class _RankingTabContent extends ConsumerWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               sliver: _AppsGrid(apps: state.data!.apps, type: type),
             ),
+            // 提示：排行榜只展示前100名
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: AppSpacing.lg,
+                  right: AppSpacing.lg,
+                  bottom: AppSpacing.lg,
+                ),
+                child: Center(
+                  child: Text(
+                    l10n.noMore,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: context.appColors.textTertiary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

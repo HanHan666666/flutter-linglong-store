@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
 
 import 'package:linglong_store/core/utils/format_utils.dart';
+import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 
 void main() {
   group('FormatUtils', () {
@@ -188,6 +190,111 @@ void main() {
           equals('5.0 MB/s'),
         ); // 5MB/s
       });
+    });
+  });
+
+  group('formatRelativeTime', () {
+    testWidgets('小于24小时显示小时数', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('zh'),
+        home: Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            final now = DateTime.now();
+            final createTime = now.subtract(const Duration(hours: 5)).toIso8601String();
+            final result = formatRelativeTime(createTime, l10n);
+            expect(result, contains('5小时前上架'));
+            return const SizedBox();
+          },
+        ),
+      ));
+    });
+
+    testWidgets('小于7天显示天数', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('zh'),
+        home: Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            final now = DateTime.now();
+            final createTime = now.subtract(const Duration(days: 3)).toIso8601String();
+            final result = formatRelativeTime(createTime, l10n);
+            expect(result, contains('3天前上架'));
+            return const SizedBox();
+          },
+        ),
+      ));
+    });
+
+    testWidgets('超过7天显示完整日期', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('zh'),
+        home: Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            final createTime = DateTime(2026, 4, 1, 10, 30).toIso8601String();
+            final result = formatRelativeTime(createTime, l10n);
+            expect(result, contains('2026-04-01上架'));
+            return const SizedBox();
+          },
+        ),
+      ));
+    });
+
+    testWidgets('null返回空字符串', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('zh'),
+        home: Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            final result = formatRelativeTime(null, l10n);
+            expect(result, '');
+            return const SizedBox();
+          },
+        ),
+      ));
+    });
+  });
+
+  group('formatDownloadCountText', () {
+    testWidgets('正常数值显示千位分隔符', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('zh'),
+        home: Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            final result = formatDownloadCountText(12345, l10n);
+            expect(result, '下载 12,345次');
+            return const SizedBox();
+          },
+        ),
+      ));
+    });
+
+    testWidgets('null或0返回空字符串', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('zh'),
+        home: Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            expect(formatDownloadCountText(null, l10n), '');
+            expect(formatDownloadCountText(0, l10n), '');
+            return const SizedBox();
+          },
+        ),
+      ));
     });
   });
 }

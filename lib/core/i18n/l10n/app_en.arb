@@ -712,5 +712,39 @@
   "noRecommend": "No recommendations available",
   "installTimeout": "Installation timeout: No progress updates for an extended period",
   "loadingInstalledApps": "Loading installed apps...",
-  "appDescriptionPlaceholder": "App description"
+  "appDescriptionPlaceholder": "App description",
+  "rankingTabNewUpload": "New Uploads",
+  "rankingTabDownloadCount": "Downloads",
+  "uploadedXHoursAgo": "Uploaded {count} hours ago",
+  "@uploadedXHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadedXDaysAgo": "Uploaded {count} days ago",
+  "@uploadedXDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadedOnDate": "Uploaded on {date}",
+  "@uploadedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedXTimes": "{count} downloads",
+  "@downloadedXTimes": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  }
 }

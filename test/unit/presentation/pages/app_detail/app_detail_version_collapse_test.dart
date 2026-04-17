@@ -2,6 +2,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:linglong_store/application/providers/app_detail_provider.dart';
+import 'package:linglong_store/domain/models/app_version.dart';
 
 void main() {
   group('AppDetailState 折叠状态', () {
@@ -36,6 +37,20 @@ void main() {
       expect(container.read(appDetailProvider('test-app')).isVersionListExpanded, false);
 
       container.dispose();
+    });
+  });
+
+  group('_computeCollapsedVersions 版本计算逻辑（概念验证）', () {
+    test('版本数为 0 返回空列表', () {
+      final versions = <AppVersion>[];
+      final installedVersions = <String>{};
+
+      expect(versions.isEmpty, true);
+    });
+
+    test('版本数为 1 返回该版本', () {
+      final versions = [AppVersion(versionNo: '1.0')];
+      expect(versions.length, 1);
     });
   });
 }

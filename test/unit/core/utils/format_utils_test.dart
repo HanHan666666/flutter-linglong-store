@@ -247,7 +247,7 @@ void main() {
       ));
     });
 
-    testWidgets('null返回空字符串', (tester) async {
+    testWidgets('null返回null', (tester) async {
       await tester.pumpWidget(MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -256,7 +256,7 @@ void main() {
           builder: (context) {
             final l10n = AppLocalizations.of(context)!;
             final result = formatRelativeTime(null, l10n);
-            expect(result, '');
+            expect(result, isNull);
             return const SizedBox();
           },
         ),
@@ -281,7 +281,7 @@ void main() {
       ));
     });
 
-    testWidgets('null或0返回空字符串', (tester) async {
+    testWidgets('null或0返回null', (tester) async {
       await tester.pumpWidget(MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -289,8 +289,8 @@ void main() {
         home: Builder(
           builder: (context) {
             final l10n = AppLocalizations.of(context)!;
-            expect(formatDownloadCountText(null, l10n), '');
-            expect(formatDownloadCountText(0, l10n), '');
+            expect(formatDownloadCountText(null, l10n), isNull);
+            expect(formatDownloadCountText(0, l10n), isNull);
             return const SizedBox();
           },
         ),

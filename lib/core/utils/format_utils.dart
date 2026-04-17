@@ -75,11 +75,13 @@ class FormatUtils {
 /// - < 24小时：显示"X小时前上架"
 /// - < 7天：显示"X天前上架"
 /// - >= 7天：显示"YYYY-MM-DD上架"
-String formatRelativeTime(String? createTime, AppLocalizations l10n) {
-  if (createTime == null) return '';
+///
+/// 返回 null 表示无有效时间
+String? formatRelativeTime(String? createTime, AppLocalizations l10n) {
+  if (createTime == null) return null;
 
   final parsed = DateTime.tryParse(createTime);
-  if (parsed == null) return '';
+  if (parsed == null) return null;
 
   final now = DateTime.now();
   final difference = now.difference(parsed);
@@ -97,8 +99,10 @@ String formatRelativeTime(String? createTime, AppLocalizations l10n) {
 /// 格式化下载量显示
 ///
 /// 格式："下载 XXX次"（使用千位分隔符）
-String formatDownloadCountText(int? count, AppLocalizations l10n) {
-  if (count == null || count <= 0) return '';
+///
+/// 返回 null 表示无有效下载量
+String? formatDownloadCountText(int? count, AppLocalizations l10n) {
+  if (count == null || count <= 0) return null;
 
   final formatted = count.toString().replaceAllMapped(
     RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),

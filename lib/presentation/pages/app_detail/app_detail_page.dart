@@ -1156,4 +1156,33 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       );
     }
   }
-}
+
+  /// 计算折叠状态下的版本列表
+  ///
+  /// 规则：
+  /// 1. 始终包含最新版本（列表第一条）
+  /// 2. 如果已安装版本 ≠ 最新版本，添加已安装版本
+  /// 3. 去重：最新版本恰好是已安装版本时只显示一条
+  List<AppVersion> _computeCollapsedVersions(
+    List<AppVersion> allVersions,
+    Set<String> installedVersions,
+  ) {
+    if (allVersions.isEmpty) {
+      return [];
+    }
+
+    final latestVersion = allVersions.first;
+    final result = <AppVersion>[latestVersion];
+
+    // 查找已安装但不是最新版本的其他版本
+    for (final version in allVersions) {
+      final isInstalled = installedVersions.contains(version.versionNo);
+      final isNotLatest = version.versionNo != latestVersion.versionNo;
+
+      if (isInstalled && isNotLatest) {
+        result.add(version);
+      }
+    }
+
+    return result;
+  }

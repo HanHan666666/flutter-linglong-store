@@ -388,7 +388,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String shareMessage(String name) {
-    return 'Take a look at "$name"';
+    return 'Take a look at \"$name\"';
   }
 
   @override

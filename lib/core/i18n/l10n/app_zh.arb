@@ -168,6 +168,17 @@
       }
     }
   },
+  "shareLink": "分享",
+  "shareMessage": "来看看「{name}」这个应用",
+  "@shareMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linkCopied": "链接已复制，快去分享吧",
+  "shareFailed": "分享失败",
   "createDesktopShortcut": "创建桌面快捷方式",
   "appDetailTitle": "应用详情",
   "appNotFound": "未找到应用信息",

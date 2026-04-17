@@ -2381,6 +2381,42 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'应用描述'**
   String get appDescriptionPlaceholder;
+
+  /// No description provided for @rankingTabNewUpload.
+  ///
+  /// In zh, this message translates to:
+  /// **'最新上架榜'**
+  String get rankingTabNewUpload;
+
+  /// No description provided for @rankingTabDownloadCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载量榜'**
+  String get rankingTabDownloadCount;
+
+  /// No description provided for @uploadedXHoursAgo.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count}小时前上架'**
+  String uploadedXHoursAgo(int count);
+
+  /// No description provided for @uploadedXDaysAgo.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count}天前上架'**
+  String uploadedXDaysAgo(int count);
+
+  /// No description provided for @uploadedOnDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'{date}上架'**
+  String uploadedOnDate(String date);
+
+  /// No description provided for @downloadedXTimes.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载 {count}次'**
+  String downloadedXTimes(String count);
 }
 
 class _AppLocalizationsDelegate

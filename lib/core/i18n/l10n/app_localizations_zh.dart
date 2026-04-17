@@ -1255,4 +1255,30 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appDescriptionPlaceholder => '应用描述';
+
+  @override
+  String get rankingTabNewUpload => '最新上架榜';
+
+  @override
+  String get rankingTabDownloadCount => '下载量榜';
+
+  @override
+  String uploadedXHoursAgo(int count) {
+    return '$count小时前上架';
+  }
+
+  @override
+  String uploadedXDaysAgo(int count) {
+    return '$count天前上架';
+  }
+
+  @override
+  String uploadedOnDate(String date) {
+    return '$date上架';
+  }
+
+  @override
+  String downloadedXTimes(String count) {
+    return '下载 $count次';
+  }
 }

@@ -253,41 +253,32 @@ class _AppCardState extends State<AppCard> {
         // 上架时间/下载量展示（仅在排行榜页面使用）
         if (widget.uploadTime != null || widget.downloadCountText != null) ...[
           const SizedBox(height: 2),
-          Row(
-            children: [
-              if (widget.uploadTime != null)
-                Expanded(
-                  child: Semantics(
-                    label: widget.uploadTime!,
-                    child: Text(
-                      widget.uploadTime!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.appColors.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+          if (widget.uploadTime != null)
+            Semantics(
+              label: widget.uploadTime!,
+              child: Text(
+                widget.uploadTime!,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: context.appColors.textSecondary,
                 ),
-              if (widget.downloadCountText != null)
-                Expanded(
-                  child: Semantics(
-                    label: widget.downloadCountText!,
-                    child: Text(
-                      widget.downloadCountText!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: context.appColors.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.right,
-                    ),
-                  ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          if (widget.downloadCountText != null)
+            Semantics(
+              label: widget.downloadCountText!,
+              child: Text(
+                widget.downloadCountText!,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: context.appColors.textSecondary,
                 ),
-            ],
-          ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
         ],
       ],
     );

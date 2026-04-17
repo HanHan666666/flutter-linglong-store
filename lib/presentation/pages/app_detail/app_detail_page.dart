@@ -10,6 +10,9 @@ import '../../../application/providers/network_speed_provider.dart';
 import '../../../domain/models/installed_app.dart';
 import '../../../domain/models/install_task.dart';
 import '../../../domain/models/install_progress.dart';
+import '../../../domain/models/app_version.dart';
+import '../../../domain/models/install_task.dart';
+import '../../../domain/models/install_progress.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../domain/models/app_detail.dart' as dm;
 import '../../helpers/app_uninstall_flow.dart';
@@ -680,42 +683,76 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     InstallTask? currentInstallTask,
     Set<String> installedVersions,
   ) {
-    final versions = detailState.versions;
+    final allVersions = detailState.versions;
     final isLoading = detailState.isLoadingVersions;
     final versionsError = detailState.versionsError;
     final currentApp = detailState.app;
+    final isExpanded = detailState.isVersionListExpanded;
+    final l10n = AppLocalizations.of(context)!;
+
+    // 根据折叠状态计算展示列表
+    final displayVersions = isExpanded
+        ? allVersions
+        : _computeCollapsedVersions(allVersions, installedVersions);
+
+    // 判断是否需要显示折叠按钮（版本数 > 2 时才显示）
+    final shouldShowToggle = allVersions.length > 2;
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 标题行：左侧标题 + 右侧折叠按钮
           Row(
             children: [
-              Text(
-                AppLocalizations.of(context)?.versionHistory ?? '版本历史',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              if (isLoading) ...[
-                const SizedBox(width: 12),
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+              Expanded(
+                child: Row(
+                  children: [
+                    Text(
+                      l10n.versionHistory,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    if (isLoading) ...[
+                      const SizedBox(width: 12),
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
+              ),
+              // 折叠按钮在右上角
+              if (shouldShowToggle)
+                TextButton(
+                  onPressed: () {
+                    ref
+                        .read(appDetailProvider(widget.appId).notifier)
+                        .toggleVersionList();
+                  },
+                  child: Text(
+                    isExpanded
+                        ? (l10n.collapse ?? '收起')
+                        : (l10n.expandAll ?? '展开全部'),
+                  ),
+                ),
             ],
           ),
+
           const SizedBox(height: 12),
-          if (versionsError != null && versions.isEmpty)
+
+          // 错误提示区域
+          if (versionsError != null && allVersions.isEmpty)
             Row(
               children: [
                 Expanded(
                   child: Text(
-                    AppLocalizations.of(context)?.versionListLoadFailed ??
-                        '版本列表加载失败，请重试',
+                    l10n.versionListLoadFailed ?? '版本列表加载失败，请重试',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.error,
                     ),
@@ -727,30 +764,30 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                         .read(appDetailProvider(widget.appId).notifier)
                         .retryVersions();
                   },
-                  child: Text(AppLocalizations.of(context)?.retry ?? '重试'),
+                  child: Text(l10n.retry ?? '重试'),
                 ),
               ],
             )
           else if (versionsError != null)
             Text(
-              AppLocalizations.of(context)?.versionListUpdateFailed ??
-                  '版本列表更新失败，显示最近一次结果',
+              l10n.versionListUpdateFailed ?? '版本列表更新失败，显示最近一次结果',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.error,
               ),
-            )
-          else
-            const SizedBox.shrink(),
+            ),
+
           if (versionsError != null) const SizedBox(height: 12),
-          if (versions.isEmpty && !isLoading)
-            Text(AppLocalizations.of(context)?.noVersionHistory ?? '暂无版本历史')
+
+          // 版本列表（使用计算后的 displayVersions）
+          if (displayVersions.isEmpty && !isLoading)
+            Text(l10n.noVersionHistory ?? '暂无版本历史')
           else
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: versions.length,
+              itemCount: displayVersions.length,
               itemBuilder: (context, index) {
-                final version = versions[index];
+                final version = displayVersions[index];
                 final isInstalledVersion = installedVersions.contains(
                   version.versionNo,
                 );
@@ -776,15 +813,11 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     subtitleParts.isEmpty ? '--' : subtitleParts.join(' · '),
                   ),
                   trailing: isInstalledVersion
-                      ? Text(
-                          AppLocalizations.of(context)?.installedBadge ?? '已安装',
-                        )
+                      ? Text(l10n.installedBadge ?? '已安装')
                       : TextButton(
                           onPressed: () =>
                               _installVersion(currentApp!, version.versionNo),
-                          child: Text(
-                            AppLocalizations.of(context)?.install ?? '安装',
-                          ),
+                          child: Text(l10n.install ?? '安装'),
                         ),
                 );
               },
@@ -1186,3 +1219,4 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
     return result;
   }
+}

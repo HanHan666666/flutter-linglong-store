@@ -331,9 +331,13 @@ class _AppsGrid extends StatelessWidget {
     return ResponsiveAppGrid<RankingAppInfo>(
       items: apps,
       itemBuilder: (ref, index, app, cardState) {
-        // 格式化上架时间和下载量
-        final uploadTime = formatRelativeTime(app.createTime, l10n);
-        final downloadCountText = formatDownloadCountText(app.downloadCount, l10n);
+        // 根据榜单类型决定显示上架时间还是下载量
+        final uploadTime = type == RankingType.rising
+            ? formatRelativeTime(app.createTime, l10n)
+            : null;
+        final downloadCountText = type == RankingType.download
+            ? formatDownloadCountText(app.downloadCount, l10n)
+            : null;
 
         return AppCard(
           appId: app.appId,

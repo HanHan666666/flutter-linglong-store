@@ -26,6 +26,7 @@ class AppDetailState {
     this.error,
     this.isSubmittingComment = false,
     this.isDescriptionExpanded = false,
+    this.isVersionListExpanded = false,
   });
 
   final InstalledApp? app;
@@ -41,6 +42,7 @@ class AppDetailState {
   final String? error;
   final bool isSubmittingComment;
   final bool isDescriptionExpanded;
+  final bool isVersionListExpanded;
 
   /// 获取截图 URL 列表
   List<String> get screenshotUrls => screenshots.map((s) => s.url).toList();
@@ -59,6 +61,7 @@ class AppDetailState {
     String? error,
     bool? isSubmittingComment,
     bool? isDescriptionExpanded,
+    bool? isVersionListExpanded,
     bool clearError = false,
     bool clearCommentsError = false,
     bool clearVersionsError = false,
@@ -83,6 +86,8 @@ class AppDetailState {
       isSubmittingComment: isSubmittingComment ?? this.isSubmittingComment,
       isDescriptionExpanded:
           isDescriptionExpanded ?? this.isDescriptionExpanded,
+      isVersionListExpanded:
+          isVersionListExpanded ?? this.isVersionListExpanded,
     );
   }
 }
@@ -234,5 +239,10 @@ class AppDetail extends _$AppDetail {
   /// 切换描述展开状态
   void toggleDescription() {
     state = state.copyWith(isDescriptionExpanded: !state.isDescriptionExpanded);
+  }
+
+  /// 切换版本列表展开状态
+  void toggleVersionList() {
+    state = state.copyWith(isVersionListExpanded: !state.isVersionListExpanded);
   }
 }

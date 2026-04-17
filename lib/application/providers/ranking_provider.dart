@@ -130,12 +130,6 @@ class Ranking extends _$Ranking {
       RankingType.rising => apiService.getNewAppList(
         const PageParams(pageNo: 1, pageSize: 100),
       ),
-      RankingType.update => apiService.getNewAppList(
-        const PageParams(pageNo: 1, pageSize: 100),
-      ),
-      RankingType.hot => apiService.getInstallAppList(
-        const PageParams(pageNo: 1, pageSize: 100),
-      ),
     };
 
     return _convertToRankingApps(response.data.data, type);
@@ -162,21 +156,10 @@ class Ranking extends _$Ranking {
         developer: dto.developerName,
         category: dto.categoryName,
         size: dto.packageSize,
-        downloadCount: _getDownloadCount(dto.downloadTimes, type, rank),
+        downloadCount: dto.last30DownloadCount?.toInt(), // 最近30天下载量
+        createTime: dto.createTime,                      // 上架时间
         rank: rank,
       );
     }).toList();
-  }
-
-  /// 根据排行榜类型调整下载/热度数值显示
-  int _getDownloadCount(int? baseCount, RankingType type, int rank) {
-    final count = baseCount ?? 0;
-
-    return switch (type) {
-      RankingType.download => count,
-      RankingType.rising => count,
-      RankingType.update => 100 - rank + 1, // 更新次数
-      RankingType.hot => 100 - rank + 1, // 热度值
-    };
   }
 }

@@ -15,7 +15,6 @@ void main() {
 
       final state = index.resolve(
         appId: 'org.example.app',
-        latestVersion: '2.0.0',
       );
 
       expect(state.buttonState, InstallButtonState.open);
@@ -33,7 +32,6 @@ void main() {
 
       final state = index.resolve(
         appId: 'org.example.app',
-        latestVersion: '1.0.0',
       );
 
       expect(state.buttonState, InstallButtonState.update);
@@ -42,17 +40,16 @@ void main() {
     });
 
     test(
-      'falls back to remote version comparison when update set is empty',
+      'returns update when app is in update set',
       () {
         const index = ApplicationCardStateIndex(
           installedVersionByAppId: {'org.example.app': '1.0.0'},
-          updateAppIds: {},
+          updateAppIds: {'org.example.app'},
           activeTasksByAppId: {},
         );
 
         final state = index.resolve(
           appId: 'org.example.app',
-          latestVersion: '1.2.0',
         );
 
         expect(state.buttonState, InstallButtonState.update);

@@ -55,6 +55,6 @@ sealed class RankingState with _$RankingState {
     @Default(false) bool isLoading,
     String? error,
     RankingData? data,
-    @Default(RankingType.download) RankingType selectedType,
+    @Default(RankingType.rising) RankingType selectedType, // 默认进入最新上架榜
   }) = _RankingState;
 }

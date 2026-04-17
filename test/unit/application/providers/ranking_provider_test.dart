@@ -26,7 +26,7 @@ void main() {
         expect(state.isLoading, isFalse);
         expect(state.error, isNull);
         expect(state.data, isNull);
-        expect(state.selectedType, equals(RankingType.download));
+        expect(state.selectedType, equals(RankingType.rising)); // 默认进入最新上架榜
       });
 
       test('should support copyWith', () {

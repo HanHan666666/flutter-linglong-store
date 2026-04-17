@@ -38,7 +38,7 @@ class _RankingPageState extends ConsumerState<RankingPage>
     _tabController = TabController(
       length: RankingType.values.length,
       vsync: this,
-      initialIndex: RankingType.download.index, // 与 RankingProvider 默认值保持一致
+      initialIndex: 0, // 默认进入最新上架榜（rising）
     );
     _tabController.addListener(_onTabChanged);
   }

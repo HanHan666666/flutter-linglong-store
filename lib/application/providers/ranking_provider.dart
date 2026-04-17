@@ -156,8 +156,8 @@ class Ranking extends _$Ranking {
         developer: dto.developerName,
         category: dto.categoryName,
         size: dto.packageSize,
-        downloadCount: dto.downloadTimes, // 下载量
-        createTime: dto.createTime,       // 上架时间
+        downloadCount: dto.last30DownloadCount, // 最近30天下载量
+        createTime: dto.createTime,              // 上架时间
         rank: rank,
       );
     }).toList();

@@ -5,12 +5,14 @@ import '../../../application/providers/app_operation_queue_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
 import '../../../application/providers/update_apps_provider.dart';
-import '../../core/config/routes.dart';
-import '../../core/config/theme.dart';
-import '../../core/i18n/l10n/app_localizations.dart';
-import '../../domain/models/install_progress.dart';
-import '../../domain/models/install_queue_state.dart';
-import '../../domain/models/install_task.dart';
+// 更新页位于 presentation/pages/update_app，下列跨层依赖必须回退到 lib 根目录，
+// 否则 clean checkout / CI 构建时会错误解析到 lib/presentation/** 虚假路径。
+import '../../../core/config/routes.dart';
+import '../../../core/config/theme.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
+import '../../../domain/models/install_progress.dart';
+import '../../../domain/models/install_queue_state.dart';
+import '../../../domain/models/install_task.dart';
 import '../../widgets/app_icon.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/install_button.dart';

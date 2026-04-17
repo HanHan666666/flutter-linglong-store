@@ -168,6 +168,17 @@
       }
     }
   },
+  "shareLink": "Share",
+  "shareMessage": "Take a look at \"{name}\"",
+  "@shareMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linkCopied": "Link copied — share away",
+  "shareFailed": "Share failed",
   "createDesktopShortcut": "Create Desktop Shortcut",
   "appDetailTitle": "App Details",
   "appNotFound": "App information not found",

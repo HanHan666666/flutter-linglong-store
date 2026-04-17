@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../application/providers/app_detail_provider.dart';
 import '../../../application/providers/app_uninstall_provider.dart';
-import '../../../application/providers/global_provider.dart';
 import '../../../application/providers/installed_apps_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
 import '../../../domain/models/installed_app.dart';
@@ -14,7 +12,6 @@ import '../../../domain/models/install_task.dart';
 import '../../../domain/models/install_progress.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../domain/models/app_detail.dart' as dm;
-import '../../../data/repositories/app_repository_impl.dart';
 import '../../helpers/app_uninstall_flow.dart';
 import '../../widgets/app_icon.dart';
 import '../../widgets/app_detail_comment_section.dart';
@@ -1085,10 +1082,10 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     // Fallback：复制到剪贴板
     try {
       await Clipboard.setData(ClipboardData(text: shareUrl));
-      if (!mounted) return;
+      if (!context.mounted) return;
       showAppSuccess(context, l10n?.linkCopied ?? '链接已复制');
     } catch (_) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       showAppError(context, l10n?.shareFailed ?? '分享失败');
     }
   }
@@ -1101,12 +1098,13 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   /// - kill 进程
   /// - 执行卸载
   Future<void> _showUninstallDialog(InstalledApp app) async {
+    final currentContext = context;
     final service = ref.read(appUninstallServiceProvider);
-    final success = await AppUninstallFlow.run(context, app, service);
-    if (!context.mounted) return;
+    final success = await AppUninstallFlow.run(currentContext, app, service);
+    if (!currentContext.mounted) return;
 
     if (success) {
-      showAppSuccess(context, '${app.name} 已卸载');
+      showAppSuccess(currentContext, '${app.name} 已卸载');
     }
   }
 
@@ -1128,7 +1126,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         error,
         stackTrace,
       );
-      if (!mounted) {
+      if (!context.mounted) {
         return;
       }
       showAppError(context, AppLocalizations.of(context)?.loadFailed ?? '加载失败');
@@ -1137,24 +1135,25 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
   /// 创建快捷方式
   Future<void> _createShortcut(InstalledApp app) async {
+    final currentContext = context;
+    final l10n = AppLocalizations.of(currentContext);
+
     try {
       final cliRepo = ref.read(linglongCliRepositoryProvider);
       await cliRepo.createDesktopShortcut(app.appId);
 
-      if (mounted) {
-        showAppSuccess(
-          context,
-          AppLocalizations.of(context)?.shortcutCreated ?? '快捷方式已创建',
-        );
-      }
+      if (!currentContext.mounted) return;
+      showAppSuccess(
+        currentContext,
+        l10n?.shortcutCreated ?? '快捷方式已创建',
+      );
     } catch (e) {
-      if (mounted) {
-        showAppError(
-          context,
-          AppLocalizations.of(context)?.shortcutCreateFailed(e.toString()) ??
-              '创建失败: $e',
-        );
-      }
+      if (!currentContext.mounted) return;
+      showAppError(
+        currentContext,
+        l10n?.shortcutCreateFailed(e.toString()) ??
+            '创建失败: $e',
+      );
     }
   }
 }

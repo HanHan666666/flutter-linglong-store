@@ -344,6 +344,8 @@ _AppListItemDTO _$AppListItemDTOFromJson(Map<String, dynamic> json) =>
       downloadTimes: (_readDownloadCount(json, 'downloadTimes') as num?)
           ?.toInt(),
       packageSize: _readPackageSize(json, 'packageSize') as String?,
+      createTime: json['createTime'] as String?,
+      last30DownloadCount: (json['last30DownloadCount'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$AppListItemDTOToJson(_AppListItemDTO instance) =>
@@ -358,6 +360,8 @@ Map<String, dynamic> _$AppListItemDTOToJson(_AppListItemDTO instance) =>
       'categoryName': instance.categoryName,
       'downloadTimes': instance.downloadTimes,
       'packageSize': instance.packageSize,
+      'createTime': instance.createTime,
+      'last30DownloadCount': instance.last30DownloadCount,
     };
 
 _AppListPagedData _$AppListPagedDataFromJson(Map<String, dynamic> json) =>

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../application/providers/launch_provider.dart';
 import '../../../application/providers/linglong_env_provider.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
@@ -38,6 +40,9 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
   /// 环境对话框是否已显示
   bool _envDialogShown = false;
 
+  /// 应用版本号（动态获取）
+  String _appVersion = AppConfig.appVersion;
+
   @override
   void initState() {
     super.initState();
@@ -64,10 +69,27 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
     // 启动动画
     _animationController.forward();
 
+    // 异步获取版本号
+    _loadAppVersion();
+
     // 延迟执行启动序列
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startLaunchSequence();
     });
+  }
+
+  /// 异步获取应用版本号
+  Future<void> _loadAppVersion() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() {
+          _appVersion = packageInfo.version;
+        });
+      }
+    } catch (_) {
+      // 获取失败时保持使用 AppConfig.appVersion fallback
+    }
   }
 
   @override
@@ -400,7 +422,7 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
   /// 构建版本信息
   Widget _buildVersionInfo(BuildContext context) {
     return Text(
-      'v1.0.0',
+      'v$_appVersion',
       style: AppTextStyles.caption.copyWith(
         color: context.appColors.textTertiary,
       ),

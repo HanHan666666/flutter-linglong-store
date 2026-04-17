@@ -11,8 +11,6 @@ import '../../../domain/models/installed_app.dart';
 import '../../../domain/models/install_task.dart';
 import '../../../domain/models/install_progress.dart';
 import '../../../domain/models/app_version.dart';
-import '../../../domain/models/install_task.dart';
-import '../../../domain/models/install_progress.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../domain/models/app_detail.dart' as dm;
 import '../../helpers/app_uninstall_flow.dart';

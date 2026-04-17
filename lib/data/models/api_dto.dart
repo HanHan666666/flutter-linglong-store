@@ -374,6 +374,7 @@ sealed class AppListItemDTO with _$AppListItemDTO {
     @JsonKey(name: 'categoryName') String? categoryName,
     @JsonKey(readValue: _readDownloadCount) int? downloadTimes,
     @JsonKey(readValue: _readPackageSize) String? packageSize,
+    @JsonKey(name: 'createTime') String? createTime, // 上架时间
   }) = _AppListItemDTO;
 
   factory AppListItemDTO.fromJson(Map<String, dynamic> json) =>

@@ -1289,4 +1289,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appDescriptionPlaceholder => 'App description';
+
+  @override
+  String get rankingTabNewUpload => 'New Uploads';
+
+  @override
+  String get rankingTabDownloadCount => 'Downloads';
+
+  @override
+  String uploadedXHoursAgo(int count) {
+    return 'Uploaded $count hours ago';
+  }
+
+  @override
+  String uploadedXDaysAgo(int count) {
+    return 'Uploaded $count days ago';
+  }
+
+  @override
+  String uploadedOnDate(String date) {
+    return 'Uploaded on $date';
+  }
+
+  @override
+  String downloadedXTimes(String count) {
+    return '$count downloads';
+  }
 }

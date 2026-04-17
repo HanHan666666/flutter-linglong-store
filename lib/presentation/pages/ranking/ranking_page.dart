@@ -7,6 +7,7 @@ import '../../../core/config/shell_primary_route.dart';
 import '../../../core/config/shell_branch_visibility.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
+import '../../../core/utils/format_utils.dart';
 import '../../../domain/models/ranking_models.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/widgets.dart';
@@ -144,13 +145,9 @@ class _RankingPageState extends ConsumerState<RankingPage>
   String _rankingTypeLabel(RankingType type, AppLocalizations l10n) {
     switch (type) {
       case RankingType.download:
-        return l10n.rankingTabDownload;
+        return l10n.rankingTabDownloadCount;
       case RankingType.rising:
-        return l10n.rankingTabRising;
-      case RankingType.update:
-        return l10n.rankingTabUpdate;
-      case RankingType.hot:
-        return l10n.rankingTabHot;
+        return l10n.rankingTabNewUpload;
     }
   }
 
@@ -298,7 +295,7 @@ class _RankingTabContent extends ConsumerWidget {
           slivers: [
             SliverPadding(
               padding: const EdgeInsets.all(AppSpacing.lg),
-              sliver: _AppsGrid(apps: state.data!.apps),
+              sliver: _AppsGrid(apps: state.data!.apps, type: type),
             ),
           ],
         ),
@@ -322,21 +319,34 @@ class _RankingTabContent extends ConsumerWidget {
 
 /// 应用网格（已迁移到共享 ResponsiveAppGrid）
 class _AppsGrid extends StatelessWidget {
-  const _AppsGrid({required this.apps});
+  const _AppsGrid({required this.apps, required this.type});
 
   final List<RankingAppInfo> apps;
+  final RankingType type;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return ResponsiveAppGrid<RankingAppInfo>(
       items: apps,
       itemBuilder: (ref, index, app, cardState) {
+        // 根据榜单类型决定显示上架时间还是下载量
+        final uploadTime = type == RankingType.rising
+            ? formatRelativeTime(app.createTime, l10n)
+            : null;
+        final downloadCountText = type == RankingType.download
+            ? formatDownloadCountText(app.downloadCount, l10n)
+            : null;
+
         return AppCard(
           appId: app.appId,
           name: app.name,
           description: app.description,
           iconUrl: app.icon,
           rank: app.rank,
+          uploadTime: uploadTime,
+          downloadCountText: downloadCountText,
           buttonState: cardState.buttonState,
           progress: cardState.progress,
           isInstalling: cardState.isInstalling,

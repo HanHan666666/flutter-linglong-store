@@ -11,11 +11,9 @@ void main() {
     group('RankingType', () {
       test('should have correct enum values', () {
         // Assert
-        expect(RankingType.values.length, equals(4));
+        expect(RankingType.values.length, equals(2));
         expect(RankingType.download.code, equals('download'));
         expect(RankingType.rising.code, equals('rising'));
-        expect(RankingType.update.code, equals('update'));
-        expect(RankingType.hot.code, equals('hot'));
       });
     });
 
@@ -99,10 +97,10 @@ void main() {
         const data = RankingData(type: RankingType.download, apps: []);
 
         // Act
-        final newData = data.copyWith(type: RankingType.hot);
+        final newData = data.copyWith(type: RankingType.rising);
 
         // Assert
-        expect(newData.type, equals(RankingType.hot));
+        expect(newData.type, equals(RankingType.rising));
         expect(newData.apps, isEmpty);
       });
     });

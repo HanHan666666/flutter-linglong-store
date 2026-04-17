@@ -4,17 +4,11 @@ part 'ranking_models.freezed.dart';
 
 /// 排行榜类型
 enum RankingType {
-  /// 下载榜
-  download('download'),
-
-  /// 新秀榜
+  /// 最新上架榜
   rising('rising'),
 
-  /// 更新榜
-  update('update'),
-
-  /// 热门榜
-  hot('hot');
+  /// 下载量榜
+  download('download');
 
   const RankingType(this.code);
 
@@ -35,6 +29,7 @@ sealed class RankingAppInfo with _$RankingAppInfo {
     String? size,
     double? rating,
     int? downloadCount,
+    String? createTime, // 上架时间（新增）
     required int rank,
     @Default(false) bool isInstalled,
     @Default(false) bool hasUpdate,

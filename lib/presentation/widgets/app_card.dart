@@ -39,6 +39,8 @@ class AppCard extends StatefulWidget {
     this.progress = 0.0,
     this.isInstalling = false,
     this.rank,
+    this.uploadTime,      // 上架时间文本（新增）
+    this.downloadCountText, // 下载量文本（新增）
     this.type = AppCardType.default_,
     this.isLoading = false,
     this.onTap,
@@ -55,6 +57,8 @@ class AppCard extends StatefulWidget {
       progress = 0.0,
       isInstalling = false,
       rank = null,
+      uploadTime = null,
+      downloadCountText = null,
       isLoading = true,
       onTap = null,
       onPrimaryPressed = null,
@@ -68,6 +72,8 @@ class AppCard extends StatefulWidget {
   final double progress;
   final bool isInstalling;
   final int? rank;
+  final String? uploadTime;       // 上架时间（相对时间或完整日期）
+  final String? downloadCountText; // 下载量文本（如"下载 1,234次")
   final AppCardType type;
   final bool isLoading;
   final VoidCallback? onTap;
@@ -244,6 +250,45 @@ class _AppCardState extends State<AppCard> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
+        // 上架时间/下载量展示（仅在排行榜页面使用）
+        if (widget.uploadTime != null || widget.downloadCountText != null) ...[
+          const SizedBox(height: 2),
+          Row(
+            children: [
+              if (widget.uploadTime != null)
+                Expanded(
+                  child: Semantics(
+                    label: widget.uploadTime!,
+                    child: Text(
+                      widget.uploadTime!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.appColors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              if (widget.downloadCountText != null)
+                Expanded(
+                  child: Semantics(
+                    label: widget.downloadCountText!,
+                    child: Text(
+                      widget.downloadCountText!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.appColors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ],
     );
   }

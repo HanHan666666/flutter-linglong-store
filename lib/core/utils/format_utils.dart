@@ -1,3 +1,5 @@
+import '../i18n/l10n/app_localizations.dart';
+
 /// 格式化工具
 class FormatUtils {
   FormatUtils._();
@@ -65,4 +67,47 @@ class FormatUtils {
     }
     return '${(bytes / _bytesPerKilobyte).toStringAsFixed(2)} KB';
   }
+}
+
+/// 格式化上架时间为相对时间
+///
+/// 规则：
+/// - < 24小时：显示"X小时前上架"
+/// - < 7天：显示"X天前上架"
+/// - >= 7天：显示"YYYY-MM-DD上架"
+///
+/// 返回 null 表示无有效时间
+String? formatRelativeTime(String? createTime, AppLocalizations l10n) {
+  if (createTime == null) return null;
+
+  final parsed = DateTime.tryParse(createTime);
+  if (parsed == null) return null;
+
+  final now = DateTime.now();
+  final difference = now.difference(parsed);
+
+  if (difference.inHours < 24) {
+    return l10n.uploadedXHoursAgo(difference.inHours);
+  } else if (difference.inDays < 7) {
+    return l10n.uploadedXDaysAgo(difference.inDays);
+  } else {
+    final dateStr = parsed.toIso8601String().split('T')[0];
+    return l10n.uploadedOnDate(dateStr);
+  }
+}
+
+/// 格式化下载量显示
+///
+/// 格式："下载 XXX次"（使用千位分隔符）
+///
+/// 返回 null 表示无有效下载量
+String? formatDownloadCountText(int? count, AppLocalizations l10n) {
+  if (count == null || count <= 0) return null;
+
+  final formatted = count.toString().replaceAllMapped(
+    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+    (Match m) => '${m[1]},',
+  );
+
+  return l10n.downloadedXTimes(formatted);
 }

@@ -713,5 +713,39 @@
   "noRecommend": "暂无推荐",
   "installTimeout": "安装超时：长时间未收到进度更新",
   "loadingInstalledApps": "正在加载已安装应用...",
-  "appDescriptionPlaceholder": "应用描述"
+  "appDescriptionPlaceholder": "应用描述",
+  "rankingTabNewUpload": "最新上架榜",
+  "rankingTabDownloadCount": "下载量榜",
+  "uploadedXHoursAgo": "{count}小时前上架",
+  "@uploadedXHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadedXDaysAgo": "{count}天前上架",
+  "@uploadedXDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadedOnDate": "{date}上架",
+  "@uploadedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedXTimes": "下载 {count}次",
+  "@downloadedXTimes": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  }
 }

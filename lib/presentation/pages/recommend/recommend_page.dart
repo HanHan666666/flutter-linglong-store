@@ -206,12 +206,10 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
           padding: const EdgeInsets.all(AppSpacing.lg),
           sliver: _AppsGrid(apps: state.data!.apps.items),
         ),
-        SliverToBoxAdapter(
-          child: _RecommendListFooter(
-            isLoadingMore: state.isLoadingMore,
-            hasMore: state.data!.apps.hasMore,
-            hasItems: state.data!.apps.items.isNotEmpty,
-          ),
+        PaginationFooterSliver(
+          isLoadingMore: state.isLoadingMore,
+          hasMore: state.data!.apps.hasMore,
+          hasItems: state.data!.apps.items.isNotEmpty,
         ),
       ],
     );
@@ -739,56 +737,6 @@ class _AppsGrid extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _RecommendListFooter extends StatelessWidget {
-  const _RecommendListFooter({
-    required this.isLoadingMore,
-    required this.hasMore,
-    required this.hasItems,
-  });
-
-  final bool isLoadingMore;
-  final bool hasMore;
-  final bool hasItems;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
-    if (!hasItems) {
-      return const SizedBox.shrink();
-    }
-
-    if (isLoadingMore) {
-      return Container(
-        padding: const EdgeInsets.only(bottom: AppSpacing.xl),
-        child: Center(
-          child: Text(
-            l10n.loading,
-            style: TextStyle(
-              fontSize: 14,
-              color: context.appColors.textSecondary,
-            ),
-          ),
-        ),
-      );
-    }
-
-    if (hasMore) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xl),
-      child: Center(
-        child: Text(
-          l10n.noMoreData,
-          style: TextStyle(fontSize: 14, color: context.appColors.textTertiary),
-        ),
-      ),
     );
   }
 }

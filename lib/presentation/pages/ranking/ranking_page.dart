@@ -298,6 +298,12 @@ class _RankingTabContent extends ConsumerWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               sliver: _AppsGrid(apps: state.data!.apps, type: type),
             ),
+            // 排行榜固定展示前 100 条，footer 始终以整行形式提示列表结束。
+            PaginationFooterSliver(
+              isLoadingMore: false,
+              hasMore: false,
+              hasItems: state.data!.apps.isNotEmpty,
+            ),
           ],
         ),
       ),

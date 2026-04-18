@@ -35,8 +35,8 @@ typedef ResponsiveGridItemBuilder<T> =
 ///
 /// 支持两种模式：
 /// 1. **简单模式**：仅传入 [items] 和 [itemBuilder]，渲染固定列表。
-/// 2. **分页模式**：额外传入 [isLoadingMore] 和 [hasMore]，
-///    自动在底部追加 [LoadingMoreIndicator] 或 [NoMoreDataIndicator]。
+/// 2. **分页模式**：由页面层在 grid 后拼接 [PaginationFooterSliver]，
+///    保证 loading 和 no-more footer 以整行 sliver 居中显示。
 ///
 /// [itemBuilder] 会接收 [WidgetRef]，方便调用 Provider 相关操作。
 class ResponsiveAppGrid<T> extends ConsumerWidget {
@@ -46,8 +46,6 @@ class ResponsiveAppGrid<T> extends ConsumerWidget {
     this.mainAxisSpacing = AppSpacing.sm,
     this.crossAxisSpacing = AppSpacing.sm,
     this.childAspectRatio,
-    this.isLoadingMore = false,
-    this.hasMore = false,
     this.emptyTitle,
     this.emptyDescription,
     super.key,
@@ -69,12 +67,6 @@ class ResponsiveAppGrid<T> extends ConsumerWidget {
   ///
   /// 若为 null，则根据当前列数和卡片高度自动计算。
   final double? childAspectRatio;
-
-  /// 是否正在加载更多（分页模式下有效）。
-  final bool isLoadingMore;
-
-  /// 是否还有更多数据（分页模式下有效）。
-  final bool hasMore;
 
   /// 空数据时的标题（简单模式下有效）。
   final String? emptyTitle;
@@ -126,13 +118,10 @@ class ResponsiveAppGrid<T> extends ConsumerWidget {
     // 预先计算所有卡片状态，避免 builder 循环中重复调用。
     final resolvedStates = items
         .map(
-          (item) => cardStateIndex.resolve(
-            appId: (item as dynamic).appId as String,
-          ),
+          (item) =>
+              cardStateIndex.resolve(appId: (item as dynamic).appId as String),
         )
         .toList(growable: false);
-
-    final extraCount = (isLoadingMore || !hasMore) ? 1 : 0;
 
     return SliverLayoutBuilder(
       builder: (context, constraints) {
@@ -153,70 +142,61 @@ class ResponsiveAppGrid<T> extends ConsumerWidget {
             childAspectRatio: aspectRatio,
           ),
           delegate: SliverChildBuilderDelegate((context, index) {
-            if (index < items.length) {
-              return itemBuilder(
-                ref,
-                index,
-                items[index],
-                resolvedStates[index],
-              );
-            }
-            // 分页模式下：加载更多或无更多数据指示器
-            if (isLoadingMore) {
-              return const LoadingMoreIndicator();
-            }
-            if (!hasMore && items.isNotEmpty) {
-              return const NoMoreDataIndicator();
-            }
-            return null;
-          }, childCount: items.length + extraCount),
+            return itemBuilder(ref, index, items[index], resolvedStates[index]);
+          }, childCount: items.length),
         );
       },
     );
   }
 }
 
-/// 加载更多指示器。
+/// 分页尾部 sliver。
 ///
-/// 居中显示圆形进度指示器。
-class LoadingMoreIndicator extends StatelessWidget {
-  const LoadingMoreIndicator({super.key});
+/// footer 必须独立于 grid 渲染，避免被当成一个卡片格子占位。
+class PaginationFooterSliver extends StatelessWidget {
+  const PaginationFooterSliver({
+    required this.isLoadingMore,
+    required this.hasMore,
+    required this.hasItems,
+    this.bottomPadding = AppSpacing.xl,
+    super.key,
+  });
+
+  final bool isLoadingMore;
+  final bool hasMore;
+  final bool hasItems;
+  final double bottomPadding;
 
   @override
   Widget build(BuildContext context) {
+    if (!hasItems) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
     final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Center(
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottomPadding),
         child: SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            semanticsLabel: l10n.loading,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// 没有更多数据指示器。
-///
-/// 居中显示"没有更多了"文本。
-class NoMoreDataIndicator extends StatelessWidget {
-  const NoMoreDataIndicator({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Center(
-        child: Text(
-          l10n.noMore,
-          style: AppTextStyles.caption.copyWith(
-            color: context.appColors.textTertiary,
+          width: double.infinity,
+          child: Center(
+            child: switch ((isLoadingMore, hasMore)) {
+              (true, _) => SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  semanticsLabel: l10n.loading,
+                ),
+              ),
+              (false, false) => Text(
+                l10n.noMore,
+                style: AppTextStyles.caption.copyWith(
+                  color: context.appColors.textTertiary,
+                ),
+              ),
+              _ => const SizedBox.shrink(),
+            },
           ),
         ),
       ),

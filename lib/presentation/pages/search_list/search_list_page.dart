@@ -135,12 +135,13 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
           // 搜索结果网格
           SliverPadding(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            sliver: _AppsGrid(
-              apps: state.results,
-              isLoadingMore: state.isLoadingMore,
-              hasMore: state.hasMore,
-              total: state.total,
-            ),
+            sliver: _AppsGrid(apps: state.results),
+          ),
+          // 搜索结果分页 footer 独立成整行 sliver，避免占一个卡片坑位。
+          PaginationFooterSliver(
+            isLoadingMore: state.isLoadingMore,
+            hasMore: state.hasMore,
+            hasItems: state.results.isNotEmpty,
           ),
         ],
       ),
@@ -235,25 +236,15 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
 
 /// 应用网格（已迁移到共享 ResponsiveAppGrid）
 class _AppsGrid extends StatelessWidget {
-  const _AppsGrid({
-    required this.apps,
-    required this.isLoadingMore,
-    required this.hasMore,
-    required this.total,
-  });
+  const _AppsGrid({required this.apps});
 
   final List<RecommendAppInfo> apps;
-  final bool isLoadingMore;
-  final bool hasMore;
-  final int total;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return ResponsiveAppGrid<RecommendAppInfo>(
       items: apps,
-      isLoadingMore: isLoadingMore,
-      hasMore: hasMore,
       emptyTitle: l10n?.searchNotFound ?? '未找到相关应用',
       emptyDescription: l10n?.searchTryOtherKeywords ?? '尝试使用其他关键词搜索',
       itemBuilder: (ref, index, app, cardState) {

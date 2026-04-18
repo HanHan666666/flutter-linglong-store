@@ -138,11 +138,13 @@ class _AllAppsPageState extends ConsumerState<AllAppsPage>
           // 应用卡片网格
           SliverPadding(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            sliver: _AppsGrid(
-              apps: state.data!.apps.items,
-              isLoadingMore: state.isLoadingMore,
-              hasMore: state.data!.apps.hasMore,
-            ),
+            sliver: _AppsGrid(apps: state.data!.apps.items),
+          ),
+          // 分页 footer 必须独立成整行 sliver，不能占用卡片格子。
+          PaginationFooterSliver(
+            isLoadingMore: state.isLoadingMore,
+            hasMore: state.data!.apps.hasMore,
+            hasItems: state.data!.apps.items.isNotEmpty,
           ),
         ],
       ),
@@ -174,22 +176,14 @@ class _AllAppsPageState extends ConsumerState<AllAppsPage>
 
 /// 应用网格（已迁移到共享 ResponsiveAppGrid）
 class _AppsGrid extends StatelessWidget {
-  const _AppsGrid({
-    required this.apps,
-    required this.isLoadingMore,
-    required this.hasMore,
-  });
+  const _AppsGrid({required this.apps});
 
   final List<RecommendAppInfo> apps;
-  final bool isLoadingMore;
-  final bool hasMore;
 
   @override
   Widget build(BuildContext context) {
     return ResponsiveAppGrid<RecommendAppInfo>(
       items: apps,
-      isLoadingMore: isLoadingMore,
-      hasMore: hasMore,
       itemBuilder: (ref, index, app, cardState) {
         return AppCard(
           appId: app.appId,

@@ -322,3 +322,4 @@ Semantics(
 - 2026-03-25：全部应用页分类筛选约定——统一走 `/visit/getSearchAppList`；分类值必须传 `getDisCategoryList` 返回的真实 `categoryId`，不能再把它当成 `menuCode` 传给 `/app/sidebar/apps`；"全部"态传 `categoryId: null`；全部应用页分页大小与 Rust 旧版对齐为 `30`；`SearchAppListRequest.categoryId` 标注 `@JsonKey(includeIfNull: false)`，`null` 时不参与 JSON 序列化，禁止改回 `includeIfNull: true` 或移除该注解。
 - 2026-04-09：侧边栏 KeepAlive 页面切换时，隐藏页不能只更新 `isVisible` 做副作用暂停；`KeepAlivePageWrapper` 必须同时把隐藏页移出绘制树、命中测试树、焦点树和 ticker 树（如 `Offstage + IgnorePointer + ExcludeFocus + TickerMode`），否则新页面骨架屏会与旧页面内容重叠透出，且隐藏页仍可能偷走键盘焦点。
 - 2026-04-18：所有分页列表的 loading / “没有更多了” footer 必须独立成整行 sliver（统一复用 `PaginationFooterSliver`）；禁止再把 footer 当成 `ResponsiveAppGrid` 或其他 `SliverGrid` 的最后一个 item 塞进网格，否则视觉上会像占用一个 `AppCard` 坑位并导致居中失真。
+- 2026-04-18：全局 `Tooltip` 悬停延迟统一由 `AppTheme.tooltipTheme.waitDuration = 800ms` 控制；禁止在业务组件里继续零散手写 `waitDuration: 300/500ms` 之类局部覆盖，除非有明确的特例交互需求并写清原因。

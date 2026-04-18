@@ -336,9 +336,7 @@ class _WindowControls extends StatelessWidget {
         _WindowButton(
           icon: isMaximized ? Icons.filter_none : Icons.crop_square,
           onPressed: onMaximize,
-          tooltip: isMaximized
-              ? l10n.restore
-              : l10n.maximize,
+          tooltip: isMaximized ? l10n.restore : l10n.maximize,
         ),
         _WindowButton(
           icon: Icons.close,
@@ -379,7 +377,6 @@ class _WindowButtonState extends State<_WindowButton> {
       label: widget.tooltip,
       child: Tooltip(
         message: widget.tooltip,
-        waitDuration: const Duration(milliseconds: 500),
         child: MouseRegion(
           onEnter: (_) => setState(() => _isHovered = true),
           onExit: (_) => setState(() => _isHovered = false),

@@ -343,7 +343,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                       Expanded(
                         child: Tooltip(
                           message: installTask.displayMessage!,
-                          waitDuration: const Duration(milliseconds: 500),
                           child: Text(
                             installTask.displayMessage!,
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -363,7 +362,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                         child: Tooltip(
                           message:
                               l10n?.copyErrorMessage ?? 'Copy error message',
-                          waitDuration: const Duration(milliseconds: 500),
                           child: TextButton(
                             onPressed: () {
                               Clipboard.setData(
@@ -714,10 +712,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                   children: [
                     Text(
                       l10n.versionHistory,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     if (isLoading) ...[
                       const SizedBox(width: 12),
@@ -738,11 +735,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                         .read(appDetailProvider(widget.appId).notifier)
                         .toggleVersionList();
                   },
-                  child: Text(
-                    isExpanded
-                        ? (l10n.collapse ?? '收起')
-                        : (l10n.expandAll ?? '展开全部'),
-                  ),
+                  child: Text(isExpanded ? l10n.collapse : l10n.expandAll),
                 ),
             ],
           ),
@@ -755,7 +748,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               children: [
                 Expanded(
                   child: Text(
-                    l10n.versionListLoadFailed ?? '版本列表加载失败，请重试',
+                    l10n.versionListLoadFailed,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.error,
                     ),
@@ -767,13 +760,13 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                         .read(appDetailProvider(widget.appId).notifier)
                         .retryVersions();
                   },
-                  child: Text(l10n.retry ?? '重试'),
+                  child: Text(l10n.retry),
                 ),
               ],
             )
           else if (versionsError != null)
             Text(
-              l10n.versionListUpdateFailed ?? '版本列表更新失败，显示最近一次结果',
+              l10n.versionListUpdateFailed,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.error,
               ),
@@ -783,7 +776,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
           // 版本列表（使用计算后的 displayVersions）
           if (displayVersions.isEmpty && !isLoading)
-            Text(l10n.noVersionHistory ?? '暂无版本历史')
+            Text(l10n.noVersionHistory)
           else
             ListView.builder(
               shrinkWrap: true,
@@ -816,11 +809,11 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     subtitleParts.isEmpty ? '--' : subtitleParts.join(' · '),
                   ),
                   trailing: isInstalledVersion
-                      ? Text(l10n.installedBadge ?? '已安装')
+                      ? Text(l10n.installedBadge)
                       : TextButton(
                           onPressed: () =>
                               _installVersion(currentApp!, version.versionNo),
-                          child: Text(l10n.install ?? '安装'),
+                          child: Text(l10n.install),
                         ),
                 );
               },
@@ -1088,10 +1081,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       tooltip: l10n?.shareLink ?? '分享',
       icon: const Icon(Icons.share_outlined, size: 20),
       // 与 InstallButton.large (40px) 高度对齐
-      constraints: const BoxConstraints(
-        minWidth: 40,
-        minHeight: 40,
-      ),
+      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
     );
   }
 
@@ -1179,16 +1169,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       await cliRepo.createDesktopShortcut(app.appId);
 
       if (!currentContext.mounted) return;
-      showAppSuccess(
-        currentContext,
-        l10n?.shortcutCreated ?? '快捷方式已创建',
-      );
+      showAppSuccess(currentContext, l10n?.shortcutCreated ?? '快捷方式已创建');
     } catch (e) {
       if (!currentContext.mounted) return;
       showAppError(
         currentContext,
-        l10n?.shortcutCreateFailed(e.toString()) ??
-            '创建失败: $e',
+        l10n?.shortcutCreateFailed(e.toString()) ?? '创建失败: $e',
       );
     }
   }

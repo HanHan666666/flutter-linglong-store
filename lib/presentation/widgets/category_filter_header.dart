@@ -141,7 +141,6 @@ class CategoryFilterHeaderBox extends StatelessWidget {
               final category = categories[index];
               return Tooltip(
                 message: category.name,
-                waitDuration: const Duration(milliseconds: 300),
                 child: _CategoryChip(
                   label: category.name,
                   count: showCount ? category.appCount : null,
@@ -196,7 +195,6 @@ class CategoryFilterHeaderBox extends StatelessWidget {
                 final category = categories[index];
                 return Tooltip(
                   message: category.name,
-                  waitDuration: const Duration(milliseconds: 300),
                   child: _CategoryChip(
                     label: category.name,
                     count: showCount ? category.appCount : null,
@@ -298,76 +296,76 @@ class _CategoryChipState extends State<_CategoryChip> {
                   minWidth: showBadge ? 108 : 92,
                   minHeight: 48,
                 ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        widget.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.visible,
-                        softWrap: false,
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.caption.copyWith(
-                          // 分类胶囊按钮使用紧凑行高，避免中文在按钮内视觉偏上。
-                          // caption = 13px，明确用于胶囊标签
-                          height: 1,
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.w500,
-                          color: isSelected
-                              ? (isDark
-                                    ? const Color(0xFFE4E4E4)
-                                    : const Color(0xFF334155))
-                              : context.appColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    if (showBadge) ...[
-                      const SizedBox(width: 10),
-                      AnimatedContainer(
-                        duration: AppAnimation.fast,
-                        curve: AppAnimation.ease,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? (isDark
-                                    ? const Color(0xFF3A3A3A)
-                                    : const Color(0xFFE2E8F0))
-                              : (isDark
-                                    ? const Color(0xFF313131)
-                                    : const Color(0xFFF1F5F9)),
-                          borderRadius: AppRadius.fullRadius,
-                        ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
                         child: Text(
-                          '${widget.count}',
+                          widget.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.visible,
+                          softWrap: false,
+                          textAlign: TextAlign.center,
                           style: AppTextStyles.caption.copyWith(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isDark
-                                ? const Color(0xFF9A9A9A)
-                                : const Color(0xFF475569),
+                            // 分类胶囊按钮使用紧凑行高，避免中文在按钮内视觉偏上。
+                            // caption = 13px，明确用于胶囊标签
+                            height: 1,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                            color: isSelected
+                                ? (isDark
+                                      ? const Color(0xFFE4E4E4)
+                                      : const Color(0xFF334155))
+                                : context.appColors.textPrimary,
                           ),
                         ),
                       ),
+                      if (showBadge) ...[
+                        const SizedBox(width: 10),
+                        AnimatedContainer(
+                          duration: AppAnimation.fast,
+                          curve: AppAnimation.ease,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? (isDark
+                                      ? const Color(0xFF3A3A3A)
+                                      : const Color(0xFFE2E8F0))
+                                : (isDark
+                                      ? const Color(0xFF313131)
+                                      : const Color(0xFFF1F5F9)),
+                            borderRadius: AppRadius.fullRadius,
+                          ),
+                          child: Text(
+                            '${widget.count}',
+                            style: AppTextStyles.caption.copyWith(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? const Color(0xFF9A9A9A)
+                                  : const Color(0xFF475569),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
       ),
-    ),
     );
   }
 }

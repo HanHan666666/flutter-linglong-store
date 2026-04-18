@@ -7,6 +7,10 @@ import 'app_spacing.dart';
 class AppTheme {
   AppTheme._();
 
+  static const _tooltipTheme = TooltipThemeData(
+    waitDuration: Duration(milliseconds: 800),
+  );
+
   /// 零动画页面转场构建器
   static const _noTransitionTheme = PageTransitionsTheme(
     builders: {
@@ -133,6 +137,8 @@ class AppTheme {
       color: AppColors.textSecondary,
       size: AppSpacing.iconSize,
     ),
+
+    tooltipTheme: _tooltipTheme,
 
     // TabBar 主题
     tabBarTheme: TabBarThemeData(
@@ -316,6 +322,8 @@ class AppTheme {
         color: palette.textSecondary,
         size: AppSpacing.iconSize,
       ),
+
+      tooltipTheme: _tooltipTheme,
 
       tabBarTheme: TabBarThemeData(
         labelColor: AppColors.primary,

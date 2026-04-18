@@ -2,6 +2,7 @@
 
 > A modern Linux desktop application store built with Flutter - migrating from Tauri/React with pixel-perfect UI consistency and equivalent business logic.
 
+![screenshot](assets/image.png)
 ## 🌟 Project Highlights
 
 - **Linux Desktop Focus**: Dedicated to improving Linux desktop app ecosystem

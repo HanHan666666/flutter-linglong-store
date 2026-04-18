@@ -9,7 +9,7 @@
 本仓库是玲珑应用商店从旧版 Tauri/React 迁移到 Flutter 的实现，目标是 **UI 像素级一致** 与 **业务逻辑等价**。
 
 **[English Version](README_EN.md) | 中文文档**
-
+![截图](assets/image.png)
 ## 环境要求
 
 - Flutter SDK (最新稳定版)

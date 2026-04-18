@@ -315,6 +315,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get officialWebsite => 'Official Website';
 
   @override
+  String get communityExchange => 'Community';
+
+  @override
   String get feedbackTitle => 'Feedback';
 
   @override

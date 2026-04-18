@@ -680,6 +680,12 @@ abstract class AppLocalizations {
   /// **'官网'**
   String get officialWebsite;
 
+  /// No description provided for @communityExchange.
+  ///
+  /// In zh, this message translates to:
+  /// **'社区交流'**
+  String get communityExchange;
+
   /// No description provided for @feedbackTitle.
   ///
   /// In zh, this message translates to:

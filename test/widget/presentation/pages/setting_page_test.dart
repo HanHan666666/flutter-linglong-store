@@ -38,4 +38,27 @@ void main() {
       expect(find.text('可选仓库'), findsNothing);
     },
   );
+
+  testWidgets('setting page about section renders community exchange link', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: const Scaffold(body: SettingPage()),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('社区交流'), findsOneWidget);
+  });
 }

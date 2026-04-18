@@ -691,6 +691,14 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   icon: const Icon(Icons.language, size: 18),
                   label: Text(l10n.officialWebsite),
                 ),
+                const SizedBox(width: 16),
+                // 社区交流入口与其他关于区外链保持同级展示。
+                TextButton.icon(
+                  onPressed: () =>
+                      _openUrl('https://bbs.deepin.org.cn/module/detail/230'),
+                  icon: const Icon(Icons.forum_outlined, size: 18),
+                  label: Text(l10n.communityExchange),
+                ),
               ],
             ),
           ],

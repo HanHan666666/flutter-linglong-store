@@ -306,6 +306,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get officialWebsite => '官网';
 
   @override
+  String get communityExchange => '社区交流';
+
+  @override
   String get feedbackTitle => '意见反馈';
 
   @override

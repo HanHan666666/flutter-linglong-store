@@ -516,13 +516,18 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     final l10n = AppLocalizations.of(context);
 
     // 优先使用长描述（detailDescription），为空时降级为简短描述
-    final description =
+    // 将 HTML <br> 标签转换为换行符，保证换行正确渲染
+    final rawDescription =
         detailState.appDetail?.detailDescription?.isNotEmpty == true
         ? detailState.appDetail!.detailDescription!
         : (detailState.appDetail?.description ??
               app.description ??
               l10n?.noDescription ??
               '暂无描述');
+    final description = rawDescription.replaceAll(
+      RegExp(r'<br\s*/?>', caseSensitive: false),
+      '\n',
+    );
 
     return Padding(
       padding: const EdgeInsets.all(16.0),

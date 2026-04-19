@@ -403,6 +403,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get installedBadge => '已安装';
 
   @override
+  String get versionInstallTargetMissing => '未找到对应已安装版本，请刷新后重试';
+
+  @override
   String uninstallFailed(String result) {
     return '卸载失败: $result';
   }

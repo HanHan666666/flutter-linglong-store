@@ -185,6 +185,7 @@
   "appNotFound": "App information not found",
   "noVersionHistory": "No version history",
   "installedBadge": "Installed",
+  "versionInstallTargetMissing": "The installed version could not be found. Refresh and try again.",
   "uninstallFailed": "Uninstall failed: {result}",
   "@uninstallFailed": {
     "placeholders": {

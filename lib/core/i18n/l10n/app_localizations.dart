@@ -854,6 +854,12 @@ abstract class AppLocalizations {
   /// **'已安装'**
   String get installedBadge;
 
+  /// No description provided for @versionInstallTargetMissing.
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到对应已安装版本，请刷新后重试'**
+  String get versionInstallTargetMissing;
+
   /// No description provided for @uninstallFailed.
   ///
   /// In zh, this message translates to:

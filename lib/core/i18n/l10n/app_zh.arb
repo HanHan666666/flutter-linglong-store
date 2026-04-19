@@ -185,6 +185,7 @@
   "appNotFound": "未找到应用信息",
   "noVersionHistory": "暂无版本历史",
   "installedBadge": "已安装",
+  "versionInstallTargetMissing": "未找到对应已安装版本，请刷新后重试",
   "uninstallFailed": "卸载失败: {result}",
   "@uninstallFailed": {
     "placeholders": {

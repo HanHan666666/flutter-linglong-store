@@ -416,6 +416,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get installedBadge => 'Installed';
 
   @override
+  String get versionInstallTargetMissing =>
+      'The installed version could not be found. Refresh and try again.';
+
+  @override
   String uninstallFailed(String result) {
     return 'Uninstall failed: $result';
   }

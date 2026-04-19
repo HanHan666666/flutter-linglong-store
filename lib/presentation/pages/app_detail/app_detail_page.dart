@@ -796,6 +796,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 ];
 
                 return ListTile(
+                  key: Key('app-detail-version-row-${version.versionNo}'),
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(
                     isInstalledVersion ? Icons.check_circle : Icons.history,
@@ -807,13 +808,19 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                   subtitle: Text(
                     subtitleParts.isEmpty ? '--' : subtitleParts.join(' · '),
                   ),
-                  trailing: isInstalledVersion
-                      ? Text(l10n.installedBadge)
-                      : TextButton(
-                          onPressed: () =>
-                              _installVersion(currentApp!, version.versionNo),
-                          child: Text(l10n.install),
-                        ),
+                  trailing: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 220),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: _buildVersionActionArea(
+                        context,
+                        currentApp!,
+                        detailState,
+                        version.versionNo,
+                        isInstalledVersion: isInstalledVersion,
+                      ),
+                    ),
+                  ),
                 );
               },
             ),
@@ -1068,6 +1075,200 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           icon: app.icon,
           version: version,
         );
+  }
+
+  Widget _buildVersionActionArea(
+    BuildContext context,
+    InstalledApp app,
+    AppDetailState detailState,
+    String version, {
+    required bool isInstalledVersion,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+
+    if (!isInstalledVersion) {
+      return _buildVersionActionButton(
+        context,
+        key: Key('app-detail-version-install-$version'),
+        label: l10n.install,
+        onPressed: () => _installVersion(app, version),
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildInstalledVersionBadge(context, version),
+        const SizedBox(width: 8),
+        _buildVersionActionButton(
+          context,
+          key: Key('app-detail-version-uninstall-$version'),
+          label: l10n.uninstall,
+          isDestructive: true,
+          onPressed: () => _uninstallVersion(detailState, version),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInstalledVersionBadge(BuildContext context, String version) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return Container(
+      key: Key('app-detail-version-installed-badge-$version'),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        l10n.installedBadge,
+        style: theme.textTheme.labelMedium?.copyWith(
+          color: theme.colorScheme.primary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVersionActionButton(
+    BuildContext context, {
+    required Key key,
+    required String label,
+    required VoidCallback onPressed,
+    bool isDestructive = false,
+  }) {
+    final theme = Theme.of(context);
+    final buttonStyle = isDestructive
+        ? OutlinedButton.styleFrom(
+            minimumSize: const Size(72, 32),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            side: BorderSide(color: theme.colorScheme.error),
+            foregroundColor: theme.colorScheme.error,
+            textStyle: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          )
+        : FilledButton.styleFrom(
+            minimumSize: const Size(72, 32),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            textStyle: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          );
+
+    final button = isDestructive
+        ? OutlinedButton(
+            key: key,
+            onPressed: onPressed,
+            style: buttonStyle,
+            child: Text(label),
+          )
+        : FilledButton(
+            key: key,
+            onPressed: onPressed,
+            style: buttonStyle,
+            child: Text(label),
+          );
+
+    return SizedBox(height: 32, child: button);
+  }
+
+  Future<void> _uninstallVersion(
+    AppDetailState detailState,
+    String version,
+  ) async {
+    final targetApp = _resolveInstalledVersionTarget(detailState, version);
+    if (targetApp == null) {
+      if (!mounted) return;
+      showAppError(
+        context,
+        AppLocalizations.of(context)?.versionInstallTargetMissing ??
+            '未找到对应已安装版本，请刷新后重试',
+      );
+      return;
+    }
+
+    await _showUninstallDialog(targetApp);
+  }
+
+  InstalledApp? _resolveInstalledVersionTarget(
+    AppDetailState detailState,
+    String version,
+  ) {
+    final currentApp = detailState.app;
+    if (currentApp == null) {
+      AppLogger.warning('[AppDetail] 版本卸载失败：当前应用详情为空');
+      return null;
+    }
+
+    final matches = ref
+        .read(installedAppsProvider)
+        .apps
+        .where((app) => app.appId == currentApp.appId && app.version == version)
+        .toList();
+
+    if (matches.isEmpty) {
+      AppLogger.warning(
+        '[AppDetail] 版本卸载失败：未找到目标安装实例 ${currentApp.appId}@$version',
+      );
+      return null;
+    }
+
+    if (matches.length == 1) {
+      return matches.first;
+    }
+
+    final preferredArch = detailState.appDetail?.arch ?? currentApp.arch;
+    final preferredChannel =
+        detailState.appDetail?.channel ?? currentApp.channel;
+    final preferredModule = detailState.appDetail?.module ?? currentApp.module;
+
+    matches.sort((left, right) {
+      final leftScore = _scoreInstalledVersionTarget(
+        left,
+        preferredArch: preferredArch,
+        preferredChannel: preferredChannel,
+        preferredModule: preferredModule,
+      );
+      final rightScore = _scoreInstalledVersionTarget(
+        right,
+        preferredArch: preferredArch,
+        preferredChannel: preferredChannel,
+        preferredModule: preferredModule,
+      );
+      return rightScore.compareTo(leftScore);
+    });
+
+    AppLogger.warning(
+      '[AppDetail] 版本卸载命中多个安装实例，已选择上下文最优实例: '
+      '${currentApp.appId}@$version (${matches.length} candidates)',
+    );
+    return matches.first;
+  }
+
+  int _scoreInstalledVersionTarget(
+    InstalledApp app, {
+    String? preferredArch,
+    String? preferredChannel,
+    String? preferredModule,
+  }) {
+    var score = 0;
+    if (preferredArch != null && app.arch == preferredArch) {
+      score += 4;
+    }
+    if (preferredChannel != null && app.channel == preferredChannel) {
+      score += 2;
+    }
+    if (preferredModule != null && app.module == preferredModule) {
+      score += 1;
+    }
+    return score;
   }
 
   /// 构建分享按钮。

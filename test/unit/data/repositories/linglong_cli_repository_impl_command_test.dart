@@ -148,6 +148,10 @@ void main() {
           ),
         ),
       );
+
+      expect(executor.executeCalls, [
+        ['uninstall', 'com.browser.softedge.stable/138.0.3351.95'],
+      ]);
     });
   });
 }

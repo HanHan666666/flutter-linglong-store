@@ -207,7 +207,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           versionOptions: versionOptions,
           selectedVersion: selectedVersion,
           isLoading: detailState.isLoadingComments,
-          isSubmitting: detailState.isSubmittingComment,
           canSubmitComment: hasInstalledInstance,
           errorMessage: detailState.commentsError,
           onVersionChanged: (value) {
@@ -928,7 +927,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     return detailState.app?.version;
   }
 
-  Future<void> _submitComment(
+  Future<bool> _submitComment(
     BuildContext context,
     String remark,
     String? version,
@@ -938,21 +937,23 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           .read(appDetailProvider(widget.appId).notifier)
           .submitComment(remark, version: version);
       if (!context.mounted) {
-        return;
+        return false;
       }
       showAppNotification(
         context,
         AppLocalizations.of(context)?.commentSubmitSuccess ?? '评论已提交',
       );
+      return true;
     } catch (e) {
       if (!context.mounted) {
-        return;
+        return false;
       }
       showAppError(
         context,
         AppLocalizations.of(context)?.commentSubmitFailed(e.toString()) ??
             '评论提交失败: $e',
       );
+      return false;
     }
   }
 

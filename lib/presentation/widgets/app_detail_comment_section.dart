@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/models/app_comment.dart';
-import '../../core/i18n/l10n/app_localizations.dart';
+import '../../core/accessibility/a11y_focus_traversal.dart';
 import '../../core/config/theme.dart';
+import '../../core/i18n/l10n/app_localizations.dart';
+import '../../domain/models/app_comment.dart';
 
 class AppDetailCommentSection extends StatefulWidget {
   const AppDetailCommentSection({
@@ -10,7 +11,6 @@ class AppDetailCommentSection extends StatefulWidget {
     required this.versionOptions,
     required this.selectedVersion,
     required this.isLoading,
-    required this.isSubmitting,
     required this.canSubmitComment,
     required this.onSubmit,
     required this.onRetry,
@@ -23,10 +23,9 @@ class AppDetailCommentSection extends StatefulWidget {
   final List<String> versionOptions;
   final String? selectedVersion;
   final bool isLoading;
-  final bool isSubmitting;
   final bool canSubmitComment;
   final String? errorMessage;
-  final Future<void> Function(String remark, String? version) onSubmit;
+  final Future<bool> Function(String remark, String? version) onSubmit;
   final VoidCallback onRetry;
   final ValueChanged<String?>? onVersionChanged;
 
@@ -36,134 +35,41 @@ class AppDetailCommentSection extends StatefulWidget {
 }
 
 class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
-  static const int _collapsedVersionCount = 8;
-
-  final TextEditingController _commentController = TextEditingController();
-  String? _localSelectedVersion;
-  bool _isVersionExpanded = false;
-
-  String? get _effectiveSelectedVersion =>
-      _localSelectedVersion ?? widget.selectedVersion;
-
-  @override
-  void initState() {
-    super.initState();
-    _localSelectedVersion = widget.selectedVersion;
-  }
-
-  @override
-  void didUpdateWidget(covariant AppDetailCommentSection oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.selectedVersion != oldWidget.selectedVersion) {
-      _localSelectedVersion = widget.selectedVersion;
-    }
-  }
-
-  @override
-  void dispose() {
-    _commentController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _handleSubmit() async {
-    final remark = _commentController.text.trim();
-    if (remark.isEmpty) {
-      return;
-    }
-
-    await widget.onSubmit(remark, _effectiveSelectedVersion);
-    if (!mounted) {
-      return;
-    }
-    _commentController.clear();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final title = l10n.appComments;
-    final hint = l10n.commentInputHint;
     final emptyText = widget.canSubmitComment ? l10n.appCommentsEmpty : '暂无评论';
     final retryLabel = l10n.retry;
     final submitLabel = l10n.submitComment;
-    final versionLabel = l10n.commentVersionLabel;
     final anonymousLabel = l10n.anonymousComment;
     final helpfulLabel = l10n.commentHelpful;
     final notHelpfulLabel = l10n.commentNotHelpful;
-    final helperText = l10n.commentAnonymousHint;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            if (widget.canSubmitComment)
+              OutlinedButton.icon(
+                key: const ValueKey('app-detail-comment-launcher'),
+                onPressed: () => _showCommentDialog(context),
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: Text(submitLabel),
+              ),
+          ],
         ),
         const SizedBox(height: 12),
-        if (widget.canSubmitComment) ...[
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(
-                alpha: 0.28,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: theme.colorScheme.outlineVariant),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  key: const ValueKey('app-detail-comment-input'),
-                  controller: _commentController,
-                  minLines: 3,
-                  maxLines: 5,
-                  decoration: InputDecoration(
-                    hintText: hint,
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (widget.versionOptions.isNotEmpty) ...[
-                  Text(
-                    versionLabel,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildVersionPills(context),
-                  const SizedBox(height: 12),
-                ],
-                FilledButton(
-                  key: const ValueKey('app-detail-comment-submit'),
-                  onPressed: widget.isSubmitting ? null : _handleSubmit,
-                  child: widget.isSubmitting
-                      ? SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: theme.colorScheme.onPrimary,
-                          ),
-                        )
-                      : Text(submitLabel),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  helperText,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
         if (widget.isLoading && widget.comments.isEmpty)
           const Center(child: CircularProgressIndicator())
         else if (widget.errorMessage != null && widget.comments.isEmpty)
@@ -255,6 +161,159 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
               );
             },
           ),
+      ],
+    );
+  }
+
+  Future<void> _showCommentDialog(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      builder: (_) => A11yFocusScope(
+        debugLabel: 'AppDetailCommentDialog',
+        child: _CommentComposerDialog(
+          versionOptions: widget.versionOptions,
+          selectedVersion: widget.selectedVersion,
+          onSubmit: widget.onSubmit,
+          onVersionChanged: widget.onVersionChanged,
+        ),
+      ),
+    );
+  }
+}
+
+class _CommentComposerDialog extends StatefulWidget {
+  const _CommentComposerDialog({
+    required this.versionOptions,
+    required this.selectedVersion,
+    required this.onSubmit,
+    this.onVersionChanged,
+  });
+
+  final List<String> versionOptions;
+  final String? selectedVersion;
+  final Future<bool> Function(String remark, String? version) onSubmit;
+  final ValueChanged<String?>? onVersionChanged;
+
+  @override
+  State<_CommentComposerDialog> createState() => _CommentComposerDialogState();
+}
+
+class _CommentComposerDialogState extends State<_CommentComposerDialog> {
+  static const int _collapsedVersionCount = 8;
+
+  final TextEditingController _commentController = TextEditingController();
+  String? _localSelectedVersion;
+  bool _isVersionExpanded = false;
+  bool _isSubmitting = false;
+
+  String? get _effectiveSelectedVersion =>
+      _localSelectedVersion ?? widget.selectedVersion;
+
+  @override
+  void initState() {
+    super.initState();
+    _localSelectedVersion = widget.selectedVersion;
+  }
+
+  @override
+  void didUpdateWidget(covariant _CommentComposerDialog oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedVersion != oldWidget.selectedVersion) {
+      _localSelectedVersion = widget.selectedVersion;
+    }
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSubmit() async {
+    final remark = _commentController.text.trim();
+    if (remark.isEmpty) {
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    final success = await widget.onSubmit(remark, _effectiveSelectedVersion);
+    if (!mounted) {
+      return;
+    }
+
+    if (success) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    setState(() => _isSubmitting = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return AlertDialog(
+      title: Text(l10n.submitComment),
+      content: SizedBox(
+        width: 460,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                key: const ValueKey('app-detail-comment-input'),
+                controller: _commentController,
+                minLines: 4,
+                maxLines: 6,
+                decoration: InputDecoration(
+                  hintText: l10n.commentInputHint,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              if (widget.versionOptions.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  l10n.commentVersionLabel,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _buildVersionPills(context),
+              ],
+              const SizedBox(height: 12),
+              Text(
+                l10n.commentAnonymousHint,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          key: const ValueKey('app-detail-comment-submit'),
+          onPressed: _isSubmitting ? null : _handleSubmit,
+          child: _isSubmitting
+              ? SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: theme.colorScheme.onPrimary,
+                  ),
+                )
+              : Text(l10n.submitComment),
+        ),
       ],
     );
   }

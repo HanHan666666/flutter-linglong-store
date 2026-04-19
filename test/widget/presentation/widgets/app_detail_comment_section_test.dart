@@ -11,10 +11,9 @@ void main() {
     List<String> versionOptions = const ['1.2.3'],
     String? selectedVersion = '1.2.3',
     bool isLoading = false,
-    bool isSubmitting = false,
     bool canSubmitComment = true,
     String? errorMessage,
-    Future<void> Function(String remark, String? version)? onSubmit,
+    Future<bool> Function(String remark, String? version)? onSubmit,
     VoidCallback? onRetry,
     ValueChanged<String?>? onVersionChanged,
   }) async {
@@ -32,10 +31,9 @@ void main() {
               versionOptions: versionOptions,
               selectedVersion: selectedVersion,
               isLoading: isLoading,
-              isSubmitting: isSubmitting,
               canSubmitComment: canSubmitComment,
               errorMessage: errorMessage,
-              onSubmit: onSubmit ?? (_, __) async {},
+              onSubmit: onSubmit ?? (_, __) async => true,
               onRetry: onRetry ?? () {},
               onVersionChanged: onVersionChanged,
             ),
@@ -45,7 +43,7 @@ void main() {
     );
   }
 
-  testWidgets('展示评论列表和发表评论表单', (tester) async {
+  testWidgets('展示评论列表并通过弹窗发表评论', (tester) async {
     String? submittedRemark;
     String? submittedVersion;
 
@@ -67,6 +65,7 @@ void main() {
       onSubmit: (remark, version) async {
         submittedRemark = remark;
         submittedVersion = version;
+        return true;
       },
     );
 
@@ -76,6 +75,18 @@ void main() {
     expect(find.text('有帮助 12'), findsOneWidget);
     expect(find.text('没帮助 1'), findsOneWidget);
     expect(find.byType(DropdownButtonFormField<String>), findsNothing);
+    expect(
+      find.byKey(const ValueKey('app-detail-comment-launcher')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('app-detail-comment-input')),
+      findsNothing,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('app-detail-comment-launcher')));
+    await tester.pumpAndSettle();
+
     expect(
       find.byKey(const ValueKey('comment-version-pill-1.2.3')),
       findsOneWidget,
@@ -94,10 +105,11 @@ void main() {
       '  新版详情页做得更清楚了  ',
     );
     await tester.tap(find.byKey(const ValueKey('app-detail-comment-submit')));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(submittedRemark, equals('新版详情页做得更清楚了'));
     expect(submittedVersion, equals('1.2.2'));
+    expect(find.byType(AlertDialog), findsNothing);
   });
 
   testWidgets('未安装时隐藏评论表单但保留评论列表', (tester) async {
@@ -118,11 +130,11 @@ void main() {
     );
 
     expect(
-      find.byKey(const ValueKey('app-detail-comment-input')),
+      find.byKey(const ValueKey('app-detail-comment-launcher')),
       findsNothing,
     );
     expect(
-      find.byKey(const ValueKey('app-detail-comment-submit')),
+      find.byKey(const ValueKey('app-detail-comment-input')),
       findsNothing,
     );
     expect(find.text('未安装用户也应该能看到这条评论。'), findsOneWidget);
@@ -169,8 +181,11 @@ void main() {
       onVersionChanged: (value) {
         selectedVersion = value;
       },
-      onSubmit: (_, __) async {},
+      onSubmit: (_, __) async => true,
     );
+
+    await tester.tap(find.byKey(const ValueKey('app-detail-comment-launcher')));
+    await tester.pumpAndSettle();
 
     expect(
       find.byKey(const ValueKey('comment-version-pill-4.1.1.10')),
@@ -199,6 +214,9 @@ void main() {
     );
     expect(find.text('收起'), findsOneWidget);
 
+    await tester.tap(find.text('取消'));
+    await tester.pumpAndSettle();
+
     await pumpCommentSection(
       tester,
       versionOptions: versions,
@@ -208,8 +226,11 @@ void main() {
       },
       onSubmit: (_, version) async {
         selectedVersion = version;
+        return true;
       },
     );
+    await tester.tap(find.byKey(const ValueKey('app-detail-comment-launcher')));
+    await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(const ValueKey('comment-version-pill-4.1.1.9')),
     );
@@ -218,7 +239,7 @@ void main() {
       '新的评论',
     );
     await tester.tap(find.byKey(const ValueKey('app-detail-comment-submit')));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(selectedVersion, equals('4.1.1.9'));
   });

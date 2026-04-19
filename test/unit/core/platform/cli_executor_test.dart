@@ -6,11 +6,7 @@ import 'package:linglong_store/core/network/api_exceptions.dart';
 void main() {
   group('CliOutput', () {
     test('should create CliOutput with correct properties', () {
-      const output = CliOutput(
-        stdout: 'test output',
-        stderr: '',
-        exitCode: 0,
-      );
+      const output = CliOutput(stdout: 'test output', stderr: '', exitCode: 0);
 
       expect(output.stdout, equals('test output'));
       expect(output.stderr, equals(''));
@@ -28,33 +24,79 @@ void main() {
       expect(output.success, isFalse);
       expect(output.exitCode, equals(1));
     });
+
+    test(
+      'should prefer stderr as the primary message when both streams exist',
+      () {
+        const output = CliOutput(
+          stdout: 'stdout message',
+          stderr: 'stderr message',
+          exitCode: 1,
+        );
+
+        expect(output.primaryMessage, equals('stderr message'));
+      },
+    );
+
+    test(
+      'should fall back to stdout as the primary message when stderr is empty',
+      () {
+        const output = CliOutput(
+          stdout: 'stdout message',
+          stderr: '  ',
+          exitCode: 1,
+        );
+
+        expect(output.primaryMessage, equals('stdout message'));
+      },
+    );
   });
 
   group('CliExecutor', () {
     group('execute', () {
-      test('should return CliOutput with success=true when exit code is 0', () async {
-        // 注意：这个测试需要实际的 ll-cli 环境
-        // 在 CI 环境中应该 mock Process.start
-        // 这里我们跳过需要实际命令的测试
-      }, skip: 'Requires ll-cli to be installed');
+      test(
+        'should return CliOutput with success=true when exit code is 0',
+        () async {
+          // 注意：这个测试需要实际的 ll-cli 环境
+          // 在 CI 环境中应该 mock Process.start
+          // 这里我们跳过需要实际命令的测试
+        },
+        skip: 'Requires ll-cli to be installed',
+      );
 
-      test('should return CliOutput with success=false when exit code is non-zero', () async {
-        // 同上，需要 mock
-      }, skip: 'Requires ll-cli to be installed');
+      test(
+        'should return CliOutput with success=false when exit code is non-zero',
+        () async {
+          // 同上，需要 mock
+        },
+        skip: 'Requires ll-cli to be installed',
+      );
 
-      test('should throw CliTimeoutException on timeout', () async {
-        // 测试超时场景
-      }, skip: 'Requires mock Process');
+      test(
+        'should throw CliTimeoutException on timeout',
+        () async {
+          // 测试超时场景
+        },
+        skip: 'Requires mock Process',
+      );
     });
 
     group('executeOrErr', () {
-      test('should return stdout when execution succeeds', () async {
-        // 测试成功执行场景
-      }, skip: 'Requires ll-cli to be installed');
+      test(
+        'should return stdout when execution succeeds',
+        () async {
+          // 测试成功执行场景
+        },
+        skip: 'Requires ll-cli to be installed',
+      );
 
-      test('should throw CliExecutionException when execution fails', () async {
-        // 测试失败场景
-      }, skip: 'Requires ll-cli to be installed');
+      test(
+        'should throw CliExecutionException when execution fails',
+        () async {
+          // 测试失败场景
+        },
+        skip: 'Requires ll-cli to be installed',
+      );
     });
   });
 

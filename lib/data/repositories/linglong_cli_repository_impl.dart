@@ -289,7 +289,9 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       );
 
       if (!output.success) {
-        AppLogger.warning('[LinglongCli] 获取已安装应用列表失败: ${output.stderr}');
+        AppLogger.warning(
+          '[LinglongCli] 获取已安装应用列表失败: ${output.primaryMessage}',
+        );
         return [];
       }
 
@@ -315,8 +317,10 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       final psOutput = await _execute(['ps'], timeout: kQueryTimeout);
 
       if (!psOutput.success) {
-        AppLogger.warning('[LinglongCli] 获取运行中进程失败: ${psOutput.stderr}');
-        throw Exception('获取运行中进程失败: ${psOutput.stderr}');
+        AppLogger.warning(
+          '[LinglongCli] 获取运行中进程失败: ${psOutput.primaryMessage}',
+        );
+        throw Exception('获取运行中进程失败: ${psOutput.primaryMessage}');
       }
 
       final runningApps = CliOutputParser.parseRunningApps(psOutput.stdout);
@@ -419,9 +423,12 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         return output.stdout;
       } else {
         // 失败时抛出异常，让调用方正确处理错误
-        AppLogger.warning('[LinglongCli] 卸载失败: ${output.stderr}');
+        final errorMessage = output.primaryMessage.isNotEmpty
+            ? output.primaryMessage
+            : '卸载命令执行失败';
+        AppLogger.warning('[LinglongCli] 卸载失败: $errorMessage');
         throw UninstallException(
-          output.stderr.isNotEmpty ? output.stderr : '卸载命令执行失败',
+          errorMessage,
           appId: appId,
           exitCode: output.exitCode,
         );
@@ -476,7 +483,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         ], timeout: const Duration(seconds: 10));
 
         if (!output.success && attempt == 5) {
-          return _messages.stopFailed(output.stderr);
+          return _messages.stopFailed(output.primaryMessage);
         }
 
         if (attempt < 5) {
@@ -590,7 +597,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       ], timeout: const Duration(seconds: 10));
 
       if (!output.success) {
-        return _messages.shortcutCreateFailed(output.stderr);
+        return _messages.shortcutCreateFailed(output.primaryMessage);
       }
 
       // 3. 从输出中找到 .desktop 文件路径
@@ -674,7 +681,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       if (output.success) {
         return output.stdout;
       } else {
-        return _messages.pruneFailed(output.stderr);
+        return _messages.pruneFailed(output.primaryMessage);
       }
     } catch (e, stack) {
       AppLogger.error('[LinglongCli] 清理异常', e, stack);

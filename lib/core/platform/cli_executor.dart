@@ -31,16 +31,24 @@ class CliOutput {
 
   bool get success => exitCode == 0;
 
+  /// 失败文案优先取 stderr，缺失时回退到 stdout，避免丢掉 CLI 主输出。
+  String get primaryMessage {
+    final trimmedStderr = stderr.trim();
+    if (trimmedStderr.isNotEmpty) {
+      return trimmedStderr;
+    }
+
+    return stdout.trim();
+  }
+
   @override
-  String toString() => 'CliOutput(exitCode: $exitCode, stdout: ${stdout.length} chars, stderr: ${stderr.length} chars)';
+  String toString() =>
+      'CliOutput(exitCode: $exitCode, stdout: ${stdout.length} chars, stderr: ${stderr.length} chars)';
 }
 
 /// CLI 执行结果（带进程引用）
 class CliResult {
-  const CliResult({
-    required this.output,
-    this.process,
-  });
+  const CliResult({required this.output, this.process});
 
   final CliOutput output;
   final Process? process;
@@ -53,10 +61,7 @@ class CliResult {
 
 /// 进度事件
 class ProgressEvent {
-  const ProgressEvent({
-    required this.line,
-    required this.type,
-  });
+  const ProgressEvent({required this.line, required this.type});
 
   final String line;
   final ProgressEventType type;
@@ -84,11 +89,7 @@ class ProgressEvent {
 }
 
 /// 进度事件类型
-enum ProgressEventType {
-  stdout,
-  stderr,
-  error,
-}
+enum ProgressEventType { stdout, stderr, error }
 
 /// CLI 命令执行器
 ///
@@ -147,8 +148,8 @@ class CliExecutor {
     String? processId,
     String? locale,
   }) async {
-    final commandStr = 'll-cli ${args.join(' ')}';
-    AppLogger.debug('[CLI] 执行命令: $commandStr');
+    final commandStr = _buildCommandString(args);
+    _logCommandStart(commandStr);
 
     Process? process;
     try {
@@ -173,17 +174,17 @@ class CliExecutor {
           .transform(utf8.decoder)
           .transform(const LineSplitter())
           .forEach((line) {
-        stdoutBuffer.writeln(line);
-        AppLogger.debug('[CLI stdout] $line');
-      });
+            stdoutBuffer.writeln(line);
+            _logCommandStdout(commandStr, line);
+          });
 
       final stderrFuture = process.stderr
           .transform(utf8.decoder)
           .transform(const LineSplitter())
           .forEach((line) {
-        stderrBuffer.writeln(line);
-        AppLogger.warning('[CLI stderr] $line');
-      });
+            stderrBuffer.writeln(line);
+            _logCommandStderr(commandStr, line);
+          });
 
       // 等待进程完成或超时
       final exitCode = await _waitForExit(
@@ -200,18 +201,14 @@ class CliExecutor {
         exitCode: exitCode,
       );
 
-      AppLogger.info('[CLI] 命令完成: exitCode=$exitCode');
+      _logCommandExit(commandStr, exitCode);
       return CliResult(output: output, process: process);
-
     } on TimeoutException {
       AppLogger.error('[CLI] 命令超时: $commandStr');
       process?.kill(ProcessSignal.sigkill);
-      throw const CliTimeoutException(
-        '命令执行超时',
-        'll-cli',
-      );
+      throw const CliTimeoutException('命令执行超时', 'll-cli');
     } catch (e, stack) {
-      AppLogger.error('[CLI] 命令执行异常', e, stack);
+      AppLogger.error('[CLI] 命令执行异常: $commandStr', e, stack);
       rethrow;
     } finally {
       // 清理活跃进程记录
@@ -256,8 +253,8 @@ class CliExecutor {
     String? locale,
     void Function(Process process)? onProcessCreated,
   }) async* {
-    final commandStr = 'll-cli ${args.join(' ')}';
-    AppLogger.debug('[CLI] 执行命令(流式): $commandStr');
+    final commandStr = _buildCommandString(args);
+    _logCommandStart(commandStr, streaming: true);
 
     Process? process;
     try {
@@ -286,17 +283,19 @@ class CliExecutor {
           .transform(const LineSplitter())
           .listen(
             (line) {
-              AppLogger.debug('[CLI stdout] $line');
-              controller.add(ProgressEvent(
-                line: line,
-                type: ProgressEventType.stdout,
-              ));
+              _logCommandStdout(commandStr, line, streaming: true);
+              controller.add(
+                ProgressEvent(line: line, type: ProgressEventType.stdout),
+              );
             },
             onError: (error) {
-              controller.add(ProgressEvent(
-                line: error.toString(),
-                type: ProgressEventType.error,
-              ));
+              AppLogger.error('[CLI][stdout] 读取异常: $commandStr', error);
+              controller.add(
+                ProgressEvent(
+                  line: error.toString(),
+                  type: ProgressEventType.error,
+                ),
+              );
             },
           );
 
@@ -306,39 +305,40 @@ class CliExecutor {
           .transform(const LineSplitter())
           .listen(
             (line) {
-              AppLogger.warning('[CLI stderr] $line');
-              controller.add(ProgressEvent(
-                line: line,
-                type: ProgressEventType.stderr,
-              ));
+              _logCommandStderr(commandStr, line, streaming: true);
+              controller.add(
+                ProgressEvent(line: line, type: ProgressEventType.stderr),
+              );
             },
             onError: (error) {
-              controller.add(ProgressEvent(
-                line: error.toString(),
-                type: ProgressEventType.error,
-              ));
+              AppLogger.error('[CLI][stderr] 读取异常: $commandStr', error);
+              controller.add(
+                ProgressEvent(
+                  line: error.toString(),
+                  type: ProgressEventType.error,
+                ),
+              );
             },
           );
 
       // 等待进程完成
       process.exitCode.then((exitCode) {
-        AppLogger.info('[CLI] 流式命令完成: exitCode=$exitCode');
+        _logCommandExit(commandStr, exitCode, streaming: true);
         controller.close();
       });
 
       // 监听取消信号
       if (processId != null) {
         _cancelSignals[processId]!.future.then((_) {
-          AppLogger.info('[CLI] 收到取消信号，终止进程: $processId');
+          AppLogger.info('[CLI] 收到取消信号，终止进程: $processId ($commandStr)');
           process?.kill(ProcessSignal.sigterm);
         });
       }
 
       // 返回事件流
       yield* controller.stream;
-
     } catch (e, stack) {
-      AppLogger.error('[CLI] 流式命令执行异常', e, stack);
+      AppLogger.error('[CLI] 流式命令执行异常: $commandStr', e, stack);
       rethrow;
     } finally {
       // 清理活跃进程记录
@@ -359,15 +359,11 @@ class CliExecutor {
     Duration timeout = kDefaultTimeout,
     String? processId,
   }) async {
-    final output = await execute(
-      args,
-      timeout: timeout,
-      processId: processId,
-    );
+    final output = await execute(args, timeout: timeout, processId: processId);
 
     if (!output.success) {
       throw CliExecutionException(
-        output.stderr.isNotEmpty ? output.stderr : '命令执行失败',
+        output.primaryMessage.isNotEmpty ? output.primaryMessage : '命令执行失败',
         output.exitCode,
         'll-cli',
       );
@@ -466,7 +462,9 @@ class CliExecutor {
 
     // 只要内部取消或系统级终止任一成功，就认为取消成功
     final success = internalCancelled || systemKillSuccess;
-    AppLogger.info('[CLI] 系统级取消完成: $processId (内部: $internalCancelled, 系统: $systemKillSuccess, 结果: $success)');
+    AppLogger.info(
+      '[CLI] 系统级取消完成: $processId (内部: $internalCancelled, 系统: $systemKillSuccess, 结果: $success)',
+    );
 
     return success;
   }
@@ -478,6 +476,48 @@ class CliExecutor {
 
   /// 获取所有活跃进程ID
   static List<String> get activeProcessIds => _activeProcesses.keys.toList();
+
+  static String _buildCommandString(List<String> args) {
+    return '$kLlCliPath ${args.join(' ')}';
+  }
+
+  static void _logCommandStart(String commandStr, {bool streaming = false}) {
+    final modeSuffix = streaming ? '(流式)' : '';
+    AppLogger.info('[CLI] 启动命令$modeSuffix: $commandStr');
+  }
+
+  static void _logCommandStdout(
+    String commandStr,
+    String line, {
+    bool streaming = false,
+  }) {
+    final modeSuffix = streaming ? '(流式)' : '';
+    AppLogger.debug('[CLI stdout]$modeSuffix $commandStr | $line');
+  }
+
+  static void _logCommandStderr(
+    String commandStr,
+    String line, {
+    bool streaming = false,
+  }) {
+    final modeSuffix = streaming ? '(流式)' : '';
+    AppLogger.warning('[CLI stderr]$modeSuffix $commandStr | $line');
+  }
+
+  static void _logCommandExit(
+    String commandStr,
+    int exitCode, {
+    bool streaming = false,
+  }) {
+    final modeSuffix = streaming ? '(流式)' : '';
+    final message = '[CLI] 命令退出$modeSuffix: $commandStr (exitCode=$exitCode)';
+    if (exitCode == 0) {
+      AppLogger.info(message);
+      return;
+    }
+
+    AppLogger.warning(message);
+  }
 
   /// 等待进程退出
   static Future<int> _waitForExit(
@@ -499,7 +539,7 @@ class CliExecutor {
     final result = await Future.any([
       process.exitCode,
       timeoutFuture.then((_) => -1), // 超时返回 -1
-      cancelFuture.then((_) => -2),  // 取消返回 -2
+      cancelFuture.then((_) => -2), // 取消返回 -2
     ]);
 
     // 处理超时

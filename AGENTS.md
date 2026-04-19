@@ -324,3 +324,4 @@ Semantics(
 - 2026-04-18：所有分页列表的 loading / “没有更多了” footer 必须独立成整行 sliver（统一复用 `PaginationFooterSliver`）；禁止再把 footer 当成 `ResponsiveAppGrid` 或其他 `SliverGrid` 的最后一个 item 塞进网格，否则视觉上会像占用一个 `AppCard` 坑位并导致居中失真。
 - 2026-04-18：全局 `Tooltip` 悬停延迟统一由 `AppTheme.tooltipTheme.waitDuration = 800ms` 控制；禁止在业务组件里继续零散手写 `waitDuration: 300/500ms` 之类局部覆盖，除非有明确的特例交互需求并写清原因。
 - 2026-04-18：所有 `ll-cli` 命令日志必须统一走 `CliExecutor`；启动时打印完整命令，执行过程中按行分别记录 `stdout/stderr`，退出时记录 `exitCode + 完整命令`，不要再只打“命令完成”或只打印摘要；业务侧读取 CLI 失败文案时必须优先 `stderr`，为空时回退到 `stdout`。
+- 2026-04-19：应用详情页历史版本列表的已安装项必须显示“已安装 + 卸载”操作区；版本行卸载必须复用 `AppUninstallFlow/AppUninstallService` 统一卸载链路，并通过 `ll-cli uninstall appId/version` 精确卸载目标版本，不能再只传 `appId`。

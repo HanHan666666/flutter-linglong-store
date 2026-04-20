@@ -277,3 +277,4 @@ Semantics(
 - 2026-03-23：全局提示统一迁移为 `AppShell` 内容区右上角通知中心：页面/组件只能通过 `app_notification_helpers.dart` 触发提示，业务服务层不得直接依赖通知 UI；涉及卸载等应用层流程时，服务返回 typed result，由页面决定展示文案，`lib/` 内禁止继续新增 `ScaffoldMessenger/showSnackBar`。
 - 2026-04-09：侧边栏 KeepAlive 页面切换时，隐藏页不能只更新 `isVisible` 做副作用暂停；`KeepAlivePageWrapper` 必须同时把隐藏页移出绘制树、命中测试树、焦点树和 ticker 树（如 `Offstage + IgnorePointer + ExcludeFocus + TickerMode`），否则新页面骨架屏会与旧页面内容重叠透出，且隐藏页仍可能偷走键盘焦点。
 - 2026-04-20：Linux 桌面主题必须在 `AppTheme` 统一配置中文 `fontFamilyFallback`，并通过同一 helper 覆盖 `textTheme` 与所有从 `AppTextStyles` 派生的组件主题文本样式；禁止在页面或单个组件里零散维护不同的字体回退列表。
+- 2026-04-20：玲珑环境检测与自动安装必须统一走 Flutter 侧服务层：环境检测只允许通过 `LinglongEnvironmentService` 聚合 `ll-cli --help`、`repo show`、版本号和系统诊断信息；`ll-cli < 1.9.0` 只记 warning、不阻断启动；自动安装脚本必须从后端 `/app/findShellString` 获取，并以 `pkexec bash <temp-script>` 执行，禁止再回退到硬编码脚本 URL、`curl/wget` 直链下载，或通过 `CliExecutor/ll-cli` 间接执行安装脚本。

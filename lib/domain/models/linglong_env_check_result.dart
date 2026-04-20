@@ -10,8 +10,38 @@ sealed class LinglongEnvCheckResult with _$LinglongEnvCheckResult {
     /// 是否通过检测
     required bool isOk,
 
+    /// 非阻断警告信息
+    String? warningMessage,
+
     /// ll-cli 版本
     String? llCliVersion,
+
+    /// linglong-bin 版本
+    String? llBinVersion,
+
+    /// 系统架构
+    String? arch,
+
+    /// 操作系统版本
+    String? osVersion,
+
+    /// glibc 版本
+    String? glibcVersion,
+
+    /// 内核信息
+    String? kernelInfo,
+
+    /// 额外诊断信息
+    String? detailMsg,
+
+    /// 默认仓库名
+    String? repoName,
+
+    /// 仓库列表
+    @Default(<LinglongRepoInfo>[]) List<LinglongRepoInfo> repos,
+
+    /// 是否在容器环境中
+    @Default(false) bool isContainer,
 
     /// repo 状态
     @Default(RepoStatus.unknown) RepoStatus repoStatus,
@@ -28,6 +58,19 @@ sealed class LinglongEnvCheckResult with _$LinglongEnvCheckResult {
 
   factory LinglongEnvCheckResult.fromJson(Map<String, dynamic> json) =>
       _$LinglongEnvCheckResultFromJson(json);
+}
+
+@freezed
+sealed class LinglongRepoInfo with _$LinglongRepoInfo {
+  const factory LinglongRepoInfo({
+    required String name,
+    required String url,
+    String? alias,
+    String? priority,
+  }) = _LinglongRepoInfo;
+
+  factory LinglongRepoInfo.fromJson(Map<String, dynamic> json) =>
+      _$LinglongRepoInfoFromJson(json);
 }
 
 /// Repo 状态枚举
@@ -58,6 +101,7 @@ extension LinglongEnvCheckResultX on LinglongEnvCheckResult {
 
   /// 获取状态描述
   String get statusDescription {
+    if (isOk && warningMessage != null) return '环境正常（建议升级）';
     if (isOk) return '环境正常';
     if (llCliVersion == null) return 'll-cli 不可用';
     return '环境异常';

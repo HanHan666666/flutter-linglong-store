@@ -557,6 +557,20 @@ class MockAppApiService extends _i1.Mock implements _i18.AppApiService {
           as _i4.Future<_i2.HttpResponse<_i19.BooleanResponse>>);
 
   @override
+  _i4.Future<_i2.HttpResponse<_i19.StringResponse>> findShellString() =>
+      (super.noSuchMethod(
+            Invocation.method(#findShellString, []),
+            returnValue:
+                _i4.Future<_i2.HttpResponse<_i19.StringResponse>>.value(
+                  _FakeHttpResponse_0<_i19.StringResponse>(
+                    this,
+                    Invocation.method(#findShellString, []),
+                  ),
+                ),
+          )
+          as _i4.Future<_i2.HttpResponse<_i19.StringResponse>>);
+
+  @override
   _i4.Future<_i2.HttpResponse<_i19.AppListArrayResponse>>
   getWelcomeCarouselList(_i19.AppWelcomeSearchRequest? request) =>
       (super.noSuchMethod(

@@ -331,6 +331,20 @@ Map<String, dynamic> _$BooleanResponseToJson(_BooleanResponse instance) =>
       'data': instance.data,
     };
 
+_StringResponse _$StringResponseFromJson(Map<String, dynamic> json) =>
+    _StringResponse(
+      code: (json['code'] as num).toInt(),
+      message: json['message'] as String?,
+      data: json['data'] as String?,
+    );
+
+Map<String, dynamic> _$StringResponseToJson(_StringResponse instance) =>
+    <String, dynamic>{
+      'code': instance.code,
+      'message': instance.message,
+      'data': instance.data,
+    };
+
 _AppListItemDTO _$AppListItemDTOFromJson(Map<String, dynamic> json) =>
     _AppListItemDTO(
       appId: json['appId'] as String,

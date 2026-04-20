@@ -358,6 +358,19 @@ sealed class BooleanResponse with _$BooleanResponse {
       _$BooleanResponseFromJson(json);
 }
 
+/// 通用字符串结果响应
+@freezed
+sealed class StringResponse with _$StringResponse {
+  const factory StringResponse({
+    required int code,
+    String? message,
+    String? data,
+  }) = _StringResponse;
+
+  factory StringResponse.fromJson(Map<String, dynamic> json) =>
+      _$StringResponseFromJson(json);
+}
+
 // ============== 应用列表相关 ==============
 
 /// 应用列表项 DTO
@@ -695,7 +708,6 @@ sealed class SidebarAppsRequest with _$SidebarAppsRequest {
   factory SidebarAppsRequest.fromJson(Map<String, dynamic> json) =>
       _$SidebarAppsRequestFromJson(json);
 }
-
 
 /// 按分类ID获取应用请求
 @freezed

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/config/app_config.dart';
@@ -296,29 +294,23 @@ class LaunchSequence extends _$LaunchSequence {
   /// 获取环境信息
   Future<void> _fetchEnvironmentInfo() async {
     try {
-      // 获取系统架构
-      final archResult = await Process.run('uname', ['-m']);
-      if (archResult.exitCode == 0) {
-        final arch = archResult.stdout.toString().trim();
-        ref.read(globalAppProvider.notifier).setArch(arch);
-      }
-
-      // 获取操作系统版本
-      final osResult = await Process.run('lsb_release', ['-d']);
-      if (osResult.exitCode == 0) {
-        final osInfo = osResult.stdout.toString();
-        final match = RegExp(r'Description:\s*(.+)').firstMatch(osInfo);
-        if (match != null) {
-          ref
-              .read(globalAppProvider.notifier)
-              .setOsVersion(match.group(1)!.trim());
-        }
-      }
-
-      // 将环境检测中获取的 ll-cli 版本同步到全局状态
       final envResult = ref.read(linglongEnvProvider).result;
-      if (envResult?.llCliVersion != null) {
-        ref.read(globalAppProvider.notifier).setLlVersion(envResult!.llCliVersion!);
+      if (envResult == null) {
+        return;
+      }
+
+      // 复用环境检测阶段已采集的数据，避免启动时重复执行系统命令。
+      if (envResult.arch != null && envResult.arch!.isNotEmpty) {
+        ref.read(globalAppProvider.notifier).setArch(envResult.arch!);
+      }
+      if (envResult.osVersion != null && envResult.osVersion!.isNotEmpty) {
+        ref.read(globalAppProvider.notifier).setOsVersion(envResult.osVersion!);
+      }
+      if (envResult.llCliVersion != null &&
+          envResult.llCliVersion!.isNotEmpty) {
+        ref
+            .read(globalAppProvider.notifier)
+            .setLlVersion(envResult.llCliVersion!);
       }
     } catch (e) {
       AppLogger.warning('Failed to fetch environment info: $e');

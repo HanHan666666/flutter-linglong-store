@@ -35,13 +35,6 @@ class AppConfig {
   /// 图片缓存大小（字节）
   static const int imageCacheSizeBytes = 64 * 1024 * 1024; // 64MB
 
-  /// 安装脚本 URL
-  /// 可通过编译时环境变量覆盖：-DINSTALL_SCRIPT_URL=https://...
-  static const String installScriptUrl = String.fromEnvironment(
-    'INSTALL_SCRIPT_URL',
-    defaultValue: 'https://mirror-repo-linglong.deepin.com/linglong/install.sh',
-  );
-
   /// 安装文档 URL
   /// 可通过编译时环境变量覆盖：-DINSTALL_DOC_URL=https://...
   static const String installDocUrl = String.fromEnvironment(

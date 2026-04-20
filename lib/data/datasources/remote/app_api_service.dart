@@ -73,6 +73,11 @@ abstract class AppApiService {
     @Body() AppCommentSaveBO request,
   );
 
+  /// 获取玲珑环境自动安装脚本
+  /// GET /app/findShellString
+  @GET('/app/findShellString')
+  Future<HttpResponse<StringResponse>> findShellString();
+
   // ============== 轮播图/推荐接口 ==============
 
   /// 轮播图列表

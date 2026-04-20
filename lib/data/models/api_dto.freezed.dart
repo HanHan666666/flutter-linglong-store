@@ -4647,6 +4647,269 @@ as bool?,
 
 
 /// @nodoc
+mixin _$StringResponse {
+
+ int get code; String? get message; String? get data;
+/// Create a copy of StringResponse
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$StringResponseCopyWith<StringResponse> get copyWith => _$StringResponseCopyWithImpl<StringResponse>(this as StringResponse, _$identity);
+
+  /// Serializes this StringResponse to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StringResponse&&(identical(other.code, code) || other.code == code)&&(identical(other.message, message) || other.message == message)&&(identical(other.data, data) || other.data == data));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,code,message,data);
+
+@override
+String toString() {
+  return 'StringResponse(code: $code, message: $message, data: $data)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $StringResponseCopyWith<$Res>  {
+  factory $StringResponseCopyWith(StringResponse value, $Res Function(StringResponse) _then) = _$StringResponseCopyWithImpl;
+@useResult
+$Res call({
+ int code, String? message, String? data
+});
+
+
+
+
+}
+/// @nodoc
+class _$StringResponseCopyWithImpl<$Res>
+    implements $StringResponseCopyWith<$Res> {
+  _$StringResponseCopyWithImpl(this._self, this._then);
+
+  final StringResponse _self;
+  final $Res Function(StringResponse) _then;
+
+/// Create a copy of StringResponse
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = freezed,}) {
+  return _then(_self.copyWith(
+code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [StringResponse].
+extension StringResponsePatterns on StringResponse {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _StringResponse value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _StringResponse() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _StringResponse value)  $default,){
+final _that = this;
+switch (_that) {
+case _StringResponse():
+return $default(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _StringResponse value)?  $default,){
+final _that = this;
+switch (_that) {
+case _StringResponse() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int code,  String? message,  String? data)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _StringResponse() when $default != null:
+return $default(_that.code,_that.message,_that.data);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int code,  String? message,  String? data)  $default,) {final _that = this;
+switch (_that) {
+case _StringResponse():
+return $default(_that.code,_that.message,_that.data);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int code,  String? message,  String? data)?  $default,) {final _that = this;
+switch (_that) {
+case _StringResponse() when $default != null:
+return $default(_that.code,_that.message,_that.data);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _StringResponse implements StringResponse {
+  const _StringResponse({required this.code, this.message, this.data});
+  factory _StringResponse.fromJson(Map<String, dynamic> json) => _$StringResponseFromJson(json);
+
+@override final  int code;
+@override final  String? message;
+@override final  String? data;
+
+/// Create a copy of StringResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$StringResponseCopyWith<_StringResponse> get copyWith => __$StringResponseCopyWithImpl<_StringResponse>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$StringResponseToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StringResponse&&(identical(other.code, code) || other.code == code)&&(identical(other.message, message) || other.message == message)&&(identical(other.data, data) || other.data == data));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,code,message,data);
+
+@override
+String toString() {
+  return 'StringResponse(code: $code, message: $message, data: $data)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$StringResponseCopyWith<$Res> implements $StringResponseCopyWith<$Res> {
+  factory _$StringResponseCopyWith(_StringResponse value, $Res Function(_StringResponse) _then) = __$StringResponseCopyWithImpl;
+@override @useResult
+$Res call({
+ int code, String? message, String? data
+});
+
+
+
+
+}
+/// @nodoc
+class __$StringResponseCopyWithImpl<$Res>
+    implements _$StringResponseCopyWith<$Res> {
+  __$StringResponseCopyWithImpl(this._self, this._then);
+
+  final _StringResponse _self;
+  final $Res Function(_StringResponse) _then;
+
+/// Create a copy of StringResponse
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? message = freezed,Object? data = freezed,}) {
+  return _then(_StringResponse(
+code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$AppListItemDTO {
 
 @JsonKey(name: 'appId') String get appId;@JsonKey(readValue: _readAppName) String get appName;@JsonKey(readValue: _readAppVersion) String? get appVersion;@JsonKey(readValue: _readAppIcon) String? get appIcon;@JsonKey(readValue: _readAppDescription) String? get appDesc;@JsonKey(readValue: _readAppKind) String? get appKind;@JsonKey(readValue: _readDeveloperName) String? get developerName;@JsonKey(name: 'categoryName') String? get categoryName;@JsonKey(readValue: _readDownloadCount) int? get downloadTimes;@JsonKey(readValue: _readPackageSize) String? get packageSize;@JsonKey(name: 'createTime') String? get createTime;// 上架时间

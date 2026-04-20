@@ -276,3 +276,4 @@ Semantics(
 - 2026-03-23：评论区“关联版本”禁止继续使用承载大量版本的桌面下拉框；统一改为横向胶囊选择，默认只展示前 `8` 个版本，超出部分通过“展开全部 / 收起”切换。提交评论时使用当前胶囊选中的版本值。
 - 2026-03-23：全局提示统一迁移为 `AppShell` 内容区右上角通知中心：页面/组件只能通过 `app_notification_helpers.dart` 触发提示，业务服务层不得直接依赖通知 UI；涉及卸载等应用层流程时，服务返回 typed result，由页面决定展示文案，`lib/` 内禁止继续新增 `ScaffoldMessenger/showSnackBar`。
 - 2026-04-09：侧边栏 KeepAlive 页面切换时，隐藏页不能只更新 `isVisible` 做副作用暂停；`KeepAlivePageWrapper` 必须同时把隐藏页移出绘制树、命中测试树、焦点树和 ticker 树（如 `Offstage + IgnorePointer + ExcludeFocus + TickerMode`），否则新页面骨架屏会与旧页面内容重叠透出，且隐藏页仍可能偷走键盘焦点。
+- 2026-04-20：Linux 桌面主题必须在 `AppTheme` 统一配置中文 `fontFamilyFallback`，并通过同一 helper 覆盖 `textTheme` 与所有从 `AppTextStyles` 派生的组件主题文本样式；禁止在页面或单个组件里零散维护不同的字体回退列表。

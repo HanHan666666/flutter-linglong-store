@@ -325,3 +325,4 @@ Semantics(
 - 2026-04-18：全局 `Tooltip` 悬停延迟统一由 `AppTheme.tooltipTheme.waitDuration = 800ms` 控制；禁止在业务组件里继续零散手写 `waitDuration: 300/500ms` 之类局部覆盖，除非有明确的特例交互需求并写清原因。
 - 2026-04-18：所有 `ll-cli` 命令日志必须统一走 `CliExecutor`；启动时打印完整命令，执行过程中按行分别记录 `stdout/stderr`，退出时记录 `exitCode + 完整命令`，不要再只打“命令完成”或只打印摘要；业务侧读取 CLI 失败文案时必须优先 `stderr`，为空时回退到 `stdout`。
 - 2026-04-19：应用详情页历史版本列表的已安装项必须显示“已安装 + 卸载”操作区；版本行卸载必须复用 `AppUninstallFlow/AppUninstallService` 统一卸载链路，并通过 `ll-cli uninstall appId/version` 精确卸载目标版本，不能再只传 `appId`。
+- 2026-04-20：Linux 桌面主题必须在 `AppTheme` 统一配置中文 `fontFamilyFallback`，并通过同一 helper 覆盖 `textTheme` 与所有从 `AppTextStyles` 派生的组件主题文本样式；禁止在页面或单个组件里零散维护不同的字体回退列表。

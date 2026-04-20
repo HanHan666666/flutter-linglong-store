@@ -11,6 +11,15 @@ class AppTheme {
     waitDuration: Duration(milliseconds: 800),
   );
 
+  // Explicit Linux CJK fallbacks avoid relying on distro-specific defaults.
+  static const _linuxFontFamilyFallback = <String>[
+    'Noto Sans CJK SC',
+    'Source Han Sans SC',
+    'WenQuanYi Micro Hei',
+    'WenQuanYi Zen Hei',
+    'Noto Color Emoji',
+  ];
+
   /// 零动画页面转场构建器
   static const _noTransitionTheme = PageTransitionsTheme(
     builders: {
@@ -22,6 +31,43 @@ class AppTheme {
       TargetPlatform.fuchsia: _NoTransitionBuilder(),
     },
   );
+
+  static TextStyle _withLinuxFontFallback(
+    TextStyle style, {
+    Color? color,
+    FontWeight? fontWeight,
+  }) {
+    return style.copyWith(
+      color: color,
+      fontWeight: fontWeight,
+      fontFamilyFallback: _linuxFontFamilyFallback,
+    );
+  }
+
+  static TextStyle? _withLinuxFontFallbackIfPresent(TextStyle? style) {
+    if (style == null) {
+      return null;
+    }
+    return style.copyWith(fontFamilyFallback: _linuxFontFamilyFallback);
+  }
+
+  static TextTheme _withLinuxFontFallbacks(TextTheme textTheme) {
+    return textTheme.copyWith(
+      displayLarge: _withLinuxFontFallbackIfPresent(textTheme.displayLarge),
+      headlineLarge: _withLinuxFontFallbackIfPresent(textTheme.headlineLarge),
+      headlineMedium: _withLinuxFontFallbackIfPresent(textTheme.headlineMedium),
+      headlineSmall: _withLinuxFontFallbackIfPresent(textTheme.headlineSmall),
+      titleLarge: _withLinuxFontFallbackIfPresent(textTheme.titleLarge),
+      titleMedium: _withLinuxFontFallbackIfPresent(textTheme.titleMedium),
+      titleSmall: _withLinuxFontFallbackIfPresent(textTheme.titleSmall),
+      bodyLarge: _withLinuxFontFallbackIfPresent(textTheme.bodyLarge),
+      bodyMedium: _withLinuxFontFallbackIfPresent(textTheme.bodyMedium),
+      bodySmall: _withLinuxFontFallbackIfPresent(textTheme.bodySmall),
+      labelLarge: _withLinuxFontFallbackIfPresent(textTheme.labelLarge),
+      labelMedium: _withLinuxFontFallbackIfPresent(textTheme.labelMedium),
+      labelSmall: _withLinuxFontFallbackIfPresent(textTheme.labelSmall),
+    );
+  }
 
   /// 浅色主题
   static ThemeData get lightTheme => ThemeData(
@@ -41,7 +87,7 @@ class AppTheme {
     // fontFamily: 'Inter, Avenir, Helvetica, Arial',
 
     // 文字主题
-    textTheme: AppTextStyles.textTheme,
+    textTheme: _withLinuxFontFallbacks(AppTextStyles.textTheme),
 
     // 应用栏主题
     appBarTheme: AppBarTheme(
@@ -50,7 +96,8 @@ class AppTheme {
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
-      titleTextStyle: AppTextStyles.title2.copyWith(
+      titleTextStyle: _withLinuxFontFallback(
+        AppTextStyles.title2,
         color: AppColors.textPrimary,
       ),
     ),
@@ -111,7 +158,10 @@ class AppTheme {
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.sm,
       ),
-      hintStyle: AppTextStyles.caption.copyWith(color: AppColors.textTertiary),
+      hintStyle: _withLinuxFontFallback(
+        AppTextStyles.caption,
+        color: AppColors.textTertiary,
+      ),
     ),
 
     // 对话框主题
@@ -144,8 +194,11 @@ class AppTheme {
     tabBarTheme: TabBarThemeData(
       labelColor: AppColors.primary,
       unselectedLabelColor: AppColors.textSecondary,
-      labelStyle: AppTextStyles.body.copyWith(fontWeight: FontWeight.w500),
-      unselectedLabelStyle: AppTextStyles.body,
+      labelStyle: _withLinuxFontFallback(
+        AppTextStyles.body,
+        fontWeight: FontWeight.w500,
+      ),
+      unselectedLabelStyle: _withLinuxFontFallback(AppTextStyles.body),
       indicator: BoxDecoration(
         color: AppColors.primaryLight,
         borderRadius: AppRadius.lgRadius,
@@ -169,12 +222,16 @@ class AppTheme {
       indicatorColor: AppColors.primaryLight,
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return AppTextStyles.caption.copyWith(
+          return _withLinuxFontFallback(
+            AppTextStyles.caption,
             color: AppColors.primary,
             fontWeight: FontWeight.w500,
           );
         }
-        return AppTextStyles.caption.copyWith(color: AppColors.textSecondary);
+        return _withLinuxFontFallback(
+          AppTextStyles.caption,
+          color: AppColors.textSecondary,
+        );
       }),
     ),
 
@@ -197,7 +254,7 @@ class AppTheme {
     chipTheme: ChipThemeData(
       backgroundColor: AppColors.cardBackground,
       selectedColor: AppColors.primaryLight,
-      labelStyle: AppTextStyles.caption,
+      labelStyle: _withLinuxFontFallback(AppTextStyles.caption),
       side: const BorderSide(color: AppColors.border),
       shape: RoundedRectangleBorder(borderRadius: AppRadius.fullRadius),
     ),
@@ -205,7 +262,10 @@ class AppTheme {
     // Snackbar 主题
     snackBarTheme: SnackBarThemeData(
       backgroundColor: AppColors.titleDark,
-      contentTextStyle: AppTextStyles.body.copyWith(color: AppColors.textLight),
+      contentTextStyle: _withLinuxFontFallback(
+        AppTextStyles.body,
+        color: AppColors.textLight,
+      ),
       shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
       behavior: SnackBarBehavior.floating,
     ),
@@ -234,7 +294,7 @@ class AppTheme {
         brightness: Brightness.dark,
       ),
       scaffoldBackgroundColor: palette.background,
-      textTheme: AppTextStyles.textTheme,
+      textTheme: _withLinuxFontFallbacks(AppTextStyles.textTheme),
 
       appBarTheme: AppBarTheme(
         backgroundColor: palette.background,
@@ -242,7 +302,8 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: AppTextStyles.title2.copyWith(
+        titleTextStyle: _withLinuxFontFallback(
+          AppTextStyles.title2,
           color: palette.textPrimary,
         ),
       ),
@@ -299,7 +360,10 @@ class AppTheme {
           horizontal: AppSpacing.lg,
           vertical: AppSpacing.sm,
         ),
-        hintStyle: AppTextStyles.caption.copyWith(color: palette.textTertiary),
+        hintStyle: _withLinuxFontFallback(
+          AppTextStyles.caption,
+          color: palette.textTertiary,
+        ),
       ),
 
       dialogTheme: DialogThemeData(
@@ -328,8 +392,11 @@ class AppTheme {
       tabBarTheme: TabBarThemeData(
         labelColor: AppColors.primary,
         unselectedLabelColor: palette.textSecondary,
-        labelStyle: AppTextStyles.body.copyWith(fontWeight: FontWeight.w500),
-        unselectedLabelStyle: AppTextStyles.body,
+        labelStyle: _withLinuxFontFallback(
+          AppTextStyles.body,
+          fontWeight: FontWeight.w500,
+        ),
+        unselectedLabelStyle: _withLinuxFontFallback(AppTextStyles.body),
         indicator: BoxDecoration(
           color: palette.primaryLight,
           borderRadius: AppRadius.lgRadius,
@@ -351,12 +418,16 @@ class AppTheme {
         indicatorColor: palette.primaryLight,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return AppTextStyles.caption.copyWith(
+            return _withLinuxFontFallback(
+              AppTextStyles.caption,
               color: AppColors.primary,
               fontWeight: FontWeight.w500,
             );
           }
-          return AppTextStyles.caption.copyWith(color: palette.textSecondary);
+          return _withLinuxFontFallback(
+            AppTextStyles.caption,
+            color: palette.textSecondary,
+          );
         }),
       ),
 
@@ -376,14 +447,18 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: palette.cardBackground,
         selectedColor: palette.primaryLight,
-        labelStyle: AppTextStyles.caption.copyWith(color: palette.textPrimary),
+        labelStyle: _withLinuxFontFallback(
+          AppTextStyles.caption,
+          color: palette.textPrimary,
+        ),
         side: BorderSide(color: palette.border),
         shape: RoundedRectangleBorder(borderRadius: AppRadius.fullRadius),
       ),
 
       snackBarTheme: SnackBarThemeData(
         backgroundColor: palette.titleDark,
-        contentTextStyle: AppTextStyles.body.copyWith(
+        contentTextStyle: _withLinuxFontFallback(
+          AppTextStyles.body,
           color: AppColors.textLight,
         ),
         shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),

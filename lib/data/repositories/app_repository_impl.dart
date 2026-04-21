@@ -79,6 +79,7 @@ class AppRepositoryImpl implements AppRepository {
         PageParams(
           pageNo: page,
           pageSize: pageSize,
+          arch: _currentArch,
           lan: resolveApiLang(ApiClient.getLocale?.call()),
         ),
       );
@@ -108,6 +109,7 @@ class AppRepositoryImpl implements AppRepository {
           categoryId: category,
           pageNo: page,
           pageSize: pageSize,
+          arch: _currentArch,
           lan: resolveApiLang(ApiClient.getLocale?.call()),
         ),
       );
@@ -135,6 +137,7 @@ class AppRepositoryImpl implements AppRepository {
           keyword: keyword,
           pageNo: page,
           pageSize: pageSize,
+          arch: _currentArch,
           lan: resolveApiLang(ApiClient.getLocale?.call()),
         ),
       );
@@ -269,10 +272,10 @@ class AppRepositoryImpl implements AppRepository {
       final lan = resolveApiLang(ApiClient.getLocale?.call());
       final response = type == 'new'
           ? await _apiService.getNewAppList(
-              PageParams(pageNo: 1, pageSize: limit, lan: lan),
+              PageParams(pageNo: 1, pageSize: limit, arch: _currentArch, lan: lan),
             )
           : await _apiService.getInstallAppList(
-              PageParams(pageNo: 1, pageSize: limit, lan: lan),
+              PageParams(pageNo: 1, pageSize: limit, arch: _currentArch, lan: lan),
             );
 
       if (response.data.data == null) return [];
@@ -322,7 +325,8 @@ class AppRepositoryImpl implements AppRepository {
       appId: dto.appId,
       name: dto.appName,
       version: dto.appVersion ?? '',
-      arch: _currentArch,
+      // 列表返回的是服务端真实架构，不能再被本机架构覆盖。
+      arch: dto.arch ?? _currentArch,
       channel: 'stable',
       description: dto.appDesc,
       icon: dto.appIcon,

@@ -87,13 +87,15 @@ class _SettingPageState extends ConsumerState<SettingPage> {
   /// 获取已收录应用总数（空关键词搜索，取 total 字段）
   Future<int?> _fetchAppTotalCount(AppApiService apiService) async {
     try {
+      final arch = resolveRequestArch(ref);
       final response = await apiService.getSearchAppList(
-        const SearchAppListRequest(
+        SearchAppListRequest(
           keyword: '',
           pageNo: 1,
           pageSize: 1,
           // 设置页不再暴露仓库切换，统计统一读取默认仓库视图。
           repoName: AppConfig.defaultStoreRepoName,
+          arch: arch,
         ),
       );
       return response.data.data?.total;

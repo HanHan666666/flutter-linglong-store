@@ -5,6 +5,7 @@ import '../../core/logging/app_logger.dart';
 import '../../core/network/api_exceptions.dart';
 import '../../data/models/api_dto.dart';
 import 'api_provider.dart';
+import 'global_provider.dart';
 
 part 'ranking_provider.g.dart';
 
@@ -44,6 +45,8 @@ class Ranking extends _$Ranking {
   final Map<RankingType, _RankingTypeCache> _typeCaches = {
     for (final type in RankingType.values) type: const _RankingTypeCache(),
   };
+
+  String get _arch => resolveRequestArch(ref);
 
   @override
   RankingState build() {
@@ -125,10 +128,10 @@ class Ranking extends _$Ranking {
 
     final response = await switch (type) {
       RankingType.download => apiService.getInstallAppList(
-        const PageParams(pageNo: 1, pageSize: 100),
+        PageParams(pageNo: 1, pageSize: 100, arch: _arch),
       ),
       RankingType.rising => apiService.getNewAppList(
-        const PageParams(pageNo: 1, pageSize: 100),
+        PageParams(pageNo: 1, pageSize: 100, arch: _arch),
       ),
     };
 
@@ -156,6 +159,7 @@ class Ranking extends _$Ranking {
         developer: dto.developerName,
         category: dto.categoryName,
         size: dto.packageSize,
+        arch: dto.arch,
         downloadCount: dto.downloadTimes, // 总安装次数（对应后端的 installCount）
         createTime: dto.createTime,        // 上架时间
         rank: rank,

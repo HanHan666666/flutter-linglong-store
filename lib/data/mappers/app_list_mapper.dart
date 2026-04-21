@@ -29,6 +29,7 @@ PaginatedResponse<RecommendAppInfo> mapAppListToRecommendApps(
           developer: dto.developerName,
           category: dto.categoryName,
           size: dto.packageSize,
+          arch: dto.arch,
           downloadCount: dto.downloadTimes,
         ),
       )

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../application/providers/search_provider.dart';
+import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/recommend_models.dart';
@@ -256,7 +256,10 @@ class _AppsGrid extends StatelessWidget {
           buttonState: cardState.buttonState,
           progress: cardState.progress,
           isInstalling: cardState.isInstalling,
-          onTap: () => context.push('/app/${app.appId}'),
+          onTap: () => context.goToAppDetail(
+            app.appId,
+            appInfo: app.toInstalledApp(),
+          ),
           onPrimaryPressed: () => handleAppCardPrimaryAction(
             context: context,
             ref: ref,

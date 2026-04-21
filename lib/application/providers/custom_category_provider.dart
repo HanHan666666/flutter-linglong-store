@@ -9,6 +9,7 @@ import '../../data/mappers/app_list_mapper.dart';
 import '../../data/models/api_dto.dart';
 import '../../domain/models/recommend_models.dart';
 import 'api_provider.dart';
+import 'global_provider.dart';
 import 'sidebar_config_provider.dart';
 import '../../core/config/local_sidebar_menu_catalog.dart';
 
@@ -24,6 +25,8 @@ class CustomCategory extends _$CustomCategory {
   // 来自侧边栏菜单 rule 的排序/过滤规则，在 loadData 时提取并复用
   String? _sortType;
   bool? _filter;
+
+  String get _arch => resolveRequestArch(ref);
 
   @override
   CustomCategoryState build(String code) {
@@ -64,6 +67,7 @@ class CustomCategory extends _$CustomCategory {
           menuCode: code,
           pageNo: 1,
           pageSize: _customCategoryPageSize,
+          arch: _arch,
           sortType: _sortType,
           filter: _filter,
           lan: resolveApiLang(ApiClient.getLocale?.call()),
@@ -127,6 +131,7 @@ class CustomCategory extends _$CustomCategory {
           menuCode: code,
           pageNo: nextPage,
           pageSize: _customCategoryPageSize,
+          arch: _arch,
           sortType: _sortType,
           filter: _filter,
           lan: resolveApiLang(ApiClient.getLocale?.call()),

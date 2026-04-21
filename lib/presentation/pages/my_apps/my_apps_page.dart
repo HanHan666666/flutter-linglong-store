@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../application/providers/app_uninstall_provider.dart';
 import '../../../application/providers/application_card_state_provider.dart';
 import '../../../application/providers/installed_apps_provider.dart';
 import '../../../application/providers/running_process_provider.dart';
+import '../../../core/config/routes.dart';
 import '../../../core/config/shell_primary_route.dart';
 import '../../../core/config/shell_branch_visibility.dart';
 import '../../../core/config/theme.dart';
@@ -117,7 +117,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
   Future<void> _uninstallApp(InstalledApp app) async {
     final service = ref.read(appUninstallServiceProvider);
     final success = await AppUninstallFlow.run(context, app, service);
-    if (!context.mounted) return;
+    if (!mounted) return;
 
     if (success) {
       showAppSuccess(context, '${app.name} 已卸载');
@@ -287,7 +287,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
               buttonState: cardState.buttonState,
               progress: cardState.progress,
               isInstalling: cardState.isInstalling,
-              onTap: () => context.push('/app/${app.appId}'),
+              onTap: () => context.goToAppDetail(app.appId, appInfo: app),
               onPrimaryPressed: () => handleAppCardPrimaryAction(
                 context: context,
                 ref: ref,

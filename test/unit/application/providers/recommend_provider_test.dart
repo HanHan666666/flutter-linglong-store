@@ -7,6 +7,7 @@ import 'package:mockito/mockito.dart';
 import 'package:retrofit/retrofit.dart';
 
 import 'package:linglong_store/application/providers/api_provider.dart';
+import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/providers/recommend_provider.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/core/storage/recommend_page_cache.dart';
@@ -17,12 +18,18 @@ import '../../../mocks/mock_classes.mocks.dart';
 
 class _InMemoryRecommendPageCacheStore implements RecommendPageCacheStore {
   RecommendPageCacheSnapshot? snapshot;
+  final List<String> readScopes = [];
+  final List<String> writeScopes = [];
 
   @override
-  Future<RecommendPageCacheSnapshot?> read(String locale) async => snapshot;
+  Future<RecommendPageCacheSnapshot?> read(String locale) async {
+    readScopes.add(locale);
+    return snapshot;
+  }
 
   @override
   Future<void> write(RecommendPageCacheSnapshot snapshot, String locale) async {
+    writeScopes.add(locale);
     this.snapshot = snapshot;
   }
 
@@ -82,6 +89,8 @@ void main() {
             id: 'cached-banner',
             title: 'Cached Banner',
             imageUrl: 'https://example.com/cached-banner.png',
+            version: '1.0.0',
+            arch: 'aarch64',
             targetAppId: 'cached.app',
           ),
         ],
@@ -112,6 +121,9 @@ void main() {
         overrides: [
           appApiServiceProvider.overrideWithValue(mockApiService),
           recommendPageCacheStoreProvider.overrideWithValue(cacheStore),
+          globalAppProvider.overrideWith(
+            () => _TestGlobalApp(const GlobalAppState(arch: 'aarch64')),
+          ),
         ],
       );
       addTearDown(container.dispose);
@@ -152,6 +164,8 @@ void main() {
       final refreshedState = container.read(recommendProvider);
       expect(refreshedState.data?.apps.items.single.name, equals('Remote App'));
       expect(cacheStore.snapshot?.apps.items.single.name, equals('Remote App'));
+      expect(cacheStore.readScopes.single, contains('aarch64'));
+      expect(cacheStore.writeScopes.single, contains('aarch64'));
     });
 
     test('loads more with rust page size 10', () async {
@@ -197,6 +211,9 @@ void main() {
         overrides: [
           appApiServiceProvider.overrideWithValue(mockApiService),
           recommendPageCacheStoreProvider.overrideWithValue(cacheStore),
+          globalAppProvider.overrideWith(
+            () => _TestGlobalApp(const GlobalAppState(arch: 'aarch64')),
+          ),
         ],
       );
       addTearDown(container.dispose);
@@ -241,6 +258,9 @@ void main() {
         overrides: [
           appApiServiceProvider.overrideWithValue(mockApiService),
           recommendPageCacheStoreProvider.overrideWithValue(cacheStore),
+          globalAppProvider.overrideWith(
+            () => _TestGlobalApp(const GlobalAppState(arch: 'aarch64')),
+          ),
         ],
       );
       addTearDown(container.dispose);
@@ -252,6 +272,99 @@ void main() {
       expect(state.error, isNull);
       expect(state.data?.apps.items.single.name, equals('App One'));
       expect(state.data?.banners, isEmpty);
+    });
+
+    test('passes current arch to carousel and app list requests', () async {
+      when(mockApiService.getWelcomeCarouselList(any)).thenAnswer(
+        (_) async => _buildCarouselResponse(const []),
+      );
+      when(mockApiService.getWelcomeAppList(any)).thenAnswer(
+        (_) async => _buildPagedResponse(
+          [
+            AppListItemDTO.fromJson({
+              'appId': 'remote.app',
+              'zhName': 'Remote App',
+              'version': '1.0.0',
+              'arch': 'aarch64',
+            }),
+          ],
+          currentPage: 1,
+          pageSize: 10,
+          total: 1,
+          pages: 1,
+        ),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          appApiServiceProvider.overrideWithValue(mockApiService),
+          recommendPageCacheStoreProvider.overrideWithValue(cacheStore),
+          globalAppProvider.overrideWith(
+            () => _TestGlobalApp(const GlobalAppState(arch: 'aarch64')),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.listen<RecommendState>(recommendProvider, (_, __) {});
+      await _flushAsyncWork();
+
+      final carouselCaptured =
+          verify(mockApiService.getWelcomeCarouselList(captureAny))
+              .captured
+              .single as AppWelcomeSearchRequest;
+      final listCaptured = verify(mockApiService.getWelcomeAppList(captureAny))
+          .captured
+          .cast<PageParams>();
+      final state = container.read(recommendProvider);
+
+      expect(carouselCaptured.arch, equals('aarch64'));
+      expect(listCaptured.single.arch, equals('aarch64'));
+      expect(
+        state.data?.apps.items.single.toInstalledApp().arch,
+        equals('aarch64'),
+      );
+      expect(cacheStore.readScopes.single, contains('aarch64'));
+      expect(cacheStore.writeScopes.single, contains('aarch64'));
+    });
+
+    test('preserves banner arch context for app detail navigation', () async {
+      when(mockApiService.getWelcomeCarouselList(any)).thenAnswer(
+        (_) async => _buildCarouselResponse([
+          AppListItemDTO.fromJson({
+            'appId': 'banner.app',
+            'zhName': 'Banner App',
+            'version': '3.2.1',
+            'icon': 'https://example.com/banner.png',
+            'description': 'banner-desc',
+            'arch': 'aarch64',
+          }),
+        ]),
+      );
+      when(mockApiService.getWelcomeAppList(any)).thenAnswer(
+        (_) async => _buildPagedResponse(const [], currentPage: 1, pageSize: 10, total: 0, pages: 0),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          appApiServiceProvider.overrideWithValue(mockApiService),
+          recommendPageCacheStoreProvider.overrideWithValue(cacheStore),
+          globalAppProvider.overrideWith(
+            () => _TestGlobalApp(const GlobalAppState(arch: 'aarch64')),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.listen<RecommendState>(recommendProvider, (_, __) {});
+      await _flushAsyncWork();
+
+      final banner = container.read(recommendProvider).data?.banners.single;
+      final bannerApp = banner?.toInstalledApp();
+
+      expect(bannerApp?.appId, equals('banner.app'));
+      expect(bannerApp?.version, equals('3.2.1'));
+      expect(bannerApp?.arch, equals('aarch64'));
     });
   });
 }
@@ -293,4 +406,13 @@ HttpResponse<AppListResponse> _buildPagedResponse(
     ),
     Response(requestOptions: RequestOptions(path: '/visit/getWelcomeAppList')),
   );
+}
+
+class _TestGlobalApp extends GlobalApp {
+  _TestGlobalApp(this._initialState);
+
+  final GlobalAppState _initialState;
+
+  @override
+  GlobalAppState build() => _initialState;
 }

@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -10,6 +9,7 @@ import '../../data/mappers/app_list_mapper.dart';
 import '../../data/models/api_dto.dart';
 import '../../domain/models/recommend_models.dart';
 import 'api_provider.dart';
+import 'global_provider.dart';
 
 part 'all_apps_provider.freezed.dart';
 part 'all_apps_provider.g.dart';
@@ -52,6 +52,8 @@ const int _allAppsPageSize = 30;
 /// 全部应用页状态 Provider
 @riverpod
 class AllApps extends _$AllApps {
+  String get _arch => resolveRequestArch(ref);
+
   @override
   AllAppsState build() {
     // 初始化时加载数据
@@ -166,6 +168,7 @@ class AllApps extends _$AllApps {
         categoryId: categoryId,
         pageNo: page,
         pageSize: _allAppsPageSize,
+        arch: _arch,
         lan: resolveApiLang(ApiClient.getLocale?.call()),
       ),
     );

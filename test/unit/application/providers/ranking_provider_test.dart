@@ -1,6 +1,16 @@
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:linglong_store/application/providers/api_provider.dart';
+import 'package:linglong_store/application/providers/global_provider.dart';
+import 'package:linglong_store/application/providers/ranking_provider.dart';
 import 'package:linglong_store/domain/models/ranking_models.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
+import 'package:linglong_store/data/models/api_dto.dart';
+import 'package:mockito/mockito.dart';
+import 'package:retrofit/retrofit.dart';
+
+import '../../../mocks/mock_classes.mocks.dart';
 
 void main() {
   setUpAll(() async {
@@ -178,5 +188,119 @@ void main() {
         expect(state.data!.type, equals(RankingType.download));
       });
     });
+
+    group('API behavior', () {
+      late MockAppApiService mockApiService;
+
+      setUp(() {
+        mockApiService = MockAppApiService();
+      });
+
+      test('passes current arch to rising and download ranking requests', () async {
+        when(mockApiService.getNewAppList(any)).thenAnswer((invocation) async {
+          final request = invocation.positionalArguments.single as PageParams;
+          return _buildRankingResponse(
+            [
+              AppListItemDTO.fromJson({
+                'appId': 'new.app',
+                'zhName': 'New App',
+                'version': '1.0.0',
+                'arch': 'aarch64',
+              }),
+            ],
+            path: '/visit/getNewAppList',
+            currentPage: request.pageNo,
+            pageSize: request.pageSize,
+          );
+        });
+        when(mockApiService.getInstallAppList(any)).thenAnswer((invocation) async {
+          final request = invocation.positionalArguments.single as PageParams;
+          return _buildRankingResponse(
+            [
+              AppListItemDTO.fromJson({
+                'appId': 'download.app',
+                'zhName': 'Download App',
+                'version': '2.0.0',
+                'arch': 'aarch64',
+              }),
+            ],
+            path: '/visit/getInstallAppList',
+            currentPage: request.pageNo,
+            pageSize: request.pageSize,
+          );
+        });
+
+        final container = ProviderContainer(
+          overrides: [
+            appApiServiceProvider.overrideWithValue(mockApiService),
+            globalAppProvider.overrideWith(
+              () => _TestGlobalApp(const GlobalAppState(arch: 'aarch64')),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        container.listen<RankingState>(rankingProvider, (_, __) {});
+        await _flushAsyncWork();
+
+        final risingCaptured = verify(mockApiService.getNewAppList(captureAny))
+            .captured
+            .single as PageParams;
+        expect(risingCaptured.arch, equals('aarch64'));
+
+        await container
+            .read(rankingProvider.notifier)
+            .selectType(RankingType.download);
+        await _flushAsyncWork();
+
+        final downloadCaptured =
+            verify(mockApiService.getInstallAppList(captureAny))
+                .captured
+                .single as PageParams;
+        final state = container.read(rankingProvider);
+
+        expect(downloadCaptured.arch, equals('aarch64'));
+        expect(
+          state.data?.apps.single.toInstalledApp().arch,
+          equals('aarch64'),
+        );
+      });
+    });
   });
+}
+
+Future<void> _flushAsyncWork() async {
+  await Future<void>.delayed(Duration.zero);
+  await Future<void>.delayed(Duration.zero);
+  await Future<void>.delayed(const Duration(milliseconds: 1));
+}
+
+HttpResponse<AppListResponse> _buildRankingResponse(
+  List<AppListItemDTO> records, {
+  required String path,
+  required int currentPage,
+  required int pageSize,
+}) {
+  return HttpResponse(
+    AppListResponse(
+      code: 200,
+      data: AppListPagedData(
+        records: records,
+        total: records.length,
+        size: pageSize,
+        current: currentPage,
+        pages: 1,
+      ),
+    ),
+    Response(requestOptions: RequestOptions(path: path)),
+  );
+}
+
+class _TestGlobalApp extends GlobalApp {
+  _TestGlobalApp(this._initialState);
+
+  final GlobalAppState _initialState;
+
+  @override
+  GlobalAppState build() => _initialState;
 }

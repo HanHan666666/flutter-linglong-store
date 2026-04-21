@@ -4912,7 +4912,7 @@ as String?,
 /// @nodoc
 mixin _$AppListItemDTO {
 
-@JsonKey(name: 'appId') String get appId;@JsonKey(readValue: _readAppName) String get appName;@JsonKey(readValue: _readAppVersion) String? get appVersion;@JsonKey(readValue: _readAppIcon) String? get appIcon;@JsonKey(readValue: _readAppDescription) String? get appDesc;@JsonKey(readValue: _readAppKind) String? get appKind;@JsonKey(readValue: _readDeveloperName) String? get developerName;@JsonKey(name: 'categoryName') String? get categoryName;@JsonKey(readValue: _readDownloadCount) int? get downloadTimes;@JsonKey(readValue: _readPackageSize) String? get packageSize;@JsonKey(name: 'createTime') String? get createTime;// 上架时间
+@JsonKey(name: 'appId') String get appId;@JsonKey(readValue: _readAppName) String get appName;@JsonKey(readValue: _readAppVersion) String? get appVersion;@JsonKey(readValue: _readAppIcon) String? get appIcon;@JsonKey(readValue: _readAppDescription) String? get appDesc;@JsonKey(readValue: _readAppKind) String? get appKind;@JsonKey(readValue: _readDeveloperName) String? get developerName;@JsonKey(name: 'categoryName') String? get categoryName;@JsonKey(readValue: _readDownloadCount) int? get downloadTimes;@JsonKey(readValue: _readPackageSize) String? get packageSize; String? get arch;@JsonKey(name: 'createTime') String? get createTime;// 上架时间
 @JsonKey(name: 'last30DownloadCount') int? get last30DownloadCount;
 /// Create a copy of AppListItemDTO
 /// with the given fields replaced by the non-null parameter values.
@@ -4926,16 +4926,16 @@ $AppListItemDTOCopyWith<AppListItemDTO> get copyWith => _$AppListItemDTOCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppListItemDTO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.appName, appName) || other.appName == appName)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&(identical(other.appIcon, appIcon) || other.appIcon == appIcon)&&(identical(other.appDesc, appDesc) || other.appDesc == appDesc)&&(identical(other.appKind, appKind) || other.appKind == appKind)&&(identical(other.developerName, developerName) || other.developerName == developerName)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.downloadTimes, downloadTimes) || other.downloadTimes == downloadTimes)&&(identical(other.packageSize, packageSize) || other.packageSize == packageSize)&&(identical(other.createTime, createTime) || other.createTime == createTime)&&(identical(other.last30DownloadCount, last30DownloadCount) || other.last30DownloadCount == last30DownloadCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppListItemDTO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.appName, appName) || other.appName == appName)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&(identical(other.appIcon, appIcon) || other.appIcon == appIcon)&&(identical(other.appDesc, appDesc) || other.appDesc == appDesc)&&(identical(other.appKind, appKind) || other.appKind == appKind)&&(identical(other.developerName, developerName) || other.developerName == developerName)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.downloadTimes, downloadTimes) || other.downloadTimes == downloadTimes)&&(identical(other.packageSize, packageSize) || other.packageSize == packageSize)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.createTime, createTime) || other.createTime == createTime)&&(identical(other.last30DownloadCount, last30DownloadCount) || other.last30DownloadCount == last30DownloadCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appId,appName,appVersion,appIcon,appDesc,appKind,developerName,categoryName,downloadTimes,packageSize,createTime,last30DownloadCount);
+int get hashCode => Object.hash(runtimeType,appId,appName,appVersion,appIcon,appDesc,appKind,developerName,categoryName,downloadTimes,packageSize,arch,createTime,last30DownloadCount);
 
 @override
 String toString() {
-  return 'AppListItemDTO(appId: $appId, appName: $appName, appVersion: $appVersion, appIcon: $appIcon, appDesc: $appDesc, appKind: $appKind, developerName: $developerName, categoryName: $categoryName, downloadTimes: $downloadTimes, packageSize: $packageSize, createTime: $createTime, last30DownloadCount: $last30DownloadCount)';
+  return 'AppListItemDTO(appId: $appId, appName: $appName, appVersion: $appVersion, appIcon: $appIcon, appDesc: $appDesc, appKind: $appKind, developerName: $developerName, categoryName: $categoryName, downloadTimes: $downloadTimes, packageSize: $packageSize, arch: $arch, createTime: $createTime, last30DownloadCount: $last30DownloadCount)';
 }
 
 
@@ -4946,7 +4946,7 @@ abstract mixin class $AppListItemDTOCopyWith<$Res>  {
   factory $AppListItemDTOCopyWith(AppListItemDTO value, $Res Function(AppListItemDTO) _then) = _$AppListItemDTOCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'appId') String appId,@JsonKey(readValue: _readAppName) String appName,@JsonKey(readValue: _readAppVersion) String? appVersion,@JsonKey(readValue: _readAppIcon) String? appIcon,@JsonKey(readValue: _readAppDescription) String? appDesc,@JsonKey(readValue: _readAppKind) String? appKind,@JsonKey(readValue: _readDeveloperName) String? developerName,@JsonKey(name: 'categoryName') String? categoryName,@JsonKey(readValue: _readDownloadCount) int? downloadTimes,@JsonKey(readValue: _readPackageSize) String? packageSize,@JsonKey(name: 'createTime') String? createTime,@JsonKey(name: 'last30DownloadCount') int? last30DownloadCount
+@JsonKey(name: 'appId') String appId,@JsonKey(readValue: _readAppName) String appName,@JsonKey(readValue: _readAppVersion) String? appVersion,@JsonKey(readValue: _readAppIcon) String? appIcon,@JsonKey(readValue: _readAppDescription) String? appDesc,@JsonKey(readValue: _readAppKind) String? appKind,@JsonKey(readValue: _readDeveloperName) String? developerName,@JsonKey(name: 'categoryName') String? categoryName,@JsonKey(readValue: _readDownloadCount) int? downloadTimes,@JsonKey(readValue: _readPackageSize) String? packageSize, String? arch,@JsonKey(name: 'createTime') String? createTime,@JsonKey(name: 'last30DownloadCount') int? last30DownloadCount
 });
 
 
@@ -4963,7 +4963,7 @@ class _$AppListItemDTOCopyWithImpl<$Res>
 
 /// Create a copy of AppListItemDTO
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? appName = null,Object? appVersion = freezed,Object? appIcon = freezed,Object? appDesc = freezed,Object? appKind = freezed,Object? developerName = freezed,Object? categoryName = freezed,Object? downloadTimes = freezed,Object? packageSize = freezed,Object? createTime = freezed,Object? last30DownloadCount = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? appName = null,Object? appVersion = freezed,Object? appIcon = freezed,Object? appDesc = freezed,Object? appKind = freezed,Object? developerName = freezed,Object? categoryName = freezed,Object? downloadTimes = freezed,Object? packageSize = freezed,Object? arch = freezed,Object? createTime = freezed,Object? last30DownloadCount = freezed,}) {
   return _then(_self.copyWith(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,appName: null == appName ? _self.appName : appName // ignore: cast_nullable_to_non_nullable
@@ -4975,6 +4975,7 @@ as String?,developerName: freezed == developerName ? _self.developerName : devel
 as String?,categoryName: freezed == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
 as String?,downloadTimes: freezed == downloadTimes ? _self.downloadTimes : downloadTimes // ignore: cast_nullable_to_non_nullable
 as int?,packageSize: freezed == packageSize ? _self.packageSize : packageSize // ignore: cast_nullable_to_non_nullable
+as String?,arch: freezed == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
 as String?,createTime: freezed == createTime ? _self.createTime : createTime // ignore: cast_nullable_to_non_nullable
 as String?,last30DownloadCount: freezed == last30DownloadCount ? _self.last30DownloadCount : last30DownloadCount // ignore: cast_nullable_to_non_nullable
 as int?,
@@ -5059,10 +5060,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId, @JsonKey(readValue: _readAppName)  String appName, @JsonKey(readValue: _readAppVersion)  String? appVersion, @JsonKey(readValue: _readAppIcon)  String? appIcon, @JsonKey(readValue: _readAppDescription)  String? appDesc, @JsonKey(readValue: _readAppKind)  String? appKind, @JsonKey(readValue: _readDeveloperName)  String? developerName, @JsonKey(name: 'categoryName')  String? categoryName, @JsonKey(readValue: _readDownloadCount)  int? downloadTimes, @JsonKey(readValue: _readPackageSize)  String? packageSize, @JsonKey(name: 'createTime')  String? createTime, @JsonKey(name: 'last30DownloadCount')  int? last30DownloadCount)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId, @JsonKey(readValue: _readAppName)  String appName, @JsonKey(readValue: _readAppVersion)  String? appVersion, @JsonKey(readValue: _readAppIcon)  String? appIcon, @JsonKey(readValue: _readAppDescription)  String? appDesc, @JsonKey(readValue: _readAppKind)  String? appKind, @JsonKey(readValue: _readDeveloperName)  String? developerName, @JsonKey(name: 'categoryName')  String? categoryName, @JsonKey(readValue: _readDownloadCount)  int? downloadTimes, @JsonKey(readValue: _readPackageSize)  String? packageSize,  String? arch, @JsonKey(name: 'createTime')  String? createTime, @JsonKey(name: 'last30DownloadCount')  int? last30DownloadCount)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppListItemDTO() when $default != null:
-return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.appDesc,_that.appKind,_that.developerName,_that.categoryName,_that.downloadTimes,_that.packageSize,_that.createTime,_that.last30DownloadCount);case _:
+return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.appDesc,_that.appKind,_that.developerName,_that.categoryName,_that.downloadTimes,_that.packageSize,_that.arch,_that.createTime,_that.last30DownloadCount);case _:
   return orElse();
 
 }
@@ -5080,10 +5081,10 @@ return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.a
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId, @JsonKey(readValue: _readAppName)  String appName, @JsonKey(readValue: _readAppVersion)  String? appVersion, @JsonKey(readValue: _readAppIcon)  String? appIcon, @JsonKey(readValue: _readAppDescription)  String? appDesc, @JsonKey(readValue: _readAppKind)  String? appKind, @JsonKey(readValue: _readDeveloperName)  String? developerName, @JsonKey(name: 'categoryName')  String? categoryName, @JsonKey(readValue: _readDownloadCount)  int? downloadTimes, @JsonKey(readValue: _readPackageSize)  String? packageSize, @JsonKey(name: 'createTime')  String? createTime, @JsonKey(name: 'last30DownloadCount')  int? last30DownloadCount)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId, @JsonKey(readValue: _readAppName)  String appName, @JsonKey(readValue: _readAppVersion)  String? appVersion, @JsonKey(readValue: _readAppIcon)  String? appIcon, @JsonKey(readValue: _readAppDescription)  String? appDesc, @JsonKey(readValue: _readAppKind)  String? appKind, @JsonKey(readValue: _readDeveloperName)  String? developerName, @JsonKey(name: 'categoryName')  String? categoryName, @JsonKey(readValue: _readDownloadCount)  int? downloadTimes, @JsonKey(readValue: _readPackageSize)  String? packageSize,  String? arch, @JsonKey(name: 'createTime')  String? createTime, @JsonKey(name: 'last30DownloadCount')  int? last30DownloadCount)  $default,) {final _that = this;
 switch (_that) {
 case _AppListItemDTO():
-return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.appDesc,_that.appKind,_that.developerName,_that.categoryName,_that.downloadTimes,_that.packageSize,_that.createTime,_that.last30DownloadCount);}
+return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.appDesc,_that.appKind,_that.developerName,_that.categoryName,_that.downloadTimes,_that.packageSize,_that.arch,_that.createTime,_that.last30DownloadCount);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -5097,10 +5098,10 @@ return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.a
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'appId')  String appId, @JsonKey(readValue: _readAppName)  String appName, @JsonKey(readValue: _readAppVersion)  String? appVersion, @JsonKey(readValue: _readAppIcon)  String? appIcon, @JsonKey(readValue: _readAppDescription)  String? appDesc, @JsonKey(readValue: _readAppKind)  String? appKind, @JsonKey(readValue: _readDeveloperName)  String? developerName, @JsonKey(name: 'categoryName')  String? categoryName, @JsonKey(readValue: _readDownloadCount)  int? downloadTimes, @JsonKey(readValue: _readPackageSize)  String? packageSize, @JsonKey(name: 'createTime')  String? createTime, @JsonKey(name: 'last30DownloadCount')  int? last30DownloadCount)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'appId')  String appId, @JsonKey(readValue: _readAppName)  String appName, @JsonKey(readValue: _readAppVersion)  String? appVersion, @JsonKey(readValue: _readAppIcon)  String? appIcon, @JsonKey(readValue: _readAppDescription)  String? appDesc, @JsonKey(readValue: _readAppKind)  String? appKind, @JsonKey(readValue: _readDeveloperName)  String? developerName, @JsonKey(name: 'categoryName')  String? categoryName, @JsonKey(readValue: _readDownloadCount)  int? downloadTimes, @JsonKey(readValue: _readPackageSize)  String? packageSize,  String? arch, @JsonKey(name: 'createTime')  String? createTime, @JsonKey(name: 'last30DownloadCount')  int? last30DownloadCount)?  $default,) {final _that = this;
 switch (_that) {
 case _AppListItemDTO() when $default != null:
-return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.appDesc,_that.appKind,_that.developerName,_that.categoryName,_that.downloadTimes,_that.packageSize,_that.createTime,_that.last30DownloadCount);case _:
+return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.appDesc,_that.appKind,_that.developerName,_that.categoryName,_that.downloadTimes,_that.packageSize,_that.arch,_that.createTime,_that.last30DownloadCount);case _:
   return null;
 
 }
@@ -5112,7 +5113,7 @@ return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.a
 @JsonSerializable()
 
 class _AppListItemDTO implements AppListItemDTO {
-  const _AppListItemDTO({@JsonKey(name: 'appId') required this.appId, @JsonKey(readValue: _readAppName) required this.appName, @JsonKey(readValue: _readAppVersion) this.appVersion, @JsonKey(readValue: _readAppIcon) this.appIcon, @JsonKey(readValue: _readAppDescription) this.appDesc, @JsonKey(readValue: _readAppKind) this.appKind, @JsonKey(readValue: _readDeveloperName) this.developerName, @JsonKey(name: 'categoryName') this.categoryName, @JsonKey(readValue: _readDownloadCount) this.downloadTimes, @JsonKey(readValue: _readPackageSize) this.packageSize, @JsonKey(name: 'createTime') this.createTime, @JsonKey(name: 'last30DownloadCount') this.last30DownloadCount});
+  const _AppListItemDTO({@JsonKey(name: 'appId') required this.appId, @JsonKey(readValue: _readAppName) required this.appName, @JsonKey(readValue: _readAppVersion) this.appVersion, @JsonKey(readValue: _readAppIcon) this.appIcon, @JsonKey(readValue: _readAppDescription) this.appDesc, @JsonKey(readValue: _readAppKind) this.appKind, @JsonKey(readValue: _readDeveloperName) this.developerName, @JsonKey(name: 'categoryName') this.categoryName, @JsonKey(readValue: _readDownloadCount) this.downloadTimes, @JsonKey(readValue: _readPackageSize) this.packageSize, this.arch, @JsonKey(name: 'createTime') this.createTime, @JsonKey(name: 'last30DownloadCount') this.last30DownloadCount});
   factory _AppListItemDTO.fromJson(Map<String, dynamic> json) => _$AppListItemDTOFromJson(json);
 
 @override@JsonKey(name: 'appId') final  String appId;
@@ -5125,6 +5126,7 @@ class _AppListItemDTO implements AppListItemDTO {
 @override@JsonKey(name: 'categoryName') final  String? categoryName;
 @override@JsonKey(readValue: _readDownloadCount) final  int? downloadTimes;
 @override@JsonKey(readValue: _readPackageSize) final  String? packageSize;
+@override final  String? arch;
 @override@JsonKey(name: 'createTime') final  String? createTime;
 // 上架时间
 @override@JsonKey(name: 'last30DownloadCount') final  int? last30DownloadCount;
@@ -5142,16 +5144,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppListItemDTO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.appName, appName) || other.appName == appName)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&(identical(other.appIcon, appIcon) || other.appIcon == appIcon)&&(identical(other.appDesc, appDesc) || other.appDesc == appDesc)&&(identical(other.appKind, appKind) || other.appKind == appKind)&&(identical(other.developerName, developerName) || other.developerName == developerName)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.downloadTimes, downloadTimes) || other.downloadTimes == downloadTimes)&&(identical(other.packageSize, packageSize) || other.packageSize == packageSize)&&(identical(other.createTime, createTime) || other.createTime == createTime)&&(identical(other.last30DownloadCount, last30DownloadCount) || other.last30DownloadCount == last30DownloadCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppListItemDTO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.appName, appName) || other.appName == appName)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&(identical(other.appIcon, appIcon) || other.appIcon == appIcon)&&(identical(other.appDesc, appDesc) || other.appDesc == appDesc)&&(identical(other.appKind, appKind) || other.appKind == appKind)&&(identical(other.developerName, developerName) || other.developerName == developerName)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.downloadTimes, downloadTimes) || other.downloadTimes == downloadTimes)&&(identical(other.packageSize, packageSize) || other.packageSize == packageSize)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.createTime, createTime) || other.createTime == createTime)&&(identical(other.last30DownloadCount, last30DownloadCount) || other.last30DownloadCount == last30DownloadCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appId,appName,appVersion,appIcon,appDesc,appKind,developerName,categoryName,downloadTimes,packageSize,createTime,last30DownloadCount);
+int get hashCode => Object.hash(runtimeType,appId,appName,appVersion,appIcon,appDesc,appKind,developerName,categoryName,downloadTimes,packageSize,arch,createTime,last30DownloadCount);
 
 @override
 String toString() {
-  return 'AppListItemDTO(appId: $appId, appName: $appName, appVersion: $appVersion, appIcon: $appIcon, appDesc: $appDesc, appKind: $appKind, developerName: $developerName, categoryName: $categoryName, downloadTimes: $downloadTimes, packageSize: $packageSize, createTime: $createTime, last30DownloadCount: $last30DownloadCount)';
+  return 'AppListItemDTO(appId: $appId, appName: $appName, appVersion: $appVersion, appIcon: $appIcon, appDesc: $appDesc, appKind: $appKind, developerName: $developerName, categoryName: $categoryName, downloadTimes: $downloadTimes, packageSize: $packageSize, arch: $arch, createTime: $createTime, last30DownloadCount: $last30DownloadCount)';
 }
 
 
@@ -5162,7 +5164,7 @@ abstract mixin class _$AppListItemDTOCopyWith<$Res> implements $AppListItemDTOCo
   factory _$AppListItemDTOCopyWith(_AppListItemDTO value, $Res Function(_AppListItemDTO) _then) = __$AppListItemDTOCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'appId') String appId,@JsonKey(readValue: _readAppName) String appName,@JsonKey(readValue: _readAppVersion) String? appVersion,@JsonKey(readValue: _readAppIcon) String? appIcon,@JsonKey(readValue: _readAppDescription) String? appDesc,@JsonKey(readValue: _readAppKind) String? appKind,@JsonKey(readValue: _readDeveloperName) String? developerName,@JsonKey(name: 'categoryName') String? categoryName,@JsonKey(readValue: _readDownloadCount) int? downloadTimes,@JsonKey(readValue: _readPackageSize) String? packageSize,@JsonKey(name: 'createTime') String? createTime,@JsonKey(name: 'last30DownloadCount') int? last30DownloadCount
+@JsonKey(name: 'appId') String appId,@JsonKey(readValue: _readAppName) String appName,@JsonKey(readValue: _readAppVersion) String? appVersion,@JsonKey(readValue: _readAppIcon) String? appIcon,@JsonKey(readValue: _readAppDescription) String? appDesc,@JsonKey(readValue: _readAppKind) String? appKind,@JsonKey(readValue: _readDeveloperName) String? developerName,@JsonKey(name: 'categoryName') String? categoryName,@JsonKey(readValue: _readDownloadCount) int? downloadTimes,@JsonKey(readValue: _readPackageSize) String? packageSize, String? arch,@JsonKey(name: 'createTime') String? createTime,@JsonKey(name: 'last30DownloadCount') int? last30DownloadCount
 });
 
 
@@ -5179,7 +5181,7 @@ class __$AppListItemDTOCopyWithImpl<$Res>
 
 /// Create a copy of AppListItemDTO
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? appId = null,Object? appName = null,Object? appVersion = freezed,Object? appIcon = freezed,Object? appDesc = freezed,Object? appKind = freezed,Object? developerName = freezed,Object? categoryName = freezed,Object? downloadTimes = freezed,Object? packageSize = freezed,Object? createTime = freezed,Object? last30DownloadCount = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? appId = null,Object? appName = null,Object? appVersion = freezed,Object? appIcon = freezed,Object? appDesc = freezed,Object? appKind = freezed,Object? developerName = freezed,Object? categoryName = freezed,Object? downloadTimes = freezed,Object? packageSize = freezed,Object? arch = freezed,Object? createTime = freezed,Object? last30DownloadCount = freezed,}) {
   return _then(_AppListItemDTO(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,appName: null == appName ? _self.appName : appName // ignore: cast_nullable_to_non_nullable
@@ -5191,6 +5193,7 @@ as String?,developerName: freezed == developerName ? _self.developerName : devel
 as String?,categoryName: freezed == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
 as String?,downloadTimes: freezed == downloadTimes ? _self.downloadTimes : downloadTimes // ignore: cast_nullable_to_non_nullable
 as int?,packageSize: freezed == packageSize ? _self.packageSize : packageSize // ignore: cast_nullable_to_non_nullable
+as String?,arch: freezed == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
 as String?,createTime: freezed == createTime ? _self.createTime : createTime // ignore: cast_nullable_to_non_nullable
 as String?,last30DownloadCount: freezed == last30DownloadCount ? _self.last30DownloadCount : last30DownloadCount // ignore: cast_nullable_to_non_nullable
 as int?,

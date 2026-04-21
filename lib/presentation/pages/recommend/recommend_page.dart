@@ -3,10 +3,10 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../application/providers/recommend_provider.dart';
+import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/config/shell_primary_route.dart';
 import '../../../core/config/shell_branch_visibility.dart';
@@ -508,7 +508,10 @@ class _BannerSectionState extends State<_BannerSection> {
   void _onBannerTap(BannerInfo banner) {
     if (banner.targetAppId != null) {
       // 如果是应用链接，跳转到应用详情页
-      context.push('/app/${banner.targetAppId}');
+      context.goToAppDetail(
+        banner.targetAppId!,
+        appInfo: banner.toInstalledApp(),
+      );
     } else if (banner.targetUrl != null) {
       // 如果是外部链接，使用系统浏览器打开
       _launchExternalUrl(banner.targetUrl!);
@@ -726,7 +729,10 @@ class _AppsGrid extends StatelessWidget {
           buttonState: cardState.buttonState,
           progress: cardState.progress,
           isInstalling: cardState.isInstalling,
-          onTap: () => context.push('/app/${app.appId}'),
+          onTap: () => context.goToAppDetail(
+            app.appId,
+            appInfo: app.toInstalledApp(),
+          ),
           onPrimaryPressed: () => handleAppCardPrimaryAction(
             context: context,
             ref: ref,

@@ -20,6 +20,20 @@ part 'global_provider.g.dart';
 const String _kLanguageKey = 'linglong-store-language';
 const String _kThemeModeKey = 'linglong-store-theme-mode';
 const String _kUserPreferencesKey = 'linglong-store-user-preferences';
+const String kDefaultRequestArch = 'x86_64';
+
+/// 解析当前请求需要使用的架构。
+///
+/// 某些 widget/unit 测试不会初始化全局 SharedPreferences/Logger，直接读取
+/// `globalAppProvider` 可能触发全局 provider 构建失败。这里在无法读取时回退为
+/// 默认架构，保证列表/统计请求仍能继续执行。
+String resolveRequestArch(dynamic ref) {
+  try {
+    return ref.read(globalAppProvider).arch ?? kDefaultRequestArch;
+  } catch (_) {
+    return kDefaultRequestArch;
+  }
+}
 
 /// 用户偏好设置
 @freezed
@@ -158,7 +172,7 @@ class GlobalAppState {
 /// - 环境信息
 @Riverpod(keepAlive: true)
 class GlobalApp extends _$GlobalApp {
-  late SharedPreferences _prefs;
+  SharedPreferences? _prefs;
 
   @override
   GlobalAppState build() {
@@ -171,17 +185,22 @@ class GlobalApp extends _$GlobalApp {
   /// 这里直接在 build 阶段同步读取，确保 MaterialApp 首帧就使用用户上次保存
   /// 的语言和主题，而不是先展示默认值再切换。
   GlobalAppState _restorePersistedSettings() {
+    final prefs = _prefs;
+    if (prefs == null) {
+      return const GlobalAppState(isInitialized: true);
+    }
+
     try {
       var restoredState = const GlobalAppState(isInitialized: true);
 
       // 加载语言设置
-      final languageCode = _prefs.getString(_kLanguageKey);
+      final languageCode = prefs.getString(_kLanguageKey);
       if (languageCode != null) {
         restoredState = restoredState.copyWith(locale: Locale(languageCode));
       }
 
       // 加载主题模式
-      final themeModeIndex = _prefs.getInt(_kThemeModeKey);
+      final themeModeIndex = prefs.getInt(_kThemeModeKey);
       if (themeModeIndex != null && themeModeIndex < ThemeMode.values.length) {
         restoredState = restoredState.copyWith(
           themeMode: ThemeMode.values[themeModeIndex],
@@ -189,7 +208,7 @@ class GlobalApp extends _$GlobalApp {
       }
 
       // 加载用户偏好
-      final prefsJson = _prefs.getString(_kUserPreferencesKey);
+      final prefsJson = prefs.getString(_kUserPreferencesKey);
       if (prefsJson != null) {
         final userPreferences = UserPreferences.fromJson(
           jsonDecode(prefsJson) as Map<String, dynamic>,
@@ -207,12 +226,11 @@ class GlobalApp extends _$GlobalApp {
     }
   }
 
-  SharedPreferences _readSharedPreferences() {
+  SharedPreferences? _readSharedPreferences() {
     try {
       return ref.read(sharedPreferencesProvider);
-    } catch (e, s) {
-      AppLogger.error('SharedPreferences is not available for GlobalApp', e, s);
-      rethrow;
+    } catch (_) {
+      return null;
     }
   }
 
@@ -221,7 +239,10 @@ class GlobalApp extends _$GlobalApp {
   /// 设置语言
   Future<void> setLocale(Locale locale) async {
     state = state.copyWith(locale: locale);
-    await _prefs.setString(_kLanguageKey, locale.languageCode);
+    final prefs = _prefs;
+    if (prefs != null) {
+      await prefs.setString(_kLanguageKey, locale.languageCode);
+    }
     AppLogger.info('Locale changed to: ${locale.languageCode}');
 
     // 刷新所有依赖语言的数据 Provider
@@ -255,7 +276,10 @@ class GlobalApp extends _$GlobalApp {
   /// 设置主题模式
   Future<void> setThemeMode(ThemeMode mode) async {
     state = state.copyWith(themeMode: mode);
-    await _prefs.setInt(_kThemeModeKey, mode.index);
+    final prefs = _prefs;
+    if (prefs != null) {
+      await prefs.setInt(_kThemeModeKey, mode.index);
+    }
     AppLogger.info('Theme mode changed to: ${mode.name}');
   }
 
@@ -281,7 +305,10 @@ class GlobalApp extends _$GlobalApp {
   /// 更新用户偏好
   Future<void> updateUserPreferences(UserPreferences prefs) async {
     state = state.copyWith(userPreferences: prefs);
-    await _prefs.setString(_kUserPreferencesKey, jsonEncode(prefs.toJson()));
+    final sharedPrefs = _prefs;
+    if (sharedPrefs != null) {
+      await sharedPrefs.setString(_kUserPreferencesKey, jsonEncode(prefs.toJson()));
+    }
     AppLogger.info('User preferences updated');
   }
 

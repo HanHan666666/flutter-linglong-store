@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/application/providers/all_apps_provider.dart';
 import 'package:linglong_store/application/providers/api_provider.dart';
+import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
 import 'package:linglong_store/domain/models/recommend_models.dart';
@@ -150,7 +151,12 @@ void main() {
           ]),
         );
         container = ProviderContainer(
-          overrides: [appApiServiceProvider.overrideWithValue(mockApiService)],
+          overrides: [
+            appApiServiceProvider.overrideWithValue(mockApiService),
+            globalAppProvider.overrideWith(
+              () => _TestGlobalApp(const GlobalAppState(arch: 'aarch64')),
+            ),
+          ],
         );
       });
 
@@ -201,6 +207,7 @@ void main() {
           ).captured.cast<SearchAppListRequest>();
           // 最后一次请求必须携带真实 categoryId
           expect(captured.last.categoryId, equals('07'));
+          expect(captured.last.arch, equals('aarch64'));
           expect(captured.last.pageSize, equals(30));
         },
       );
@@ -268,10 +275,20 @@ void main() {
           ).captured.cast<SearchAppListRequest>();
           // loadMore 必须保留当前 categoryId 并继续使用 pageSize=30
           expect(captured.last.categoryId, equals('07'));
+          expect(captured.last.arch, equals('aarch64'));
           expect(captured.last.pageSize, equals(30));
           expect(captured.last.pageNo, equals(2));
         },
       );
     });
   });
+}
+
+class _TestGlobalApp extends GlobalApp {
+  _TestGlobalApp(this._initialState);
+
+  final GlobalAppState _initialState;
+
+  @override
+  GlobalAppState build() => _initialState;
 }

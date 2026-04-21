@@ -113,9 +113,12 @@ class AppDetail extends _$AppDetail {
 
     try {
       final repository = ref.read(appRepositoryProvider);
+      // 优先沿用列表入口传入的 arch，避免跨架构条目进入详情后查不到。
+      final detailArch =
+          initialApp?.arch ?? state.appDetail?.arch ?? state.app?.arch;
 
       // 调用真实 API 获取应用详情
-      final appDetail = await repository.getAppDetail(appId);
+      final appDetail = await repository.getAppDetail(appId, arch: detailArch);
 
       // 将详情转换为 InstalledApp 模型
       final repo = ref.read(appRepositoryProvider) as AppRepositoryImpl;

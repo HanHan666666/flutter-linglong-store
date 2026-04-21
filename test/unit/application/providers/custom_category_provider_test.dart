@@ -6,6 +6,7 @@ import 'package:retrofit/retrofit.dart';
 
 import 'package:linglong_store/application/providers/api_provider.dart';
 import 'package:linglong_store/application/providers/custom_category_provider.dart';
+import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/providers/sidebar_config_provider.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/core/network/api_client.dart';
@@ -70,6 +71,9 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           appApiServiceProvider.overrideWithValue(mockApiService),
+          globalAppProvider.overrideWith(
+            () => _TestGlobalApp(const GlobalAppState(arch: 'aarch64')),
+          ),
           sidebarConfigProvider.overrideWith(
             (ref) async => const [
               SidebarMenuDTO(menuCode: 'office', menuName: '办公'),
@@ -141,6 +145,9 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           appApiServiceProvider.overrideWithValue(mockApiService),
+          globalAppProvider.overrideWith(
+            () => _TestGlobalApp(const GlobalAppState(arch: 'aarch64')),
+          ),
           sidebarConfigProvider.overrideWith(
             (ref) async => const [
               SidebarMenuDTO(menuCode: 'office', menuName: '办公'),
@@ -164,11 +171,22 @@ void main() {
       final captured =
           verify(mockApiService.getSidebarApps(captureAny)).captured
               .cast<SidebarAppsRequest>();
+      expect(captured[0].arch, equals('aarch64'));
       expect(captured[0].pageSize, equals(30));
+      expect(captured[1].arch, equals('aarch64'));
       expect(captured[1].pageNo, equals(2));
       expect(captured[1].pageSize, equals(30));
     });
   });
+}
+
+class _TestGlobalApp extends GlobalApp {
+  _TestGlobalApp(this._initialState);
+
+  final GlobalAppState _initialState;
+
+  @override
+  GlobalAppState build() => _initialState;
 }
 
 Future<void> _flushAsyncWork() async {

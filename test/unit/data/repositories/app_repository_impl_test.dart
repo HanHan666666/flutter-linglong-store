@@ -51,24 +51,26 @@ void main() {
       test('should return list of InstalledApp on success', () async {
         // Arrange
         final mockResponse = HttpResponse(
-          const AppListResponse(
+          AppListResponse(
             code: 200,
             data: AppListPagedData(
               records: [
-                AppListItemDTO(
-                  appId: 'com.example.app1',
-                  appName: 'App 1',
-                  appVersion: '1.0.0',
-                  appIcon: 'https://example.com/icon1.png',
-                  appDesc: 'Description 1',
-                ),
-                AppListItemDTO(
-                  appId: 'com.example.app2',
-                  appName: 'App 2',
-                  appVersion: '2.0.0',
-                  appIcon: 'https://example.com/icon2.png',
-                  appDesc: 'Description 2',
-                ),
+                AppListItemDTO.fromJson({
+                  'appId': 'com.example.app1',
+                  'zhName': 'App 1',
+                  'version': '1.0.0',
+                  'icon': 'https://example.com/icon1.png',
+                  'description': 'Description 1',
+                  'arch': 'aarch64',
+                }),
+                AppListItemDTO.fromJson({
+                  'appId': 'com.example.app2',
+                  'zhName': 'App 2',
+                  'version': '2.0.0',
+                  'icon': 'https://example.com/icon2.png',
+                  'description': 'Description 2',
+                  'arch': 'x86_64',
+                }),
               ],
               total: 2,
               size: 20,
@@ -92,8 +94,12 @@ void main() {
         expect(result.length, equals(2));
         expect(result[0].appId, equals('com.example.app1'));
         expect(result[0].name, equals('App 1'));
+        expect(result[0].arch, equals('aarch64'));
         expect(result[1].appId, equals('com.example.app2'));
-        verify(mockApiService.getWelcomeAppList(any)).called(1);
+        final captured =
+            verify(mockApiService.getWelcomeAppList(captureAny)).captured.single
+                as PageParams;
+        expect(captured.arch, equals(_expectedCurrentArch()));
       });
 
       test('should return empty list when data is null', () async {
@@ -200,6 +206,7 @@ void main() {
         final captured =
             verify(mockApiService.getSearchAppList(captureAny)).captured.single
                 as SearchAppListRequest;
+        expect(captured.arch, equals(_expectedCurrentArch()));
         expect(captured.pageNo, equals(2));
         expect(captured.pageSize, equals(50));
       });
@@ -237,6 +244,7 @@ void main() {
                     mockApiService.getSearchAppList(captureAny),
                   ).captured.single
                   as SearchAppListRequest;
+          expect(captured.arch, equals(_expectedCurrentArch()));
           expect(captured.keyword, equals(''));
           expect(captured.categoryId, equals('07'));
           expect(captured.pageSize, equals(30));
@@ -272,6 +280,7 @@ void main() {
         final captured =
             verify(mockApiService.getSearchAppList(captureAny)).captured.single
                 as SearchAppListRequest;
+        expect(captured.arch, equals(_expectedCurrentArch()));
         expect(captured.categoryId, isNull);
       });
     });
@@ -342,6 +351,7 @@ void main() {
         final captured =
             verify(mockApiService.getSearchAppList(captureAny)).captured.single
                 as SearchAppListRequest;
+        expect(captured.arch, equals(_expectedCurrentArch()));
         expect(captured.keyword, equals('test keyword'));
       });
     });
@@ -793,6 +803,7 @@ void main() {
         final captured =
             verify(mockApiService.getNewAppList(captureAny)).captured.single
                 as PageParams;
+        expect(captured.arch, equals(_expectedCurrentArch()));
         expect(captured.pageSize, equals(50));
       });
     });
@@ -993,4 +1004,22 @@ void main() {
       });
     });
   });
+}
+
+String _expectedCurrentArch() {
+  try {
+    final archFile = File('/proc/sys/kernel/arch');
+    if (archFile.existsSync()) {
+      return archFile.readAsStringSync().trim();
+    }
+  } catch (_) {}
+
+  try {
+    final result = Process.runSync('uname', ['-m']);
+    if (result.exitCode == 0) {
+      return (result.stdout as String).trim();
+    }
+  } catch (_) {}
+
+  return 'x86_64';
 }

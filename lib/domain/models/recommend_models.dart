@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'installed_app.dart';
+
 part 'recommend_models.freezed.dart';
 
 /// 轮播图信息
@@ -9,10 +11,25 @@ sealed class BannerInfo with _$BannerInfo {
     required String id,
     required String title,
     required String imageUrl,
+    @Default('') String version,
+    String? arch,
     String? targetAppId,
     String? targetUrl,
     String? description,
   }) = _BannerInfo;
+}
+
+extension BannerInfoInstalledAppX on BannerInfo {
+  InstalledApp toInstalledApp() {
+    return InstalledApp(
+      appId: targetAppId ?? id,
+      name: title,
+      version: version,
+      arch: arch,
+      description: description,
+      icon: imageUrl,
+    );
+  }
 }
 
 /// 分类信息
@@ -38,11 +55,26 @@ sealed class RecommendAppInfo with _$RecommendAppInfo {
     String? developer,
     String? category,
     String? size,
+    String? arch,
     double? rating,
     int? downloadCount,
     @Default(false) bool isInstalled,
     @Default(false) bool hasUpdate,
   }) = _RecommendAppInfo;
+}
+
+extension RecommendAppInfoInstalledAppX on RecommendAppInfo {
+  InstalledApp toInstalledApp() {
+    return InstalledApp(
+      appId: appId,
+      name: name,
+      version: version,
+      arch: arch,
+      description: description,
+      icon: icon,
+      size: size,
+    );
+  }
 }
 
 /// 分页响应 - 用于推荐应用列表

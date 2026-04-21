@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'installed_app.dart';
+
 part 'ranking_models.freezed.dart';
 
 /// 排行榜类型
@@ -27,6 +29,7 @@ sealed class RankingAppInfo with _$RankingAppInfo {
     String? developer,
     String? category,
     String? size,
+    String? arch,
     double? rating,
     int? downloadCount,
     String? createTime, // 上架时间（新增）
@@ -34,6 +37,20 @@ sealed class RankingAppInfo with _$RankingAppInfo {
     @Default(false) bool isInstalled,
     @Default(false) bool hasUpdate,
   }) = _RankingAppInfo;
+}
+
+extension RankingAppInfoInstalledAppX on RankingAppInfo {
+  InstalledApp toInstalledApp() {
+    return InstalledApp(
+      appId: appId,
+      name: name,
+      version: version,
+      arch: arch,
+      description: description,
+      icon: icon,
+      size: size,
+    );
+  }
 }
 
 /// 排行榜数据

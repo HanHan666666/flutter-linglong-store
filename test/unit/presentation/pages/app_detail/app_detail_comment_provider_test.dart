@@ -6,6 +6,7 @@ import 'package:linglong_store/core/di/providers.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
 import 'package:linglong_store/data/repositories/app_repository_impl.dart';
+import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:mockito/mockito.dart';
 import 'package:retrofit/retrofit.dart';
 
@@ -128,6 +129,61 @@ void main() {
       expect(state.comments.single.remark, equals('提交后的最新评论'));
       verify(mockApiService.saveAppComment(any)).called(1);
       verify(mockApiService.getAppCommentList(any)).called(1);
+    });
+
+    test('loadDetail 会优先使用初始应用上下文中的 arch', () async {
+      when(mockApiService.getAppDetail(any)).thenAnswer(
+        (_) async => HttpResponse(
+          const AppDetailResponse(
+            code: 200,
+            data: {
+              'org.deepin.album': [
+                {
+                  'appId': 'org.deepin.album',
+                  'zhName': '相册',
+                  'version': '6.0.49.1',
+                  'arch': 'aarch64',
+                },
+              ],
+            },
+          ),
+          Response(requestOptions: RequestOptions(path: '/app/getAppDetail')),
+        ),
+      );
+      when(mockApiService.getSearchAppVersionList(any)).thenAnswer(
+        (_) async => HttpResponse(
+          const VersionListResponse(code: 200, data: []),
+          Response(
+            requestOptions: RequestOptions(
+              path: '/visit/getSearchAppVersionList',
+            ),
+          ),
+        ),
+      );
+      when(mockApiService.getAppCommentList(any)).thenAnswer(
+        (_) async => HttpResponse(
+          const AppCommentListResponse(code: 200, data: []),
+          Response(
+            requestOptions: RequestOptions(path: '/app/getAppCommentList'),
+          ),
+        ),
+      );
+
+      await container
+          .read(appDetailProvider('org.deepin.album').notifier)
+          .loadDetail(
+            const InstalledApp(
+              appId: 'org.deepin.album',
+              name: '相册',
+              version: '6.0.49.1',
+              arch: 'aarch64',
+            ),
+          );
+
+      final captured =
+          verify(mockApiService.getAppDetail(captureAny)).captured.single
+              as List<AppDetailSearchBO>;
+      expect(captured.single.arch, equals('aarch64'));
     });
   });
 }

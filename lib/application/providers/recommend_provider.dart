@@ -9,6 +9,7 @@ import '../../data/mappers/app_list_mapper.dart';
 import '../../data/models/api_dto.dart';
 import '../../domain/models/recommend_models.dart';
 import 'api_provider.dart';
+import 'global_provider.dart';
 
 part 'recommend_provider.g.dart';
 
@@ -16,6 +17,11 @@ part 'recommend_provider.g.dart';
 @riverpod
 class Recommend extends _$Recommend {
   static const int _pageSize = 10;
+
+  String get _arch => resolveRequestArch(ref);
+  // 推荐页缓存必须同时按语言和架构分片，避免不同架构的快照互相污染。
+  String get _cacheScope =>
+      '${resolveApiLang(ApiClient.getLocale?.call())}|$_arch';
 
   @override
   RecommendState build() {
@@ -35,6 +41,7 @@ class Recommend extends _$Recommend {
       try {
         final carouselResponse = await apiService.getWelcomeCarouselList(
           AppWelcomeSearchRequest(
+            arch: _arch,
             lan: resolveApiLang(ApiClient.getLocale?.call()),
           ),
         );
@@ -47,6 +54,7 @@ class Recommend extends _$Recommend {
         PageParams(
           pageNo: 1,
           pageSize: _pageSize,
+          arch: _arch,
           lan: resolveApiLang(ApiClient.getLocale?.call()),
         ),
       );
@@ -95,6 +103,7 @@ class Recommend extends _$Recommend {
         PageParams(
           pageNo: nextPage,
           pageSize: _pageSize,
+          arch: _arch,
           lan: resolveApiLang(ApiClient.getLocale?.call()),
         ),
       );
@@ -125,9 +134,8 @@ class Recommend extends _$Recommend {
   }
 
   Future<void> _hydrateFromCacheIfPresent() async {
-    final locale = resolveApiLang(ApiClient.getLocale?.call());
     final cacheStore = ref.read(recommendPageCacheStoreProvider);
-    final snapshot = await cacheStore.read(locale);
+    final snapshot = await cacheStore.read(_cacheScope);
     if (snapshot == null) {
       return;
     }
@@ -147,7 +155,6 @@ class Recommend extends _$Recommend {
     required RecommendData data,
     required int currentPage,
   }) async {
-    final locale = resolveApiLang(ApiClient.getLocale?.call());
     final cacheStore = ref.read(recommendPageCacheStoreProvider);
     await cacheStore.write(
       RecommendPageCacheSnapshot(
@@ -155,7 +162,7 @@ class Recommend extends _$Recommend {
         apps: data.apps,
         currentPage: currentPage,
       ),
-      locale,
+      _cacheScope,
     );
   }
 
@@ -170,6 +177,8 @@ class Recommend extends _$Recommend {
             id: dto.appId,
             title: dto.appName,
             imageUrl: dto.appIcon ?? '',
+            version: dto.appVersion ?? '',
+            arch: dto.arch,
             targetAppId: dto.appId,
             description: dto.appDesc,
           ),

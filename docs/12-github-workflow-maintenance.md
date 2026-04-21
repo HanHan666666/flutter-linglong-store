@@ -61,11 +61,13 @@
 - 如果默认分支 `HEAD` 与某个已存在 nightly prerelease 的 `Nightly source commit` 相同，则首轮执行跳过 prerelease；只有 `run_attempt > 1` 或手动 `force_aur_publish=true` 时，才允许复用那次 prerelease 资产补发 AUR
 - 手动补发时可额外传 `aur_release_tag`，显式指定要复用的历史 nightly tag；这种恢复路径以该 tag 对应的 prerelease 为准，不要求它的 `Nightly source commit` 仍等于当前 `HEAD`
 - 如果手动补发未传 `aur_release_tag`，workflow 会回退到按 `Nightly source commit` 扫描现有 nightly prerelease
+- `aur_release_tag` 指向的 prerelease 必须已经包含 `amd64 + arm64` nightly tarball 及其 `.asc`；对于历史单架构 nightly tag，当前策略是显式失败而不是回退发布一份缺失 arm64 的 Nightly AUR 元数据
 - 无论补发的是当前还是历史 prerelease，`publish-aur-nightly` 都必须继续使用触发本次 workflow 的当前代码版本执行渲染、校验与发布脚本；只允许资产下载 URL 与版本标签指向历史 prerelease
-- nightly 只构建 `amd64`
+- nightly 必须同时构建 `amd64` / `arm64`；`arm64` 优先走 `ubuntu-24.04-arm` 原生 runner，失败或取消时再回退到 QEMU
 - nightly Release notes 必须通过 `build/scripts/generate-nightly-release-notes.sh` 生成，禁止再把 changelog / 下载说明 / metadata 直接内联写回 workflow heredoc
 - nightly changelog 的范围固定为“最近一次 nightly prerelease 的 `Nightly source commit` → 当前 `source_commit`”；如果没有上一版 nightly，则必须输出明确的首版兜底文案
 - nightly 发布前必须基于最终签名后的发布资产追加 `SHA256 Hashes of the release artifacts` 段落，并同时产出 `hashes.sha256`；禁止在 prepare/build 阶段对未签名产物提前固化哈希
+- nightly 的 build/sign/publish/AUR 阶段都必须消费合并后的多架构 artifact；不要再在签名后保留 `*-amd64` 这种误导性的单架构 artifact 名
 
 ### `release.yml`
 
@@ -141,9 +143,13 @@ nightly 的内部打包继续复用正式 semver 产物，然后由 `build/scrip
 当前输出命名：
 
 - `linglong-store-<nightly_label>-linux-amd64.tar.gz`
+- `linglong-store-<nightly_label>-linux-arm64.tar.gz`
 - `linglong-store-<nightly_label>-amd64.deb`
+- `linglong-store-<nightly_label>-arm64.deb`
 - `linglong-store-<nightly_label>-x86_64.rpm`
+- `linglong-store-<nightly_label>-aarch64.rpm`
 - `linglong-store-<nightly_label>-amd64.AppImage`
+- `linglong-store-<nightly_label>-arm64.AppImage`
 
 注意：
 
@@ -226,9 +232,14 @@ rpm -K package.rpm
 ```
 linglong-store-<label>-linux-amd64.tar.gz
 linglong-store-<label>-linux-amd64.tar.gz.asc  ← PGP 签名
+linglong-store-<label>-linux-arm64.tar.gz
+linglong-store-<label>-linux-arm64.tar.gz.asc  ← PGP 签名
 linglong-store-<label>-amd64.deb
+linglong-store-<label>-arm64.deb
 linglong-store-<label>-x86_64.rpm              ← 内嵌签名
+linglong-store-<label>-aarch64.rpm             ← 内嵌签名
 linglong-store-<label>-amd64.AppImage
+linglong-store-<label>-arm64.AppImage
 hashes.sha256                                  ← GitHub Release 页面附带的 SHA256 汇总文件
 ```
 
@@ -272,7 +283,7 @@ nightly 在 GitHub prerelease 发布成功后，必须继续执行 AUR 发布，
 
 约束如下：
 
-- `linglong-store-nightly-bin` 只发布 `x86_64`
+- `linglong-store-nightly-bin` 必须同时发布 `x86_64` / `aarch64`
 - `linglong-store-nightly-bin` 必须声明 `conflicts=('linglong-store' 'linglong-store-bin')`，因为它复用稳定版安装路径，既要拦住稳定包名，也要拦住共享虚拟包名
 - nightly AUR `pkgver` 必须把 `<base_version>-nightly.<YYYYMMDD>+<short_sha>` 归一成 `<base_version>_nightly.<YYYYMMDD>.<short_sha>`
 - nightly 桌面与 metainfo 命名必须显式带 nightly 变体：
@@ -280,6 +291,7 @@ nightly 在 GitHub prerelease 发布成功后，必须继续执行 AUR 发布，
   - AppStream launchable：`linglong-store-nightly.desktop`
   - 用户可见名称必须带 `Nightly`
 - `nightly.yml` 当前发布顺序固定为：生成并签名 nightly 资产 → 发布 GitHub prerelease → 发布 nightly AUR；不要把 AUR 发布提前到 prerelease 之前
+- nightly AUR 的 checksum/render/validate/publish 必须同时消费 `amd64` / `arm64` tarball 与 `.asc`，禁止再把 arm64 当成 stable-only 逻辑
 - `publish-aur.sh` 在宿主机没有 `makepkg` 时，必须通过临时 Arch 容器生成 `.SRCINFO`，不要假定 Ubuntu runner 自带 Arch 打包工具
 - 容器兜底只允许在容器内部临时工作目录生成 `.SRCINFO` 后再拷回结果，禁止对挂载进来的宿主 AUR 仓库执行递归 `chown`
 

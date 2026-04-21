@@ -85,10 +85,11 @@ $changelog_content
 ## Nightly Build
 
 - Version label: $nightly_label
-- Architecture: amd64
+- Architecture: amd64, arm64
 
 ## Download
 - amd64: bundle / deb / rpm / AppImage
+- arm64: bundle / deb / rpm / AppImage
 
 ## Requirements
 - Linux

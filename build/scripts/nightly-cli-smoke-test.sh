@@ -62,6 +62,10 @@ touch "$FAKE_SOURCE_DIR/linglong-store-${base_version}-linux-amd64.tar.gz"
 touch "$FAKE_SOURCE_DIR/linglong-store_${base_version}_amd64.deb"
 touch "$FAKE_SOURCE_DIR/linglong-store-${base_version}-1.x86_64.rpm"
 touch "$FAKE_SOURCE_DIR/linglong-store-${base_version}-amd64.AppImage"
+touch "$FAKE_SOURCE_DIR/linglong-store-${base_version}-linux-arm64.tar.gz"
+touch "$FAKE_SOURCE_DIR/linglong-store_${base_version}_arm64.deb"
+touch "$FAKE_SOURCE_DIR/linglong-store-${base_version}-1.aarch64.rpm"
+touch "$FAKE_SOURCE_DIR/linglong-store-${base_version}-arm64.AppImage"
 
 bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
   --inner \
@@ -99,7 +103,9 @@ bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
   --output-dir "$NIGHTLY_AUR_OUTPUT_DIR" \
   --channel nightly \
   --sha256-amd64 deadbeef \
+  --sha256-arm64 deadbeef \
   --sha256-sig-amd64 deadbeef \
+  --sha256-sig-arm64 deadbeef \
   --gpg-key-id TESTKEY
 
 test -f "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
@@ -108,13 +114,12 @@ test -f "$NIGHTLY_AUR_OUTPUT_DIR/aur/linglong-store-nightly-bin.changelog"
 assert_no_template_placeholders "$NIGHTLY_AUR_OUTPUT_DIR/aur/linglong-store-nightly-bin.changelog"
 grep -q '^pkgname=linglong-store-nightly-bin$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
 grep -q "^pkgver=${current_nightly_aur_version}$" "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
-grep -q "^arch=('x86_64')$" "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
+grep -q "^arch=('x86_64' 'aarch64')$" "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
 grep -q '^conflicts=('"'linglong-store' 'linglong-store-bin'"')$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
 grep -q '/releases/tag/nightly-'"$nightly_date"'$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/linglong-store-nightly-bin.changelog"
-if grep -q '^source_aarch64=' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"; then
-  echo "Nightly PKGBUILD unexpectedly rendered source_aarch64 block." >&2
-  exit 1
-fi
+grep -q '^source_aarch64=(' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
+grep -q 'linglong-store-'"$nightly_label"'-linux-arm64.tar.gz::https://github.com/HanHan666666/flutter-linglong-store/releases/download/nightly-'"$nightly_date"'/linglong-store-'"$nightly_label"'-linux-arm64.tar.gz' \
+  "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
 
 desktop_count="$(find "$RENDER_OUTPUT_DIR" -maxdepth 1 -type f -name '*.desktop' | awk 'END { print NR }')"
 test "$desktop_count" = "1"
@@ -136,6 +141,18 @@ test -f "$OUTPUT_DIR/linglong-store-${nightly_label}-linux-amd64.tar.gz"
 test -f "$OUTPUT_DIR/linglong-store-${nightly_label}-amd64.deb"
 test -f "$OUTPUT_DIR/linglong-store-${nightly_label}-x86_64.rpm"
 test -f "$OUTPUT_DIR/linglong-store-${nightly_label}-amd64.AppImage"
+
+bash "$ROOT_DIR/build/scripts/prepare-nightly-assets.sh" \
+  --base-version "$base_version" \
+  --nightly-label "$nightly_label" \
+  --arch arm64 \
+  --source-dir "$FAKE_SOURCE_DIR" \
+  --output-dir "$OUTPUT_DIR-arm64"
+
+test -f "$OUTPUT_DIR-arm64/linglong-store-${nightly_label}-linux-arm64.tar.gz"
+test -f "$OUTPUT_DIR-arm64/linglong-store-${nightly_label}-arm64.deb"
+test -f "$OUTPUT_DIR-arm64/linglong-store-${nightly_label}-aarch64.rpm"
+test -f "$OUTPUT_DIR-arm64/linglong-store-${nightly_label}-arm64.AppImage"
 
 NOTES_FIXTURE_REPO="$TMP_ROOT/notes-repo"
 NOTES_OUTPUT_WITH_HISTORY="$TMP_ROOT/nightly-release-notes-with-history.md"
@@ -177,7 +194,10 @@ assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- append nightly changelog"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly source commit: $current_source_commit"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly source date: $nightly_date"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly version label: $nightly_label"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- Architecture: amd64, arm64"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Download"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- amd64: bundle / deb / rpm / AppImage"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- arm64: bundle / deb / rpm / AppImage"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Requirements"
 
 (
@@ -213,6 +233,11 @@ printf 'nightly bundle signature\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store
 printf 'nightly deb\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-amd64.deb"
 printf 'nightly rpm\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-x86_64.rpm"
 printf 'nightly appimage\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-amd64.AppImage"
+printf 'nightly arm64 bundle\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-linux-arm64.tar.gz"
+printf 'nightly arm64 bundle signature\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-linux-arm64.tar.gz.asc"
+printf 'nightly arm64 deb\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-arm64.deb"
+printf 'nightly arm64 rpm\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-aarch64.rpm"
+printf 'nightly arm64 appimage\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-arm64.AppImage"
 
 bash "$ROOT_DIR/build/scripts/append-release-asset-hashes.sh" \
   --assets-dir "$NIGHTLY_ASSET_FIXTURE_DIR" \
@@ -228,7 +253,10 @@ assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- hashes.sha256"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "$nightly_hashes_hash"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "linglong-store-${nightly_label}-linux-amd64.tar.gz"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "$nightly_bundle_hash"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "linglong-store-${nightly_label}-linux-arm64.tar.gz"
 grep -q 'linglong-store-'"$nightly_label"'-amd64.AppImage$' "$NIGHTLY_HASHES_OUTPUT_PATH"
 grep -q 'linglong-store-'"$nightly_label"'-x86_64.rpm$' "$NIGHTLY_HASHES_OUTPUT_PATH"
+grep -q 'linglong-store-'"$nightly_label"'-arm64.AppImage$' "$NIGHTLY_HASHES_OUTPUT_PATH"
+grep -q 'linglong-store-'"$nightly_label"'-aarch64.rpm$' "$NIGHTLY_HASHES_OUTPUT_PATH"
 
 echo "Nightly CLI smoke test passed."

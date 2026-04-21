@@ -146,14 +146,9 @@ if [[ -z "$sha256_amd64" || -z "$sha256_sig_amd64" ]]; then
   exit 1
 fi
 
-if [[ "$channel" == "stable" && ( -z "$sha256_arm64" || -z "$sha256_sig_arm64" ) ]]; then
-  echo "Error: stable AUR publishing requires SHA256_ARM64 and SHA256_SIG_ARM64" >&2
+if [[ -z "$sha256_arm64" || -z "$sha256_sig_arm64" ]]; then
+  echo "Error: AUR publishing requires SHA256_ARM64 and SHA256_SIG_ARM64" >&2
   exit 1
-fi
-
-if [[ "$channel" == "nightly" && "$target_arch" != "x86_64" ]]; then
-  echo "Nightly AUR publishing only supports the x86_64 package set." >&2
-  exit 64
 fi
 
 # Setup SSH for AUR

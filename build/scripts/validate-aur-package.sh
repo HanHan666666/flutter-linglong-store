@@ -141,12 +141,10 @@ EOF
   printf 'offline signature fixture for %s\n' "$release_version" \
     > "$build_dir/linglong-store-${release_version}-linux-amd64.tar.gz.asc"
 
-  if [[ "$channel" == "stable" ]]; then
-    cp "$build_dir/linglong-store-${release_version}-linux-amd64.tar.gz" \
-      "$build_dir/linglong-store-${release_version}-linux-arm64.tar.gz"
-    cp "$build_dir/linglong-store-${release_version}-linux-amd64.tar.gz.asc" \
-      "$build_dir/linglong-store-${release_version}-linux-arm64.tar.gz.asc"
-  fi
+  cp "$build_dir/linglong-store-${release_version}-linux-amd64.tar.gz" \
+    "$build_dir/linglong-store-${release_version}-linux-arm64.tar.gz"
+  cp "$build_dir/linglong-store-${release_version}-linux-amd64.tar.gz.asc" \
+    "$build_dir/linglong-store-${release_version}-linux-arm64.tar.gz.asc"
 }
 
 prepare_offline_build_workspace() {
@@ -246,7 +244,7 @@ run_inner_validation() {
       sha256_amd64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-amd64.tar.gz")")"
     fi
 
-    if [[ "$channel" == "stable" && -z "$sha256_arm64" ]]; then
+    if [[ -z "$sha256_arm64" ]]; then
       sha256_arm64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-arm64.tar.gz")")"
     fi
 
@@ -254,7 +252,7 @@ run_inner_validation() {
       sha256_sig_amd64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-amd64.tar.gz.asc")")"
     fi
 
-    if [[ "$channel" == "stable" && -z "$sha256_sig_arm64" ]]; then
+    if [[ -z "$sha256_sig_arm64" ]]; then
       sha256_sig_arm64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-arm64.tar.gz.asc")")"
     fi
   else
@@ -262,11 +260,8 @@ run_inner_validation() {
     # deterministic placeholder digests avoid any accidental network access.
     : "${sha256_amd64:=$(placeholder_sha256 "${channel}:${release_version}:amd64:bundle")}"
     : "${sha256_sig_amd64:=$(placeholder_sha256 "${channel}:${release_version}:amd64:signature")}"
-
-    if [[ "$channel" == "stable" ]]; then
-      : "${sha256_arm64:=$(placeholder_sha256 "${channel}:${release_version}:arm64:bundle")}"
-      : "${sha256_sig_arm64:=$(placeholder_sha256 "${channel}:${release_version}:arm64:signature")}"
-    fi
+    : "${sha256_arm64:=$(placeholder_sha256 "${channel}:${release_version}:arm64:bundle")}"
+    : "${sha256_sig_arm64:=$(placeholder_sha256 "${channel}:${release_version}:arm64:signature")}"
   fi
 
   case "$channel" in
@@ -384,15 +379,10 @@ EOF
       "AUR metadata did not render the expected conflicts entry ${expected_conflict}."
   done
 
-  if [[ "$channel" == "stable" ]]; then
-    assert_file_contains "$metadata_dir/aur/.SRCINFO" "$expected_arch_line_secondary" \
-      "Stable AUR metadata is still missing the arm64 architecture."
-  else
-    assert_file_not_contains "$metadata_dir/aur/.SRCINFO" "$expected_arch_line_secondary" \
-      "Nightly AUR metadata unexpectedly rendered the arm64 architecture."
-    assert_file_not_contains "$metadata_dir/aur/.SRCINFO" "source_aarch64 =" \
-      "Nightly AUR metadata unexpectedly rendered source_aarch64 entries."
-  fi
+  assert_file_contains "$metadata_dir/aur/.SRCINFO" "$expected_arch_line_secondary" \
+    "AUR metadata is still missing the arm64 architecture."
+  assert_file_contains "$metadata_dir/aur/.SRCINFO" "source_aarch64 =" \
+    "AUR metadata is still missing arm64 source entries."
 
   assert_output_contains "$pkginfo" "pkgname = ${package_name}" \
     "Built AUR package did not keep the expected package name."

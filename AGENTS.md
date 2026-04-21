@@ -280,6 +280,7 @@ Semantics(
 测试文件位于 `test/unit/core/accessibility/a11y_semantics_test.dart`。
 
 ## 变更记录
+- 2026-04-21：`nightly.yml` 不再只做 `amd64`；必须同时构建 `amd64 + arm64`，其中 `arm64` 优先走 `ubuntu-24.04-arm` 原生 runner，失败/取消时回退到 QEMU；Nightly 的签名、Release notes、GitHub prerelease 与 `linglong-store-nightly-bin` AUR 都必须按双架构资产（`x86_64 + aarch64`）统一处理，禁止继续保留 amd64-only 假设。
 - 2026-03-17：应用列表卡片状态统一迁移到页面级索引 `application_card_state_provider.dart`，由公共 `AppCard` 渲染；列表页禁止再各自复制 `_AppCard` 并手写“安装/更新/打开”判断。
 - 2026-03-17：卡片主按钮统一采用三态规则：未安装显示“安装”，已安装且可更新显示“更新”，已安装且无更新显示“打开”；安装队列仅作为 loading/progress 来源，不改变三态决策。
 - 2026-03-17：`我的应用` 页按 `appId` 合并多版本，仅展示最高版本；卸载乐观更新必须按 `appId + version` 精确移除，不能整包删除同应用的其他已安装版本。

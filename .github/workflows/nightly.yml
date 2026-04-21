@@ -72,7 +72,7 @@ jobs:
 
               if (!label) {
                 for (const asset of release.assets || []) {
-                  const assetMatch = asset.name.match(/^linglong-store-(.+)-linux-amd64\.tar\.gz$/);
+                  const assetMatch = asset.name.match(/^linglong-store-(.+)-linux-(?:amd64|arm64)\.tar\.gz$/);
                   if (assetMatch) {
                     label = assetMatch[1];
                     break;
@@ -272,16 +272,108 @@ jobs:
           path: build/out/nightly/${{ needs.prepare-nightly.outputs.nightly_label }}/amd64
           if-no-files-found: error
 
+  build-nightly-arm64:
+    name: Build nightly arm64 native ${{ needs.prepare-nightly.outputs.nightly_label }}
+    needs: prepare-nightly
+    if: ${{ needs.prepare-nightly.outputs.should_publish_release == 'true' }}
+    runs-on: ubuntu-24.04-arm
+    env:
+      TARGET_ARCH: arm64
+      RPM_ARCH: aarch64
+      RELEASE_VERSION: ${{ needs.prepare-nightly.outputs.base_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and cache Debian 10 release image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: build/docker/debian10-release.Dockerfile
+          load: true
+          tags: linglong-store/debian10-release:local
+          cache-from: type=gha,scope=debian10-release-arm64
+          cache-to: type=gha,mode=max,scope=debian10-release-arm64
+
+      - name: Run Debian 10 packaging smoke test
+        env:
+          PACKAGE_CHANNEL: nightly
+        run: bash build/scripts/package-smoke-test.sh
+
+      - name: Stage nightly assets
+        run: |
+          bash build/scripts/prepare-nightly-assets.sh \
+            --base-version "${RELEASE_VERSION}" \
+            --nightly-label "${{ needs.prepare-nightly.outputs.nightly_label }}" \
+            --arch "${TARGET_ARCH}" \
+            --source-dir "build/out/linux/${RELEASE_VERSION}/${TARGET_ARCH}" \
+            --output-dir "build/out/nightly/${{ needs.prepare-nightly.outputs.nightly_label }}/${TARGET_ARCH}"
+
+      - name: Upload nightly assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-assets-arm64
+          path: build/out/nightly/${{ needs.prepare-nightly.outputs.nightly_label }}/arm64
+          if-no-files-found: error
+
+  build-nightly-arm64-qemu:
+    name: Build nightly arm64 fallback ${{ needs.prepare-nightly.outputs.nightly_label }}
+    needs: [prepare-nightly, build-nightly-arm64]
+    if: ${{ always() && needs.prepare-nightly.outputs.should_publish_release == 'true' && (needs.build-nightly-arm64.result == 'failure' || needs.build-nightly-arm64.result == 'cancelled') }}
+    runs-on: ubuntu-latest
+    env:
+      TARGET_ARCH: arm64
+      RPM_ARCH: aarch64
+      RELEASE_VERSION: ${{ needs.prepare-nightly.outputs.base_version }}
+      DOCKER_DEFAULT_PLATFORM: linux/arm64
+      DOCKER_PLATFORM: linux/arm64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Run Debian 10 packaging smoke test
+        env:
+          PACKAGE_CHANNEL: nightly
+        run: bash build/scripts/package-smoke-test.sh
+
+      - name: Stage nightly assets
+        run: |
+          bash build/scripts/prepare-nightly-assets.sh \
+            --base-version "${RELEASE_VERSION}" \
+            --nightly-label "${{ needs.prepare-nightly.outputs.nightly_label }}" \
+            --arch "${TARGET_ARCH}" \
+            --source-dir "build/out/linux/${RELEASE_VERSION}/${TARGET_ARCH}" \
+            --output-dir "build/out/nightly/${{ needs.prepare-nightly.outputs.nightly_label }}/${TARGET_ARCH}"
+
+      - name: Upload nightly assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-assets-arm64
+          path: build/out/nightly/${{ needs.prepare-nightly.outputs.nightly_label }}/arm64
+          if-no-files-found: error
+
   sign-nightly:
     name: Sign nightly assets
-    needs: [prepare-nightly, build-nightly-amd64]
-    if: ${{ needs.prepare-nightly.outputs.should_publish_release == 'true' && needs.build-nightly-amd64.result == 'success' }}
+    needs: [prepare-nightly, build-nightly-amd64, build-nightly-arm64, build-nightly-arm64-qemu]
+    if: ${{ always() && needs.prepare-nightly.outputs.should_publish_release == 'true' && needs.build-nightly-amd64.result == 'success' && (needs.build-nightly-arm64.result == 'success' || (needs.build-nightly-arm64.result != 'success' && needs.build-nightly-arm64-qemu.result == 'success')) }}
     runs-on: ubuntu-latest
     steps:
       - name: Download nightly assets
         uses: actions/download-artifact@v4
         with:
-          name: nightly-assets-amd64
+          pattern: nightly-assets-*
+          merge-multiple: true
           path: artifacts
 
       - name: Install RPM signing tools
@@ -357,7 +449,7 @@ jobs:
       - name: Upload signed assets
         uses: actions/upload-artifact@v4
         with:
-          name: signed-nightly-assets-amd64
+          name: signed-nightly-assets
           path: |
             artifacts/*.tar.gz
             artifacts/*.tar.gz.asc
@@ -385,7 +477,7 @@ jobs:
       - name: Download signed nightly assets
         uses: actions/download-artifact@v4
         with:
-          name: signed-nightly-assets-amd64
+          name: signed-nightly-assets
           path: nightly-artifacts
 
       - name: Update nightly tag
@@ -453,7 +545,7 @@ jobs:
         if: ${{ needs.prepare-nightly.outputs.aur_asset_source == 'artifact' }}
         uses: actions/download-artifact@v4
         with:
-          name: signed-nightly-assets-amd64
+          name: signed-nightly-assets
           path: signed-nightly-assets
 
       - name: Download signed nightly assets from existing prerelease
@@ -466,7 +558,9 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --dir signed-nightly-assets \
             --pattern "linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz" \
-            --pattern "linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz.asc"
+            --pattern "linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz.asc" \
+            --pattern "linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-arm64.tar.gz" \
+            --pattern "linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-arm64.tar.gz.asc"
 
       - name: Calculate nightly checksums
         id: checksums
@@ -483,11 +577,27 @@ jobs:
             exit 1
           fi
 
+          tarball_path_arm64="signed-nightly-assets/linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-arm64.tar.gz"
+          if [[ ! -f "$tarball_path_arm64" ]]; then
+            echo "Missing expected signed nightly arm64 tarball: $tarball_path_arm64" >&2
+            exit 1
+          fi
+
+          sig_path_arm64="signed-nightly-assets/linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-arm64.tar.gz.asc"
+          if [[ ! -f "$sig_path_arm64" ]]; then
+            echo "Missing expected signed nightly arm64 tarball signature: $sig_path_arm64" >&2
+            exit 1
+          fi
+
           sha_amd64="$(sha256sum "$tarball_path" | awk '{print $1}')"
           sha_sig_amd64="$(sha256sum "$sig_path" | awk '{print $1}')"
+          sha_arm64="$(sha256sum "$tarball_path_arm64" | awk '{print $1}')"
+          sha_sig_arm64="$(sha256sum "$sig_path_arm64" | awk '{print $1}')"
 
           echo "sha_amd64=$sha_amd64" >> "$GITHUB_OUTPUT"
           echo "sha_sig_amd64=$sha_sig_amd64" >> "$GITHUB_OUTPUT"
+          echo "sha_arm64=$sha_arm64" >> "$GITHUB_OUTPUT"
+          echo "sha_sig_arm64=$sha_sig_arm64" >> "$GITHUB_OUTPUT"
 
       - name: Normalize nightly AUR version
         id: aur-version
@@ -504,6 +614,8 @@ jobs:
 
           expected_tarball_url="https://github.com/HanHan666666/flutter-linglong-store/releases/download/${{ needs.prepare-nightly.outputs.aur_nightly_tag }}/linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz"
           expected_signature_url="${expected_tarball_url}.asc"
+          expected_tarball_url_arm64="https://github.com/HanHan666666/flutter-linglong-store/releases/download/${{ needs.prepare-nightly.outputs.aur_nightly_tag }}/linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-arm64.tar.gz"
+          expected_signature_url_arm64="${expected_tarball_url_arm64}.asc"
 
           bash build/scripts/render-packaging-templates.sh \
             --inner \
@@ -512,17 +624,24 @@ jobs:
             --output-dir "$metadata_dir" \
             --channel nightly \
             --sha256-amd64 "${{ steps.checksums.outputs.sha_amd64 }}" \
+            --sha256-arm64 "${{ steps.checksums.outputs.sha_arm64 }}" \
             --sha256-sig-amd64 "${{ steps.checksums.outputs.sha_sig_amd64 }}" \
+            --sha256-sig-arm64 "${{ steps.checksums.outputs.sha_sig_arm64 }}" \
             --gpg-key-id "$GPG_KEY_ID"
 
           pkgbuild="$metadata_dir/aur/PKGBUILD"
           grep -Fqx "pkgname=linglong-store-nightly-bin" "$pkgbuild"
           grep -Fqx "pkgver=${{ steps.aur-version.outputs.aur_version }}" "$pkgbuild"
+          grep -Fqx "arch=('x86_64' 'aarch64')" "$pkgbuild"
           grep -Fqx "validpgpkeys=('${GPG_KEY_ID}')" "$pkgbuild"
           grep -Fqx "  \"linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz::${expected_tarball_url}\"" "$pkgbuild"
           grep -Fqx "  \"linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz.asc::${expected_signature_url}\"" "$pkgbuild"
+          grep -Fqx "  \"linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-arm64.tar.gz::${expected_tarball_url_arm64}\"" "$pkgbuild"
+          grep -Fqx "  \"linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-arm64.tar.gz.asc::${expected_signature_url_arm64}\"" "$pkgbuild"
           grep -Fqx "  '${{ steps.checksums.outputs.sha_amd64 }}'" "$pkgbuild"
           grep -Fqx "  '${{ steps.checksums.outputs.sha_sig_amd64 }}'" "$pkgbuild"
+          grep -Fqx "  '${{ steps.checksums.outputs.sha_arm64 }}'" "$pkgbuild"
+          grep -Fqx "  '${{ steps.checksums.outputs.sha_sig_arm64 }}'" "$pkgbuild"
 
       - name: Setup SSH for AUR
         env:
@@ -549,13 +668,17 @@ jobs:
             --package-name linglong-store-nightly-bin \
             --aur-version "${{ steps.aur-version.outputs.aur_version }}" \
             --sha256-amd64 "${{ steps.checksums.outputs.sha_amd64 }}" \
+            --sha256-arm64 "${{ steps.checksums.outputs.sha_arm64 }}" \
             --sha256-sig-amd64 "${{ steps.checksums.outputs.sha_sig_amd64 }}" \
+            --sha256-sig-arm64 "${{ steps.checksums.outputs.sha_sig_arm64 }}" \
             --gpg-key-id "$GPG_KEY_ID"
 
       - name: Publish nightly AUR package
         env:
           SHA256_AMD64: ${{ steps.checksums.outputs.sha_amd64 }}
+          SHA256_ARM64: ${{ steps.checksums.outputs.sha_arm64 }}
           SHA256_SIG_AMD64: ${{ steps.checksums.outputs.sha_sig_amd64 }}
+          SHA256_SIG_ARM64: ${{ steps.checksums.outputs.sha_sig_arm64 }}
           GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
         run: |
           bash build/scripts/publish-aur.sh \

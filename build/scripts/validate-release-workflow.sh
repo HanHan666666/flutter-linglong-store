@@ -51,6 +51,12 @@ require_grep "aur_release_tag" .github/workflows/nightly.yml
 require_grep "package-smoke-test.sh" .github/workflows/nightly.yml
 require_grep "PACKAGE_CHANNEL: nightly" .github/workflows/nightly.yml
 require_grep "nightly" .github/workflows/nightly.yml
+require_grep "ubuntu-24.04-arm" .github/workflows/nightly.yml
+require_grep "build-nightly-arm64:" .github/workflows/nightly.yml
+require_grep "build-nightly-arm64-qemu:" .github/workflows/nightly.yml
+require_grep "always()" .github/workflows/nightly.yml
+require_grep "needs.build-nightly-amd64.result == 'success'" .github/workflows/nightly.yml
+require_grep "needs.build-nightly-arm64.result != 'success' && needs.build-nightly-arm64-qemu.result == 'success'" .github/workflows/nightly.yml
 require_grep "publish-aur-nightly:" .github/workflows/nightly.yml
 require_grep "should_publish_release" .github/workflows/nightly.yml
 require_grep "should_publish_aur" .github/workflows/nightly.yml
@@ -63,10 +69,15 @@ require_grep "needs.prepare-nightly.outputs.should_publish_aur == 'true'" .githu
 require_grep "generate-nightly-release-notes.sh" .github/workflows/nightly.yml
 require_grep "append-release-asset-hashes.sh" .github/workflows/nightly.yml
 require_grep "nightly-artifacts/hashes.sha256" .github/workflows/nightly.yml
+require_grep "pattern: nightly-assets-*" .github/workflows/nightly.yml
+require_grep "merge-multiple: true" .github/workflows/nightly.yml
 require_grep "gh release download" .github/workflows/nightly.yml
-require_grep "signed-nightly-assets-amd64" .github/workflows/nightly.yml
+require_grep "nightly-assets-arm64" .github/workflows/nightly.yml
+require_grep "signed-nightly-assets" .github/workflows/nightly.yml
 require_grep 'linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz' .github/workflows/nightly.yml
 require_grep 'linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-amd64.tar.gz.asc' .github/workflows/nightly.yml
+require_grep 'linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-arm64.tar.gz' .github/workflows/nightly.yml
+require_grep 'linglong-store-${{ needs.prepare-nightly.outputs.aur_nightly_label }}-linux-arm64.tar.gz.asc' .github/workflows/nightly.yml
 require_grep "normalize-nightly-aur-version.sh" .github/workflows/nightly.yml
 require_grep "render-packaging-templates.sh" .github/workflows/nightly.yml
 require_grep "Render nightly AUR metadata with publish inputs" .github/workflows/nightly.yml

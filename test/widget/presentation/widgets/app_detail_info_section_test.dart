@@ -103,4 +103,39 @@ void main() {
       equals(<String, dynamic>{'text': 'org.deepin.album'}),
     );
   });
+
+  testWidgets('复制按钮紧挨包名文本显示', (tester) async {
+    await pumpInfoSection(tester);
+
+    final packageValue = find.text('org.deepin.album');
+    final copyButton = find.byIcon(Icons.copy_outlined);
+    final packageRect = tester.getRect(packageValue);
+    final copyButtonRect = tester.getRect(copyButton);
+
+    // 复制按钮应跟随包名文本，而不是被整行宽度推到最右侧。
+    expect(copyButtonRect.left - packageRect.right, inInclusiveRange(0, 12));
+  });
+
+  testWidgets('点击复制后显示对勾反馈且不弹出底部通知条', (tester) async {
+    const clipboardChannel = SystemChannels.platform;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(clipboardChannel, (call) async => null);
+    addTearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(clipboardChannel, null);
+    });
+
+    await pumpInfoSection(tester);
+
+    await tester.tap(find.byIcon(Icons.copy_outlined));
+    await tester.pump();
+
+    expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+    expect(find.byType(SnackBar), findsNothing);
+
+    await tester.pump(const Duration(milliseconds: 1400));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.copy_outlined), findsOneWidget);
+  });
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:linglong_store/application/providers/app_detail_provider.dart';
@@ -24,6 +25,54 @@ void main() {
   });
 
   group('AppDetailPage version actions', () {
+    testWidgets('runtime info row exposes copy action', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      const clipboardChannel = SystemChannels.platform;
+      MethodCall? clipboardCall;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(clipboardChannel, (call) async {
+            clipboardCall = call;
+            return null;
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(clipboardChannel, null);
+      });
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          appId: 'org.example.demo',
+          uninstallService: _RecordingUninstallService(),
+          detailState: _detailState(versions: const []),
+          installedApps: const [],
+        ),
+      );
+
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final runtimeCard = find.byKey(const ValueKey('app-detail-info-运行时'));
+      final runtimeCopyButton = find.descendant(
+        of: runtimeCard,
+        matching: find.byIcon(Icons.copy_outlined),
+      );
+
+      expect(runtimeCopyButton, findsOneWidget);
+
+      await tester.tap(runtimeCopyButton);
+      await tester.pump();
+
+      expect(clipboardCall?.method, equals('Clipboard.setData'));
+      expect(
+        clipboardCall?.arguments,
+        equals(<String, dynamic>{
+          'text': 'main:org.deepin.runtime.webengine/25.2.1/x86_64',
+        }),
+      );
+    });
+
     testWidgets(
       'renders installed badge and uninstall for installed versions',
       (tester) async {
@@ -189,6 +238,7 @@ AppDetailState _detailState({required List<AppVersion> versions}) {
       arch: 'x86_64',
       channel: 'main',
       module: 'main',
+      runtime: 'main:org.deepin.runtime.webengine/25.2.1/x86_64',
     ),
     appDetail: const dm.AppDetail(
       appId: 'org.example.demo',
@@ -198,6 +248,7 @@ AppDetailState _detailState({required List<AppVersion> versions}) {
       arch: 'x86_64',
       channel: 'main',
       module: 'main',
+      runtime: 'main:org.deepin.runtime.webengine/25.2.1/x86_64',
     ),
     versions: versions,
     isVersionListExpanded: true,

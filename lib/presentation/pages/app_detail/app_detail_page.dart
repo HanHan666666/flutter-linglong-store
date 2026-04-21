@@ -643,6 +643,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           label: AppLocalizations.of(context)?.runtime ?? '运行时',
           value: app.runtime!,
           span: AppDetailInfoSpan.full,
+          isCopyable: true,
         ),
       if (detail?.license != null)
         AppDetailInfoEntry(

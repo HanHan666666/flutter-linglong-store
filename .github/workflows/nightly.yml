@@ -461,7 +461,7 @@ jobs:
   publish-nightly:
     name: Publish nightly ${{ needs.prepare-nightly.outputs.nightly_label }}
     needs: [prepare-nightly, sign-nightly]
-    if: ${{ needs.prepare-nightly.outputs.should_publish_release == 'true' && needs.sign-nightly.result == 'success' }}
+    if: ${{ always() && needs.prepare-nightly.outputs.should_publish_release == 'true' && needs.sign-nightly.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

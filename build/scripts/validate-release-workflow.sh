@@ -66,6 +66,8 @@ require_grep "aur_nightly_tag" .github/workflows/nightly.yml
 require_grep "previous_nightly_source_commit" .github/workflows/nightly.yml
 require_grep "needs.prepare-nightly.outputs.should_publish_release == 'true'" .github/workflows/nightly.yml
 require_grep "needs.prepare-nightly.outputs.should_publish_aur == 'true'" .github/workflows/nightly.yml
+require_grep "always() && needs.prepare-nightly.outputs.should_publish_release == 'true' && needs.sign-nightly.result == 'success'" .github/workflows/nightly.yml
+require_grep "needs.sign-nightly.result == 'success'" .github/workflows/nightly.yml
 require_grep "generate-nightly-release-notes.sh" .github/workflows/nightly.yml
 require_grep "append-release-asset-hashes.sh" .github/workflows/nightly.yml
 require_grep "nightly-artifacts/hashes.sha256" .github/workflows/nightly.yml

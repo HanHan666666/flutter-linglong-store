@@ -1028,6 +1028,18 @@ abstract class AppLocalizations {
   /// **'正在安装...'**
   String get installingLinglong;
 
+  /// No description provided for @openInstallLogDirectory.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开日志目录'**
+  String get openInstallLogDirectory;
+
+  /// No description provided for @cannotOpenDirectory.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法打开目录: {path}'**
+  String cannotOpenDirectory(String path);
+
   /// No description provided for @appIntroduction.
   ///
   /// In zh, this message translates to:

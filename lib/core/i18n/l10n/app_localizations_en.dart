@@ -516,6 +516,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get installingLinglong => 'Installing...';
 
   @override
+  String get openInstallLogDirectory => 'Open Log Directory';
+
+  @override
+  String cannotOpenDirectory(String path) {
+    return 'Cannot open directory: $path';
+  }
+
+  @override
   String get appIntroduction => 'App Introduction';
 
   @override

@@ -500,6 +500,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get installingLinglong => '正在安装...';
 
   @override
+  String get openInstallLogDirectory => '打开日志目录';
+
+  @override
+  String cannotOpenDirectory(String path) {
+    return '无法打开目录: $path';
+  }
+
+  @override
   String get appIntroduction => '应用介绍';
 
   @override

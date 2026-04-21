@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'api_provider.dart';
 import '../services/linglong_environment_service.dart';
+import '../services/linglong_install_log_service.dart';
 import '../services/linglong_install_script_service.dart';
 import '../../core/config/app_config.dart';
 import '../../core/logging/app_logger.dart';
@@ -37,6 +38,7 @@ class LinglongEnvState {
     this.isInstalling = false,
     this.installProgress = 0.0,
     this.installMessage,
+    this.installLogFilePath,
     this.wasSkipped = false,
   });
 
@@ -54,6 +56,9 @@ class LinglongEnvState {
 
   /// 安装消息
   final String? installMessage;
+
+  /// 安装日志文件路径
+  final String? installLogFilePath;
 
   /// 是否被用户跳过
   final bool wasSkipped;
@@ -82,9 +87,11 @@ class LinglongEnvState {
     bool? isInstalling,
     double? installProgress,
     String? installMessage,
+    String? installLogFilePath,
     bool? wasSkipped,
     bool clearResult = false,
     bool clearInstallMessage = false,
+    bool clearInstallLogFilePath = false,
   }) {
     return LinglongEnvState(
       checkState: checkState ?? this.checkState,
@@ -94,6 +101,9 @@ class LinglongEnvState {
       installMessage: clearInstallMessage
           ? null
           : (installMessage ?? this.installMessage),
+      installLogFilePath: clearInstallLogFilePath
+          ? null
+          : (installLogFilePath ?? this.installLogFilePath),
       wasSkipped: wasSkipped ?? this.wasSkipped,
     );
   }
@@ -121,6 +131,12 @@ final linglongInstallScriptServiceProvider =
         },
       );
     });
+
+final linglongInstallLogServiceProvider = Provider<LinglongInstallLogService>((
+  ref,
+) {
+  return LinglongInstallLogService();
+});
 
 /// 玲珑环境检测 Provider
 ///
@@ -208,9 +224,11 @@ class LinglongEnv extends _$LinglongEnv {
       isInstalling: true,
       installProgress: 0.0,
       installMessage: '正在准备安装...',
+      clearInstallLogFilePath: true,
     );
 
     File? scriptFile;
+    File? installLogFile;
     try {
       state = state.copyWith(
         installProgress: 0.1,
@@ -228,9 +246,14 @@ class LinglongEnv extends _$LinglongEnv {
 
       scriptFile = await _writeInstallScript(script);
 
+      installLogFile = await ref
+          .read(linglongInstallLogServiceProvider)
+          .createInstallLogFile();
+
       state = state.copyWith(
         installProgress: 0.35,
         installMessage: '正在准备执行安装...',
+        installLogFilePath: installLogFile.path,
       );
 
       await _setExecutablePermission(scriptFile.path);
@@ -240,11 +263,18 @@ class LinglongEnv extends _$LinglongEnv {
         installMessage: '正在执行安装脚本（需要管理员权限）...',
       );
 
-      final installResult = await ref.read(shellCommandExecutorProvider).run([
-        'pkexec',
-        'bash',
-        scriptFile.path,
-      ], timeout: const Duration(minutes: 30));
+      final installResult = await ref
+          .read(shellCommandExecutorProvider)
+          .run(
+            ['pkexec', 'bash', scriptFile.path],
+            timeout: const Duration(minutes: 30),
+            logOptions: installLogFile == null
+                ? null
+                : ShellCommandLogOptions(
+                    filePath: installLogFile.path,
+                    overwrite: true,
+                  ),
+          );
 
       if (!installResult.success) {
         final errorMessage = installResult.primaryMessage.isNotEmpty

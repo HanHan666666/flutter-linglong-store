@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -5,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../application/providers/linglong_env_provider.dart';
 import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
+import '../../core/platform/local_path_opener.dart';
 import '../../core/platform/window_service.dart';
 import '../../core/utils/app_notification_helpers.dart';
 import '../../domain/models/linglong_env_check_result.dart';
@@ -184,7 +187,11 @@ class LinglongEnvDialog extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.error_outline, color: AppColors.error, size: 16),
+                    const Icon(
+                      Icons.error_outline,
+                      color: AppColors.error,
+                      size: 16,
+                    ),
                     const SizedBox(width: AppSpacing.sm),
                     Text(
                       AppLocalizations.of(context)?.errorMessage ?? '错误信息',
@@ -281,12 +288,32 @@ class LinglongEnvDialog extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         Text(
-          envState.installMessage ?? AppLocalizations.of(context)?.installingLinglong ?? '正在安装...',
+          envState.installMessage ??
+              AppLocalizations.of(context)?.installingLinglong ??
+              '正在安装...',
           style: AppTextStyles.body.copyWith(
             color: context.appColors.textSecondary,
           ),
           textAlign: TextAlign.center,
         ),
+        if (envState.installLogFilePath != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            envState.installLogFilePath!,
+            style: AppTextStyles.tiny.copyWith(
+              color: context.appColors.textTertiary,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _buildOpenInstallLogButton(
+            context,
+            ref,
+            envState.installLogFilePath!,
+          ),
+        ],
         const SizedBox(height: AppSpacing.lg),
       ],
     );
@@ -318,6 +345,9 @@ class LinglongEnvDialog extends ConsumerWidget {
         label: Text(AppLocalizations.of(context)?.manualInstall ?? '手动安装'),
         style: TextButton.styleFrom(foregroundColor: AppColors.info),
       ),
+
+      if (envState.installLogFilePath != null)
+        _buildOpenInstallLogButton(context, ref, envState.installLogFilePath!),
 
       // 自动安装按钮
       ElevatedButton.icon(
@@ -355,6 +385,25 @@ class LinglongEnvDialog extends ConsumerWidget {
     ];
   }
 
+  Widget _buildOpenInstallLogButton(
+    BuildContext context,
+    WidgetRef ref,
+    String logFilePath,
+  ) {
+    return OutlinedButton.icon(
+      onPressed: () =>
+          _handleOpenInstallLogDirectory(context, ref, logFilePath),
+      icon: const Icon(Icons.folder_open, size: 16),
+      label: Text(
+        AppLocalizations.of(context)?.openInstallLogDirectory ?? '打开日志目录',
+      ),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.info,
+        side: const BorderSide(color: AppColors.info),
+      ),
+    );
+  }
+
   /// 处理退出
   void _handleExit(BuildContext context) {
     Navigator.of(context).pop();
@@ -373,8 +422,7 @@ class LinglongEnvDialog extends ConsumerWidget {
       if (context.mounted) {
         showAppError(
           context,
-          AppLocalizations.of(context)?.cannotOpenLink(url) ??
-              '无法打开链接: $url',
+          AppLocalizations.of(context)?.cannotOpenLink(url) ?? '无法打开链接: $url',
         );
       }
     }
@@ -403,6 +451,24 @@ class LinglongEnvDialog extends ConsumerWidget {
           AppLocalizations.of(context)?.envCheckFailed ?? '安装完成，但环境仍异常，请检查',
         );
       }
+    }
+  }
+
+  Future<void> _handleOpenInstallLogDirectory(
+    BuildContext context,
+    WidgetRef ref,
+    String logFilePath,
+  ) async {
+    final directoryPath = File(logFilePath).parent.path;
+    final opened = await ref
+        .read(localPathOpenerProvider)
+        .openDirectory(directoryPath);
+    if (!opened && context.mounted) {
+      showAppError(
+        context,
+        AppLocalizations.of(context)?.cannotOpenDirectory(directoryPath) ??
+            '无法打开目录: $directoryPath',
+      );
     }
   }
 

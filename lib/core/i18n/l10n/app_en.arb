@@ -249,6 +249,15 @@
   "notDetected": "Not Detected",
   "errorMessage": "Error Message",
   "installingLinglong": "Installing...",
+  "openInstallLogDirectory": "Open Log Directory",
+  "cannotOpenDirectory": "Cannot open directory: {path}",
+  "@cannotOpenDirectory": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "appIntroduction": "App Introduction",
   "collapse": "Collapse",
   "expandAll": "Expand All",

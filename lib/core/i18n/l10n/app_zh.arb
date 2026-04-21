@@ -250,6 +250,15 @@
   "notDetected": "未检测到",
   "errorMessage": "错误信息",
   "installingLinglong": "正在安装...",
+  "openInstallLogDirectory": "打开日志目录",
+  "cannotOpenDirectory": "无法打开目录: {path}",
+  "@cannotOpenDirectory": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "appIntroduction": "应用介绍",
   "collapse": "收起",
   "expandAll": "展开全部",

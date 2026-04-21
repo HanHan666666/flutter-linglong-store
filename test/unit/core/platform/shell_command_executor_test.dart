@@ -1,7 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/core/platform/shell_command_executor.dart';
 
 void main() {
+  setUpAll(() async {
+    await AppLogger.init();
+  });
+
   group('ShellCommandResult', () {
     test('prefers stderr as the primary message when both streams exist', () {
       const result = ShellCommandResult(
@@ -55,6 +62,39 @@ void main() {
       expect(result.primaryMessage, 'boom');
       expect(result.success, isFalse);
     });
+
+    test('writes command output into the provided log file', () async {
+      final tempDir = await Directory.systemTemp.createTemp(
+        'shell-command-executor-test-',
+      );
+      addTearDown(() async {
+        if (await tempDir.exists()) {
+          await tempDir.delete(recursive: true);
+        }
+      });
+
+      final logFile = File('${tempDir.path}/install.log');
+      final executor = ShellCommandExecutor();
+
+      final result = await executor.run(
+        [
+          'bash',
+          '-lc',
+          'printf "hello from stdout\\n"; printf "oops from stderr\\n" >&2',
+        ],
+        logOptions: ShellCommandLogOptions(
+          filePath: logFile.path,
+          overwrite: true,
+        ),
+      );
+
+      final content = await logFile.readAsString();
+
+      expect(result.success, isTrue);
+      expect(content, contains('bash -lc'));
+      expect(content, contains('hello from stdout'));
+      expect(content, contains('oops from stderr'));
+    });
   });
 }
 
@@ -68,6 +108,7 @@ class _FixedShellCommandRunner implements ShellCommandRunner {
     List<String> command, {
     Duration timeout = const Duration(minutes: 5),
     Map<String, String>? environment,
+    ShellCommandLogOptions? logOptions,
   }) async {
     return _result;
   }

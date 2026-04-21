@@ -159,6 +159,7 @@ class _FakeShellCommandRunner implements ShellCommandRunner {
     List<String> command, {
     Duration timeout = const Duration(minutes: 5),
     Map<String, String>? environment,
+    ShellCommandLogOptions? logOptions,
   }) async {
     final key = command.join(' ');
     final result = _results[key];

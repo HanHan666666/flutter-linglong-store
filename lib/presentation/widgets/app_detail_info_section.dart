@@ -144,10 +144,10 @@ class _CopyableValueState extends State<_CopyableValue> {
       builder: (context, constraints) {
         final maxTextWidth = constraints.maxWidth.isFinite
             ? (constraints.maxWidth -
-                    _CopyableValue._buttonSize -
-                    _CopyableValue._buttonSpacing)
-                .clamp(0.0, double.infinity)
-                .toDouble()
+                      _CopyableValue._buttonSize -
+                      _CopyableValue._buttonSpacing)
+                  .clamp(0.0, double.infinity)
+                  .toDouble()
             : double.infinity;
 
         return Row(
@@ -192,9 +192,10 @@ class _CopyableValueState extends State<_CopyableValue> {
                   transitionBuilder: (child, animation) => FadeTransition(
                     opacity: animation,
                     child: ScaleTransition(
-                      scale: Tween<double>(begin: 0.92, end: 1.0).animate(
-                        animation,
-                      ),
+                      scale: Tween<double>(
+                        begin: 0.92,
+                        end: 1.0,
+                      ).animate(animation),
                       child: child,
                     ),
                   ),

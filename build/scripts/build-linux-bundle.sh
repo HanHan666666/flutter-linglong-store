@@ -178,7 +178,9 @@ LINGLONG_RELEASE_TOOL_ROOT="$source_copy_dir" \
   "$release_version"
 run_with_retries 5 flutter pub get
 run_with_retries 5 dart run build_runner build --delete-conflicting-outputs
-run_with_retries 3 flutter build linux --release
+run_with_retries 3 flutter build linux --release \
+  --obfuscate \
+  --split-debug-info="$output_dir/symbols"
 popd > /dev/null
 
 if [[ ! -d "$expected_bundle_dir" ]]; then

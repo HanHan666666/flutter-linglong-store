@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -362,7 +364,7 @@ class DownloadManagerDialog extends ConsumerWidget {
 }
 
 /// 任务卡片组件
-class _TaskCard extends StatelessWidget {
+class _TaskCard extends StatefulWidget {
   const _TaskCard({
     required this.task,
     this.showProgress = false,
@@ -386,23 +388,79 @@ class _TaskCard extends StatelessWidget {
   final VoidCallback? onRemove;
 
   @override
+  State<_TaskCard> createState() => _TaskCardState();
+}
+
+class _TaskCardState extends State<_TaskCard> {
+  Timer? _ticker;
+  DateTime _now = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _syncTicker();
+  }
+
+  @override
+  void didUpdateWidget(covariant _TaskCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.showProgress != widget.showProgress ||
+        oldWidget.task != widget.task) {
+      _syncTicker();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ticker?.cancel();
+    super.dispose();
+  }
+
+  void _syncTicker() {
+    _ticker?.cancel();
+    _now = DateTime.now();
+
+    final shouldTick =
+        widget.showProgress &&
+        widget.task.status == InstallStatus.installing &&
+        widget.task.progressValue >= 0.95;
+    if (!shouldTick) {
+      return;
+    }
+
+    _ticker = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _now = DateTime.now();
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final appColors = context.appColors;
 
     return Semantics(
-      label: l10n.a11yDownloadItem(task.appName, task.progressPercentLabel),
-      value: task.isProcessing ? '${task.progressPercentLabel}' : null,
+      label: l10n.a11yDownloadItem(
+        widget.task.appName,
+        widget.task.progressPercentLabel,
+      ),
+      value: widget.task.isProcessing ? widget.task.progressPercentLabel : null,
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: EdgeInsets.all(featured ? AppSpacing.lg : AppSpacing.md),
+        padding: EdgeInsets.all(
+          widget.featured ? AppSpacing.lg : AppSpacing.md,
+        ),
         decoration: BoxDecoration(
-          color: featured
+          color: widget.featured
               ? appColors.primaryLight.withValues(alpha: 0.6)
               : appColors.cardBackground.withValues(alpha: 0.7),
-          borderRadius: BorderRadius.circular(featured ? 18 : 16),
+          borderRadius: BorderRadius.circular(widget.featured ? 18 : 16),
           border: Border.all(
-            color: featured
+            color: widget.featured
                 ? appColors.primaryLight
                 : appColors.borderSecondary,
           ),
@@ -414,10 +472,10 @@ class _TaskCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppIcon(
-                  iconUrl: task.icon,
-                  size: featured ? 48 : 42,
-                  borderRadius: featured ? 16 : 14,
-                  appName: task.appName,
+                  iconUrl: widget.task.icon,
+                  size: widget.featured ? 48 : 42,
+                  borderRadius: widget.featured ? 16 : 14,
+                  appName: widget.task.appName,
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
@@ -428,10 +486,10 @@ class _TaskCard extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              task.appName,
+                              widget.task.appName,
                               // featured 用 16px 正文级别，普通用 14px 说明级别
                               style:
-                                  (featured
+                                  (widget.featured
                                           ? AppTextStyles.body
                                           : AppTextStyles.bodyMedium)
                                       .copyWith(fontWeight: FontWeight.w600),
@@ -449,7 +507,7 @@ class _TaskCard extends StatelessWidget {
                         style: AppTextStyles.caption.copyWith(
                           color: appColors.textSecondary,
                         ),
-                        maxLines: compact ? 1 : 2,
+                        maxLines: widget.compact ? 1 : 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
@@ -459,16 +517,34 @@ class _TaskCard extends StatelessWidget {
                 _buildActionButtons(context),
               ],
             ),
-            if (showProgress &&
-                (task.isProcessing ||
-                    task.status == InstallStatus.downloading)) ...[
+            if (widget.showProgress &&
+                (widget.task.isProcessing ||
+                    widget.task.status == InstallStatus.downloading)) ...[
               const SizedBox(height: AppSpacing.md),
               _buildProgressBar(context),
             ],
-            if (task.isFailed && task.errorMessage != null) ...[
+            if (widget.task.shouldShowSlowInstallHint(_now)) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline, size: 14, color: appColors.warning),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      l10n.downloadManagerSlowInstallHint,
+                      style: AppTextStyles.caption.copyWith(
+                        color: appColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            if (widget.task.isFailed && widget.task.errorMessage != null) ...[
               const SizedBox(height: AppSpacing.xs),
               Text(
-                task.errorMessage!,
+                widget.task.errorMessage!,
                 style: AppTextStyles.caption.copyWith(color: AppColors.error),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -484,8 +560,8 @@ class _TaskCard extends StatelessWidget {
   /// 构建进度条
   Widget _buildProgressBar(BuildContext context) {
     final appColors = context.appColors;
-    final message = task.displayMessage?.trim();
-    final speed = downloadSpeed?.trim();
+    final message = widget.task.displayMessage?.trim();
+    final speed = widget.downloadSpeed?.trim();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -495,9 +571,7 @@ class _TaskCard extends StatelessWidget {
             Expanded(
               child: Tooltip(
                 richMessage: TextSpan(
-                  text: message != null && message.isNotEmpty
-                      ? message
-                      : '处理中',
+                  text: message != null && message.isNotEmpty ? message : '处理中',
                 ),
                 constraints: const BoxConstraints(maxWidth: 500),
                 child: Text(
@@ -511,7 +585,7 @@ class _TaskCard extends StatelessWidget {
               ),
             ),
             Text(
-              task.progressPercentLabel,
+              widget.task.progressPercentLabel,
               style: AppTextStyles.caption.copyWith(
                 color: appColors.textPrimary,
                 fontWeight: FontWeight.w600,
@@ -521,7 +595,7 @@ class _TaskCard extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xs),
         LinearProgressIndicator(
-          value: task.progressValue,
+          value: widget.task.progressValue,
           minHeight: 8,
           borderRadius: BorderRadius.circular(AppRadius.full),
           backgroundColor: appColors.surfaceContainerHighest,
@@ -531,8 +605,10 @@ class _TaskCard extends StatelessWidget {
         Text(
           [
             if (speed != null && speed.isNotEmpty) speed,
-            if (task.version != null && task.version!.isNotEmpty) task.version!,
-            if ((speed == null || speed.isEmpty)) task.progressPercentLabel,
+            if (widget.task.version != null && widget.task.version!.isNotEmpty)
+              widget.task.version!,
+            if ((speed == null || speed.isEmpty))
+              widget.task.progressPercentLabel,
           ].join(' · '),
           style: AppTextStyles.caption,
         ),
@@ -542,7 +618,7 @@ class _TaskCard extends StatelessWidget {
 
   Widget _buildStatusPill(BuildContext context) {
     final appColors = context.appColors;
-    final (label, color) = switch (task.status) {
+    final (label, color) = switch (widget.task.status) {
       InstallStatus.pending => ('等待中', appColors.textSecondary),
       InstallStatus.downloading => ('下载中', appColors.primary),
       InstallStatus.installing => ('安装中', appColors.primary),
@@ -568,23 +644,26 @@ class _TaskCard extends StatelessWidget {
   }
 
   String _buildSubtitle(BuildContext context) {
-    if (task.isFailed &&
-        task.errorMessage != null &&
-        task.errorMessage!.isNotEmpty) {
-      return task.errorMessage!;
+    if (widget.task.isFailed &&
+        widget.task.errorMessage != null &&
+        widget.task.errorMessage!.isNotEmpty) {
+      return widget.task.errorMessage!;
     }
     final parts = <String>[
-      if (task.version != null && task.version!.isNotEmpty) task.version!,
-      if (task.displayMessage != null && task.displayMessage!.trim().isNotEmpty)
-        task.displayMessage!.trim(),
-      if ((task.displayMessage == null || task.displayMessage!.trim().isEmpty))
-        switch (task.status) {
-          InstallStatus.pending => task.waitingMessage,
+      if (widget.task.version != null && widget.task.version!.isNotEmpty)
+        widget.task.version!,
+      if (widget.task.displayMessage != null &&
+          widget.task.displayMessage!.trim().isNotEmpty)
+        widget.task.displayMessage!.trim(),
+      if ((widget.task.displayMessage == null ||
+          widget.task.displayMessage!.trim().isEmpty))
+        switch (widget.task.status) {
+          InstallStatus.pending => widget.task.waitingMessage,
           InstallStatus.downloading => '正在下载资源',
           InstallStatus.installing => '正在安装',
-          InstallStatus.success => task.successMessage,
+          InstallStatus.success => widget.task.successMessage,
           InstallStatus.failed => '安装失败',
-          InstallStatus.cancelled => task.cancelledMessage,
+          InstallStatus.cancelled => widget.task.cancelledMessage,
         },
     ];
     return parts.join(' · ');
@@ -594,60 +673,60 @@ class _TaskCard extends StatelessWidget {
   Widget _buildActionButtons(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    if (task.isProcessing ||
-        task.status == InstallStatus.downloading ||
-        task.status == InstallStatus.pending) {
+    if (widget.task.isProcessing ||
+        widget.task.status == InstallStatus.downloading ||
+        widget.task.status == InstallStatus.pending) {
       // 可取消
       return IconButton(
         icon: const Icon(Icons.close, size: 18),
-        onPressed: onCancel,
+        onPressed: widget.onCancel,
         tooltip: l10n?.cancel ?? '取消',
       );
     }
 
-    if (task.isFailed && onRetry != null) {
+    if (widget.task.isFailed && widget.onRetry != null) {
       // 可重试
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
             icon: const Icon(Icons.refresh, size: 18),
-            onPressed: onRetry,
+            onPressed: widget.onRetry,
             tooltip: l10n?.retry ?? '重试',
           ),
-          if (onRemove != null)
+          if (widget.onRemove != null)
             IconButton(
               icon: const Icon(Icons.close, size: 18),
-              onPressed: onRemove,
+              onPressed: widget.onRemove,
               tooltip: l10n?.remove ?? '移除',
             ),
         ],
       );
     }
 
-    if (task.status == InstallStatus.success && onOpen != null) {
+    if (widget.task.status == InstallStatus.success && widget.onOpen != null) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
             icon: const Icon(Icons.open_in_new, size: 18),
-            onPressed: onOpen,
+            onPressed: widget.onOpen,
             tooltip: l10n?.open ?? '打开',
           ),
-          if (onRemove != null)
+          if (widget.onRemove != null)
             IconButton(
               icon: const Icon(Icons.close, size: 18),
-              onPressed: onRemove,
+              onPressed: widget.onRemove,
               tooltip: l10n?.remove ?? '移除',
             ),
         ],
       );
     }
 
-    if (onRemove != null) {
+    if (widget.onRemove != null) {
       return IconButton(
         icon: const Icon(Icons.close, size: 18),
-        onPressed: onRemove,
+        onPressed: widget.onRemove,
         tooltip: l10n?.remove ?? '移除',
       );
     }

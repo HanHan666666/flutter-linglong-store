@@ -110,6 +110,15 @@ extension InstallTaskX on InstallTask {
   String get progressPercentLabel =>
       '${(progressValue * 100).round().clamp(0, 100)}%';
 
+  /// 推断任务真正开始执行的时间。
+  DateTime? get executionStartedAt {
+    final timestamp = startedAt ?? createdAt;
+    if (timestamp <= 0) {
+      return null;
+    }
+    return DateTime.fromMillisecondsSinceEpoch(timestamp);
+  }
+
   /// 对旧任务或异常任务兜底，避免把整段 JSON 原文直接渲染到 UI。
   String? get displayMessage => _extractMessageText(message);
 
@@ -127,6 +136,24 @@ extension InstallTaskX on InstallTask {
 
   /// 用户取消文案。
   String get cancelledMessage => isUpdateTask ? '更新已取消' : '安装已取消';
+
+  /// 是否需要提示“安装较慢，可能在处理依赖”。
+  bool shouldShowSlowInstallHint(
+    DateTime now, {
+    Duration threshold = const Duration(seconds: 30),
+  }) {
+    if (status != InstallStatus.installing) {
+      return false;
+    }
+    if (progressValue < 0.95) {
+      return false;
+    }
+    final startedAtTime = executionStartedAt;
+    if (startedAtTime == null) {
+      return false;
+    }
+    return now.difference(startedAtTime) >= threshold;
+  }
 
   /// 转换为 JSON 字符串（用于持久化）
   String toJsonString() => toJson().toString();

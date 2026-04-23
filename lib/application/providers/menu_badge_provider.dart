@@ -9,15 +9,12 @@ part 'menu_badge_provider.g.dart';
 ///
 /// 存储各菜单项的红点数量
 class MenuBadgeState {
-  const MenuBadgeState({
-    this.updateCount = 0,
-    this.installingCount = 0,
-  });
+  const MenuBadgeState({this.updateCount = 0, this.installingCount = 0});
 
   /// 更新页红点数量（可更新应用数量）
   final int updateCount;
 
-  /// 我的应用红点数量（正在安装的应用数量）
+  /// 下载管理红点数量（当前任务 + 等待队列数量）
   final int installingCount;
 
   /// 是否有任何红点
@@ -27,10 +24,7 @@ class MenuBadgeState {
   int get totalCount => updateCount + installingCount;
 
   /// 复制并更新
-  MenuBadgeState copyWith({
-    int? updateCount,
-    int? installingCount,
-  }) {
+  MenuBadgeState copyWith({int? updateCount, int? installingCount}) {
     return MenuBadgeState(
       updateCount: updateCount ?? this.updateCount,
       installingCount: installingCount ?? this.installingCount,
@@ -58,7 +52,7 @@ class MenuBadgeState {
 ///
 /// 计算各菜单项的红点数量：
 /// - 更新页：显示可更新应用数量
-/// - 我的应用：显示正在安装的应用数量
+/// - 下载管理：显示当前任务 + 等待队列数量
 @riverpod
 MenuBadgeState menuBadge(Ref ref) {
   // 监听安装队列状态
@@ -68,8 +62,8 @@ MenuBadgeState menuBadge(Ref ref) {
   final updateApps = ref.watch(updateAppsProvider);
 
   // 计算正在安装的数量（当前任务 + 队列中待处理任务）
-  final installingCount = installQueue.queue.length +
-      (installQueue.currentTask != null ? 1 : 0);
+  final installingCount =
+      installQueue.queue.length + (installQueue.currentTask != null ? 1 : 0);
 
   // 获取可更新应用数量
   final updateCount = updateApps.count;
@@ -88,10 +82,11 @@ int menuUpdateBadgeCount(Ref ref) {
   return ref.watch(menuBadgeProvider).updateCount;
 }
 
-/// 我的应用红点数量
+/// 下载管理红点数量
 @riverpod
 int menuInstallingBadgeCount(Ref ref) {
-  return ref.watch(menuBadgeProvider).installingCount;
+  final installQueue = ref.watch(installQueueProvider);
+  return installQueue.queue.length + (installQueue.currentTask != null ? 1 : 0);
 }
 
 /// 是否有任何菜单红点

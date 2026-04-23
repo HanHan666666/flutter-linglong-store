@@ -1300,6 +1300,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Installation timeout: No progress updates for an extended period';
 
   @override
+  String get downloadManagerSlowInstallHint =>
+      'If progress looks slow, required dependencies may still be installing. Please wait a little longer…';
+
+  @override
   String get loadingInstalledApps => 'Loading installed apps...';
 
   @override

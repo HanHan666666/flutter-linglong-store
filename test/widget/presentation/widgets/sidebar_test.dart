@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/sidebar_config_provider.dart';
 import 'package:linglong_store/core/config/local_sidebar_menu_catalog.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
+import 'package:linglong_store/domain/models/install_progress.dart';
+import 'package:linglong_store/domain/models/install_queue_state.dart';
+import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/presentation/widgets/sidebar.dart';
 
 void main() {
@@ -52,7 +56,7 @@ void main() {
         expect(find.text('推 荐'), findsOneWidget);
         expect(find.text('全 部'), findsOneWidget);
         expect(find.text('排 行'), findsOneWidget);
-        expect(find.text('更 新'), findsNothing);
+        expect(find.text('更 新'), findsOneWidget);
 
         expect(find.text(officeLabel), findsOneWidget);
         expect(find.text(systemLabel), findsOneWidget);
@@ -74,36 +78,103 @@ void main() {
       },
     );
 
-    testWidgets(
-      'uses widened desktop width and single-line english labels',
-      (tester) async {
-        tester.view.physicalSize = const Size(1200, 800);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.reset);
+    testWidgets('uses widened desktop width and single-line english labels', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
 
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              sidebarConfigProvider.overrideWith((ref) async => const []),
-            ],
-            child: const MaterialApp(
-              locale: Locale('en'),
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              home: Scaffold(body: Sidebar(currentPath: '/')),
-            ),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sidebarConfigProvider.overrideWith((ref) async => const []),
+          ],
+          child: const MaterialApp(
+            locale: Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: Sidebar(currentPath: '/')),
           ),
-        );
+        ),
+      );
 
-        await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-        expect(Sidebar.defaultWidth, 176);
+      expect(Sidebar.defaultWidth, 176);
 
-        final recommendText = tester.widget<Text>(find.text('Recommend'));
-        expect(recommendText.maxLines, 1);
-        expect(recommendText.softWrap, isFalse);
-        expect(recommendText.overflow, TextOverflow.ellipsis);
-      },
-    );
+      final recommendText = tester.widget<Text>(find.text('Recommend'));
+      expect(recommendText.maxLines, 1);
+      expect(recommendText.softWrap, isFalse);
+      expect(recommendText.overflow, TextOverflow.ellipsis);
+    });
+
+    testWidgets('shows download badge count from active install tasks', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sidebarConfigProvider.overrideWith((ref) async => const []),
+            installQueueProvider.overrideWith(
+              () => _StaticInstallQueue(
+                const InstallQueueState(
+                  currentTask: InstallTask(
+                    id: 'task-current',
+                    appId: 'org.example.current',
+                    appName: 'Current',
+                    status: InstallStatus.installing,
+                    createdAt: 1,
+                  ),
+                  queue: [
+                    InstallTask(
+                      id: 'task-queued-1',
+                      appId: 'org.example.queued1',
+                      appName: 'Queued 1',
+                      status: InstallStatus.pending,
+                      createdAt: 2,
+                    ),
+                    InstallTask(
+                      id: 'task-queued-2',
+                      appId: 'org.example.queued2',
+                      appName: 'Queued 2',
+                      status: InstallStatus.pending,
+                      createdAt: 3,
+                    ),
+                  ],
+                  isProcessing: true,
+                ),
+              ),
+            ),
+          ],
+          child: const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: Sidebar(currentPath: '/my-apps')),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(of: find.byTooltip('下载管理'), matching: find.text('3')),
+        findsOneWidget,
+      );
+    });
   });
+}
+
+class _StaticInstallQueue extends InstallQueue {
+  _StaticInstallQueue(this.initialState);
+
+  final InstallQueueState initialState;
+
+  @override
+  InstallQueueState build() => initialState;
 }

@@ -69,6 +69,43 @@ void main() {
       expect(noStatus, isNull);
     });
 
+    test('should return only active tasks for app', () {
+      final currentTask = InstallTask(
+        id: 'current-id',
+        appId: 'com.example.test',
+        appName: 'Current Task',
+        status: InstallStatus.installing,
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+      );
+      final queuedTask = InstallTask(
+        id: 'queued-id',
+        appId: 'com.example.test',
+        appName: 'Queued Task',
+        version: '1.0.0',
+        status: InstallStatus.pending,
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+      );
+      final historyTask = InstallTask(
+        id: 'history-id',
+        appId: 'com.example.test',
+        appName: 'History Task',
+        status: InstallStatus.success,
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+      );
+
+      final state = InstallQueueState(
+        currentTask: currentTask,
+        queue: [queuedTask],
+        history: [historyTask],
+      );
+
+      final tasks = state.getActiveTasksForApp('com.example.test');
+
+      expect(tasks, hasLength(2));
+      expect(tasks.first.id, 'current-id');
+      expect(tasks.last.id, 'queued-id');
+    });
+
     test('should check hasActiveTasks', () {
       const emptyState = InstallQueueState();
       expect(emptyState.hasActiveTasks(), isFalse);

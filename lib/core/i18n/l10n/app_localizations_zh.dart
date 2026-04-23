@@ -1265,6 +1265,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get installTimeout => '安装超时：长时间未收到进度更新';
 
   @override
+  String get downloadManagerSlowInstallHint => '如果进度看起来较慢，可能正在安装软件必备依赖，请再等等……';
+
+  @override
   String get loadingInstalledApps => '正在加载已安装应用...';
 
   @override

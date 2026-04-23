@@ -723,6 +723,7 @@
   "noRanking": "暂无排行",
   "noRecommend": "暂无推荐",
   "installTimeout": "安装超时：长时间未收到进度更新",
+  "downloadManagerSlowInstallHint": "如果进度看起来较慢，可能正在安装软件必备依赖，请再等等……",
   "loadingInstalledApps": "正在加载已安装应用...",
   "appDescriptionPlaceholder": "应用描述",
   "rankingTabNewUpload": "最新上架榜",

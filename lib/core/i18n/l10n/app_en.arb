@@ -722,6 +722,7 @@
   "noRanking": "No rankings available",
   "noRecommend": "No recommendations available",
   "installTimeout": "Installation timeout: No progress updates for an extended period",
+  "downloadManagerSlowInstallHint": "If progress looks slow, required dependencies may still be installing. Please wait a little longer…",
   "loadingInstalledApps": "Loading installed apps...",
   "appDescriptionPlaceholder": "App description",
   "rankingTabNewUpload": "New Uploads",

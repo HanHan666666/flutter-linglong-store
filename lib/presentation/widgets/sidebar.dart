@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../application/providers/menu_badge_provider.dart';
 import '../../application/providers/sidebar_config_provider.dart';
 import '../../core/config/routes.dart';
 import '../../core/config/theme.dart';
@@ -60,6 +61,7 @@ class Sidebar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isCollapsed = screenWidth <= 768;
+    final downloadBadgeCount = ref.watch(menuInstallingBadgeCountProvider);
 
     // 读取服务端下发的动态菜单（失败时默认返回空列表，不影响静态菜单）
     final dynamicMenus = ref
@@ -86,7 +88,11 @@ class Sidebar extends ConsumerWidget {
             ),
           ),
           // 底部固定入口保持“展开态横排、折叠态竖排”的既定桌面交互。
-          _BottomSection(currentPath: currentPath, isCollapsed: isCollapsed),
+          _BottomSection(
+            currentPath: currentPath,
+            isCollapsed: isCollapsed,
+            downloadBadgeCount: downloadBadgeCount,
+          ),
         ],
       ),
     );
@@ -192,8 +198,9 @@ class _MenuItemTile extends StatelessWidget {
                 horizontal: isCollapsed ? 0 : AppSpacing.md,
               ),
               child: Row(
-                mainAxisAlignment:
-                    isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
+                mainAxisAlignment: isCollapsed
+                    ? MainAxisAlignment.center
+                    : MainAxisAlignment.start,
                 children: [
                   // 选中指示器（左侧 3px 竖条）
                   if (!isCollapsed) ...[
@@ -206,7 +213,9 @@ class _MenuItemTile extends StatelessWidget {
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    SizedBox(width: isSelected ? AppSpacing.sm : AppSpacing.sm + 3),
+                    SizedBox(
+                      width: isSelected ? AppSpacing.sm : AppSpacing.sm + 3,
+                    ),
                   ],
                   // 图标
                   Icon(
@@ -309,10 +318,15 @@ enum _BottomSidebarItem {
 
 /// 底部固定动作区域
 class _BottomSection extends StatelessWidget {
-  const _BottomSection({required this.currentPath, required this.isCollapsed});
+  const _BottomSection({
+    required this.currentPath,
+    required this.isCollapsed,
+    required this.downloadBadgeCount,
+  });
 
   final String currentPath;
   final bool isCollapsed;
+  final int downloadBadgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -334,6 +348,9 @@ class _BottomSection extends StatelessWidget {
                       item: item,
                       isSelected:
                           item.route != null && currentPath == item.route,
+                      badgeCount: item == _BottomSidebarItem.downloadManager
+                          ? downloadBadgeCount
+                          : 0,
                     ),
                   ),
               ],
@@ -345,6 +362,9 @@ class _BottomSection extends StatelessWidget {
                   _BottomIconButton(
                     item: item,
                     isSelected: item.route != null && currentPath == item.route,
+                    badgeCount: item == _BottomSidebarItem.downloadManager
+                        ? downloadBadgeCount
+                        : 0,
                   ),
               ],
             ),
@@ -394,8 +414,9 @@ class _DynamicMenuItemTile extends StatelessWidget {
               horizontal: isCollapsed ? 0 : AppSpacing.md,
             ),
             child: Row(
-              mainAxisAlignment:
-                  isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
+              mainAxisAlignment: isCollapsed
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.start,
               children: [
                 // 选中指示器（左侧 3px 竖条）
                 if (!isCollapsed) ...[
@@ -408,7 +429,9 @@ class _DynamicMenuItemTile extends StatelessWidget {
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  SizedBox(width: isSelected ? AppSpacing.sm : AppSpacing.sm + 3),
+                  SizedBox(
+                    width: isSelected ? AppSpacing.sm : AppSpacing.sm + 3,
+                  ),
                 ],
                 Icon(
                   isSelected ? presentation.selectedIcon : presentation.icon,
@@ -450,10 +473,15 @@ class _DynamicMenuItemTile extends StatelessWidget {
 /// 使用 [SidebarInteractionSurface] 封装 hover/tap 交互。
 /// 固定 48x48 尺寸（AppSpacing.x2l），图标颜色在 hover 时变化。
 class _BottomIconButton extends StatelessWidget {
-  const _BottomIconButton({required this.item, required this.isSelected});
+  const _BottomIconButton({
+    required this.item,
+    required this.isSelected,
+    this.badgeCount = 0,
+  });
 
   final _BottomSidebarItem item;
   final bool isSelected;
+  final int badgeCount;
 
   void _handleTap(BuildContext context) {
     if (item == _BottomSidebarItem.downloadManager) {
@@ -478,7 +506,18 @@ class _BottomIconButton extends StatelessWidget {
         onTap: () => _handleTap(context),
         width: AppSpacing.x2l,
         height: AppSpacing.x2l,
-        child: _BottomIconContent(item: item, isSelected: isSelected),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: Center(
+                child: _BottomIconContent(item: item, isSelected: isSelected),
+              ),
+            ),
+            if (badgeCount > 0)
+              Positioned(top: -4, right: -4, child: _Badge(count: badgeCount)),
+          ],
+        ),
       ),
     );
   }
@@ -514,7 +553,9 @@ class _BottomIconContentState extends State<_BottomIconContent> {
         size: 20,
         color: widget.isSelected
             ? AppColors.primary
-            : (_isHovered ? AppColors.primary : context.appColors.textSecondary),
+            : (_isHovered
+                  ? AppColors.primary
+                  : context.appColors.textSecondary),
       ),
     );
   }

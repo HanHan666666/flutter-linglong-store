@@ -2394,6 +2394,12 @@ abstract class AppLocalizations {
   /// **'安装超时：长时间未收到进度更新'**
   String get installTimeout;
 
+  /// No description provided for @downloadManagerSlowInstallHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'如果进度看起来较慢，可能正在安装软件必备依赖，请再等等……'**
+  String get downloadManagerSlowInstallHint;
+
   /// No description provided for @loadingInstalledApps.
   ///
   /// In zh, this message translates to:

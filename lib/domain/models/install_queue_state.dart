@@ -41,6 +41,19 @@ class InstallQueueState {
     return null;
   }
 
+  /// 获取应用当前仍处于活跃状态的任务列表。
+  ///
+  /// 只返回正在处理中的当前任务和等待队列中的任务，
+  /// 不包含历史记录，便于 UI 精确映射“正在安装/等待安装”状态。
+  List<InstallTask> getActiveTasksForApp(String appId) {
+    final tasks = <InstallTask>[];
+    if (currentTask?.appId == appId) {
+      tasks.add(currentTask!);
+    }
+    tasks.addAll(queue.where((task) => task.appId == appId));
+    return tasks;
+  }
+
   /// 是否有活跃任务
   bool hasActiveTasks() => currentTask != null || queue.isNotEmpty;
 

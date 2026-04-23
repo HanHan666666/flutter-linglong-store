@@ -138,6 +138,63 @@ void main() {
       );
     });
 
+    testWidgets(
+      'shows slow install hint when progress stalls near completion',
+      (tester) async {
+        final startedAt = DateTime.now()
+            .subtract(const Duration(seconds: 45))
+            .millisecondsSinceEpoch;
+
+        final installQueue = TestInstallQueue(
+          initialState: InstallQueueState(
+            currentTask: InstallTask(
+              id: 'task-slow',
+              appId: 'org.example.demo',
+              appName: 'Demo',
+              kind: InstallTaskKind.install,
+              status: InstallStatus.installing,
+              progress: 0.95,
+              message: 'Installing runtime dependencies',
+              createdAt: startedAt,
+              startedAt: startedAt,
+            ),
+            isProcessing: true,
+          ),
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              installQueueProvider.overrideWith(() => installQueue),
+              networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+            ],
+            child: MaterialApp(
+              locale: const Locale('zh'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Builder(
+                builder: (context) {
+                  return Scaffold(
+                    body: Center(
+                      child: FilledButton(
+                        onPressed: () => showDownloadManagerDialog(context),
+                        child: const Text('open'),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('如果进度看起来较慢，可能正在安装软件必备依赖，请再等等……'), findsOneWidget);
+      },
+    );
+
     testWidgets('closing dialog detaches install queue updates', (
       tester,
     ) async {

@@ -100,6 +100,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       body: _buildBody(
         context,
         detailState,
+        installState,
         installTask,
         installedVersions,
         hasInstalledInstance: hasInstalledInstance,
@@ -110,6 +111,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   Widget _buildBody(
     BuildContext context,
     AppDetailState detailState,
+    InstallQueueState installState,
     InstallTask? installTask,
     Set<String> installedVersions, {
     required bool hasInstalledInstance,
@@ -176,7 +178,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           _buildVersionList(
             context,
             detailState,
-            installTask,
+            installState,
             installedVersions,
           ),
 
@@ -681,7 +683,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   Widget _buildVersionList(
     BuildContext context,
     AppDetailState detailState,
-    InstallTask? currentInstallTask,
+    InstallQueueState installState,
     Set<String> installedVersions,
   ) {
     final allVersions = detailState.versions;
@@ -787,6 +789,11 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 final isInstalledVersion = installedVersions.contains(
                   version.versionNo,
                 );
+                final activeTask = _resolveVersionInstallTask(
+                  installState,
+                  detailState,
+                  version.versionNo,
+                );
                 final formattedPackageSize = FormatUtils.formatFileSizeValue(
                   version.packageSize,
                 );
@@ -818,6 +825,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                         currentApp!,
                         detailState,
                         version.versionNo,
+                        activeTask: activeTask,
                         isInstalledVersion: isInstalledVersion,
                       ),
                     ),
@@ -1083,9 +1091,23 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     InstalledApp app,
     AppDetailState detailState,
     String version, {
+    InstallTask? activeTask,
     required bool isInstalledVersion,
   }) {
     final l10n = AppLocalizations.of(context)!;
+
+    if (activeTask != null) {
+      return _buildVersionActionButton(
+        context,
+        key: Key('app-detail-version-progress-$version'),
+        label: _resolveVersionActionLabel(context, activeTask),
+        progress: activeTask.progressValue,
+        isLoading:
+            activeTask.status == InstallStatus.downloading ||
+            activeTask.status == InstallStatus.installing,
+        isPending: activeTask.status == InstallStatus.pending,
+      );
+    }
 
     if (!isInstalledVersion) {
       return _buildVersionActionButton(
@@ -1137,10 +1159,77 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     BuildContext context, {
     required Key key,
     required String label,
-    required VoidCallback onPressed,
+    VoidCallback? onPressed,
     bool isDestructive = false,
+    bool isLoading = false,
+    bool isPending = false,
+    double progress = 0.0,
   }) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    const buttonHeight = 32.0;
+
+    if (isLoading || isPending) {
+      final progressTask = InstallTask(
+        id: 'app-detail-version-progress',
+        appId: widget.appId,
+        appName: widget.appId,
+        progress: progress,
+        createdAt: 0,
+      );
+      final displayLabel = isLoading
+          ? (progressTask.progressValue > 0
+                ? progressTask.progressPercentLabel
+                : l10n.installing)
+          : l10n.waitingForInstall;
+
+      return SizedBox(
+        height: buttonHeight,
+        child: FilledButton(
+          key: key,
+          onPressed: null,
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(72, 32),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            shape: const StadiumBorder(),
+            backgroundColor: AppColors.primary.withValues(alpha: 0.72),
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.72),
+            disabledForegroundColor: Colors.white,
+            textStyle: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          child: isLoading
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ExcludeSemantics(
+                      child: SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          value: progressTask.progressValue > 0
+                              ? progressTask.progressValue
+                              : null,
+                          strokeWidth: 2,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(displayLabel),
+                  ],
+                )
+              : Text(displayLabel),
+        ),
+      );
+    }
+
     final buttonStyle = isDestructive
         ? OutlinedButton.styleFrom(
             minimumSize: const Size(72, 32),
@@ -1177,7 +1266,60 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             child: Text(label),
           );
 
-    return SizedBox(height: 32, child: button);
+    return SizedBox(height: buttonHeight, child: button);
+  }
+
+  String _resolveVersionActionLabel(BuildContext context, InstallTask task) {
+    final l10n = AppLocalizations.of(context)!;
+    return switch (task.status) {
+      InstallStatus.pending => l10n.waitingForInstall,
+      InstallStatus.downloading || InstallStatus.installing =>
+        task.progressValue > 0 ? task.progressPercentLabel : l10n.installing,
+      InstallStatus.success => l10n.open,
+      InstallStatus.failed => l10n.install,
+      InstallStatus.cancelled => l10n.install,
+    };
+  }
+
+  InstallTask? _resolveVersionInstallTask(
+    InstallQueueState installState,
+    AppDetailState detailState,
+    String version,
+  ) {
+    final appId = detailState.app?.appId;
+    if (appId == null || appId.isEmpty) {
+      return null;
+    }
+
+    final latestVersion = detailState.versions.isNotEmpty
+        ? detailState.versions.first.versionNo
+        : detailState.app?.version;
+
+    for (final task in installState.getActiveTasksForApp(appId)) {
+      if (_versionTaskMatchesRow(task, version, latestVersion: latestVersion)) {
+        return task;
+      }
+    }
+    return null;
+  }
+
+  bool _versionTaskMatchesRow(
+    InstallTask task,
+    String version, {
+    String? latestVersion,
+  }) {
+    final taskVersion = task.version?.trim();
+    if (taskVersion != null && taskVersion.isNotEmpty) {
+      return taskVersion == version;
+    }
+
+    if (latestVersion == null || latestVersion.isEmpty) {
+      return false;
+    }
+
+    return version == latestVersion &&
+        (task.kind == InstallTaskKind.install ||
+            task.kind == InstallTaskKind.update);
   }
 
   Future<void> _uninstallVersion(

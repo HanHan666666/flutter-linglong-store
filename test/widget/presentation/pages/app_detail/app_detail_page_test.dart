@@ -13,7 +13,9 @@ import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/domain/models/app_detail.dart' as dm;
 import 'package:linglong_store/domain/models/app_version.dart';
+import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
+import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/domain/models/running_app.dart';
 import 'package:linglong_store/domain/models/uninstall_result.dart';
@@ -197,6 +199,71 @@ void main() {
         expect(uninstallService.executedApps.single.module, 'main');
       },
     );
+
+    testWidgets('matching version row shows installing progress state', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          appId: 'org.example.demo',
+          uninstallService: _RecordingUninstallService(),
+          detailState: _detailState(
+            versions: const [
+              AppVersion(
+                versionNo: '2.0.0',
+                releaseTime: '2026-04-19',
+                packageSize: '1048576',
+              ),
+              AppVersion(
+                versionNo: '1.0.0',
+                releaseTime: '2026-04-18',
+                packageSize: '524288',
+              ),
+            ],
+          ),
+          installedApps: const [],
+          installQueueState: InstallQueueState(
+            currentTask: InstallTask(
+              id: 'task-1',
+              appId: 'org.example.demo',
+              appName: 'Demo',
+              version: '1.0.0',
+              status: InstallStatus.installing,
+              progress: 0.42,
+              createdAt: DateTime.now().millisecondsSinceEpoch,
+            ),
+            isProcessing: true,
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final versionRow = find.byKey(const Key('app-detail-version-row-1.0.0'));
+      expect(versionRow, findsOneWidget);
+      expect(
+        find.descendant(of: versionRow, matching: find.text('42%')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: versionRow,
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: versionRow,
+          matching: find.byKey(const Key('app-detail-version-install-1.0.0')),
+        ),
+        findsNothing,
+      );
+    });
   });
 }
 
@@ -205,6 +272,7 @@ Widget _buildTestApp({
   required AppDetailState detailState,
   required List<InstalledApp> installedApps,
   required _RecordingUninstallService uninstallService,
+  InstallQueueState installQueueState = const InstallQueueState(),
 }) {
   return ProviderScope(
     overrides: [
@@ -214,7 +282,9 @@ Widget _buildTestApp({
       installedAppsProvider.overrideWith(
         () => _StaticInstalledApps(apps: installedApps),
       ),
-      installQueueProvider.overrideWith(() => _StaticInstallQueue()),
+      installQueueProvider.overrideWith(
+        () => _StaticInstallQueue(installQueueState),
+      ),
       appUninstallServiceProvider.overrideWithValue(uninstallService),
     ],
     child: MaterialApp(
@@ -286,8 +356,12 @@ class _StaticInstalledApps extends InstalledApps {
 }
 
 class _StaticInstallQueue extends InstallQueue {
+  _StaticInstallQueue([this.initialState = const InstallQueueState()]);
+
+  final InstallQueueState initialState;
+
   @override
-  InstallQueueState build() => const InstallQueueState();
+  InstallQueueState build() => initialState;
 }
 
 class _RecordingUninstallService extends AppUninstallService {

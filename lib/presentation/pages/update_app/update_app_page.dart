@@ -35,6 +35,11 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
     });
   }
 
+  /// 手动检查更新
+  void _checkUpdates() {
+    ref.read(updateAppsProvider.notifier).checkUpdates();
+  }
+
   /// 全部更新
   void _updateAll() {
     final installState = ref.read(installQueueProvider);
@@ -109,11 +114,8 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
     UpdateAppsState state,
     InstallQueueState installState,
   ) {
-    // 如果没有可更新应用，不显示头部
-    if (state.apps.isEmpty) {
-      return const SizedBox.shrink();
-    }
     final isUpdating = installState.hasActiveTasks();
+    final isChecking = state.isLoading;
     final l10n = AppLocalizations.of(context);
 
     return Container(
@@ -132,32 +134,66 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
           // 更新数量提示
           Expanded(
             child: Text(
-              l10n?.updateCount(state.count) ?? '共 ${state.count} 个应用可更新',
+              _buildHeaderSummaryText(context, state),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ),
 
-          // 全部更新按钮
-          FilledButton.icon(
-            onPressed: isUpdating ? null : _updateAll,
-            icon: isUpdating
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.update, size: 18),
-            label: Text(
-              isUpdating
-                  ? (l10n?.updating ?? '正在更新...')
-                  : (l10n?.updateAll ?? '全部更新'),
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              OutlinedButton.icon(
+                onPressed: isChecking ? null : _checkUpdates,
+                icon: const Icon(Icons.refresh, size: 18),
+                label: Text(
+                  isChecking
+                      ? (l10n?.checkingUpdate ?? '检查更新中...')
+                      : (l10n?.checkUpdate ?? '检查更新'),
+                ),
+              ),
+              if (state.apps.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                // 全部更新按钮
+                FilledButton.icon(
+                  onPressed: isUpdating ? null : _updateAll,
+                  icon: isUpdating
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.update, size: 18),
+                  label: Text(
+                    isUpdating
+                        ? (l10n?.updating ?? '正在更新...')
+                        : (l10n?.updateAll ?? '全部更新'),
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),
     );
+  }
+
+  String _buildHeaderSummaryText(BuildContext context, UpdateAppsState state) {
+    final l10n = AppLocalizations.of(context);
+    if (state.apps.isNotEmpty) {
+      return l10n?.updateCount(state.count) ?? '共 ${state.count} 个应用可更新';
+    }
+
+    if (state.error != null) {
+      return l10n?.updateCheckFailed ?? '检查更新失败';
+    }
+
+    if (state.isLoading && !state.hasLoadedOnce) {
+      return l10n?.checkingUpdate ?? '检查更新中...';
+    }
+
+    return l10n?.noUpdate ?? '暂无更新';
   }
 
   /// 构建内容区域

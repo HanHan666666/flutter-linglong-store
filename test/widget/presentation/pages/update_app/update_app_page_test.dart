@@ -283,6 +283,54 @@ void main() {
       expect(find.text('1.0.0 → 1.1.0'), findsOneWidget);
     });
 
+    testWidgets('shows check update action next to update all in header', (
+      tester,
+    ) async {
+      final installQueue = TestInstallQueue(
+        initialState: const InstallQueueState(),
+      );
+      final updateApps = TestUpdateApps(
+        initialState: const UpdateAppsState(
+          apps: [
+            UpdatableApp(
+              installedApp: InstalledApp(
+                appId: 'org.example.demo',
+                name: 'Demo',
+                version: '1.0.0',
+              ),
+              latestVersion: '1.1.0',
+            ),
+          ],
+          hasLoadedOnce: true,
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            installQueueProvider.overrideWith(() => installQueue),
+            updateAppsProvider.overrideWith(() => updateApps),
+            networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+            appOperationQueueControllerProvider.overrideWith(
+              (ref) => RecordingAppOperationQueueController(ref),
+            ),
+          ],
+          child: const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: UpdateAppPage()),
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.widgetWithText(OutlinedButton, '检查更新'), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, '全部更新'), findsOneWidget);
+    });
+
     testWidgets('keeps empty state visible during background refresh', (
       tester,
     ) async {
@@ -317,8 +365,50 @@ void main() {
 
       await tester.pump();
 
-      expect(find.text('暂无更新'), findsOneWidget);
+      expect(find.text('暂无更新'), findsNWidgets(2));
+      expect(find.widgetWithText(OutlinedButton, '检查更新中...'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNothing);
+    });
+
+    testWidgets('keeps check update action available in empty state', (
+      tester,
+    ) async {
+      final installQueue = TestInstallQueue(
+        initialState: const InstallQueueState(),
+      );
+      final updateApps = TestUpdateApps(
+        initialState: const UpdateAppsState(hasLoadedOnce: true),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            installQueueProvider.overrideWith(() => installQueue),
+            updateAppsProvider.overrideWith(() => updateApps),
+            networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+            appOperationQueueControllerProvider.overrideWith(
+              (ref) => RecordingAppOperationQueueController(ref),
+            ),
+          ],
+          child: const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: UpdateAppPage()),
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      final beforeTapCalls = updateApps.checkUpdatesCalls;
+      expect(find.widgetWithText(OutlinedButton, '检查更新'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(OutlinedButton, '检查更新'));
+      await tester.pump();
+
+      expect(updateApps.checkUpdatesCalls, beforeTapCalls + 1);
     });
 
     testWidgets('shows "等待安装" for pending apps in queue, not progress bar', (
@@ -416,15 +506,21 @@ class TestUpdateApps extends UpdateApps {
           initialState ?? UpdateAppsState(apps: apps ?? const <UpdatableApp>[]);
 
   final UpdateAppsState initialState;
+  int checkUpdatesCalls = 0;
+  int refreshCalls = 0;
 
   @override
   UpdateAppsState build() => initialState;
 
   @override
-  Future<void> checkUpdates() async {}
+  Future<void> checkUpdates() async {
+    checkUpdatesCalls += 1;
+  }
 
   @override
-  Future<void> refresh() async {}
+  Future<void> refresh() async {
+    refreshCalls += 1;
+  }
 }
 
 class RecordingAppOperationQueueController extends AppOperationQueueController {

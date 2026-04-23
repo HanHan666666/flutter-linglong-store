@@ -4,6 +4,8 @@ abstract class AnalyticsRepository {
   Future<void> reportVisit({
     String? arch,
     String? llVersion,
+    String? llBinVersion,
+    String? detailMsg,
     String? osVersion,
     String? repoName,
     String? appVersion,

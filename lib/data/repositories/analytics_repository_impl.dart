@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'dart:math';
 
 import 'package:linglong_store/core/logging/app_logger.dart';
@@ -15,10 +16,18 @@ import '../../domain/repositories/analytics_repository.dart';
 /// - 上报内容不含任何个人隐私信息
 class AnalyticsRepositoryImpl implements AnalyticsRepository {
   static const _kVisitorIdKey = 'analytics_visitor_id';
+  static const _kClientIpKey = 'analytics_client_ip';
+  static const _kClientIpUrl = 'https://api64.ipify.org?format=json';
 
-  AnalyticsRepositoryImpl() : _apiService = AppApiService(ApiClient.instance);
+  AnalyticsRepositoryImpl({
+    AppApiService? apiService,
+    Future<String?> Function()? clientIpResolver,
+  }) : _apiService = apiService ?? AppApiService(ApiClient.instance),
+       _clientIpResolver = clientIpResolver ?? _defaultClientIpResolver;
 
   final AppApiService _apiService;
+  final Future<String?> Function() _clientIpResolver;
+  String? _cachedClientIp;
 
   // ----------------------------------------------------------------
   // Visitor ID — 首次生成后持久化，之后复用
@@ -40,6 +49,50 @@ class AnalyticsRepositoryImpl implements AnalyticsRepository {
     return visitorId;
   }
 
+  /// 获取或解析客户端公网 IP。
+  ///
+  /// 旧版 Electron 会在启动阶段单独解析 clientIp 并附带到统计请求中。
+  /// Flutter 端这里收敛为仓储内部能力：
+  /// - 优先复用已缓存值，避免每次上报都打外网请求；
+  /// - 解析失败时返回 null，不影响主流程。
+  Future<String?> _getOrCreateClientIp() async {
+    final cached =
+        _cachedClientIp ?? PreferencesService.getString(_kClientIpKey);
+    if (cached != null && cached.isNotEmpty) {
+      _cachedClientIp = cached;
+      return cached;
+    }
+
+    try {
+      final resolved = (await _clientIpResolver())?.trim();
+      if (resolved == null || resolved.isEmpty) {
+        return null;
+      }
+
+      _cachedClientIp = resolved;
+      PreferencesService.setString(_kClientIpKey, resolved).ignore();
+      return resolved;
+    } catch (e) {
+      AppLogger.warning('[analytics] Failed to resolve client IP: $e');
+      return null;
+    }
+  }
+
+  static Future<String?> _defaultClientIpResolver() async {
+    final dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 1),
+        receiveTimeout: const Duration(seconds: 1),
+      ),
+    );
+
+    final response = await dio.get<Map<String, dynamic>>(_kClientIpUrl);
+    final data = response.data;
+    final value = data?['ip']?.toString() ?? data?['query']?.toString();
+    final trimmed = value?.trim();
+    return (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+  }
+
   // ----------------------------------------------------------------
   // AnalyticsRepository 接口实现
   // ----------------------------------------------------------------
@@ -48,17 +101,22 @@ class AnalyticsRepositoryImpl implements AnalyticsRepository {
   Future<void> reportVisit({
     String? arch,
     String? llVersion,
+    String? llBinVersion,
+    String? detailMsg,
     String? osVersion,
     String? repoName,
     String? appVersion,
   }) async {
     try {
       final visitorId = _getOrCreateVisitorId();
+      final clientIp = await _getOrCreateClientIp();
       final request = SaveVisitRecordRequest(
         visitorId: visitorId,
+        clientIp: clientIp,
         arch: arch,
         llVersion: llVersion,
-        llBinVersion: llVersion,
+        llBinVersion: llBinVersion ?? llVersion,
+        detailMsg: detailMsg,
         osVersion: osVersion,
         repoName: repoName,
         appVersion: appVersion,
@@ -79,8 +137,10 @@ class AnalyticsRepositoryImpl implements AnalyticsRepository {
   }) async {
     try {
       final visitorId = _getOrCreateVisitorId();
+      final clientIp = await _getOrCreateClientIp();
       final request = SaveInstalledRecordRequest(
         visitorId: visitorId,
+        clientIp: clientIp,
         addedItems: [
           InstalledRecordItemDTO(appId: appId, name: appName, version: version),
         ],
@@ -100,8 +160,10 @@ class AnalyticsRepositoryImpl implements AnalyticsRepository {
   }) async {
     try {
       final visitorId = _getOrCreateVisitorId();
+      final clientIp = await _getOrCreateClientIp();
       final request = SaveInstalledRecordRequest(
         visitorId: visitorId,
+        clientIp: clientIp,
         removedItems: [
           InstalledRecordItemDTO(appId: appId, name: appName, version: version),
         ],

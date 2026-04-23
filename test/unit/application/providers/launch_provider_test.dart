@@ -442,7 +442,122 @@ void main() {
         expect(state.errorMessage, '未检测到玲珑仓库配置，请检查环境');
       },
     );
+
+    test(
+      'reports legacy startup diagnostics fields after launch success',
+      () async {
+        final analytics = _RecordingAnalyticsRepository();
+        final container = ProviderContainer(
+          overrides: [
+            globalAppProvider.overrideWith(
+              () => _TestGlobalApp(
+                const GlobalAppState(
+                  userPreferences: UserPreferences(autoCheckUpdate: true),
+                  appVersion: '2.0.0',
+                  arch: 'x86_64',
+                  osVersion: 'Linux test kernel',
+                  llVersion: '1.9.0',
+                ),
+              ),
+            ),
+            linglongEnvProvider.overrideWith(
+              () => _TestLinglongEnv(
+                const LinglongEnvCheckResult(
+                  isOk: true,
+                  llCliVersion: '1.9.0',
+                  llBinVersion: '1.9.1',
+                  detailMsg: 'ii  linglong-bin 1.9.1',
+                  arch: 'x86_64',
+                  osVersion: 'Linux test kernel',
+                  repoStatus: RepoStatus.ok,
+                  checkedAt: 1,
+                ),
+              ),
+            ),
+            installedAppsProvider.overrideWith(
+              () => _TestInstalledApps(apps: const []),
+            ),
+            updateAppsProvider.overrideWith(() => _TestUpdateApps()),
+            installQueueProvider.overrideWith(() => _TestInstallQueue()),
+            analyticsRepositoryProvider.overrideWithValue(analytics),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await container.read(launchSequenceProvider.notifier).runSequence();
+
+        expect(analytics.visitReports, hasLength(1));
+        final report = analytics.visitReports.single;
+        expect(report.arch, equals('x86_64'));
+        expect(report.llVersion, equals('1.9.0'));
+        expect(report.llBinVersion, equals('1.9.1'));
+        expect(report.detailMsg, equals('ii  linglong-bin 1.9.1'));
+        expect(report.osVersion, equals('Linux test kernel'));
+        expect(report.appVersion, equals('2.0.0'));
+      },
+    );
   });
+}
+
+class _VisitReportRecord {
+  const _VisitReportRecord({
+    this.arch,
+    this.llVersion,
+    this.llBinVersion,
+    this.detailMsg,
+    this.osVersion,
+    this.repoName,
+    this.appVersion,
+  });
+
+  final String? arch;
+  final String? llVersion;
+  final String? llBinVersion;
+  final String? detailMsg;
+  final String? osVersion;
+  final String? repoName;
+  final String? appVersion;
+}
+
+class _RecordingAnalyticsRepository implements AnalyticsRepository {
+  final List<_VisitReportRecord> visitReports = [];
+
+  @override
+  Future<void> reportInstall(
+    String appId,
+    String version, {
+    String? appName,
+  }) async {}
+
+  @override
+  Future<void> reportUninstall(
+    String appId,
+    String version, {
+    String? appName,
+  }) async {}
+
+  @override
+  Future<void> reportVisit({
+    String? arch,
+    String? llVersion,
+    String? llBinVersion,
+    String? detailMsg,
+    String? osVersion,
+    String? repoName,
+    String? appVersion,
+  }) async {
+    visitReports.add(
+      _VisitReportRecord(
+        arch: arch,
+        llVersion: llVersion,
+        llBinVersion: llBinVersion,
+        detailMsg: detailMsg,
+        osVersion: osVersion,
+        repoName: repoName,
+        appVersion: appVersion,
+      ),
+    );
+  }
 }
 
 class _TestLinglongEnv extends LinglongEnv {
@@ -525,6 +640,8 @@ class _NoopAnalyticsRepository implements AnalyticsRepository {
   Future<void> reportVisit({
     String? arch,
     String? llVersion,
+    String? llBinVersion,
+    String? detailMsg,
     String? osVersion,
     String? repoName,
     String? appVersion,

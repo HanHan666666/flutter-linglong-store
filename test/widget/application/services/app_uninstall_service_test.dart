@@ -1,10 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/application/services/app_uninstall_service.dart';
+import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/domain/models/running_app.dart';
 import 'package:linglong_store/domain/models/uninstall_result.dart';
 
 void main() {
+  setUpAll(() async {
+    await AppLogger.init();
+  });
+
   group('AppUninstallService', () {
     test('getActiveBlockingTask returns null when no active task', () {
       final service = AppUninstallService(
@@ -211,29 +216,34 @@ void main() {
       expect((result as UninstallResultKillFailed).appId, 'org.example.demo');
     });
 
-    test('executeUninstall returns error result on uninstall failure',
-        () async {
-      final service = AppUninstallService(
-        readRunningApps: () => const [],
-        killRunningApp: (_) async => true,
-        uninstallApp: (appId, version) async {
-          throw Exception('uninstall failed');
-        },
-        removeInstalledApp: (appId, version) {},
-        syncAfterUninstall: () async {},
-        reportUninstall: (appId, version, {appName}) async {},
-      );
+    test(
+      'executeUninstall returns error result on uninstall failure',
+      () async {
+        final service = AppUninstallService(
+          readRunningApps: () => const [],
+          killRunningApp: (_) async => true,
+          uninstallApp: (appId, version) async {
+            throw Exception('uninstall failed');
+          },
+          removeInstalledApp: (appId, version) {},
+          syncAfterUninstall: () async {},
+          reportUninstall: (appId, version, {appName}) async {},
+        );
 
-      final app = const InstalledApp(
-        appId: 'org.example.demo',
-        name: 'Demo',
-        version: '1.0.0',
-      );
+        final app = const InstalledApp(
+          appId: 'org.example.demo',
+          name: 'Demo',
+          version: '1.0.0',
+        );
 
-      final result = await service.executeUninstall(app);
+        final result = await service.executeUninstall(app);
 
-      expect(result, isA<UninstallResultError>());
-      expect((result as UninstallResultError).message, contains('uninstall failed'));
-    });
+        expect(result, isA<UninstallResultError>());
+        expect(
+          (result as UninstallResultError).message,
+          contains('uninstall failed'),
+        );
+      },
+    );
   });
 }

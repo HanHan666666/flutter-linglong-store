@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../core/config/app_config.dart';
 import '../../core/di/providers.dart';
 import '../../core/logging/app_logger.dart';
+import '../../domain/models/linglong_env_check_result.dart';
 import 'installed_apps_provider.dart';
 import 'linglong_env_provider.dart';
 
@@ -157,6 +158,12 @@ class LaunchSequence extends _$LaunchSequence {
   /// 环境检测状态
   LinglongEnvCheckState _envCheckState = LinglongEnvCheckState.initial;
 
+  /// 最近一次环境检测结果。
+  ///
+  /// 启动流程后续阶段（如埋点）依赖环境信息时，优先复用这里的结果，
+  /// 避免 Provider 状态在重建/覆盖场景下暂时拿不到 result。
+  LinglongEnvCheckResult? _lastEnvResult;
+
   /// 获取环境检测状态
   LinglongEnvCheckState get envCheckState => _envCheckState;
 
@@ -211,6 +218,7 @@ class LaunchSequence extends _$LaunchSequence {
       final envResult = await ref
           .read(linglongEnvProvider.notifier)
           .checkEnvironment();
+      _lastEnvResult = envResult;
 
       // 更新状态
       _envCheckState = envResult.isOk
@@ -294,7 +302,7 @@ class LaunchSequence extends _$LaunchSequence {
   /// 获取环境信息
   Future<void> _fetchEnvironmentInfo() async {
     try {
-      final envResult = ref.read(linglongEnvProvider).result;
+      final envResult = ref.read(linglongEnvProvider).result ?? _lastEnvResult;
       if (envResult == null) {
         return;
       }
@@ -460,11 +468,14 @@ class LaunchSequence extends _$LaunchSequence {
   /// 上报启动访问记录（携带设备/环境信息）
   void _reportStartupVisit() {
     final globalApp = ref.read(globalAppProvider);
+    final envResult = ref.read(linglongEnvProvider).result ?? _lastEnvResult;
     ref
         .read(analyticsRepositoryProvider)
         .reportVisit(
           arch: globalApp.arch,
           llVersion: globalApp.llVersion,
+          llBinVersion: envResult?.llBinVersion,
+          detailMsg: envResult?.detailMsg,
           osVersion: globalApp.osVersion,
           // 仓库配置不再允许用户切换，埋点统一记录默认仓库即可。
           repoName: AppConfig.defaultStoreRepoName,

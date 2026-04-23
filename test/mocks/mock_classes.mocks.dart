@@ -373,6 +373,8 @@ class MockAnalyticsRepository extends _i1.Mock
   _i4.Future<void> reportVisit({
     String? arch,
     String? llVersion,
+    String? llBinVersion,
+    String? detailMsg,
     String? osVersion,
     String? repoName,
     String? appVersion,
@@ -381,6 +383,8 @@ class MockAnalyticsRepository extends _i1.Mock
             Invocation.method(#reportVisit, [], {
               #arch: arch,
               #llVersion: llVersion,
+              #llBinVersion: llBinVersion,
+              #detailMsg: detailMsg,
               #osVersion: osVersion,
               #repoName: repoName,
               #appVersion: appVersion,

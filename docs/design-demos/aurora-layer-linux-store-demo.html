@@ -1,0 +1,2377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aurora Layer Linux Store Demo</title>
+    <style>
+      :root {
+        --accent: #2f6df6;
+        --accent-rgb: 47, 109, 246;
+        --accent-soft: rgba(47, 109, 246, 0.12);
+        --accent-surface: rgba(47, 109, 246, 0.18);
+        --accent-gradient: linear-gradient(135deg, #2f6df6 0%, #86b0ff 100%);
+        --success: #34b97d;
+        --warning: #f0a33f;
+        --danger: #eb5c6a;
+        --bg: #edf2f8;
+        --bg-glow-a: rgba(47, 109, 246, 0.12);
+        --bg-glow-b: rgba(78, 190, 166, 0.14);
+        --shell: rgba(255, 255, 255, 0.86);
+        --shell-strong: rgba(255, 255, 255, 0.94);
+        --sidebar: rgba(250, 251, 255, 0.78);
+        --panel: rgba(255, 255, 255, 0.92);
+        --panel-soft: rgba(248, 250, 254, 0.86);
+        --line: rgba(25, 40, 68, 0.08);
+        --line-strong: rgba(25, 40, 68, 0.14);
+        --text: #182235;
+        --muted: #647289;
+        --text-inverse: #ffffff;
+        --shadow-lg: 0 24px 64px rgba(34, 52, 84, 0.14);
+        --shadow-md: 0 18px 44px rgba(34, 52, 84, 0.1);
+        --radius-xl: 30px;
+        --radius-lg: 24px;
+        --radius-md: 18px;
+        --radius-sm: 14px;
+      }
+
+      body[data-mode="dark"] {
+        --bg: #0d121b;
+        --bg-glow-a: rgba(71, 122, 255, 0.18);
+        --bg-glow-b: rgba(78, 190, 166, 0.12);
+        --shell: rgba(14, 19, 28, 0.88);
+        --shell-strong: rgba(18, 24, 35, 0.96);
+        --sidebar: rgba(15, 20, 30, 0.8);
+        --panel: rgba(27, 34, 47, 0.92);
+        --panel-soft: rgba(22, 28, 40, 0.9);
+        --line: rgba(255, 255, 255, 0.08);
+        --line-strong: rgba(255, 255, 255, 0.14);
+        --text: #ebf0f8;
+        --muted: #98a4b8;
+        --text-inverse: #f7f9fd;
+        --shadow-lg: 0 26px 64px rgba(0, 0, 0, 0.38);
+        --shadow-md: 0 18px 44px rgba(0, 0, 0, 0.28);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        font-family:
+          "Noto Sans SC",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, var(--bg-glow-a), transparent 24%),
+          radial-gradient(circle at top right, var(--bg-glow-b), transparent 18%),
+          linear-gradient(180deg, color-mix(in srgb, var(--bg) 88%, white 12%) 0%, var(--bg) 100%);
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button {
+        border: none;
+        background: none;
+        color: inherit;
+        cursor: pointer;
+      }
+
+      .demo-shell {
+        width: min(1560px, calc(100vw - 32px));
+        min-height: calc(100vh - 32px);
+        margin: 16px auto;
+        display: flex;
+        flex-direction: column;
+        background: var(--shell);
+        border: 1px solid var(--line);
+        border-radius: 34px;
+        box-shadow: var(--shadow-lg);
+        backdrop-filter: blur(28px);
+        overflow: hidden;
+      }
+
+      .titlebar {
+        height: 70px;
+        display: grid;
+        grid-template-columns: 240px minmax(320px, 1fr) auto;
+        align-items: center;
+        gap: 18px;
+        padding: 0 18px 0 20px;
+        border-bottom: 1px solid var(--line);
+        background: color-mix(in srgb, var(--shell-strong) 86%, transparent);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .brand-mark {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        background: var(--accent-gradient);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        position: relative;
+      }
+
+      .brand-mark::before,
+      .brand-mark::after {
+        content: "";
+        position: absolute;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.9);
+      }
+
+      .brand-mark::before {
+        width: 12px;
+        height: 12px;
+        left: 8px;
+        top: 8px;
+        opacity: 0.92;
+      }
+
+      .brand-mark::after {
+        width: 12px;
+        height: 12px;
+        right: 8px;
+        bottom: 8px;
+        opacity: 0.68;
+      }
+
+      .brand-copy {
+        min-width: 0;
+      }
+
+      .brand-copy strong {
+        display: block;
+        font-size: 16px;
+        line-height: 1.1;
+      }
+
+      .brand-copy span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .title-search {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 42px;
+        padding: 0 16px;
+        border-radius: 999px;
+        background: var(--panel-soft);
+        border: 1px solid var(--line);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+
+      .title-search svg {
+        width: 16px;
+        height: 16px;
+        color: var(--muted);
+        flex: none;
+      }
+
+      .title-search input {
+        width: 100%;
+        color: var(--text);
+        background: transparent;
+        border: none;
+        outline: none;
+      }
+
+      .title-search input::placeholder {
+        color: var(--muted);
+      }
+
+      .title-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .icon-button,
+      .window-button,
+      .nav-item,
+      .quick-action,
+      .chip,
+      .segmented button,
+      .control-card button,
+      .palette-button,
+      .secondary-button,
+      .primary-button,
+      .ghost-button,
+      .danger-button {
+        transition:
+          background-color 160ms ease,
+          border-color 160ms ease,
+          color 160ms ease,
+          transform 180ms ease,
+          box-shadow 180ms ease;
+      }
+
+      .icon-button {
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+        background: var(--panel-soft);
+        border: 1px solid var(--line);
+      }
+
+      .icon-button:hover,
+      .nav-item:hover,
+      .quick-action:hover,
+      .palette-button:hover,
+      .secondary-button:hover,
+      .ghost-button:hover {
+        transform: translateY(-1px);
+        background: color-mix(in srgb, var(--accent-soft) 60%, var(--panel));
+        border-color: color-mix(in srgb, var(--accent) 22%, var(--line));
+      }
+
+      .win-controls {
+        display: flex;
+        gap: 8px;
+        margin-left: 2px;
+      }
+
+      .window-button {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        background: transparent;
+        border: 1px solid transparent;
+        color: var(--muted);
+      }
+
+      .window-button:hover {
+        background: var(--panel-soft);
+        border-color: var(--line);
+      }
+
+      .workspace {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 224px minmax(0, 1fr);
+      }
+
+      .sidebar {
+        padding: 18px 14px 16px;
+        border-right: 1px solid var(--line);
+        background: var(--sidebar);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .sidebar-group {
+        display: grid;
+        gap: 8px;
+      }
+
+      .sidebar-group-title {
+        padding: 0 12px;
+        color: var(--muted);
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .nav-item {
+        min-height: 46px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 14px;
+        border-radius: 16px;
+        border: 1px solid transparent;
+        color: var(--text);
+        background: transparent;
+        text-align: left;
+      }
+
+      .nav-item::before {
+        content: "";
+        width: 18px;
+        height: 18px;
+        border-radius: 7px;
+        background: color-mix(in srgb, var(--muted) 18%, transparent);
+        flex: none;
+      }
+
+      .nav-item[data-active="true"] {
+        background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+        border-color: color-mix(in srgb, var(--accent) 18%, var(--line));
+        color: var(--accent);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      }
+
+      .nav-item[data-active="true"]::before {
+        background: color-mix(in srgb, var(--accent) 40%, transparent);
+      }
+
+      .nav-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .nav-copy strong {
+        font-size: 14px;
+        line-height: 1.2;
+      }
+
+      .nav-copy span {
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .sidebar-footer {
+        margin-top: auto;
+        display: grid;
+        gap: 8px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line);
+      }
+
+      .content-host {
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .content-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 18px 22px 0;
+      }
+
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .breadcrumb strong {
+        font-size: 20px;
+      }
+
+      .breadcrumb span {
+        color: var(--muted);
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .toolbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .palette-dock {
+        display: flex;
+        gap: 8px;
+        padding: 4px;
+        border-radius: 999px;
+        background: var(--panel-soft);
+        border: 1px solid var(--line);
+      }
+
+      .palette-button {
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        border: 2px solid transparent;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+      }
+
+      .palette-button[data-active="true"] {
+        border-color: color-mix(in srgb, var(--text) 20%, white);
+        box-shadow:
+          0 0 0 3px color-mix(in srgb, var(--accent-soft) 78%, transparent),
+          inset 0 1px 0 rgba(255, 255, 255, 0.36);
+      }
+
+      .mode-toggle {
+        display: flex;
+        gap: 6px;
+        padding: 4px;
+        border-radius: 999px;
+        background: var(--panel-soft);
+        border: 1px solid var(--line);
+      }
+
+      .mode-toggle button {
+        min-width: 66px;
+        height: 32px;
+        border-radius: 999px;
+        color: var(--muted);
+      }
+
+      .mode-toggle button[data-active="true"] {
+        background: var(--panel);
+        color: var(--text);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+
+      .screen-stack {
+        min-height: 0;
+        flex: 1;
+        padding: 16px 22px 22px;
+        overflow: auto;
+      }
+
+      .screen {
+        display: none;
+      }
+
+      .screen[data-active="true"] {
+        display: block;
+      }
+
+      .screen-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 18px;
+      }
+
+      .main-column,
+      .aux-column {
+        display: grid;
+        gap: 16px;
+        align-content: start;
+      }
+
+      .card,
+      .hero-card,
+      .highlight-card,
+      .summary-card,
+      .task-card,
+      .app-card,
+      .comment-card,
+      .version-card,
+      .control-card,
+      .notification-panel {
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--line);
+        background: var(--panel);
+        box-shadow: var(--shadow-md);
+      }
+
+      .card,
+      .summary-card,
+      .task-card,
+      .highlight-card,
+      .notification-panel {
+        padding: 18px;
+      }
+
+      .hero-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 240px;
+        padding: 28px;
+        color: var(--text-inverse);
+        background:
+          radial-gradient(circle at 76% 28%, rgba(166, 229, 255, 0.48), transparent 18%),
+          radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.16), transparent 18%),
+          linear-gradient(135deg, color-mix(in srgb, var(--accent) 94%, #183d86) 0%, color-mix(in srgb, var(--accent) 65%, #0b1e44) 100%);
+      }
+
+      .hero-card::after {
+        content: "";
+        position: absolute;
+        inset: auto -28px -60px auto;
+        width: 240px;
+        height: 240px;
+        border-radius: 42px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.05));
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        transform: rotate(12deg);
+      }
+
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        font-size: 13px;
+      }
+
+      .hero-title {
+        max-width: 440px;
+        margin: 18px 0 10px;
+        font-size: clamp(34px, 3vw, 46px);
+        line-height: 1.06;
+        letter-spacing: -0.04em;
+      }
+
+      .hero-copy {
+        max-width: 420px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 15px;
+        line-height: 1.72;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+      }
+
+      .primary-button,
+      .secondary-button,
+      .ghost-button,
+      .danger-button {
+        min-height: 40px;
+        padding: 0 16px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 600;
+      }
+
+      .primary-button {
+        background: rgba(255, 255, 255, 0.16);
+        color: var(--text-inverse);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        backdrop-filter: blur(12px);
+      }
+
+      .secondary-button {
+        background: var(--accent-soft);
+        color: var(--accent);
+        border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line));
+      }
+
+      .ghost-button {
+        background: transparent;
+        border: 1px solid var(--line);
+        color: var(--text);
+      }
+
+      .danger-button {
+        background: color-mix(in srgb, var(--danger) 12%, var(--panel));
+        color: var(--danger);
+        border: 1px solid color-mix(in srgb, var(--danger) 18%, var(--line));
+      }
+
+      .primary-button:hover,
+      .secondary-button:hover,
+      .ghost-button:hover,
+      .danger-button:hover {
+        transform: translateY(-1px);
+      }
+
+      .section-card {
+        display: grid;
+        gap: 14px;
+      }
+
+      .section-headline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .section-headline h3 {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .section-headline p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .section-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .chip-row,
+      .quick-grid,
+      .summary-grid,
+      .state-grid,
+      .settings-grid,
+      .component-grid,
+      .metrics-row {
+        display: grid;
+        gap: 12px;
+      }
+
+      .chip-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .chip,
+      .quick-action {
+        min-height: 68px;
+        padding: 14px 16px;
+        border-radius: var(--radius-md);
+        background: var(--panel);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow-md);
+      }
+
+      .chip {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        justify-content: center;
+      }
+
+      .chip strong,
+      .quick-action strong,
+      .app-meta strong,
+      .meta-block strong,
+      .task-copy strong,
+      .notification-panel strong,
+      .control-card strong {
+        font-size: 14px;
+      }
+
+      .chip span,
+      .quick-action span,
+      .app-meta span,
+      .meta-block span,
+      .task-copy span,
+      .muted,
+      .notification-panel span,
+      .control-card span {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .quick-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .quick-action {
+        text-align: left;
+      }
+
+      .app-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .app-card {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 118px;
+        padding: 16px;
+      }
+
+      .app-card:hover,
+      .task-card:hover,
+      .highlight-card:hover,
+      .summary-card:hover,
+      .comment-card:hover,
+      .version-card:hover,
+      .control-card:hover {
+        transform: translateY(-1px);
+      }
+
+      .app-icon,
+      .avatar {
+        width: 54px;
+        height: 54px;
+        flex: none;
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.18), rgba(var(--accent-rgb), 0.04));
+        border: 1px solid rgba(var(--accent-rgb), 0.18);
+      }
+
+      .app-icon.firefox {
+        background: linear-gradient(135deg, #ffb46e, #ff5b78 56%, #ff9c4f);
+      }
+
+      .app-icon.vscode {
+        background: linear-gradient(135deg, #38a0ff, #0b63d8);
+      }
+
+      .app-icon.weixin {
+        background: linear-gradient(135deg, #37c977, #66dc9e);
+      }
+
+      .app-icon.wps {
+        background: linear-gradient(135deg, #ff7f4e, #d93422);
+      }
+
+      .app-icon.steam {
+        background: linear-gradient(135deg, #2d4f96, #16315e);
+      }
+
+      .app-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+      }
+
+      .app-copy h4,
+      .meta-title,
+      .comment-card h4,
+      .version-card h4,
+      .control-card h4,
+      .summary-card h4 {
+        margin: 0;
+        font-size: 15px;
+      }
+
+      .app-copy p,
+      .summary-card p,
+      .card p,
+      .comment-card p,
+      .control-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.65;
+      }
+
+      .app-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .state-pill,
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 28px;
+        padding: 0 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        border: 1px solid var(--line);
+        background: var(--panel-soft);
+      }
+
+      .state-pill.install { color: var(--accent); background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 18%, var(--line)); }
+      .state-pill.open { color: var(--text); }
+      .state-pill.update { color: var(--warning); background: color-mix(in srgb, var(--warning) 14%, var(--panel)); border-color: color-mix(in srgb, var(--warning) 18%, var(--line)); }
+      .state-pill.queue { color: var(--muted); }
+      .state-pill.progress { color: var(--success); background: color-mix(in srgb, var(--success) 12%, var(--panel)); border-color: color-mix(in srgb, var(--success) 18%, var(--line)); }
+      .state-pill.error { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, var(--panel)); border-color: color-mix(in srgb, var(--danger) 18%, var(--line)); }
+
+      .summary-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .summary-card {
+        min-height: 112px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .summary-metric {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+      }
+
+      .metric-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .subtle-bar {
+        height: 8px;
+        width: 100%;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--accent-soft) 35%, var(--panel-soft));
+        overflow: hidden;
+      }
+
+      .subtle-bar > span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--accent-gradient);
+      }
+
+      .highlight-card {
+        min-height: 184px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .highlight-visual {
+        min-height: 112px;
+        border-radius: 18px;
+        background:
+          radial-gradient(circle at 78% 26%, rgba(166, 229, 255, 0.44), transparent 18%),
+          linear-gradient(135deg, color-mix(in srgb, var(--accent) 92%, #183d86), color-mix(in srgb, var(--accent) 60%, #0f224c));
+      }
+
+      .meta-grid,
+      .version-list,
+      .comment-list,
+      .task-list,
+      .setting-list,
+      .component-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .meta-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .meta-block {
+        min-height: 92px;
+        padding: 16px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--line);
+        background: var(--panel-soft);
+      }
+
+      .detail-hero {
+        display: grid;
+        grid-template-columns: 96px minmax(0, 1fr);
+        gap: 18px;
+        padding: 22px;
+        border-radius: var(--radius-lg);
+        background: var(--panel);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow-md);
+      }
+
+      .detail-icon {
+        width: 96px;
+        height: 96px;
+        border-radius: 28px;
+        background: linear-gradient(135deg, #38c97b, #7ce3aa);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+
+      .detail-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .detail-copy h2 {
+        margin: 0;
+        font-size: clamp(28px, 3vw, 38px);
+        line-height: 1.08;
+        letter-spacing: -0.04em;
+      }
+
+      .detail-actions,
+      .filter-row,
+      .tag-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .gallery-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .screenshot {
+        min-height: 160px;
+        border-radius: var(--radius-md);
+        background:
+          linear-gradient(135deg, rgba(var(--accent-rgb), 0.2), rgba(var(--accent-rgb), 0.04)),
+          color-mix(in srgb, var(--panel-soft) 72%, transparent);
+        border: 1px solid var(--line);
+      }
+
+      .comment-card,
+      .version-card,
+      .task-card,
+      .control-card {
+        padding: 16px;
+      }
+
+      .comment-card,
+      .version-card,
+      .task-card,
+      .control-card {
+        display: grid;
+        gap: 10px;
+      }
+
+      .comment-head,
+      .task-head,
+      .version-head,
+      .setting-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 12px;
+      }
+
+      .avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.22), rgba(var(--accent-rgb), 0.06));
+      }
+
+      .comment-meta,
+      .task-copy,
+      .version-copy {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .comment-headline,
+      .task-inline,
+      .version-inline {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .rating {
+        display: flex;
+        gap: 4px;
+        color: #ffb545;
+        font-size: 13px;
+      }
+
+      .task-card {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+      }
+
+      .progress-ring {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at center, var(--panel) 58%, transparent 59%),
+          conic-gradient(var(--accent) 0deg 250deg, color-mix(in srgb, var(--accent-soft) 30%, var(--panel-soft)) 250deg 360deg);
+        color: var(--accent);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .task-meta {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .notification-panel {
+        position: absolute;
+        right: 22px;
+        top: 82px;
+        width: 320px;
+        display: none;
+        z-index: 30;
+      }
+
+      .notification-panel[data-open="true"] {
+        display: grid;
+        gap: 10px;
+      }
+
+      .notice {
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: var(--panel-soft);
+      }
+
+      .notice.info { border-color: color-mix(in srgb, var(--accent) 22%, var(--line)); background: color-mix(in srgb, var(--accent) 10%, var(--panel-soft)); }
+      .notice.success { border-color: color-mix(in srgb, var(--success) 22%, var(--line)); background: color-mix(in srgb, var(--success) 10%, var(--panel-soft)); }
+      .notice.warning { border-color: color-mix(in srgb, var(--warning) 22%, var(--line)); background: color-mix(in srgb, var(--warning) 10%, var(--panel-soft)); }
+      .notice.error { border-color: color-mix(in srgb, var(--danger) 22%, var(--line)); background: color-mix(in srgb, var(--danger) 10%, var(--panel-soft)); }
+
+      .setting-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .control-card {
+        min-height: 150px;
+      }
+
+      .segmented {
+        display: inline-flex;
+        gap: 6px;
+        padding: 4px;
+        border-radius: 999px;
+        background: var(--panel-soft);
+        border: 1px solid var(--line);
+      }
+
+      .segmented button {
+        min-width: 72px;
+        height: 32px;
+        border-radius: 999px;
+        color: var(--muted);
+      }
+
+      .segmented button[data-active="true"] {
+        background: var(--panel);
+        color: var(--text);
+      }
+
+      .palette-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .palette-card {
+        min-height: 86px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        display: flex;
+        align-items: end;
+        padding: 10px;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      }
+
+      .s-blue { background: linear-gradient(135deg, #2f6df6, #86b0ff); }
+      .s-green { background: linear-gradient(135deg, #22a96d, #7fd8b2); }
+      .s-orange { background: linear-gradient(135deg, #ea8b28, #f9c172); }
+      .s-teal { background: linear-gradient(135deg, #1494a2, #7cd7df); }
+      .s-rose { background: linear-gradient(135deg, #df5b7c, #f3a0b4); }
+      .s-violet { background: linear-gradient(135deg, #6f62ea, #b4a7ff); }
+      .s-slate { background: linear-gradient(135deg, #54637f, #9cabbe); }
+      .s-system { background: linear-gradient(135deg, #7986a8, #d1d7e6); }
+
+      .component-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .empty-state,
+      .error-state,
+      .loading-state {
+        min-height: 144px;
+        display: grid;
+        place-items: center;
+        border-radius: var(--radius-md);
+        border: 1px dashed var(--line-strong);
+        background: var(--panel-soft);
+        text-align: center;
+        padding: 18px;
+      }
+
+      .loading-skeleton {
+        width: 100%;
+        display: grid;
+        gap: 10px;
+      }
+
+      .skeleton-line,
+      .skeleton-card {
+        border-radius: 14px;
+        background:
+          linear-gradient(90deg, color-mix(in srgb, var(--panel-soft) 78%, transparent) 0%, color-mix(in srgb, var(--accent-soft) 26%, transparent) 50%, color-mix(in srgb, var(--panel-soft) 78%, transparent) 100%);
+        background-size: 200% 100%;
+        animation: shimmer 1.6s linear infinite;
+      }
+
+      .skeleton-line {
+        height: 12px;
+      }
+
+      .skeleton-line.short {
+        width: 56%;
+      }
+
+      .skeleton-card {
+        height: 82px;
+      }
+
+      .footnote {
+        padding: 0 2px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.65;
+      }
+
+      @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+
+      @media (max-width: 1360px) {
+        .screen-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 1120px) {
+        .workspace {
+          grid-template-columns: 86px minmax(0, 1fr);
+        }
+
+        .sidebar {
+          padding-inline: 10px;
+        }
+
+        .sidebar-group-title,
+        .nav-copy span {
+          display: none;
+        }
+
+        .nav-copy strong {
+          font-size: 13px;
+        }
+
+        .nav-item {
+          justify-content: center;
+          padding-inline: 10px;
+        }
+
+        .nav-item::before {
+          margin: 0;
+        }
+
+        .nav-copy {
+          display: none;
+        }
+      }
+
+      @media (max-width: 920px) {
+        .demo-shell {
+          width: calc(100vw - 16px);
+          min-height: calc(100vh - 16px);
+          margin: 8px;
+          border-radius: 24px;
+        }
+
+        .titlebar {
+          grid-template-columns: 1fr;
+          height: auto;
+          padding-block: 14px;
+        }
+
+        .title-actions,
+        .toolbar-actions {
+          justify-content: flex-start;
+          flex-wrap: wrap;
+        }
+
+        .chip-row,
+        .quick-grid,
+        .summary-grid,
+        .meta-grid,
+        .app-grid,
+        .gallery-row,
+        .setting-list,
+        .component-grid,
+        .palette-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body data-mode="light">
+    <div class="demo-shell">
+      <header class="titlebar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <div class="brand-copy">
+            <strong>玲珑应用商店社区版</strong>
+            <span>Aurora Layer Linux Desktop Store Demo</span>
+          </div>
+        </div>
+
+        <label class="title-search" aria-label="搜索应用">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M20 20l-3.5-3.5"></path>
+          </svg>
+          <input type="text" value="在这里搜索你想发现的应用、运行时或社区精选" aria-label="搜索预览" />
+        </label>
+
+        <div class="title-actions">
+          <button class="icon-button" id="notificationToggle" aria-label="切换通知中心">◎</button>
+          <div class="mode-toggle" aria-label="浅深模式">
+            <button data-mode-button="light" data-active="true">浅色</button>
+            <button data-mode-button="dark" data-active="false">深色</button>
+          </div>
+          <div class="palette-dock" aria-label="主题色">
+            <button class="palette-button" data-palette="blue" data-active="true" style="background:linear-gradient(135deg,#2f6df6,#86b0ff)"></button>
+            <button class="palette-button" data-palette="green" style="background:linear-gradient(135deg,#22a96d,#7fd8b2)"></button>
+            <button class="palette-button" data-palette="orange" style="background:linear-gradient(135deg,#ea8b28,#f9c172)"></button>
+            <button class="palette-button" data-palette="teal" style="background:linear-gradient(135deg,#1494a2,#7cd7df)"></button>
+            <button class="palette-button" data-palette="rose" style="background:linear-gradient(135deg,#df5b7c,#f3a0b4)"></button>
+            <button class="palette-button" data-palette="violet" style="background:linear-gradient(135deg,#6f62ea,#b4a7ff)"></button>
+            <button class="palette-button" data-palette="slate" style="background:linear-gradient(135deg,#54637f,#9cabbe)"></button>
+            <button class="palette-button" data-palette="system" style="background:linear-gradient(135deg,#7986a8,#d1d7e6)"></button>
+          </div>
+          <div class="win-controls" aria-hidden="true">
+            <button class="window-button">－</button>
+            <button class="window-button">□</button>
+            <button class="window-button">×</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <aside class="sidebar">
+          <div class="sidebar-group">
+            <div class="sidebar-group-title">主导航</div>
+            <button class="nav-item" data-screen-target="home" data-active="true">
+              <div class="nav-copy">
+                <strong>推荐</strong>
+                <span>发现与精选</span>
+              </div>
+            </button>
+            <button class="nav-item" data-screen-target="browse" data-active="false">
+              <div class="nav-copy">
+                <strong>全部应用</strong>
+                <span>浏览与筛选</span>
+              </div>
+            </button>
+            <button class="nav-item" data-screen-target="detail" data-active="false">
+              <div class="nav-copy">
+                <strong>应用详情</strong>
+                <span>决策页模板</span>
+              </div>
+            </button>
+          </div>
+
+          <div class="sidebar-group">
+            <div class="sidebar-group-title">任务与设置</div>
+            <button class="nav-item" data-screen-target="updates" data-active="false">
+              <div class="nav-copy">
+                <strong>更新页</strong>
+                <span>任务工作区</span>
+              </div>
+            </button>
+            <button class="nav-item" data-screen-target="downloads" data-active="false">
+              <div class="nav-copy">
+                <strong>下载管理</strong>
+                <span>队列与历史</span>
+              </div>
+            </button>
+            <button class="nav-item" data-screen-target="settings" data-active="false">
+              <div class="nav-copy">
+                <strong>设置</strong>
+                <span>外观与偏好</span>
+              </div>
+            </button>
+          </div>
+
+          <div class="sidebar-footer">
+            <button class="nav-item" data-screen-target="components" data-active="false">
+              <div class="nav-copy">
+                <strong>组件样板</strong>
+                <span>按钮、状态与卡片</span>
+              </div>
+            </button>
+          </div>
+        </aside>
+
+        <div class="content-host">
+          <div class="content-toolbar">
+            <div class="breadcrumb">
+              <div>
+                <strong id="pageTitle">推荐</strong>
+                <span id="pageSubtitle">Aurora Layer 首页模板，偏展示但保持桌面节奏。</span>
+              </div>
+            </div>
+            <div class="toolbar-actions">
+              <button class="ghost-button">平衡密度</button>
+              <button class="secondary-button">通知中心</button>
+              <button class="secondary-button">跟随系统强调色</button>
+            </div>
+          </div>
+
+          <div class="notification-panel" id="notificationPanel" data-open="false">
+            <strong>通知中心</strong>
+            <div class="notice info">
+              <strong>主题已切换</strong>
+              <span>导航激活态、主按钮、焦点边框和评分强调已同步更新。</span>
+            </div>
+            <div class="notice success">
+              <strong>安装完成</strong>
+              <span>Visual Studio Code 已安装，可立即打开。</span>
+            </div>
+            <div class="notice warning">
+              <strong>下载排队中</strong>
+              <span>当前仍有 2 个任务等待执行，卸载入口将保持可见但会进行拦截。</span>
+            </div>
+            <div class="notice error">
+              <strong>网络请求失败</strong>
+              <span>版本历史回源失败时，详情页保留主体可用，只在版本区显示轻错误态。</span>
+            </div>
+          </div>
+
+          <main class="screen-stack">
+            <section class="screen" id="screen-home" data-active="true">
+              <div class="screen-grid">
+                <div class="main-column">
+                  <section class="hero-card">
+                    <div class="hero-badge">Aurora Layer / Linux Desktop Store</div>
+                    <h1 class="hero-title">把应用商店做成现代桌面工作区，而不是网页化陈列页</h1>
+                    <div class="hero-copy">
+                      首页保留发现和推荐能力，但不走营销站路线。Banner 是唯一主视觉区，下面的分类捷径、精选应用、榜单和主题位统一走规整节奏。
+                    </div>
+                    <div class="hero-actions">
+                      <button class="primary-button">立即探索</button>
+                      <button class="primary-button">查看主题规范</button>
+                    </div>
+                  </section>
+
+                  <section class="section-card">
+                    <div class="section-headline">
+                      <div class="section-copy">
+                        <h3>常用入口</h3>
+                        <p>轻量功能捷径，不与 Banner 抢戏。</p>
+                      </div>
+                      <button class="ghost-button">自定义布局</button>
+                    </div>
+                    <div class="chip-row">
+                      <div class="chip"><strong>高效办公</strong><span>文档、表格、协作</span></div>
+                      <div class="chip"><strong>开发工具</strong><span>编辑器、终端、构建</span></div>
+                      <div class="chip"><strong>系统工具</strong><span>监控、文件、备份</span></div>
+                      <div class="chip"><strong>创意设计</strong><span>图像、视频、建模</span></div>
+                    </div>
+                  </section>
+
+                  <section class="section-card">
+                    <div class="section-headline">
+                      <div class="section-copy">
+                        <h3>精选应用</h3>
+                        <p>沿用统一应用卡片状态规则：安装 / 更新 / 打开 / 进行中。</p>
+                      </div>
+                      <button class="ghost-button">查看全部</button>
+                    </div>
+                    <div class="app-grid">
+                      <article class="app-card">
+                        <div class="app-icon vscode"></div>
+                        <div class="app-copy">
+                          <h4>Visual Studio Code</h4>
+                          <p>强大的代码编辑器，兼顾现代界面与开发者效率。</p>
+                          <div class="app-meta">
+                            <span class="state-pill update">可更新</span>
+                            <span class="muted">4.8 / 开发工具</span>
+                          </div>
+                        </div>
+                        <button class="secondary-button">更新</button>
+                      </article>
+
+                      <article class="app-card">
+                        <div class="app-icon weixin"></div>
+                        <div class="app-copy">
+                          <h4>微信</h4>
+                          <p>桌面端消息、文件和社交协作的统一入口。</p>
+                          <div class="app-meta">
+                            <span class="state-pill open">已安装</span>
+                            <span class="muted">4.6 / 社交通讯</span>
+                          </div>
+                        </div>
+                        <button class="ghost-button">打开</button>
+                      </article>
+
+                      <article class="app-card">
+                        <div class="app-icon firefox"></div>
+                        <div class="app-copy">
+                          <h4>Firefox</h4>
+                          <p>现代浏览器模板，体现 Aurora Layer 在大众应用上的平衡感。</p>
+                          <div class="app-meta">
+                            <span class="state-pill install">未安装</span>
+                            <span class="muted">4.7 / 浏览器</span>
+                          </div>
+                        </div>
+                        <button class="secondary-button">安装</button>
+                      </article>
+
+                      <article class="app-card">
+                        <div class="app-icon steam"></div>
+                        <div class="app-copy">
+                          <h4>Steam</h4>
+                          <p>演示大图标、高关注应用与任务状态并存时的卡片节奏。</p>
+                          <div class="app-meta">
+                            <span class="state-pill queue">排队中</span>
+                            <span class="muted">4.7 / 游戏平台</span>
+                          </div>
+                        </div>
+                        <button class="ghost-button">排队</button>
+                      </article>
+                    </div>
+                  </section>
+
+                  <section class="section-card">
+                    <div class="section-headline">
+                      <div class="section-copy">
+                        <h3>热门榜单</h3>
+                        <p>首页榜单区强化序号与推荐理由，但不脱离统一卡片语言。</p>
+                      </div>
+                      <button class="ghost-button">榜单详情</button>
+                    </div>
+                    <div class="summary-grid">
+                      <article class="summary-card">
+                        <h4>1. 腾讯会议</h4>
+                        <p>桌面协作的高频工具，在 Linux 商店中保持清爽排版。</p>
+                        <div class="metric-line">
+                          <span class="muted">趋势稳定</span>
+                          <span class="summary-metric">4.8</span>
+                        </div>
+                      </article>
+                      <article class="summary-card">
+                        <h4>2. 搜狗输入法</h4>
+                        <p>工具类应用采用更明确的版本与下载信息表达。</p>
+                        <div class="metric-line">
+                          <span class="muted">上升 8%</span>
+                          <span class="summary-metric">4.7</span>
+                        </div>
+                      </article>
+                      <article class="summary-card">
+                        <h4>3. OBS Studio</h4>
+                        <p>创作型应用也保持统一业务按钮与信息节奏。</p>
+                        <div class="metric-line">
+                          <span class="muted">创作者精选</span>
+                          <span class="summary-metric">4.6</span>
+                        </div>
+                      </article>
+                    </div>
+                  </section>
+                </div>
+
+                <aside class="aux-column">
+                  <article class="highlight-card">
+                    <div class="section-copy">
+                      <h3>今日推荐</h3>
+                      <p>辅助区只承载上下文内容，不是固定广告栏。</p>
+                    </div>
+                    <div class="highlight-visual"></div>
+                    <div class="tag-row">
+                      <span class="tag">轻盈桌面感</span>
+                      <span class="tag">统一主题色</span>
+                    </div>
+                  </article>
+
+                  <article class="summary-card">
+                    <h4>主题摘要</h4>
+                    <p>当前主题色驱动导航、按钮、焦点、评分和通知主轨。</p>
+                    <div class="subtle-bar"><span style="width: 72%"></span></div>
+                    <div class="footnote">成功、警告、失败仍保留独立语义色，不随主题色漂移。</div>
+                  </article>
+
+                  <article class="summary-card">
+                    <h4>社区生态位</h4>
+                    <p>社区感只作为辅助氛围，不主导页面骨架。</p>
+                    <div class="tag-row">
+                      <span class="tag">开放生态</span>
+                      <span class="tag">精选内容</span>
+                    </div>
+                  </article>
+                </aside>
+              </div>
+            </section>
+
+            <section class="screen" id="screen-browse" data-active="false">
+              <div class="screen-grid">
+                <div class="main-column">
+                  <section class="card section-card">
+                    <div class="section-headline">
+                      <div class="section-copy">
+                        <h3>全部应用</h3>
+                        <p>浏览型列表页：标题、筛选、排序、列表节奏全部统一。</p>
+                      </div>
+                      <div class="filter-row">
+                        <button class="secondary-button">全部</button>
+                        <button class="ghost-button">最热</button>
+                        <button class="ghost-button">最近更新</button>
+                      </div>
+                    </div>
+
+                    <div class="filter-row">
+                      <span class="tag">办公</span>
+                      <span class="tag">系统</span>
+                      <span class="tag">开发</span>
+                      <span class="tag">娱乐</span>
+                      <span class="tag">设计</span>
+                      <span class="tag">音视频</span>
+                    </div>
+
+                    <div class="app-grid">
+                      <article class="app-card">
+                        <div class="app-icon wps"></div>
+                        <div class="app-copy">
+                          <h4>WPS Office</h4>
+                          <p>高频办公套件，列表页里信息更克制，按钮更明确。</p>
+                          <div class="app-meta"><span class="muted">办公效率 / 4.7</span></div>
+                        </div>
+                        <button class="secondary-button">安装</button>
+                      </article>
+
+                      <article class="app-card">
+                        <div class="app-icon vscode"></div>
+                        <div class="app-copy">
+                          <h4>VSCodium</h4>
+                          <p>开发工具示例，适合观察主题色在冷色工具类上的表现。</p>
+                          <div class="app-meta"><span class="state-pill install">未安装</span></div>
+                        </div>
+                        <button class="secondary-button">安装</button>
+                      </article>
+
+                      <article class="app-card">
+                        <div class="app-icon firefox"></div>
+                        <div class="app-copy">
+                          <h4>Inkscape</h4>
+                          <p>设计类应用保留统一卡片骨架，不因为品类不同而重写布局。</p>
+                          <div class="app-meta"><span class="state-pill progress">下载中</span></div>
+                        </div>
+                        <button class="ghost-button">53%</button>
+                      </article>
+
+                      <article class="app-card">
+                        <div class="app-icon steam"></div>
+                        <div class="app-copy">
+                          <h4>Typora</h4>
+                          <p>用于演示列表页右侧操作区在不同内容长度下的稳定节奏。</p>
+                          <div class="app-meta"><span class="state-pill open">已安装</span></div>
+                        </div>
+                        <button class="ghost-button">打开</button>
+                      </article>
+
+                      <article class="app-card">
+                        <div class="app-icon weixin"></div>
+                        <div class="app-copy">
+                          <h4>QQ 音乐</h4>
+                          <p>应用卡片在浏览页保持轻信息，不直接塞满所有元数据。</p>
+                          <div class="app-meta"><span class="state-pill queue">等待更新</span></div>
+                        </div>
+                        <button class="ghost-button">排队</button>
+                      </article>
+
+                      <article class="app-card">
+                        <div class="app-icon firefox"></div>
+                        <div class="app-copy">
+                          <h4>OnlyOffice</h4>
+                          <p>默认密度为平衡型，兼顾一屏数量和可读性。</p>
+                          <div class="app-meta"><span class="muted">办公效率 / 4.5</span></div>
+                        </div>
+                        <button class="secondary-button">安装</button>
+                      </article>
+                    </div>
+                  </section>
+                </div>
+
+                <aside class="aux-column">
+                  <article class="summary-card">
+                    <h4>当前筛选摘要</h4>
+                    <p>浏览页右侧显示的是筛选上下文和结果摘要，而不是运营位。</p>
+                    <div class="tag-row">
+                      <span class="tag">类别：全部</span>
+                      <span class="tag">排序：最热</span>
+                    </div>
+                  </article>
+
+                  <article class="summary-card">
+                    <h4>结果总览</h4>
+                    <div class="metric-line">
+                      <span class="muted">已收录应用</span>
+                      <span class="summary-metric">3,248</span>
+                    </div>
+                    <div class="subtle-bar"><span style="width: 66%"></span></div>
+                  </article>
+                </aside>
+              </div>
+            </section>
+
+            <section class="screen" id="screen-detail" data-active="false">
+              <div class="screen-grid">
+                <div class="main-column">
+                  <section class="detail-hero">
+                    <div class="detail-icon"></div>
+                    <div class="detail-copy">
+                      <div class="tag-row">
+                        <span class="tag">官方</span>
+                        <span class="tag">社交通讯</span>
+                        <span class="tag">社区精选</span>
+                      </div>
+                      <h2>微信</h2>
+                      <p>详情页改成真正的决策页：左主右辅，主操作与次级动作同行，截图、介绍、评论和版本历史有明确分区。</p>
+                      <div class="tag-row">
+                        <button class="secondary-button">打开</button>
+                        <button class="ghost-button">创建桌面快捷方式</button>
+                        <button class="danger-button">卸载</button>
+                        <button class="ghost-button">分享</button>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class="card section-card">
+                    <div class="section-headline">
+                      <div class="section-copy">
+                        <h3>截图与介绍</h3>
+                        <p>截图区域统一用大预览 + 横向缩略内容，不再和详情信息混在同一层。</p>
+                      </div>
+                    </div>
+                    <div class="gallery-row">
+                      <div class="screenshot"></div>
+                      <div class="screenshot"></div>
+                      <div class="screenshot"></div>
+                    </div>
+                    <p class="muted">
+                      微信是一款全方位桌面通讯应用，帮助你将消息、文件、联系人与团队协作整合到统一体验中。Aurora Layer 下，描述区保持高可读正文，不回退为 12px 小字。
+                    </p>
+                  </section>
+
+                  <section class="card section-card">
+                    <div class="section-headline">
+                      <div class="section-copy">
+                        <h3>应用信息</h3>
+                        <p>短字段三列组织，长字段独占整行，避免再次退化为竖向长表格。</p>
+                      </div>
+                    </div>
+                    <div class="meta-grid">
+                      <div class="meta-block"><strong>版本</strong><span>4.1.1.6</span></div>
+                      <div class="meta-block"><strong>大小</strong><span>716.64 MB</span></div>
+                      <div class="meta-block"><strong>开发者</strong><span>Tencent</span></div>
+                      <div class="meta-block"><strong>架构</strong><span>x86_64</span></div>
+                    </div>
+                  </section>
+
+                  <section class="section-card">
+                    <div class="section-headline">
+                      <div class="section-copy">
+                        <h3>最新评论</h3>
+                        <p>评论区沿用统一卡片语言，版本关联以胶囊而非巨大下拉实现。</p>
+                      </div>
+                      <button class="secondary-button">写评论</button>
+                    </div>
+
+                    <div class="comment-list">
+                      <article class="comment-card">
+                        <div class="comment-head">
+                          <div class="comment-headline">
+                            <div class="avatar"></div>
+                            <div class="comment-meta">
+                              <h4>Linux 玩家</h4>
+                              <div class="rating">★ ★ ★ ★ ★</div>
+                            </div>
+                          </div>
+                          <span class="muted">2026-04-16</span>
+                        </div>
+                        <p>桌面端运行稳定，安装管理清晰。新版详情页把版本、截图和主操作拆分得更合理，不会像信息堆叠。</p>
+                      </article>
+
+                      <article class="comment-card">
+                        <div class="comment-head">
+                          <div class="comment-headline">
+                            <div class="avatar"></div>
+                            <div class="comment-meta">
+                              <h4>社区维护者</h4>
+                              <div class="rating">★ ★ ★ ★ ☆</div>
+                            </div>
+                          </div>
+                          <span class="muted">2026-04-13</span>
+                        </div>
+                        <p>如果后续加上主题色在评论提交区的轻预览，会更容易体现这套设计系统的完整度。</p>
+                      </article>
+                    </div>
+                  </section>
+                </div>
+
+                <aside class="aux-column">
+                  <article class="summary-card">
+                    <h4>评分摘要</h4>
+                    <div class="metric-line">
+                      <span class="muted">综合评分</span>
+                      <span class="summary-metric">4.6</span>
+                    </div>
+                    <div class="rating">★ ★ ★ ★ ☆</div>
+                    <div class="footnote">评分数字与星级采用主题色强调，但星级本身保持暖色体系。</div>
+                  </article>
+
+                  <article class="version-card">
+                    <div class="version-head">
+                      <div class="version-copy">
+                        <h4>版本历史</h4>
+                        <span>当前仓库与架构下的可选版本</span>
+                      </div>
+                      <button class="ghost-button">展开全部</button>
+                    </div>
+                    <div class="version-list">
+                      <div class="version-card">
+                        <div class="version-inline">
+                          <strong>v4.1.1.6</strong>
+                          <span class="state-pill open">当前已安装</span>
+                        </div>
+                        <span>2026-04-16 · 716.64 MB</span>
+                      </div>
+                      <div class="version-card">
+                        <div class="version-inline">
+                          <strong>v4.1.1.5</strong>
+                          <span class="state-pill install">可安装</span>
+                        </div>
+                        <span>2026-03-28 · 708.42 MB</span>
+                      </div>
+                    </div>
+                  </article>
+
+                  <article class="summary-card">
+                    <h4>开发者其他应用</h4>
+                    <div class="app-grid">
+                      <article class="app-card">
+                        <div class="app-icon weixin"></div>
+                        <div class="app-copy">
+                          <h4>企业微信</h4>
+                          <p>为商业场景优化的协同应用。</p>
+                        </div>
+                      </article>
+                    </div>
+                  </article>
+                </aside>
+              </div>
+            </section>
+
+            <section class="screen" id="screen-updates" data-active="false">
+              <div class="screen-grid">
+                <div class="main-column">
+                  <section class="section-card">
+                    <div class="section-headline">
+                      <div class="section-copy">
+                        <h3>更新工作台</h3>
+                        <p>更新页采用任务视角，而不是普通应用列表视角。</p>
+                      </div>
+                      <div class="tag-row">
+                        <button class="secondary-button">全部更新</button>
+                        <button class="ghost-button">暂停检查</button>
+                      </div>
+                    </div>
+
+                    <div class="summary-grid">
+                      <article class="summary-card">
+                        <h4>待更新</h4>
+                        <div class="summary-metric">12</div>
+                        <p>同步到侧边栏红点与下载任务概览。</p>
+                      </article>
+                      <article class="summary-card">
+                        <h4>进行中</h4>
+                        <div class="summary-metric">2</div>
+                        <p>行级进度展示，不在页面其他位置重复渲染状态。</p>
+                      </article>
+                      <article class="summary-card">
+                        <h4>失败重试</h4>
+                        <div class="summary-metric">1</div>
+                        <p>危险或失败状态采用功能语义色，而不是主题色。</p>
+                      </article>
+                    </div>
+                  </section>
+
+                  <section class="task-list">
+                    <article class="task-card">
+                      <div class="task-copy">
+                        <div class="task-head">
+                          <div class="task-inline">
+                            <div class="app-icon vscode"></div>
+                            <div>
+                              <strong>Visual Studio Code</strong>
+                              <div class="task-meta">
+                                <span>从 1.99.0 更新到 2.0.0</span>
+                                <span>预计剩余 1 分钟</span>
+                              </div>
+                            </div>
+                          </div>
+                          <span class="state-pill progress">下载中</span>
+                        </div>
+                        <div class="subtle-bar"><span style="width: 74%"></span></div>
+                      </div>
+                      <div class="progress-ring">74%</div>
+                    </article>
+
+                    <article class="task-card">
+                      <div class="task-copy">
+                        <div class="task-head">
+                          <div class="task-inline">
+                            <div class="app-icon firefox"></div>
+                            <div>
+                              <strong>Firefox</strong>
+                              <div class="task-meta">
+                                <span>版本准备中</span>
+                                <span>等待队列前置任务完成</span>
+                              </div>
+                            </div>
+                          </div>
+                          <span class="state-pill queue">排队中</span>
+                        </div>
+                      </div>
+                      <button class="ghost-button">取消</button>
+                    </article>
+
+                    <article class="task-card">
+                      <div class="task-copy">
+                        <div class="task-head">
+                          <div class="task-inline">
+                            <div class="app-icon steam"></div>
+                            <div>
+                              <strong>Steam</strong>
+                              <div class="task-meta">
+                                <span>拉取更新失败</span>
+                                <span>请检查网络后重试</span>
+                              </div>
+                            </div>
+                          </div>
+                          <span class="state-pill error">失败</span>
+                        </div>
+                      </div>
+                      <button class="danger-button">重试</button>
+                    </article>
+                  </section>
+                </div>
+
+                <aside class="aux-column">
+                  <article class="summary-card">
+                    <h4>更新策略</h4>
+                    <p>页面仅承担批量操作与任务观察，不直接重写安装队列逻辑。</p>
+                    <div class="tag-row">
+                      <span class="tag">统一队列</span>
+                      <span class="tag">单任务执行</span>
+                    </div>
+                  </article>
+                </aside>
+              </div>
+            </section>
+
+            <section class="screen" id="screen-downloads" data-active="false">
+              <div class="screen-grid">
+                <div class="main-column">
+                  <section class="section-card">
+                    <div class="section-headline">
+                      <div class="section-copy">
+                        <h3>下载管理</h3>
+                        <p>改为轻工作面板语言：概览 + 当前任务 + 队列 + 历史记录。</p>
+                      </div>
+                      <button class="ghost-button">清空历史</button>
+                    </div>
+                    <div class="summary-grid">
+                      <article class="summary-card">
+                        <h4>进行中</h4>
+                        <div class="summary-metric">1</div>
+                        <p>下载速度统一从队列状态链路映射。</p>
+                      </article>
+                      <article class="summary-card">
+                        <h4>等待中</h4>
+                        <div class="summary-metric">3</div>
+                        <p>排队任务不阻断卸载，但需要在任务链路上明确可见。</p>
+                      </article>
+                      <article class="summary-card">
+                        <h4>已完成</h4>
+                        <div class="summary-metric">8</div>
+                        <p>历史区支持轻清理，不抢主任务的关注点。</p>
+                      </article>
+                    </div>
+                  </section>
+
+                  <section class="task-list">
+                    <article class="task-card">
+                      <div class="task-copy">
+                        <div class="task-head">
+                          <div class="task-inline">
+                            <div class="app-icon wps"></div>
+                            <div>
+                              <strong>WPS Office</strong>
+                              <div class="task-meta">
+                                <span>安装包下载中</span>
+                                <span>1.6 MB/s</span>
+                                <span>42%</span>
+                              </div>
+                            </div>
+                          </div>
+                          <span class="state-pill progress">当前任务</span>
+                        </div>
+                        <div class="subtle-bar"><span style="width: 42%"></span></div>
+                      </div>
+                      <div class="progress-ring">42%</div>
+                    </article>
+
+                    <article class="task-card">
+                      <div class="task-copy">
+                        <div class="task-head">
+                          <div class="task-inline">
+                            <div class="app-icon firefox"></div>
+                            <div>
+                              <strong>GIMP</strong>
+                              <div class="task-meta">
+                                <span>等待 WPS Office 完成</span>
+                                <span>优先级自动排序</span>
+                              </div>
+                            </div>
+                          </div>
+                          <span class="state-pill queue">排队中</span>
+                        </div>
+                      </div>
+                      <button class="ghost-button">取消</button>
+                    </article>
+
+                    <article class="task-card">
+                      <div class="task-copy">
+                        <div class="task-head">
+                          <div class="task-inline">
+                            <div class="app-icon weixin"></div>
+                            <div>
+                              <strong>网易云音乐</strong>
+                              <div class="task-meta">
+                                <span>2026-04-23 11:42 完成</span>
+                                <span>已刷新应用集合</span>
+                              </div>
+                            </div>
+                          </div>
+                          <span class="state-pill open">已完成</span>
+                        </div>
+                      </div>
+                      <button class="ghost-button">打开</button>
+                    </article>
+                  </section>
+                </div>
+
+                <aside class="aux-column">
+                  <article class="summary-card">
+                    <h4>任务说明</h4>
+                    <p>下载管理是桌面工作面板，不再使用“手机式弹窗 + 紧凑列表”表达。</p>
+                  </article>
+                </aside>
+              </div>
+            </section>
+
+            <section class="screen" id="screen-settings" data-active="false">
+              <div class="screen-grid">
+                <div class="main-column">
+                  <section class="section-card">
+                    <div class="section-headline">
+                      <div class="section-copy">
+                        <h3>设置页</h3>
+                        <p>设置页纳入 Aurora Layer 统一语言，但维持系统设置的克制感。</p>
+                      </div>
+                    </div>
+
+                    <div class="setting-list">
+                      <article class="control-card">
+                        <div class="setting-head">
+                          <div>
+                            <h4>语言</h4>
+                            <p>仅保留必要语言切换，不做多余装饰。</p>
+                          </div>
+                          <div class="segmented">
+                            <button data-active="true">中文</button>
+                            <button>English</button>
+                          </div>
+                        </div>
+                      </article>
+
+                      <article class="control-card">
+                        <div class="setting-head">
+                          <div>
+                            <h4>主题模式</h4>
+                            <p>跟随系统 / 浅色 / 深色</p>
+                          </div>
+                          <div class="segmented">
+                            <button>系统</button>
+                            <button data-active="true">浅色</button>
+                            <button>深色</button>
+                          </div>
+                        </div>
+                      </article>
+
+                      <article class="control-card" style="grid-column: 1 / -1;">
+                        <div class="setting-head">
+                          <div>
+                            <h4>主题色板</h4>
+                            <p>官方色板 + 跟随系统强调色，不直接开放任意拾色。</p>
+                          </div>
+                        </div>
+                        <div class="palette-grid">
+                          <div class="palette-card s-blue">默认蓝</div>
+                          <div class="palette-card s-green">生态绿</div>
+                          <div class="palette-card s-orange">活力橙</div>
+                          <div class="palette-card s-teal">湖青</div>
+                          <div class="palette-card s-rose">暖玫</div>
+                          <div class="palette-card s-violet">紫靛</div>
+                          <div class="palette-card s-slate">石板灰蓝</div>
+                          <div class="palette-card s-system">跟随系统</div>
+                        </div>
+                      </article>
+
+                      <article class="control-card">
+                        <div class="setting-head">
+                          <div>
+                            <h4>缓存管理</h4>
+                            <p>保持工具页语义，强调信息和操作，不强调装饰。</p>
+                          </div>
+                          <button class="danger-button">清除缓存</button>
+                        </div>
+                      </article>
+
+                      <article class="control-card">
+                        <div class="setting-head">
+                          <div>
+                            <h4>商店偏好</h4>
+                            <p>启动检查更新、自动运行、通知与性能偏好统一归组。</p>
+                          </div>
+                        </div>
+                      </article>
+                    </div>
+                  </section>
+                </div>
+
+                <aside class="aux-column">
+                  <article class="summary-card">
+                    <h4>设置页原则</h4>
+                    <p>不以当前 Material 风格作为最终标准，而是纳入 Aurora Layer 的面板和交互体系。</p>
+                  </article>
+                </aside>
+              </div>
+            </section>
+
+            <section class="screen" id="screen-components" data-active="false">
+              <div class="screen-grid">
+                <div class="main-column">
+                  <section class="section-card">
+                    <div class="section-headline">
+                      <div class="section-copy">
+                        <h3>基础组件</h3>
+                        <p>按钮、分段控件、标签、通知和状态不再各页各做一套。</p>
+                      </div>
+                    </div>
+
+                    <div class="component-grid">
+                      <article class="control-card">
+                        <h4>按钮体系</h4>
+                        <div class="tag-row">
+                          <button class="secondary-button">安装</button>
+                          <button class="ghost-button">打开</button>
+                          <button class="danger-button">卸载</button>
+                          <button class="ghost-button">排队中</button>
+                        </div>
+                      </article>
+
+                      <article class="control-card">
+                        <h4>标签 / 胶囊 / Segment</h4>
+                        <div class="tag-row">
+                          <span class="tag">办公</span>
+                          <span class="tag">开发</span>
+                          <span class="tag">社区精选</span>
+                        </div>
+                        <div class="segmented">
+                          <button data-active="true">推荐</button>
+                          <button>排行</button>
+                          <button>更新</button>
+                        </div>
+                      </article>
+
+                      <article class="control-card">
+                        <h4>空状态</h4>
+                        <div class="empty-state">
+                          <div>
+                            <strong>暂无搜索结果</strong>
+                            <div class="muted">尝试调整关键词或切换分类。</div>
+                          </div>
+                        </div>
+                      </article>
+
+                      <article class="control-card">
+                        <h4>错误状态</h4>
+                        <div class="error-state">
+                          <div>
+                            <strong>网络连接失败</strong>
+                            <div class="muted">页面主体保持可用，仅局部区域显示错误反馈。</div>
+                          </div>
+                        </div>
+                      </article>
+
+                      <article class="control-card" style="grid-column: 1 / -1;">
+                        <h4>加载骨架</h4>
+                        <div class="loading-state">
+                          <div class="loading-skeleton">
+                            <div class="skeleton-line short"></div>
+                            <div class="skeleton-card"></div>
+                            <div class="skeleton-card"></div>
+                          </div>
+                        </div>
+                      </article>
+                    </div>
+                  </section>
+
+                  <section class="section-card">
+                    <div class="section-headline">
+                      <div class="section-copy">
+                        <h3>业务组件</h3>
+                        <p>应用卡片、版本历史项、任务项、评论项都从同一语言生长。</p>
+                      </div>
+                    </div>
+                    <div class="app-grid">
+                      <article class="app-card">
+                        <div class="app-icon firefox"></div>
+                        <div class="app-copy">
+                          <h4>未安装态</h4>
+                          <p>主按钮为安装。</p>
+                        </div>
+                        <button class="secondary-button">安装</button>
+                      </article>
+                      <article class="app-card">
+                        <div class="app-icon weixin"></div>
+                        <div class="app-copy">
+                          <h4>已安装态</h4>
+                          <p>主按钮为打开。</p>
+                        </div>
+                        <button class="ghost-button">打开</button>
+                      </article>
+                      <article class="app-card">
+                        <div class="app-icon vscode"></div>
+                        <div class="app-copy">
+                          <h4>可更新态</h4>
+                          <p>主按钮为更新。</p>
+                        </div>
+                        <button class="secondary-button">更新</button>
+                      </article>
+                      <article class="app-card">
+                        <div class="app-icon steam"></div>
+                        <div class="app-copy">
+                          <h4>进行中态</h4>
+                          <p>主按钮变为任务反馈。</p>
+                        </div>
+                        <button class="ghost-button">68%</button>
+                      </article>
+                    </div>
+                  </section>
+                </div>
+
+                <aside class="aux-column">
+                  <article class="summary-card">
+                    <h4>设计说明</h4>
+                    <p>这一页专门用于核对组件是否覆盖到按钮、状态、空态、错误态和骨架态，不让 Demo 只停留在首页视觉稿。</p>
+                  </article>
+                </aside>
+              </div>
+            </section>
+          </main>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const palettes = {
+        blue: {
+          accent: "#2f6df6",
+          rgb: "47, 109, 246",
+          soft: "rgba(47, 109, 246, 0.12)",
+          surface: "rgba(47, 109, 246, 0.18)",
+          gradient: "linear-gradient(135deg, #2f6df6 0%, #86b0ff 100%)",
+        },
+        green: {
+          accent: "#22a96d",
+          rgb: "34, 169, 109",
+          soft: "rgba(34, 169, 109, 0.12)",
+          surface: "rgba(34, 169, 109, 0.18)",
+          gradient: "linear-gradient(135deg, #22a96d 0%, #7fd8b2 100%)",
+        },
+        orange: {
+          accent: "#ea8b28",
+          rgb: "234, 139, 40",
+          soft: "rgba(234, 139, 40, 0.12)",
+          surface: "rgba(234, 139, 40, 0.18)",
+          gradient: "linear-gradient(135deg, #ea8b28 0%, #f9c172 100%)",
+        },
+        teal: {
+          accent: "#1494a2",
+          rgb: "20, 148, 162",
+          soft: "rgba(20, 148, 162, 0.12)",
+          surface: "rgba(20, 148, 162, 0.18)",
+          gradient: "linear-gradient(135deg, #1494a2 0%, #7cd7df 100%)",
+        },
+        rose: {
+          accent: "#df5b7c",
+          rgb: "223, 91, 124",
+          soft: "rgba(223, 91, 124, 0.12)",
+          surface: "rgba(223, 91, 124, 0.18)",
+          gradient: "linear-gradient(135deg, #df5b7c 0%, #f3a0b4 100%)",
+        },
+        violet: {
+          accent: "#6f62ea",
+          rgb: "111, 98, 234",
+          soft: "rgba(111, 98, 234, 0.12)",
+          surface: "rgba(111, 98, 234, 0.18)",
+          gradient: "linear-gradient(135deg, #6f62ea 0%, #b4a7ff 100%)",
+        },
+        slate: {
+          accent: "#54637f",
+          rgb: "84, 99, 127",
+          soft: "rgba(84, 99, 127, 0.12)",
+          surface: "rgba(84, 99, 127, 0.18)",
+          gradient: "linear-gradient(135deg, #54637f 0%, #9cabbe 100%)",
+        },
+        system: {
+          accent: "#7986a8",
+          rgb: "121, 134, 168",
+          soft: "rgba(121, 134, 168, 0.12)",
+          surface: "rgba(121, 134, 168, 0.18)",
+          gradient: "linear-gradient(135deg, #7986a8 0%, #d1d7e6 100%)",
+        },
+      };
+
+      const screenMeta = {
+        home: {
+          title: "推荐",
+          subtitle: "Aurora Layer 首页模板，偏展示但保持桌面节奏。",
+        },
+        browse: {
+          title: "全部应用",
+          subtitle: "浏览型列表模板：统一筛选、排序、卡片节奏和分页反馈。",
+        },
+        detail: {
+          title: "应用详情",
+          subtitle: "主副双栏决策页：主操作、截图、介绍、评论和版本历史分区清晰。",
+        },
+        updates: {
+          title: "更新页",
+          subtitle: "以任务视角组织应用更新，而不是普通应用列表页。",
+        },
+        downloads: {
+          title: "下载管理",
+          subtitle: "轻工作面板：概览、当前任务、队列与历史记录一体化。",
+        },
+        settings: {
+          title: "设置",
+          subtitle: "外观、主题色、缓存和商店偏好统一纳入 Aurora Layer 语言。",
+        },
+        components: {
+          title: "组件样板",
+          subtitle: "核对按钮、标签、通知、空态、错误态和骨架态覆盖是否完整。",
+        },
+      };
+
+      const root = document.documentElement;
+      const body = document.body;
+      const paletteButtons = document.querySelectorAll(".palette-button");
+      const modeButtons = document.querySelectorAll("[data-mode-button]");
+      const screenButtons = document.querySelectorAll("[data-screen-target]");
+      const screens = document.querySelectorAll(".screen");
+      const pageTitle = document.getElementById("pageTitle");
+      const pageSubtitle = document.getElementById("pageSubtitle");
+      const notificationToggle = document.getElementById("notificationToggle");
+      const notificationPanel = document.getElementById("notificationPanel");
+
+      function applyPalette(name) {
+        const palette = palettes[name];
+        if (!palette) return;
+        root.style.setProperty("--accent", palette.accent);
+        root.style.setProperty("--accent-rgb", palette.rgb);
+        root.style.setProperty("--accent-soft", palette.soft);
+        root.style.setProperty("--accent-surface", palette.surface);
+        root.style.setProperty("--accent-gradient", palette.gradient);
+        paletteButtons.forEach((button) => {
+          button.dataset.active = String(button.dataset.palette === name);
+        });
+      }
+
+      function applyMode(mode) {
+        body.dataset.mode = mode;
+        modeButtons.forEach((button) => {
+          button.dataset.active = String(button.dataset.modeButton === mode);
+        });
+      }
+
+      function showScreen(name) {
+        const meta = screenMeta[name];
+        if (!meta) return;
+        screenButtons.forEach((button) => {
+          button.dataset.active = String(button.dataset.screenTarget === name);
+        });
+        screens.forEach((screen) => {
+          screen.dataset.active = String(screen.id === `screen-${name}`);
+        });
+        pageTitle.textContent = meta.title;
+        pageSubtitle.textContent = meta.subtitle;
+        notificationPanel.dataset.open = "false";
+      }
+
+      paletteButtons.forEach((button) => {
+        button.addEventListener("click", () => applyPalette(button.dataset.palette));
+      });
+
+      modeButtons.forEach((button) => {
+        button.addEventListener("click", () => applyMode(button.dataset.modeButton));
+      });
+
+      screenButtons.forEach((button) => {
+        button.addEventListener("click", () => showScreen(button.dataset.screenTarget));
+      });
+
+      notificationToggle.addEventListener("click", () => {
+        notificationPanel.dataset.open =
+          notificationPanel.dataset.open === "true" ? "false" : "true";
+      });
+
+      applyPalette("blue");
+      applyMode("light");
+      showScreen("home");
+    </script>
+  </body>
+</html>

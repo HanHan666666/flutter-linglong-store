@@ -105,6 +105,8 @@ class _FakeAnalyticsRepository implements AnalyticsRepository {
   Future<void> reportVisit({
     String? arch,
     String? llVersion,
+    String? llBinVersion,
+    String? detailMsg,
     String? osVersion,
     String? repoName,
     String? appVersion,
@@ -135,50 +137,59 @@ void main() {
   });
 
   group('AppOperationQueueController', () {
-    test('routes update operations to updateApp and records update task kind', () async {
-      final fakeRepo = _FakeLinglongCliRepository();
-      final container = await _createTestContainer(fakeRepo);
-      addTearDown(container.dispose);
+    test(
+      'routes update operations to updateApp and records update task kind',
+      () async {
+        final fakeRepo = _FakeLinglongCliRepository();
+        final container = await _createTestContainer(fakeRepo);
+        addTearDown(container.dispose);
 
-      container.read(appOperationQueueControllerProvider).enqueueBatchOperations([
-        const EnqueueAppOperationParams(
-          kind: InstallTaskKind.update,
-          appId: 'com.example.update',
-          appName: 'Update App',
-          version: '2.0.0',
-        ),
-      ]);
+        container
+            .read(appOperationQueueControllerProvider)
+            .enqueueBatchOperations([
+              const EnqueueAppOperationParams(
+                kind: InstallTaskKind.update,
+                appId: 'com.example.update',
+                appName: 'Update App',
+              ),
+            ]);
 
-      await Future<void>.delayed(const Duration(milliseconds: 20));
+        await Future<void>.delayed(const Duration(milliseconds: 20));
 
-      final state = container.read(installQueueProvider);
-      expect(fakeRepo.updateCallCount, 1);
-      expect(fakeRepo.installCallCount, 0);
-      expect(state.history.first.kind, InstallTaskKind.update);
-      expect(state.history.first.message, '更新完成');
-    });
+        final state = container.read(installQueueProvider);
+        expect(fakeRepo.updateCallCount, 1);
+        expect(fakeRepo.installCallCount, 0);
+        expect(state.history.first.kind, InstallTaskKind.update);
+        expect(state.history.first.message, '更新完成');
+      },
+    );
 
-    test('routes install operations to installApp and records install task kind', () async {
-      final fakeRepo = _FakeLinglongCliRepository();
-      final container = await _createTestContainer(fakeRepo);
-      addTearDown(container.dispose);
+    test(
+      'routes install operations to installApp and records install task kind',
+      () async {
+        final fakeRepo = _FakeLinglongCliRepository();
+        final container = await _createTestContainer(fakeRepo);
+        addTearDown(container.dispose);
 
-      container.read(appOperationQueueControllerProvider).enqueueAppOperation(
-            const EnqueueAppOperationParams(
-              kind: InstallTaskKind.install,
-              appId: 'com.example.install',
-              appName: 'Install App',
-              version: '1.0.0',
-            ),
-          );
+        container
+            .read(appOperationQueueControllerProvider)
+            .enqueueAppOperation(
+              const EnqueueAppOperationParams(
+                kind: InstallTaskKind.install,
+                appId: 'com.example.install',
+                appName: 'Install App',
+                version: '1.0.0',
+              ),
+            );
 
-      await Future<void>.delayed(const Duration(milliseconds: 20));
+        await Future<void>.delayed(const Duration(milliseconds: 20));
 
-      final state = container.read(installQueueProvider);
-      expect(fakeRepo.installCallCount, 1);
-      expect(fakeRepo.updateCallCount, 0);
-      expect(state.history.first.kind, InstallTaskKind.install);
-      expect(state.history.first.message, '安装完成');
-    });
+        final state = container.read(installQueueProvider);
+        expect(fakeRepo.installCallCount, 1);
+        expect(fakeRepo.updateCallCount, 0);
+        expect(state.history.first.kind, InstallTaskKind.install);
+        expect(state.history.first.message, '安装完成');
+      },
+    );
   });
 }

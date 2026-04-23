@@ -112,8 +112,6 @@
   "cacheSize": "缓存大小",
   "startupCheckUpdate": "启动时检查商店版本更新",
   "startupCheckUpdateDesc": "每次启动时检测是否有新版本可用",
-  "autoUpdateInContainer": "容器内自动更新商店本体",
-  "autoUpdateInContainerDesc": "在玲珑容器内运行时自动更新商店应用",
   "showBaseServices": "显示基础运行服务",
   "showBaseServicesDesc": "在已安装列表中显示底层基础运行服务",
   "cleanDeprecatedServices": "清理废弃基础服务",

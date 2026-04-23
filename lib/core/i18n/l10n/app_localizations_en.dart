@@ -285,13 +285,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check if a new version is available on each startup';
 
   @override
-  String get autoUpdateInContainer => 'Auto-update store in container';
-
-  @override
-  String get autoUpdateInContainerDesc =>
-      'Automatically update the store app when running in Linglong container';
-
-  @override
   String get showBaseServices => 'Show base runtime services';
 
   @override

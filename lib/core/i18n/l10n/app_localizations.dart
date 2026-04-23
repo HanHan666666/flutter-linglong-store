@@ -626,18 +626,6 @@ abstract class AppLocalizations {
   /// **'每次启动时检测是否有新版本可用'**
   String get startupCheckUpdateDesc;
 
-  /// No description provided for @autoUpdateInContainer.
-  ///
-  /// In zh, this message translates to:
-  /// **'容器内自动更新商店本体'**
-  String get autoUpdateInContainer;
-
-  /// No description provided for @autoUpdateInContainerDesc.
-  ///
-  /// In zh, this message translates to:
-  /// **'在玲珑容器内运行时自动更新商店应用'**
-  String get autoUpdateInContainerDesc;
-
   /// No description provided for @showBaseServices.
   ///
   /// In zh, this message translates to:

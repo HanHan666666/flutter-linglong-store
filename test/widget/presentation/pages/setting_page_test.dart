@@ -39,6 +39,29 @@ void main() {
     },
   );
 
+  testWidgets('setting page does not render container auto-update option', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: const Scaffold(body: SettingPage()),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('容器内自动更新商店本体'), findsNothing);
+  });
+
   testWidgets('setting page about section renders community exchange link', (
     tester,
   ) async {

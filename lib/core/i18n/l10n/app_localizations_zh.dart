@@ -279,12 +279,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get startupCheckUpdateDesc => '每次启动时检测是否有新版本可用';
 
   @override
-  String get autoUpdateInContainer => '容器内自动更新商店本体';
-
-  @override
-  String get autoUpdateInContainerDesc => '在玲珑容器内运行时自动更新商店应用';
-
-  @override
   String get showBaseServices => '显示基础运行服务';
 
   @override

@@ -6,10 +6,9 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/di/providers.dart'
+    show linglongCliRepositoryProvider, sharedPreferencesProvider;
 import '../../core/logging/app_logger.dart';
-import '../../core/di/repository_provider.dart';
-import 'global_provider.dart';
-import 'install_queue_provider.dart';
 import 'installed_apps_provider.dart';
 
 part 'setting_provider.freezed.dart';
@@ -30,9 +29,6 @@ sealed class SettingState with _$SettingState {
 
     /// 启动时检履商店版本更新
     @Default(true) bool checkVersionOnStartup,
-
-    /// 容器内自动更新商店本体
-    @Default(false) bool autoUpdateStoreInContainer,
 
     /// 已安装列表中显示基础运行服务
     @Default(false) bool showBaseService,
@@ -63,16 +59,6 @@ class Setting extends _$Setting {
       if (checkVersion != null) {
         restoredState = restoredState.copyWith(
           checkVersionOnStartup: checkVersion,
-        );
-      }
-
-      // 加载容器内自动更新开关
-      final autoUpdate = _prefs.getBool(
-        'setting_auto_update_store_in_container',
-      );
-      if (autoUpdate != null) {
-        restoredState = restoredState.copyWith(
-          autoUpdateStoreInContainer: autoUpdate,
         );
       }
 
@@ -154,12 +140,6 @@ class Setting extends _$Setting {
   Future<void> setCheckVersionOnStartup(bool value) async {
     state = state.copyWith(checkVersionOnStartup: value);
     await _prefs.setBool('setting_check_version_on_startup', value);
-  }
-
-  /// 设置「容器内自动更新商店本体」开关
-  Future<void> setAutoUpdateStoreInContainer(bool value) async {
-    state = state.copyWith(autoUpdateStoreInContainer: value);
-    await _prefs.setBool('setting_auto_update_store_in_container', value);
   }
 
   /// 设置「已安装列表显示基础运行服务」开关

@@ -112,8 +112,6 @@
   "cacheSize": "Cache Size",
   "startupCheckUpdate": "Check for store updates at launch",
   "startupCheckUpdateDesc": "Check if a new version is available on each startup",
-  "autoUpdateInContainer": "Auto-update store in container",
-  "autoUpdateInContainerDesc": "Automatically update the store app when running in Linglong container",
   "showBaseServices": "Show base runtime services",
   "showBaseServicesDesc": "Show underlying base runtime services in the installed list",
   "cleanDeprecatedServices": "Clean up deprecated base services",

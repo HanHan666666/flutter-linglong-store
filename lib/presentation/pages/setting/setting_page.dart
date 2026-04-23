@@ -458,7 +458,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
   /// 构建商店选项部分
   ///
-  /// 包含三个行为开关和一个清理废弃基础服务的操作按钮。
+  /// 包含两个行为开关和一个清理废弃基础服务的操作按钮。
   Widget _buildStoreOptionsSection(BuildContext context, SettingState state) {
     final l10n = AppLocalizations.of(context)!;
     return Card(
@@ -481,18 +481,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               ref
                   .read(settingProvider.notifier)
                   .setCheckVersionOnStartup(value);
-            },
-          ),
-          _buildDivider(context),
-          // 容器内自动更新商店本体
-          SwitchListTile(
-            title: Text(l10n.autoUpdateInContainer),
-            subtitle: Text(l10n.autoUpdateInContainerDesc),
-            value: state.autoUpdateStoreInContainer,
-            onChanged: (value) {
-              ref
-                  .read(settingProvider.notifier)
-                  .setAutoUpdateStoreInContainer(value);
             },
           ),
           _buildDivider(context),

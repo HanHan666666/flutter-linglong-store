@@ -370,6 +370,15 @@ class MockAnalyticsRepository extends _i1.Mock
   }
 
   @override
+  _i4.Future<void> initializeSession() =>
+      (super.noSuchMethod(
+            Invocation.method(#initializeSession, []),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
   _i4.Future<void> reportVisit({
     String? arch,
     String? llVersion,

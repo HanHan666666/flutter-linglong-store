@@ -38,10 +38,15 @@ class LinglongEnvironmentService {
     final checkedAt = _clock();
 
     final arch = await _runAndTrim(['uname', '-m']);
-    final osVersion = await _loadOsVersion();
+    final rawOsVersion = await _loadOsVersion();
     final glibcVersion = await _loadGlibcVersion();
     final kernelInfo = await _runAndTrim(['uname', '-a']);
     final detailMsg = await _loadDetailMessage();
+    final osVersion = _buildReportedOsVersion(
+      osVersion: rawOsVersion,
+      glibcVersion: glibcVersion,
+      kernelInfo: kernelInfo,
+    );
 
     final help = await _runLlCli(['--help']);
     if (help == null || !help.success) {
@@ -126,6 +131,27 @@ class LinglongEnvironmentService {
       }
     }
     return _runAndTrim(['uname', '-a']);
+  }
+
+  String? _buildReportedOsVersion({
+    required String? osVersion,
+    required String? glibcVersion,
+    required String? kernelInfo,
+  }) {
+    final parts = <String>[];
+    if (osVersion != null && osVersion.trim().isNotEmpty) {
+      parts.add('OS: ${osVersion.trim()}');
+    }
+    if (glibcVersion != null && glibcVersion.trim().isNotEmpty) {
+      parts.add('glibc: ${glibcVersion.trim()}');
+    }
+    if (kernelInfo != null && kernelInfo.trim().isNotEmpty) {
+      parts.add('kernel: ${kernelInfo.trim()}');
+    }
+    if (parts.isEmpty) {
+      return null;
+    }
+    return parts.join(' | ');
   }
 
   Future<String?> _loadGlibcVersion() async {

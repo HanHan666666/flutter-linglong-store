@@ -1,3 +1,5 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart' show Provider;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/config/app_config.dart';
@@ -8,6 +10,22 @@ import 'installed_apps_provider.dart';
 import 'linglong_env_provider.dart';
 
 part 'launch_provider.g.dart';
+
+/// 启动阶段解析应用版本号。
+///
+/// 单测可覆盖该 Provider，以避免直接依赖平台 channel。
+final launchAppVersionResolverProvider = Provider<Future<String> Function()>(
+  (ref) {
+    return () async {
+      try {
+        final packageInfo = await PackageInfo.fromPlatform();
+        return packageInfo.version.trim();
+      } catch (_) {
+        return AppConfig.appVersion;
+      }
+    };
+  },
+);
 
 /// 启动步骤枚举
 enum LaunchStep {
@@ -181,6 +199,8 @@ class LaunchSequence extends _$LaunchSequence {
         return;
       }
 
+      final analyticsPreparation = _prepareStartupAnalyticsContext();
+
       // Step 2: 已安装应用初始化
       await _initInstalledApps();
 
@@ -189,6 +209,8 @@ class LaunchSequence extends _$LaunchSequence {
 
       // Step 4: 安装队列恢复
       await _recoverQueue();
+
+      await analyticsPreparation;
 
       // 完成
       _complete();
@@ -280,6 +302,8 @@ class LaunchSequence extends _$LaunchSequence {
     // 清除错误状态
     state = state.copyWith(hasError: false, clearError: true);
 
+    final analyticsPreparation = _prepareStartupAnalyticsContext();
+
     // 继续后续步骤
     try {
       // Step 2: 已安装应用初始化
@@ -290,6 +314,8 @@ class LaunchSequence extends _$LaunchSequence {
 
       // Step 4: 安装队列恢复
       await _recoverQueue();
+
+      await analyticsPreparation;
 
       // 完成
       _complete();
@@ -322,6 +348,35 @@ class LaunchSequence extends _$LaunchSequence {
       }
     } catch (e) {
       AppLogger.warning('Failed to fetch environment info: $e');
+    }
+  }
+
+  /// 预热启动上报上下文。
+  ///
+  /// 参考 Rust 版本：在启动完成前先准备匿名统计会话与商店版本信息，
+  /// 确保真正发送启动访问记录时字段已经齐全。
+  Future<void> _prepareStartupAnalyticsContext() async {
+    try {
+      await Future.wait<Object?>([
+        _resolveAppVersion(),
+        ref.read(analyticsRepositoryProvider).initializeSession(),
+      ]);
+    } catch (e) {
+      AppLogger.warning('Failed to prepare startup analytics context: $e');
+    }
+  }
+
+  /// 解析并缓存当前商店版本号。
+  Future<void> _resolveAppVersion() async {
+    try {
+      final resolved = await ref.read(launchAppVersionResolverProvider)();
+      final normalized = resolved.trim().isEmpty
+          ? AppConfig.appVersion
+          : resolved.trim();
+      ref.read(globalAppProvider.notifier).setAppVersion(normalized);
+    } catch (e) {
+      ref.read(globalAppProvider.notifier).setAppVersion(AppConfig.appVersion);
+      AppLogger.warning('Failed to resolve app version: $e');
     }
   }
 

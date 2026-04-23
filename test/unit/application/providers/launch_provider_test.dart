@@ -449,13 +449,15 @@ void main() {
         final analytics = _RecordingAnalyticsRepository();
         final container = ProviderContainer(
           overrides: [
+            launchAppVersionResolverProvider.overrideWithValue(
+              () async => '3.2.1',
+            ),
             globalAppProvider.overrideWith(
               () => _TestGlobalApp(
                 const GlobalAppState(
                   userPreferences: UserPreferences(autoCheckUpdate: true),
-                  appVersion: '2.0.0',
                   arch: 'x86_64',
-                  osVersion: 'Linux test kernel',
+                  osVersion: 'stale os version',
                   llVersion: '1.9.0',
                 ),
               ),
@@ -468,7 +470,8 @@ void main() {
                   llBinVersion: '1.9.1',
                   detailMsg: 'ii  linglong-bin 1.9.1',
                   arch: 'x86_64',
-                  osVersion: 'Linux test kernel',
+                  osVersion:
+                      'OS: Deepin 23 | glibc: 2.36 | kernel: Linux test kernel',
                   repoStatus: RepoStatus.ok,
                   checkedAt: 1,
                 ),
@@ -492,8 +495,71 @@ void main() {
         expect(report.llVersion, equals('1.9.0'));
         expect(report.llBinVersion, equals('1.9.1'));
         expect(report.detailMsg, equals('ii  linglong-bin 1.9.1'));
-        expect(report.osVersion, equals('Linux test kernel'));
-        expect(report.appVersion, equals('2.0.0'));
+        expect(
+          report.osVersion,
+          equals('OS: Deepin 23 | glibc: 2.36 | kernel: Linux test kernel'),
+        );
+        expect(report.appVersion, equals('3.2.1'));
+      },
+    );
+
+    test(
+      'initializes analytics session and resolves app version before visit report',
+      () async {
+        final analytics = _RecordingAnalyticsRepository();
+        final container = ProviderContainer(
+          overrides: [
+            launchAppVersionResolverProvider.overrideWithValue(
+              () async => '3.2.1',
+            ),
+            globalAppProvider.overrideWith(
+              () => _TestGlobalApp(
+                const GlobalAppState(
+                  userPreferences: UserPreferences(autoCheckUpdate: true),
+                  arch: 'x86_64',
+                  osVersion: 'stale os version',
+                  llVersion: '1.9.0',
+                ),
+              ),
+            ),
+            linglongEnvProvider.overrideWith(
+              () => _TestLinglongEnv(
+                const LinglongEnvCheckResult(
+                  isOk: true,
+                  llCliVersion: '1.9.0',
+                  llBinVersion: '1.9.1',
+                  detailMsg: 'ii  linglong-bin 1.9.1',
+                  arch: 'x86_64',
+                  osVersion:
+                      'OS: Deepin 23 | glibc: 2.36 | kernel: Linux test kernel',
+                  repoStatus: RepoStatus.ok,
+                  checkedAt: 1,
+                ),
+              ),
+            ),
+            installedAppsProvider.overrideWith(
+              () => _TestInstalledApps(apps: const []),
+            ),
+            updateAppsProvider.overrideWith(() => _TestUpdateApps()),
+            installQueueProvider.overrideWith(() => _TestInstallQueue()),
+            analyticsRepositoryProvider.overrideWithValue(analytics),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await container.read(launchSequenceProvider.notifier).runSequence();
+
+        expect(analytics.initializeSessionCalls, equals(1));
+        expect(analytics.visitReports, hasLength(1));
+        expect(analytics.visitReports.single.appVersion, equals('3.2.1'));
+        expect(
+          analytics.visitReports.single.osVersion,
+          equals('OS: Deepin 23 | glibc: 2.36 | kernel: Linux test kernel'),
+        );
+        expect(
+          container.read(globalAppProvider).appVersion,
+          equals('3.2.1'),
+        );
       },
     );
   });
@@ -521,6 +587,12 @@ class _VisitReportRecord {
 
 class _RecordingAnalyticsRepository implements AnalyticsRepository {
   final List<_VisitReportRecord> visitReports = [];
+  int initializeSessionCalls = 0;
+
+  @override
+  Future<void> initializeSession() async {
+    initializeSessionCalls += 1;
+  }
 
   @override
   Future<void> reportInstall(
@@ -621,6 +693,9 @@ class _TestInstallQueue extends InstallQueue {
 
 class _NoopAnalyticsRepository implements AnalyticsRepository {
   const _NoopAnalyticsRepository();
+
+  @override
+  Future<void> initializeSession() async {}
 
   @override
   Future<void> reportInstall(

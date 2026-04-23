@@ -46,6 +46,8 @@ void main() {
         },
       );
 
+      await repository.initializeSession();
+
       await repository.reportVisit(
         arch: 'x86_64',
         llVersion: '1.9.0',

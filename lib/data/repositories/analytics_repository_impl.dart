@@ -98,6 +98,17 @@ class AnalyticsRepositoryImpl implements AnalyticsRepository {
   // ----------------------------------------------------------------
 
   @override
+  Future<void> initializeSession() async {
+    try {
+      _getOrCreateVisitorId();
+      await _getOrCreateClientIp();
+      AppLogger.info('[analytics] Session initialized');
+    } catch (e) {
+      AppLogger.warning('[analytics] Failed to initialize session: $e');
+    }
+  }
+
+  @override
   Future<void> reportVisit({
     String? arch,
     String? llVersion,

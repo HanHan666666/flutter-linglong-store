@@ -91,6 +91,10 @@ void main() {
         expect(result.repoName, 'stable');
         expect(result.repos, hasLength(1));
         expect(result.llCliVersion, '1.8.2');
+        expect(
+          result.osVersion,
+          'OS: Deepin 23 | glibc: 2.36 | kernel: Linux test 6.8.0',
+        );
         expect(result.checkedAt, 456);
       },
     );

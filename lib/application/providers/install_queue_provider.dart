@@ -485,9 +485,10 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
         if (_stateMachine?.state == InstallStateMachineState.succeeded) {
           markSuccess(task.appId);
         } else if (_stateMachine?.state != InstallStateMachineState.failed) {
-          // 进程正常退出，标记成功
-          _stateMachine?.onSuccess();
-          markSuccess(task.appId);
+          // 若底层流结束时仍未给出 success/failed/cancelled 终态，
+          // 不能乐观推断成功；否则历史版本安装会出现“假完成”。
+          _stateMachine?.onFailure();
+          markFailed(task.appId, messages.confirmFailed(operation));
         }
       }
     } catch (e, s) {

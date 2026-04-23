@@ -14,9 +14,22 @@ import 'package:linglong_store/domain/repositories/linglong_cli_repository.dart'
 class _FakeLinglongCliRepository implements LinglongCliRepository {
   int installCallCount = 0;
   int updateCallCount = 0;
-
-  @override
-  Future<bool> cancelInstall(String appId) async => true;
+  List<InstallProgress> installEvents = const [
+    InstallProgress(
+      appId: 'ignored',
+      status: InstallStatus.success,
+      progress: 1.0,
+      message: '安装完成',
+    ),
+  ];
+  List<InstallProgress> updateEvents = const [
+    InstallProgress(
+      appId: 'ignored',
+      status: InstallStatus.success,
+      progress: 1.0,
+      message: '更新完成',
+    ),
+  ];
 
   @override
   Future<bool> cancelOperation(
@@ -49,12 +62,9 @@ class _FakeLinglongCliRepository implements LinglongCliRepository {
     bool force = false,
   }) async* {
     installCallCount += 1;
-    yield InstallProgress(
-      appId: appId,
-      status: InstallStatus.success,
-      progress: 1.0,
-      message: '安装完成',
-    );
+    for (final event in installEvents) {
+      yield event.copyWith(appId: appId);
+    }
   }
 
   @override
@@ -73,19 +83,19 @@ class _FakeLinglongCliRepository implements LinglongCliRepository {
   Future<String> uninstallApp(String appId, String version) async => '';
 
   @override
-  Stream<InstallProgress> updateApp(String appId, {String? version}) async* {
+  Stream<InstallProgress> updateApp(String appId) async* {
     updateCallCount += 1;
-    yield InstallProgress(
-      appId: appId,
-      status: InstallStatus.success,
-      progress: 1.0,
-      message: '更新完成',
-    );
+    for (final event in updateEvents) {
+      yield event.copyWith(appId: appId);
+    }
   }
 }
 
 class _FakeAnalyticsRepository implements AnalyticsRepository {
   const _FakeAnalyticsRepository();
+
+  @override
+  Future<void> initializeSession() async {}
 
   @override
   Future<void> reportInstall(
@@ -189,6 +199,41 @@ void main() {
         expect(fakeRepo.updateCallCount, 0);
         expect(state.history.first.kind, InstallTaskKind.install);
         expect(state.history.first.message, '安装完成');
+      },
+    );
+
+    test(
+      'marks install as failed when the progress stream ends without a terminal status',
+      () async {
+        final fakeRepo = _FakeLinglongCliRepository()
+          ..installEvents = const [
+            InstallProgress(
+              appId: 'ignored',
+              status: InstallStatus.pending,
+              message: '准备安装',
+            ),
+          ];
+        final container = await _createTestContainer(fakeRepo);
+        addTearDown(container.dispose);
+
+        container
+            .read(appOperationQueueControllerProvider)
+            .enqueueAppOperation(
+              const EnqueueAppOperationParams(
+                kind: InstallTaskKind.install,
+                appId: 'com.example.install',
+                appName: 'Install App',
+                version: '1.0.0',
+              ),
+            );
+
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+
+        final state = container.read(installQueueProvider);
+        expect(fakeRepo.installCallCount, 1);
+        expect(state.currentTask, isNull);
+        expect(state.history.first.status, InstallStatus.failed);
+        expect(state.history.first.errorMessage, contains('无法确认安装结果'));
       },
     );
   });

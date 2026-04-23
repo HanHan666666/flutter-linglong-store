@@ -264,6 +264,67 @@ void main() {
         findsNothing,
       );
     });
+
+    testWidgets('downgrade confirmation enqueues historical install with force', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final installQueue = _RecordingInstallQueue();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          appId: 'org.example.demo',
+          uninstallService: _RecordingUninstallService(),
+          detailState: _detailState(
+            versions: const [
+              AppVersion(
+                versionNo: '2.0.0',
+                releaseTime: '2026-04-19',
+                packageSize: '1048576',
+              ),
+              AppVersion(
+                versionNo: '1.0.0',
+                releaseTime: '2026-04-18',
+                packageSize: '524288',
+              ),
+            ],
+          ),
+          installedApps: const [
+            InstalledApp(
+              appId: 'org.example.demo',
+              name: 'Demo',
+              version: '2.0.0',
+              arch: 'x86_64',
+              channel: 'main',
+              module: 'main',
+            ),
+          ],
+          installQueue: installQueue,
+        ),
+      );
+
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('app-detail-version-install-1.0.0')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(ElevatedButton),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(installQueue.lastAppId, 'org.example.demo');
+      expect(installQueue.lastVersion, '1.0.0');
+      expect(installQueue.lastForce, isTrue);
+    });
   });
 }
 
@@ -273,7 +334,11 @@ Widget _buildTestApp({
   required List<InstalledApp> installedApps,
   required _RecordingUninstallService uninstallService,
   InstallQueueState installQueueState = const InstallQueueState(),
+  InstallQueue? installQueue,
 }) {
+  final effectiveInstallQueue =
+      installQueue ?? _StaticInstallQueue(installQueueState);
+
   return ProviderScope(
     overrides: [
       appDetailProvider(
@@ -283,7 +348,7 @@ Widget _buildTestApp({
         () => _StaticInstalledApps(apps: installedApps),
       ),
       installQueueProvider.overrideWith(
-        () => _StaticInstallQueue(installQueueState),
+        () => effectiveInstallQueue,
       ),
       appUninstallServiceProvider.overrideWithValue(uninstallService),
     ],
@@ -362,6 +427,33 @@ class _StaticInstallQueue extends InstallQueue {
 
   @override
   InstallQueueState build() => initialState;
+}
+
+class _RecordingInstallQueue extends InstallQueue {
+  String? lastAppId;
+  String? lastAppName;
+  String? lastIcon;
+  String? lastVersion;
+  bool? lastForce;
+
+  @override
+  InstallQueueState build() => const InstallQueueState();
+
+  @override
+  String enqueueInstall({
+    required String appId,
+    required String appName,
+    String? icon,
+    String? version,
+    bool force = false,
+  }) {
+    lastAppId = appId;
+    lastAppName = appName;
+    lastIcon = icon;
+    lastVersion = version;
+    lastForce = force;
+    return 'recorded-task';
+  }
 }
 
 class _RecordingUninstallService extends AppUninstallService {

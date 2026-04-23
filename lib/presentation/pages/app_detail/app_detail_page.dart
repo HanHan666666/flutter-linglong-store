@@ -1046,6 +1046,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         .where((a) => a.appId == app.appId)
         .map((a) => a.version)
         .toList();
+    var shouldForceInstall = false;
 
     final isSameVersionInstalled = installedVersions.contains(version);
     if (isSameVersionInstalled) {
@@ -1056,6 +1057,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         version: version,
       );
       if (confirmed != true || !mounted) return;
+      // 同版本重装必须显式带 --force，避免 ll-cli 直接拒绝为“已安装同版本”。
+      shouldForceInstall = true;
     } else {
       // 检查是否为降级（目标版本低于已安装的最高版本）
       if (installedVersions.isNotEmpty) {
@@ -1071,6 +1074,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             targetVersion: version,
           );
           if (confirmed != true || !mounted) return;
+          // 历史版本降级安装同样要走 force，否则 ll-cli 会快速拒绝安装。
+          shouldForceInstall = true;
         }
       }
     }
@@ -1083,6 +1088,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           appName: app.name,
           icon: app.icon,
           version: version,
+          force: shouldForceInstall,
         );
   }
 

@@ -108,6 +108,12 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
   }) async* {
     final processId = _operationProcessId(appId, kind);
     final operationLabel = _operationLabel(kind);
+    final needsPreInstallSnapshot =
+        kind == InstallTaskKind.update ||
+        (force && version != null && version.isNotEmpty);
+    final installedVersionsBefore = needsPreInstallSnapshot
+        ? await _getInstalledVersionsForApp(appId)
+        : null;
 
     // 每次开始新任务前重置该任务的取消标志。
     _cancelFlags[processId] = false;
@@ -218,9 +224,15 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         }
       }
 
-      final output = await _execute(['info', appId], timeout: kQueryTimeout);
+      final confirmed = await _confirmInstalledTarget(
+        appId,
+        kind: kind,
+        version: kind == InstallTaskKind.install ? version : null,
+        force: force,
+        installedVersionsBefore: installedVersionsBefore,
+      );
 
-      if (output.success) {
+      if (confirmed) {
         yield InstallProgress(
           appId: appId,
           eventType: InstallProgressEventType.progress,
@@ -230,14 +242,18 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
           rawMessage: _messages.completed(operationLabel),
         );
       } else {
+        final confirmMessage = _messages.confirmFailed(operationLabel);
+        final targetRef =
+            version != null && version.isNotEmpty ? '$appId/$version' : appId;
+
         yield InstallProgress(
           appId: appId,
           eventType: InstallProgressEventType.error,
           status: InstallStatus.failed,
-          message: _messages.unknownStatus(operationLabel),
-          error: _messages.confirmFailed(operationLabel),
-          rawMessage: _messages.unknownStatus(operationLabel),
-          errorDetail: _messages.confirmFailed(operationLabel),
+          message: confirmMessage,
+          error: confirmMessage,
+          rawMessage: confirmMessage,
+          errorDetail: 'Installed target not found after $operationLabel: $targetRef',
         );
       }
     } on CliTimeoutException catch (e) {
@@ -274,6 +290,60 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       _cancelFlags.remove(processId);
       _activeProcessPids.remove(processId);
     }
+  }
+
+  Future<bool> _confirmInstalledTarget(
+    String appId, {
+    required InstallTaskKind kind,
+    String? version,
+    bool force = false,
+    Set<String>? installedVersionsBefore,
+  }) async {
+    final installedVersionsAfter = await _getInstalledVersionsForApp(appId);
+
+    if (kind == InstallTaskKind.update) {
+      if (installedVersionsBefore == null) {
+        return false;
+      }
+      return !_sameVersionSet(installedVersionsBefore, installedVersionsAfter);
+    }
+
+    if (version != null && version.isNotEmpty) {
+      if (!installedVersionsAfter.contains(version)) {
+        return false;
+      }
+
+      if (force &&
+          installedVersionsBefore != null &&
+          installedVersionsBefore.contains(version) &&
+          _sameVersionSet(installedVersionsBefore, installedVersionsAfter)) {
+        return false;
+      }
+
+      return true;
+    }
+
+    if (installedVersionsAfter.isEmpty) {
+      return false;
+    }
+
+    if (installedVersionsBefore == null || installedVersionsBefore.isEmpty) {
+      return true;
+    }
+
+    return !_sameVersionSet(installedVersionsBefore, installedVersionsAfter);
+  }
+
+  Future<Set<String>> _getInstalledVersionsForApp(String appId) async {
+    final installedApps = await getInstalledApps();
+    return installedApps
+        .where((app) => app.appId == appId && app.version.isNotEmpty)
+        .map((app) => app.version)
+        .toSet();
+  }
+
+  bool _sameVersionSet(Set<String> left, Set<String> right) {
+    return left.length == right.length && left.containsAll(right);
   }
 
   @override

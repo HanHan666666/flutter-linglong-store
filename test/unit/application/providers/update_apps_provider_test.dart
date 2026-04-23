@@ -9,8 +9,10 @@ import 'package:linglong_store/application/providers/api_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/installed_apps_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
+import 'package:linglong_store/core/di/repository_provider.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
+import 'package:linglong_store/data/repositories/app_repository_impl.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
 
 import '../../../mocks/mock_classes.mocks.dart';
@@ -69,6 +71,7 @@ void main() {
 
       expect(state.apps, isEmpty);
       expect(state.isLoading, isFalse);
+      expect(state.hasLoadedOnce, isFalse);
       expect(state.error, isNull);
       expect(state.count, equals(0));
       expect(state.isEmpty, isTrue);
@@ -89,11 +92,13 @@ void main() {
       const state = UpdateAppsState(
         apps: [updatableApp],
         isLoading: true,
+        hasLoadedOnce: true,
         error: 'Test error',
       );
 
       expect(state.apps.length, equals(1));
       expect(state.isLoading, isTrue);
+      expect(state.hasLoadedOnce, isTrue);
       expect(state.error, equals('Test error'));
       expect(state.count, equals(1));
       expect(state.isEmpty, isFalse);
@@ -104,9 +109,11 @@ void main() {
 
       final newState = state.copyWith(
         isLoading: true,
+        hasLoadedOnce: true,
       );
 
       expect(newState.isLoading, isTrue);
+      expect(newState.hasLoadedOnce, isTrue);
       expect(newState.apps, isEmpty);
       expect(newState.error, isNull);
     });
@@ -216,6 +223,9 @@ void main() {
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
             appApiServiceProvider.overrideWithValue(mockApiService),
+            appRepositoryProvider.overrideWithValue(
+              AppRepositoryImpl.withService(mockApiService),
+            ),
             installedAppsProvider.overrideWithValue(
               const InstalledAppsState(apps: [installedApp]),
             ),
@@ -245,6 +255,76 @@ void main() {
         expect(retainedState.count, 1);
         expect(retainedState.apps.single.latestVersion, '2.0.0');
         verify(mockApiService.appCheckUpdate(any)).called(1);
+      },
+    );
+
+    test(
+      'deduplicates installed apps by appId and keeps only the highest local version',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final mockApiService = MockAppApiService();
+
+        when(mockApiService.appCheckUpdate(any)).thenAnswer(
+          (_) async => HttpResponse(
+            const AppDetailListResponse(
+              code: 200,
+              data: [
+                AppDetailDTO(
+                  appId: 'org.example.demo',
+                  appName: 'Demo',
+                  appVersion: '3.0.0',
+                ),
+              ],
+            ),
+            Response(
+              requestOptions: RequestOptions(path: '/app/appCheckUpdate'),
+            ),
+          ),
+        );
+
+        final container = ProviderContainer(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            appApiServiceProvider.overrideWithValue(mockApiService),
+            appRepositoryProvider.overrideWithValue(
+              AppRepositoryImpl.withService(mockApiService),
+            ),
+            installedAppsProvider.overrideWithValue(
+              const InstalledAppsState(
+                apps: [
+                  InstalledApp(
+                    appId: 'org.example.demo',
+                    name: 'Demo',
+                    version: '1.0.0',
+                    arch: 'x86_64',
+                  ),
+                  InstalledApp(
+                    appId: 'org.example.demo',
+                    name: 'Demo',
+                    version: '2.0.0',
+                    arch: 'x86_64',
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await container.read(updateAppsProvider.notifier).checkUpdates();
+
+        final captured = verify(
+          mockApiService.appCheckUpdate(captureAny),
+        ).captured.single as List<AppCheckVersionBO>;
+
+        expect(captured, hasLength(1));
+        expect(captured.single.appId, 'org.example.demo');
+        expect(captured.single.version, '2.0.0');
+        expect(
+          container.read(updateAppsProvider).apps.single.currentVersion,
+          '2.0.0',
+        );
       },
     );
   });
@@ -304,6 +384,9 @@ void main() {
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
             appApiServiceProvider.overrideWithValue(mockApiService),
+            appRepositoryProvider.overrideWithValue(
+              AppRepositoryImpl.withService(mockApiService),
+            ),
             installedAppsProvider.overrideWith(() => installedApps),
           ],
         );

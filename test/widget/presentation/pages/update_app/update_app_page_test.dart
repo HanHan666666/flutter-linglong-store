@@ -235,6 +235,92 @@ void main() {
       },
     );
 
+    testWidgets('keeps header and list visible during background refresh', (
+      tester,
+    ) async {
+      final installQueue = TestInstallQueue(
+        initialState: const InstallQueueState(),
+      );
+      final updateApps = TestUpdateApps(
+        initialState: const UpdateAppsState(
+          apps: [
+            UpdatableApp(
+              installedApp: InstalledApp(
+                appId: 'org.example.demo',
+                name: 'Demo',
+                version: '1.0.0',
+              ),
+              latestVersion: '1.1.0',
+            ),
+          ],
+          isLoading: true,
+          hasLoadedOnce: true,
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            installQueueProvider.overrideWith(() => installQueue),
+            updateAppsProvider.overrideWith(() => updateApps),
+            networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+            appOperationQueueControllerProvider.overrideWith(
+              (ref) => RecordingAppOperationQueueController(ref),
+            ),
+          ],
+          child: const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: UpdateAppPage()),
+          ),
+        ),
+      );
+
+      await tester.pump();
+
+      expect(find.text('共 1 个应用可更新'), findsOneWidget);
+      expect(find.text('1.0.0 → 1.1.0'), findsOneWidget);
+    });
+
+    testWidgets('keeps empty state visible during background refresh', (
+      tester,
+    ) async {
+      final installQueue = TestInstallQueue(
+        initialState: const InstallQueueState(),
+      );
+      final updateApps = TestUpdateApps(
+        initialState: const UpdateAppsState(
+          isLoading: true,
+          hasLoadedOnce: true,
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            installQueueProvider.overrideWith(() => installQueue),
+            updateAppsProvider.overrideWith(() => updateApps),
+            networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+            appOperationQueueControllerProvider.overrideWith(
+              (ref) => RecordingAppOperationQueueController(ref),
+            ),
+          ],
+          child: const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: UpdateAppPage()),
+          ),
+        ),
+      );
+
+      await tester.pump();
+
+      expect(find.text('暂无更新'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    });
+
     testWidgets('shows "等待安装" for pending apps in queue, not progress bar', (
       tester,
     ) async {
@@ -325,12 +411,14 @@ class TestInstallQueue extends InstallQueue {
 }
 
 class TestUpdateApps extends UpdateApps {
-  TestUpdateApps({required this.apps});
+  TestUpdateApps({UpdateAppsState? initialState, List<UpdatableApp>? apps})
+    : initialState =
+          initialState ?? UpdateAppsState(apps: apps ?? const <UpdatableApp>[]);
 
-  final List<UpdatableApp> apps;
+  final UpdateAppsState initialState;
 
   @override
-  UpdateAppsState build() => UpdateAppsState(apps: apps);
+  UpdateAppsState build() => initialState;
 
   @override
   Future<void> checkUpdates() async {}

@@ -64,6 +64,12 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
 
   /// 更新单个应用
   void _updateApp(UpdatableApp app) {
+    final installState = ref.read(installQueueProvider);
+    final installTask = installState.getAppInstallStatus(app.appId);
+    if (_shouldDisableUpdateAction(installState, installTask)) {
+      return;
+    }
+
     ref
         .read(appOperationQueueControllerProvider)
         .enqueueAppOperation(
@@ -104,7 +110,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
     InstallQueueState installState,
   ) {
     // 如果没有可更新应用，不显示头部
-    if (state.apps.isEmpty || state.isLoading) {
+    if (state.apps.isEmpty) {
       return const SizedBox.shrink();
     }
     final isUpdating = installState.hasActiveTasks();
@@ -162,55 +168,99 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
   ) {
     final l10n = AppLocalizations.of(context);
 
-    // 加载中状态 — 仅在首次加载（列表为空）时显示全屏加载
-    if (state.isLoading && state.apps.isEmpty) {
+    // 加载中状态 — 仅在首次加载（列表为空且尚无历史结果）时显示全屏 loading。
+    if (state.isLoading && state.apps.isEmpty && !state.hasLoadedOnce) {
       return const Center(child: CircularProgressIndicator());
     }
 
     // 错误状态 — 仅在列表为空时显示
     if (state.error != null && state.apps.isEmpty) {
-      return EmptyState(
-        icon: Icons.error_outline,
-        title: l10n?.updateCheckFailed ?? '检查更新失败',
-        description: state.error,
-        retryText: l10n?.retry ?? '重试',
-        onRetry: () {
-          ref.read(updateAppsProvider.notifier).checkUpdates();
-        },
+      return _buildRefreshOverlay(
+        isRefreshing: state.isLoading,
+        child: EmptyState(
+          icon: Icons.error_outline,
+          title: l10n?.updateCheckFailed ?? '检查更新失败',
+          description: state.error,
+          retryText: l10n?.retry ?? '重试',
+          onRetry: () {
+            ref.read(updateAppsProvider.notifier).checkUpdates();
+          },
+        ),
       );
     }
 
     // 空状态
     if (state.apps.isEmpty) {
-      return EmptyState(
-        icon: Icons.update,
-        title: l10n?.noUpdate ?? '暂无更新',
-        description: l10n?.allAppsUpToDate ?? '您的所有应用都是最新版本',
+      return _buildRefreshOverlay(
+        isRefreshing: state.isLoading,
+        child: EmptyState(
+          icon: Icons.update,
+          title: l10n?.noUpdate ?? '暂无更新',
+          description: l10n?.allAppsUpToDate ?? '您的所有应用都是最新版本',
+        ),
       );
     }
 
     // 可更新应用列表
-    return RefreshIndicator(
-      onRefresh: () => ref.read(updateAppsProvider.notifier).refresh(),
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: state.apps.length,
-        itemBuilder: (context, index) {
-          final app = state.apps[index];
-          final installTask = installState.getAppInstallStatus(app.appId);
-          return _UpdatableAppItem(
-            key: ValueKey(app.appId),
-            app: app,
-            installTask: installTask,
-            onTap: () => context.goToAppDetail(app.appId, appInfo: app.installedApp),
-            onUpdate: () => _updateApp(app),
-            onCancel: installTask != null
-                ? () => _cancelAppInstall(app.appId)
-                : null,
-          );
-        },
+    return _buildRefreshOverlay(
+      isRefreshing: state.isLoading,
+      child: RefreshIndicator(
+        onRefresh: () => ref.read(updateAppsProvider.notifier).refresh(),
+        child: ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          itemCount: state.apps.length,
+          itemBuilder: (context, index) {
+            final app = state.apps[index];
+            final installTask = installState.getAppInstallStatus(app.appId);
+            return _UpdatableAppItem(
+              key: ValueKey(app.appId),
+              app: app,
+              installTask: installTask,
+              isUpdateDisabled: _shouldDisableUpdateAction(
+                installState,
+                installTask,
+              ),
+              onTap: () =>
+                  context.goToAppDetail(app.appId, appInfo: app.installedApp),
+              onUpdate: () => _updateApp(app),
+              onCancel: installTask != null
+                  ? () => _cancelAppInstall(app.appId)
+                  : null,
+            );
+          },
+        ),
       ),
     );
+  }
+
+  Widget _buildRefreshOverlay({
+    required bool isRefreshing,
+    required Widget child,
+  }) {
+    if (!isRefreshing) {
+      return child;
+    }
+
+    return Stack(
+      children: [
+        Positioned.fill(child: child),
+        const Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: LinearProgressIndicator(minHeight: 2),
+        ),
+      ],
+    );
+  }
+
+  bool _shouldDisableUpdateAction(
+    InstallQueueState installState,
+    InstallTask? installTask,
+  ) {
+    // 队列仍在处理其他任务时，如果当前列表项只是历史成功任务残留，
+    // 说明这是一条等待后台刷新剔除的脏数据，必须阻止再次入队。
+    return installState.hasActiveTasks() && (installTask?.isSuccess ?? false);
   }
 }
 
@@ -220,6 +270,7 @@ class _UpdatableAppItem extends ConsumerStatefulWidget {
     super.key,
     required this.app,
     required this.installTask,
+    required this.isUpdateDisabled,
     required this.onTap,
     required this.onUpdate,
     required this.onCancel,
@@ -227,6 +278,7 @@ class _UpdatableAppItem extends ConsumerStatefulWidget {
 
   final UpdatableApp app;
   final InstallTask? installTask;
+  final bool isUpdateDisabled;
   final VoidCallback onTap;
   final VoidCallback onUpdate;
   final VoidCallback? onCancel;
@@ -326,7 +378,9 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
                           buttonState == InstallButtonState.installing
                               ? ref.watch(networkSpeedProvider).formatted
                               : null,
-                      onPressed: widget.onUpdate,
+                      onPressed: widget.isUpdateDisabled
+                          ? () {}
+                          : widget.onUpdate,
                       onCancel: widget.onCancel,
                       size: ButtonSize.small,
                     ),

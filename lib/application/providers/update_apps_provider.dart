@@ -3,7 +3,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/network/api_exceptions.dart';
 import '../../core/di/repository_provider.dart';
-import '../../domain/models/app_detail.dart';
 import '../../domain/models/installed_app.dart';
 import 'installed_apps_provider.dart';
 
@@ -48,6 +47,7 @@ class UpdateAppsState {
   const UpdateAppsState({
     this.apps = const [],
     this.isLoading = false,
+    this.hasLoadedOnce = false,
     this.error,
   });
 
@@ -56,6 +56,11 @@ class UpdateAppsState {
 
   /// 是否正在加载
   final bool isLoading;
+
+  /// 是否至少完成过一次更新检查。
+  ///
+  /// 用于区分首次冷启动加载和已有结果后的后台刷新，避免刷新时整页闪动。
+  final bool hasLoadedOnce;
 
   /// 错误信息
   final String? error;
@@ -70,12 +75,14 @@ class UpdateAppsState {
   UpdateAppsState copyWith({
     List<UpdatableApp>? apps,
     bool? isLoading,
+    bool? hasLoadedOnce,
     String? error,
     bool clearError = false,
   }) {
     return UpdateAppsState(
       apps: apps ?? this.apps,
       isLoading: isLoading ?? this.isLoading,
+      hasLoadedOnce: hasLoadedOnce ?? this.hasLoadedOnce,
       error: clearError ? null : (error ?? this.error),
     );
   }
@@ -110,21 +117,31 @@ class UpdateApps extends _$UpdateApps {
         installedApps = ref.read(installedAppsProvider).apps;
       }
 
+      final latestInstalledApps = _retainLatestInstalledApps(installedApps);
+
       // 从远程 API 获取最新版本信息
-      final updatableApps = await _checkUpdatesFromRemote(installedApps);
+      final updatableApps = await _checkUpdatesFromRemote(latestInstalledApps);
 
       // 只允许最新一次检查落状态，避免旧请求覆盖新结果。
       if (requestId != _latestRequestId) {
         return;
       }
 
-      state = UpdateAppsState(apps: updatableApps, isLoading: false);
+      state = UpdateAppsState(
+        apps: updatableApps,
+        isLoading: false,
+        hasLoadedOnce: true,
+      );
     } catch (e, s) {
       AppLogger.error('检查更新失败', e, s);
       if (requestId != _latestRequestId) {
         return;
       }
-      state = state.copyWith(isLoading: false, error: presentAppError(e));
+      state = state.copyWith(
+        isLoading: false,
+        hasLoadedOnce: true,
+        error: presentAppError(e),
+      );
     }
   }
 
@@ -138,30 +155,89 @@ class UpdateApps extends _$UpdateApps {
     final appRepo = ref.read(appRepositoryProvider);
     final updateDetails = await appRepo.checkAppUpdates(installedApps);
 
-    final updatableApps = <UpdatableApp>[];
+    final installedAppsById = <String, InstalledApp>{
+      for (final app in installedApps) app.appId: app,
+    };
+    final updatableAppsById = <String, UpdatableApp>{};
 
     for (final appDetail in updateDetails) {
-      // 找到对应的已安装应用
-      final installedApp = installedApps.firstWhere(
-        (app) => app.appId == appDetail.appId,
-        orElse: () => installedApps.first,
-      );
+      final installedApp = installedAppsById[appDetail.appId];
+      if (installedApp == null) {
+        continue;
+      }
 
       // 如果版本不同，说明有更新（使用领域模型的 version 字段）
       if (appDetail.version != installedApp.version) {
-        updatableApps.add(
-          UpdatableApp(
-            installedApp: installedApp,
-            latestVersion: appDetail.version,
-            latestVersionDescription:
-                appDetail.releaseNote ?? appDetail.detailDescription,
-            latestVersionSize: appDetail.packageSize,
-          ),
+        final candidate = UpdatableApp(
+          installedApp: installedApp,
+          latestVersion: appDetail.version,
+          latestVersionDescription:
+              appDetail.releaseNote ?? appDetail.detailDescription,
+          latestVersionSize: appDetail.packageSize,
         );
+        final existing = updatableAppsById[appDetail.appId];
+        if (existing == null ||
+            _compareVersions(candidate.latestVersion, existing.latestVersion) >
+                0) {
+          updatableAppsById[appDetail.appId] = candidate;
+        }
       }
     }
 
-    return updatableApps;
+    return updatableAppsById.values.toList();
+  }
+
+  List<InstalledApp> _retainLatestInstalledApps(List<InstalledApp> apps) {
+    final latestAppsById = <String, InstalledApp>{};
+
+    for (final app in apps) {
+      final existing = latestAppsById[app.appId];
+      if (existing == null ||
+          _compareVersions(app.version, existing.version) > 0) {
+        latestAppsById[app.appId] = app;
+      }
+    }
+
+    return latestAppsById.values.toList();
+  }
+
+  int _compareVersions(String left, String right) {
+    final leftParts = _splitVersionParts(left);
+    final rightParts = _splitVersionParts(right);
+    final maxLength = leftParts.length > rightParts.length
+        ? leftParts.length
+        : rightParts.length;
+
+    for (var index = 0; index < maxLength; index++) {
+      final leftPart = index < leftParts.length ? leftParts[index] : 0;
+      final rightPart = index < rightParts.length ? rightParts[index] : 0;
+
+      if (leftPart is int && rightPart is int) {
+        if (leftPart != rightPart) {
+          return leftPart.compareTo(rightPart);
+        }
+        continue;
+      }
+
+      final leftValue = leftPart.toString();
+      final rightValue = rightPart.toString();
+      if (leftValue != rightValue) {
+        return leftValue.compareTo(rightValue);
+      }
+    }
+
+    return 0;
+  }
+
+  List<Object> _splitVersionParts(String version) {
+    return version.split(RegExp(r'[._-]')).map((part) {
+      if (part.isEmpty) {
+        return 0;
+      }
+
+      final numericValue = int.tryParse(part);
+      return numericValue ?? part;
+    }).toList();
   }
 
   /// 刷新更新列表

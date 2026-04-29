@@ -6,10 +6,12 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../application/providers/linglong_env_provider.dart';
 import '../../core/config/theme.dart';
+import '../../core/i18n/install_messages.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/platform/local_path_opener.dart';
 import '../../core/platform/window_service.dart';
 import '../../core/utils/app_notification_helpers.dart';
+import '../../domain/models/linux_distribution.dart';
 import '../../domain/models/linglong_env_check_result.dart';
 
 /// 玲珑环境检测对话框
@@ -128,6 +130,8 @@ class LinglongEnvDialog extends ConsumerWidget {
       );
     }
 
+    final distributionGuidance = _resolveDistributionGuidance(context, result);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,6 +167,11 @@ class LinglongEnvDialog extends ConsumerWidget {
         ),
 
         const SizedBox(height: AppSpacing.lg),
+
+        if (distributionGuidance != null) ...[
+          _buildDistributionGuidanceHint(context, distributionGuidance),
+          const SizedBox(height: AppSpacing.lg),
+        ],
 
         // 详细信息
         _buildDetailItem(
@@ -223,6 +232,56 @@ class LinglongEnvDialog extends ConsumerWidget {
           ),
         ],
       ],
+    );
+  }
+
+  String? _resolveDistributionGuidance(
+    BuildContext context,
+    LinglongEnvCheckResult result,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) {
+      return null;
+    }
+
+    // 对话框只负责“按当前场景请求 guidance”，
+    // 不直接知道 UOS/Deepin 等发行版细节，避免弹窗逻辑再次退化成 `if (isXxx)`。
+    return InstallMessages.fromL10n(l10n).guidanceForDistribution(
+      distribution: result.distribution,
+      scenario: LinuxDistributionGuidanceScenario.envInstallDialog,
+    );
+  }
+
+  Widget _buildDistributionGuidanceHint(
+    BuildContext context,
+    String guidance,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.info.withValues(alpha: 0.08),
+        borderRadius: AppRadius.smRadius,
+        border: Border.all(color: AppColors.info.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: Icon(Icons.info_outline, color: AppColors.info, size: 18),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              guidance,
+              style: AppTextStyles.caption.copyWith(
+                color: context.appColors.textPrimary,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

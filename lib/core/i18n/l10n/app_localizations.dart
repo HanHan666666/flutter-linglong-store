@@ -2154,6 +2154,18 @@ abstract class AppLocalizations {
   /// **'ll-cli 未安装'**
   String get llCliNotInstalled;
 
+  /// No description provided for @uosEnvInstallHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'UOS 系统安装玲珑环境前，请先打开系统的开发者模式，并确保当前账号可获取 root 权限（设置-通用-开发者选项-进入开发者模式，办公系统建议咨询 IT 谨慎操作）。'**
+  String get uosEnvInstallHint;
+
+  /// No description provided for @uosAppInstallFailureHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'若当前为 UOS 系统，请确认是否已打开系统的开发者模式（设置-通用-开发者选项-进入开发者模式，办公系统建议咨询 IT 谨慎操作）。'**
+  String get uosAppInstallFailureHint;
+
   /// No description provided for @appInfoUnavailable.
   ///
   /// In zh, this message translates to:

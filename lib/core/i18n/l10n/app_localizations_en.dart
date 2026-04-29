@@ -1161,6 +1161,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get llCliNotInstalled => 'll-cli not installed';
 
   @override
+  String get uosEnvInstallHint =>
+      'On UOS, installing the Linglong environment requires Developer Mode to be enabled and the current account to have root privileges (Settings > General > Developer Options > Enter Developer Mode). On managed office devices, please consult IT before proceeding.';
+
+  @override
+  String get uosAppInstallFailureHint =>
+      'If you are using UOS, please confirm that Developer Mode is enabled (Settings > General > Developer Options > Enter Developer Mode). On managed office devices, please consult IT before proceeding.';
+
+  @override
   String get appInfoUnavailable => 'Cannot get app info';
 
   @override

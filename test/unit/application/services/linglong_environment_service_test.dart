@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/application/services/linglong_environment_service.dart';
 import 'package:linglong_store/core/platform/shell_command_executor.dart';
+import 'package:linglong_store/domain/models/linux_distribution.dart';
 import 'package:linglong_store/domain/models/linglong_env_check_result.dart';
 
 void main() {
@@ -150,6 +151,80 @@ void main() {
       expect(result.repoStatus, RepoStatus.notConfigured);
       expect(result.errorMessage, '未检测到玲珑仓库配置，请检查环境');
     });
+
+    test(
+      'resolves UOS as a structured distribution profile for future adaptations',
+      () async {
+        final service = LinglongEnvironmentService(
+          executor: ShellCommandExecutor(
+            runner: _FakeShellCommandRunner.fromCommands({
+              'uname -m': const ShellCommandResult(
+                stdout: 'x86_64\n',
+                stderr: '',
+                exitCode: 0,
+              ),
+              'ldd --version': const ShellCommandResult(
+                stdout: 'ldd (GNU libc) 2.36\n',
+                stderr: '',
+                exitCode: 0,
+              ),
+              'uname -a': const ShellCommandResult(
+                stdout: 'Linux uniontech 6.8.0\n',
+                stderr: '',
+                exitCode: 0,
+              ),
+              'bash -c dpkg -l | grep linglong': const ShellCommandResult(
+                stdout: 'ii linglong-bin 1.9.2\n',
+                stderr: '',
+                exitCode: 0,
+              ),
+              'll-cli --help': const ShellCommandResult(
+                stdout: 'Usage: ll-cli\n',
+                stderr: '',
+                exitCode: 0,
+              ),
+              'll-cli --json repo show': const ShellCommandResult(
+                stdout:
+                    '{"defaultRepo":"stable","repos":[{"name":"stable","url":"https://repo.example"}]}',
+                stderr: '',
+                exitCode: 0,
+              ),
+              'll-cli --json --version': const ShellCommandResult(
+                stdout: '{"version":"1.9.2"}',
+                stderr: '',
+                exitCode: 0,
+              ),
+              'apt-cache policy linglong-bin': const ShellCommandResult(
+                stdout: 'Installed: 1.9.2\n',
+                stderr: '',
+                exitCode: 0,
+              ),
+            }),
+          ),
+          osReleaseReader: () async =>
+              'ID=uos\nNAME="UnionTech OS Desktop"\nPRETTY_NAME="UOS 1070"\n',
+          environmentReader: (name) => null,
+        );
+
+        final result = await service.checkEnvironment();
+
+        expect(result.isOk, isTrue);
+        expect(result.distribution.id, LinuxDistributionId.uos);
+        expect(
+          result.distribution.supportsGuidanceScenario(
+            LinuxDistributionGuidanceScenario.envInstallDialog,
+          ),
+          isTrue,
+        );
+        expect(
+          result.distribution.supportsGuidanceScenario(
+            LinuxDistributionGuidanceScenario.appUpdateFailure,
+          ),
+          isFalse,
+        );
+        expect(result.osVersion, contains('UOS 1070'));
+      },
+    );
   });
 }
 

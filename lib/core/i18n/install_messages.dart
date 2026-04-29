@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../../domain/models/linux_distribution.dart';
 import 'l10n/app_localizations.dart';
 
 /// 安装相关消息的国际化辅助类
@@ -213,6 +214,64 @@ class InstallMessages {
 
   /// 安装超时
   String get installTimeout => _l10n.installTimeout;
+
+  /// 获取发行版在指定场景下的特殊提示。
+  ///
+  /// 当前只有 UOS 实现了特殊提示，但调用侧无需再关心 `isUos` 这种发行版细节。
+  ///
+  /// 这里是“发行版能力 -> 业务场景提示文案”的唯一映射点：
+  /// - 模型层只声明 capability / scenario；
+  /// - 文案层只在这里决定最终展示哪条 l10n 文案；
+  /// - 页面和 Provider 不允许再各自 switch 发行版名称。
+  ///
+  /// 后续新增发行版时，优先在这里补映射，而不是在页面里插入新的条件分支。
+  String? guidanceForDistribution({
+    required LinuxDistribution distribution,
+    required LinuxDistributionGuidanceScenario scenario,
+  }) {
+    if (!distribution.supportsGuidanceScenario(scenario)) {
+      return null;
+    }
+
+    return switch ((distribution.id, scenario)) {
+      (
+        LinuxDistributionId.uos,
+        LinuxDistributionGuidanceScenario.envInstallDialog,
+      ) => _l10n.uosEnvInstallHint,
+      (
+        LinuxDistributionId.uos,
+        LinuxDistributionGuidanceScenario.appInstallFailure,
+      ) => _l10n.uosAppInstallFailureHint,
+      _ => null,
+    };
+  }
+
+  /// 在原始失败文案后追加发行版特殊提示。
+  ///
+  /// 这里会自动处理空字符串和重复追加，
+  /// 这样队列层/UI 层只需要把“原始失败文案 + distribution + scenario”交进来即可。
+  String appendDistributionGuidance({
+    required LinuxDistribution distribution,
+    required LinuxDistributionGuidanceScenario scenario,
+    required String message,
+  }) {
+    final hint = guidanceForDistribution(
+      distribution: distribution,
+      scenario: scenario,
+    );
+    if (hint == null) {
+      return message.trim();
+    }
+
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) {
+      return hint;
+    }
+    if (trimmed.contains(hint)) {
+      return trimmed;
+    }
+    return '$trimmed $hint';
+  }
 }
 
 /// 安装阶段判断（纯逻辑，不依赖 i18n）

@@ -9,6 +9,8 @@ import '../../core/i18n/install_messages.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/di/providers.dart'
     show analyticsRepositoryProvider, currentLocaleProvider;
+import 'linglong_env_provider.dart';
+import '../../domain/models/linux_distribution.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_queue_state.dart';
 import '../../domain/models/install_state_machine.dart';
@@ -671,14 +673,21 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
         ? messages.updateLabel
         : messages.installLabel;
     final cancelledMsg = messages.cancelled(operation);
+    final resolvedError = wasCancelled
+        ? cancelledMsg
+        : _decorateFailureMessageForCurrentPlatform(
+            task: state.currentTask!,
+            error: error,
+            messages: messages,
+          );
 
     // 根据取消状态决定任务状态
     final failedTask = state.currentTask!.copyWith(
       status: wasCancelled ? InstallStatus.cancelled : InstallStatus.failed,
-      errorMessage: wasCancelled ? cancelledMsg : error,
+      errorMessage: resolvedError,
       errorCode: wasCancelled ? null : errorCode,
       errorDetail: wasCancelled ? null : errorDetail,
-      message: wasCancelled ? cancelledMsg : error,
+      message: resolvedError,
       finishedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
@@ -698,6 +707,35 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
 
     // 继续处理下一个任务（失败不阻塞队列）
     Future.delayed(const Duration(milliseconds: 100), () => startProcessing());
+  }
+
+  String _decorateFailureMessageForCurrentPlatform({
+    required InstallTask task,
+    required String error,
+    required InstallMessages messages,
+  }) {
+    final trimmedError = error.trim();
+    if (trimmedError.isEmpty) {
+      return trimmedError;
+    }
+
+    // 失败文案的发行版增强统一收口在队列层，原因是多个页面都消费同一份失败状态：
+    // - 下载管理
+    // - 详情页
+    // - 其他依赖安装历史/当前任务的展示面
+    // 这样可以避免页面层各自再拼一遍提示，导致规则漂移或重复追加。
+    final distribution =
+        ref.read(linglongEnvProvider).result?.distribution ??
+        LinuxDistribution.unknown;
+    final scenario = task.isUpdateTask
+        ? LinuxDistributionGuidanceScenario.appUpdateFailure
+        : LinuxDistributionGuidanceScenario.appInstallFailure;
+
+    return messages.appendDistributionGuidance(
+      distribution: distribution,
+      scenario: scenario,
+      message: trimmedError,
+    );
   }
 
   // -----------------------------------------------------------------------

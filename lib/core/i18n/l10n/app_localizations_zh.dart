@@ -1127,6 +1127,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get llCliNotInstalled => 'll-cli 未安装';
 
   @override
+  String get uosEnvInstallHint =>
+      'UOS 系统安装玲珑环境前，请先打开系统的开发者模式，并确保当前账号可获取 root 权限（设置-通用-开发者选项-进入开发者模式，办公系统建议咨询 IT 谨慎操作）。';
+
+  @override
+  String get uosAppInstallFailureHint =>
+      '若当前为 UOS 系统，请确认是否已打开系统的开发者模式（设置-通用-开发者选项-进入开发者模式，办公系统建议咨询 IT 谨慎操作）。';
+
+  @override
   String get appInfoUnavailable => '无法获取应用信息';
 
   @override

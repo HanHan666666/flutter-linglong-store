@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'linux_distribution.dart';
+
 part 'linglong_env_check_result.freezed.dart';
 part 'linglong_env_check_result.g.dart';
 
@@ -42,6 +44,13 @@ sealed class LinglongEnvCheckResult with _$LinglongEnvCheckResult {
 
     /// 是否在容器环境中
     @Default(false) bool isContainer,
+
+    /// 当前 Linux 发行版画像。
+    ///
+    /// 这是环境检测链路向下游透传“发行版特殊适配”信息的统一出口。
+    /// 后续如果新增发行版特殊提示，应继续复用这个字段，
+    /// 不要重新在结果模型里增加 `isUos` / `isDeepin` 之类一次性布尔值。
+    @Default(LinuxDistribution()) LinuxDistribution distribution,
 
     /// repo 状态
     @Default(RepoStatus.unknown) RepoStatus repoStatus,
@@ -106,4 +115,10 @@ extension LinglongEnvCheckResultX on LinglongEnvCheckResult {
     if (llCliVersion == null) return 'll-cli 不可用';
     return '环境异常';
   }
+
+  /// 是否存在发行版特殊适配。
+  ///
+  /// 这个 getter 主要给展示层判断“是否值得渲染额外提示块”，
+  /// 具体提示内容仍然要继续走 scenario -> guidance 映射。
+  bool get hasDistributionAdaptation => distribution.hasSpecialAdaptation;
 }

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'linux_distribution_resolver.dart';
 import '../../core/platform/shell_command_executor.dart';
 import '../../domain/models/linglong_env_check_result.dart';
 
@@ -13,17 +14,21 @@ class LinglongEnvironmentService {
     required ShellCommandExecutor executor,
     OsReleaseReader? osReleaseReader,
     EnvVarReader? environmentReader,
+    LinuxDistributionResolver? distributionResolver,
     TimestampReader? clock,
     String minimumVersion = '1.9.0',
   }) : _executor = executor,
        _osReleaseReader = osReleaseReader ?? _defaultOsReleaseReader,
        _environmentReader = environmentReader ?? _defaultEnvironmentReader,
+       _distributionResolver =
+           distributionResolver ?? const LinuxDistributionResolver(),
        _clock = clock ?? _defaultClock,
        _minimumVersion = minimumVersion;
 
   final ShellCommandExecutor _executor;
   final OsReleaseReader _osReleaseReader;
   final EnvVarReader _environmentReader;
+  final LinuxDistributionResolver _distributionResolver;
   final TimestampReader _clock;
   final String _minimumVersion;
 
@@ -38,10 +43,13 @@ class LinglongEnvironmentService {
     final checkedAt = _clock();
 
     final arch = await _runAndTrim(['uname', '-m']);
-    final rawOsVersion = await _loadOsVersion();
+    final osRelease = await _loadOsRelease();
+    final rawOsVersion =
+        _extractPrettyName(osRelease) ?? await _runAndTrim(['uname', '-a']);
     final glibcVersion = await _loadGlibcVersion();
     final kernelInfo = await _runAndTrim(['uname', '-a']);
     final detailMsg = await _loadDetailMessage();
+    final distribution = _distributionResolver.resolve(osRelease);
     final osVersion = _buildReportedOsVersion(
       osVersion: rawOsVersion,
       glibcVersion: glibcVersion,
@@ -57,6 +65,7 @@ class LinglongEnvironmentService {
         glibcVersion: glibcVersion,
         kernelInfo: kernelInfo,
         detailMsg: detailMsg,
+        distribution: distribution,
         errorMessage: 'll-cli 未安装或不可用',
         errorDetail: help?.primaryMessage,
         repoStatus: RepoStatus.unavailable,
@@ -73,6 +82,7 @@ class LinglongEnvironmentService {
         glibcVersion: glibcVersion,
         kernelInfo: kernelInfo,
         detailMsg: detailMsg,
+        distribution: distribution,
         errorMessage: '未检测到玲珑仓库配置，请检查环境',
         repoStatus: repoInfo.status,
         checkedAt: checkedAt,
@@ -88,6 +98,7 @@ class LinglongEnvironmentService {
         glibcVersion: glibcVersion,
         kernelInfo: kernelInfo,
         detailMsg: detailMsg,
+        distribution: distribution,
         errorMessage: '无法检测到玲珑环境版本，请确认已安装',
         repoStatus: RepoStatus.ok,
         repoName: repoInfo.defaultRepo,
@@ -115,22 +126,48 @@ class LinglongEnvironmentService {
       repoName: repoInfo.defaultRepo,
       repos: repoInfo.repos,
       isContainer: isContainer,
+      distribution: distribution,
       repoStatus: RepoStatus.ok,
       checkedAt: checkedAt,
     );
   }
 
-  Future<String?> _loadOsVersion() async {
+  Future<Map<String, String>?> _loadOsRelease() async {
     final osRelease = await _osReleaseReader();
-    if (osRelease != null) {
-      for (final line in const LineSplitter().convert(osRelease)) {
-        if (!line.startsWith('PRETTY_NAME=')) {
-          continue;
-        }
-        return line.split('=').skip(1).join('=').replaceAll('"', '').trim();
+    if (osRelease == null || osRelease.trim().isEmpty) {
+      return null;
+    }
+    return _parseOsRelease(osRelease);
+  }
+
+  String? _extractPrettyName(Map<String, String>? osRelease) {
+    final prettyName = osRelease?['PRETTY_NAME']?.trim();
+    if (prettyName == null || prettyName.isEmpty) {
+      return null;
+    }
+    return prettyName;
+  }
+
+  Map<String, String> _parseOsRelease(String raw) {
+    final result = <String, String>{};
+    for (final line in const LineSplitter().convert(raw)) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty ||
+          trimmed.startsWith('#') ||
+          !trimmed.contains('=')) {
+        continue;
+      }
+      final separatorIndex = trimmed.indexOf('=');
+      final key = trimmed.substring(0, separatorIndex).trim();
+      final value = trimmed
+          .substring(separatorIndex + 1)
+          .trim()
+          .replaceAll('"', '');
+      if (key.isNotEmpty) {
+        result[key] = value;
       }
     }
-    return _runAndTrim(['uname', '-a']);
+    return result;
   }
 
   String? _buildReportedOsVersion({

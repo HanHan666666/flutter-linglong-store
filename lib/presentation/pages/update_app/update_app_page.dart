@@ -320,8 +320,7 @@ class _UpdatableAppItem extends ConsumerStatefulWidget {
   final VoidCallback? onCancel;
 
   @override
-  ConsumerState<_UpdatableAppItem> createState() =>
-      _UpdatableAppItemState();
+  ConsumerState<_UpdatableAppItem> createState() => _UpdatableAppItemState();
 }
 
 class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
@@ -355,7 +354,9 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
                 color: context.appColors.surface,
                 borderRadius: AppRadius.smRadius,
                 border: Border.all(
-                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.35,
+                  ),
                 ),
                 boxShadow: _isHovered
                     ? [
@@ -412,8 +413,8 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
                       progress: progress,
                       downloadSpeed:
                           buttonState == InstallButtonState.installing
-                              ? ref.watch(networkSpeedProvider).formatted
-                              : null,
+                          ? ref.watch(networkSpeedProvider).formatted
+                          : null,
                       onPressed: widget.isUpdateDisabled
                           ? () {}
                           : widget.onUpdate,
@@ -439,7 +440,8 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
     if (status == InstallStatus.pending) {
       return InstallButtonState.pending;
     }
-    if (status == InstallStatus.downloading || status == InstallStatus.installing) {
+    if (status == InstallStatus.downloading ||
+        status == InstallStatus.installing) {
       return InstallButtonState.installing;
     }
     return InstallButtonState.update;

@@ -195,7 +195,7 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
               AppLocalizations.of(context)!.linglongRecommend,
               style: TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.w500,
+                fontWeight: context.appFontWeight(FontWeight.w500),
                 color: context.appColors.textPrimary,
               ),
             ),
@@ -596,9 +596,11 @@ class _BannerItem extends StatelessWidget {
                         children: [
                           Text(
                             banner.title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 24,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: context.appFontWeight(
+                                FontWeight.w600,
+                              ),
                               color: Colors.white,
                               height: 1.1,
                             ),
@@ -660,7 +662,10 @@ class _BannerDetailButton extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: context.appFontWeight(FontWeight.w500),
+          ),
         ),
       ),
     );

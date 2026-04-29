@@ -336,7 +336,9 @@ class _TabTitle extends StatelessWidget {
               color: isActive
                   ? context.appColors.textPrimary
                   : context.appColors.textSecondary,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+              fontWeight: context.appFontWeight(
+                isActive ? FontWeight.w600 : FontWeight.w400,
+              ),
             ),
           ),
           const SizedBox(height: 6),

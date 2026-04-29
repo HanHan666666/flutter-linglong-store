@@ -229,7 +229,7 @@ class _TitleBar extends StatelessWidget {
             style: TextStyle(
               color: primaryText,
               fontSize: 13,
-              fontWeight: FontWeight.w500,
+              fontWeight: context.appFontWeight(FontWeight.w500),
             ),
           ),
           const Spacer(),

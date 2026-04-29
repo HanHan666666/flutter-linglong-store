@@ -267,7 +267,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 Text(
                   app.name,
                   style: theme.textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: context.appFontWeight(FontWeight.w700),
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -448,7 +448,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 l10n.screenShots,
                 style: Theme.of(
                   context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                ).textTheme.titleMedium?.copyWith(
+                  fontWeight: context.appFontWeight(FontWeight.w700),
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -545,7 +547,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               Text(
                 AppLocalizations.of(context)?.appIntroduction ?? '应用介绍',
                 style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: context.appFontWeight(FontWeight.w700),
                 ),
               ),
               const SizedBox(height: 12),
@@ -670,7 +672,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             AppLocalizations.of(context)?.appInfo ?? '应用信息',
             style: Theme.of(
               context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ).textTheme.titleMedium?.copyWith(
+              fontWeight: context.appFontWeight(FontWeight.w700),
+            ),
           ),
           const SizedBox(height: 12),
           AppDetailInfoSection(entries: entries),
@@ -715,7 +719,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     Text(
                       l10n.versionHistory,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: context.appFontWeight(FontWeight.w700),
                       ),
                     ),
                     if (isLoading) ...[
@@ -1155,7 +1159,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         l10n.installedBadge,
         style: theme.textTheme.labelMedium?.copyWith(
           color: theme.colorScheme.primary,
-          fontWeight: FontWeight.w600,
+          fontWeight: context.appFontWeight(FontWeight.w600),
         ),
       ),
     );
@@ -1205,7 +1209,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.72),
             disabledForegroundColor: Colors.white,
             textStyle: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: context.appFontWeight(FontWeight.w600),
             ),
           ),
           child: isLoading
@@ -1245,7 +1249,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             side: BorderSide(color: theme.colorScheme.error),
             foregroundColor: theme.colorScheme.error,
             textStyle: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: context.appFontWeight(FontWeight.w600),
             ),
           )
         : FilledButton.styleFrom(
@@ -1254,7 +1258,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
             textStyle: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: context.appFontWeight(FontWeight.w600),
             ),
           );
 

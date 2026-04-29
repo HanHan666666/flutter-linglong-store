@@ -389,7 +389,9 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
                           Text(
                             widget.app.name,
                             style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w500,
+                              fontWeight: context.appFontWeight(
+                                FontWeight.w500,
+                              ),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

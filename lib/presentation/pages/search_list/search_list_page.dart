@@ -162,16 +162,14 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
           const SizedBox(height: 16),
           Text(
             l10n?.searchInputHint ?? '在顶部搜索框输入关键词',
-            style: TextStyle(
-              fontSize: 16,
+            style: context.appTextStyles.body.copyWith(
               color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             l10n?.searchPressEnter ?? '按 Enter 开始搜索应用',
-            style: TextStyle(
-              fontSize: 14,
+            style: context.appTextStyles.bodyMedium.copyWith(
               color: context.appColors.textTertiary,
             ),
           ),
@@ -191,8 +189,7 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
         children: [
           Text(
             l10n?.searchResultCount(state.total) ?? '找到 ${state.total} 个结果',
-            style: TextStyle(
-              fontSize: 14,
+            style: context.appTextStyles.bodyMedium.copyWith(
               color: context.appColors.textSecondary,
             ),
           ),
@@ -200,10 +197,9 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
           if (state.query.isNotEmpty)
             Text(
               '"${state.query}"',
-              style: const TextStyle(
-                fontSize: 14,
+              style: context.appTextStyles.bodyMedium.copyWith(
                 color: AppColors.primary,
-                fontWeight: FontWeight.w500,
+                fontWeight: context.appFontWeight(FontWeight.w500),
               ),
             ),
         ],

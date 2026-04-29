@@ -8,6 +8,7 @@ import '../../../application/providers/global_provider.dart';
 import '../../../application/providers/setting_provider.dart';
 import '../../../application/services/version_check_service.dart';
 import '../../../core/config/app_config.dart';
+import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/utils/app_notification_helpers.dart';
@@ -193,6 +194,12 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
           const SizedBox(height: 24),
 
+          // 字体设置
+          _buildSectionTitle(context, l10n.fontSettings),
+          _buildTypographySection(context, globalState.userPreferences),
+
+          const SizedBox(height: 24),
+
           // 缓存管理
           _buildSectionTitle(context, l10n.cacheManagement),
           _buildCacheSection(context, state),
@@ -224,7 +231,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         title,
         style: Theme.of(
           context,
-        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+        ).textTheme.titleMedium?.copyWith(
+          fontWeight: context.appFontWeight(FontWeight.w600),
+        ),
       ),
     );
   }
@@ -324,6 +333,129 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     );
   }
 
+  /// 构建字体设置部分。
+  ///
+  /// 字体大小与字重都会在系统设置基础上叠加用户手动调整值，
+  /// 这样既保留平台一致性，又允许用户做轻量个性化微调。
+  Widget _buildTypographySection(
+    BuildContext context,
+    UserPreferences preferences,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant,
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.fontSettingsHint,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              l10n.fontSizeAdjustment,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: context.appFontWeight(FontWeight.w600),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(
+                  Icons.text_decrease,
+                  size: 18,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Slider(
+                    value: preferences.fontScaleFactor,
+                    min: kMinUserFontScaleFactor,
+                    max: kMaxUserFontScaleFactor,
+                    divisions: 9,
+                    label: l10n.fontScalePercent(
+                      (preferences.fontScaleFactor * 100).round(),
+                    ),
+                    onChanged: (value) {
+                      ref
+                          .read(globalAppProvider.notifier)
+                          .setFontScaleFactor(value);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.text_increase,
+                  size: 18,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 52,
+                  child: Text(
+                    l10n.fontScalePercent(
+                      (preferences.fontScaleFactor * 100).round(),
+                    ),
+                    textAlign: TextAlign.right,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: context.appFontWeight(FontWeight.w500),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.fontWeightAdjustmentLabel,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: context.appFontWeight(FontWeight.w600),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SegmentedButton<AppFontWeightAdjustment>(
+              segments: [
+                ButtonSegment<AppFontWeightAdjustment>(
+                  value: AppFontWeightAdjustment.lighter,
+                  label: Text(l10n.fontWeightLighter),
+                ),
+                ButtonSegment<AppFontWeightAdjustment>(
+                  value: AppFontWeightAdjustment.normal,
+                  label: Text(l10n.fontWeightNormal),
+                ),
+                ButtonSegment<AppFontWeightAdjustment>(
+                  value: AppFontWeightAdjustment.bolder,
+                  label: Text(l10n.fontWeightBolder),
+                ),
+              ],
+              selected: <AppFontWeightAdjustment>{
+                preferences.fontWeightAdjustment,
+              },
+              onSelectionChanged: (selection) {
+                final value = selection.first;
+                ref
+                    .read(globalAppProvider.notifier)
+                    .setFontWeightAdjustment(value);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// 构建主题选项
   Widget _buildThemeTile(
     BuildContext context, {
@@ -386,7 +518,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                       cacheSizeText,
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: context.appFontWeight(FontWeight.w700),
                             color: Theme.of(context).colorScheme.primary,
                           ),
                     ),
@@ -583,7 +715,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   Text(
                     AppConfig.appName,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: context.appFontWeight(FontWeight.w700),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -718,7 +850,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             value,
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+            ).textTheme.bodyMedium?.copyWith(
+              fontWeight: context.appFontWeight(FontWeight.w500),
+            ),
           ),
         ],
       ),

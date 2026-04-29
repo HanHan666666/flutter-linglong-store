@@ -17,7 +17,34 @@ class LinglongStoreApp extends ConsumerWidget {
     // 监听语言和主题状态
     final locale = ref.watch(currentLocaleProvider);
     final themeMode = ref.watch(currentThemeModeProvider);
+    final fontScaleFactor = ref.watch(
+      globalAppProvider.select(
+        (state) => state.userPreferences.fontScaleFactor,
+      ),
+    );
+    final fontWeightAdjustment = ref.watch(
+      globalAppProvider.select(
+        (state) => state.userPreferences.fontWeightAdjustment,
+      ),
+    );
     final router = ref.watch(routerProvider);
+    final platformBoldText =
+        WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.boldText;
+
+    ThemeData buildTypographyTheme({
+      required bool isDark,
+      required bool systemBoldText,
+    }) {
+      return isDark
+          ? AppTheme.buildDarkTheme(
+              fontWeightAdjustment: fontWeightAdjustment,
+              systemBoldText: systemBoldText,
+            )
+          : AppTheme.buildLightTheme(
+              fontWeightAdjustment: fontWeightAdjustment,
+              systemBoldText: systemBoldText,
+            );
+    }
 
     return A11yKeyboardHandler(
       child: MaterialApp.router(
@@ -32,22 +59,45 @@ class LinglongStoreApp extends ConsumerWidget {
         supportedLocales: AppLocalizations.supportedLocales,
 
         // 主题配置
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
+        theme: buildTypographyTheme(
+          isDark: false,
+          systemBoldText: platformBoldText,
+        ),
+        darkTheme: buildTypographyTheme(
+          isDark: true,
+          systemBoldText: platformBoldText,
+        ),
         themeMode: themeMode,
         builder: (context, child) {
+          final mediaQuery = MediaQuery.of(context);
           final systemIsDark =
-              MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+              mediaQuery.platformBrightness == Brightness.dark;
           final effectiveIsDark = switch (themeMode) {
             ThemeMode.system => systemIsDark,
             ThemeMode.light => false,
             ThemeMode.dark => true,
           };
-
-          return NativeMenuThemeSync(
+          final resolvedTheme = buildTypographyTheme(
             isDark: effectiveIsDark,
-            child: A11yFocusScope(
-              child: child ?? const SizedBox.shrink(),
+            systemBoldText: mediaQuery.boldText,
+          );
+          final resolvedMediaQuery = mediaQuery.copyWith(
+            textScaler: composeTextScaler(
+              mediaQuery.textScaler,
+              userScaleFactor: fontScaleFactor,
+            ),
+          );
+
+          return MediaQuery(
+            data: resolvedMediaQuery,
+            child: NativeMenuThemeSync(
+              isDark: effectiveIsDark,
+              child: Theme(
+                data: resolvedTheme,
+                child: A11yFocusScope(
+                  child: child ?? const SizedBox.shrink(),
+                ),
+              ),
             ),
           );
         },

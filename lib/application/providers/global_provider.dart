@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging/app_logger.dart';
+import '../../core/config/theme.dart';
 import 'all_apps_provider.dart';
 import 'install_queue_provider.dart';
 import 'ranking_provider.dart';
@@ -62,6 +63,13 @@ sealed class UserPreferences with _$UserPreferences {
 
     /// 是否精简模式
     @Default(false) bool compactMode,
+
+    /// 用户手动字号倍率，始终叠加在系统字号基础上。
+    @Default(kDefaultUserFontScaleFactor) double fontScaleFactor,
+
+    /// 用户手动字重微调档位，始终叠加在系统字重基础上。
+    @Default(AppFontWeightAdjustment.normal)
+    AppFontWeightAdjustment fontWeightAdjustment,
 
     /// 首页自定义配置
     @Default([]) List<String> customCategories,
@@ -210,9 +218,7 @@ class GlobalApp extends _$GlobalApp {
       // 加载用户偏好
       final prefsJson = prefs.getString(_kUserPreferencesKey);
       if (prefsJson != null) {
-        final userPreferences = UserPreferences.fromJson(
-          jsonDecode(prefsJson) as Map<String, dynamic>,
-        );
+        final userPreferences = _restoreUserPreferences(prefsJson);
         restoredState = restoredState.copyWith(
           userPreferences: userPreferences,
         );
@@ -224,6 +230,36 @@ class GlobalApp extends _$GlobalApp {
       AppLogger.error('Failed to load persisted settings', e, s);
       return const GlobalAppState(isInitialized: true);
     }
+  }
+
+  UserPreferences _restoreUserPreferences(String prefsJson) {
+    final decodedJson = jsonDecode(prefsJson);
+    if (decodedJson is! Map<String, dynamic>) {
+      throw const FormatException('User preferences must be a JSON object');
+    }
+
+    final normalizedJson = Map<String, dynamic>.from(decodedJson);
+    final rawFontScaleFactor = normalizedJson['fontScaleFactor'];
+    if (rawFontScaleFactor is num) {
+      normalizedJson['fontScaleFactor'] = rawFontScaleFactor
+          .toDouble()
+          .clamp(kMinUserFontScaleFactor, kMaxUserFontScaleFactor);
+    }
+
+    final rawFontWeightAdjustment = normalizedJson['fontWeightAdjustment'];
+    if (rawFontWeightAdjustment is String &&
+        !AppFontWeightAdjustment.values.any(
+          (value) => value.name == rawFontWeightAdjustment,
+        )) {
+      AppLogger.warning(
+        'Unknown persisted fontWeightAdjustment "$rawFontWeightAdjustment", '
+        'fallback to normal',
+      );
+      normalizedJson['fontWeightAdjustment'] =
+          AppFontWeightAdjustment.normal.name;
+    }
+
+    return UserPreferences.fromJson(normalizedJson);
   }
 
   SharedPreferences? _readSharedPreferences() {
@@ -365,6 +401,24 @@ class GlobalApp extends _$GlobalApp {
   Future<void> setCompactMode(bool value) async {
     await updateUserPreferences(
       state.userPreferences.copyWith(compactMode: value),
+    );
+  }
+
+  /// 设置字号倍率。
+  Future<void> setFontScaleFactor(double value) async {
+    final clampedValue = value.clamp(
+      kMinUserFontScaleFactor,
+      kMaxUserFontScaleFactor,
+    );
+    await updateUserPreferences(
+      state.userPreferences.copyWith(fontScaleFactor: clampedValue),
+    );
+  }
+
+  /// 设置字重调整档位。
+  Future<void> setFontWeightAdjustment(AppFontWeightAdjustment value) async {
+    await updateUserPreferences(
+      state.userPreferences.copyWith(fontWeightAdjustment: value),
     );
   }
 

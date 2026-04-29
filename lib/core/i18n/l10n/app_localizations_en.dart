@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Linglong Store Community Edition';
+  String get appTitle => 'Linyaps Store Community Edition';
 
   @override
   String get recommend => 'Recommend';
@@ -54,7 +54,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get refresh => 'Refresh';
 
   @override
-  String get linglongRecommend => 'Linglong Recommend';
+  String get linglongRecommend => 'Linyaps Recommend';
 
   @override
   String get loading => 'Loading...';
@@ -126,7 +126,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get operation => 'Operation';
 
   @override
-  String get linglongProcess => 'Linglong Process';
+  String get linglongProcess => 'Linyaps Process';
 
   @override
   String get baseSetting => 'Settings';
@@ -135,11 +135,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get about => 'About';
 
   @override
-  String get envMissing => 'Linglong environment missing';
+  String get envMissing => 'Linyaps environment missing';
 
   @override
   String get envMissingDetail =>
-      'Linglong components are missing or outdated. Please install them first.';
+      'Linyaps components are missing or outdated. Please install them first.';
 
   @override
   String get autoInstall => 'Auto Install';
@@ -198,7 +198,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noInstalledAppsHint =>
-      'You haven\'t installed any Linglong apps yet, check the recommendations';
+      'You haven\'t installed any Linyaps apps yet, check the recommendations';
 
   @override
   String get noUpdateApps => 'No updates available';
@@ -518,7 +518,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get envCheckTitle => 'Environment Check';
 
   @override
-  String get checkingLinglongEnv => 'Checking Linglong environment...';
+  String get checkingLinglongEnv => 'Checking Linyaps environment...';
 
   @override
   String get unknownStatus => 'Unknown Status';
@@ -650,10 +650,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMore => 'No more';
 
   @override
-  String get appTitleShort => 'Linglong Store';
+  String get appTitleShort => 'Linyaps Store';
 
   @override
-  String get detectingEnv => 'Detecting Linglong environment...';
+  String get detectingEnv => 'Detecting Linyaps environment...';
 
   @override
   String get stepEnvCheck => 'Environment Check';
@@ -725,7 +725,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get systemArch => 'System Architecture';
 
   @override
-  String get linglongVersion => 'Linglong Version';
+  String get linglongVersion => 'Linyaps Version';
 
   @override
   String get checkNetwork => 'Please check network and retry';
@@ -881,7 +881,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get detailDescriptionHint => 'Describe the issue in detail';
 
   @override
-  String get linglongCommunity => 'Linglong Community';
+  String get linglongCommunity => 'Linyaps Community';
 
   @override
   String get unknown => 'Unknown';
@@ -1162,7 +1162,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uosEnvInstallHint =>
-      'On UOS, installing the Linglong environment requires Developer Mode to be enabled and the current account to have root privileges (Settings > General > Developer Options > Enter Developer Mode). On managed office devices, please consult IT before proceeding.';
+      'On UOS, installing the Linyaps environment requires Developer Mode to be enabled and the current account to have root privileges (Settings > General > Developer Options > Enter Developer Mode). On managed office devices, please consult IT before proceeding.';
 
   @override
   String get uosAppInstallFailureHint =>
@@ -1187,7 +1187,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String uninstallBlockedMessage(String activeTaskName) {
-    return 'Installing/updating 「$activeTaskName」 is in progress. Linglong does not support running install and uninstall at the same time. Please wait for the current task to finish, or cancel it first.';
+    return 'Installing/updating 「$activeTaskName」 is in progress. Linyaps does not support running install and uninstall at the same time. Please wait for the current task to finish, or cancel it first.';
   }
 
   @override

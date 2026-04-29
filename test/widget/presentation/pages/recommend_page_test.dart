@@ -195,7 +195,7 @@ void main() {
       expect(infoDockRect.left, greaterThan(backgroundRect.left + 80));
     });
 
-    testWidgets('shows rust no-more copy', (tester) async {
+    testWidgets('shows shared footer no-more copy', (tester) async {
       await tester.pumpWidget(
         _buildTestApp(
           const RecommendState(
@@ -221,7 +221,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('没有更多数据了'), findsOneWidget);
+      expect(find.text('没有更多了'), findsOneWidget);
     });
 
     testWidgets('renders banner refresh structure in dark mode', (

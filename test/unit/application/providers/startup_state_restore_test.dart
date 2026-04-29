@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/setting_provider.dart';
+import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 
 void main() {
@@ -31,6 +32,8 @@ void main() {
             'downloadConcurrency': 5,
             'autoRunAfterInstall': true,
             'compactMode': true,
+            'fontScaleFactor': 1.15,
+            'fontWeightAdjustment': 'bolder',
             'customCategories': ['office'],
           }),
         });
@@ -47,6 +50,11 @@ void main() {
         expect(state.themeMode, ThemeMode.dark);
         expect(state.userPreferences.autoCheckUpdate, isFalse);
         expect(state.userPreferences.downloadConcurrency, 5);
+        expect(state.userPreferences.fontScaleFactor, 1.15);
+        expect(
+          state.userPreferences.fontWeightAdjustment,
+          AppFontWeightAdjustment.bolder,
+        );
         expect(state.userPreferences.customCategories, ['office']);
       },
     );

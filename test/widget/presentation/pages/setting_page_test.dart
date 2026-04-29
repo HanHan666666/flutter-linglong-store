@@ -84,4 +84,30 @@ void main() {
 
     expect(find.text('社区交流'), findsOneWidget);
   });
+
+  testWidgets('setting page renders typography controls', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: const Scaffold(body: SettingPage()),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('字体设置'), findsOneWidget);
+    expect(find.text('字体大小'), findsOneWidget);
+    expect(find.text('字体粗细'), findsOneWidget);
+    expect(find.text('更细'), findsOneWidget);
+    expect(find.text('标准'), findsOneWidget);
+    expect(find.text('更粗'), findsOneWidget);
+  });
 }

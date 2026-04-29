@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:linglong_store/core/config/theme.dart';
@@ -57,6 +58,27 @@ void main() {
         AppTheme.darkTheme.appBarTheme.titleTextStyle?.fontFamilyFallback,
         expectedLinuxFontFallback,
       );
+    });
+  });
+
+  group('AppTheme dynamic typography', () {
+    test('bolder typography shifts body text one weight step up', () {
+      final theme = AppTheme.buildLightTheme(
+        fontWeightAdjustment: AppFontWeightAdjustment.bolder,
+      );
+
+      expect(theme.textTheme.bodyMedium?.fontWeight, FontWeight.w500);
+      expect(
+        theme.extension<AppTypographyStyles>()?.body.fontWeight,
+        FontWeight.w500,
+      );
+    });
+
+    test('system bold text also increases semantic font weight', () {
+      final theme = AppTheme.buildDarkTheme(systemBoldText: true);
+
+      expect(theme.textTheme.bodyMedium?.fontWeight, FontWeight.w500);
+      expect(theme.textTheme.titleMedium?.fontWeight, FontWeight.w700);
     });
   });
 }

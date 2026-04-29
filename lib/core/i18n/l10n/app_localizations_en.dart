@@ -245,10 +245,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeSettings => 'Theme Settings';
 
   @override
+  String get fontSettings => 'Font Settings';
+
+  @override
   String get cacheManagement => 'Cache Management';
 
   @override
   String get storeOptions => 'Store Options';
+
+  @override
+  String get fontSettingsHint =>
+      'System font settings stay as the base value, and the adjustments below are layered on top.';
+
+  @override
+  String get fontSizeAdjustment => 'Font Size';
+
+  @override
+  String get fontWeightAdjustmentLabel => 'Font Weight';
+
+  @override
+  String get fontWeightLighter => 'Lighter';
+
+  @override
+  String get fontWeightNormal => 'Standard';
+
+  @override
+  String get fontWeightBolder => 'Bolder';
+
+  @override
+  String fontScalePercent(int percent) {
+    return '$percent%';
+  }
 
   @override
   String get checkUpdate => 'Check for Updates';

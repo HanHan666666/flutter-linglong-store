@@ -560,6 +560,12 @@ abstract class AppLocalizations {
   /// **'主题设置'**
   String get themeSettings;
 
+  /// No description provided for @fontSettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'字体设置'**
+  String get fontSettings;
+
   /// No description provided for @cacheManagement.
   ///
   /// In zh, this message translates to:
@@ -571,6 +577,48 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'商店选项'**
   String get storeOptions;
+
+  /// No description provided for @fontSettingsHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'系统字体设置会作为基础值，下面的调整会在其基础上叠加。'**
+  String get fontSettingsHint;
+
+  /// No description provided for @fontSizeAdjustment.
+  ///
+  /// In zh, this message translates to:
+  /// **'字体大小'**
+  String get fontSizeAdjustment;
+
+  /// No description provided for @fontWeightAdjustmentLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'字体粗细'**
+  String get fontWeightAdjustmentLabel;
+
+  /// No description provided for @fontWeightLighter.
+  ///
+  /// In zh, this message translates to:
+  /// **'更细'**
+  String get fontWeightLighter;
+
+  /// No description provided for @fontWeightNormal.
+  ///
+  /// In zh, this message translates to:
+  /// **'标准'**
+  String get fontWeightNormal;
+
+  /// No description provided for @fontWeightBolder.
+  ///
+  /// In zh, this message translates to:
+  /// **'更粗'**
+  String get fontWeightBolder;
+
+  /// No description provided for @fontScalePercent.
+  ///
+  /// In zh, this message translates to:
+  /// **'{percent}%'**
+  String fontScalePercent(int percent);
 
   /// No description provided for @checkUpdate.
   ///

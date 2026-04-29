@@ -240,10 +240,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get themeSettings => '主题设置';
 
   @override
+  String get fontSettings => '字体设置';
+
+  @override
   String get cacheManagement => '缓存管理';
 
   @override
   String get storeOptions => '商店选项';
+
+  @override
+  String get fontSettingsHint => '系统字体设置会作为基础值，下面的调整会在其基础上叠加。';
+
+  @override
+  String get fontSizeAdjustment => '字体大小';
+
+  @override
+  String get fontWeightAdjustmentLabel => '字体粗细';
+
+  @override
+  String get fontWeightLighter => '更细';
+
+  @override
+  String get fontWeightNormal => '标准';
+
+  @override
+  String get fontWeightBolder => '更粗';
+
+  @override
+  String fontScalePercent(int percent) {
+    return '$percent%';
+  }
 
   @override
   String get checkUpdate => '检查更新';

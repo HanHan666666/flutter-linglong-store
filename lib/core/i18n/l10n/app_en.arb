@@ -77,8 +77,23 @@
   "searchApps": "Search apps...",
   "languageSettings": "Language Settings",
   "themeSettings": "Theme Settings",
+  "fontSettings": "Font Settings",
   "cacheManagement": "Cache Management",
   "storeOptions": "Store Options",
+  "fontSettingsHint": "System font settings stay as the base value, and the adjustments below are layered on top.",
+  "fontSizeAdjustment": "Font Size",
+  "fontWeightAdjustmentLabel": "Font Weight",
+  "fontWeightLighter": "Lighter",
+  "fontWeightNormal": "Standard",
+  "fontWeightBolder": "Bolder",
+  "fontScalePercent": "{percent}%",
+  "@fontScalePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "checkUpdate": "Check for Updates",
   "currentVersion": "Current version: {version}",
   "@currentVersion": {

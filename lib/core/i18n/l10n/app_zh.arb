@@ -77,8 +77,23 @@
   "searchApps": "搜索应用...",
   "languageSettings": "语言设置",
   "themeSettings": "主题设置",
+  "fontSettings": "字体设置",
   "cacheManagement": "缓存管理",
   "storeOptions": "商店选项",
+  "fontSettingsHint": "系统字体设置会作为基础值，下面的调整会在其基础上叠加。",
+  "fontSizeAdjustment": "字体大小",
+  "fontWeightAdjustmentLabel": "字体粗细",
+  "fontWeightLighter": "更细",
+  "fontWeightNormal": "标准",
+  "fontWeightBolder": "更粗",
+  "fontScalePercent": "{percent}%",
+  "@fontScalePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "checkUpdate": "检查更新",
   "currentVersion": "当前版本: {version}",
   "@currentVersion": {

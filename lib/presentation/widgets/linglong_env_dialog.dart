@@ -59,7 +59,7 @@ class LinglongEnvDialog extends ConsumerWidget {
           const SizedBox(width: AppSpacing.sm),
           Text(
             AppLocalizations.of(context)?.envCheckTitle ?? '环境检测',
-            style: AppTextStyles.title3.copyWith(
+            style: context.appTextStyles.title3.copyWith(
               color: context.appColors.textPrimary,
             ),
           ),
@@ -102,7 +102,7 @@ class LinglongEnvDialog extends ConsumerWidget {
         const SizedBox(height: AppSpacing.xl),
         Text(
           AppLocalizations.of(context)?.checkingLinglongEnv ?? '正在检测玲珑环境...',
-          style: AppTextStyles.body.copyWith(
+          style: context.appTextStyles.body.copyWith(
             color: context.appColors.textSecondary,
           ),
         ),
@@ -122,7 +122,7 @@ class LinglongEnvDialog extends ConsumerWidget {
     if (result == null) {
       return Text(
         AppLocalizations.of(context)?.unknownStatus ?? '未知状态',
-        style: AppTextStyles.body.copyWith(
+        style: context.appTextStyles.body.copyWith(
           color: context.appColors.textSecondary,
         ),
       );
@@ -152,9 +152,9 @@ class LinglongEnvDialog extends ConsumerWidget {
               Expanded(
                 child: Text(
                   result.statusDescription,
-                  style: AppTextStyles.body.copyWith(
+                  style: context.appTextStyles.body.copyWith(
                     color: result.isOk ? AppColors.success : AppColors.warning,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: context.appFontWeight(FontWeight.w500),
                   ),
                 ),
               ),
@@ -195,9 +195,9 @@ class LinglongEnvDialog extends ConsumerWidget {
                     const SizedBox(width: AppSpacing.sm),
                     Text(
                       AppLocalizations.of(context)?.errorMessage ?? '错误信息',
-                      style: AppTextStyles.caption.copyWith(
+                      style: context.appTextStyles.caption.copyWith(
                         color: AppColors.error,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: context.appFontWeight(FontWeight.w500),
                       ),
                     ),
                   ],
@@ -205,7 +205,7 @@ class LinglongEnvDialog extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   result.errorMessage ?? '',
-                  style: AppTextStyles.caption.copyWith(
+                  style: context.appTextStyles.caption.copyWith(
                     color: context.appColors.textSecondary,
                   ),
                 ),
@@ -213,7 +213,7 @@ class LinglongEnvDialog extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     result.errorDetail ?? '',
-                    style: AppTextStyles.tiny.copyWith(
+                    style: context.appTextStyles.tiny.copyWith(
                       color: context.appColors.textTertiary,
                     ),
                   ),
@@ -239,7 +239,7 @@ class LinglongEnvDialog extends ConsumerWidget {
           width: 100,
           child: Text(
             label,
-            style: AppTextStyles.caption.copyWith(
+            style: context.appTextStyles.caption.copyWith(
               color: context.appColors.textTertiary,
             ),
           ),
@@ -255,7 +255,7 @@ class LinglongEnvDialog extends ConsumerWidget {
               const SizedBox(width: AppSpacing.xs),
               Text(
                 value,
-                style: AppTextStyles.body.copyWith(
+                style: context.appTextStyles.body.copyWith(
                   color: context.appColors.textPrimary,
                 ),
               ),
@@ -291,7 +291,7 @@ class LinglongEnvDialog extends ConsumerWidget {
           envState.installMessage ??
               AppLocalizations.of(context)?.installingLinglong ??
               '正在安装...',
-          style: AppTextStyles.body.copyWith(
+          style: context.appTextStyles.body.copyWith(
             color: context.appColors.textSecondary,
           ),
           textAlign: TextAlign.center,
@@ -300,7 +300,7 @@ class LinglongEnvDialog extends ConsumerWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             envState.installLogFilePath!,
-            style: AppTextStyles.tiny.copyWith(
+            style: context.appTextStyles.tiny.copyWith(
               color: context.appColors.textTertiary,
             ),
             textAlign: TextAlign.center,

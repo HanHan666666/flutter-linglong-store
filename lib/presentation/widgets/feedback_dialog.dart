@@ -75,7 +75,7 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
                     label: Text(cat),
                     selected: selected,
                     // 显式指定文字颜色，确保浅灰背景上文字清晰可读
-                    labelStyle: AppTextStyles.caption.copyWith(
+                    labelStyle: context.appTextStyles.caption.copyWith(
                       color: selected
                           ? AppColors.primary
                           : AppColors.textPrimary,

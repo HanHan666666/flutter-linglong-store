@@ -312,13 +312,13 @@ class _CategoryChipState extends State<_CategoryChip> {
                           overflow: TextOverflow.visible,
                           softWrap: false,
                           textAlign: TextAlign.center,
-                          style: AppTextStyles.caption.copyWith(
+                          style: context.appTextStyles.caption.copyWith(
                             // 分类胶囊按钮使用紧凑行高，避免中文在按钮内视觉偏上。
                             // caption = 13px，明确用于胶囊标签
                             height: 1,
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.w500,
+                            fontWeight: context.appFontWeight(
+                              isSelected ? FontWeight.w600 : FontWeight.w500,
+                            ),
                             color: isSelected
                                 ? (isDark
                                       ? const Color(0xFFE4E4E4)
@@ -348,9 +348,11 @@ class _CategoryChipState extends State<_CategoryChip> {
                           ),
                           child: Text(
                             '${widget.count}',
-                            style: AppTextStyles.caption.copyWith(
+                            style: context.appTextStyles.caption.copyWith(
                               fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: context.appFontWeight(
+                                FontWeight.w600,
+                              ),
                               color: isDark
                                   ? const Color(0xFF9A9A9A)
                                   : const Color(0xFF475569),

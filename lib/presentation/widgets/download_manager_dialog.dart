@@ -83,13 +83,13 @@ class DownloadManagerDialog extends ConsumerWidget {
               children: [
                 Text(
                   AppLocalizations.of(context)?.downloadManager ?? '下载管理',
-                  style: AppTextStyles.title3.copyWith(
-                    fontWeight: FontWeight.w600,
+                  style: context.appTextStyles.title3.copyWith(
+                    fontWeight: context.appFontWeight(FontWeight.w600),
                   ),
                 ),
                 Text(
                   _buildHeaderSummary(context, queueState),
-                  style: AppTextStyles.caption.copyWith(
+                  style: context.appTextStyles.caption.copyWith(
                     color: appColors.textSecondary,
                   ),
                 ),
@@ -219,7 +219,9 @@ class DownloadManagerDialog extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               AppLocalizations.of(context)?.noDownloadTasks ?? '暂无下载任务',
-              style: AppTextStyles.tertiary,
+              style: context.appTextStyles.body.copyWith(
+                color: context.appColors.textTertiary,
+              ),
             ),
           ],
         ),
@@ -233,9 +235,9 @@ class DownloadManagerDialog extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Text(
         title,
-        style: AppTextStyles.caption.copyWith(
+        style: context.appTextStyles.caption.copyWith(
           color: context.appColors.textSecondary,
-          fontWeight: FontWeight.w600,
+          fontWeight: context.appFontWeight(FontWeight.w600),
         ),
       ),
     );
@@ -326,14 +328,14 @@ class DownloadManagerDialog extends ConsumerWidget {
           Expanded(
             child: Text(
               speed.isEmpty ? '等待下载任务开始' : '实时速度 $speed',
-              style: AppTextStyles.caption.copyWith(
+              style: context.appTextStyles.caption.copyWith(
                 color: appColors.textSecondary,
               ),
             ),
           ),
           Text(
             '${queueState.history.length} 条记录',
-            style: AppTextStyles.caption.copyWith(
+            style: context.appTextStyles.caption.copyWith(
               color: appColors.textTertiary,
             ),
           ),
@@ -490,9 +492,13 @@ class _TaskCardState extends State<_TaskCard> {
                               // featured 用 16px 正文级别，普通用 14px 说明级别
                               style:
                                   (widget.featured
-                                          ? AppTextStyles.body
-                                          : AppTextStyles.bodyMedium)
-                                      .copyWith(fontWeight: FontWeight.w600),
+                                          ? context.appTextStyles.body
+                                          : context.appTextStyles.bodyMedium)
+                                      .copyWith(
+                                        fontWeight: context.appFontWeight(
+                                          FontWeight.w600,
+                                        ),
+                                      ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -504,7 +510,7 @@ class _TaskCardState extends State<_TaskCard> {
                       const SizedBox(height: AppSpacing.xs),
                       Text(
                         _buildSubtitle(context),
-                        style: AppTextStyles.caption.copyWith(
+                        style: context.appTextStyles.caption.copyWith(
                           color: appColors.textSecondary,
                         ),
                         maxLines: widget.compact ? 1 : 2,
@@ -533,7 +539,7 @@ class _TaskCardState extends State<_TaskCard> {
                   Expanded(
                     child: Text(
                       l10n.downloadManagerSlowInstallHint,
-                      style: AppTextStyles.caption.copyWith(
+                      style: context.appTextStyles.caption.copyWith(
                         color: appColors.textSecondary,
                       ),
                     ),
@@ -545,7 +551,9 @@ class _TaskCardState extends State<_TaskCard> {
               const SizedBox(height: AppSpacing.xs),
               Text(
                 widget.task.errorMessage!,
-                style: AppTextStyles.caption.copyWith(color: AppColors.error),
+                style: context.appTextStyles.caption.copyWith(
+                  color: AppColors.error,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -576,7 +584,7 @@ class _TaskCardState extends State<_TaskCard> {
                 constraints: const BoxConstraints(maxWidth: 500),
                 child: Text(
                   message != null && message.isNotEmpty ? message : '处理中',
-                  style: AppTextStyles.caption.copyWith(
+                  style: context.appTextStyles.caption.copyWith(
                     color: appColors.textSecondary,
                   ),
                   maxLines: 1,
@@ -586,9 +594,9 @@ class _TaskCardState extends State<_TaskCard> {
             ),
             Text(
               widget.task.progressPercentLabel,
-              style: AppTextStyles.caption.copyWith(
+              style: context.appTextStyles.caption.copyWith(
                 color: appColors.textPrimary,
-                fontWeight: FontWeight.w600,
+                fontWeight: context.appFontWeight(FontWeight.w600),
               ),
             ),
           ],
@@ -610,7 +618,7 @@ class _TaskCardState extends State<_TaskCard> {
             if ((speed == null || speed.isEmpty))
               widget.task.progressPercentLabel,
           ].join(' · '),
-          style: AppTextStyles.caption,
+          style: context.appTextStyles.caption,
         ),
       ],
     );
@@ -635,9 +643,9 @@ class _TaskCardState extends State<_TaskCard> {
       ),
       child: Text(
         label,
-        style: AppTextStyles.tiny.copyWith(
+        style: context.appTextStyles.tiny.copyWith(
           color: color,
-          fontWeight: FontWeight.w600,
+          fontWeight: context.appFontWeight(FontWeight.w600),
         ),
       ),
     );
@@ -778,11 +786,11 @@ class _OverviewPill extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: AppTextStyles.caption.copyWith(
+              style: context.appTextStyles.caption.copyWith(
                 color: highlighted
                     ? appColors.primary
                     : appColors.textSecondary,
-                fontWeight: FontWeight.w600,
+                fontWeight: context.appFontWeight(FontWeight.w600),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -791,9 +799,9 @@ class _OverviewPill extends StatelessWidget {
           const SizedBox(width: AppSpacing.xs),
           Text(
             '$count',
-            style: AppTextStyles.caption.copyWith(
+            style: context.appTextStyles.caption.copyWith(
               color: highlighted ? appColors.primary : appColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: context.appFontWeight(FontWeight.w700),
             ),
           ),
         ],

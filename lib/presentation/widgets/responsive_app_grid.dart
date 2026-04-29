@@ -191,7 +191,7 @@ class PaginationFooterSliver extends StatelessWidget {
               ),
               (false, false) => Text(
                 l10n.noMore,
-                style: AppTextStyles.caption.copyWith(
+                style: context.appTextStyles.caption.copyWith(
                   color: context.appColors.textTertiary,
                 ),
               ),

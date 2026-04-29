@@ -234,13 +234,13 @@ class _MenuItemTile extends StatelessWidget {
                         maxLines: 1,
                         softWrap: false,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.menuActive.copyWith(
+                        style: context.appTextStyles.menuActive.copyWith(
                           color: isSelected
                               ? AppColors.primary
                               : context.appColors.textPrimary,
-                          fontWeight: isSelected
-                              ? FontWeight.w500
-                              : FontWeight.w400,
+                          fontWeight: context.appFontWeight(
+                            isSelected ? FontWeight.w500 : FontWeight.w400,
+                          ),
                         ),
                       ),
                     ),
@@ -283,9 +283,9 @@ class _Badge extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 2),
             child: Text(
               count > 99 ? '99+' : count.toString(),
-              style: AppTextStyles.tiny.copyWith(
+              style: context.appTextStyles.tiny.copyWith(
                 color: AppColors.textLight,
-                fontWeight: FontWeight.w500,
+                fontWeight: context.appFontWeight(FontWeight.w500),
               ),
             ),
           ),
@@ -448,13 +448,13 @@ class _DynamicMenuItemTile extends StatelessWidget {
                       maxLines: 1,
                       softWrap: false,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.menuActive.copyWith(
+                      style: context.appTextStyles.menuActive.copyWith(
                         color: isSelected
                             ? AppColors.primary
                             : context.appColors.textPrimary,
-                        fontWeight: isSelected
-                            ? FontWeight.w500
-                            : FontWeight.w400,
+                        fontWeight: context.appFontWeight(
+                          isSelected ? FontWeight.w500 : FontWeight.w400,
+                        ),
                       ),
                     ),
                   ),

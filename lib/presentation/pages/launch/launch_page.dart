@@ -217,9 +217,9 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
   Widget _buildAppName(BuildContext context) {
     return Text(
       AppLocalizations.of(context)?.appTitleShort ?? '玲珑应用商店',
-      style: AppTextStyles.title1.copyWith(
+      style: context.appTextStyles.title1.copyWith(
         color: context.appColors.textPrimary,
-        fontWeight: FontWeight.w600,
+        fontWeight: context.appFontWeight(FontWeight.w600),
       ),
     );
   }
@@ -246,7 +246,7 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
       child: Text(
         message,
         key: ValueKey(message),
-        style: AppTextStyles.body.copyWith(
+        style: context.appTextStyles.body.copyWith(
           color: context.appColors.textSecondary,
         ),
         textAlign: TextAlign.center,
@@ -369,7 +369,7 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
             launchState.errorMessage ??
                 AppLocalizations.of(context)?.launchFailedTitle ??
                 '启动失败',
-            style: AppTextStyles.body.copyWith(
+            style: context.appTextStyles.body.copyWith(
               color: context.appColors.textPrimary,
             ),
             textAlign: TextAlign.center,
@@ -423,7 +423,7 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
   Widget _buildVersionInfo(BuildContext context) {
     return Text(
       'v$_appVersion',
-      style: AppTextStyles.caption.copyWith(
+      style: context.appTextStyles.caption.copyWith(
         color: context.appColors.textTertiary,
       ),
     );

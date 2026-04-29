@@ -180,9 +180,9 @@ class _CategoryHeaderDelegate extends SliverPersistentHeaderDelegate {
                   // 分类名称
                   Text(
                     categoryName,
-                    style: AppTextStyles.title2.copyWith(
+                    style: context.appTextStyles.title2.copyWith(
                       color: context.appColors.textPrimary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: context.appFontWeight(FontWeight.w600),
                     ),
                   ),
                   // 应用数量
@@ -190,7 +190,7 @@ class _CategoryHeaderDelegate extends SliverPersistentHeaderDelegate {
                     const SizedBox(width: AppSpacing.sm),
                     Text(
                       '($appCount)',
-                      style: AppTextStyles.body.copyWith(
+                      style: context.appTextStyles.body.copyWith(
                         color: context.appColors.textTertiary,
                       ),
                     ),

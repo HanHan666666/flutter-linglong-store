@@ -113,11 +113,13 @@ class _RankingPageState extends ConsumerState<RankingPage>
         labelColor: AppColors.primary,
         unselectedLabelColor: palette.textSecondary,
         // 使用 14px 字号 + 紧凑行高，保证文字在按钮内垂直居中
-        labelStyle: AppTextStyles.bodyMedium.copyWith(
-          fontWeight: FontWeight.w500,
+        labelStyle: context.appTextStyles.bodyMedium.copyWith(
+          fontWeight: context.appFontWeight(FontWeight.w500),
           height: 1.0,
         ),
-        unselectedLabelStyle: AppTextStyles.bodyMedium.copyWith(height: 1.0),
+        unselectedLabelStyle: context.appTextStyles.bodyMedium.copyWith(
+          height: 1.0,
+        ),
         indicator: BoxDecoration(
           color: palette.primaryLight,
           borderRadius: BorderRadius.circular(48), // 胶囊形圆角，与 Tab 高度匹配
@@ -228,8 +230,8 @@ class _HoverableTabState extends State<_HoverableTab> {
                   widget.text,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
+                  style: context.appTextStyles.bodyMedium.copyWith(
+                    fontWeight: context.appFontWeight(FontWeight.w500),
                     height: 1.0,
                     color: textColor,
                   ),

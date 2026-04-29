@@ -56,7 +56,7 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
               child: Text(
                 title,
                 style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: context.appFontWeight(FontWeight.w700),
                 ),
               ),
             ),
@@ -431,9 +431,9 @@ class _CommentVersionPillState extends State<_CommentVersionPill> {
                 widget.label,
                 style: theme.textTheme.bodySmall?.copyWith(
                   height: 1,
-                  fontWeight: widget.isSelected
-                      ? FontWeight.w600
-                      : FontWeight.w500,
+                  fontWeight: context.appFontWeight(
+                    widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                  ),
                   color: widget.isSelected
                       ? theme.colorScheme.primary
                       : theme.colorScheme.onSurface,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/accessibility/accessibility.dart';
+import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../domain/models/install_button_state.dart';
 import '../../domain/models/install_task.dart';
@@ -348,7 +349,7 @@ class _InstallButtonState extends State<InstallButton> {
           Text(
             label,
             style: TextStyle(
-              fontWeight: FontWeight.w500,
+              fontWeight: context.appFontWeight(FontWeight.w500),
               color: foregroundColor,
             ),
           ),
@@ -443,7 +444,7 @@ class _InstallButtonState extends State<InstallButton> {
                 Text(
                   label,
                   style: TextStyle(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: context.appFontWeight(FontWeight.w500),
                     color: isHovering
                         ? theme.colorScheme.error
                         : theme.colorScheme.onSurfaceVariant,

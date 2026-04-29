@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+import '../../core/config/theme.dart';
+
 /// 应用图标组件
 ///
 /// 支持网络图片和本地占位符，带有缓存机制
@@ -103,7 +105,7 @@ class AppIcon extends StatelessWidget {
       initial,
       style: TextStyle(
         fontSize: size * 0.4,
-        fontWeight: FontWeight.bold,
+        fontWeight: context.appFontWeight(FontWeight.w700),
         color: Theme.of(
           context,
         ).textTheme.bodyLarge?.color?.withValues(alpha: 0.5),

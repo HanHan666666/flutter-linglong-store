@@ -236,7 +236,7 @@ class _AppCardState extends State<AppCard> {
           style: TextStyle(
             // 卡片标题：16px ，桌面端主可读层级
             fontSize: 16,
-            fontWeight: FontWeight.w500,
+            fontWeight: context.appFontWeight(FontWeight.w500),
             color: context.appColors.textPrimary,
           ),
           maxLines: 1,
@@ -477,7 +477,7 @@ class _RankBadge extends StatelessWidget {
           '$rank',
           style: TextStyle(
             fontSize: 12,
-            fontWeight: FontWeight.w600,
+            fontWeight: context.appFontWeight(FontWeight.w600),
             color: textColor,
           ),
         ),

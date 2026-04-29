@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 
 /// 错误状态组件
@@ -126,7 +128,7 @@ class ErrorState extends StatelessWidget {
             Text(
               defaultTitle,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: context.appFontWeight(FontWeight.w600),
                   ),
               textAlign: TextAlign.center,
             ),

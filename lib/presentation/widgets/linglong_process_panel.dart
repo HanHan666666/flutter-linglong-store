@@ -238,7 +238,9 @@ class _ProcessToolbar extends ConsumerWidget {
             l10n.linglongProcess,
             style: Theme.of(
               context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            ).textTheme.titleMedium?.copyWith(
+              fontWeight: context.appFontWeight(FontWeight.w600),
+            ),
           ),
           const SizedBox(width: 8),
           Container(
@@ -383,7 +385,7 @@ class _ProcessHeaderCell extends StatelessWidget {
         label,
         textAlign: centered ? TextAlign.center : TextAlign.start,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: context.appFontWeight(FontWeight.w600),
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
@@ -488,7 +490,11 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(fontWeight: FontWeight.w500),
+                                      ?.copyWith(
+                                        fontWeight: context.appFontWeight(
+                                          FontWeight.w500,
+                                        ),
+                                      ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(

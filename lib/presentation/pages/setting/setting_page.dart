@@ -125,6 +125,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         case VersionCheckResultUpdateAvailable(
           :final latestVersion,
           :final currentVersion,
+          :final releasePageUrl,
         ):
           showDialog(
             context: context,
@@ -137,9 +138,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                 TextButton(
                   onPressed: () {
                     Navigator.of(ctx).pop();
-                    _openUrl(
-                      'https://gitee.com/Shirosu/linglong-store/releases/latest',
-                    );
+                    _openUrl(releasePageUrl);
                   },
                   child: Text(l10n.goDownload),
                 ),

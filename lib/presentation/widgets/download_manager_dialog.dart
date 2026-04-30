@@ -554,8 +554,7 @@ class _TaskCardState extends State<_TaskCard> {
                 style: context.appTextStyles.caption.copyWith(
                   color: AppColors.error,
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+                softWrap: true,
               ),
             ],
           ],

@@ -340,6 +340,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     installTask.displayMessage != null) ...[
                   const SizedBox(height: 8),
                   Row(
+                    crossAxisAlignment: installTask.isFailed
+                        ? CrossAxisAlignment.start
+                        : CrossAxisAlignment.center,
                     children: [
                       Expanded(
                         child: Tooltip(
@@ -351,8 +354,11 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                                   ? theme.colorScheme.error
                                   : theme.colorScheme.onSurfaceVariant,
                             ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
+                            softWrap: installTask.isFailed,
+                            overflow: installTask.isFailed
+                                ? TextOverflow.visible
+                                : TextOverflow.ellipsis,
+                            maxLines: installTask.isFailed ? null : 1,
                           ),
                         ),
                       ),
@@ -446,9 +452,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
                 l10n.screenShots,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: context.appFontWeight(FontWeight.w700),
                 ),
               ),
@@ -670,9 +674,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         children: [
           Text(
             AppLocalizations.of(context)?.appInfo ?? '应用信息',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: context.appFontWeight(FontWeight.w700),
             ),
           ),

@@ -302,8 +302,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
     }
 
     // 升级任务必须不带版本号，否则后续命令构造会出错。
-    final effectiveVersion =
-        kind == InstallTaskKind.update ? null : version;
+    final effectiveVersion = kind == InstallTaskKind.update ? null : version;
 
     final kindTask = InstallTask(
       id: _generateTaskId(),
@@ -359,8 +358,9 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       }
 
       // 批量更新同样禁止携带版本号。
-      final batchVersion =
-          params.kind == InstallTaskKind.update ? null : params.version;
+      final batchVersion = params.kind == InstallTaskKind.update
+          ? null
+          : params.version;
 
       final task = InstallTask(
         id: _generateTaskId(),
@@ -677,7 +677,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
         ? cancelledMsg
         : _decorateFailureMessageForCurrentPlatform(
             task: state.currentTask!,
-            error: error,
+            message: error,
             messages: messages,
           );
 
@@ -711,12 +711,12 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
 
   String _decorateFailureMessageForCurrentPlatform({
     required InstallTask task,
-    required String error,
+    required String message,
     required InstallMessages messages,
   }) {
-    final trimmedError = error.trim();
-    if (trimmedError.isEmpty) {
-      return trimmedError;
+    final trimmedMessage = message.trim();
+    if (trimmedMessage.isEmpty) {
+      return trimmedMessage;
     }
 
     // 失败文案的发行版增强统一收口在队列层，原因是多个页面都消费同一份失败状态：
@@ -734,7 +734,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
     return messages.appendDistributionGuidance(
       distribution: distribution,
       scenario: scenario,
-      message: trimmedError,
+      message: trimmedMessage,
     );
   }
 

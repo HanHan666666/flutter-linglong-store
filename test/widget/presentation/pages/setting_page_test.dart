@@ -62,7 +62,7 @@ void main() {
     expect(find.text('容器内自动更新商店本体'), findsNothing);
   });
 
-  testWidgets('setting page about section renders community exchange link', (
+  testWidgets('setting page about section renders project links', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
@@ -83,6 +83,8 @@ void main() {
     await tester.pump();
 
     expect(find.text('社区交流'), findsOneWidget);
+    expect(find.text('关于开发者'), findsOneWidget);
+    expect(find.text('Gitee'), findsOneWidget);
   });
 
   testWidgets('setting page renders typography controls', (tester) async {

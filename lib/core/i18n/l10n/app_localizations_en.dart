@@ -338,6 +338,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get communityExchange => 'Community';
 
   @override
+  String get aboutDevelopers => 'Developers';
+
+  @override
   String get feedbackTitle => 'Feedback';
 
   @override

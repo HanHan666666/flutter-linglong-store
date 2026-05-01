@@ -722,6 +722,12 @@ abstract class AppLocalizations {
   /// **'社区交流'**
   String get communityExchange;
 
+  /// No description provided for @aboutDevelopers.
+  ///
+  /// In zh, this message translates to:
+  /// **'关于开发者'**
+  String get aboutDevelopers;
+
   /// No description provided for @feedbackTitle.
   ///
   /// In zh, this message translates to:

@@ -125,7 +125,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         case VersionCheckResultUpdateAvailable(
           :final latestVersion,
           :final currentVersion,
-          :final releasePageUrl,
         ):
           showDialog(
             context: context,
@@ -138,7 +137,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                 TextButton(
                   onPressed: () {
                     Navigator.of(ctx).pop();
-                    _openUrl(releasePageUrl);
+                    _openUrl(
+                      'https://gitee.com/Shirosu/linglong-store/releases/latest',
+                    );
                   },
                   child: Text(l10n.goDownload),
                 ),
@@ -795,9 +796,11 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
             const SizedBox(height: 8),
 
-            // 项目链接
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            // 链接数量已增加，使用 Wrap 避免窄窗口下按钮溢出。
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 16,
+              runSpacing: 8,
               children: [
                 TextButton.icon(
                   onPressed: () => _openUrl(
@@ -806,19 +809,30 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   icon: const Icon(Icons.code, size: 18),
                   label: const Text('GitHub'),
                 ),
-                const SizedBox(width: 16),
+                TextButton.icon(
+                  onPressed: () => _openUrl(
+                    'https://gitee.com/hanplus/flutter-linglong-store',
+                  ),
+                  icon: const Icon(Icons.code_outlined, size: 18),
+                  label: const Text('Gitee'),
+                ),
                 TextButton.icon(
                   onPressed: () => _openUrl('https://linyaps.org.cn/'),
                   icon: const Icon(Icons.language, size: 18),
                   label: Text(l10n.officialWebsite),
                 ),
-                const SizedBox(width: 16),
                 // 社区交流入口与其他关于区外链保持同级展示。
                 TextButton.icon(
                   onPressed: () =>
                       _openUrl('https://bbs.deepin.org.cn/module/detail/230'),
                   icon: const Icon(Icons.forum_outlined, size: 18),
                   label: Text(l10n.communityExchange),
+                ),
+                TextButton.icon(
+                  onPressed: () =>
+                      _openUrl('https://linyaps.org.cn/linyaps-store-sig'),
+                  icon: const Icon(Icons.groups_2_outlined, size: 18),
+                  label: Text(l10n.aboutDevelopers),
                 ),
               ],
             ),

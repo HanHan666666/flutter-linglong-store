@@ -340,7 +340,9 @@ void main() {
       ).captured.cast<PageParams>();
       expect(captured, hasLength(2));
       expect(captured[0].pageNo, equals(1));
+      expect(captured[0].pageSize, equals(30));
       expect(captured[1].pageNo, equals(2));
+      expect(captured[1].pageSize, equals(30));
     });
   });
 }

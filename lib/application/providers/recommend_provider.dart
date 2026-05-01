@@ -16,7 +16,8 @@ part 'recommend_provider.g.dart';
 /// 推荐页状态 Provider
 @riverpod
 class Recommend extends _$Recommend {
-  static const int _pageSize = 10;
+  // 首页首屏请求提升到 30 条，减少首次进入时依赖自动补页才能铺满内容区。
+  static const int _pageSize = 30;
 
   String get _arch => resolveRequestArch(ref);
   // 推荐页缓存必须同时按语言和架构分片，避免不同架构的快照互相污染。

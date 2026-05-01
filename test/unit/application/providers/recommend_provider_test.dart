@@ -168,7 +168,7 @@ void main() {
       expect(cacheStore.writeScopes.single, contains('aarch64'));
     });
 
-    test('loads more with rust page size 10', () async {
+    test('loads more with upgraded page size 30', () async {
       when(
         mockApiService.getWelcomeCarouselList(any),
       ).thenAnswer((_) async => _buildCarouselResponse(const []));
@@ -229,9 +229,9 @@ void main() {
       final captured = verify(
         mockApiService.getWelcomeAppList(captureAny),
       ).captured.cast<PageParams>();
-      expect(captured[0].pageSize, equals(10));
+      expect(captured[0].pageSize, equals(30));
       expect(captured[1].pageNo, equals(2));
-      expect(captured[1].pageSize, equals(10));
+      expect(captured[1].pageSize, equals(30));
     });
 
     test('keeps app list available when carousel request fails', () async {

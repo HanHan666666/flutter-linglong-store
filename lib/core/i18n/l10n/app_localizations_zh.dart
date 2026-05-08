@@ -317,60 +317,59 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rendererModeDetecting => '正在检测当前渲染状态…';
 
   @override
-  String get rendererModeDetectFailed => '无法读取当前渲染状态，仍可保存为下次启动偏好。';
+  String get rendererModeDetectFailed => '无法获取当前渲染状态，但仍可保存下次启动时使用的渲染方式。';
 
   @override
   String rendererModeCurrentStatus(Object mode, Object reason) {
-    return '当前：$mode（$reason）';
+    return '当前使用$mode。$reason';
   }
 
   @override
   String rendererModeReasonEnvironment(Object value) {
-    return '由环境变量 $value 控制';
+    return '当前渲染模式由环境变量 $value 控制。';
   }
 
   @override
-  String get rendererModeReasonUserPreference => '按你的设置启动';
+  String get rendererModeReasonUserPreference => '当前已按保存的设置生效。';
 
   @override
-  String get rendererModeReasonCpuFallback => '检测到非 Intel / AMD CPU，自动回退';
+  String get rendererModeReasonCpuFallback => '为提高兼容性，当前设备默认使用软件渲染。';
 
   @override
-  String get rendererModeReasonDefault => '白名单 CPU 默认硬件渲染';
+  String get rendererModeReasonDefault => '当前设备默认使用硬件渲染。';
 
   @override
   String rendererModeEnvLocked(Object value) {
-    return '检测到外部环境变量 $value，当前会话与下次启动都会以它为准，设置开关已锁定。';
+    return '检测到环境变量 $value。当前渲染模式由系统环境控制，无法在这里修改。';
   }
 
   @override
   String rendererModeNextLaunchStatus(Object mode) {
-    return '下次启动：$mode';
+    return '下次启动时将使用$mode。';
   }
 
   @override
-  String get rendererModeWhitelistHint =>
-      '当前 CPU 不在 Intel / AMD 白名单内，建议保留软件渲染以避免黑屏。';
+  String get rendererModeWhitelistHint => '当前设备建议保留软件渲染，以获得更稳定的显示效果。';
 
   @override
   String get rendererModeHardwareRiskHint =>
-      '你已选择下次启动尝试硬件渲染；如果遇到黑屏，请按下面命令删除数据目录。';
+      '下次启动将使用硬件渲染。如遇界面无法正常显示，可使用下面的命令恢复。';
 
   @override
-  String get rendererModeDisableWarningTitle => '关闭软件渲染？';
+  String get rendererModeDisableWarningTitle => '确认关闭软件渲染';
 
   @override
   String get rendererModeDisableWarningMessage =>
-      '非 Intel 和 AMD 的 CPU 可能会在 GPU 渲染时黑屏。你仍可继续关闭软件渲染，但建议先保存下面的恢复命令。';
+      '当前设备关闭软件渲染后，应用可能无法正常显示。建议保留软件渲染，以获得更稳定的显示效果。';
 
   @override
   String rendererModeDetectedCpu(Object cpu) {
-    return '当前检测到的 CPU：$cpu';
+    return '当前设备处理器：$cpu';
   }
 
   @override
   String get rendererModeDisableBlackScreenHint =>
-      '如果下次启动黑屏，请在终端删除应用数据目录后重新打开商店。';
+      '如果应用下次启动后无法正常显示，请在终端执行下面的命令，然后重新打开应用。';
 
   @override
   String get rendererModeDataDirectoryLabel => '数据目录';
@@ -379,19 +378,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rendererModeDeleteCommandLabel => '删除命令';
 
   @override
-  String get rendererModeSaveCommandHint => '建议提前复制或保存这条命令，万一下次黑屏就不用现找了。';
+  String get rendererModeSaveCommandHint => '建议先复制并保存此命令，以便应用无法正常显示时进行恢复。';
 
   @override
-  String get rendererModeDisableConfirm => '仍然关闭';
+  String get rendererModeDisableConfirm => '继续关闭';
 
   @override
-  String get rendererModeSavedSoftware => '已保存，下次启动将使用软件渲染；当前会话保持不变。';
+  String get rendererModeSavedSoftware => '已切换为软件渲染，将在下次启动时生效。';
 
   @override
-  String get rendererModeSavedHardware => '已保存，下次启动将尝试硬件渲染；当前会话保持不变。';
+  String get rendererModeSavedHardware => '已切换为硬件渲染，将在下次启动时生效。';
 
   @override
-  String get rendererModeSaveFailed => '保存渲染模式失败，请稍后重试。';
+  String get rendererModeSaveFailed => '保存渲染设置失败，请稍后重试。';
 
   @override
   String get showBaseServices => '显示基础运行服务';

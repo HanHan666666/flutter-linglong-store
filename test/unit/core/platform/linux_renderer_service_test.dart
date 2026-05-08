@@ -9,24 +9,28 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('LinuxRendererService', () {
-    test('savePreferredMode persists and loadPersistedPreferenceSync restores it', () async {
-      final tempDirectory = await Directory.systemTemp.createTemp(
-        'linux-renderer-service-',
-      );
-      addTearDown(() => tempDirectory.delete(recursive: true));
+    test(
+      'savePreferredMode persists and loadPersistedPreferenceSync restores it',
+      () async {
+        final tempDirectory = await Directory.systemTemp.createTemp(
+          'linux-renderer-service-',
+        );
+        addTearDown(() => tempDirectory.delete(recursive: true));
 
-      final service = LinuxRendererService(
-        configFilePathOverride: '${tempDirectory.path}/renderer_preferences.ini',
-        dataDirectoryPathOverride: tempDirectory.path,
-      );
+        final service = LinuxRendererService(
+          configFilePathOverride:
+              '${tempDirectory.path}/renderer_preferences.ini',
+          dataDirectoryPathOverride: tempDirectory.path,
+        );
 
-      await service.savePreferredMode(LinuxRendererPreference.software);
+        await service.savePreferredMode(LinuxRendererPreference.software);
 
-      expect(
-        service.loadPersistedPreferenceSync(),
-        LinuxRendererPreference.software,
-      );
-    });
+        expect(
+          service.loadPersistedPreferenceSync(),
+          LinuxRendererPreference.software,
+        );
+      },
+    );
 
     test('buildRecoveryInfo returns a safely quoted delete command', () {
       final service = LinuxRendererService(
@@ -43,44 +47,47 @@ void main() {
       );
     });
 
-    test('environment-controlled runtime state stays authoritative for next launch', () async {
-      const channel = MethodChannel('test/linux_renderer');
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (call) async {
-            if (call.method != 'getRendererRuntimeState') {
-              return null;
-            }
-
-            return <String, Object?>{
-              'currentMode': 'software',
-              'decisionSource': 'environment',
-              'isCpuWhitelisted': false,
-              'cpuVendor': 'Loongson',
-              'cpuModel': '3A6000',
-              'environmentValue': 'software',
-            };
-          });
-      addTearDown(() {
+    test(
+      'environment-controlled runtime state stays authoritative for next launch',
+      () async {
+        const channel = MethodChannel('test/linux_renderer');
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(channel, null);
-      });
+            .setMockMethodCallHandler(channel, (call) async {
+              if (call.method != 'getRendererRuntimeState') {
+                return null;
+              }
 
-      final service = LinuxRendererService(
-        channel: channel,
-        configFilePathOverride: '/tmp/unused/renderer_preferences.ini',
-        dataDirectoryPathOverride: '/tmp/unused',
-      );
+              return <String, Object?>{
+                'currentMode': 'software',
+                'decisionSource': 'environment',
+                'isCpuWhitelisted': false,
+                'cpuVendor': 'Loongson',
+                'cpuModel': '3A6000',
+                'environmentValue': 'software',
+              };
+            });
+        addTearDown(() {
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockMethodCallHandler(channel, null);
+        });
 
-      final runtimeState = await service.getRuntimeState();
+        final service = LinuxRendererService(
+          channel: channel,
+          configFilePathOverride: '/tmp/unused/renderer_preferences.ini',
+          dataDirectoryPathOverride: '/tmp/unused',
+        );
 
-      expect(runtimeState.isEnvironmentLocked, isTrue);
-      expect(
-        service.resolveNextLaunchUsesSoftwareRendering(
-          runtimeState: runtimeState,
-          preference: LinuxRendererPreference.hardware,
-        ),
-        isTrue,
-      );
-    });
+        final runtimeState = await service.getRuntimeState();
+
+        expect(runtimeState.isEnvironmentLocked, isTrue);
+        expect(
+          service.resolveNextLaunchUsesSoftwareRendering(
+            runtimeState: runtimeState,
+            preference: LinuxRendererPreference.hardware,
+          ),
+          isTrue,
+        );
+      },
+    );
   });
 }

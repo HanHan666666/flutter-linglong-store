@@ -62,7 +62,7 @@ void main() {
     );
 
     expect(find.text('软件渲染'), findsOneWidget);
-    expect(find.textContaining('检测到外部环境变量 software'), findsOneWidget);
+    expect(find.textContaining('检测到环境变量 software'), findsOneWidget);
 
     final tile = tester.widget<SwitchListTile>(find.byType(SwitchListTile));
     expect(tile.value, isTrue);
@@ -97,25 +97,22 @@ void main() {
       },
     );
 
-    expect(
-      find.text('当前 CPU 不在 Intel / AMD 白名单内，建议保留软件渲染以避免黑屏。'),
-      findsOneWidget,
-    );
+    expect(find.text('当前设备建议保留软件渲染，以获得更稳定的显示效果。'), findsOneWidget);
 
     await tester.tap(find.byType(Switch));
     await tester.pumpAndSettle();
 
-    expect(find.text('关闭软件渲染？'), findsOneWidget);
+    expect(find.text('确认关闭软件渲染'), findsOneWidget);
     expect(find.text('删除命令'), findsOneWidget);
     expect(find.byType(CopyableCommandBlock), findsOneWidget);
     expect(find.text("rm -rf -- '/tmp/Linyaps Store'"), findsOneWidget);
     expect(savedPreference, isNull);
 
-    await tester.tap(find.widgetWithText(ElevatedButton, '仍然关闭'));
+    await tester.tap(find.widgetWithText(ElevatedButton, '继续关闭'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(savedPreference, LinuxRendererPreference.hardware);
-    expect(find.text('已保存，下次启动将尝试硬件渲染；当前会话保持不变。'), findsOneWidget);
+    expect(find.text('已切换为硬件渲染，将在下次启动时生效。'), findsOneWidget);
   });
 }

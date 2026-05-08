@@ -131,53 +131,53 @@
   "softwareRenderingEnabled": "软件渲染",
   "hardwareRenderingEnabled": "硬件渲染",
   "rendererModeDetecting": "正在检测当前渲染状态…",
-  "rendererModeDetectFailed": "无法读取当前渲染状态，仍可保存为下次启动偏好。",
-  "rendererModeCurrentStatus": "当前：{mode}（{reason}）",
+  "rendererModeDetectFailed": "无法获取当前渲染状态，但仍可保存下次启动时使用的渲染方式。",
+  "rendererModeCurrentStatus": "当前使用{mode}。{reason}",
   "@rendererModeCurrentStatus": {
     "placeholders": {
       "mode": {},
       "reason": {}
     }
   },
-  "rendererModeReasonEnvironment": "由环境变量 {value} 控制",
+  "rendererModeReasonEnvironment": "当前渲染模式由环境变量 {value} 控制。",
   "@rendererModeReasonEnvironment": {
     "placeholders": {
       "value": {}
     }
   },
-  "rendererModeReasonUserPreference": "按你的设置启动",
-  "rendererModeReasonCpuFallback": "检测到非 Intel / AMD CPU，自动回退",
-  "rendererModeReasonDefault": "白名单 CPU 默认硬件渲染",
-  "rendererModeEnvLocked": "检测到外部环境变量 {value}，当前会话与下次启动都会以它为准，设置开关已锁定。",
+  "rendererModeReasonUserPreference": "当前已按保存的设置生效。",
+  "rendererModeReasonCpuFallback": "为提高兼容性，当前设备默认使用软件渲染。",
+  "rendererModeReasonDefault": "当前设备默认使用硬件渲染。",
+  "rendererModeEnvLocked": "检测到环境变量 {value}。当前渲染模式由系统环境控制，无法在这里修改。",
   "@rendererModeEnvLocked": {
     "placeholders": {
       "value": {}
     }
   },
-  "rendererModeNextLaunchStatus": "下次启动：{mode}",
+  "rendererModeNextLaunchStatus": "下次启动时将使用{mode}。",
   "@rendererModeNextLaunchStatus": {
     "placeholders": {
       "mode": {}
     }
   },
-  "rendererModeWhitelistHint": "当前 CPU 不在 Intel / AMD 白名单内，建议保留软件渲染以避免黑屏。",
-  "rendererModeHardwareRiskHint": "你已选择下次启动尝试硬件渲染；如果遇到黑屏，请按下面命令删除数据目录。",
-  "rendererModeDisableWarningTitle": "关闭软件渲染？",
-  "rendererModeDisableWarningMessage": "非 Intel 和 AMD 的 CPU 可能会在 GPU 渲染时黑屏。你仍可继续关闭软件渲染，但建议先保存下面的恢复命令。",
-  "rendererModeDetectedCpu": "当前检测到的 CPU：{cpu}",
+  "rendererModeWhitelistHint": "当前设备建议保留软件渲染，以获得更稳定的显示效果。",
+  "rendererModeHardwareRiskHint": "下次启动将使用硬件渲染。如遇界面无法正常显示，可使用下面的命令恢复。",
+  "rendererModeDisableWarningTitle": "确认关闭软件渲染",
+  "rendererModeDisableWarningMessage": "当前设备关闭软件渲染后，应用可能无法正常显示。建议保留软件渲染，以获得更稳定的显示效果。",
+  "rendererModeDetectedCpu": "当前设备处理器：{cpu}",
   "@rendererModeDetectedCpu": {
     "placeholders": {
       "cpu": {}
     }
   },
-  "rendererModeDisableBlackScreenHint": "如果下次启动黑屏，请在终端删除应用数据目录后重新打开商店。",
+  "rendererModeDisableBlackScreenHint": "如果应用下次启动后无法正常显示，请在终端执行下面的命令，然后重新打开应用。",
   "rendererModeDataDirectoryLabel": "数据目录",
   "rendererModeDeleteCommandLabel": "删除命令",
-  "rendererModeSaveCommandHint": "建议提前复制或保存这条命令，万一下次黑屏就不用现找了。",
-  "rendererModeDisableConfirm": "仍然关闭",
-  "rendererModeSavedSoftware": "已保存，下次启动将使用软件渲染；当前会话保持不变。",
-  "rendererModeSavedHardware": "已保存，下次启动将尝试硬件渲染；当前会话保持不变。",
-  "rendererModeSaveFailed": "保存渲染模式失败，请稍后重试。",
+  "rendererModeSaveCommandHint": "建议先复制并保存此命令，以便应用无法正常显示时进行恢复。",
+  "rendererModeDisableConfirm": "继续关闭",
+  "rendererModeSavedSoftware": "已切换为软件渲染，将在下次启动时生效。",
+  "rendererModeSavedHardware": "已切换为硬件渲染，将在下次启动时生效。",
+  "rendererModeSaveFailed": "保存渲染设置失败，请稍后重试。",
   "showBaseServices": "显示基础运行服务",
   "showBaseServicesDesc": "在已安装列表中显示底层基础运行服务",
   "cleanDeprecatedServices": "清理废弃基础服务",
@@ -278,7 +278,6 @@
   "commandCopied": "命令已复制到剪贴板，请粘贴到终端中执行",
   "copy": "复制",
   "copyErrorMessage": "复制错误信息",
-  "copied": "已复制：{value}",
   "skipCheck": "跳过检测",
   "loadFailed": "加载失败",
   "shortcutCreated": "快捷方式已创建",
@@ -685,7 +684,6 @@
       }
     }
   },
-  "shortcutCreated": "快捷方式已创建",
   "shortcutCreatedWithPath": "快捷方式已创建: {path}",
   "@shortcutCreatedWithPath": {
     "placeholders": {

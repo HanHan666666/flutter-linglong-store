@@ -75,7 +75,9 @@ void main() {
               '${tempDirectory.path}/renderer_preferences.ini',
           dataDirectoryPathOverride: tempDirectory.path,
         );
-        await rendererService.savePreferredMode(LinuxRendererPreference.hardware);
+        await rendererService.savePreferredMode(
+          LinuxRendererPreference.hardware,
+        );
 
         SharedPreferences.setMockInitialValues({
           'linglong-store-language': 'en',

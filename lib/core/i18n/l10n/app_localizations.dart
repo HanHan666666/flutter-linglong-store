@@ -701,85 +701,85 @@ abstract class AppLocalizations {
   /// No description provided for @rendererModeDetectFailed.
   ///
   /// In zh, this message translates to:
-  /// **'无法读取当前渲染状态，仍可保存为下次启动偏好。'**
+  /// **'无法获取当前渲染状态，但仍可保存下次启动时使用的渲染方式。'**
   String get rendererModeDetectFailed;
 
   /// No description provided for @rendererModeCurrentStatus.
   ///
   /// In zh, this message translates to:
-  /// **'当前：{mode}（{reason}）'**
+  /// **'当前使用{mode}。{reason}'**
   String rendererModeCurrentStatus(Object mode, Object reason);
 
   /// No description provided for @rendererModeReasonEnvironment.
   ///
   /// In zh, this message translates to:
-  /// **'由环境变量 {value} 控制'**
+  /// **'当前渲染模式由环境变量 {value} 控制。'**
   String rendererModeReasonEnvironment(Object value);
 
   /// No description provided for @rendererModeReasonUserPreference.
   ///
   /// In zh, this message translates to:
-  /// **'按你的设置启动'**
+  /// **'当前已按保存的设置生效。'**
   String get rendererModeReasonUserPreference;
 
   /// No description provided for @rendererModeReasonCpuFallback.
   ///
   /// In zh, this message translates to:
-  /// **'检测到非 Intel / AMD CPU，自动回退'**
+  /// **'为提高兼容性，当前设备默认使用软件渲染。'**
   String get rendererModeReasonCpuFallback;
 
   /// No description provided for @rendererModeReasonDefault.
   ///
   /// In zh, this message translates to:
-  /// **'白名单 CPU 默认硬件渲染'**
+  /// **'当前设备默认使用硬件渲染。'**
   String get rendererModeReasonDefault;
 
   /// No description provided for @rendererModeEnvLocked.
   ///
   /// In zh, this message translates to:
-  /// **'检测到外部环境变量 {value}，当前会话与下次启动都会以它为准，设置开关已锁定。'**
+  /// **'检测到环境变量 {value}。当前渲染模式由系统环境控制，无法在这里修改。'**
   String rendererModeEnvLocked(Object value);
 
   /// No description provided for @rendererModeNextLaunchStatus.
   ///
   /// In zh, this message translates to:
-  /// **'下次启动：{mode}'**
+  /// **'下次启动时将使用{mode}。'**
   String rendererModeNextLaunchStatus(Object mode);
 
   /// No description provided for @rendererModeWhitelistHint.
   ///
   /// In zh, this message translates to:
-  /// **'当前 CPU 不在 Intel / AMD 白名单内，建议保留软件渲染以避免黑屏。'**
+  /// **'当前设备建议保留软件渲染，以获得更稳定的显示效果。'**
   String get rendererModeWhitelistHint;
 
   /// No description provided for @rendererModeHardwareRiskHint.
   ///
   /// In zh, this message translates to:
-  /// **'你已选择下次启动尝试硬件渲染；如果遇到黑屏，请按下面命令删除数据目录。'**
+  /// **'下次启动将使用硬件渲染。如遇界面无法正常显示，可使用下面的命令恢复。'**
   String get rendererModeHardwareRiskHint;
 
   /// No description provided for @rendererModeDisableWarningTitle.
   ///
   /// In zh, this message translates to:
-  /// **'关闭软件渲染？'**
+  /// **'确认关闭软件渲染'**
   String get rendererModeDisableWarningTitle;
 
   /// No description provided for @rendererModeDisableWarningMessage.
   ///
   /// In zh, this message translates to:
-  /// **'非 Intel 和 AMD 的 CPU 可能会在 GPU 渲染时黑屏。你仍可继续关闭软件渲染，但建议先保存下面的恢复命令。'**
+  /// **'当前设备关闭软件渲染后，应用可能无法正常显示。建议保留软件渲染，以获得更稳定的显示效果。'**
   String get rendererModeDisableWarningMessage;
 
   /// No description provided for @rendererModeDetectedCpu.
   ///
   /// In zh, this message translates to:
-  /// **'当前检测到的 CPU：{cpu}'**
+  /// **'当前设备处理器：{cpu}'**
   String rendererModeDetectedCpu(Object cpu);
 
   /// No description provided for @rendererModeDisableBlackScreenHint.
   ///
   /// In zh, this message translates to:
-  /// **'如果下次启动黑屏，请在终端删除应用数据目录后重新打开商店。'**
+  /// **'如果应用下次启动后无法正常显示，请在终端执行下面的命令，然后重新打开应用。'**
   String get rendererModeDisableBlackScreenHint;
 
   /// No description provided for @rendererModeDataDirectoryLabel.
@@ -797,31 +797,31 @@ abstract class AppLocalizations {
   /// No description provided for @rendererModeSaveCommandHint.
   ///
   /// In zh, this message translates to:
-  /// **'建议提前复制或保存这条命令，万一下次黑屏就不用现找了。'**
+  /// **'建议先复制并保存此命令，以便应用无法正常显示时进行恢复。'**
   String get rendererModeSaveCommandHint;
 
   /// No description provided for @rendererModeDisableConfirm.
   ///
   /// In zh, this message translates to:
-  /// **'仍然关闭'**
+  /// **'继续关闭'**
   String get rendererModeDisableConfirm;
 
   /// No description provided for @rendererModeSavedSoftware.
   ///
   /// In zh, this message translates to:
-  /// **'已保存，下次启动将使用软件渲染；当前会话保持不变。'**
+  /// **'已切换为软件渲染，将在下次启动时生效。'**
   String get rendererModeSavedSoftware;
 
   /// No description provided for @rendererModeSavedHardware.
   ///
   /// In zh, this message translates to:
-  /// **'已保存，下次启动将尝试硬件渲染；当前会话保持不变。'**
+  /// **'已切换为硬件渲染，将在下次启动时生效。'**
   String get rendererModeSavedHardware;
 
   /// No description provided for @rendererModeSaveFailed.
   ///
   /// In zh, this message translates to:
-  /// **'保存渲染模式失败，请稍后重试。'**
+  /// **'保存渲染设置失败，请稍后重试。'**
   String get rendererModeSaveFailed;
 
   /// No description provided for @showBaseServices.

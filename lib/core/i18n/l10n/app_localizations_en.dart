@@ -325,63 +325,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rendererModeDetectFailed =>
-      'Couldn\'t read the current renderer state, but you can still save a preference for the next launch.';
+      'The current rendering state couldn\'t be read, but you can still save the setting for the next launch.';
 
   @override
   String rendererModeCurrentStatus(Object mode, Object reason) {
-    return 'Current: $mode ($reason)';
+    return 'Currently using $mode. $reason';
   }
 
   @override
   String rendererModeReasonEnvironment(Object value) {
-    return 'controlled by environment variable $value';
+    return 'Rendering is controlled by the environment variable $value.';
   }
 
   @override
   String get rendererModeReasonUserPreference =>
-      'started from your saved preference';
+      'The saved setting is currently in effect.';
 
   @override
   String get rendererModeReasonCpuFallback =>
-      'auto-fallback on a non-Intel/AMD CPU';
+      'Software rendering is enabled by default on this device for better compatibility.';
 
   @override
   String get rendererModeReasonDefault =>
-      'whitelisted CPU using default hardware rendering';
+      'Hardware rendering is enabled by default on this device.';
 
   @override
   String rendererModeEnvLocked(Object value) {
-    return 'Detected external environment variable $value. This session and the next launch will both follow it, so the switch is locked.';
+    return 'The environment variable $value was detected. Rendering is controlled by the system environment and can\'t be changed here.';
   }
 
   @override
   String rendererModeNextLaunchStatus(Object mode) {
-    return 'Next launch: $mode';
+    return 'On the next launch, the app will use $mode.';
   }
 
   @override
   String get rendererModeWhitelistHint =>
-      'This CPU is not in the Intel/AMD whitelist. Keeping software rendering is recommended to avoid black screens.';
+      'Software rendering is recommended on this device for more stable display output.';
 
   @override
   String get rendererModeHardwareRiskHint =>
-      'The next launch will try hardware rendering. If you hit a black screen, use the command below to delete the data directory.';
+      'Hardware rendering will be used on the next launch. If the interface does not display correctly, use the command below to recover.';
 
   @override
-  String get rendererModeDisableWarningTitle => 'Turn off software rendering?';
+  String get rendererModeDisableWarningTitle =>
+      'Confirm turning off software rendering';
 
   @override
   String get rendererModeDisableWarningMessage =>
-      'Non-Intel and non-AMD CPUs may fail during GPU rendering and show a black screen. You can still continue, but please save the recovery command below first.';
+      'If software rendering is turned off on this device, the app may fail to display correctly. Keeping software rendering enabled is recommended for better stability.';
 
   @override
   String rendererModeDetectedCpu(Object cpu) {
-    return 'Detected CPU: $cpu';
+    return 'Detected processor: $cpu';
   }
 
   @override
   String get rendererModeDisableBlackScreenHint =>
-      'If the next launch shows a black screen, delete the app data directory in a terminal and reopen the store.';
+      'If the app does not display correctly on the next launch, run the command below in a terminal and then reopen the app.';
 
   @override
   String get rendererModeDataDirectoryLabel => 'Data directory';
@@ -391,22 +392,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rendererModeSaveCommandHint =>
-      'Copy or save this command now so you have it ready if the next launch goes black.';
+      'Copy and save this command now so you can recover the app if it no longer displays correctly.';
 
   @override
-  String get rendererModeDisableConfirm => 'Turn off anyway';
+  String get rendererModeDisableConfirm => 'Continue';
 
   @override
   String get rendererModeSavedSoftware =>
-      'Saved. Software rendering will be used on the next launch; the current session stays unchanged.';
+      'Software rendering has been enabled for the next launch.';
 
   @override
   String get rendererModeSavedHardware =>
-      'Saved. Hardware rendering will be tried on the next launch; the current session stays unchanged.';
+      'Hardware rendering has been enabled for the next launch.';
 
   @override
   String get rendererModeSaveFailed =>
-      'Failed to save the renderer preference. Please try again.';
+      'Couldn\'t save the rendering setting. Please try again.';
 
   @override
   String get showBaseServices => 'Show base runtime services';

@@ -285,8 +285,7 @@ class LinuxRendererService {
 
     final currentDataDirectoryPath =
         AppDataDirectoryMigration.resolveCurrentDataDirectoryPath();
-    if (currentDataDirectoryPath == null ||
-        currentDataDirectoryPath.isEmpty) {
+    if (currentDataDirectoryPath == null || currentDataDirectoryPath.isEmpty) {
       return null;
     }
 

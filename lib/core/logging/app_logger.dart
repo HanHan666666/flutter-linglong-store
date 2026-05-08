@@ -2,9 +2,7 @@ import 'dart:io';
 
 import 'package:logger/logger.dart';
 
-/// 日志文件相对路径（相对于 $HOME），与反馈对话框上传路径保持一致
-const _kLogFileRelative =
-    '.local/share/com.dongpl.linglong-store.v2/logs/linglong-store.log';
+import '../storage/app_data_directory_migration.dart';
 
 /// 日志文件最大容量 10 MB，超出后滚动轮转
 const _kMaxFileSize = 10 * 1024 * 1024;
@@ -22,7 +20,7 @@ class AppLogger {
 
   /// 初始化日志
   static Future<void> init() async {
-    final home = Platform.environment['HOME'] ?? '';
+    final logFilePath = AppDataDirectoryMigration.resolveCurrentLogFilePath();
 
     _logger = Logger(
       printer: PrettyPrinter(
@@ -35,9 +33,9 @@ class AppLogger {
       ),
       output: _MultiOutput([
         ConsoleOutput(),
-        if (home.isNotEmpty)
+        if (logFilePath != null)
           _RollingFileOutput(
-            filePath: '$home/$_kLogFileRelative',
+            filePath: logFilePath,
             maxFileSize: _kMaxFileSize,
             maxHistoryFiles: _kMaxHistoryFiles,
           ),
@@ -56,7 +54,11 @@ class AppLogger {
   }
 
   /// 警告日志
-  static void warning(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+  static void warning(
+    dynamic message, [
+    dynamic error,
+    StackTrace? stackTrace,
+  ]) {
     _logger.w(message, error: error, stackTrace: stackTrace);
   }
 
@@ -161,7 +163,7 @@ class _RollingFileOutput extends LogOutput {
     _sink?.close();
 
     // 删除最老的历史文件
-    final oldest = File('$filePath.${maxHistoryFiles}');
+    final oldest = File('$filePath.$maxHistoryFiles');
     if (oldest.existsSync()) {
       oldest.deleteSync();
     }

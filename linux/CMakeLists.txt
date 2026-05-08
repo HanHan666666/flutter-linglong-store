@@ -6,7 +6,7 @@ project(linglong_store LANGUAGES CXX)
 set(BINARY_NAME "linglong_store")
 
 # The unique GTK application identifier for this application.
-set(APPLICATION_ID "org.linglong-store.LinyapsManager")
+set(APPLICATION_ID "com.dongpl.linglong-store.v2")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.

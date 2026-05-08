@@ -11,11 +11,15 @@ import 'core/logging/app_logger.dart';
 import 'core/platform/single_instance.dart';
 import 'core/platform/window_service.dart';
 import 'core/config/app_config.dart';
+import 'core/storage/app_data_directory_migration.dart';
 import 'core/storage/cache_service.dart';
 import 'core/storage/preferences_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 先迁移历史数据目录，确保日志、SharedPreferences 与 Hive 都落到新目录。
+  await AppDataDirectoryMigration.migrateForCurrentUser();
 
   // 应用图片缓存限额（Flutter 默认 100MB/1000张，压缩到 64MB/200张）
   PaintingBinding.instance.imageCache.maximumSizeBytes =

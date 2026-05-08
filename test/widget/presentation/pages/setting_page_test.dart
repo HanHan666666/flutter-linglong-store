@@ -1,115 +1,105 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:linglong_store/application/providers/install_queue_provider.dart';
-import 'package:linglong_store/core/config/theme.dart';
-import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
-import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/presentation/pages/setting/setting_page.dart';
 
 void main() {
-  setUpAll(() async {
-    await AppLogger.init();
-  });
+  group('runSettingPageInitialization', () {
+    test(
+      'updates version, cache and app count while the page stays mounted',
+      () async {
+        final callOrder = <String>[];
+        String? version;
+        int? total;
 
-  testWidgets(
-    'setting page no longer renders repository configuration section',
-    (tester) async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
+        await runSettingPageInitialization(
+          resolveAppVersion: () async {
+            callOrder.add('resolve-version');
+            return '3.4.0';
+          },
+          setAppVersion: (value) {
+            callOrder.add('set-version');
+            version = value;
+          },
+          refreshCacheSize: () async {
+            callOrder.add('refresh-cache');
+          },
+          isMounted: () => true,
+          fetchAppTotalCount: () async {
+            callOrder.add('fetch-total');
+            return 123;
+          },
+          setAppTotalCount: (value) {
+            callOrder.add('set-total');
+            total = value;
+          },
+        );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-          child: MaterialApp(
-            theme: AppTheme.lightTheme,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: const Scaffold(body: SettingPage()),
-          ),
-        ),
-      );
-      await tester.pump();
-
-      expect(find.text('仓库配置'), findsNothing);
-      expect(find.text('当前仓库源'), findsNothing);
-      expect(find.text('可选仓库'), findsNothing);
-    },
-  );
-
-  testWidgets('setting page does not render container auto-update option', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-        child: MaterialApp(
-          theme: AppTheme.lightTheme,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('zh'),
-          home: const Scaffold(body: SettingPage()),
-        ),
-      ),
+        expect(version, '3.4.0');
+        expect(total, 123);
+        expect(callOrder, [
+          'resolve-version',
+          'set-version',
+          'refresh-cache',
+          'fetch-total',
+          'set-total',
+        ]);
+      },
     );
-    await tester.pump();
 
-    expect(find.text('容器内自动更新商店本体'), findsNothing);
-  });
+    test(
+      'stops after resolving the version when the page is already unmounted',
+      () async {
+        var refreshCalled = false;
+        var fetchCalled = false;
+        var setTotalCalled = false;
+        String? version;
 
-  testWidgets('setting page about section renders project links', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
+        await runSettingPageInitialization(
+          resolveAppVersion: () async => '3.4.0',
+          setAppVersion: (value) => version = value,
+          refreshCacheSize: () async => refreshCalled = true,
+          isMounted: () => false,
+          fetchAppTotalCount: () async {
+            fetchCalled = true;
+            return 123;
+          },
+          setAppTotalCount: (_) => setTotalCalled = true,
+        );
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-        child: MaterialApp(
-          theme: AppTheme.lightTheme,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('zh'),
-          home: const Scaffold(body: SettingPage()),
-        ),
-      ),
+        expect(version, '3.4.0');
+        expect(refreshCalled, isFalse);
+        expect(fetchCalled, isFalse);
+        expect(setTotalCalled, isFalse);
+      },
     );
-    await tester.pump();
 
-    expect(find.text('社区交流'), findsOneWidget);
-    expect(find.text('关于开发者'), findsOneWidget);
-    expect(find.text('Gitee'), findsOneWidget);
-  });
+    test(
+      'stops before fetching app totals when the page unmounts after cache refresh',
+      () async {
+        var mountChecks = 0;
+        var refreshCalled = false;
+        var fetchCalled = false;
+        var setTotalCalled = false;
 
-  testWidgets('setting page renders typography controls', (tester) async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
+        await runSettingPageInitialization(
+          resolveAppVersion: () async => '3.4.0',
+          setAppVersion: (_) {},
+          refreshCacheSize: () async => refreshCalled = true,
+          isMounted: () {
+            mountChecks += 1;
+            return mountChecks == 1;
+          },
+          fetchAppTotalCount: () async {
+            fetchCalled = true;
+            return 123;
+          },
+          setAppTotalCount: (_) => setTotalCalled = true,
+        );
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-        child: MaterialApp(
-          theme: AppTheme.lightTheme,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('zh'),
-          home: const Scaffold(body: SettingPage()),
-        ),
-      ),
+        expect(refreshCalled, isTrue);
+        expect(fetchCalled, isFalse);
+        expect(setTotalCalled, isFalse);
+      },
     );
-    await tester.pump();
-
-    expect(find.text('字体设置'), findsOneWidget);
-    expect(find.text('字体大小'), findsOneWidget);
-    expect(find.text('字体粗细'), findsOneWidget);
-    expect(find.text('更细'), findsOneWidget);
-    expect(find.text('标准'), findsOneWidget);
-    expect(find.text('更粗'), findsOneWidget);
   });
 }

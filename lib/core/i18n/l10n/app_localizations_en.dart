@@ -312,6 +312,103 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check if a new version is available on each startup';
 
   @override
+  String get softwareRendering => 'Software rendering';
+
+  @override
+  String get softwareRenderingEnabled => 'Software rendering';
+
+  @override
+  String get hardwareRenderingEnabled => 'Hardware rendering';
+
+  @override
+  String get rendererModeDetecting => 'Detecting the current rendering state…';
+
+  @override
+  String get rendererModeDetectFailed =>
+      'Couldn\'t read the current renderer state, but you can still save a preference for the next launch.';
+
+  @override
+  String rendererModeCurrentStatus(Object mode, Object reason) {
+    return 'Current: $mode ($reason)';
+  }
+
+  @override
+  String rendererModeReasonEnvironment(Object value) {
+    return 'controlled by environment variable $value';
+  }
+
+  @override
+  String get rendererModeReasonUserPreference =>
+      'started from your saved preference';
+
+  @override
+  String get rendererModeReasonCpuFallback =>
+      'auto-fallback on a non-Intel/AMD CPU';
+
+  @override
+  String get rendererModeReasonDefault =>
+      'whitelisted CPU using default hardware rendering';
+
+  @override
+  String rendererModeEnvLocked(Object value) {
+    return 'Detected external environment variable $value. This session and the next launch will both follow it, so the switch is locked.';
+  }
+
+  @override
+  String rendererModeNextLaunchStatus(Object mode) {
+    return 'Next launch: $mode';
+  }
+
+  @override
+  String get rendererModeWhitelistHint =>
+      'This CPU is not in the Intel/AMD whitelist. Keeping software rendering is recommended to avoid black screens.';
+
+  @override
+  String get rendererModeHardwareRiskHint =>
+      'The next launch will try hardware rendering. If you hit a black screen, use the command below to delete the data directory.';
+
+  @override
+  String get rendererModeDisableWarningTitle => 'Turn off software rendering?';
+
+  @override
+  String get rendererModeDisableWarningMessage =>
+      'Non-Intel and non-AMD CPUs may fail during GPU rendering and show a black screen. You can still continue, but please save the recovery command below first.';
+
+  @override
+  String rendererModeDetectedCpu(Object cpu) {
+    return 'Detected CPU: $cpu';
+  }
+
+  @override
+  String get rendererModeDisableBlackScreenHint =>
+      'If the next launch shows a black screen, delete the app data directory in a terminal and reopen the store.';
+
+  @override
+  String get rendererModeDataDirectoryLabel => 'Data directory';
+
+  @override
+  String get rendererModeDeleteCommandLabel => 'Delete command';
+
+  @override
+  String get rendererModeSaveCommandHint =>
+      'Copy or save this command now so you have it ready if the next launch goes black.';
+
+  @override
+  String get rendererModeDisableConfirm => 'Turn off anyway';
+
+  @override
+  String get rendererModeSavedSoftware =>
+      'Saved. Software rendering will be used on the next launch; the current session stays unchanged.';
+
+  @override
+  String get rendererModeSavedHardware =>
+      'Saved. Hardware rendering will be tried on the next launch; the current session stays unchanged.';
+
+  @override
+  String get rendererModeSaveFailed =>
+      'Failed to save the renderer preference. Please try again.';
+
+  @override
   String get showBaseServices => 'Show base runtime services';
 
   @override

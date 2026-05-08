@@ -127,6 +127,57 @@
   "cacheSize": "Cache Size",
   "startupCheckUpdate": "Check for store updates at launch",
   "startupCheckUpdateDesc": "Check if a new version is available on each startup",
+  "softwareRendering": "Software rendering",
+  "softwareRenderingEnabled": "Software rendering",
+  "hardwareRenderingEnabled": "Hardware rendering",
+  "rendererModeDetecting": "Detecting the current rendering state…",
+  "rendererModeDetectFailed": "Couldn't read the current renderer state, but you can still save a preference for the next launch.",
+  "rendererModeCurrentStatus": "Current: {mode} ({reason})",
+  "@rendererModeCurrentStatus": {
+    "placeholders": {
+      "mode": {},
+      "reason": {}
+    }
+  },
+  "rendererModeReasonEnvironment": "controlled by environment variable {value}",
+  "@rendererModeReasonEnvironment": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "rendererModeReasonUserPreference": "started from your saved preference",
+  "rendererModeReasonCpuFallback": "auto-fallback on a non-Intel/AMD CPU",
+  "rendererModeReasonDefault": "whitelisted CPU using default hardware rendering",
+  "rendererModeEnvLocked": "Detected external environment variable {value}. This session and the next launch will both follow it, so the switch is locked.",
+  "@rendererModeEnvLocked": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "rendererModeNextLaunchStatus": "Next launch: {mode}",
+  "@rendererModeNextLaunchStatus": {
+    "placeholders": {
+      "mode": {}
+    }
+  },
+  "rendererModeWhitelistHint": "This CPU is not in the Intel/AMD whitelist. Keeping software rendering is recommended to avoid black screens.",
+  "rendererModeHardwareRiskHint": "The next launch will try hardware rendering. If you hit a black screen, use the command below to delete the data directory.",
+  "rendererModeDisableWarningTitle": "Turn off software rendering?",
+  "rendererModeDisableWarningMessage": "Non-Intel and non-AMD CPUs may fail during GPU rendering and show a black screen. You can still continue, but please save the recovery command below first.",
+  "rendererModeDetectedCpu": "Detected CPU: {cpu}",
+  "@rendererModeDetectedCpu": {
+    "placeholders": {
+      "cpu": {}
+    }
+  },
+  "rendererModeDisableBlackScreenHint": "If the next launch shows a black screen, delete the app data directory in a terminal and reopen the store.",
+  "rendererModeDataDirectoryLabel": "Data directory",
+  "rendererModeDeleteCommandLabel": "Delete command",
+  "rendererModeSaveCommandHint": "Copy or save this command now so you have it ready if the next launch goes black.",
+  "rendererModeDisableConfirm": "Turn off anyway",
+  "rendererModeSavedSoftware": "Saved. Software rendering will be used on the next launch; the current session stays unchanged.",
+  "rendererModeSavedHardware": "Saved. Hardware rendering will be tried on the next launch; the current session stays unchanged.",
+  "rendererModeSaveFailed": "Failed to save the renderer preference. Please try again.",
   "showBaseServices": "Show base runtime services",
   "showBaseServicesDesc": "Show underlying base runtime services in the installed list",
   "cleanDeprecatedServices": "Clean up deprecated base services",

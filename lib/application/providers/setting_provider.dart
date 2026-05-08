@@ -9,7 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/di/providers.dart'
     show linglongCliRepositoryProvider, sharedPreferencesProvider;
 import '../../core/logging/app_logger.dart';
+import '../../core/platform/linux_renderer_service.dart';
 import 'installed_apps_provider.dart';
+import 'linux_renderer_provider.dart';
 
 part 'setting_provider.freezed.dart';
 part 'setting_provider.g.dart';
@@ -32,6 +34,10 @@ sealed class SettingState with _$SettingState {
 
     /// 已安装列表中显示基础运行服务
     @Default(false) bool showBaseService,
+
+    /// Linux 渲染模式偏好，仅影响下次启动时的渲染决策。
+    @Default(LinuxRendererPreference.auto)
+    LinuxRendererPreference rendererPreference,
 
     /// 是否正在清理基础服务
     @Default(false) bool isPruningBaseService,
@@ -67,6 +73,15 @@ class Setting extends _$Setting {
       if (showBase != null) {
         restoredState = restoredState.copyWith(showBaseService: showBase);
       }
+
+      // Linux 渲染模式属于启动前配置，单独使用配置文件保存，
+      // 这样 Linux runner 才能在创建 Flutter 引擎前读取到用户偏好。
+      final rendererPreference = ref
+          .read(linuxRendererServiceProvider)
+          .loadPersistedPreferenceSync();
+      restoredState = restoredState.copyWith(
+        rendererPreference: rendererPreference,
+      );
 
       AppLogger.info('Settings loaded');
       return restoredState;
@@ -150,6 +165,30 @@ class Setting extends _$Setting {
     await _prefs.setBool('setting_show_base_service', value);
     // 切换后刷新已安装列表
     await ref.read(installedAppsProvider.notifier).refresh();
+  }
+
+  /// 设置 Linux 软件/硬件渲染偏好。
+  ///
+  /// 该偏好只会在下次启动时由 Linux runner 读取并生效，
+  /// 当前会话的实际渲染模式不在这里直接切换。
+  Future<void> setRendererPreference(LinuxRendererPreference preference) async {
+    final previousPreference = state.rendererPreference;
+    state = state.copyWith(rendererPreference: preference);
+
+    try {
+      await ref
+          .read(linuxRendererServiceProvider)
+          .savePreferredMode(preference);
+      AppLogger.info('Renderer preference updated: ${preference.value}');
+    } catch (error, stackTrace) {
+      state = state.copyWith(rendererPreference: previousPreference);
+      AppLogger.error(
+        'Failed to persist renderer preference',
+        error,
+        stackTrace,
+      );
+      rethrow;
+    }
   }
 
   /// 清理废弃基础服务

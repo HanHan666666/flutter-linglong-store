@@ -26,7 +26,12 @@ abstract class AppRepository {
   });
 
   /// 获取应用详情（含截图）
-  Future<AppDetail> getAppDetail(String appId, {String? arch});
+  Future<AppDetail> getAppDetail(
+    String appId, {
+    String? arch,
+    String? repoName,
+    String? module,
+  });
 
   /// 获取应用评论列表
   Future<List<AppComment>> getAppComments(String appId);

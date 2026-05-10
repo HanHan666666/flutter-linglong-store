@@ -185,5 +185,66 @@ void main() {
               as List<AppDetailSearchBO>;
       expect(captured.single.arch, equals('aarch64'));
     });
+
+    test('loadDetail 会透传初始应用上下文中的 repoName 和 module', () async {
+      when(mockApiService.getAppDetail(any)).thenAnswer(
+        (_) async => HttpResponse(
+          const AppDetailResponse(
+            code: 200,
+            data: {
+              'org.deepin.album': [
+                {
+                  'appId': 'org.deepin.album',
+                  'zhName': '相册',
+                  'version': '6.0.49.1',
+                  'arch': 'aarch64',
+                  'repoName': 'stable',
+                  'module': 'runtime',
+                },
+              ],
+            },
+          ),
+          Response(requestOptions: RequestOptions(path: '/app/getAppDetail')),
+        ),
+      );
+      when(mockApiService.getSearchAppVersionList(any)).thenAnswer(
+        (_) async => HttpResponse(
+          const VersionListResponse(code: 200, data: []),
+          Response(
+            requestOptions: RequestOptions(
+              path: '/visit/getSearchAppVersionList',
+            ),
+          ),
+        ),
+      );
+      when(mockApiService.getAppCommentList(any)).thenAnswer(
+        (_) async => HttpResponse(
+          const AppCommentListResponse(code: 200, data: []),
+          Response(
+            requestOptions: RequestOptions(path: '/app/getAppCommentList'),
+          ),
+        ),
+      );
+
+      await container
+          .read(appDetailProvider('org.deepin.album').notifier)
+          .loadDetail(
+            const InstalledApp(
+              appId: 'org.deepin.album',
+              name: '相册',
+              version: '6.0.49.1',
+              arch: 'aarch64',
+              module: 'runtime',
+              repoName: 'stable',
+            ),
+          );
+
+      final captured =
+          verify(mockApiService.getAppDetail(captureAny)).captured.single
+              as List<AppDetailSearchBO>;
+      expect(captured.single.arch, equals('aarch64'));
+      expect(captured.single.module, equals('runtime'));
+      expect(captured.single.repoName, equals('stable'));
+    });
   });
 }

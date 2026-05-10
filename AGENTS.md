@@ -280,6 +280,7 @@ Semantics(
 测试文件位于 `test/unit/core/accessibility/a11y_semantics_test.dart`。
 
 ## 变更记录
+- 2026-05-10：应用详情契约必须与列表项身份对齐；列表页进入详情页时必须原样透传 `appId + arch + repoName + module`，后端 `/visit/getAppDetails` 与 `/app/getAppDetail` 在这些字段已知时必须精确匹配，仅在字段缺失时才允许回退到 `runtime/binary` 候选；详情接口禁止再额外叠加列表之外的 `app_level` 可见性过滤。
 - 2026-04-29：发行版特殊提示/特殊适配统一走 `LinuxDistributionResolver -> LinglongEnvCheckResult.distribution -> InstallMessages guidance scenario` 链路；启动期环境安装提示由 `LinglongEnvDialog` 按发行版场景渲染，安装失败提醒统一在 `InstallQueue.markFailed()` 收口。新增发行版规则时，禁止重新扩散 `isUos` / `isDeepin` 一类布尔判断。
 - 2026-04-21：`nightly.yml` 不再只做 `amd64`；必须同时构建 `amd64 + arm64`，其中 `arm64` 优先走 `ubuntu-24.04-arm` 原生 runner，失败/取消时回退到 QEMU；Nightly 的签名、Release notes、GitHub prerelease 与 `linglong-store-nightly-bin` AUR 都必须按双架构资产（`x86_64 + aarch64`）统一处理，禁止继续保留 amd64-only 假设。
 - 2026-03-17：应用列表卡片状态统一迁移到页面级索引 `application_card_state_provider.dart`，由公共 `AppCard` 渲染；列表页禁止再各自复制 `_AppCard` 并手写“安装/更新/打开”判断。

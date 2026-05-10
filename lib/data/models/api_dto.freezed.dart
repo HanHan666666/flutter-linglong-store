@@ -290,7 +290,7 @@ as String?,
 /// @nodoc
 mixin _$AppDetailsBO {
 
-@JsonKey(name: 'appId') String get appId; String? get name; String? get version; String? get channel; String? get module; String? get arch;
+@JsonKey(name: 'appId') String get appId; String? get name; String? get version; String? get channel; String? get module;@JsonKey(name: 'repoName') String? get repoName; String? get arch;
 /// Create a copy of AppDetailsBO
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -303,16 +303,16 @@ $AppDetailsBOCopyWith<AppDetailsBO> get copyWith => _$AppDetailsBOCopyWithImpl<A
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppDetailsBO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.name, name) || other.name == name)&&(identical(other.version, version) || other.version == version)&&(identical(other.channel, channel) || other.channel == channel)&&(identical(other.module, module) || other.module == module)&&(identical(other.arch, arch) || other.arch == arch));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppDetailsBO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.name, name) || other.name == name)&&(identical(other.version, version) || other.version == version)&&(identical(other.channel, channel) || other.channel == channel)&&(identical(other.module, module) || other.module == module)&&(identical(other.repoName, repoName) || other.repoName == repoName)&&(identical(other.arch, arch) || other.arch == arch));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appId,name,version,channel,module,arch);
+int get hashCode => Object.hash(runtimeType,appId,name,version,channel,module,repoName,arch);
 
 @override
 String toString() {
-  return 'AppDetailsBO(appId: $appId, name: $name, version: $version, channel: $channel, module: $module, arch: $arch)';
+  return 'AppDetailsBO(appId: $appId, name: $name, version: $version, channel: $channel, module: $module, repoName: $repoName, arch: $arch)';
 }
 
 
@@ -323,7 +323,7 @@ abstract mixin class $AppDetailsBOCopyWith<$Res>  {
   factory $AppDetailsBOCopyWith(AppDetailsBO value, $Res Function(AppDetailsBO) _then) = _$AppDetailsBOCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'appId') String appId, String? name, String? version, String? channel, String? module, String? arch
+@JsonKey(name: 'appId') String appId, String? name, String? version, String? channel, String? module,@JsonKey(name: 'repoName') String? repoName, String? arch
 });
 
 
@@ -340,13 +340,14 @@ class _$AppDetailsBOCopyWithImpl<$Res>
 
 /// Create a copy of AppDetailsBO
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? name = freezed,Object? version = freezed,Object? channel = freezed,Object? module = freezed,Object? arch = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? name = freezed,Object? version = freezed,Object? channel = freezed,Object? module = freezed,Object? repoName = freezed,Object? arch = freezed,}) {
   return _then(_self.copyWith(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,version: freezed == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as String?,channel: freezed == channel ? _self.channel : channel // ignore: cast_nullable_to_non_nullable
 as String?,module: freezed == module ? _self.module : module // ignore: cast_nullable_to_non_nullable
+as String?,repoName: freezed == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
 as String?,arch: freezed == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -430,10 +431,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId,  String? name,  String? version,  String? channel,  String? module,  String? arch)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId,  String? name,  String? version,  String? channel,  String? module, @JsonKey(name: 'repoName')  String? repoName,  String? arch)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppDetailsBO() when $default != null:
-return $default(_that.appId,_that.name,_that.version,_that.channel,_that.module,_that.arch);case _:
+return $default(_that.appId,_that.name,_that.version,_that.channel,_that.module,_that.repoName,_that.arch);case _:
   return orElse();
 
 }
@@ -451,10 +452,10 @@ return $default(_that.appId,_that.name,_that.version,_that.channel,_that.module,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId,  String? name,  String? version,  String? channel,  String? module,  String? arch)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId,  String? name,  String? version,  String? channel,  String? module, @JsonKey(name: 'repoName')  String? repoName,  String? arch)  $default,) {final _that = this;
 switch (_that) {
 case _AppDetailsBO():
-return $default(_that.appId,_that.name,_that.version,_that.channel,_that.module,_that.arch);}
+return $default(_that.appId,_that.name,_that.version,_that.channel,_that.module,_that.repoName,_that.arch);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -468,10 +469,10 @@ return $default(_that.appId,_that.name,_that.version,_that.channel,_that.module,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'appId')  String appId,  String? name,  String? version,  String? channel,  String? module,  String? arch)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'appId')  String appId,  String? name,  String? version,  String? channel,  String? module, @JsonKey(name: 'repoName')  String? repoName,  String? arch)?  $default,) {final _that = this;
 switch (_that) {
 case _AppDetailsBO() when $default != null:
-return $default(_that.appId,_that.name,_that.version,_that.channel,_that.module,_that.arch);case _:
+return $default(_that.appId,_that.name,_that.version,_that.channel,_that.module,_that.repoName,_that.arch);case _:
   return null;
 
 }
@@ -483,7 +484,7 @@ return $default(_that.appId,_that.name,_that.version,_that.channel,_that.module,
 @JsonSerializable()
 
 class _AppDetailsBO implements AppDetailsBO {
-  const _AppDetailsBO({@JsonKey(name: 'appId') required this.appId, this.name, this.version, this.channel, this.module, this.arch});
+  const _AppDetailsBO({@JsonKey(name: 'appId') required this.appId, this.name, this.version, this.channel, this.module, @JsonKey(name: 'repoName') this.repoName, this.arch});
   factory _AppDetailsBO.fromJson(Map<String, dynamic> json) => _$AppDetailsBOFromJson(json);
 
 @override@JsonKey(name: 'appId') final  String appId;
@@ -491,6 +492,7 @@ class _AppDetailsBO implements AppDetailsBO {
 @override final  String? version;
 @override final  String? channel;
 @override final  String? module;
+@override@JsonKey(name: 'repoName') final  String? repoName;
 @override final  String? arch;
 
 /// Create a copy of AppDetailsBO
@@ -506,16 +508,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppDetailsBO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.name, name) || other.name == name)&&(identical(other.version, version) || other.version == version)&&(identical(other.channel, channel) || other.channel == channel)&&(identical(other.module, module) || other.module == module)&&(identical(other.arch, arch) || other.arch == arch));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppDetailsBO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.name, name) || other.name == name)&&(identical(other.version, version) || other.version == version)&&(identical(other.channel, channel) || other.channel == channel)&&(identical(other.module, module) || other.module == module)&&(identical(other.repoName, repoName) || other.repoName == repoName)&&(identical(other.arch, arch) || other.arch == arch));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appId,name,version,channel,module,arch);
+int get hashCode => Object.hash(runtimeType,appId,name,version,channel,module,repoName,arch);
 
 @override
 String toString() {
-  return 'AppDetailsBO(appId: $appId, name: $name, version: $version, channel: $channel, module: $module, arch: $arch)';
+  return 'AppDetailsBO(appId: $appId, name: $name, version: $version, channel: $channel, module: $module, repoName: $repoName, arch: $arch)';
 }
 
 
@@ -526,7 +528,7 @@ abstract mixin class _$AppDetailsBOCopyWith<$Res> implements $AppDetailsBOCopyWi
   factory _$AppDetailsBOCopyWith(_AppDetailsBO value, $Res Function(_AppDetailsBO) _then) = __$AppDetailsBOCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'appId') String appId, String? name, String? version, String? channel, String? module, String? arch
+@JsonKey(name: 'appId') String appId, String? name, String? version, String? channel, String? module,@JsonKey(name: 'repoName') String? repoName, String? arch
 });
 
 
@@ -543,13 +545,14 @@ class __$AppDetailsBOCopyWithImpl<$Res>
 
 /// Create a copy of AppDetailsBO
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? appId = null,Object? name = freezed,Object? version = freezed,Object? channel = freezed,Object? module = freezed,Object? arch = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? appId = null,Object? name = freezed,Object? version = freezed,Object? channel = freezed,Object? module = freezed,Object? repoName = freezed,Object? arch = freezed,}) {
   return _then(_AppDetailsBO(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,version: freezed == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as String?,channel: freezed == channel ? _self.channel : channel // ignore: cast_nullable_to_non_nullable
 as String?,module: freezed == module ? _self.module : module // ignore: cast_nullable_to_non_nullable
+as String?,repoName: freezed == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
 as String?,arch: freezed == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -1101,7 +1104,7 @@ as List<CategoryDTO>,
 mixin _$AppDetailSearchBO {
 
  String get appId; String get arch;// /app/getAppDetail 会按语言精确过滤截图和标签，必须显式传入 lang。
- String? get lang;
+ String? get lang; String? get module;@JsonKey(name: 'repoName') String? get repoName;
 /// Create a copy of AppDetailSearchBO
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1114,16 +1117,16 @@ $AppDetailSearchBOCopyWith<AppDetailSearchBO> get copyWith => _$AppDetailSearchB
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppDetailSearchBO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.lang, lang) || other.lang == lang));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppDetailSearchBO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.lang, lang) || other.lang == lang)&&(identical(other.module, module) || other.module == module)&&(identical(other.repoName, repoName) || other.repoName == repoName));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appId,arch,lang);
+int get hashCode => Object.hash(runtimeType,appId,arch,lang,module,repoName);
 
 @override
 String toString() {
-  return 'AppDetailSearchBO(appId: $appId, arch: $arch, lang: $lang)';
+  return 'AppDetailSearchBO(appId: $appId, arch: $arch, lang: $lang, module: $module, repoName: $repoName)';
 }
 
 
@@ -1134,7 +1137,7 @@ abstract mixin class $AppDetailSearchBOCopyWith<$Res>  {
   factory $AppDetailSearchBOCopyWith(AppDetailSearchBO value, $Res Function(AppDetailSearchBO) _then) = _$AppDetailSearchBOCopyWithImpl;
 @useResult
 $Res call({
- String appId, String arch, String? lang
+ String appId, String arch, String? lang, String? module,@JsonKey(name: 'repoName') String? repoName
 });
 
 
@@ -1151,11 +1154,13 @@ class _$AppDetailSearchBOCopyWithImpl<$Res>
 
 /// Create a copy of AppDetailSearchBO
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? arch = null,Object? lang = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? arch = null,Object? lang = freezed,Object? module = freezed,Object? repoName = freezed,}) {
   return _then(_self.copyWith(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,arch: null == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
 as String,lang: freezed == lang ? _self.lang : lang // ignore: cast_nullable_to_non_nullable
+as String?,module: freezed == module ? _self.module : module // ignore: cast_nullable_to_non_nullable
+as String?,repoName: freezed == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -1238,10 +1243,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String appId,  String arch,  String? lang)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String appId,  String arch,  String? lang,  String? module, @JsonKey(name: 'repoName')  String? repoName)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppDetailSearchBO() when $default != null:
-return $default(_that.appId,_that.arch,_that.lang);case _:
+return $default(_that.appId,_that.arch,_that.lang,_that.module,_that.repoName);case _:
   return orElse();
 
 }
@@ -1259,10 +1264,10 @@ return $default(_that.appId,_that.arch,_that.lang);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String appId,  String arch,  String? lang)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String appId,  String arch,  String? lang,  String? module, @JsonKey(name: 'repoName')  String? repoName)  $default,) {final _that = this;
 switch (_that) {
 case _AppDetailSearchBO():
-return $default(_that.appId,_that.arch,_that.lang);}
+return $default(_that.appId,_that.arch,_that.lang,_that.module,_that.repoName);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -1276,10 +1281,10 @@ return $default(_that.appId,_that.arch,_that.lang);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String appId,  String arch,  String? lang)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String appId,  String arch,  String? lang,  String? module, @JsonKey(name: 'repoName')  String? repoName)?  $default,) {final _that = this;
 switch (_that) {
 case _AppDetailSearchBO() when $default != null:
-return $default(_that.appId,_that.arch,_that.lang);case _:
+return $default(_that.appId,_that.arch,_that.lang,_that.module,_that.repoName);case _:
   return null;
 
 }
@@ -1291,13 +1296,15 @@ return $default(_that.appId,_that.arch,_that.lang);case _:
 @JsonSerializable()
 
 class _AppDetailSearchBO implements AppDetailSearchBO {
-  const _AppDetailSearchBO({required this.appId, required this.arch, this.lang});
+  const _AppDetailSearchBO({required this.appId, required this.arch, this.lang, this.module, @JsonKey(name: 'repoName') this.repoName});
   factory _AppDetailSearchBO.fromJson(Map<String, dynamic> json) => _$AppDetailSearchBOFromJson(json);
 
 @override final  String appId;
 @override final  String arch;
 // /app/getAppDetail 会按语言精确过滤截图和标签，必须显式传入 lang。
 @override final  String? lang;
+@override final  String? module;
+@override@JsonKey(name: 'repoName') final  String? repoName;
 
 /// Create a copy of AppDetailSearchBO
 /// with the given fields replaced by the non-null parameter values.
@@ -1312,16 +1319,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppDetailSearchBO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.lang, lang) || other.lang == lang));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppDetailSearchBO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.lang, lang) || other.lang == lang)&&(identical(other.module, module) || other.module == module)&&(identical(other.repoName, repoName) || other.repoName == repoName));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appId,arch,lang);
+int get hashCode => Object.hash(runtimeType,appId,arch,lang,module,repoName);
 
 @override
 String toString() {
-  return 'AppDetailSearchBO(appId: $appId, arch: $arch, lang: $lang)';
+  return 'AppDetailSearchBO(appId: $appId, arch: $arch, lang: $lang, module: $module, repoName: $repoName)';
 }
 
 
@@ -1332,7 +1339,7 @@ abstract mixin class _$AppDetailSearchBOCopyWith<$Res> implements $AppDetailSear
   factory _$AppDetailSearchBOCopyWith(_AppDetailSearchBO value, $Res Function(_AppDetailSearchBO) _then) = __$AppDetailSearchBOCopyWithImpl;
 @override @useResult
 $Res call({
- String appId, String arch, String? lang
+ String appId, String arch, String? lang, String? module,@JsonKey(name: 'repoName') String? repoName
 });
 
 
@@ -1349,11 +1356,13 @@ class __$AppDetailSearchBOCopyWithImpl<$Res>
 
 /// Create a copy of AppDetailSearchBO
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? appId = null,Object? arch = null,Object? lang = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? appId = null,Object? arch = null,Object? lang = freezed,Object? module = freezed,Object? repoName = freezed,}) {
   return _then(_AppDetailSearchBO(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,arch: null == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
 as String,lang: freezed == lang ? _self.lang : lang // ignore: cast_nullable_to_non_nullable
+as String?,module: freezed == module ? _self.module : module // ignore: cast_nullable_to_non_nullable
+as String?,repoName: freezed == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -4912,7 +4921,7 @@ as String?,
 /// @nodoc
 mixin _$AppListItemDTO {
 
-@JsonKey(name: 'appId') String get appId;@JsonKey(readValue: _readAppName) String get appName;@JsonKey(readValue: _readAppVersion) String? get appVersion;@JsonKey(readValue: _readAppIcon) String? get appIcon;@JsonKey(readValue: _readAppDescription) String? get appDesc;@JsonKey(readValue: _readAppKind) String? get appKind;@JsonKey(readValue: _readDeveloperName) String? get developerName;@JsonKey(name: 'categoryName') String? get categoryName;@JsonKey(readValue: _readDownloadCount) int? get downloadTimes;@JsonKey(readValue: _readPackageSize) String? get packageSize; String? get arch;@JsonKey(name: 'createTime') String? get createTime;// 上架时间
+@JsonKey(name: 'appId') String get appId;@JsonKey(readValue: _readAppName) String get appName;@JsonKey(readValue: _readAppVersion) String? get appVersion;@JsonKey(readValue: _readAppIcon) String? get appIcon;@JsonKey(readValue: _readAppDescription) String? get appDesc;@JsonKey(readValue: _readAppKind) String? get appKind;@JsonKey(readValue: _readDeveloperName) String? get developerName;@JsonKey(name: 'categoryName') String? get categoryName;@JsonKey(readValue: _readDownloadCount) int? get downloadTimes;@JsonKey(readValue: _readPackageSize) String? get packageSize; String? get arch; String? get module;@JsonKey(name: 'repoName') String? get repoName;@JsonKey(name: 'createTime') String? get createTime;// 上架时间
 @JsonKey(name: 'last30DownloadCount') int? get last30DownloadCount;
 /// Create a copy of AppListItemDTO
 /// with the given fields replaced by the non-null parameter values.
@@ -4926,16 +4935,16 @@ $AppListItemDTOCopyWith<AppListItemDTO> get copyWith => _$AppListItemDTOCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppListItemDTO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.appName, appName) || other.appName == appName)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&(identical(other.appIcon, appIcon) || other.appIcon == appIcon)&&(identical(other.appDesc, appDesc) || other.appDesc == appDesc)&&(identical(other.appKind, appKind) || other.appKind == appKind)&&(identical(other.developerName, developerName) || other.developerName == developerName)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.downloadTimes, downloadTimes) || other.downloadTimes == downloadTimes)&&(identical(other.packageSize, packageSize) || other.packageSize == packageSize)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.createTime, createTime) || other.createTime == createTime)&&(identical(other.last30DownloadCount, last30DownloadCount) || other.last30DownloadCount == last30DownloadCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppListItemDTO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.appName, appName) || other.appName == appName)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&(identical(other.appIcon, appIcon) || other.appIcon == appIcon)&&(identical(other.appDesc, appDesc) || other.appDesc == appDesc)&&(identical(other.appKind, appKind) || other.appKind == appKind)&&(identical(other.developerName, developerName) || other.developerName == developerName)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.downloadTimes, downloadTimes) || other.downloadTimes == downloadTimes)&&(identical(other.packageSize, packageSize) || other.packageSize == packageSize)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.module, module) || other.module == module)&&(identical(other.repoName, repoName) || other.repoName == repoName)&&(identical(other.createTime, createTime) || other.createTime == createTime)&&(identical(other.last30DownloadCount, last30DownloadCount) || other.last30DownloadCount == last30DownloadCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appId,appName,appVersion,appIcon,appDesc,appKind,developerName,categoryName,downloadTimes,packageSize,arch,createTime,last30DownloadCount);
+int get hashCode => Object.hash(runtimeType,appId,appName,appVersion,appIcon,appDesc,appKind,developerName,categoryName,downloadTimes,packageSize,arch,module,repoName,createTime,last30DownloadCount);
 
 @override
 String toString() {
-  return 'AppListItemDTO(appId: $appId, appName: $appName, appVersion: $appVersion, appIcon: $appIcon, appDesc: $appDesc, appKind: $appKind, developerName: $developerName, categoryName: $categoryName, downloadTimes: $downloadTimes, packageSize: $packageSize, arch: $arch, createTime: $createTime, last30DownloadCount: $last30DownloadCount)';
+  return 'AppListItemDTO(appId: $appId, appName: $appName, appVersion: $appVersion, appIcon: $appIcon, appDesc: $appDesc, appKind: $appKind, developerName: $developerName, categoryName: $categoryName, downloadTimes: $downloadTimes, packageSize: $packageSize, arch: $arch, module: $module, repoName: $repoName, createTime: $createTime, last30DownloadCount: $last30DownloadCount)';
 }
 
 
@@ -4946,7 +4955,7 @@ abstract mixin class $AppListItemDTOCopyWith<$Res>  {
   factory $AppListItemDTOCopyWith(AppListItemDTO value, $Res Function(AppListItemDTO) _then) = _$AppListItemDTOCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'appId') String appId,@JsonKey(readValue: _readAppName) String appName,@JsonKey(readValue: _readAppVersion) String? appVersion,@JsonKey(readValue: _readAppIcon) String? appIcon,@JsonKey(readValue: _readAppDescription) String? appDesc,@JsonKey(readValue: _readAppKind) String? appKind,@JsonKey(readValue: _readDeveloperName) String? developerName,@JsonKey(name: 'categoryName') String? categoryName,@JsonKey(readValue: _readDownloadCount) int? downloadTimes,@JsonKey(readValue: _readPackageSize) String? packageSize, String? arch,@JsonKey(name: 'createTime') String? createTime,@JsonKey(name: 'last30DownloadCount') int? last30DownloadCount
+@JsonKey(name: 'appId') String appId,@JsonKey(readValue: _readAppName) String appName,@JsonKey(readValue: _readAppVersion) String? appVersion,@JsonKey(readValue: _readAppIcon) String? appIcon,@JsonKey(readValue: _readAppDescription) String? appDesc,@JsonKey(readValue: _readAppKind) String? appKind,@JsonKey(readValue: _readDeveloperName) String? developerName,@JsonKey(name: 'categoryName') String? categoryName,@JsonKey(readValue: _readDownloadCount) int? downloadTimes,@JsonKey(readValue: _readPackageSize) String? packageSize, String? arch, String? module,@JsonKey(name: 'repoName') String? repoName,@JsonKey(name: 'createTime') String? createTime,@JsonKey(name: 'last30DownloadCount') int? last30DownloadCount
 });
 
 
@@ -4963,7 +4972,7 @@ class _$AppListItemDTOCopyWithImpl<$Res>
 
 /// Create a copy of AppListItemDTO
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? appName = null,Object? appVersion = freezed,Object? appIcon = freezed,Object? appDesc = freezed,Object? appKind = freezed,Object? developerName = freezed,Object? categoryName = freezed,Object? downloadTimes = freezed,Object? packageSize = freezed,Object? arch = freezed,Object? createTime = freezed,Object? last30DownloadCount = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? appName = null,Object? appVersion = freezed,Object? appIcon = freezed,Object? appDesc = freezed,Object? appKind = freezed,Object? developerName = freezed,Object? categoryName = freezed,Object? downloadTimes = freezed,Object? packageSize = freezed,Object? arch = freezed,Object? module = freezed,Object? repoName = freezed,Object? createTime = freezed,Object? last30DownloadCount = freezed,}) {
   return _then(_self.copyWith(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,appName: null == appName ? _self.appName : appName // ignore: cast_nullable_to_non_nullable
@@ -4976,6 +4985,8 @@ as String?,categoryName: freezed == categoryName ? _self.categoryName : category
 as String?,downloadTimes: freezed == downloadTimes ? _self.downloadTimes : downloadTimes // ignore: cast_nullable_to_non_nullable
 as int?,packageSize: freezed == packageSize ? _self.packageSize : packageSize // ignore: cast_nullable_to_non_nullable
 as String?,arch: freezed == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
+as String?,module: freezed == module ? _self.module : module // ignore: cast_nullable_to_non_nullable
+as String?,repoName: freezed == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
 as String?,createTime: freezed == createTime ? _self.createTime : createTime // ignore: cast_nullable_to_non_nullable
 as String?,last30DownloadCount: freezed == last30DownloadCount ? _self.last30DownloadCount : last30DownloadCount // ignore: cast_nullable_to_non_nullable
 as int?,
@@ -5060,10 +5071,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId, @JsonKey(readValue: _readAppName)  String appName, @JsonKey(readValue: _readAppVersion)  String? appVersion, @JsonKey(readValue: _readAppIcon)  String? appIcon, @JsonKey(readValue: _readAppDescription)  String? appDesc, @JsonKey(readValue: _readAppKind)  String? appKind, @JsonKey(readValue: _readDeveloperName)  String? developerName, @JsonKey(name: 'categoryName')  String? categoryName, @JsonKey(readValue: _readDownloadCount)  int? downloadTimes, @JsonKey(readValue: _readPackageSize)  String? packageSize,  String? arch, @JsonKey(name: 'createTime')  String? createTime, @JsonKey(name: 'last30DownloadCount')  int? last30DownloadCount)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId, @JsonKey(readValue: _readAppName)  String appName, @JsonKey(readValue: _readAppVersion)  String? appVersion, @JsonKey(readValue: _readAppIcon)  String? appIcon, @JsonKey(readValue: _readAppDescription)  String? appDesc, @JsonKey(readValue: _readAppKind)  String? appKind, @JsonKey(readValue: _readDeveloperName)  String? developerName, @JsonKey(name: 'categoryName')  String? categoryName, @JsonKey(readValue: _readDownloadCount)  int? downloadTimes, @JsonKey(readValue: _readPackageSize)  String? packageSize,  String? arch,  String? module, @JsonKey(name: 'repoName')  String? repoName, @JsonKey(name: 'createTime')  String? createTime, @JsonKey(name: 'last30DownloadCount')  int? last30DownloadCount)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppListItemDTO() when $default != null:
-return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.appDesc,_that.appKind,_that.developerName,_that.categoryName,_that.downloadTimes,_that.packageSize,_that.arch,_that.createTime,_that.last30DownloadCount);case _:
+return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.appDesc,_that.appKind,_that.developerName,_that.categoryName,_that.downloadTimes,_that.packageSize,_that.arch,_that.module,_that.repoName,_that.createTime,_that.last30DownloadCount);case _:
   return orElse();
 
 }
@@ -5081,10 +5092,10 @@ return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.a
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId, @JsonKey(readValue: _readAppName)  String appName, @JsonKey(readValue: _readAppVersion)  String? appVersion, @JsonKey(readValue: _readAppIcon)  String? appIcon, @JsonKey(readValue: _readAppDescription)  String? appDesc, @JsonKey(readValue: _readAppKind)  String? appKind, @JsonKey(readValue: _readDeveloperName)  String? developerName, @JsonKey(name: 'categoryName')  String? categoryName, @JsonKey(readValue: _readDownloadCount)  int? downloadTimes, @JsonKey(readValue: _readPackageSize)  String? packageSize,  String? arch, @JsonKey(name: 'createTime')  String? createTime, @JsonKey(name: 'last30DownloadCount')  int? last30DownloadCount)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String appId, @JsonKey(readValue: _readAppName)  String appName, @JsonKey(readValue: _readAppVersion)  String? appVersion, @JsonKey(readValue: _readAppIcon)  String? appIcon, @JsonKey(readValue: _readAppDescription)  String? appDesc, @JsonKey(readValue: _readAppKind)  String? appKind, @JsonKey(readValue: _readDeveloperName)  String? developerName, @JsonKey(name: 'categoryName')  String? categoryName, @JsonKey(readValue: _readDownloadCount)  int? downloadTimes, @JsonKey(readValue: _readPackageSize)  String? packageSize,  String? arch,  String? module, @JsonKey(name: 'repoName')  String? repoName, @JsonKey(name: 'createTime')  String? createTime, @JsonKey(name: 'last30DownloadCount')  int? last30DownloadCount)  $default,) {final _that = this;
 switch (_that) {
 case _AppListItemDTO():
-return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.appDesc,_that.appKind,_that.developerName,_that.categoryName,_that.downloadTimes,_that.packageSize,_that.arch,_that.createTime,_that.last30DownloadCount);}
+return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.appDesc,_that.appKind,_that.developerName,_that.categoryName,_that.downloadTimes,_that.packageSize,_that.arch,_that.module,_that.repoName,_that.createTime,_that.last30DownloadCount);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -5098,10 +5109,10 @@ return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.a
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'appId')  String appId, @JsonKey(readValue: _readAppName)  String appName, @JsonKey(readValue: _readAppVersion)  String? appVersion, @JsonKey(readValue: _readAppIcon)  String? appIcon, @JsonKey(readValue: _readAppDescription)  String? appDesc, @JsonKey(readValue: _readAppKind)  String? appKind, @JsonKey(readValue: _readDeveloperName)  String? developerName, @JsonKey(name: 'categoryName')  String? categoryName, @JsonKey(readValue: _readDownloadCount)  int? downloadTimes, @JsonKey(readValue: _readPackageSize)  String? packageSize,  String? arch, @JsonKey(name: 'createTime')  String? createTime, @JsonKey(name: 'last30DownloadCount')  int? last30DownloadCount)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'appId')  String appId, @JsonKey(readValue: _readAppName)  String appName, @JsonKey(readValue: _readAppVersion)  String? appVersion, @JsonKey(readValue: _readAppIcon)  String? appIcon, @JsonKey(readValue: _readAppDescription)  String? appDesc, @JsonKey(readValue: _readAppKind)  String? appKind, @JsonKey(readValue: _readDeveloperName)  String? developerName, @JsonKey(name: 'categoryName')  String? categoryName, @JsonKey(readValue: _readDownloadCount)  int? downloadTimes, @JsonKey(readValue: _readPackageSize)  String? packageSize,  String? arch,  String? module, @JsonKey(name: 'repoName')  String? repoName, @JsonKey(name: 'createTime')  String? createTime, @JsonKey(name: 'last30DownloadCount')  int? last30DownloadCount)?  $default,) {final _that = this;
 switch (_that) {
 case _AppListItemDTO() when $default != null:
-return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.appDesc,_that.appKind,_that.developerName,_that.categoryName,_that.downloadTimes,_that.packageSize,_that.arch,_that.createTime,_that.last30DownloadCount);case _:
+return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.appDesc,_that.appKind,_that.developerName,_that.categoryName,_that.downloadTimes,_that.packageSize,_that.arch,_that.module,_that.repoName,_that.createTime,_that.last30DownloadCount);case _:
   return null;
 
 }
@@ -5113,7 +5124,7 @@ return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.a
 @JsonSerializable()
 
 class _AppListItemDTO implements AppListItemDTO {
-  const _AppListItemDTO({@JsonKey(name: 'appId') required this.appId, @JsonKey(readValue: _readAppName) required this.appName, @JsonKey(readValue: _readAppVersion) this.appVersion, @JsonKey(readValue: _readAppIcon) this.appIcon, @JsonKey(readValue: _readAppDescription) this.appDesc, @JsonKey(readValue: _readAppKind) this.appKind, @JsonKey(readValue: _readDeveloperName) this.developerName, @JsonKey(name: 'categoryName') this.categoryName, @JsonKey(readValue: _readDownloadCount) this.downloadTimes, @JsonKey(readValue: _readPackageSize) this.packageSize, this.arch, @JsonKey(name: 'createTime') this.createTime, @JsonKey(name: 'last30DownloadCount') this.last30DownloadCount});
+  const _AppListItemDTO({@JsonKey(name: 'appId') required this.appId, @JsonKey(readValue: _readAppName) required this.appName, @JsonKey(readValue: _readAppVersion) this.appVersion, @JsonKey(readValue: _readAppIcon) this.appIcon, @JsonKey(readValue: _readAppDescription) this.appDesc, @JsonKey(readValue: _readAppKind) this.appKind, @JsonKey(readValue: _readDeveloperName) this.developerName, @JsonKey(name: 'categoryName') this.categoryName, @JsonKey(readValue: _readDownloadCount) this.downloadTimes, @JsonKey(readValue: _readPackageSize) this.packageSize, this.arch, this.module, @JsonKey(name: 'repoName') this.repoName, @JsonKey(name: 'createTime') this.createTime, @JsonKey(name: 'last30DownloadCount') this.last30DownloadCount});
   factory _AppListItemDTO.fromJson(Map<String, dynamic> json) => _$AppListItemDTOFromJson(json);
 
 @override@JsonKey(name: 'appId') final  String appId;
@@ -5127,6 +5138,8 @@ class _AppListItemDTO implements AppListItemDTO {
 @override@JsonKey(readValue: _readDownloadCount) final  int? downloadTimes;
 @override@JsonKey(readValue: _readPackageSize) final  String? packageSize;
 @override final  String? arch;
+@override final  String? module;
+@override@JsonKey(name: 'repoName') final  String? repoName;
 @override@JsonKey(name: 'createTime') final  String? createTime;
 // 上架时间
 @override@JsonKey(name: 'last30DownloadCount') final  int? last30DownloadCount;
@@ -5144,16 +5157,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppListItemDTO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.appName, appName) || other.appName == appName)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&(identical(other.appIcon, appIcon) || other.appIcon == appIcon)&&(identical(other.appDesc, appDesc) || other.appDesc == appDesc)&&(identical(other.appKind, appKind) || other.appKind == appKind)&&(identical(other.developerName, developerName) || other.developerName == developerName)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.downloadTimes, downloadTimes) || other.downloadTimes == downloadTimes)&&(identical(other.packageSize, packageSize) || other.packageSize == packageSize)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.createTime, createTime) || other.createTime == createTime)&&(identical(other.last30DownloadCount, last30DownloadCount) || other.last30DownloadCount == last30DownloadCount));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppListItemDTO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.appName, appName) || other.appName == appName)&&(identical(other.appVersion, appVersion) || other.appVersion == appVersion)&&(identical(other.appIcon, appIcon) || other.appIcon == appIcon)&&(identical(other.appDesc, appDesc) || other.appDesc == appDesc)&&(identical(other.appKind, appKind) || other.appKind == appKind)&&(identical(other.developerName, developerName) || other.developerName == developerName)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.downloadTimes, downloadTimes) || other.downloadTimes == downloadTimes)&&(identical(other.packageSize, packageSize) || other.packageSize == packageSize)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.module, module) || other.module == module)&&(identical(other.repoName, repoName) || other.repoName == repoName)&&(identical(other.createTime, createTime) || other.createTime == createTime)&&(identical(other.last30DownloadCount, last30DownloadCount) || other.last30DownloadCount == last30DownloadCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appId,appName,appVersion,appIcon,appDesc,appKind,developerName,categoryName,downloadTimes,packageSize,arch,createTime,last30DownloadCount);
+int get hashCode => Object.hash(runtimeType,appId,appName,appVersion,appIcon,appDesc,appKind,developerName,categoryName,downloadTimes,packageSize,arch,module,repoName,createTime,last30DownloadCount);
 
 @override
 String toString() {
-  return 'AppListItemDTO(appId: $appId, appName: $appName, appVersion: $appVersion, appIcon: $appIcon, appDesc: $appDesc, appKind: $appKind, developerName: $developerName, categoryName: $categoryName, downloadTimes: $downloadTimes, packageSize: $packageSize, arch: $arch, createTime: $createTime, last30DownloadCount: $last30DownloadCount)';
+  return 'AppListItemDTO(appId: $appId, appName: $appName, appVersion: $appVersion, appIcon: $appIcon, appDesc: $appDesc, appKind: $appKind, developerName: $developerName, categoryName: $categoryName, downloadTimes: $downloadTimes, packageSize: $packageSize, arch: $arch, module: $module, repoName: $repoName, createTime: $createTime, last30DownloadCount: $last30DownloadCount)';
 }
 
 
@@ -5164,7 +5177,7 @@ abstract mixin class _$AppListItemDTOCopyWith<$Res> implements $AppListItemDTOCo
   factory _$AppListItemDTOCopyWith(_AppListItemDTO value, $Res Function(_AppListItemDTO) _then) = __$AppListItemDTOCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'appId') String appId,@JsonKey(readValue: _readAppName) String appName,@JsonKey(readValue: _readAppVersion) String? appVersion,@JsonKey(readValue: _readAppIcon) String? appIcon,@JsonKey(readValue: _readAppDescription) String? appDesc,@JsonKey(readValue: _readAppKind) String? appKind,@JsonKey(readValue: _readDeveloperName) String? developerName,@JsonKey(name: 'categoryName') String? categoryName,@JsonKey(readValue: _readDownloadCount) int? downloadTimes,@JsonKey(readValue: _readPackageSize) String? packageSize, String? arch,@JsonKey(name: 'createTime') String? createTime,@JsonKey(name: 'last30DownloadCount') int? last30DownloadCount
+@JsonKey(name: 'appId') String appId,@JsonKey(readValue: _readAppName) String appName,@JsonKey(readValue: _readAppVersion) String? appVersion,@JsonKey(readValue: _readAppIcon) String? appIcon,@JsonKey(readValue: _readAppDescription) String? appDesc,@JsonKey(readValue: _readAppKind) String? appKind,@JsonKey(readValue: _readDeveloperName) String? developerName,@JsonKey(name: 'categoryName') String? categoryName,@JsonKey(readValue: _readDownloadCount) int? downloadTimes,@JsonKey(readValue: _readPackageSize) String? packageSize, String? arch, String? module,@JsonKey(name: 'repoName') String? repoName,@JsonKey(name: 'createTime') String? createTime,@JsonKey(name: 'last30DownloadCount') int? last30DownloadCount
 });
 
 
@@ -5181,7 +5194,7 @@ class __$AppListItemDTOCopyWithImpl<$Res>
 
 /// Create a copy of AppListItemDTO
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? appId = null,Object? appName = null,Object? appVersion = freezed,Object? appIcon = freezed,Object? appDesc = freezed,Object? appKind = freezed,Object? developerName = freezed,Object? categoryName = freezed,Object? downloadTimes = freezed,Object? packageSize = freezed,Object? arch = freezed,Object? createTime = freezed,Object? last30DownloadCount = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? appId = null,Object? appName = null,Object? appVersion = freezed,Object? appIcon = freezed,Object? appDesc = freezed,Object? appKind = freezed,Object? developerName = freezed,Object? categoryName = freezed,Object? downloadTimes = freezed,Object? packageSize = freezed,Object? arch = freezed,Object? module = freezed,Object? repoName = freezed,Object? createTime = freezed,Object? last30DownloadCount = freezed,}) {
   return _then(_AppListItemDTO(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,appName: null == appName ? _self.appName : appName // ignore: cast_nullable_to_non_nullable
@@ -5194,6 +5207,8 @@ as String?,categoryName: freezed == categoryName ? _self.categoryName : category
 as String?,downloadTimes: freezed == downloadTimes ? _self.downloadTimes : downloadTimes // ignore: cast_nullable_to_non_nullable
 as int?,packageSize: freezed == packageSize ? _self.packageSize : packageSize // ignore: cast_nullable_to_non_nullable
 as String?,arch: freezed == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
+as String?,module: freezed == module ? _self.module : module // ignore: cast_nullable_to_non_nullable
+as String?,repoName: freezed == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
 as String?,createTime: freezed == createTime ? _self.createTime : createTime // ignore: cast_nullable_to_non_nullable
 as String?,last30DownloadCount: freezed == last30DownloadCount ? _self.last30DownloadCount : last30DownloadCount // ignore: cast_nullable_to_non_nullable
 as int?,

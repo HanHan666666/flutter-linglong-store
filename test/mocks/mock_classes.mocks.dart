@@ -109,13 +109,26 @@ class MockAppRepository extends _i1.Mock implements _i3.AppRepository {
           as _i4.Future<List<_i5.InstalledApp>>);
 
   @override
-  _i4.Future<_i6.AppDetail> getAppDetail(String? appId, {String? arch}) =>
+  _i4.Future<_i6.AppDetail> getAppDetail(
+    String? appId, {
+    String? arch,
+    String? repoName,
+    String? module,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#getAppDetail, [appId], {#arch: arch}),
+            Invocation.method(
+              #getAppDetail,
+              [appId],
+              {#arch: arch, #repoName: repoName, #module: module},
+            ),
             returnValue: _i4.Future<_i6.AppDetail>.value(
               _i7.dummyValue<_i6.AppDetail>(
                 this,
-                Invocation.method(#getAppDetail, [appId], {#arch: arch}),
+                Invocation.method(
+                  #getAppDetail,
+                  [appId],
+                  {#arch: arch, #repoName: repoName, #module: module},
+                ),
               ),
             ),
           )

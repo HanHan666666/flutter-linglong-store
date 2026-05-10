@@ -448,6 +448,44 @@ void main() {
         expect(captured.single.lang, equals('zh_CN'));
       });
 
+      test(
+        'should pass repoName and module through detail request when provided',
+        () async {
+          final mockResponse = HttpResponse(
+            const AppDetailResponse(
+              code: 200,
+              data: {
+                'com.example.app': [
+                  {
+                    'appId': 'com.example.app',
+                    'zhName': 'Test App',
+                    'version': '1.0.0',
+                  },
+                ],
+              },
+            ),
+            Response(requestOptions: RequestOptions(path: '/app/getAppDetail')),
+          );
+
+          when(
+            mockApiService.getAppDetail(any),
+          ).thenAnswer((_) async => mockResponse);
+
+          await repository.getAppDetail(
+            'com.example.app',
+            arch: 'x86_64',
+            repoName: 'stable',
+            module: 'runtime',
+          );
+
+          final captured =
+              verify(mockApiService.getAppDetail(captureAny)).captured.single
+                  as List<AppDetailSearchBO>;
+          expect(captured.single.repoName, equals('stable'));
+          expect(captured.single.module, equals('runtime'));
+        },
+      );
+
       test('should map English locale to en_US for detail request', () async {
         // Arrange
         ApiClient.getLocale = () => 'en';
@@ -1001,6 +1039,44 @@ void main() {
         expect(capturedRequests.last.map((item) => item.appId), [
           'org.deepin.camera',
         ]);
+      });
+
+      test('should preserve repoName in batch detail enrichment requests', () async {
+        final apps = [
+          const InstalledApp(
+            appId: 'org.deepin.calculator',
+            name: 'deepin-calculator',
+            version: '6.5.31.1',
+            arch: 'x86_64',
+            channel: 'main',
+            module: 'binary',
+            repoName: 'stable',
+          ),
+        ];
+
+        when(mockApiService.getAppDetails(any)).thenAnswer(
+          (_) async => HttpResponse(
+            const AppListArrayResponse(
+              code: 200,
+              data: [
+                AppListItemDTO(
+                  appId: 'org.deepin.calculator',
+                  appName: '计算器',
+                  appVersion: '6.5.31.1',
+                ),
+              ],
+            ),
+            Response(requestOptions: RequestOptions(path: '/app/getAppDetails')),
+          ),
+        );
+
+        await repository.enrichInstalledAppsWithDetails(apps);
+
+        final captured =
+            verify(mockApiService.getAppDetails(captureAny)).captured.single
+                as List<AppDetailsBO>;
+        expect(captured.single.repoName, equals('stable'));
+        expect(captured.single.module, equals('binary'));
       });
     });
   });

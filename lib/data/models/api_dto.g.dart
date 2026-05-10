@@ -34,6 +34,7 @@ _AppDetailsBO _$AppDetailsBOFromJson(Map<String, dynamic> json) =>
       version: json['version'] as String?,
       channel: json['channel'] as String?,
       module: json['module'] as String?,
+      repoName: json['repoName'] as String?,
       arch: json['arch'] as String?,
     );
 
@@ -44,6 +45,7 @@ Map<String, dynamic> _$AppDetailsBOToJson(_AppDetailsBO instance) =>
       'version': instance.version,
       'channel': instance.channel,
       'module': instance.module,
+      'repoName': instance.repoName,
       'arch': instance.arch,
     };
 
@@ -87,6 +89,8 @@ _AppDetailSearchBO _$AppDetailSearchBOFromJson(Map<String, dynamic> json) =>
       appId: json['appId'] as String,
       arch: json['arch'] as String,
       lang: json['lang'] as String?,
+      module: json['module'] as String?,
+      repoName: json['repoName'] as String?,
     );
 
 Map<String, dynamic> _$AppDetailSearchBOToJson(_AppDetailSearchBO instance) =>
@@ -94,6 +98,8 @@ Map<String, dynamic> _$AppDetailSearchBOToJson(_AppDetailSearchBO instance) =>
       'appId': instance.appId,
       'arch': instance.arch,
       'lang': instance.lang,
+      'module': instance.module,
+      'repoName': instance.repoName,
     };
 
 _AppCommentSearchBO _$AppCommentSearchBOFromJson(Map<String, dynamic> json) =>
@@ -359,6 +365,8 @@ _AppListItemDTO _$AppListItemDTOFromJson(Map<String, dynamic> json) =>
           ?.toInt(),
       packageSize: _readPackageSize(json, 'packageSize') as String?,
       arch: json['arch'] as String?,
+      module: json['module'] as String?,
+      repoName: json['repoName'] as String?,
       createTime: json['createTime'] as String?,
       last30DownloadCount: (json['last30DownloadCount'] as num?)?.toInt(),
     );
@@ -376,6 +384,8 @@ Map<String, dynamic> _$AppListItemDTOToJson(_AppListItemDTO instance) =>
       'downloadTimes': instance.downloadTimes,
       'packageSize': instance.packageSize,
       'arch': instance.arch,
+      'module': instance.module,
+      'repoName': instance.repoName,
       'createTime': instance.createTime,
       'last30DownloadCount': instance.last30DownloadCount,
     };

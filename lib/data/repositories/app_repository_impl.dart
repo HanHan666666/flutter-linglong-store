@@ -154,7 +154,12 @@ class AppRepositoryImpl implements AppRepository {
   }
 
   @override
-  Future<AppDetail> getAppDetail(String appId, {String? arch}) async {
+  Future<AppDetail> getAppDetail(
+    String appId, {
+    String? arch,
+    String? repoName,
+    String? module,
+  }) async {
     try {
       AppLogger.info('获取应用详情: $appId');
       final detailLang = resolveApiLang(ApiClient.getLocale?.call());
@@ -165,6 +170,8 @@ class AppRepositoryImpl implements AppRepository {
           appId: appId,
           arch: arch ?? _currentArch,
           lang: detailLang,
+          module: module,
+          repoName: repoName,
         ),
       ]);
 
@@ -331,8 +338,9 @@ class AppRepositoryImpl implements AppRepository {
       description: dto.appDesc,
       icon: dto.appIcon,
       kind: dto.appKind,
+      module: dto.module,
       size: dto.packageSize,
-      repoName: dto.developerName,
+      repoName: dto.repoName,
     );
   }
 
@@ -441,6 +449,7 @@ class AppRepositoryImpl implements AppRepository {
       version: app.version,
       channel: app.channel,
       module: app.module,
+      repoName: app.repoName,
       arch: app.arch ?? _currentArch,
     );
   }

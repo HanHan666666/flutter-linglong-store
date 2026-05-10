@@ -115,6 +115,7 @@ sealed class AppDetailsBO with _$AppDetailsBO {
     String? version,
     String? channel,
     String? module,
+    @JsonKey(name: 'repoName') String? repoName,
     String? arch,
   }) = _AppDetailsBO;
 
@@ -160,6 +161,8 @@ sealed class AppDetailSearchBO with _$AppDetailSearchBO {
     required String arch,
     // /app/getAppDetail 会按语言精确过滤截图和标签，必须显式传入 lang。
     String? lang,
+    String? module,
+    @JsonKey(name: 'repoName') String? repoName,
   }) = _AppDetailSearchBO;
 
   factory AppDetailSearchBO.fromJson(Map<String, dynamic> json) =>
@@ -388,6 +391,8 @@ sealed class AppListItemDTO with _$AppListItemDTO {
     @JsonKey(readValue: _readDownloadCount) int? downloadTimes,
     @JsonKey(readValue: _readPackageSize) String? packageSize,
     String? arch,
+    String? module,
+    @JsonKey(name: 'repoName') String? repoName,
     @JsonKey(name: 'createTime') String? createTime, // 上架时间
     @JsonKey(name: 'last30DownloadCount') int? last30DownloadCount, // 最近30天下载量
   }) = _AppListItemDTO;

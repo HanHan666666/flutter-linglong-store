@@ -21,6 +21,7 @@ dependencies:
 
   # 网络
   dio: ^5.7.0
+  http: ^1.2.2
   retrofit: ^4.4.1
 
   # 序列化

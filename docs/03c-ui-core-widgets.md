@@ -40,7 +40,7 @@
 | 加载失败 | 显示默认图标 |
 
 图标来源优先级：
-1. `appInfo.icon`（远程 URL）
+1. `appInfo.icon`（远程 URL，SVG 由 `flutter_svg` 渲染，位图由 `CachedNetworkImage` 渲染）
 2. 构建时内置的 category 默认图标
 3. 全局默认 SVG 图标
 

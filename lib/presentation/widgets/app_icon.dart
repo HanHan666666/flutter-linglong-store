@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:http/http.dart' as http;
 
 import '../../core/config/theme.dart';
 
@@ -31,6 +33,9 @@ class AppIcon extends StatelessWidget {
   /// 磁盘缓存最大宽度（像素），默认为 size * 4
   final int? maxDiskCacheWidth;
 
+  /// SVG 网络客户端注入点，默认仅用于测试稳定控制返回内容。
+  final http.Client? svgHttpClient;
+
   const AppIcon({
     super.key,
     this.iconUrl,
@@ -41,6 +46,7 @@ class AppIcon extends StatelessWidget {
     this.appName,
     this.memCacheWidth,
     this.maxDiskCacheWidth,
+    this.svgHttpClient,
   });
 
   @override
@@ -62,6 +68,27 @@ class AppIcon extends StatelessWidget {
     final effectiveMemCacheWidth = memCacheWidth ?? (size * 2).toInt();
     final effectiveDiskCacheWidth = maxDiskCacheWidth ?? (size * 3).toInt();
 
+    if (_isSvgIconUrl(iconUrl!)) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: SvgPicture.network(
+            iconUrl!,
+            width: size,
+            height: size,
+            fit: BoxFit.contain,
+            placeholderBuilder: (context) =>
+                _buildPlaceholder(context, bgColor!),
+            errorBuilder: (context, error, stackTrace) =>
+                _buildErrorWidget(context, bgColor!),
+            httpClient: svgHttpClient,
+          ),
+        ),
+      );
+    }
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: CachedNetworkImage(
@@ -76,6 +103,17 @@ class AppIcon extends StatelessWidget {
             _buildErrorWidget(context, bgColor!),
       ),
     );
+  }
+
+  bool _isSvgIconUrl(String url) {
+    final normalized = url.trim().toLowerCase();
+    if (normalized.startsWith('data:image/svg+xml')) {
+      return true;
+    }
+
+    final uri = Uri.tryParse(normalized);
+    final path = uri?.path ?? normalized;
+    return path.endsWith('.svg');
   }
 
   /// 构建占位符

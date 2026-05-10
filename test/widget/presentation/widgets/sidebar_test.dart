@@ -10,6 +10,7 @@ import 'package:linglong_store/data/models/api_dto.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
+import 'package:linglong_store/presentation/widgets/install_to_download_flyout.dart';
 import 'package:linglong_store/presentation/widgets/sidebar.dart';
 
 void main() {
@@ -166,6 +167,32 @@ void main() {
         find.descendant(of: find.byTooltip('下载管理'), matching: find.text('3')),
         findsOneWidget,
       );
+    });
+
+    testWidgets('wraps the download manager action with a flyout target', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sidebarConfigProvider.overrideWith((ref) async => const []),
+          ],
+          child: const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: Sidebar(currentPath: '/my-apps')),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DownloadCenterFlyoutTarget), findsOneWidget);
     });
   });
 }

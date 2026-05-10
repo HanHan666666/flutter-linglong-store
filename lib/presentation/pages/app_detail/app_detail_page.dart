@@ -18,6 +18,7 @@ import '../../widgets/app_icon.dart';
 import '../../widgets/app_detail_comment_section.dart';
 import '../../widgets/app_detail_secondary_actions.dart';
 import '../../widgets/app_detail_info_section.dart';
+import '../../widgets/install_to_download_flyout.dart';
 import '../../widgets/install_button.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../../core/di/providers.dart';
@@ -64,6 +65,9 @@ class AppDetailPage extends ConsumerStatefulWidget {
 
 class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   String? _selectedCommentVersion;
+  final GlobalKey _installSourceKey = GlobalKey(
+    debugLabel: 'app-detail-install-source',
+  );
 
   @override
   void initState() {
@@ -251,11 +255,16 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 应用图标
-          AppIcon(
-            iconUrl: app.icon,
-            size: 80,
-            borderRadius: 16,
-            appName: app.name,
+          SizedBox(
+            key: _installSourceKey,
+            width: 80,
+            height: 80,
+            child: AppIcon(
+              iconUrl: app.icon,
+              size: 80,
+              borderRadius: 16,
+              appName: app.name,
+            ),
           ),
           const SizedBox(width: 16),
           // 应用信息
@@ -984,17 +993,18 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     switch (currentState) {
       case InstallButtonState.notInstalled:
         // 详情页主按钮走默认安装，不指定版本；只有版本列表入口才允许传版本。
-        ref
+        final taskId = ref
             .read(installQueueProvider.notifier)
             .enqueueInstall(
               appId: app.appId,
               appName: app.name,
               icon: app.icon,
             );
+        _triggerInstallFlyout(app, taskId: taskId);
         break;
       case InstallButtonState.update:
         // 详情页更新统一走 update 队列，不再伪装成带版本安装。
-        ref
+        final taskId = ref
             .read(installQueueProvider.notifier)
             .enqueueOperation(
               kind: InstallTaskKind.update,
@@ -1002,6 +1012,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               appName: app.name,
               icon: app.icon,
             );
+        _triggerInstallFlyout(app, taskId: taskId);
         break;
       case InstallButtonState.installed:
       case InstallButtonState.open:
@@ -1087,7 +1098,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     }
 
     // 入安装队列
-    ref
+    final taskId = ref
         .read(installQueueProvider.notifier)
         .enqueueInstall(
           appId: app.appId,
@@ -1096,6 +1107,24 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           version: version,
           force: shouldForceInstall,
         );
+    _triggerInstallFlyout(app, taskId: taskId);
+  }
+
+  void _triggerInstallFlyout(InstalledApp app, {required String taskId}) {
+    if (taskId.isEmpty) {
+      return;
+    }
+
+    final flyoutController = InstallToDownloadFlyoutLayer.maybeOf(context);
+    final launched = flyoutController?.launch(
+      sourceKey: _installSourceKey,
+      appId: app.appId,
+      appName: app.name,
+      iconUrl: app.icon,
+    );
+    if (launched != true) {
+      flyoutController?.pulseDownloadCenter();
+    }
   }
 
   Widget _buildVersionActionArea(

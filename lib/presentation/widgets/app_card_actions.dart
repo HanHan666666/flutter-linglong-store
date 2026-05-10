@@ -5,6 +5,7 @@ import '../../application/providers/app_operation_queue_provider.dart';
 import '../../application/providers/install_queue_provider.dart';
 import '../../core/utils/app_notification_helpers.dart';
 import '../../domain/models/install_task.dart';
+import 'install_to_download_flyout.dart';
 import 'install_button.dart';
 
 /// 统一处理列表卡片主按钮动作，保证各列表页行为一致。
@@ -14,12 +15,15 @@ Future<void> handleAppCardPrimaryAction({
   required InstallButtonState buttonState,
   required String appId,
   required String appName,
+  required GlobalKey sourceIconKey,
   String? icon,
 }) async {
+  final flyoutController = InstallToDownloadFlyoutLayer.maybeOf(context);
+
   switch (buttonState) {
     // 列表卡片入口一律走默认安装/升级，不在这里绑定具体版本。
     case InstallButtonState.notInstalled:
-      ref
+      final taskId = ref
           .read(appOperationQueueControllerProvider)
           .enqueueAppOperation(
             EnqueueAppOperationParams(
@@ -29,9 +33,20 @@ Future<void> handleAppCardPrimaryAction({
               icon: icon,
             ),
           );
+      if (taskId.isNotEmpty) {
+        final launched = flyoutController?.launch(
+          sourceKey: sourceIconKey,
+          appId: appId,
+          appName: appName,
+          iconUrl: icon,
+        );
+        if (launched != true) {
+          flyoutController?.pulseDownloadCenter();
+        }
+      }
       return;
     case InstallButtonState.update:
-      ref
+      final taskId = ref
           .read(appOperationQueueControllerProvider)
           .enqueueAppOperation(
             EnqueueAppOperationParams(
@@ -41,6 +56,17 @@ Future<void> handleAppCardPrimaryAction({
               icon: icon,
             ),
           );
+      if (taskId.isNotEmpty) {
+        final launched = flyoutController?.launch(
+          sourceKey: sourceIconKey,
+          appId: appId,
+          appName: appName,
+          iconUrl: icon,
+        );
+        if (launched != true) {
+          flyoutController?.pulseDownloadCenter();
+        }
+      }
       return;
     case InstallButtonState.installed:
     case InstallButtonState.open:

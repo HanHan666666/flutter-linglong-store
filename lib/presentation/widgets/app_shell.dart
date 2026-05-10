@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../application/providers/app_collection_sync_provider.dart';
-import '../../application/providers/update_apps_provider.dart';
 import '../../core/config/shell_branch_visibility.dart';
 import '../../core/config/shell_primary_route.dart';
 import '../../core/config/theme.dart';
@@ -19,6 +18,7 @@ import '../../presentation/pages/all_apps/all_apps_page.dart';
 import '../../presentation/pages/my_apps/my_apps_page.dart';
 import '../../presentation/pages/ranking/ranking_page.dart';
 import '../../presentation/pages/recommend/recommend_page.dart';
+import 'install_to_download_flyout.dart';
 import 'sidebar.dart';
 import 'title_bar.dart';
 
@@ -79,7 +79,9 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
           if (completedTask?.status == InstallStatus.success) {
             // 乐观移除：立即从待更新列表中移除已完成的应用，
             // 不等异步刷新，避免 UI 显示过时条目。
-            ref.read(updateAppsProvider.notifier).removeApp(completedTask!.appId);
+            ref
+                .read(updateAppsProvider.notifier)
+                .removeApp(completedTask!.appId);
 
             unawaited(
               ref
@@ -90,7 +92,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
             // 如果开启了『安装后自动打开』，且是安装任务（不是更新），自动启动应用
             final prefs = ref.read(globalAppProvider).userPreferences;
             if (prefs.autoRunAfterInstall &&
-                completedTask!.kind == InstallTaskKind.install) {
+                completedTask.kind == InstallTaskKind.install) {
               _tryRunApp(completedTask.appId);
             }
           }
@@ -230,48 +232,49 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
         ? (widget.currentUri.queryParameters['q'] ?? '')
         : '';
     final updateCount = ref.watch(updatableAppsCountProvider);
-
-    return Scaffold(
-      body: Column(
-        children: [
-          // 自定义标题栏
-          CustomTitleBar(
-            isMaximized: _isMaximized,
-            onMinimize: _onMinimize,
-            onMaximize: _onMaximize,
-            onClose: _onClose,
-            currentSearchQuery: currentSearchQuery,
-          ),
-          // 主内容区域
-          Expanded(
-            child: Row(
-              children: [
-                // 左侧导航栏
-                Sidebar(
-                  currentPath: widget.currentPath,
-                  updateCount: updateCount,
-                ),
-                // 右侧内容区域，背景跟随主题
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: context.appColors.surfaceContainerLow,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(AppRadius.sm),
+    return InstallToDownloadFlyoutLayer(
+      child: Scaffold(
+        body: Column(
+          children: [
+            // 自定义标题栏
+            CustomTitleBar(
+              isMaximized: _isMaximized,
+              onMinimize: _onMinimize,
+              onMaximize: _onMaximize,
+              onClose: _onClose,
+              currentSearchQuery: currentSearchQuery,
+            ),
+            // 主内容区域
+            Expanded(
+              child: Row(
+                children: [
+                  // 左侧导航栏
+                  Sidebar(
+                    currentPath: widget.currentPath,
+                    updateCount: updateCount,
+                  ),
+                  // 右侧内容区域，背景跟随主题
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: context.appColors.surfaceContainerLow,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(AppRadius.sm),
+                        ),
                       ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(AppRadius.sm),
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(AppRadius.sm),
+                        ),
+                        child: _buildContentArea(),
                       ),
-                      child: _buildContentArea(),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

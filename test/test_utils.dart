@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:linglong_store/core/config/theme.dart';
+import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 
 /// 创建测试用的 MaterialApp widget
 ///
@@ -13,15 +14,15 @@ import 'package:linglong_store/core/config/theme.dart';
 /// ```dart
 /// await tester.pumpWidget(createTestApp(MyWidget()));
 /// ```
-Widget createTestApp(
-  Widget child, {
-  List<Override> overrides = const [],
-}) {
+Widget createTestApp(Widget child, {List<Override> overrides = const []}) {
   return ProviderScope(
     overrides: overrides,
     child: MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      locale: const Locale('zh'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(body: child),
     ),
   );
@@ -39,6 +40,9 @@ Widget createTestAppWithNavigator(
     child: MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      locale: const Locale('zh'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       routes: {
         '/': (context) => Scaffold(body: child),
         '/detail': (context) => const Scaffold(body: Text('Detail Page')),

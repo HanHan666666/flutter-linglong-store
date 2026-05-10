@@ -17,6 +17,43 @@ class AppDetailSecondaryActions extends StatelessWidget {
   final VoidCallback onCreateShortcut;
   final VoidCallback onUninstall;
 
+  ButtonStyle _buildDestructiveActionStyle(Color errorColor) {
+    return OutlinedButton.styleFrom(
+      foregroundColor: errorColor,
+      side: BorderSide(color: errorColor),
+    ).copyWith(
+      side: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return BorderSide(color: errorColor.withValues(alpha: 0.40));
+        }
+        if (states.contains(WidgetState.hovered) ||
+            states.contains(WidgetState.focused)) {
+          return BorderSide(color: errorColor.withValues(alpha: 0.88));
+        }
+        return BorderSide(color: errorColor);
+      }),
+      backgroundColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.pressed)) {
+          return errorColor.withValues(alpha: 0.12);
+        }
+        if (states.contains(WidgetState.hovered) ||
+            states.contains(WidgetState.focused)) {
+          return errorColor.withValues(alpha: 0.08);
+        }
+        return Colors.transparent;
+      }),
+      overlayColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.pressed)) {
+          return errorColor.withValues(alpha: 0.14);
+        }
+        if (states.contains(WidgetState.hovered)) {
+          return errorColor.withValues(alpha: 0.10);
+        }
+        return null;
+      }),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!isVisible) {
@@ -48,19 +85,9 @@ class AppDetailSecondaryActions extends StatelessWidget {
           height: buttonHeight,
           child: OutlinedButton.icon(
             onPressed: onUninstall,
-            icon: Icon(
-              Icons.delete_outline_rounded,
-              size: iconSize,
-              color: errorColor,
-            ),
-            label: Text(
-              l10n.uninstall,
-              style: TextStyle(color: errorColor),
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: errorColor,
-              side: BorderSide(color: errorColor),
-            ),
+            icon: const Icon(Icons.delete_outline_rounded, size: iconSize),
+            label: Text(l10n.uninstall),
+            style: _buildDestructiveActionStyle(errorColor),
           ),
         ),
       ],

@@ -108,7 +108,7 @@ void main() {
     expect(find.text("rm -rf -- '/tmp/Linyaps Store'"), findsOneWidget);
     expect(savedPreference, isNull);
 
-    await tester.tap(find.widgetWithText(ElevatedButton, '继续关闭'));
+    await tester.tap(find.widgetWithText(FilledButton, '继续关闭'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 

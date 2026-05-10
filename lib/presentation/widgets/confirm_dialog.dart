@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 
 /// 确认对话框组件
@@ -150,7 +152,8 @@ class ConfirmDialog extends StatelessWidget {
       barrierDismissible: true,
       builder: (context) => ConfirmDialog.delete(
         title: l10n?.appRunningTitle ?? '应用正在运行',
-        message: l10n?.appRunningUninstallMessage(name) ??
+        message:
+            l10n?.appRunningUninstallMessage(name) ??
             '$name 当前正在运行中，卸载前需要强制关闭所有运行实例。\n是否强制关闭并卸载？',
         confirmText: l10n?.forceCloseAndUninstall ?? '强制关闭并卸载',
         cancelText: l10n?.cancel ?? '取消',
@@ -173,7 +176,8 @@ class ConfirmDialog extends StatelessWidget {
       barrierDismissible: true,
       builder: (context) => ConfirmDialog(
         title: l10n?.confirmDowngrade ?? '确认降级',
-        message: l10n?.downgradeMessageWithVersion(
+        message:
+            l10n?.downgradeMessageWithVersion(
               appName,
               currentVersion,
               targetVersion,
@@ -202,7 +206,8 @@ class ConfirmDialog extends StatelessWidget {
       barrierDismissible: true,
       builder: (context) => ConfirmDialog(
         title: l10n?.alreadyInstalledVersion ?? '已安装此版本',
-        message: l10n?.reinstallMessage(appName, version) ??
+        message:
+            l10n?.reinstallMessage(appName, version) ??
             '$appName v$version 已安装。\n是否重新安装（将覆盖现有安装）？',
         confirmText: l10n?.forceReinstall ?? '强制重装',
         cancelText: l10n?.cancel ?? '取消',
@@ -245,9 +250,10 @@ class ConfirmDialog extends StatelessWidget {
 
   /// 构建确认按钮
   Widget _buildConfirmButton(BuildContext context, String text) {
+    final theme = Theme.of(context);
     switch (confirmStyle) {
       case ConfirmButtonStyle.primary:
-        return ElevatedButton(
+        return FilledButton(
           onPressed: () {
             Navigator.of(context).pop(true);
             onConfirm?.call();
@@ -256,10 +262,10 @@ class ConfirmDialog extends StatelessWidget {
         );
 
       case ConfirmButtonStyle.danger:
-        return ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
+        return FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: theme.colorScheme.error,
+            foregroundColor: theme.colorScheme.onError,
           ),
           onPressed: () {
             Navigator.of(context).pop(true);
@@ -269,9 +275,9 @@ class ConfirmDialog extends StatelessWidget {
         );
 
       case ConfirmButtonStyle.warning:
-        return ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orange,
+        return FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.warning,
             foregroundColor: Colors.white,
           ),
           onPressed: () {

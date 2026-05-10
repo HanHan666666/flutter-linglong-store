@@ -213,7 +213,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
               onPressed: () => Navigator.of(context).pop(false),
               child: Text(l10n.cancel),
             ),
-            ElevatedButton(
+            FilledButton(
               onPressed: () {
                 Navigator.of(context).pop(true);
                 WindowService.close();

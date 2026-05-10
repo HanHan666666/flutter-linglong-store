@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/presentation/widgets/confirm_dialog.dart';
 import 'package:linglong_store/presentation/widgets/empty_state.dart';
@@ -14,9 +15,7 @@ void main() {
           locale: Locale('zh'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: ErrorState(),
-          ),
+          home: Scaffold(body: ErrorState()),
         ),
       );
 
@@ -30,9 +29,7 @@ void main() {
           locale: Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: ErrorState(),
-          ),
+          home: Scaffold(body: ErrorState()),
         ),
       );
 
@@ -66,9 +63,7 @@ void main() {
           locale: Locale('zh'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: EmptyState(),
-          ),
+          home: Scaffold(body: EmptyState()),
         ),
       );
 
@@ -82,9 +77,7 @@ void main() {
           locale: Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: EmptyState(),
-          ),
+          home: Scaffold(body: EmptyState()),
         ),
       );
 
@@ -115,6 +108,7 @@ void main() {
     testWidgets('should display localized confirm button', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          theme: AppTheme.lightTheme,
           locale: const Locale('zh'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -133,12 +127,19 @@ void main() {
       await tester.pumpAndSettle();
 
       // 应该显示中文确认按钮
-      expect(find.text('确认'), findsWidgets);
+      expect(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.widgetWithText(FilledButton, '确认'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('should display localized cancel button', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          theme: AppTheme.lightTheme,
           locale: const Locale('zh'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -157,7 +158,48 @@ void main() {
       await tester.pumpAndSettle();
 
       // 应该显示中文取消按钮
-      expect(find.text('取消'), findsWidgets);
+      expect(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.widgetWithText(TextButton, '取消'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('should use FilledButton for warning confirm actions', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => ConfirmDialog.showUninstall(context),
+                child: const Text('Show Dialog'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Show Dialog'));
+      await tester.pumpAndSettle();
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(AlertDialog)),
+      )!;
+
+      expect(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.widgetWithText(FilledButton, l10n.uninstall),
+        ),
+        findsOneWidget,
+      );
     });
   });
 

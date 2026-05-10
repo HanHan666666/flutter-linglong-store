@@ -11,6 +11,10 @@ import 'package:linglong_store/domain/models/linglong_env_check_result.dart';
 import 'package:linglong_store/presentation/widgets/linglong_env_dialog.dart';
 
 void main() {
+  AppLocalizations l10nFor(WidgetTester tester) {
+    return AppLocalizations.of(tester.element(find.byType(Scaffold)))!;
+  }
+
   testWidgets(
     'shows distribution guidance when env dialog exposes an adapted distro',
     (tester) async {
@@ -29,8 +33,14 @@ void main() {
         ),
       );
 
+      final l10n = l10nFor(tester);
+
       expect(find.textContaining('开发者模式'), findsOneWidget);
       expect(find.textContaining('root'), findsOneWidget);
+      expect(
+        find.widgetWithText(FilledButton, l10n.autoInstall),
+        findsOneWidget,
+      );
     },
   );
 

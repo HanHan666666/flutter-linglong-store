@@ -5,6 +5,45 @@ import 'package:http/http.dart' as http;
 
 import '../../core/config/theme.dart';
 
+enum _AppIconLoadStrategy { svg, directNetwork, cachedNetwork }
+
+_AppIconLoadStrategy _resolveAppIconLoadStrategy(String url) {
+  final normalized = url.trim().toLowerCase();
+  if (normalized.startsWith('data:image/svg+xml')) {
+    return _AppIconLoadStrategy.svg;
+  }
+
+  final uri = Uri.tryParse(normalized);
+  final path = uri?.path ?? normalized;
+  if (path.endsWith('.svg')) {
+    return _AppIconLoadStrategy.svg;
+  }
+
+  if (_shouldUseDirectNetworkImageUrl(uri)) {
+    return _AppIconLoadStrategy.directNetwork;
+  }
+
+  return _AppIconLoadStrategy.cachedNetwork;
+}
+
+bool _shouldUseDirectNetworkImageUrl(Uri? uri) {
+  if (uri == null) {
+    return false;
+  }
+
+  final scheme = uri.scheme.toLowerCase();
+  if (scheme.isNotEmpty && scheme != 'http' && scheme != 'https') {
+    return false;
+  }
+
+  if (uri.pathSegments.isEmpty) {
+    return false;
+  }
+
+  final lastSegment = uri.pathSegments.last.toLowerCase();
+  return !lastSegment.contains('.');
+}
+
 /// 应用图标组件
 ///
 /// 支持网络图片和本地占位符，带有缓存机制
@@ -27,14 +66,14 @@ class AppIcon extends StatelessWidget {
   /// 应用名称（用于占位符显示首字母）
   final String? appName;
 
+  /// SVG 加载时使用的 HTTP client，仅用于测试和受控网络场景。
+  final http.Client? svgHttpClient;
+
   /// 内存缓存最大宽度（像素），默认为 size * 3
   final int? memCacheWidth;
 
   /// 磁盘缓存最大宽度（像素），默认为 size * 4
   final int? maxDiskCacheWidth;
-
-  /// SVG 网络客户端注入点，默认仅用于测试稳定控制返回内容。
-  final http.Client? svgHttpClient;
 
   const AppIcon({
     super.key,
@@ -44,9 +83,9 @@ class AppIcon extends StatelessWidget {
     this.placeholderColor,
     this.errorColor,
     this.appName,
+    this.svgHttpClient,
     this.memCacheWidth,
     this.maxDiskCacheWidth,
-    this.svgHttpClient,
   });
 
   @override
@@ -63,28 +102,74 @@ class AppIcon extends StatelessWidget {
       return _buildPlaceholder(context, bgColor!);
     }
 
+    final normalizedIconUrl = iconUrl!.trim();
+
     // 缓存策略：内存缓存约为显示尺寸的2倍，磁盘缓存约为显示尺寸的3倍
     // 这样可以在保证清晰度的同时节省内存
     final effectiveMemCacheWidth = memCacheWidth ?? (size * 2).toInt();
     final effectiveDiskCacheWidth = maxDiskCacheWidth ?? (size * 3).toInt();
+    final loadStrategy = _resolveAppIconLoadStrategy(normalizedIconUrl);
 
-    if (_isSvgIconUrl(iconUrl!)) {
+    if (loadStrategy == _AppIconLoadStrategy.svg) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
         child: SizedBox(
           width: size,
           height: size,
           child: SvgPicture.network(
-            iconUrl!,
+            normalizedIconUrl,
             width: size,
             height: size,
             fit: BoxFit.contain,
+            httpClient: svgHttpClient,
             placeholderBuilder: (context) =>
                 _buildPlaceholder(context, bgColor!),
             errorBuilder: (context, error, stackTrace) =>
                 _buildErrorWidget(context, bgColor!),
-            httpClient: svgHttpClient,
           ),
+        ),
+      );
+    }
+
+    // 联通后端存在一类无扩展名图标地址，Linux 下走 CachedNetworkImage
+    // 会出现无法显示的问题。此类地址直接交给 Image.network 解码，
+    // 若实际内容是 SVG，则在位图解码失败后再回退到 SvgPicture。
+    if (loadStrategy == _AppIconLoadStrategy.directNetwork) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: Image.network(
+          normalizedIconUrl,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          cacheWidth: effectiveMemCacheWidth,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            }
+            return _buildPlaceholder(context, bgColor!);
+          },
+          errorBuilder: (context, error, stackTrace) {
+            if (error is NetworkImageLoadException) {
+              return _buildErrorWidget(context, bgColor!);
+            }
+
+            return SizedBox(
+              width: size,
+              height: size,
+              child: SvgPicture.network(
+                normalizedIconUrl,
+                width: size,
+                height: size,
+                fit: BoxFit.contain,
+                httpClient: svgHttpClient,
+                placeholderBuilder: (context) =>
+                    _buildPlaceholder(context, bgColor!),
+                errorBuilder: (context, svgError, svgStackTrace) =>
+                    _buildErrorWidget(context, bgColor!),
+              ),
+            );
+          },
         ),
       );
     }
@@ -92,7 +177,7 @@ class AppIcon extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: CachedNetworkImage(
-        imageUrl: iconUrl!,
+        imageUrl: normalizedIconUrl,
         width: size,
         height: size,
         fit: BoxFit.cover,
@@ -103,17 +188,6 @@ class AppIcon extends StatelessWidget {
             _buildErrorWidget(context, bgColor!),
       ),
     );
-  }
-
-  bool _isSvgIconUrl(String url) {
-    final normalized = url.trim().toLowerCase();
-    if (normalized.startsWith('data:image/svg+xml')) {
-      return true;
-    }
-
-    final uri = Uri.tryParse(normalized);
-    final path = uri?.path ?? normalized;
-    return path.endsWith('.svg');
   }
 
   /// 构建占位符

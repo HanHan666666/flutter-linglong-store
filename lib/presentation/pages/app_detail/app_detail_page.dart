@@ -238,7 +238,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     InstallTask? installTask, {
     required bool hasInstalledInstance,
   }) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final appDetail = detailState.appDetail;
 
@@ -348,63 +347,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 if (installTask != null &&
                     installTask.displayMessage != null) ...[
                   const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: installTask.isFailed
-                        ? CrossAxisAlignment.start
-                        : CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Tooltip(
-                          message: installTask.displayMessage!,
-                          child: Text(
-                            installTask.displayMessage!,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: installTask.isFailed
-                                  ? theme.colorScheme.error
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
-                            softWrap: installTask.isFailed,
-                            overflow: installTask.isFailed
-                                ? TextOverflow.visible
-                                : TextOverflow.ellipsis,
-                            maxLines: installTask.isFailed ? null : 1,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Semantics(
-                        label: l10n?.copyErrorMessage ?? 'Copy error message',
-                        button: true,
-                        child: Tooltip(
-                          message:
-                              l10n?.copyErrorMessage ?? 'Copy error message',
-                          child: TextButton(
-                            onPressed: () {
-                              Clipboard.setData(
-                                ClipboardData(
-                                  text: installTask.displayMessage!,
-                                ),
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: Text(
-                              l10n?.copy ?? 'Copy',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildInstallStatusMessage(context, installTask),
                 ],
               ],
             ),
@@ -412,6 +355,124 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         ],
       ),
     );
+  }
+
+  Widget _buildInstallStatusMessage(
+    BuildContext context,
+    InstallTask installTask,
+  ) {
+    final theme = Theme.of(context);
+    final displayMessage = installTask.displayMessage;
+    if (displayMessage == null || displayMessage.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // 失败态让错误文本独占整行，避免复制按钮挤压后出现截断。
+    if (installTask.isFailed) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Tooltip(
+            message: displayMessage,
+            child: Text(
+              displayMessage,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerRight,
+            child: _buildInstallStatusCopyButton(
+              context,
+              _resolveFailedInstallStatusCopyText(installTask, displayMessage),
+              isFailed: true,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Tooltip(
+            message: displayMessage,
+            child: Text(
+              displayMessage,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        _buildInstallStatusCopyButton(context, displayMessage, isFailed: false),
+      ],
+    );
+  }
+
+  Widget _buildInstallStatusCopyButton(
+    BuildContext context,
+    String copyText, {
+    required bool isFailed,
+  }) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final label = isFailed
+        ? (l10n?.copyErrorMessage ?? 'Copy error message')
+        : (l10n?.copy ?? 'Copy');
+
+    return Semantics(
+      label: label,
+      button: true,
+      child: Tooltip(
+        message: label,
+        child: TextButton(
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: copyText));
+          },
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            l10n?.copy ?? 'Copy',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _resolveFailedInstallStatusCopyText(
+    InstallTask installTask,
+    String fallback,
+  ) {
+    final errorDetail = installTask.errorDetail?.trim();
+    if (errorDetail != null && errorDetail.isNotEmpty) {
+      return errorDetail;
+    }
+
+    final errorMessage = installTask.errorMessage?.trim();
+    if (errorMessage != null && errorMessage.isNotEmpty) {
+      return errorMessage;
+    }
+
+    final rawMessage = installTask.rawMessage?.trim();
+    if (rawMessage != null && rawMessage.isNotEmpty) {
+      return rawMessage;
+    }
+
+    return fallback;
   }
 
   /// 构建标签列表（Chip 样式）

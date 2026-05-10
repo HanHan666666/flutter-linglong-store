@@ -75,6 +75,274 @@ void main() {
       );
     });
 
+    testWidgets('failed install message wraps fully and copies full detail', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(760, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      const displayedMessage =
+          'Error executing command as another user: Request denied because authentication dialog was dismissed before the command could continue.';
+      const fullErrorDetail =
+          'Error executing command as another user: Request denied because authentication dialog was dismissed before the command could continue. pkexec exited with code 126.';
+
+      const clipboardChannel = SystemChannels.platform;
+      MethodCall? clipboardCall;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(clipboardChannel, (call) async {
+            clipboardCall = call;
+            return null;
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(clipboardChannel, null);
+      });
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          appId: 'org.example.demo',
+          uninstallService: _RecordingUninstallService(),
+          detailState: _detailState(versions: const []),
+          installedApps: const [],
+          installQueueState: InstallQueueState(
+            history: [
+              InstallTask(
+                id: 'failed-task',
+                appId: 'org.example.demo',
+                appName: 'Demo',
+                version: '2.0.0',
+                status: InstallStatus.failed,
+                message: displayedMessage,
+                errorMessage: displayedMessage,
+                errorDetail: fullErrorDetail,
+                createdAt: DateTime.now().millisecondsSinceEpoch,
+                finishedAt: DateTime.now().millisecondsSinceEpoch,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final errorText = find.text(displayedMessage);
+      final copyButton = find.byTooltip('复制错误信息');
+      final errorTextWidget = tester.widget<Text>(errorText);
+
+      expect(errorText, findsOneWidget);
+      expect(copyButton, findsOneWidget);
+      expect(errorTextWidget.maxLines, isNull);
+      expect(
+        tester.getTopLeft(copyButton).dy,
+        greaterThan(tester.getBottomLeft(errorText).dy),
+      );
+
+      await tester.tap(copyButton);
+      await tester.pump();
+
+      expect(clipboardCall?.method, equals('Clipboard.setData'));
+      expect(
+        clipboardCall?.arguments,
+        equals(<String, dynamic>{'text': fullErrorDetail}),
+      );
+    });
+
+    testWidgets('non-failed install message keeps copying displayed message', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(760, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      const displayedMessage = '准备安装...';
+      const rawMessage = '{"message":"raw install message"}';
+
+      const clipboardChannel = SystemChannels.platform;
+      MethodCall? clipboardCall;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(clipboardChannel, (call) async {
+            clipboardCall = call;
+            return null;
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(clipboardChannel, null);
+      });
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          appId: 'org.example.demo',
+          uninstallService: _RecordingUninstallService(),
+          detailState: _detailState(versions: const []),
+          installedApps: const [],
+          installQueueState: InstallQueueState(
+            currentTask: InstallTask(
+              id: 'active-task',
+              appId: 'org.example.demo',
+              appName: 'Demo',
+              version: '2.0.0',
+              status: InstallStatus.installing,
+              message: displayedMessage,
+              rawMessage: rawMessage,
+              createdAt: DateTime.now().millisecondsSinceEpoch,
+            ),
+            isProcessing: true,
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final statusRow = find.ancestor(
+        of: find.text(displayedMessage),
+        matching: find.byType(Row),
+      );
+      final copyButton = find.descendant(
+        of: statusRow.first,
+        matching: find.widgetWithText(TextButton, '复制'),
+      );
+      final neutralTooltip = find.descendant(
+        of: statusRow.first,
+        matching: find.byTooltip('复制'),
+      );
+      final errorTooltip = find.descendant(
+        of: statusRow.first,
+        matching: find.byTooltip('复制错误信息'),
+      );
+
+      expect(neutralTooltip, findsOneWidget);
+      expect(errorTooltip, findsNothing);
+
+      await tester.tap(copyButton);
+      await tester.pump();
+
+      expect(clipboardCall?.method, equals('Clipboard.setData'));
+      expect(
+        clipboardCall?.arguments,
+        equals(<String, dynamic>{'text': displayedMessage}),
+      );
+    });
+
+    testWidgets(
+      'restored failed task copies error message when detail is absent',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(760, 900));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        const displayedMessage = '任务异常中断';
+        const errorMessage = '请重试安装，若仍失败请检查认证授权。';
+
+        const clipboardChannel = SystemChannels.platform;
+        MethodCall? clipboardCall;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(clipboardChannel, (call) async {
+              clipboardCall = call;
+              return null;
+            });
+        addTearDown(() {
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockMethodCallHandler(clipboardChannel, null);
+        });
+
+        await tester.pumpWidget(
+          _buildTestApp(
+            appId: 'org.example.demo',
+            uninstallService: _RecordingUninstallService(),
+            detailState: _detailState(versions: const []),
+            installedApps: const [],
+            installQueueState: InstallQueueState(
+              history: [
+                InstallTask(
+                  id: 'restored-failed-task',
+                  appId: 'org.example.demo',
+                  appName: 'Demo',
+                  version: '2.0.0',
+                  status: InstallStatus.failed,
+                  message: displayedMessage,
+                  errorMessage: errorMessage,
+                  createdAt: DateTime.now().millisecondsSinceEpoch,
+                  finishedAt: DateTime.now().millisecondsSinceEpoch,
+                ),
+              ],
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byTooltip('复制错误信息'));
+        await tester.pump();
+
+        expect(clipboardCall?.method, equals('Clipboard.setData'));
+        expect(
+          clipboardCall?.arguments,
+          equals(<String, dynamic>{'text': errorMessage}),
+        );
+      },
+    );
+
+    testWidgets(
+      'failed install message copies raw message when it is the only detail',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(760, 900));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        const displayedMessage = '安装失败';
+        const rawMessage =
+            '{"message":"polkit denied request","stdout":"","stderr":"Request dismissed by user"}';
+
+        const clipboardChannel = SystemChannels.platform;
+        MethodCall? clipboardCall;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(clipboardChannel, (call) async {
+              clipboardCall = call;
+              return null;
+            });
+        addTearDown(() {
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockMethodCallHandler(clipboardChannel, null);
+        });
+
+        await tester.pumpWidget(
+          _buildTestApp(
+            appId: 'org.example.demo',
+            uninstallService: _RecordingUninstallService(),
+            detailState: _detailState(versions: const []),
+            installedApps: const [],
+            installQueueState: InstallQueueState(
+              history: [
+                InstallTask(
+                  id: 'raw-failed-task',
+                  appId: 'org.example.demo',
+                  appName: 'Demo',
+                  version: '2.0.0',
+                  status: InstallStatus.failed,
+                  message: displayedMessage,
+                  rawMessage: rawMessage,
+                  createdAt: DateTime.now().millisecondsSinceEpoch,
+                  finishedAt: DateTime.now().millisecondsSinceEpoch,
+                ),
+              ],
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byTooltip('复制错误信息'));
+        await tester.pump();
+
+        expect(clipboardCall?.method, equals('Clipboard.setData'));
+        expect(
+          clipboardCall?.arguments,
+          equals(<String, dynamic>{'text': rawMessage}),
+        );
+      },
+    );
+
     testWidgets(
       'renders installed badge and uninstall for installed versions',
       (tester) async {
@@ -265,66 +533,69 @@ void main() {
       );
     });
 
-    testWidgets('downgrade confirmation enqueues historical install with force', (
-      tester,
-    ) async {
-      await tester.binding.setSurfaceSize(const Size(1280, 1400));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+    testWidgets(
+      'downgrade confirmation enqueues historical install with force',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1280, 1400));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      final installQueue = _RecordingInstallQueue();
+        final installQueue = _RecordingInstallQueue();
 
-      await tester.pumpWidget(
-        _buildTestApp(
-          appId: 'org.example.demo',
-          uninstallService: _RecordingUninstallService(),
-          detailState: _detailState(
-            versions: const [
-              AppVersion(
-                versionNo: '2.0.0',
-                releaseTime: '2026-04-19',
-                packageSize: '1048576',
-              ),
-              AppVersion(
-                versionNo: '1.0.0',
-                releaseTime: '2026-04-18',
-                packageSize: '524288',
+        await tester.pumpWidget(
+          _buildTestApp(
+            appId: 'org.example.demo',
+            uninstallService: _RecordingUninstallService(),
+            detailState: _detailState(
+              versions: const [
+                AppVersion(
+                  versionNo: '2.0.0',
+                  releaseTime: '2026-04-19',
+                  packageSize: '1048576',
+                ),
+                AppVersion(
+                  versionNo: '1.0.0',
+                  releaseTime: '2026-04-18',
+                  packageSize: '524288',
+                ),
+              ],
+            ),
+            installedApps: const [
+              InstalledApp(
+                appId: 'org.example.demo',
+                name: 'Demo',
+                version: '2.0.0',
+                arch: 'x86_64',
+                channel: 'main',
+                module: 'main',
               ),
             ],
+            installQueue: installQueue,
           ),
-          installedApps: const [
-            InstalledApp(
-              appId: 'org.example.demo',
-              name: 'Demo',
-              version: '2.0.0',
-              arch: 'x86_64',
-              channel: 'main',
-              module: 'main',
-            ),
-          ],
-          installQueue: installQueue,
-        ),
-      );
+        );
 
-      await tester.pump();
-      await tester.pumpAndSettle();
+        await tester.pump();
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('app-detail-version-install-1.0.0')));
-      await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const Key('app-detail-version-install-1.0.0')),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.byType(AlertDialog), findsOneWidget);
+        expect(find.byType(AlertDialog), findsOneWidget);
 
-      await tester.tap(
-        find.descendant(
-          of: find.byType(AlertDialog),
-          matching: find.byType(ElevatedButton),
-        ),
-      );
-      await tester.pumpAndSettle();
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(ElevatedButton),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(installQueue.lastAppId, 'org.example.demo');
-      expect(installQueue.lastVersion, '1.0.0');
-      expect(installQueue.lastForce, isTrue);
-    });
+        expect(installQueue.lastAppId, 'org.example.demo');
+        expect(installQueue.lastVersion, '1.0.0');
+        expect(installQueue.lastForce, isTrue);
+      },
+    );
   });
 }
 
@@ -347,9 +618,7 @@ Widget _buildTestApp({
       installedAppsProvider.overrideWith(
         () => _StaticInstalledApps(apps: installedApps),
       ),
-      installQueueProvider.overrideWith(
-        () => effectiveInstallQueue,
-      ),
+      installQueueProvider.overrideWith(() => effectiveInstallQueue),
       appUninstallServiceProvider.overrideWithValue(uninstallService),
     ],
     child: MaterialApp(

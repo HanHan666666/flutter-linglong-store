@@ -72,15 +72,8 @@ jobs:
           if-no-files-found: error
 
       - name: Generate release notes
-        env:
-          SOURCE_COMMIT: ${{ steps.source-commit.outputs.source_commit }}
         run: |
-          previous_tag="$(git describe --tags --abbrev=0 --match 'v3.0.*' "$SOURCE_COMMIT" 2>/dev/null || true)"
-          if [[ -n "$previous_tag" ]]; then
-            bash build/scripts/generate-changelog.sh "${{ steps.release-version.outputs.version }}" "$previous_tag" > release-notes.md
-          else
-            bash build/scripts/generate-changelog.sh "${{ steps.release-version.outputs.version }}" > release-notes.md
-          fi
+          bash build/scripts/generate-changelog.sh "${{ steps.release-version.outputs.version }}" > release-notes.md
           cat <<'EOF' >> release-notes.md
 
           ## Download

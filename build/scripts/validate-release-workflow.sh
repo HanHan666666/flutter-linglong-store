@@ -36,10 +36,12 @@ require_grep "append-release-asset-hashes.sh" .github/workflows/release.yml
 require_grep "normalize-release-assets.sh" .github/workflows/release.yml
 require_grep "release-assets/hashes.sha256" .github/workflows/release.yml
 require_grep "release-assets/*" .github/workflows/release.yml
+require_grep 'bash build/scripts/generate-changelog.sh "${{ steps.release-version.outputs.version }}" > release-notes.md' .github/workflows/release.yml
 require_grep "artifacts/*.tar.gz.asc" .github/workflows/release.yml
 require_grep "for tarball in *.tar.gz; do" .github/workflows/release.yml
 require_grep "Missing expected signed amd64 tarball signature in signed-assets" .github/workflows/release.yml
 require_no_grep "/home/han/flutter" .github/workflows/release.yml
+require_no_grep "git describe --tags --abbrev=0 --match 'v3.0.*'" .github/workflows/release.yml
 require_no_grep "app_constants.dart" .github/workflows/release.yml
 require_grep "pull_request" .github/workflows/ci.yml
 require_grep "release-cli-smoke-test.sh" .github/workflows/ci.yml

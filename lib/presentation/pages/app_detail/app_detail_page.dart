@@ -446,9 +446,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
                 l10n.screenShots,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: context.appFontWeight(FontWeight.w700),
                 ),
               ),
@@ -670,9 +668,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         children: [
           Text(
             AppLocalizations.of(context)?.appInfo ?? '应用信息',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: context.appFontWeight(FontWeight.w700),
             ),
           ),

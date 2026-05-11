@@ -734,10 +734,8 @@ class _AppsGrid extends StatelessWidget {
           buttonState: cardState.buttonState,
           progress: cardState.progress,
           isInstalling: cardState.isInstalling,
-          onTap: () => context.goToAppDetail(
-            app.appId,
-            appInfo: app.toInstalledApp(),
-          ),
+          onTap: () =>
+              context.goToAppDetail(app.appId, appInfo: app.toInstalledApp()),
           onPrimaryPressed: () => handleAppCardPrimaryAction(
             context: context,
             ref: ref,

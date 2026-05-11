@@ -252,10 +252,7 @@ class LinglongEnvDialog extends ConsumerWidget {
     );
   }
 
-  Widget _buildDistributionGuidanceHint(
-    BuildContext context,
-    String guidance,
-  ) {
+  Widget _buildDistributionGuidanceHint(BuildContext context, String guidance) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(

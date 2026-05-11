@@ -39,7 +39,7 @@ class AppCard extends StatefulWidget {
     this.progress = 0.0,
     this.isInstalling = false,
     this.rank,
-    this.uploadTime,      // 上架时间文本（新增）
+    this.uploadTime, // 上架时间文本（新增）
     this.downloadCountText, // 下载量文本（新增）
     this.type = AppCardType.default_,
     this.isLoading = false,
@@ -72,7 +72,7 @@ class AppCard extends StatefulWidget {
   final double progress;
   final bool isInstalling;
   final int? rank;
-  final String? uploadTime;       // 上架时间（相对时间或完整日期）
+  final String? uploadTime; // 上架时间（相对时间或完整日期）
   final String? downloadCountText; // 下载量文本（如"下载 1,234次")
   final AppCardType type;
   final bool isLoading;
@@ -435,10 +435,7 @@ class _AppCardState extends State<AppCard> {
   }
 
   /// 解析按钮状态对应的无障碍状态文本。
-  String _resolveStatusText(
-    AppLocalizations l10n,
-    InstallButtonState state,
-  ) {
+  String _resolveStatusText(AppLocalizations l10n, InstallButtonState state) {
     return switch (state) {
       InstallButtonState.notInstalled => l10n.a11yStatusNotInstalled,
       InstallButtonState.installing ||

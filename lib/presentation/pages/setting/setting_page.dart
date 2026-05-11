@@ -229,9 +229,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: Theme.of(
-          context,
-        ).textTheme.titleMedium?.copyWith(
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
           fontWeight: context.appFontWeight(FontWeight.w600),
         ),
       ),
@@ -348,10 +346,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: theme.colorScheme.outlineVariant,
-          width: 1,
-        ),
+        side: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -848,9 +843,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           ),
           Text(
             value,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontWeight: context.appFontWeight(FontWeight.w500),
             ),
           ),

@@ -276,9 +276,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
           separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
           itemBuilder: (context, index) {
             final app = filteredApps[index];
-            final cardState = cardStateIndex.resolve(
-              appId: app.appId,
-            );
+            final cardState = cardStateIndex.resolve(appId: app.appId);
             return AppCard(
               appId: app.appId,
               name: app.name,

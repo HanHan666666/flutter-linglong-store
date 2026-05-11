@@ -10,7 +10,6 @@ import '../../core/config/local_sidebar_menu_catalog.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../data/models/api_dto.dart';
 import 'download_manager_dialog.dart';
-import 'install_to_download_flyout.dart';
 import 'sidebar_interaction_surface.dart';
 
 /// 侧边栏菜单项定义
@@ -499,29 +498,28 @@ class _BottomIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final button = SidebarInteractionSurface(
-      isSelected: isSelected,
-      onTap: () => _handleTap(context),
-      width: AppSpacing.x2l,
-      height: AppSpacing.x2l,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned.fill(
-            child: Center(
-              child: _BottomIconContent(item: item, isSelected: isSelected),
+
+    return Tooltip(
+      message: item.localizedLabel(l10n),
+      child: SidebarInteractionSurface(
+        isSelected: isSelected,
+        onTap: () => _handleTap(context),
+        width: AppSpacing.x2l,
+        height: AppSpacing.x2l,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: Center(
+                child: _BottomIconContent(item: item, isSelected: isSelected),
+              ),
             ),
-          ),
-          if (badgeCount > 0)
-            Positioned(top: -4, right: -4, child: _Badge(count: badgeCount)),
-        ],
+            if (badgeCount > 0)
+              Positioned(top: -4, right: -4, child: _Badge(count: badgeCount)),
+          ],
+        ),
       ),
     );
-    final anchoredButton = item == _BottomSidebarItem.downloadManager
-        ? DownloadCenterFlyoutTarget(child: button)
-        : button;
-
-    return Tooltip(message: item.localizedLabel(l10n), child: anchoredButton);
   }
 }
 

@@ -5,33 +5,21 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../application/providers/api_provider.dart';
 import '../../../application/providers/global_provider.dart';
-import '../../../application/providers/linux_renderer_provider.dart';
 import '../../../application/providers/setting_provider.dart';
 import '../../../application/services/version_check_service.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/logging/app_logger.dart';
-import '../../../core/platform/linux_renderer_service.dart';
 import '../../../core/utils/app_notification_helpers.dart';
 import '../../../data/datasources/remote/app_api_service.dart';
 import '../../../data/models/api_dto.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/feedback_dialog.dart';
-import 'widgets/renderer_preference_tile.dart';
 
 /// 设置页
 class SettingPage extends ConsumerStatefulWidget {
-  const SettingPage({
-    super.key,
-    this.resolveAppVersion,
-    this.refreshCacheSize,
-    this.fetchAppTotalCount,
-  });
-
-  final Future<String> Function()? resolveAppVersion;
-  final Future<void> Function()? refreshCacheSize;
-  final Future<int?> Function()? fetchAppTotalCount;
+  const SettingPage({super.key});
 
   @override
   ConsumerState<SettingPage> createState() => _SettingPageState();
@@ -75,24 +63,21 @@ class _SettingPageState extends ConsumerState<SettingPage> {
   /// 初始化设置
   Future<void> _initSettings() async {
     final notifier = ref.read(settingProvider.notifier);
+    final apiService = ref.read(appApiServiceProvider);
 
     await runSettingPageInitialization(
-      resolveAppVersion:
-          widget.resolveAppVersion ??
-          () async {
-            try {
-              final packageInfo = await PackageInfo.fromPlatform();
-              return packageInfo.version;
-            } catch (_) {
-              return AppConfig.appVersion;
-            }
-          },
+      resolveAppVersion: () async {
+        try {
+          final packageInfo = await PackageInfo.fromPlatform();
+          return packageInfo.version;
+        } catch (_) {
+          return AppConfig.appVersion;
+        }
+      },
       setAppVersion: notifier.setAppVersion,
-      refreshCacheSize: widget.refreshCacheSize ?? notifier.refreshCacheSize,
+      refreshCacheSize: notifier.refreshCacheSize,
       isMounted: () => mounted,
-      fetchAppTotalCount:
-          widget.fetchAppTotalCount ??
-          () => _fetchAppTotalCount(ref.read(appApiServiceProvider)),
+      fetchAppTotalCount: () => _fetchAppTotalCount(apiService),
       setAppTotalCount: (total) {
         if (!mounted) return;
         setState(() => _appTotalCount = total);
@@ -187,7 +172,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(settingProvider);
     final globalState = ref.watch(globalAppProvider);
-    final rendererRuntime = ref.watch(linuxRendererRuntimeProvider);
     final l10n = AppLocalizations.of(context)!;
 
     return SingleChildScrollView(
@@ -224,7 +208,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
           // 商店选项
           _buildSectionTitle(context, l10n.storeOptions),
-          _buildStoreOptionsSection(context, state, rendererRuntime),
+          _buildStoreOptionsSection(context, state),
 
           const SizedBox(height: 24),
 
@@ -245,7 +229,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(
           fontWeight: context.appFontWeight(FontWeight.w600),
         ),
       ),
@@ -362,7 +348,10 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
+        side: BorderSide(
+          color: theme.colorScheme.outlineVariant,
+          width: 1,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -602,13 +591,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
   /// 构建商店选项部分
   ///
   /// 包含两个行为开关和一个清理废弃基础服务的操作按钮。
-  Widget _buildStoreOptionsSection(
-    BuildContext context,
-    SettingState state,
-    AsyncValue<LinuxRendererRuntimeState> rendererRuntime,
-  ) {
+  Widget _buildStoreOptionsSection(BuildContext context, SettingState state) {
     final l10n = AppLocalizations.of(context)!;
-
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -620,17 +604,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       ),
       child: Column(
         children: [
-          RendererPreferenceTile(
-            rendererRuntime: rendererRuntime,
-            rendererPreference: state.rendererPreference,
-            rendererService: ref.read(linuxRendererServiceProvider),
-            onPreferenceSelected: (preference) {
-              return ref
-                  .read(settingProvider.notifier)
-                  .setRendererPreference(preference);
-            },
-          ),
-          _buildDivider(context),
           // 启动时检查商店版本更新
           SwitchListTile(
             title: Text(l10n.startupCheckUpdate),
@@ -823,11 +796,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
             const SizedBox(height: 8),
 
-            // 链接数量已增加，使用 Wrap 避免窄窗口下按钮溢出。
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 16,
-              runSpacing: 8,
+            // 项目链接
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton.icon(
                   onPressed: () => _openUrl(
@@ -836,30 +807,19 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   icon: const Icon(Icons.code, size: 18),
                   label: const Text('GitHub'),
                 ),
-                TextButton.icon(
-                  onPressed: () => _openUrl(
-                    'https://gitee.com/hanplus/flutter-linglong-store',
-                  ),
-                  icon: const Icon(Icons.code_outlined, size: 18),
-                  label: const Text('Gitee'),
-                ),
+                const SizedBox(width: 16),
                 TextButton.icon(
                   onPressed: () => _openUrl('https://linyaps.org.cn/'),
                   icon: const Icon(Icons.language, size: 18),
                   label: Text(l10n.officialWebsite),
                 ),
+                const SizedBox(width: 16),
                 // 社区交流入口与其他关于区外链保持同级展示。
                 TextButton.icon(
                   onPressed: () =>
                       _openUrl('https://bbs.deepin.org.cn/module/detail/230'),
                   icon: const Icon(Icons.forum_outlined, size: 18),
                   label: Text(l10n.communityExchange),
-                ),
-                TextButton.icon(
-                  onPressed: () =>
-                      _openUrl('https://linyaps.org.cn/linyaps-store-sig'),
-                  icon: const Icon(Icons.groups_2_outlined, size: 18),
-                  label: Text(l10n.aboutDevelopers),
                 ),
               ],
             ),
@@ -888,7 +848,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           ),
           Text(
             value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(
               fontWeight: context.appFontWeight(FontWeight.w500),
             ),
           ),

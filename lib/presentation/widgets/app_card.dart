@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -41,7 +39,7 @@ class AppCard extends StatefulWidget {
     this.progress = 0.0,
     this.isInstalling = false,
     this.rank,
-    this.uploadTime, // 上架时间文本（新增）
+    this.uploadTime,      // 上架时间文本（新增）
     this.downloadCountText, // 下载量文本（新增）
     this.type = AppCardType.default_,
     this.isLoading = false,
@@ -74,12 +72,12 @@ class AppCard extends StatefulWidget {
   final double progress;
   final bool isInstalling;
   final int? rank;
-  final String? uploadTime; // 上架时间（相对时间或完整日期）
+  final String? uploadTime;       // 上架时间（相对时间或完整日期）
   final String? downloadCountText; // 下载量文本（如"下载 1,234次")
   final AppCardType type;
   final bool isLoading;
   final VoidCallback? onTap;
-  final FutureOr<void> Function(GlobalKey sourceIconKey)? onPrimaryPressed;
+  final VoidCallback? onPrimaryPressed;
   final List<AppCardMenuAction> menuActions;
 
   @override
@@ -88,7 +86,6 @@ class AppCard extends StatefulWidget {
 
 class _AppCardState extends State<AppCard> {
   bool _isHovered = false;
-  final GlobalKey _iconKey = GlobalKey(debugLabel: 'app-card-icon');
 
   @override
   Widget build(BuildContext context) {
@@ -137,16 +134,11 @@ class _AppCardState extends State<AppCard> {
                       const SizedBox(width: AppSpacing.sm),
                     ],
                     ExcludeSemantics(
-                      child: SizedBox(
-                        key: _iconKey,
-                        width: 48,
-                        height: 48,
-                        child: AppIcon(
-                          iconUrl: widget.iconUrl,
-                          size: 48,
-                          borderRadius: 8,
-                          appName: widget.name,
-                        ),
+                      child: AppIcon(
+                        iconUrl: widget.iconUrl,
+                        size: 48,
+                        borderRadius: 8,
+                        appName: widget.name,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -312,22 +304,16 @@ class _AppCardState extends State<AppCard> {
     // 安装中/排队中时按钮禁用
     final isEnabled = !isLoading && !isPending;
 
-    void handlePrimaryPressed() {
-      widget.onPrimaryPressed?.call(_iconKey);
-    }
-
     if (widget.buttonState == InstallButtonState.open ||
         widget.buttonState == InstallButtonState.installed) {
       return A11yButton(
         semanticsLabel: semanticsLabel,
-        onTap: handlePrimaryPressed,
+        onTap: widget.onPrimaryPressed ?? () {},
         enabled: isEnabled,
         child: SizedBox(
           height: 28,
           child: OutlinedButton(
-            onPressed: isEnabled && widget.onPrimaryPressed != null
-                ? handlePrimaryPressed
-                : null,
+            onPressed: isEnabled ? widget.onPrimaryPressed : null,
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(56, 28),
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -346,14 +332,12 @@ class _AppCardState extends State<AppCard> {
 
     return A11yButton(
       semanticsLabel: semanticsLabel,
-      onTap: handlePrimaryPressed,
+      onTap: widget.onPrimaryPressed ?? () {},
       enabled: isEnabled,
       child: SizedBox(
         height: 28,
         child: FilledButton(
-          onPressed: isEnabled && widget.onPrimaryPressed != null
-              ? handlePrimaryPressed
-              : null,
+          onPressed: isEnabled ? widget.onPrimaryPressed : null,
           style: FilledButton.styleFrom(
             minimumSize: const Size(56, 28),
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -451,7 +435,10 @@ class _AppCardState extends State<AppCard> {
   }
 
   /// 解析按钮状态对应的无障碍状态文本。
-  String _resolveStatusText(AppLocalizations l10n, InstallButtonState state) {
+  String _resolveStatusText(
+    AppLocalizations l10n,
+    InstallButtonState state,
+  ) {
     return switch (state) {
       InstallButtonState.notInstalled => l10n.a11yStatusNotInstalled,
       InstallButtonState.installing ||

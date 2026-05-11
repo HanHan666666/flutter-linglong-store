@@ -276,7 +276,9 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
           separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
           itemBuilder: (context, index) {
             final app = filteredApps[index];
-            final cardState = cardStateIndex.resolve(appId: app.appId);
+            final cardState = cardStateIndex.resolve(
+              appId: app.appId,
+            );
             return AppCard(
               appId: app.appId,
               name: app.name,
@@ -286,13 +288,12 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
               progress: cardState.progress,
               isInstalling: cardState.isInstalling,
               onTap: () => context.goToAppDetail(app.appId, appInfo: app),
-              onPrimaryPressed: (sourceIconKey) => handleAppCardPrimaryAction(
+              onPrimaryPressed: () => handleAppCardPrimaryAction(
                 context: context,
                 ref: ref,
                 buttonState: cardState.buttonState,
                 appId: app.appId,
                 appName: app.name,
-                sourceIconKey: sourceIconKey,
                 icon: app.icon,
               ),
               menuActions: [

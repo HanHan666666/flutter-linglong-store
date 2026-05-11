@@ -252,7 +252,10 @@ class LinglongEnvDialog extends ConsumerWidget {
     );
   }
 
-  Widget _buildDistributionGuidanceHint(BuildContext context, String guidance) {
+  Widget _buildDistributionGuidanceHint(
+    BuildContext context,
+    String guidance,
+  ) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -406,12 +409,16 @@ class LinglongEnvDialog extends ConsumerWidget {
         _buildOpenInstallLogButton(context, ref, envState.installLogFilePath!),
 
       // 自动安装按钮
-      FilledButton.icon(
+      ElevatedButton.icon(
         onPressed: result?.isOk == true
             ? null
             : () => _handleAutoInstall(context, ref),
         icon: const Icon(Icons.download, size: 16),
         label: Text(AppLocalizations.of(context)?.autoInstall ?? '自动安装'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+        ),
       ),
 
       // 重新检测按钮

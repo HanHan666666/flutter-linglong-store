@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
+import 'package:linglong_store/application/services/version_check_service.dart';
 import 'package:linglong_store/application/providers/linux_renderer_provider.dart';
 import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
@@ -153,5 +154,46 @@ void main() {
     expect(find.text('更细'), findsOneWidget);
     expect(find.text('标准'), findsOneWidget);
     expect(find.text('更粗'), findsOneWidget);
+  });
+
+  testWidgets('setting page uses unified filled button for clear cache', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+
+    await tester.binding.setSurfaceSize(const Size(1280, 1800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: const Scaffold(body: SettingPage()),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(FilledButton, '清除缓存'), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, '清除缓存'), findsNothing);
+  });
+
+  test('setting page uses release result url for update downloads', () {
+    const result = VersionCheckResultUpdateAvailable(
+      currentVersion: '3.3.1',
+      latestVersion: 'v3.3.2',
+      releasePageUrl:
+          'https://github.com/HanHan666666/flutter-linglong-store/releases/tag/v3.3.2',
+    );
+
+    expect(
+      resolveSettingPageUpdateDownloadUrl(result),
+      'https://github.com/HanHan666666/flutter-linglong-store/releases/tag/v3.3.2',
+    );
   });
 }

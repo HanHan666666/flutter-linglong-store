@@ -685,10 +685,7 @@ void main() {
           installedApps: const [installedApp],
           updateAppsState: const UpdateAppsState(
             apps: [
-              UpdatableApp(
-                installedApp: installedApp,
-                latestVersion: '2.0.0',
-              ),
+              UpdatableApp(installedApp: installedApp, latestVersion: '2.0.0'),
             ],
           ),
           installQueue: installQueue,

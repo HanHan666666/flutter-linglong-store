@@ -82,9 +82,8 @@ void main() {
     });
 
     testWidgets(
-      'passes the icon source key from the outlined primary button branch', (
-        tester,
-      ) async {
+      'passes the icon source key from the outlined primary button branch',
+      (tester) async {
         GlobalKey? capturedSourceKey;
 
         await tester.pumpWidget(

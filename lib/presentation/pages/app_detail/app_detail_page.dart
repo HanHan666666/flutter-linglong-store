@@ -90,14 +90,14 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         .apps
         .where((app) => app.appId == widget.appId)
         .toList(growable: false);
-    final installedVersions = installedApps
-        .map((app) => app.version)
-        .toSet();
+    final installedVersions = installedApps.map((app) => app.version).toSet();
     final hasInstalledInstance = installedVersions.isNotEmpty;
     final hasUpdate = _hasAvailableUpdate(
       detailState,
       hasInstalledInstance: hasInstalledInstance,
-      highestInstalledVersion: _resolveHighestInstalledVersion(installedVersions),
+      highestInstalledVersion: _resolveHighestInstalledVersion(
+        installedVersions,
+      ),
     );
     final l10n = AppLocalizations.of(context)!;
 
@@ -1014,7 +1014,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       return true;
     }
 
-    final remoteVersion = detailState.appDetail?.version ?? detailState.app?.version;
+    final remoteVersion =
+        detailState.appDetail?.version ?? detailState.app?.version;
     if (remoteVersion == null ||
         remoteVersion.isEmpty ||
         highestInstalledVersion == null ||

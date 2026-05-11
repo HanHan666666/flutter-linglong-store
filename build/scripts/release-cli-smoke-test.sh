@@ -33,6 +33,50 @@ if [[ "$first_line" != "## Release Notes" ]]; then
   exit 1
 fi
 
+CHANGELOG_FIXTURE_DIR="$TMP_ROOT/changelog-fixture"
+mkdir -p "$CHANGELOG_FIXTURE_DIR"
+
+git -C "$CHANGELOG_FIXTURE_DIR" init >/dev/null 2>&1
+git -C "$CHANGELOG_FIXTURE_DIR" config user.name "Copilot Smoke Test"
+git -C "$CHANGELOG_FIXTURE_DIR" config user.email "copilot-smoke@example.com"
+
+printf 'bootstrap\n' > "$CHANGELOG_FIXTURE_DIR/base.txt"
+git -C "$CHANGELOG_FIXTURE_DIR" add base.txt
+git -C "$CHANGELOG_FIXTURE_DIR" commit -m "feat: bootstrap release repo" >/dev/null 2>&1
+default_branch="$(git -C "$CHANGELOG_FIXTURE_DIR" symbolic-ref --quiet --short HEAD)"
+initial_commit="$(git -C "$CHANGELOG_FIXTURE_DIR" rev-parse HEAD)"
+
+printf 'stable release baseline\n' > "$CHANGELOG_FIXTURE_DIR/mainline.txt"
+git -C "$CHANGELOG_FIXTURE_DIR" add mainline.txt
+git -C "$CHANGELOG_FIXTURE_DIR" commit -m "feat: release line 3.1.0 work" >/dev/null 2>&1
+git -C "$CHANGELOG_FIXTURE_DIR" tag v3.1.0
+
+git -C "$CHANGELOG_FIXTURE_DIR" checkout -b maintenance "$initial_commit" >/dev/null 2>&1
+printf 'hotfix branch\n' > "$CHANGELOG_FIXTURE_DIR/hotfix.txt"
+git -C "$CHANGELOG_FIXTURE_DIR" add hotfix.txt
+git -C "$CHANGELOG_FIXTURE_DIR" commit -m "fix: hotfix merged after the previous release" >/dev/null 2>&1
+git -C "$CHANGELOG_FIXTURE_DIR" tag v99.0.0
+
+git -C "$CHANGELOG_FIXTURE_DIR" checkout "$default_branch" >/dev/null 2>&1
+git -C "$CHANGELOG_FIXTURE_DIR" merge --no-ff maintenance -m "Merge branch 'maintenance'" >/dev/null 2>&1
+printf 'current release candidate\n' > "$CHANGELOG_FIXTURE_DIR/current.txt"
+git -C "$CHANGELOG_FIXTURE_DIR" add current.txt
+git -C "$CHANGELOG_FIXTURE_DIR" commit -m "feat: current release candidate" >/dev/null 2>&1
+
+fixture_changelog="$({
+  LINGLONG_RELEASE_TOOL_ROOT="$CHANGELOG_FIXTURE_DIR" \
+    bash build/scripts/run-release-dart-tool.sh \
+    "$ROOT_DIR/tool/release/generate_changelog.dart" \
+    3.1.1
+})"
+
+grep -q -- '^- hotfix merged after the previous release$' <<< "$fixture_changelog"
+grep -q -- '^- current release candidate$' <<< "$fixture_changelog"
+if grep -q -- '^- release line 3.1.0 work$' <<< "$fixture_changelog"; then
+  echo "Expected auto-resolved previous release tag to exclude the already released mainline commit." >&2
+  exit 1
+fi
+
 bash build/scripts/render-packaging-templates.sh \
   --inner \
   --version "$version_output" \

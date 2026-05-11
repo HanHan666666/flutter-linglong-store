@@ -23,22 +23,27 @@ void main() {
       },
     );
 
-    test('renders grouped changelog output without the release commit', () {
-      final changelogBody = generateChangelog(
-        previousTag: 'v3.0.6',
-        releaseVersion: '3.0.7',
-        commits: const [
-          'feat: add release tooling baseline',
-          'fix: align release note contract',
-          'docs: document the release baseline',
-          'chore: release 3.0.7',
-          'not a conventional commit',
-        ],
-      );
+    test(
+      'renders grouped changelog output without release bookkeeping commits',
+      () {
+        final changelogBody = generateChangelog(
+          previousTag: 'v3.0.6',
+          releaseVersion: '3.0.7',
+          commits: const [
+            'feat: add release tooling baseline',
+            'fix: align release note contract',
+            'docs: document the release baseline',
+            'chore: release tooling compatibility for 3.4.0',
+            'chore: release 3.0.6',
+            'chore: release 3.0.7',
+            'chore: release Running build hooks...Running build hooks...3.0.0',
+            'not a conventional commit',
+          ],
+        );
 
-      expect(
-        changelogBody,
-        equals('''## Release Notes
+        expect(
+          changelogBody,
+          equals('''## Release Notes
 
 ## feat
 - add release tooling baseline
@@ -49,10 +54,14 @@ void main() {
 ## docs
 - document the release baseline
 
+## chore
+- release tooling compatibility for 3.4.0
+
 ## other
 - not a conventional commit
 '''),
-      );
-    });
+        );
+      },
+    );
   });
 }

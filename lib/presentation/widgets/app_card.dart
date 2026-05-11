@@ -77,7 +77,7 @@ class AppCard extends StatefulWidget {
   final AppCardType type;
   final bool isLoading;
   final VoidCallback? onTap;
-  final VoidCallback? onPrimaryPressed;
+  final void Function(GlobalKey sourceIconKey)? onPrimaryPressed;
   final List<AppCardMenuAction> menuActions;
 
   @override
@@ -86,6 +86,12 @@ class AppCard extends StatefulWidget {
 
 class _AppCardState extends State<AppCard> {
   bool _isHovered = false;
+  // 安装飞行动画需要从真实图标位置起飞，因此卡片内部保留图标锚点。
+  final GlobalKey _iconKey = GlobalKey(debugLabel: 'app-card-icon');
+
+  void _handlePrimaryPressed() {
+    widget.onPrimaryPressed?.call(_iconKey);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,11 +140,16 @@ class _AppCardState extends State<AppCard> {
                       const SizedBox(width: AppSpacing.sm),
                     ],
                     ExcludeSemantics(
-                      child: AppIcon(
-                        iconUrl: widget.iconUrl,
-                        size: 48,
-                        borderRadius: 8,
-                        appName: widget.name,
+                      child: SizedBox(
+                        key: _iconKey,
+                        width: 48,
+                        height: 48,
+                        child: AppIcon(
+                          iconUrl: widget.iconUrl,
+                          size: 48,
+                          borderRadius: 8,
+                          appName: widget.name,
+                        ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -289,6 +300,8 @@ class _AppCardState extends State<AppCard> {
     final isLoading = widget.buttonState == InstallButtonState.installing;
     final isPending = widget.buttonState == InstallButtonState.pending;
     final label = _resolveLabel(l10n, widget.buttonState, isLoading);
+    final hasPrimaryAction = widget.onPrimaryPressed != null;
+    final isPrimaryEnabled = !isLoading && !isPending && hasPrimaryAction;
 
     // 构建语义标签
     final semanticsLabel = switch (widget.buttonState) {
@@ -301,19 +314,16 @@ class _AppCardState extends State<AppCard> {
       InstallButtonState.uninstall => l10n.a11yUninstallApp(widget.name),
     };
 
-    // 安装中/排队中时按钮禁用
-    final isEnabled = !isLoading && !isPending;
-
     if (widget.buttonState == InstallButtonState.open ||
         widget.buttonState == InstallButtonState.installed) {
       return A11yButton(
         semanticsLabel: semanticsLabel,
-        onTap: widget.onPrimaryPressed ?? () {},
-        enabled: isEnabled,
+        onTap: _handlePrimaryPressed,
+        enabled: isPrimaryEnabled,
         child: SizedBox(
           height: 28,
           child: OutlinedButton(
-            onPressed: isEnabled ? widget.onPrimaryPressed : null,
+            onPressed: isPrimaryEnabled ? _handlePrimaryPressed : null,
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(56, 28),
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -332,12 +342,12 @@ class _AppCardState extends State<AppCard> {
 
     return A11yButton(
       semanticsLabel: semanticsLabel,
-      onTap: widget.onPrimaryPressed ?? () {},
-      enabled: isEnabled,
+      onTap: _handlePrimaryPressed,
+      enabled: isPrimaryEnabled,
       child: SizedBox(
         height: 28,
         child: FilledButton(
-          onPressed: isEnabled ? widget.onPrimaryPressed : null,
+          onPressed: isPrimaryEnabled ? _handlePrimaryPressed : null,
           style: FilledButton.styleFrom(
             minimumSize: const Size(56, 28),
             padding: const EdgeInsets.symmetric(horizontal: 12),

@@ -286,12 +286,13 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
               progress: cardState.progress,
               isInstalling: cardState.isInstalling,
               onTap: () => context.goToAppDetail(app.appId, appInfo: app),
-              onPrimaryPressed: () => handleAppCardPrimaryAction(
+              onPrimaryPressed: (sourceIconKey) => handleAppCardPrimaryAction(
                 context: context,
                 ref: ref,
                 buttonState: cardState.buttonState,
                 appId: app.appId,
                 appName: app.name,
+                sourceIconKey: sourceIconKey,
                 icon: app.icon,
               ),
               menuActions: [

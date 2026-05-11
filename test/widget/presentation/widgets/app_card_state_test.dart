@@ -80,5 +80,38 @@ void main() {
       expect(capturedSourceKey, isNotNull);
       expect(capturedSourceKey!.currentContext, isNotNull);
     });
+
+    testWidgets(
+      'passes the icon source key from the outlined primary button branch', (
+        tester,
+      ) async {
+        GlobalKey? capturedSourceKey;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: AppCard(
+                appId: 'org.example.app',
+                name: 'Example',
+                description: 'Example description',
+                buttonState: InstallButtonState.installed,
+                onPrimaryPressed: (sourceKey) {
+                  capturedSourceKey = sourceKey;
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.byType(OutlinedButton));
+        await tester.pump();
+
+        expect(capturedSourceKey, isNotNull);
+        expect(capturedSourceKey!.currentContext, isNotNull);
+      },
+    );
   });
 }

@@ -12,7 +12,7 @@ class AppConfig {
   static const String appName = '玲珑应用商店社区版';
 
   /// 应用版本
-  static const String appVersion = '3.3.4';
+  static const String appVersion = '3.3.5';
 
   /// 默认语言
   static const String defaultLocale = 'zh';

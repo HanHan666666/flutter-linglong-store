@@ -18,6 +18,7 @@ import '../../widgets/app_icon.dart';
 import '../../widgets/app_detail_comment_section.dart';
 import '../../widgets/app_detail_secondary_actions.dart';
 import '../../widgets/app_detail_info_section.dart';
+import '../../widgets/install_to_download_flyout.dart';
 import '../../widgets/install_button.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../../core/di/providers.dart';
@@ -64,6 +65,9 @@ class AppDetailPage extends ConsumerStatefulWidget {
 
 class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   String? _selectedCommentVersion;
+  final GlobalKey _installSourceKey = GlobalKey(
+    debugLabel: 'app-detail-install-source',
+  );
 
   @override
   void initState() {
@@ -81,13 +85,20 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     final detailState = ref.watch(appDetailProvider(widget.appId));
     final installState = ref.watch(installQueueProvider);
     final installTask = installState.getAppInstallStatus(widget.appId);
-    final installedVersions = ref
+    final installedApps = ref
         .watch(installedAppsProvider)
         .apps
         .where((app) => app.appId == widget.appId)
+        .toList(growable: false);
+    final installedVersions = installedApps
         .map((app) => app.version)
         .toSet();
     final hasInstalledInstance = installedVersions.isNotEmpty;
+    final hasUpdate = _hasAvailableUpdate(
+      detailState,
+      hasInstalledInstance: hasInstalledInstance,
+      highestInstalledVersion: _resolveHighestInstalledVersion(installedVersions),
+    );
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -104,6 +115,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         installTask,
         installedVersions,
         hasInstalledInstance: hasInstalledInstance,
+        hasUpdate: hasUpdate,
       ),
     );
   }
@@ -115,6 +127,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     InstallTask? installTask,
     Set<String> installedVersions, {
     required bool hasInstalledInstance,
+    required bool hasUpdate,
   }) {
     // 加载中
     if (detailState.isLoading && detailState.app == null) {
@@ -146,6 +159,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             app,
             installTask,
             hasInstalledInstance: hasInstalledInstance,
+            hasUpdate: hasUpdate,
           ),
 
           const Divider(height: 1),
@@ -233,8 +247,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     InstalledApp app,
     InstallTask? installTask, {
     required bool hasInstalledInstance,
+    required bool hasUpdate,
   }) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final appDetail = detailState.appDetail;
 
@@ -242,6 +256,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     final buttonState = _getInstallButtonState(
       installTask,
       hasInstalledInstance: hasInstalledInstance,
+      hasUpdate: hasUpdate,
     );
     final progress = installTask?.progress ?? 0.0;
 
@@ -251,11 +266,16 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 应用图标
-          AppIcon(
-            iconUrl: app.icon,
-            size: 80,
-            borderRadius: 16,
-            appName: app.name,
+          SizedBox(
+            key: _installSourceKey,
+            width: 80,
+            height: 80,
+            child: AppIcon(
+              iconUrl: app.icon,
+              size: 80,
+              borderRadius: 16,
+              appName: app.name,
+            ),
           ),
           const SizedBox(width: 16),
           // 应用信息
@@ -339,57 +359,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 if (installTask != null &&
                     installTask.displayMessage != null) ...[
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Tooltip(
-                          message: installTask.displayMessage!,
-                          child: Text(
-                            installTask.displayMessage!,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: installTask.isFailed
-                                  ? theme.colorScheme.error
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Semantics(
-                        label: l10n?.copyErrorMessage ?? 'Copy error message',
-                        button: true,
-                        child: Tooltip(
-                          message:
-                              l10n?.copyErrorMessage ?? 'Copy error message',
-                          child: TextButton(
-                            onPressed: () {
-                              Clipboard.setData(
-                                ClipboardData(
-                                  text: installTask.displayMessage!,
-                                ),
-                              );
-                            },
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: Text(
-                              l10n?.copy ?? 'Copy',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildInstallStatusMessage(context, installTask),
                 ],
               ],
             ),
@@ -397,6 +367,124 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         ],
       ),
     );
+  }
+
+  Widget _buildInstallStatusMessage(
+    BuildContext context,
+    InstallTask installTask,
+  ) {
+    final theme = Theme.of(context);
+    final displayMessage = installTask.displayMessage;
+    if (displayMessage == null || displayMessage.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // 失败态让错误文本独占整行，避免复制按钮挤压后出现截断。
+    if (installTask.isFailed) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Tooltip(
+            message: displayMessage,
+            child: Text(
+              displayMessage,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerRight,
+            child: _buildInstallStatusCopyButton(
+              context,
+              _resolveFailedInstallStatusCopyText(installTask, displayMessage),
+              isFailed: true,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Tooltip(
+            message: displayMessage,
+            child: Text(
+              displayMessage,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        _buildInstallStatusCopyButton(context, displayMessage, isFailed: false),
+      ],
+    );
+  }
+
+  Widget _buildInstallStatusCopyButton(
+    BuildContext context,
+    String copyText, {
+    required bool isFailed,
+  }) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final label = isFailed
+        ? (l10n?.copyErrorMessage ?? 'Copy error message')
+        : (l10n?.copy ?? 'Copy');
+
+    return Semantics(
+      label: label,
+      button: true,
+      child: Tooltip(
+        message: label,
+        child: TextButton(
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: copyText));
+          },
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            l10n?.copy ?? 'Copy',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _resolveFailedInstallStatusCopyText(
+    InstallTask installTask,
+    String fallback,
+  ) {
+    final errorDetail = installTask.errorDetail?.trim();
+    if (errorDetail != null && errorDetail.isNotEmpty) {
+      return errorDetail;
+    }
+
+    final errorMessage = installTask.errorMessage?.trim();
+    if (errorMessage != null && errorMessage.isNotEmpty) {
+      return errorMessage;
+    }
+
+    final rawMessage = installTask.rawMessage?.trim();
+    if (rawMessage != null && rawMessage.isNotEmpty) {
+      return rawMessage;
+    }
+
+    return fallback;
   }
 
   /// 构建标签列表（Chip 样式）
@@ -880,6 +968,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   InstallButtonState _getInstallButtonState(
     InstallTask? installTask, {
     required bool hasInstalledInstance,
+    required bool hasUpdate,
   }) {
     // 如果有安装任务，根据任务状态返回
     if (installTask != null) {
@@ -905,10 +994,46 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
     // 主按钮与次级操作共用同一份本地安装态判断，避免页面内规则漂移。
     if (hasInstalledInstance) {
-      return InstallButtonState.open;
+      return hasUpdate ? InstallButtonState.update : InstallButtonState.open;
     }
 
     return InstallButtonState.notInstalled;
+  }
+
+  bool _hasAvailableUpdate(
+    AppDetailState detailState, {
+    required bool hasInstalledInstance,
+    required String? highestInstalledVersion,
+  }) {
+    if (!hasInstalledInstance) {
+      return false;
+    }
+
+    final updateApps = ref.watch(updateAppsProvider).apps;
+    if (updateApps.any((app) => app.appId == widget.appId)) {
+      return true;
+    }
+
+    final remoteVersion = detailState.appDetail?.version ?? detailState.app?.version;
+    if (remoteVersion == null ||
+        remoteVersion.isEmpty ||
+        highestInstalledVersion == null ||
+        highestInstalledVersion.isEmpty) {
+      return false;
+    }
+
+    return VersionCompare.greaterThan(remoteVersion, highestInstalledVersion);
+  }
+
+  String? _resolveHighestInstalledVersion(Iterable<String> versions) {
+    String? highestVersion;
+    for (final version in versions) {
+      if (highestVersion == null ||
+          VersionCompare.greaterThan(version, highestVersion)) {
+        highestVersion = version;
+      }
+    }
+    return highestVersion;
   }
 
   List<String> _buildCommentVersionOptions(AppDetailState detailState) {
@@ -978,17 +1103,18 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     switch (currentState) {
       case InstallButtonState.notInstalled:
         // 详情页主按钮走默认安装，不指定版本；只有版本列表入口才允许传版本。
-        ref
+        final taskId = ref
             .read(installQueueProvider.notifier)
             .enqueueInstall(
               appId: app.appId,
               appName: app.name,
               icon: app.icon,
             );
+        _triggerInstallFlyout(app, taskId: taskId);
         break;
       case InstallButtonState.update:
         // 详情页更新统一走 update 队列，不再伪装成带版本安装。
-        ref
+        final taskId = ref
             .read(installQueueProvider.notifier)
             .enqueueOperation(
               kind: InstallTaskKind.update,
@@ -996,6 +1122,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               appName: app.name,
               icon: app.icon,
             );
+        _triggerInstallFlyout(app, taskId: taskId);
         break;
       case InstallButtonState.installed:
       case InstallButtonState.open:
@@ -1081,7 +1208,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     }
 
     // 入安装队列
-    ref
+    final taskId = ref
         .read(installQueueProvider.notifier)
         .enqueueInstall(
           appId: app.appId,
@@ -1090,6 +1217,24 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           version: version,
           force: shouldForceInstall,
         );
+    _triggerInstallFlyout(app, taskId: taskId);
+  }
+
+  void _triggerInstallFlyout(InstalledApp app, {required String taskId}) {
+    if (taskId.isEmpty) {
+      return;
+    }
+
+    final flyoutController = InstallToDownloadFlyoutLayer.maybeOf(context);
+    final launched = flyoutController?.launch(
+      sourceKey: _installSourceKey,
+      appId: app.appId,
+      appName: app.name,
+      iconUrl: app.icon,
+    );
+    if (launched != true) {
+      flyoutController?.pulseDownloadCenter();
+    }
   }
 
   Widget _buildVersionActionArea(

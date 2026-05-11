@@ -6,6 +6,7 @@ import 'package:linglong_store/application/providers/install_queue_provider.dart
 import 'package:linglong_store/application/providers/network_speed_provider.dart';
 import 'package:linglong_store/application/providers/sidebar_config_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
+import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
@@ -326,6 +327,75 @@ void main() {
         expect(find.byType(Dialog), findsNothing);
       },
     );
+
+    testWidgets('renders full failed error text without line clamping', (
+      tester,
+    ) async {
+      const errorMessage =
+          'Error executing command as another user: Request denied because authentication dialog was dismissed before the command could continue. pkexec exited with code 126.';
+
+      final installQueue = TestInstallQueue(
+        initialState: InstallQueueState(
+          history: [
+            InstallTask(
+              id: 'task-failed',
+              appId: 'org.example.demo',
+              appName: 'Demo',
+              kind: InstallTaskKind.install,
+              status: InstallStatus.failed,
+              message: '安装失败',
+              errorMessage: errorMessage,
+              createdAt: DateTime.now().millisecondsSinceEpoch,
+              finishedAt: DateTime.now().millisecondsSinceEpoch,
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            installQueueProvider.overrideWith(() => installQueue),
+            networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+          ],
+          child: MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: Center(
+                    child: FilledButton(
+                      onPressed: () => showDownloadManagerDialog(context),
+                      child: const Text('open'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      final errorTexts = tester
+          .widgetList<Text>(
+            find.byWidgetPredicate(
+              (widget) =>
+                  widget is Text &&
+                  widget.data == errorMessage &&
+                  widget.style?.color == AppColors.error,
+            ),
+          )
+          .toList();
+
+      expect(errorTexts, isNotEmpty);
+      expect(errorTexts.first.maxLines, isNull);
+      expect(errorTexts.first.overflow, isNull);
+    });
   });
 }
 

@@ -7,6 +7,7 @@ import 'package:linglong_store/application/providers/app_detail_provider.dart';
 import 'package:linglong_store/application/providers/app_uninstall_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/installed_apps_provider.dart';
+import 'package:linglong_store/application/providers/update_apps_provider.dart';
 import 'package:linglong_store/application/services/app_uninstall_service.dart';
 import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
@@ -20,6 +21,7 @@ import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/domain/models/running_app.dart';
 import 'package:linglong_store/domain/models/uninstall_result.dart';
 import 'package:linglong_store/presentation/pages/app_detail/app_detail_page.dart';
+import 'package:linglong_store/presentation/widgets/install_to_download_flyout.dart';
 
 void main() {
   setUpAll(() async {
@@ -596,6 +598,156 @@ void main() {
         expect(installQueue.lastForce, isTrue);
       },
     );
+
+    testWidgets('main install action launches download flyout on success', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final installQueue = _RecordingInstallQueue();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          appId: 'org.example.demo',
+          uninstallService: _RecordingUninstallService(),
+          detailState: _detailState(versions: const []),
+          installedApps: const [],
+          installQueue: installQueue,
+          withFlyoutLayer: true,
+        ),
+      );
+
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(ElevatedButton, '安 装'));
+      await tester.pump();
+
+      expect(installQueue.lastAppId, 'org.example.demo');
+      expect(find.byKey(const Key('install-download-flyout')), findsOneWidget);
+    });
+
+    testWidgets('main install action skips flyout when enqueue fails', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final installQueue = _RecordingInstallQueue(nextTaskId: '');
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          appId: 'org.example.demo',
+          uninstallService: _RecordingUninstallService(),
+          detailState: _detailState(versions: const []),
+          installedApps: const [],
+          installQueue: installQueue,
+          withFlyoutLayer: true,
+        ),
+      );
+
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(ElevatedButton, '安 装'));
+      await tester.pump();
+
+      expect(installQueue.lastAppId, 'org.example.demo');
+      expect(find.byKey(const Key('install-download-flyout')), findsNothing);
+      expect(
+        find.byKey(const Key('install-download-target-pulse')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('main update action launches download flyout on success', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final installQueue = _RecordingInstallQueue();
+      const installedApp = InstalledApp(
+        appId: 'org.example.demo',
+        name: 'Demo',
+        version: '1.0.0',
+        arch: 'x86_64',
+        channel: 'main',
+        module: 'main',
+      );
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          appId: 'org.example.demo',
+          uninstallService: _RecordingUninstallService(),
+          detailState: _detailState(versions: const []),
+          installedApps: const [installedApp],
+          updateAppsState: const UpdateAppsState(
+            apps: [
+              UpdatableApp(
+                installedApp: installedApp,
+                latestVersion: '2.0.0',
+              ),
+            ],
+          ),
+          installQueue: installQueue,
+          withFlyoutLayer: true,
+        ),
+      );
+
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(ElevatedButton, '更 新'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(ElevatedButton, '更 新'));
+      await tester.pump();
+
+      expect(installQueue.lastKind, InstallTaskKind.update);
+      expect(installQueue.lastAppId, 'org.example.demo');
+      expect(installQueue.lastVersion, isNull);
+      expect(find.byKey(const Key('install-download-flyout')), findsOneWidget);
+    });
+
+    testWidgets('version install action launches download flyout on success', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final installQueue = _RecordingInstallQueue();
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          appId: 'org.example.demo',
+          uninstallService: _RecordingUninstallService(),
+          detailState: _detailState(
+            versions: const [
+              AppVersion(
+                versionNo: '1.0.0',
+                releaseTime: '2026-04-18',
+                packageSize: '524288',
+              ),
+            ],
+          ),
+          installedApps: const [],
+          installQueue: installQueue,
+          withFlyoutLayer: true,
+        ),
+      );
+
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const Key('app-detail-version-install-1.0.0')),
+      );
+      await tester.pump();
+
+      expect(installQueue.lastVersion, '1.0.0');
+      expect(find.byKey(const Key('install-download-flyout')), findsOneWidget);
+    });
   });
 }
 
@@ -606,9 +758,29 @@ Widget _buildTestApp({
   required _RecordingUninstallService uninstallService,
   InstallQueueState installQueueState = const InstallQueueState(),
   InstallQueue? installQueue,
+  UpdateAppsState updateAppsState = const UpdateAppsState(),
+  bool withFlyoutLayer = false,
 }) {
   final effectiveInstallQueue =
       installQueue ?? _StaticInstallQueue(installQueueState);
+  Widget home = AppDetailPage(appId: appId);
+
+  if (withFlyoutLayer) {
+    home = InstallToDownloadFlyoutLayer(
+      child: Stack(
+        children: [
+          Positioned.fill(child: home),
+          const Positioned(
+            top: 16,
+            right: 16,
+            child: DownloadCenterFlyoutTarget(
+              child: SizedBox(width: 40, height: 40),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   return ProviderScope(
     overrides: [
@@ -618,6 +790,7 @@ Widget _buildTestApp({
       installedAppsProvider.overrideWith(
         () => _StaticInstalledApps(apps: installedApps),
       ),
+      updateAppsProvider.overrideWith(() => _StaticUpdateApps(updateAppsState)),
       installQueueProvider.overrideWith(() => effectiveInstallQueue),
       appUninstallServiceProvider.overrideWithValue(uninstallService),
     ],
@@ -627,7 +800,7 @@ Widget _buildTestApp({
       darkTheme: AppTheme.darkTheme,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(body: AppDetailPage(appId: appId)),
+      home: home,
     ),
   );
 }
@@ -689,6 +862,18 @@ class _StaticInstalledApps extends InstalledApps {
   InstalledAppsState build() => InstalledAppsState(apps: apps);
 }
 
+class _StaticUpdateApps extends UpdateApps {
+  _StaticUpdateApps(this.initialState);
+
+  final UpdateAppsState initialState;
+
+  @override
+  UpdateAppsState build() => initialState;
+
+  @override
+  Future<void> checkUpdates() async {}
+}
+
 class _StaticInstallQueue extends InstallQueue {
   _StaticInstallQueue([this.initialState = const InstallQueueState()]);
 
@@ -699,11 +884,15 @@ class _StaticInstallQueue extends InstallQueue {
 }
 
 class _RecordingInstallQueue extends InstallQueue {
+  _RecordingInstallQueue({this.nextTaskId = 'recorded-task'});
+
   String? lastAppId;
   String? lastAppName;
   String? lastIcon;
+  InstallTaskKind? lastKind;
   String? lastVersion;
   bool? lastForce;
+  final String nextTaskId;
 
   @override
   InstallQueueState build() => const InstallQueueState();
@@ -716,12 +905,31 @@ class _RecordingInstallQueue extends InstallQueue {
     String? version,
     bool force = false,
   }) {
+    lastKind = InstallTaskKind.install;
     lastAppId = appId;
     lastAppName = appName;
     lastIcon = icon;
     lastVersion = version;
     lastForce = force;
-    return 'recorded-task';
+    return nextTaskId;
+  }
+
+  @override
+  String enqueueOperation({
+    required InstallTaskKind kind,
+    required String appId,
+    required String appName,
+    String? icon,
+    String? version,
+    bool force = false,
+  }) {
+    lastKind = kind;
+    lastAppId = appId;
+    lastAppName = appName;
+    lastIcon = icon;
+    lastVersion = version;
+    lastForce = force;
+    return nextTaskId;
   }
 }
 

@@ -4,9 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
+import 'package:linglong_store/application/providers/linux_renderer_provider.dart';
 import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
+import 'package:linglong_store/core/platform/linux_renderer_service.dart';
 import 'package:linglong_store/presentation/pages/setting/setting_page.dart';
 
 void main() {
@@ -83,6 +85,48 @@ void main() {
     await tester.pump();
 
     expect(find.text('社区交流'), findsOneWidget);
+  });
+
+  testWidgets('setting page restores renderer entry and developer links', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final rendererService = LinuxRendererService(
+      configFilePathOverride: '/tmp/unused/renderer_preferences.ini',
+      dataDirectoryPathOverride: '/tmp/unused',
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          linuxRendererServiceProvider.overrideWithValue(rendererService),
+          linuxRendererRuntimeProvider.overrideWith(
+            (ref) async => const LinuxRendererRuntimeState(
+              currentMode: LinuxRendererMode.software,
+              decisionSource: LinuxRendererDecisionSource.cpuFallback,
+              isCpuWhitelisted: false,
+              cpuVendor: 'Loongson',
+              cpuModel: '3A6000',
+              environmentValue: null,
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: const Scaffold(body: SettingPage()),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('软件渲染'), findsOneWidget);
+    expect(find.text('Gitee'), findsOneWidget);
+    expect(find.text('关于开发者'), findsOneWidget);
   });
 
   testWidgets('setting page renders typography controls', (tester) async {

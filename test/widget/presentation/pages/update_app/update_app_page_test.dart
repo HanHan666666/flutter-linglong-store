@@ -14,6 +14,7 @@ import 'package:linglong_store/domain/models/install_queue_state.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/presentation/pages/update_app/update_app_page.dart';
+import 'package:linglong_store/presentation/widgets/install_to_download_flyout.dart';
 import 'package:linglong_store/presentation/widgets/install_button.dart';
 
 void main() {
@@ -488,7 +489,232 @@ void main() {
       expect(find.textContaining('KB/s'), findsNothing);
       expect(find.textContaining('MB/s'), findsNothing);
     });
+
+    testWidgets('launches flyout after single update is enqueued', (
+      tester,
+    ) async {
+      final installQueue = TestInstallQueue(
+        initialState: const InstallQueueState(),
+      );
+      final updateApps = TestUpdateApps(
+        apps: const [
+          UpdatableApp(
+            installedApp: InstalledApp(
+              appId: 'org.example.demo',
+              name: 'Demo',
+              version: '1.0.0',
+            ),
+            latestVersion: '1.1.0',
+            latestVersionDescription: 'Bug fixes',
+          ),
+        ],
+      );
+      final singleCalls = <EnqueueAppOperationParams>[];
+      final batchCalls = <List<EnqueueAppOperationParams>>[];
+
+      await tester.pumpWidget(
+        _buildFlyoutHost(
+          installQueue: installQueue,
+          updateApps: updateApps,
+          singleCalls: singleCalls,
+          batchCalls: batchCalls,
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      await tester.tap(find.widgetWithText(ElevatedButton, '更 新'));
+      await tester.pump();
+
+      expect(singleCalls, hasLength(1));
+      expect(find.byKey(const Key('install-download-flyout')), findsOneWidget);
+    });
+
+    testWidgets('does not trigger single update flyout when enqueue fails', (
+      tester,
+    ) async {
+      final installQueue = TestInstallQueue(
+        initialState: const InstallQueueState(),
+      );
+      final updateApps = TestUpdateApps(
+        apps: const [
+          UpdatableApp(
+            installedApp: InstalledApp(
+              appId: 'org.example.demo',
+              name: 'Demo',
+              version: '1.0.0',
+            ),
+            latestVersion: '1.1.0',
+            latestVersionDescription: 'Bug fixes',
+          ),
+        ],
+      );
+      final singleCalls = <EnqueueAppOperationParams>[];
+      final batchCalls = <List<EnqueueAppOperationParams>>[];
+
+      await tester.pumpWidget(
+        _buildFlyoutHost(
+          installQueue: installQueue,
+          updateApps: updateApps,
+          singleCalls: singleCalls,
+          batchCalls: batchCalls,
+          singleReturnValue: '',
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      await tester.tap(find.widgetWithText(ElevatedButton, '更 新'));
+      await tester.pump();
+
+      expect(singleCalls, hasLength(1));
+      expect(find.byKey(const Key('install-download-flyout')), findsNothing);
+      expect(
+        find.byKey(const Key('install-download-target-pulse')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('pulses download center after batch update is enqueued', (
+      tester,
+    ) async {
+      final installQueue = TestInstallQueue(
+        initialState: const InstallQueueState(),
+      );
+      final updateApps = TestUpdateApps(
+        apps: const [
+          UpdatableApp(
+            installedApp: InstalledApp(
+              appId: 'org.example.demo',
+              name: 'Demo',
+              version: '1.0.0',
+            ),
+            latestVersion: '1.1.0',
+            latestVersionDescription: 'Bug fixes',
+          ),
+        ],
+      );
+      final singleCalls = <EnqueueAppOperationParams>[];
+      final batchCalls = <List<EnqueueAppOperationParams>>[];
+
+      await tester.pumpWidget(
+        _buildFlyoutHost(
+          installQueue: installQueue,
+          updateApps: updateApps,
+          singleCalls: singleCalls,
+          batchCalls: batchCalls,
+          batchReturnValue: const ['task-1'],
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      await tester.tap(find.widgetWithText(FilledButton, '全部更新'));
+      await tester.pump();
+
+      expect(batchCalls, hasLength(1));
+      expect(
+        find.byKey(const Key('install-download-target-pulse')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('install-download-flyout')), findsNothing);
+    });
+
+    testWidgets('does not pulse download center when batch enqueue fails', (
+      tester,
+    ) async {
+      final installQueue = TestInstallQueue(
+        initialState: const InstallQueueState(),
+      );
+      final updateApps = TestUpdateApps(
+        apps: const [
+          UpdatableApp(
+            installedApp: InstalledApp(
+              appId: 'org.example.demo',
+              name: 'Demo',
+              version: '1.0.0',
+            ),
+            latestVersion: '1.1.0',
+            latestVersionDescription: 'Bug fixes',
+          ),
+        ],
+      );
+      final singleCalls = <EnqueueAppOperationParams>[];
+      final batchCalls = <List<EnqueueAppOperationParams>>[];
+
+      await tester.pumpWidget(
+        _buildFlyoutHost(
+          installQueue: installQueue,
+          updateApps: updateApps,
+          singleCalls: singleCalls,
+          batchCalls: batchCalls,
+          batchReturnValue: const <String>[],
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      await tester.tap(find.widgetWithText(FilledButton, '全部更新'));
+      await tester.pump();
+
+      expect(batchCalls, hasLength(1));
+      expect(
+        find.byKey(const Key('install-download-target-pulse')),
+        findsNothing,
+      );
+    });
   });
+}
+
+Widget _buildFlyoutHost({
+  required InstallQueue installQueue,
+  required UpdateApps updateApps,
+  List<EnqueueAppOperationParams>? singleCalls,
+  List<List<EnqueueAppOperationParams>>? batchCalls,
+  String singleReturnValue = 'task-1',
+  List<String> batchReturnValue = const <String>['task-1'],
+}) {
+  return ProviderScope(
+    overrides: [
+      installQueueProvider.overrideWith(() => installQueue),
+      updateAppsProvider.overrideWith(() => updateApps),
+      networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+      appOperationQueueControllerProvider.overrideWith(
+        (ref) => RecordingAppOperationQueueController(
+          ref,
+          singleCalls: singleCalls,
+          batchCalls: batchCalls,
+          singleReturnValue: singleReturnValue,
+          batchReturnValue: batchReturnValue,
+        ),
+      ),
+    ],
+    child: const MaterialApp(
+      locale: Locale('zh'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: InstallToDownloadFlyoutLayer(
+          child: Stack(
+            children: [
+              Positioned.fill(child: UpdateAppPage()),
+              Positioned(
+                top: 16,
+                right: 16,
+                child: DownloadCenterFlyoutTarget(
+                  child: SizedBox(width: 40, height: 40),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 class TestInstallQueue extends InstallQueue {
@@ -527,13 +753,29 @@ class RecordingAppOperationQueueController extends AppOperationQueueController {
   RecordingAppOperationQueueController(
     super.ref, {
     List<EnqueueAppOperationParams>? singleCalls,
-  }) : singleCalls = singleCalls ?? <EnqueueAppOperationParams>[];
+    List<List<EnqueueAppOperationParams>>? batchCalls,
+    this.singleReturnValue = 'task-1',
+    List<String>? batchReturnValue,
+  }) : singleCalls = singleCalls ?? <EnqueueAppOperationParams>[],
+       batchCalls = batchCalls ?? <List<EnqueueAppOperationParams>>[],
+       batchReturnValue = batchReturnValue ?? const <String>['task-1'];
 
   final List<EnqueueAppOperationParams> singleCalls;
+  final List<List<EnqueueAppOperationParams>> batchCalls;
+  final String singleReturnValue;
+  final List<String> batchReturnValue;
 
   @override
   String enqueueAppOperation(EnqueueAppOperationParams params) {
     singleCalls.add(params);
-    return 'task-${singleCalls.length}';
+    return singleReturnValue;
+  }
+
+  @override
+  List<String> enqueueBatchOperations(
+    List<EnqueueAppOperationParams> paramsList,
+  ) {
+    batchCalls.add(List<EnqueueAppOperationParams>.from(paramsList));
+    return List<String>.from(batchReturnValue);
   }
 }

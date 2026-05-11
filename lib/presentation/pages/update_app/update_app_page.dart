@@ -15,6 +15,7 @@ import '../../../domain/models/install_queue_state.dart';
 import '../../../domain/models/install_task.dart';
 import '../../widgets/app_icon.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/install_to_download_flyout.dart';
 import '../../widgets/install_button.dart';
 
 /// 应用更新页
@@ -62,20 +63,23 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
           ),
         )
         .toList();
-    ref
+    final taskIds = ref
         .read(appOperationQueueControllerProvider)
         .enqueueBatchOperations(operations);
+    if (taskIds.isNotEmpty) {
+      InstallToDownloadFlyoutLayer.maybeOf(context)?.pulseDownloadCenter();
+    }
   }
 
   /// 更新单个应用
-  void _updateApp(UpdatableApp app) {
+  String _updateApp(UpdatableApp app) {
     final installState = ref.read(installQueueProvider);
     final installTask = installState.getAppInstallStatus(app.appId);
     if (_shouldDisableUpdateAction(installState, installTask)) {
-      return;
+      return '';
     }
 
-    ref
+    return ref
         .read(appOperationQueueControllerProvider)
         .enqueueAppOperation(
           EnqueueAppOperationParams(
@@ -316,7 +320,7 @@ class _UpdatableAppItem extends ConsumerStatefulWidget {
   final InstallTask? installTask;
   final bool isUpdateDisabled;
   final VoidCallback onTap;
-  final VoidCallback onUpdate;
+  final String Function() onUpdate;
   final VoidCallback? onCancel;
 
   @override
@@ -325,6 +329,7 @@ class _UpdatableAppItem extends ConsumerStatefulWidget {
 
 class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
   bool _isHovered = false;
+  final GlobalKey _iconKey = GlobalKey(debugLabel: 'update-app-icon');
 
   @override
   Widget build(BuildContext context) {
@@ -373,11 +378,16 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
                 child: Row(
                   children: [
                     // 应用图标
-                    AppIcon(
-                      iconUrl: widget.app.icon,
-                      size: 48,
-                      borderRadius: AppRadius.sm,
-                      appName: widget.app.name,
+                    SizedBox(
+                      key: _iconKey,
+                      width: 48,
+                      height: 48,
+                      child: AppIcon(
+                        iconUrl: widget.app.icon,
+                        size: 48,
+                        borderRadius: AppRadius.sm,
+                        appName: widget.app.name,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.md),
 
@@ -419,7 +429,7 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
                           : null,
                       onPressed: widget.isUpdateDisabled
                           ? () {}
-                          : widget.onUpdate,
+                          : _handleUpdatePressed,
                       onCancel: widget.onCancel,
                       size: ButtonSize.small,
                     ),
@@ -447,5 +457,23 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
       return InstallButtonState.installing;
     }
     return InstallButtonState.update;
+  }
+
+  void _handleUpdatePressed() {
+    final taskId = widget.onUpdate();
+    if (taskId.isEmpty) {
+      return;
+    }
+
+    final flyoutController = InstallToDownloadFlyoutLayer.maybeOf(context);
+    final launched = flyoutController?.launch(
+      sourceKey: _iconKey,
+      appId: widget.app.appId,
+      appName: widget.app.name,
+      iconUrl: widget.app.icon,
+    );
+    if (launched != true) {
+      flyoutController?.pulseDownloadCenter();
+    }
   }
 }

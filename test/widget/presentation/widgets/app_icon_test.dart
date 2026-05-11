@@ -57,6 +57,26 @@ void main() {
       expect(find.byType(SvgPicture), findsNothing);
     });
 
+    testWidgets('renders extensionless urls with direct Image path', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: AppIcon(
+              iconUrl: 'https://example.com/icon',
+              size: 48,
+              appName: 'Demo',
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(Image), findsOneWidget);
+      expect(find.byType(CachedNetworkImage), findsNothing);
+      expect(find.byType(SvgPicture), findsNothing);
+    });
+
     testWidgets('renders placeholder when icon url is empty', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(

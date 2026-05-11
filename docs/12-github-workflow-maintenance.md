@@ -90,6 +90,8 @@
 - build/sign job 必须统一消费同一份 `release-version-files` 中间产物，保证构建内容与最终 release commit 完全一致
 - 只有在正式构建与签名成功后，才允许进入独立的 `finalize-release-state` job 推送 release commit 并创建正式 tag
 - `publish-release` 必须依赖 `finalize-release-state`，不要在 tag 尚未落库时抢先创建 GitHub Release
+- 正式 release changelog 必须通过 `build/scripts/generate-changelog.sh` 自动解析“当前 `HEAD` 可达的最近一个稳定 semver tag → 当前源码”范围；禁止再在 workflow 里写死 `v3.0.*` 一类 tag 模式
+- 用户可见的正式 release notes 必须过滤 `chore: release x.y.z` 这类 release bookkeeping commit，避免把历史发版提交刷进 changelog
 - release notes 的 `SHA256 Hashes of the release artifacts` 段落只能在 `publish-release` 下载最终签名资产后追加，并与同一份 `hashes.sha256` 一起发布，避免展示未签名产物的旧哈希
 - `sign-release` 上传 `signed-release-assets` 时只能匹配单层 `artifacts/*.tar.gz(.asc)/.deb/.rpm/.AppImage` 文件；不要对已 `merge-multiple` 的下载目录继续使用递归 `**`，否则 `.asc` 可能在 artifact 阶段被漏掉
 - `sign-release` 生成 tarball 签名时同样只能遍历单层 `artifacts/*.tar.gz`；GitHub runner 默认 `globstar` 关闭，`**/*.tar.gz` 在平铺目录下不会命中任何文件，必须在签名步骤里显式校验 `*.tar.gz.asc` 已生成

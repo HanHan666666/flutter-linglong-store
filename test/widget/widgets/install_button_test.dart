@@ -55,7 +55,7 @@ void main() {
           ),
         );
 
-        await tester.tap(find.byType(ElevatedButton));
+        await tester.tap(find.byType(FilledButton));
         await tester.pump();
 
         expect(pressed, isTrue);
@@ -486,9 +486,7 @@ void main() {
         );
 
         // 禁用状态按钮不可点击
-        final button = tester.widget<ElevatedButton>(
-          find.byType(ElevatedButton),
-        );
+        final button = tester.widget<FilledButton>(find.byType(FilledButton));
         expect(button.onPressed, isNull);
       });
     });

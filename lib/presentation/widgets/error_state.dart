@@ -128,8 +128,8 @@ class ErrorState extends StatelessWidget {
             Text(
               defaultTitle,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: context.appFontWeight(FontWeight.w600),
-                  ),
+                fontWeight: context.appFontWeight(FontWeight.w600),
+              ),
               textAlign: TextAlign.center,
             ),
 
@@ -139,8 +139,8 @@ class ErrorState extends StatelessWidget {
             Text(
               defaultDescription,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).textTheme.bodySmall?.color,
-                  ),
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
               textAlign: TextAlign.center,
             ),
 
@@ -168,7 +168,7 @@ class ErrorState extends StatelessWidget {
             // 重试按钮
             if (onRetry != null) ...[
               const SizedBox(height: 24),
-              ElevatedButton.icon(
+              FilledButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
                 label: Text(retryText ?? l10n.retry),

@@ -84,6 +84,41 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
     },
   );
+
+  testWidgets('launch page uses filled retry button in error state', (
+    tester,
+  ) async {
+    final errorSequence = _ErrorLaunchSequence();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          launchSequenceProvider.overrideWith(() => errorSequence),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const LaunchPage(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final retryButton = find.ancestor(
+      of: find.text('重试'),
+      matching: find.byWidgetPredicate((widget) => widget is FilledButton),
+    );
+
+    expect(retryButton, findsOneWidget);
+
+    await tester.tap(retryButton);
+    await tester.pump();
+
+    expect(errorSequence.retried, isTrue);
+  });
 }
 
 class _IdleLaunchSequence extends LaunchSequence {
@@ -92,6 +127,23 @@ class _IdleLaunchSequence extends LaunchSequence {
 
   @override
   Future<void> runSequence() async {}
+}
+
+class _ErrorLaunchSequence extends LaunchSequence {
+  bool retried = false;
+
+  @override
+  LaunchState build() {
+    return const LaunchState(hasError: true, errorMessage: '启动失败');
+  }
+
+  @override
+  Future<void> runSequence() async {}
+
+  @override
+  Future<void> retry() async {
+    retried = true;
+  }
 }
 
 class _WarningLinglongEnv extends LinglongEnv {

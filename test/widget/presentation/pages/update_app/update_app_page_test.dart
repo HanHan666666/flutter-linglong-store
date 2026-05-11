@@ -150,7 +150,7 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 100));
 
-        await tester.tap(find.widgetWithText(ElevatedButton, '更 新'));
+        await tester.tap(find.widgetWithText(FilledButton, '更 新'));
         await tester.pump();
 
         expect(recordedSingles, isEmpty);
@@ -524,7 +524,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      await tester.tap(find.widgetWithText(ElevatedButton, '更 新'));
+      await tester.tap(find.widgetWithText(FilledButton, '更 新'));
       await tester.pump();
 
       expect(singleCalls, hasLength(1));
@@ -566,7 +566,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
-      await tester.tap(find.widgetWithText(ElevatedButton, '更 新'));
+      await tester.tap(find.widgetWithText(FilledButton, '更 新'));
       await tester.pump();
 
       expect(singleCalls, hasLength(1));

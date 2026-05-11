@@ -23,6 +23,13 @@ import 'package:linglong_store/domain/models/uninstall_result.dart';
 import 'package:linglong_store/presentation/pages/app_detail/app_detail_page.dart';
 import 'package:linglong_store/presentation/widgets/install_to_download_flyout.dart';
 
+Finder _filledButtonWithText(String text) {
+  return find.ancestor(
+    of: find.text(text),
+    matching: find.byWidgetPredicate((widget) => widget is FilledButton),
+  );
+}
+
 void main() {
   setUpAll(() async {
     await AppLogger.init();
@@ -621,7 +628,7 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(ElevatedButton, '安 装'));
+      await tester.tap(_filledButtonWithText('安 装'));
       await tester.pump();
 
       expect(installQueue.lastAppId, 'org.example.demo');
@@ -650,7 +657,7 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(ElevatedButton, '安 装'));
+      await tester.tap(_filledButtonWithText('安 装'));
       await tester.pump();
 
       expect(installQueue.lastAppId, 'org.example.demo');
@@ -696,9 +703,9 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(ElevatedButton, '更 新'), findsOneWidget);
+      expect(_filledButtonWithText('更 新'), findsOneWidget);
 
-      await tester.tap(find.widgetWithText(ElevatedButton, '更 新'));
+      await tester.tap(_filledButtonWithText('更 新'));
       await tester.pump();
 
       expect(installQueue.lastKind, InstallTaskKind.update);

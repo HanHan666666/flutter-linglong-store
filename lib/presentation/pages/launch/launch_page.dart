@@ -384,13 +384,13 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // 重试按钮
-              ElevatedButton.icon(
+              FilledButton.icon(
                 onPressed: () {
                   ref.read(launchSequenceProvider.notifier).retry();
                 },
                 icon: const Icon(Icons.refresh, size: 18),
                 label: Text(AppLocalizations.of(context)?.retry ?? '重试'),
-                style: ElevatedButton.styleFrom(
+                style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(

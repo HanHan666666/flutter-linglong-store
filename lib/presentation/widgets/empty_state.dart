@@ -145,7 +145,7 @@ class EmptyState extends StatelessWidget {
             // 重试按钮
             if (onRetry != null) ...[
               const SizedBox(height: 16),
-              ElevatedButton.icon(
+              FilledButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
                 label: Text(retryText ?? l10n.retry),

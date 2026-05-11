@@ -406,16 +406,12 @@ class LinglongEnvDialog extends ConsumerWidget {
         _buildOpenInstallLogButton(context, ref, envState.installLogFilePath!),
 
       // 自动安装按钮
-      ElevatedButton.icon(
+      FilledButton.icon(
         onPressed: result?.isOk == true
             ? null
             : () => _handleAutoInstall(context, ref),
         icon: const Icon(Icons.download, size: 16),
         label: Text(AppLocalizations.of(context)?.autoInstall ?? '自动安装'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-        ),
       ),
 
       // 重新检测按钮

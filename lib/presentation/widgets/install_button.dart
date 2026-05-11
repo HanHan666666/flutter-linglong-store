@@ -154,11 +154,11 @@ class _InstallButtonState extends State<InstallButton> {
       enabled: enabled && !widget.disabled,
       child: SizedBox(
         height: buttonHeight,
-        child: ElevatedButton.icon(
+        child: FilledButton.icon(
           onPressed: widget.disabled || !enabled ? null : widget.onPressed,
           icon: ExcludeSemantics(child: Icon(icon, size: _getIconSize())),
           label: Text(label),
-          style: ElevatedButton.styleFrom(
+          style: FilledButton.styleFrom(
             padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding()),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(buttonHeight / 2),

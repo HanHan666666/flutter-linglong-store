@@ -54,6 +54,18 @@ void main() {
       expect(find.text('Custom Error'), findsOneWidget);
       expect(find.text('Custom error description'), findsOneWidget);
     });
+
+    testWidgets('should use FilledButton for retry action', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: ErrorState(onRetry: _noop)),
+        ),
+      );
+
+      expect(find.byType(FilledButton), findsOneWidget);
+    });
   });
 
   group('EmptyState i18n Tests', () {
@@ -101,6 +113,18 @@ void main() {
 
       expect(find.text('No Results'), findsOneWidget);
       expect(find.text('Try a different search'), findsOneWidget);
+    });
+
+    testWidgets('should use FilledButton for retry action', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: EmptyState(onRetry: _noop)),
+        ),
+      );
+
+      expect(find.byType(FilledButton), findsOneWidget);
     });
   });
 
@@ -212,3 +236,5 @@ void main() {
     });
   });
 }
+
+void _noop() {}

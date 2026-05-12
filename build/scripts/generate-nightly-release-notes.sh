@@ -13,7 +13,7 @@ render_fallback_changelog() {
   cat <<'EOF'
 ## Release Notes
 
-这是首个 Nightly Release，后续 Nightly 将从上一版 Nightly source commit 自动生成变更日志。
+1、这是首个 Nightly Release，后续 Nightly 将从上一版 Nightly source commit 自动生成变更日志。
 EOF
 }
 

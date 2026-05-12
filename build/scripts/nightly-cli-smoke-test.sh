@@ -16,6 +16,7 @@ FAKE_CLAUDE_INPUT_PATH="$TMP_ROOT/fake-claude-input.txt"
 FAKE_CLAUDE_ARGS_PATH="$TMP_ROOT/fake-claude-args.txt"
 FAKE_CLAUDE_SETTINGS_PATH="$TMP_ROOT/fake-claude-settings.json"
 FAKE_CLAUDE_HOME="$TMP_ROOT/fake-claude-home"
+FAKE_CLAUDE_PROMPT_PATH="$TMP_ROOT/fake-claude-prompt.md"
 
 cleanup() {
   rm -rf "$TMP_ROOT"
@@ -203,8 +204,7 @@ current_source_commit="$(git -C "$NOTES_FIXTURE_REPO" rev-parse HEAD)"
 )
 
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Release Notes"
-assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## fix"
-assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- append nightly changelog"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "1、本次版本暂无需要特别说明的功能新增或问题修复。"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly source commit: $current_source_commit"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly source date: $nightly_date"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly version label: $nightly_label"
@@ -224,7 +224,7 @@ assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Requirements"
 )
 
 assert_file_contains "$NOTES_OUTPUT_FIRST_RELEASE" "## Release Notes"
-assert_file_contains "$NOTES_OUTPUT_FIRST_RELEASE" "这是首个 Nightly Release，后续 Nightly 将从上一版 Nightly source commit 自动生成变更日志。"
+assert_file_contains "$NOTES_OUTPUT_FIRST_RELEASE" "1、这是首个 Nightly Release，后续 Nightly 将从上一版 Nightly source commit 自动生成变更日志。"
 
 (
   cd "$NOTES_FIXTURE_REPO"
@@ -237,7 +237,7 @@ assert_file_contains "$NOTES_OUTPUT_FIRST_RELEASE" "这是首个 Nightly Release
 )
 
 assert_file_contains "$NOTES_OUTPUT_INVALID_BASELINE" "## Release Notes"
-assert_file_contains "$NOTES_OUTPUT_INVALID_BASELINE" "这是首个 Nightly Release，后续 Nightly 将从上一版 Nightly source commit 自动生成变更日志。"
+assert_file_contains "$NOTES_OUTPUT_INVALID_BASELINE" "1、这是首个 Nightly Release，后续 Nightly 将从上一版 Nightly source commit 自动生成变更日志。"
 
 cat > "$FAKE_CLAUDE_SETTINGS_PATH" <<'EOF'
 {
@@ -254,13 +254,26 @@ cat > "$FAKE_CLAUDE_SUCCESS_PATH" <<'EOF'
 set -euo pipefail
 
 printf '%s\n' "$*" > "$FAKE_CLAUDE_ARGS_PATH"
+previous_arg=""
+prompt_file=""
+for arg in "$@"; do
+  if [[ "$previous_arg" == "--append-system-prompt-file" ]]; then
+    prompt_file="$arg"
+    break
+  fi
+  previous_arg="$arg"
+done
+
+if [[ -n "${FAKE_CLAUDE_PROMPT_PATH:-}" && -n "$prompt_file" ]]; then
+  cat "$prompt_file" > "$FAKE_CLAUDE_PROMPT_PATH"
+fi
+
 cat > "$FAKE_CLAUDE_INPUT_PATH"
 test "$(jq -S . "$HOME/.claude/settings.json")" = "$(jq -S . "$FAKE_CLAUDE_SETTINGS_PATH")"
 cat <<'OUT'
 ## Release Notes
 
-### Nightly Highlights
-- AI generated nightly summary.
+1、修复：AI generated nightly summary.
 OUT
 EOF
 chmod +x "$FAKE_CLAUDE_SUCCESS_PATH"
@@ -280,6 +293,7 @@ NOTES_OUTPUT_WITH_AI="$TMP_ROOT/nightly-release-notes-with-ai.md"
   CLAUDE_CODE_SETTINGS_JSON="$(cat "$FAKE_CLAUDE_SETTINGS_PATH")" \
   FAKE_CLAUDE_ARGS_PATH="$FAKE_CLAUDE_ARGS_PATH" \
   FAKE_CLAUDE_INPUT_PATH="$FAKE_CLAUDE_INPUT_PATH" \
+  FAKE_CLAUDE_PROMPT_PATH="$FAKE_CLAUDE_PROMPT_PATH" \
   FAKE_CLAUDE_SETTINGS_PATH="$FAKE_CLAUDE_SETTINGS_PATH" \
   LINGLONG_CLAUDE_CODE_EXECUTABLE="$FAKE_CLAUDE_SUCCESS_PATH" \
   LINGLONG_USE_SYSTEM_CLAUDE_CODE=0 \
@@ -291,7 +305,7 @@ NOTES_OUTPUT_WITH_AI="$TMP_ROOT/nightly-release-notes-with-ai.md"
     --output "$NOTES_OUTPUT_WITH_AI"
 )
 
-assert_file_contains "$NOTES_OUTPUT_WITH_AI" "AI generated nightly summary"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI" "1、修复：AI generated nightly summary."
 assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly source commit: $current_source_commit"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly source date: $nightly_date"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly version label: $nightly_label"
@@ -300,6 +314,17 @@ assert_file_contains "$NOTES_OUTPUT_WITH_AI" "## Download"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI" "## Requirements"
 assert_file_contains "$FAKE_CLAUDE_INPUT_PATH" "subject: fix: append nightly changelog"
 assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "--setting-sources user"
+assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "请分析当前工作区代码库、${ROOT_DIR}/docs 文档以及本次变更信息，并为版本 ${nightly_label}（nightly）生成最终的 Markdown 更新日志段落。"
+assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前版本：${nightly_label}"
+assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前构建类型：nightly"
+assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前基线引用：${previous_source_commit}"
+assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前代码库根目录：${NOTES_FIXTURE_REPO}"
+assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前文档目录：${ROOT_DIR}/docs"
+assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "允许分析当前代码库中的相关实现。"
+if grep -Fq -- '--tools' "$FAKE_CLAUDE_ARGS_PATH"; then
+  echo "Expected nightly Claude CLI invocation to allow default tools for repository analysis." >&2
+  exit 1
+fi
 
 NOTES_OUTPUT_WITH_AI_FALLBACK="$TMP_ROOT/nightly-release-notes-with-ai-fallback.md"
 
@@ -321,8 +346,7 @@ NOTES_OUTPUT_WITH_AI_FALLBACK="$TMP_ROOT/nightly-release-notes-with-ai-fallback.
 )
 
 assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "## Release Notes"
-assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "## fix"
-assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "- append nightly changelog"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "1、本次版本暂无需要特别说明的功能新增或问题修复。"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "Nightly source commit: $current_source_commit"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "Nightly source date: $nightly_date"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "Nightly version label: $nightly_label"

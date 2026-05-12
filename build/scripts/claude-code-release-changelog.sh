@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 WORKSPACE_ROOT="${LINGLONG_RELEASE_TOOL_ROOT:-$PWD}"
+PROMPT_TEMPLATE_PATH="$ROOT_DIR/build/scripts/ai-release-notes-system-prompt.md"
 
 release_version=""
 baseline_ref=""
@@ -44,6 +45,11 @@ if [[ -z "$release_version" || -z "$base_changelog_file" ]]; then
   exit 64
 fi
 
+if [[ ! -f "$PROMPT_TEMPLATE_PATH" ]]; then
+  echo "Prompt template does not exist: $PROMPT_TEMPLATE_PATH" >&2
+  exit 1
+fi
+
 if [[ ! -f "$base_changelog_file" ]]; then
   echo "Base changelog file does not exist: $base_changelog_file" >&2
   exit 1
@@ -81,8 +87,29 @@ jq -e . "$settings_path" >/dev/null
 claude_bin="$({ bash "$ROOT_DIR/build/scripts/install-claude-code.sh"; })"
 
 context_path="$tmp_dir/context.txt"
-prompt_path="$tmp_dir/prompt.txt"
+prompt_path="$tmp_dir/prompt.md"
 raw_output_path="$tmp_dir/raw-output.txt"
+docs_root_for_prompt="$ROOT_DIR/docs"
+
+build_kind_for_prompt="release"
+if [[ "$kind" == "nightly" ]]; then
+  build_kind_for_prompt="nightly"
+fi
+
+baseline_ref_display="${baseline_ref:-<none>}"
+
+render_prompt_template() {
+  local rendered_prompt=""
+
+  rendered_prompt="$(cat "$PROMPT_TEMPLATE_PATH")"
+  rendered_prompt="${rendered_prompt//\{\{RELEASE_VERSION\}\}/$release_version}"
+  rendered_prompt="${rendered_prompt//\{\{BUILD_KIND\}\}/$build_kind_for_prompt}"
+  rendered_prompt="${rendered_prompt//\{\{BASELINE_REF\}\}/$baseline_ref_display}"
+  rendered_prompt="${rendered_prompt//\{\{WORKSPACE_ROOT\}\}/$WORKSPACE_ROOT}"
+  rendered_prompt="${rendered_prompt//\{\{DOCS_ROOT\}\}/$docs_root_for_prompt}"
+
+  printf '%s' "$rendered_prompt"
+}
 
 range_args=()
 if [[ -n "$baseline_ref" ]] && git -C "$WORKSPACE_ROOT" rev-parse --verify "${baseline_ref}^{commit}" >/dev/null 2>&1; then
@@ -103,9 +130,9 @@ fi
 cat > "$context_path" <<EOF
 # Release Notes Context
 
-Kind: $kind
+Kind: $build_kind_for_prompt
 Target version: $release_version
-Baseline ref: ${baseline_ref:-<none>}
+Baseline ref: $baseline_ref_display
 
 ## Existing deterministic changelog
 
@@ -124,28 +151,24 @@ $(sed -n '1,120p' "$ROOT_DIR/README.md")
 $git_log_output
 EOF
 
-cat > "$prompt_path" <<EOF
-You are writing the GitHub Release changelog section for the flutter-linglong-store project.
+render_prompt_template > "$prompt_path"
 
-Requirements:
-- Respond in Simplified Chinese.
-- Use only the information from the provided context document.
-- Output Markdown only.
-- The first line must be exactly: ## Release Notes
-- Keep the output focused on the changelog section only.
-- Do not include download instructions, requirements, nightly metadata lines, hashes, signatures, or any text outside the changelog section.
-- Do not mention AI, prompts, or the existence of the context bundle.
-- Prefer concise, user-facing summaries. Do not invent features or claims not supported by the context.
-EOF
+if grep -Fq '{{' "$prompt_path"; then
+  echo "Prompt template rendering failed: unresolved placeholders remain in $prompt_path" >&2
+  exit 1
+fi
 
-cat "$context_path" | "$claude_bin" -p \
-  --bare \
-  --setting-sources user \
-  --tools "" \
-  --max-turns 1 \
-  --no-session-persistence \
-  --append-system-prompt-file "$prompt_path" \
-  "Generate the final Markdown changelog section for version ${release_version}." > "$raw_output_path"
+(
+  cd "$WORKSPACE_ROOT"
+  cat "$context_path" | "$claude_bin" -p \
+    --bare \
+    --setting-sources user \
+    --max-turns 1000 \
+    --no-session-persistence \
+    --dangerously-skip-permissions \
+    --append-system-prompt-file "$prompt_path" \
+    "请分析当前工作区代码库、${docs_root_for_prompt} 文档以及本次变更信息，并为版本 ${release_version}（${build_kind_for_prompt}）生成最终的 Markdown 更新日志段落。"
+) > "$raw_output_path"
 
 extract_release_notes_markdown() {
   local raw_path="$1"
@@ -182,6 +205,9 @@ extract_release_notes_markdown() {
 validate_release_notes_markdown() {
   local candidate_path="$1"
   local first_line=""
+  local numbered_line_count="0"
+  local expected_number="1"
+  local line=""
 
   first_line="$(sed -n '1p' "$candidate_path")"
   if [[ "$first_line" != "## Release Notes" ]]; then
@@ -201,6 +227,23 @@ validate_release_notes_markdown() {
   fi
 
   if grep -Fq 'Nightly version label:' "$candidate_path"; then
+    return 1
+  fi
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ -z "$line" || "$line" == "## Release Notes" ]]; then
+      continue
+    fi
+
+    if [[ ! "$line" =~ ^${expected_number}、 ]]; then
+      return 1
+    fi
+
+    numbered_line_count="$((numbered_line_count + 1))"
+    expected_number="$((expected_number + 1))"
+  done < "$candidate_path"
+
+  if [[ "$numbered_line_count" -lt 1 || "$numbered_line_count" -gt 5 ]]; then
     return 1
   fi
 

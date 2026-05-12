@@ -9,11 +9,13 @@ RELEASE_ASSET_FIXTURE_DIR="$TMP_ROOT/release-assets"
 RELEASE_NOTES_FIXTURE_PATH="$TMP_ROOT/release-notes.md"
 HASHES_OUTPUT_PATH="$RELEASE_ASSET_FIXTURE_DIR/hashes.sha256"
 FAKE_CLAUDE_SUCCESS_PATH="$TMP_ROOT/fake-claude-success.sh"
+FAKE_CLAUDE_INVALID_PATH="$TMP_ROOT/fake-claude-invalid.sh"
 FAKE_CLAUDE_FAILURE_PATH="$TMP_ROOT/fake-claude-failure.sh"
 FAKE_CLAUDE_INPUT_PATH="$TMP_ROOT/fake-claude-input.txt"
 FAKE_CLAUDE_ARGS_PATH="$TMP_ROOT/fake-claude-args.txt"
 FAKE_CLAUDE_SETTINGS_PATH="$TMP_ROOT/fake-claude-settings.json"
 FAKE_CLAUDE_HOME="$TMP_ROOT/fake-claude-home"
+FAKE_CLAUDE_PROMPT_PATH="$TMP_ROOT/fake-claude-prompt.md"
 
 cleanup() {
   rm -rf "$TMP_ROOT"
@@ -73,21 +75,46 @@ git -C "$CHANGELOG_FIXTURE_DIR" tag v99.0.0
 
 git -C "$CHANGELOG_FIXTURE_DIR" checkout "$default_branch" >/dev/null 2>&1
 git -C "$CHANGELOG_FIXTURE_DIR" merge --no-ff maintenance -m "Merge branch 'maintenance'" >/dev/null 2>&1
+printf 'release workflow guard\n' > "$CHANGELOG_FIXTURE_DIR/workflow.txt"
+git -C "$CHANGELOG_FIXTURE_DIR" add workflow.txt
+git -C "$CHANGELOG_FIXTURE_DIR" commit -m "fix: add checkout for update-uos-store job" >/dev/null 2>&1
+printf 'release workflow docs\n' > "$CHANGELOG_FIXTURE_DIR/docs.txt"
+git -C "$CHANGELOG_FIXTURE_DIR" add docs.txt
+git -C "$CHANGELOG_FIXTURE_DIR" commit -m "docs: document release workflow" >/dev/null 2>&1
+printf 'release workflow tests\n' > "$CHANGELOG_FIXTURE_DIR/tests.txt"
+git -C "$CHANGELOG_FIXTURE_DIR" add tests.txt
+git -C "$CHANGELOG_FIXTURE_DIR" commit -m "test: cover release workflow" >/dev/null 2>&1
 printf 'current release candidate\n' > "$CHANGELOG_FIXTURE_DIR/current.txt"
 git -C "$CHANGELOG_FIXTURE_DIR" add current.txt
 git -C "$CHANGELOG_FIXTURE_DIR" commit -m "feat: current release candidate" >/dev/null 2>&1
 
 fixture_changelog="$({
   LINGLONG_RELEASE_TOOL_ROOT="$CHANGELOG_FIXTURE_DIR" \
-    bash build/scripts/run-release-dart-tool.sh \
-    "$ROOT_DIR/tool/release/generate_changelog.dart" \
-    3.1.1
+    bash build/scripts/generate-changelog.sh \
+    3.1.1 \
+    v3.1.0
 })"
 
-grep -q -- '^- hotfix merged after the previous release$' <<< "$fixture_changelog"
-grep -q -- '^- current release candidate$' <<< "$fixture_changelog"
-if grep -q -- '^- release line 3.1.0 work$' <<< "$fixture_changelog"; then
+grep -q '^1、新增：current release candidate$' <<< "$fixture_changelog"
+grep -q '^2、修复：hotfix merged after the previous release$' <<< "$fixture_changelog"
+if grep -q -- 'release line 3.1.0 work' <<< "$fixture_changelog"; then
   echo "Expected auto-resolved previous release tag to exclude the already released mainline commit." >&2
+  exit 1
+fi
+if grep -q -- 'Merge branch' <<< "$fixture_changelog"; then
+  echo "Expected formatted release notes to ignore non user-facing maintenance commits." >&2
+  exit 1
+fi
+if grep -q -- 'add checkout for update-uos-store job' <<< "$fixture_changelog"; then
+  echo "Expected update-uos-store maintenance fixes to be filtered from deterministic release notes." >&2
+  exit 1
+fi
+if grep -q -- 'document release workflow' <<< "$fixture_changelog"; then
+  echo "Expected docs commits to be filtered from deterministic release notes." >&2
+  exit 1
+fi
+if grep -q -- 'cover release workflow' <<< "$fixture_changelog"; then
+  echo "Expected test commits to be filtered from deterministic release notes." >&2
   exit 1
 fi
 
@@ -106,16 +133,42 @@ cat > "$FAKE_CLAUDE_SUCCESS_PATH" <<'EOF'
 set -euo pipefail
 
 printf '%s\n' "$*" > "$FAKE_CLAUDE_ARGS_PATH"
+previous_arg=""
+prompt_file=""
+for arg in "$@"; do
+  if [[ "$previous_arg" == "--append-system-prompt-file" ]]; then
+    prompt_file="$arg"
+    break
+  fi
+  previous_arg="$arg"
+done
+
+if [[ -n "${FAKE_CLAUDE_PROMPT_PATH:-}" && -n "$prompt_file" ]]; then
+  cat "$prompt_file" > "$FAKE_CLAUDE_PROMPT_PATH"
+fi
+
 cat > "$FAKE_CLAUDE_INPUT_PATH"
 test "$(jq -S . "$HOME/.claude/settings.json")" = "$(jq -S . "$FAKE_CLAUDE_SETTINGS_PATH")"
 cat <<'OUT'
 ## Release Notes
 
-### Highlights
-- AI generated summary for the current release candidate.
+1、新增：AI generated summary for the current release candidate.
 OUT
 EOF
 chmod +x "$FAKE_CLAUDE_SUCCESS_PATH"
+
+cat > "$FAKE_CLAUDE_INVALID_PATH" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+cat >/dev/null
+cat <<'OUT'
+## Release Notes
+
+1、新增：AI generated summary for the current release candidate.
+1、修复：This duplicate numbering should be rejected.
+OUT
+EOF
+chmod +x "$FAKE_CLAUDE_INVALID_PATH"
 
 cat > "$FAKE_CLAUDE_FAILURE_PATH" <<'EOF'
 #!/usr/bin/env bash
@@ -129,6 +182,7 @@ ai_changelog="$({
   CLAUDE_CODE_SETTINGS_JSON="$(cat "$FAKE_CLAUDE_SETTINGS_PATH")" \
   FAKE_CLAUDE_ARGS_PATH="$FAKE_CLAUDE_ARGS_PATH" \
   FAKE_CLAUDE_INPUT_PATH="$FAKE_CLAUDE_INPUT_PATH" \
+  FAKE_CLAUDE_PROMPT_PATH="$FAKE_CLAUDE_PROMPT_PATH" \
   FAKE_CLAUDE_SETTINGS_PATH="$FAKE_CLAUDE_SETTINGS_PATH" \
   LINGLONG_CLAUDE_CODE_EXECUTABLE="$FAKE_CLAUDE_SUCCESS_PATH" \
   LINGLONG_USE_SYSTEM_CLAUDE_CODE=0 \
@@ -137,13 +191,55 @@ ai_changelog="$({
 })"
 
 grep -q '^## Release Notes$' <<< "$ai_changelog"
-grep -q 'AI generated summary for the current release candidate' <<< "$ai_changelog"
+grep -q '^1、新增：AI generated summary for the current release candidate\.$' <<< "$ai_changelog"
 grep -q -- '--bare' "$FAKE_CLAUDE_ARGS_PATH"
 grep -q -- '--setting-sources user' "$FAKE_CLAUDE_ARGS_PATH"
 grep -q -- '--max-turns 1' "$FAKE_CLAUDE_ARGS_PATH"
+if grep -Fq -- '--tools' "$FAKE_CLAUDE_ARGS_PATH"; then
+  echo "Expected Claude CLI invocation to allow default tools for repository analysis." >&2
+  exit 1
+fi
+grep -q '请分析当前工作区代码库、.*/docs 文档以及本次变更信息，并为版本 3.1.1（release）生成最终的 Markdown 更新日志段落。' "$FAKE_CLAUDE_ARGS_PATH"
 grep -q '^# Release Notes Context$' "$FAKE_CLAUDE_INPUT_PATH"
 grep -q '^# 12 GitHub Workflow Maintenance$' "$FAKE_CLAUDE_INPUT_PATH"
+grep -q '^# flutter-linglong-store GitHub Release 更新日志生成 Prompt$' "$FAKE_CLAUDE_PROMPT_PATH"
+grep -q '当前版本：3.1.1' "$FAKE_CLAUDE_PROMPT_PATH"
+grep -q '当前构建类型：release' "$FAKE_CLAUDE_PROMPT_PATH"
+grep -q '当前基线引用：v3.1.0' "$FAKE_CLAUDE_PROMPT_PATH"
+grep -q '当前代码库根目录：.*/changelog-fixture' "$FAKE_CLAUDE_PROMPT_PATH"
+grep -q '当前文档目录：.*/docs' "$FAKE_CLAUDE_PROMPT_PATH"
+grep -q '允许分析当前代码库中的相关实现。' "$FAKE_CLAUDE_PROMPT_PATH"
+grep -q '允许分析 `.*/docs` 目录中的相关文档。' "$FAKE_CLAUDE_PROMPT_PATH"
 grep -q 'subject: feat: current release candidate' "$FAKE_CLAUDE_INPUT_PATH"
+
+release_notes_for_uos="$TMP_ROOT/release-notes-for-uos.md"
+cat > "$release_notes_for_uos" <<EOF
+$ai_changelog
+
+## Download
+- amd64: bundle / deb / rpm / AppImage
+- arm64: bundle / deb / rpm / AppImage
+EOF
+
+uos_note="$({
+  bash build/scripts/extract-release-note-summary.sh "$release_notes_for_uos"
+})"
+
+test "$uos_note" = '1、新增：AI generated summary for the current release candidate.'
+
+invalid_ai_changelog="$({
+  HOME="$FAKE_CLAUDE_HOME" \
+  CLAUDE_CODE_SETTINGS_JSON="$(cat "$FAKE_CLAUDE_SETTINGS_PATH")" \
+  FAKE_CLAUDE_ARGS_PATH="$FAKE_CLAUDE_ARGS_PATH" \
+  FAKE_CLAUDE_INPUT_PATH="$FAKE_CLAUDE_INPUT_PATH" \
+  FAKE_CLAUDE_SETTINGS_PATH="$FAKE_CLAUDE_SETTINGS_PATH" \
+  LINGLONG_CLAUDE_CODE_EXECUTABLE="$FAKE_CLAUDE_INVALID_PATH" \
+  LINGLONG_USE_SYSTEM_CLAUDE_CODE=0 \
+  LINGLONG_RELEASE_TOOL_ROOT="$CHANGELOG_FIXTURE_DIR" \
+    bash build/scripts/generate-changelog.sh 3.1.1 v3.1.0
+})"
+
+test "$invalid_ai_changelog" = "$fixture_changelog"
 
 fallback_ai_changelog="$({
   HOME="$FAKE_CLAUDE_HOME" \

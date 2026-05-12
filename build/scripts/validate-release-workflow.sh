@@ -41,6 +41,10 @@ require_grep "guanzi008/appstore@main" .github/workflows/release.yml
 require_grep "APPSTORE_USERNAME" .github/workflows/release.yml
 require_grep "APPSTORE_PASSWORD" .github/workflows/release.yml
 require_grep "Expected exactly 2 Debian packages" .github/workflows/release.yml
+require_grep "Checkout repository for UOS note extraction" .github/workflows/release.yml
+require_grep "Prepare UOS Store note" .github/workflows/release.yml
+require_grep "extract-release-note-summary.sh" .github/workflows/release.yml
+require_grep 'note: ${{ steps.uos_note.outputs.note }}' .github/workflows/release.yml
 require_grep 'bash build/scripts/generate-changelog.sh "${{ steps.release-version.outputs.version }}" > release-notes.md' .github/workflows/release.yml
 require_grep "artifacts/*.tar.gz.asc" .github/workflows/release.yml
 require_grep "for tarball in *.tar.gz; do" .github/workflows/release.yml

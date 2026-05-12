@@ -483,6 +483,19 @@ jobs:
           name: signed-release-assets
           path: signed-release-assets
 
+      - name: Checkout repository for UOS note extraction
+        if: ${{ steps.store_credentials.outputs.enabled == 'true' }}
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Download release notes
+        if: ${{ steps.store_credentials.outputs.enabled == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes
+
       - name: Collect release Debian packages
         if: ${{ steps.store_credentials.outputs.enabled == 'true' }}
         id: debian_packages
@@ -499,6 +512,17 @@ jobs:
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
+      - name: Prepare UOS Store note
+        if: ${{ steps.store_credentials.outputs.enabled == 'true' }}
+        id: uos_note
+        run: |
+          note="$(bash build/scripts/extract-release-note-summary.sh release-notes/release-notes.md)"
+          {
+            echo 'note<<EOF'
+            printf '%s\n' "$note"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Submit latest release to UOS Store
         if: ${{ steps.store_credentials.outputs.enabled == 'true' }}
         uses: guanzi008/appstore@main
@@ -506,7 +530,7 @@ jobs:
           username: ${{ secrets.APPSTORE_USERNAME }}
           password: ${{ secrets.APPSTORE_PASSWORD }}
           packages: ${{ steps.debian_packages.outputs.packages }}
-          note: GitHub Release ${{ needs.prepare-release.outputs.tag }} 自动更新。
+          note: ${{ steps.uos_note.outputs.note }}
           mode: api
           release-key: latest-release
 

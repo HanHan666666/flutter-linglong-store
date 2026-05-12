@@ -19,7 +19,7 @@
 - [ ] 写安装脚本，支持显式版本与自定义可执行文件覆盖。
 - [ ] 写 settings 写回逻辑：从 `CLAUDE_CODE_SETTINGS_JSON` 写到 `~/.claude/settings.json`，校验 JSON，收紧权限。
 - [ ] 写上下文包生成逻辑：收集 deterministic changelog、git log、README 摘要、workflow 约束摘要。
-- [ ] 用 `claude -p --bare --setting-sources user --tools "" --max-turns 1 --json-schema ...` 生成结构化 Markdown。
+- [ ] 用 `claude -p --bare --setting-sources user --max-turns 1` 调用 Claude，根据当前代码库、`docs/` 文档与变更信息生成 Markdown 更新日志。
 - [ ] 当 Secret 缺失、Claude 失败或输出校验失败时回退到 deterministic changelog。
 
 ### Task 2: 把 AI 增强接入 stable/nightly notes 入口

@@ -26,8 +26,11 @@
 
 ### Release Notes Contract
 
-- `build/scripts/generate-changelog.sh` 目前只负责 changelog 段落。
+- `build/scripts/generate-changelog.sh` 仍然是 stable release notes 的唯一入口，最终输出必须统一为 `## Release Notes` + `1、2、3` 编号列表，最多 `5` 条。
+- changelog 只保留用户可感知的功能新增与缺陷修复；文档、CI、workflow、打包、发布流程、AUR/UOS 发布、测试、重构和其他维护性改动即使落在 `feat/fix` 提交里，也应在最终输出中忽略。
 - `build/scripts/generate-nightly-release-notes.sh` 会在 changelog 后追加 nightly 固定元数据。
+- 当本次范围内没有需要对外说明的功能新增或问题修复时，changelog 统一回退为单条编号文案：`1、本次版本暂无需要特别说明的功能新增或问题修复。`
+- release workflow 中提交到 UOS Store 的 `note` 必须直接复用同一份 release notes 中的编号列表摘要，禁止继续手写与 GitHub Release 脱节的固定说明。
 - `build/scripts/release-cli-smoke-test.sh` 与 `build/scripts/nightly-cli-smoke-test.sh` 都对 Markdown 结构有显式断言。
 - `build/scripts/validate-release-workflow.sh` 目前要求 `release.yml` 继续调用 `generate-changelog.sh`，要求 `nightly.yml` 继续调用 `generate-nightly-release-notes.sh`。
 
@@ -122,17 +125,16 @@ Claude Code 使用非交互 CLI：
 - `claude -p`
 - `--bare`
 - `--setting-sources user`
-- `--tools ""`
 - `--max-turns 1`
-- `--output-format json`
-- `--json-schema ...`
+- `--no-session-persistence`
+- `--append-system-prompt-file <prompt.txt>`
 
 这样做的目的：
 
 - 只加载我们刚写入的用户级 `~/.claude/settings.json`。
 - 不自动读取项目级 `.claude/`、`.mcp.json`、`CLAUDE.md`。
-- 通过预先构造的上下文包让 Claude“理解项目上下文”，但不授予额外的 Bash/编辑权限。
-- 通过 JSON Schema 强制返回单个 Markdown 字段，避免半截文本或额外解释污染输出文件。
+- 通过预先构造的上下文包让 Claude“理解项目上下文”，同时允许它按当前用户级配置分析代码库与 `docs/` 文档。
+- 直接要求 Claude 输出 Markdown，然后在 shell 脚本里做结构校验，避免半截文本或额外解释污染输出文件。
 
 ### Context Package
 

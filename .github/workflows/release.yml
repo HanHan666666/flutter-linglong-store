@@ -452,6 +452,59 @@ jobs:
           files: |
             release-assets/*
 
+  update-uos-store:
+    name: Update UOS Store latest release ${{ needs.prepare-release.outputs.version }}
+    needs: [prepare-release, publish-release]
+    if: ${{ always() && needs.publish-release.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check UOS Store credentials
+        id: store_credentials
+        env:
+          APPSTORE_USERNAME: ${{ secrets.APPSTORE_USERNAME }}
+          APPSTORE_PASSWORD: ${{ secrets.APPSTORE_PASSWORD }}
+        run: |
+          if [[ -z "$APPSTORE_USERNAME" || -z "$APPSTORE_PASSWORD" ]]; then
+            echo "UOS Store credentials are not configured; skipping store update."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+      - name: Download signed Debian packages
+        if: ${{ steps.store_credentials.outputs.enabled == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: signed-release-assets
+          path: signed-release-assets
+
+      - name: Collect release Debian packages
+        if: ${{ steps.store_credentials.outputs.enabled == 'true' }}
+        id: debian_packages
+        run: |
+          mapfile -t debs < <(find signed-release-assets -type f -name '*.deb' | sort)
+          if [[ "${#debs[@]}" -ne 2 ]]; then
+            printf 'Expected exactly 2 Debian packages, found %s:\n' "${#debs[@]}" >&2
+            printf '%s\n' "${debs[@]}" >&2
+            exit 1
+          fi
+          {
+            echo 'packages<<EOF'
+            printf '%s\n' "${debs[@]}"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Submit latest release to UOS Store
+        if: ${{ steps.store_credentials.outputs.enabled == 'true' }}
+        uses: guanzi008/appstore@main
+        with:
+          username: ${{ secrets.APPSTORE_USERNAME }}
+          password: ${{ secrets.APPSTORE_PASSWORD }}
+          packages: ${{ steps.debian_packages.outputs.packages }}
+          note: GitHub Release ${{ needs.prepare-release.outputs.tag }} 自动更新。
+          mode: api
+          release-key: latest-release
+
   publish-aur:
     name: Publish to AUR ${{ needs.prepare-release.outputs.version }}
     needs: [prepare-release, publish-release]

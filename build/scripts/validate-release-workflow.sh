@@ -36,6 +36,11 @@ require_grep "append-release-asset-hashes.sh" .github/workflows/release.yml
 require_grep "normalize-release-assets.sh" .github/workflows/release.yml
 require_grep "release-assets/hashes.sha256" .github/workflows/release.yml
 require_grep "release-assets/*" .github/workflows/release.yml
+require_grep "update-uos-store:" .github/workflows/release.yml
+require_grep "guanzi008/appstore@main" .github/workflows/release.yml
+require_grep "APPSTORE_USERNAME" .github/workflows/release.yml
+require_grep "APPSTORE_PASSWORD" .github/workflows/release.yml
+require_grep "Expected exactly 2 Debian packages" .github/workflows/release.yml
 require_grep 'bash build/scripts/generate-changelog.sh "${{ steps.release-version.outputs.version }}" > release-notes.md' .github/workflows/release.yml
 require_grep "artifacts/*.tar.gz.asc" .github/workflows/release.yml
 require_grep "for tarball in *.tar.gz; do" .github/workflows/release.yml

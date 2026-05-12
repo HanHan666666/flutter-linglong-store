@@ -489,7 +489,12 @@ jobs:
         uses: dart-lang/setup-dart@v1
 
       - name: Render nightly release notes
+        env:
+          CLAUDE_CODE_SETTINGS_JSON: ${{ secrets['CLAUDE_CODE_SETTINGS_JSON'] }}
+          LINGLONG_CLAUDE_CODE_VERSION: 2.1.126
+          LINGLONG_USE_SYSTEM_CLAUDE_CODE: '0'
         run: |
+          # Secret 为空时脚本会在 changelog 段回退到 deterministic/fallback 文案，不阻断 nightly 发布。
           cmd=(
             bash build/scripts/generate-nightly-release-notes.sh
             --nightly-label "${{ needs.prepare-nightly.outputs.nightly_label }}"

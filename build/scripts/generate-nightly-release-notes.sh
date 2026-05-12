@@ -64,11 +64,11 @@ if [[ -n "$previous_source_commit" ]]; then
   # release body 里的历史 SHA 可能被人工编辑或因历史改写失效；不可用时降级为首版文案而不是直接炸掉 nightly。
   if git -C "$PWD" rev-parse --verify "${previous_source_commit}^{commit}" >/dev/null 2>&1 \
     && git -C "$PWD" merge-base --is-ancestor "$previous_source_commit" HEAD; then
-    # 直接复用正式 release 的 Dart 生成器，同时把 git 上下文显式绑定到当前仓库目录。
+    # 直接复用正式 release 的 changelog 入口，这样 stable/nightly 可以共享同一条 AI fallback 链路。
     changelog_content="$({
+      LINGLONG_CHANGELOG_CONTEXT_KIND=nightly \
       LINGLONG_RELEASE_TOOL_ROOT="$PWD" \
-        bash "$ROOT_DIR/build/scripts/run-release-dart-tool.sh" \
-        "$ROOT_DIR/tool/release/generate_changelog.dart" \
+        bash "$ROOT_DIR/build/scripts/generate-changelog.sh" \
         "$nightly_label" \
         "$previous_source_commit"
     })"

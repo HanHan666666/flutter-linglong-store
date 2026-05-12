@@ -10,12 +10,26 @@ NIGHTLY_AUR_OUTPUT_DIR="$TMP_ROOT/nightly-aur-render"
 OUTPUT_DIR="$TMP_ROOT/output"
 NIGHTLY_ASSET_FIXTURE_DIR="$TMP_ROOT/nightly-assets"
 NIGHTLY_HASHES_OUTPUT_PATH="$NIGHTLY_ASSET_FIXTURE_DIR/hashes.sha256"
+FAKE_CLAUDE_SUCCESS_PATH="$TMP_ROOT/fake-claude-success.sh"
+FAKE_CLAUDE_FAILURE_PATH="$TMP_ROOT/fake-claude-failure.sh"
+FAKE_CLAUDE_INPUT_PATH="$TMP_ROOT/fake-claude-input.txt"
+FAKE_CLAUDE_ARGS_PATH="$TMP_ROOT/fake-claude-args.txt"
+FAKE_CLAUDE_SETTINGS_PATH="$TMP_ROOT/fake-claude-settings.json"
+FAKE_CLAUDE_HOME="$TMP_ROOT/fake-claude-home"
 
 cleanup() {
   rm -rf "$TMP_ROOT"
 }
 
 trap cleanup EXIT
+
+unset \
+  CLAUDE_CODE_SETTINGS_JSON \
+  LINGLONG_CLAUDE_CODE_EXECUTABLE \
+  LINGLONG_CLAUDE_CODE_INSTALL_DIR \
+  LINGLONG_CLAUDE_CODE_VERSION \
+  LINGLONG_REINSTALL_CLAUDE_CODE \
+  LINGLONG_USE_SYSTEM_CLAUDE_CODE
 
 assert_no_template_placeholders() {
   local file_path="$1"
@@ -224,6 +238,94 @@ assert_file_contains "$NOTES_OUTPUT_FIRST_RELEASE" "这是首个 Nightly Release
 
 assert_file_contains "$NOTES_OUTPUT_INVALID_BASELINE" "## Release Notes"
 assert_file_contains "$NOTES_OUTPUT_INVALID_BASELINE" "这是首个 Nightly Release，后续 Nightly 将从上一版 Nightly source commit 自动生成变更日志。"
+
+cat > "$FAKE_CLAUDE_SETTINGS_PATH" <<'EOF'
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "nightly-token",
+    "ANTHROPIC_BASE_URL": "http://claude.example.test"
+  },
+  "model": "sonnet"
+}
+EOF
+
+cat > "$FAKE_CLAUDE_SUCCESS_PATH" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+printf '%s\n' "$*" > "$FAKE_CLAUDE_ARGS_PATH"
+cat > "$FAKE_CLAUDE_INPUT_PATH"
+test "$(jq -S . "$HOME/.claude/settings.json")" = "$(jq -S . "$FAKE_CLAUDE_SETTINGS_PATH")"
+cat <<'OUT'
+## Release Notes
+
+### Nightly Highlights
+- AI generated nightly summary.
+OUT
+EOF
+chmod +x "$FAKE_CLAUDE_SUCCESS_PATH"
+
+cat > "$FAKE_CLAUDE_FAILURE_PATH" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+exit 1
+EOF
+chmod +x "$FAKE_CLAUDE_FAILURE_PATH"
+
+NOTES_OUTPUT_WITH_AI="$TMP_ROOT/nightly-release-notes-with-ai.md"
+
+(
+  cd "$NOTES_FIXTURE_REPO"
+  HOME="$FAKE_CLAUDE_HOME" \
+  CLAUDE_CODE_SETTINGS_JSON="$(cat "$FAKE_CLAUDE_SETTINGS_PATH")" \
+  FAKE_CLAUDE_ARGS_PATH="$FAKE_CLAUDE_ARGS_PATH" \
+  FAKE_CLAUDE_INPUT_PATH="$FAKE_CLAUDE_INPUT_PATH" \
+  FAKE_CLAUDE_SETTINGS_PATH="$FAKE_CLAUDE_SETTINGS_PATH" \
+  LINGLONG_CLAUDE_CODE_EXECUTABLE="$FAKE_CLAUDE_SUCCESS_PATH" \
+  LINGLONG_USE_SYSTEM_CLAUDE_CODE=0 \
+  bash "$ROOT_DIR/build/scripts/generate-nightly-release-notes.sh" \
+    --nightly-label "$nightly_label" \
+    --nightly-date "$nightly_date" \
+    --source-commit "$current_source_commit" \
+    --previous-source-commit "$previous_source_commit" \
+    --output "$NOTES_OUTPUT_WITH_AI"
+)
+
+assert_file_contains "$NOTES_OUTPUT_WITH_AI" "AI generated nightly summary"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly source commit: $current_source_commit"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly source date: $nightly_date"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly version label: $nightly_label"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI" "## Nightly Build"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI" "## Download"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI" "## Requirements"
+assert_file_contains "$FAKE_CLAUDE_INPUT_PATH" "subject: fix: append nightly changelog"
+assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "--setting-sources user"
+
+NOTES_OUTPUT_WITH_AI_FALLBACK="$TMP_ROOT/nightly-release-notes-with-ai-fallback.md"
+
+(
+  cd "$NOTES_FIXTURE_REPO"
+  HOME="$FAKE_CLAUDE_HOME" \
+  CLAUDE_CODE_SETTINGS_JSON="$(cat "$FAKE_CLAUDE_SETTINGS_PATH")" \
+  FAKE_CLAUDE_ARGS_PATH="$FAKE_CLAUDE_ARGS_PATH" \
+  FAKE_CLAUDE_INPUT_PATH="$FAKE_CLAUDE_INPUT_PATH" \
+  FAKE_CLAUDE_SETTINGS_PATH="$FAKE_CLAUDE_SETTINGS_PATH" \
+  LINGLONG_CLAUDE_CODE_EXECUTABLE="$FAKE_CLAUDE_FAILURE_PATH" \
+  LINGLONG_USE_SYSTEM_CLAUDE_CODE=0 \
+  bash "$ROOT_DIR/build/scripts/generate-nightly-release-notes.sh" \
+    --nightly-label "$nightly_label" \
+    --nightly-date "$nightly_date" \
+    --source-commit "$current_source_commit" \
+    --previous-source-commit "$previous_source_commit" \
+    --output "$NOTES_OUTPUT_WITH_AI_FALLBACK"
+)
+
+assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "## Release Notes"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "## fix"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "- append nightly changelog"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "Nightly source commit: $current_source_commit"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "Nightly source date: $nightly_date"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "Nightly version label: $nightly_label"
 
 mkdir -p "$NIGHTLY_ASSET_FIXTURE_DIR"
 

@@ -8,12 +8,26 @@ RELEASE_ASSET_DOWNLOAD_FIXTURE_DIR="$TMP_ROOT/release-artifacts-download"
 RELEASE_ASSET_FIXTURE_DIR="$TMP_ROOT/release-assets"
 RELEASE_NOTES_FIXTURE_PATH="$TMP_ROOT/release-notes.md"
 HASHES_OUTPUT_PATH="$RELEASE_ASSET_FIXTURE_DIR/hashes.sha256"
+FAKE_CLAUDE_SUCCESS_PATH="$TMP_ROOT/fake-claude-success.sh"
+FAKE_CLAUDE_FAILURE_PATH="$TMP_ROOT/fake-claude-failure.sh"
+FAKE_CLAUDE_INPUT_PATH="$TMP_ROOT/fake-claude-input.txt"
+FAKE_CLAUDE_ARGS_PATH="$TMP_ROOT/fake-claude-args.txt"
+FAKE_CLAUDE_SETTINGS_PATH="$TMP_ROOT/fake-claude-settings.json"
+FAKE_CLAUDE_HOME="$TMP_ROOT/fake-claude-home"
 
 cleanup() {
   rm -rf "$TMP_ROOT"
 }
 
 trap cleanup EXIT
+
+unset \
+  CLAUDE_CODE_SETTINGS_JSON \
+  LINGLONG_CLAUDE_CODE_EXECUTABLE \
+  LINGLONG_CLAUDE_CODE_INSTALL_DIR \
+  LINGLONG_CLAUDE_CODE_VERSION \
+  LINGLONG_REINSTALL_CLAUDE_CODE \
+  LINGLONG_USE_SYSTEM_CLAUDE_CODE
 
 cd "$ROOT_DIR"
 
@@ -76,6 +90,74 @@ if grep -q -- '^- release line 3.1.0 work$' <<< "$fixture_changelog"; then
   echo "Expected auto-resolved previous release tag to exclude the already released mainline commit." >&2
   exit 1
 fi
+
+cat > "$FAKE_CLAUDE_SETTINGS_PATH" <<'EOF'
+{
+  "env": {
+    "ANTHROPIC_AUTH_TOKEN": "test-token",
+    "ANTHROPIC_BASE_URL": "http://claude.example.test"
+  },
+  "model": "sonnet"
+}
+EOF
+
+cat > "$FAKE_CLAUDE_SUCCESS_PATH" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+printf '%s\n' "$*" > "$FAKE_CLAUDE_ARGS_PATH"
+cat > "$FAKE_CLAUDE_INPUT_PATH"
+test "$(jq -S . "$HOME/.claude/settings.json")" = "$(jq -S . "$FAKE_CLAUDE_SETTINGS_PATH")"
+cat <<'OUT'
+## Release Notes
+
+### Highlights
+- AI generated summary for the current release candidate.
+OUT
+EOF
+chmod +x "$FAKE_CLAUDE_SUCCESS_PATH"
+
+cat > "$FAKE_CLAUDE_FAILURE_PATH" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+exit 1
+EOF
+chmod +x "$FAKE_CLAUDE_FAILURE_PATH"
+
+ai_changelog="$({
+  HOME="$FAKE_CLAUDE_HOME" \
+  CLAUDE_CODE_SETTINGS_JSON="$(cat "$FAKE_CLAUDE_SETTINGS_PATH")" \
+  FAKE_CLAUDE_ARGS_PATH="$FAKE_CLAUDE_ARGS_PATH" \
+  FAKE_CLAUDE_INPUT_PATH="$FAKE_CLAUDE_INPUT_PATH" \
+  FAKE_CLAUDE_SETTINGS_PATH="$FAKE_CLAUDE_SETTINGS_PATH" \
+  LINGLONG_CLAUDE_CODE_EXECUTABLE="$FAKE_CLAUDE_SUCCESS_PATH" \
+  LINGLONG_USE_SYSTEM_CLAUDE_CODE=0 \
+  LINGLONG_RELEASE_TOOL_ROOT="$CHANGELOG_FIXTURE_DIR" \
+    bash build/scripts/generate-changelog.sh 3.1.1 v3.1.0
+})"
+
+grep -q '^## Release Notes$' <<< "$ai_changelog"
+grep -q 'AI generated summary for the current release candidate' <<< "$ai_changelog"
+grep -q -- '--bare' "$FAKE_CLAUDE_ARGS_PATH"
+grep -q -- '--setting-sources user' "$FAKE_CLAUDE_ARGS_PATH"
+grep -q -- '--max-turns 1' "$FAKE_CLAUDE_ARGS_PATH"
+grep -q '^# Release Notes Context$' "$FAKE_CLAUDE_INPUT_PATH"
+grep -q '^# 12 GitHub Workflow Maintenance$' "$FAKE_CLAUDE_INPUT_PATH"
+grep -q 'subject: feat: current release candidate' "$FAKE_CLAUDE_INPUT_PATH"
+
+fallback_ai_changelog="$({
+  HOME="$FAKE_CLAUDE_HOME" \
+  CLAUDE_CODE_SETTINGS_JSON="$(cat "$FAKE_CLAUDE_SETTINGS_PATH")" \
+  FAKE_CLAUDE_ARGS_PATH="$FAKE_CLAUDE_ARGS_PATH" \
+  FAKE_CLAUDE_INPUT_PATH="$FAKE_CLAUDE_INPUT_PATH" \
+  FAKE_CLAUDE_SETTINGS_PATH="$FAKE_CLAUDE_SETTINGS_PATH" \
+  LINGLONG_CLAUDE_CODE_EXECUTABLE="$FAKE_CLAUDE_FAILURE_PATH" \
+  LINGLONG_USE_SYSTEM_CLAUDE_CODE=0 \
+  LINGLONG_RELEASE_TOOL_ROOT="$CHANGELOG_FIXTURE_DIR" \
+    bash build/scripts/generate-changelog.sh 3.1.1 v3.1.0
+})"
+
+test "$fallback_ai_changelog" = "$fixture_changelog"
 
 bash build/scripts/render-packaging-templates.sh \
   --inner \

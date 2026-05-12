@@ -72,7 +72,12 @@ jobs:
           if-no-files-found: error
 
       - name: Generate release notes
+        env:
+          CLAUDE_CODE_SETTINGS_JSON: ${{ secrets['CLAUDE_CODE_SETTINGS_JSON'] }}
+          LINGLONG_CLAUDE_CODE_VERSION: 2.1.126
+          LINGLONG_USE_SYSTEM_CLAUDE_CODE: '0'
         run: |
+          # Secret 为空时脚本会自动回退到 deterministic changelog，不阻断正式发版。
           bash build/scripts/generate-changelog.sh "${{ steps.release-version.outputs.version }}" > release-notes.md
           cat <<'EOF' >> release-notes.md
 

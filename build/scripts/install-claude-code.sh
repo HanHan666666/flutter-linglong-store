@@ -23,7 +23,25 @@ fi
 install_root="${LINGLONG_CLAUDE_CODE_INSTALL_DIR:-${RUNNER_TEMP:-${TMPDIR:-/tmp}}/linglong-claude-code}"
 package_version="${LINGLONG_CLAUDE_CODE_VERSION:-latest}"
 package_spec="@anthropic-ai/claude-code@${package_version}"
-claude_bin="${install_root}/bin/claude"
+
+resolve_installed_claude_bin() {
+  local root="$1"
+  local candidate=""
+
+  for candidate in \
+    "${root}/node_modules/.bin/claude" \
+    "${root}/node_modules/@anthropic-ai/claude-code/bin/claude" \
+    "${root}/bin/claude"; do
+    if [[ -x "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+claude_bin="$(resolve_installed_claude_bin "$install_root" || true)"
 
 if [[ ! -x "$claude_bin" || "${LINGLONG_REINSTALL_CLAUDE_CODE:-0}" == "1" ]]; then
   rm -rf "$install_root"
@@ -34,10 +52,12 @@ if [[ ! -x "$claude_bin" || "${LINGLONG_REINSTALL_CLAUDE_CODE:-0}" == "1" ]]; th
     --no-audit \
     --no-fund \
     "$package_spec" >/dev/null
+
+  claude_bin="$(resolve_installed_claude_bin "$install_root" || true)"
 fi
 
 if [[ ! -x "$claude_bin" ]]; then
-  echo "Failed to install Claude Code to ${claude_bin}." >&2
+  echo "Failed to locate an installed Claude Code executable under ${install_root}." >&2
   exit 1
 fi
 

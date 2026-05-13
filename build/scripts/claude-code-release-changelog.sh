@@ -161,8 +161,6 @@ fi
 (
   cd "$WORKSPACE_ROOT"
   cat "$context_path" | "$claude_bin" -p \
-    --bare \
-    --setting-sources user \
     --max-turns 1000 \
     --no-session-persistence \
     --dangerously-skip-permissions \

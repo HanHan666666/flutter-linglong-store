@@ -123,27 +123,33 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
       );
     }
 
+    // 搜索结果存在后，安排自动补页检查
+    scheduleAutoLoadCheckAfterLayout();
+
     // 搜索结果列表
     return RefreshIndicator(
       onRefresh: () => ref.read(searchProvider.notifier).refresh(),
-      child: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          // 结果统计
-          SliverToBoxAdapter(child: _buildResultHeader(state)),
+      child: NotificationListener<ScrollMetricsNotification>(
+        onNotification: onScrollMetricsNotification,
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            // 结果统计
+            SliverToBoxAdapter(child: _buildResultHeader(state)),
 
-          // 搜索结果网格
-          SliverPadding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            sliver: _AppsGrid(apps: state.results),
-          ),
-          // 搜索结果分页 footer 独立成整行 sliver，避免占一个卡片坑位。
-          PaginationFooterSliver(
-            isLoadingMore: state.isLoadingMore,
-            hasMore: state.hasMore,
-            hasItems: state.results.isNotEmpty,
-          ),
-        ],
+            // 搜索结果网格
+            SliverPadding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              sliver: _AppsGrid(apps: state.results),
+            ),
+            // 搜索结果分页 footer 独立成整行 sliver，避免占一个卡片坑位。
+            PaginationFooterSliver(
+              isLoadingMore: state.isLoadingMore,
+              hasMore: state.hasMore,
+              hasItems: state.results.isNotEmpty,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -517,6 +517,12 @@ InitialLoad (骨架屏)
                  └─ No  → ShowError (重试按钮)
 ```
 
+### 分页列表全屏自动补页约定
+
+- 所有分页列表必须在分页数据进入正常渲染分支后调用统一自动补页检查（`scheduleAutoLoadCheckAfterLayout()`）；禁止只依赖滚动触底事件
+- 所有分页 `CustomScrollView` 必须监听 `ScrollMetricsNotification`，窗口全屏、退出全屏、DPI 缩放或内容区尺寸变化后，如果内容不足一屏且 `hasMore=true`，应继续补页
+- 页面隐藏时自动补页必须暂停；主页面通过 `ShellBranchVisibilityMixin` 控制，非主页面在路由销毁前可视为可见
+
 ### ApplicationCard 状态流
 
 ```

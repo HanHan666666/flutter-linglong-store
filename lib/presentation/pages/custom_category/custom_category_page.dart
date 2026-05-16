@@ -104,33 +104,39 @@ class _CustomCategoryPageState extends ConsumerState<CustomCategoryPage>
       );
     }
 
+    // 数据渲染完成后，安排自动补页检查
+    scheduleAutoLoadCheckAfterLayout();
+
     // 正常显示
     return Semantics(
       label: l10n.a11yAppListArea,
-      child: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          // 标题栏
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _CategoryHeaderDelegate(
-              categoryName: state.data!.categoryInfo.name,
-              appCount: state.data!.categoryInfo.appCount,
+      child: NotificationListener<ScrollMetricsNotification>(
+        onNotification: onScrollMetricsNotification,
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            // 标题栏
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _CategoryHeaderDelegate(
+                categoryName: state.data!.categoryInfo.name,
+                appCount: state.data!.categoryInfo.appCount,
+              ),
             ),
-          ),
 
-          // 应用卡片网格
-          SliverPadding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            sliver: _AppsGrid(apps: state.data!.apps.items),
-          ),
-          // 分页 footer 必须独立成整行 sliver，不能占用卡片格子。
-          PaginationFooterSliver(
-            isLoadingMore: state.isLoadingMore,
-            hasMore: state.data!.apps.hasMore,
-            hasItems: state.data!.apps.items.isNotEmpty,
-          ),
-        ],
+            // 应用卡片网格
+            SliverPadding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              sliver: _AppsGrid(apps: state.data!.apps.items),
+            ),
+            // 分页 footer 必须独立成整行 sliver，不能占用卡片格子。
+            PaginationFooterSliver(
+              isLoadingMore: state.isLoadingMore,
+              hasMore: state.data!.apps.hasMore,
+              hasItems: state.data!.apps.items.isNotEmpty,
+            ),
+          ],
+        ),
       ),
     );
   }

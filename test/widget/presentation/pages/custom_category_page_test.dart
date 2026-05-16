@@ -6,6 +6,7 @@ import 'package:mockito/mockito.dart';
 import 'package:retrofit/retrofit.dart';
 
 import 'package:linglong_store/application/providers/api_provider.dart';
+import 'package:linglong_store/application/providers/application_card_state_provider.dart';
 import 'package:linglong_store/application/providers/sidebar_config_provider.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
@@ -107,6 +108,91 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('System'), findsOneWidget);
       expect(find.text('(7)'), findsOneWidget);
+    });
+
+    testWidgets('auto loads next page when first page cannot fill viewport', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1600, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      when(mockApiService.getSidebarApps(any)).thenAnswer((invocation) async {
+        final request =
+            invocation.positionalArguments.single as SidebarAppsRequest;
+
+        final records = request.pageNo == 1
+            ? const [
+                AppListItemDTO(
+                  appId: 'system.one',
+                  appName: 'System One',
+                  appVersion: '1.0.0',
+                ),
+              ]
+            : const [
+                AppListItemDTO(
+                  appId: 'system.two',
+                  appName: 'System Two',
+                  appVersion: '2.0.0',
+                ),
+              ];
+
+        return HttpResponse(
+          AppListResponse(
+            code: 200,
+            data: AppListPagedData(
+              records: records,
+              total: 2,
+              size: request.pageSize,
+              current: request.pageNo,
+              pages: 2,
+            ),
+          ),
+          Response(requestOptions: RequestOptions(path: '/app/sidebar/apps')),
+        );
+      });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appApiServiceProvider.overrideWithValue(mockApiService),
+            applicationCardStateIndexProvider.overrideWithValue(
+              const ApplicationCardStateIndex(
+                installedVersionByAppId: {},
+                updateAppIds: {},
+                activeTasksByAppId: {},
+              ),
+            ),
+            sidebarConfigProvider.overrideWith(
+              (ref) async => const [
+                SidebarMenuDTO(menuCode: 'system', menuName: '系统'),
+              ],
+            ),
+          ],
+          child: const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: CustomCategoryPage(code: 'system')),
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.text('System One'), findsOneWidget);
+      expect(find.text('System Two'), findsOneWidget);
+
+      final captured = verify(
+        mockApiService.getSidebarApps(captureAny),
+      ).captured.cast<SidebarAppsRequest>();
+
+      expect(captured.map((r) => r.pageNo), containsAllInOrder([1, 2]));
+      expect(captured.every((r) => r.menuCode == 'system'), isTrue);
+      expect(captured.every((r) => r.pageSize == 30), isTrue);
     });
   });
 }

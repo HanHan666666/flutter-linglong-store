@@ -122,6 +122,30 @@ mixin AutoLoadWhenNotScrollable<T extends StatefulWidget> on State<T> {
     // 但 shouldAutoLoad 会因 isPageVisible 返回 false 而短路。
   }
 
+  /// 数据渲染完成、窗口尺寸变化或布局约束变化后，安排一次自动补页检查。
+  ///
+  /// 页面层应在分页数据已进入正常渲染分支后调用该方法。
+  /// 方法内部会通过 [_shouldAutoLoadWhenNotScrollable] 统一判断：
+  /// - 页面必须可见
+  /// - 不能处于首次加载或加载更多中
+  /// - 必须还有更多数据
+  ///
+  /// 实际读取滚动尺寸会延迟到 post-frame，避免在 build/layout 未完成时读取
+  /// `ScrollPosition` 得到过期尺寸。
+  @protected
+  void scheduleAutoLoadCheckAfterLayout() {
+    _scheduleAutoLoadCheck();
+  }
+
+  /// 处理视口尺寸变化，例如窗口最大化、退出全屏或 DPI 缩放变化。
+  ///
+  /// 返回 false，允许通知继续向上冒泡，不拦截其他滚动监听。
+  @protected
+  bool onScrollMetricsNotification(ScrollMetricsNotification notification) {
+    scheduleAutoLoadCheckAfterLayout();
+    return false;
+  }
+
   /// 滚动回调方法。
   ///
   /// 子类应在 `_onScroll` 中调用此方法，或直接将其作为 scroll listener：

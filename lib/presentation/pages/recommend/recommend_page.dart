@@ -138,12 +138,11 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
       _hasLoadedData = true;
     }
 
-    // 数据加载完成后，检查是否需要自动补页
-    // 始终调用 onVisibilityChanged(true) 触发检查
+    // 数据加载完成后，安排自动补页检查
     // mixin 内部的 _shouldAutoLoadWhenNotScrollable 会检查实际的 isPageVisible
     // 当页面不可见时会自动短路，不会重复安排
     if (state.data != null) {
-      onVisibilityChanged(true);
+      scheduleAutoLoadCheckAfterLayout();
     }
 
     return Semantics(
@@ -179,39 +178,42 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
     }
 
     // 正常显示
-    return CustomScrollView(
-      controller: _scrollController,
-      slivers: [
-        SliverToBoxAdapter(
-          child: _BannerSection(
-            banners: state.data!.banners,
-            isPageVisible: _isPageVisible,
+    return NotificationListener<ScrollMetricsNotification>(
+      onNotification: onScrollMetricsNotification,
+      child: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          SliverToBoxAdapter(
+            child: _BannerSection(
+              banners: state.data!.banners,
+              isPageVisible: _isPageVisible,
+            ),
           ),
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Text(
-              AppLocalizations.of(context)!.linglongRecommend,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: context.appFontWeight(FontWeight.w500),
-                color: context.appColors.textPrimary,
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Text(
+                AppLocalizations.of(context)!.linglongRecommend,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: context.appFontWeight(FontWeight.w500),
+                  color: context.appColors.textPrimary,
+                ),
               ),
             ),
           ),
-        ),
-        // 推荐列表区
-        SliverPadding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          sliver: _AppsGrid(apps: state.data!.apps.items),
-        ),
-        PaginationFooterSliver(
-          isLoadingMore: state.isLoadingMore,
-          hasMore: state.data!.apps.hasMore,
-          hasItems: state.data!.apps.items.isNotEmpty,
-        ),
-      ],
+          // 推荐列表区
+          SliverPadding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            sliver: _AppsGrid(apps: state.data!.apps.items),
+          ),
+          PaginationFooterSliver(
+            isLoadingMore: state.isLoadingMore,
+            hasMore: state.data!.apps.hasMore,
+            hasItems: state.data!.apps.items.isNotEmpty,
+          ),
+        ],
+      ),
     );
   }
 

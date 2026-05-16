@@ -115,38 +115,44 @@ class _AllAppsPageState extends ConsumerState<AllAppsPage>
       );
     }
 
+    // 数据渲染完成后，安排自动补页检查
+    scheduleAutoLoadCheckAfterLayout();
+
     // 正常显示
     return Semantics(
       label: l10n.a11yAppListArea,
-      child: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          // 分类筛选栏
-          CategoryFilterSection(
-            categories: state.data!.categories,
-            selectedIndex: state.selectedCategoryIndex,
-            onSelected: (index) {
-              ref.read(allAppsProvider.notifier).selectCategory(index);
-            },
-            showCount: true,
-            isExpanded: _isCategoryExpanded,
-            onToggleExpand: () => setState(() {
-              _isCategoryExpanded = !_isCategoryExpanded;
-            }),
-          ),
+      child: NotificationListener<ScrollMetricsNotification>(
+        onNotification: onScrollMetricsNotification,
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            // 分类筛选栏
+            CategoryFilterSection(
+              categories: state.data!.categories,
+              selectedIndex: state.selectedCategoryIndex,
+              onSelected: (index) {
+                ref.read(allAppsProvider.notifier).selectCategory(index);
+              },
+              showCount: true,
+              isExpanded: _isCategoryExpanded,
+              onToggleExpand: () => setState(() {
+                _isCategoryExpanded = !_isCategoryExpanded;
+              }),
+            ),
 
-          // 应用卡片网格
-          SliverPadding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            sliver: _AppsGrid(apps: state.data!.apps.items),
-          ),
-          // 分页 footer 必须独立成整行 sliver，不能占用卡片格子。
-          PaginationFooterSliver(
-            isLoadingMore: state.isLoadingMore,
-            hasMore: state.data!.apps.hasMore,
-            hasItems: state.data!.apps.items.isNotEmpty,
-          ),
-        ],
+            // 应用卡片网格
+            SliverPadding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              sliver: _AppsGrid(apps: state.data!.apps.items),
+            ),
+            // 分页 footer 必须独立成整行 sliver，不能占用卡片格子。
+            PaginationFooterSliver(
+              isLoadingMore: state.isLoadingMore,
+              hasMore: state.data!.apps.hasMore,
+              hasItems: state.data!.apps.items.isNotEmpty,
+            ),
+          ],
+        ),
       ),
     );
   }

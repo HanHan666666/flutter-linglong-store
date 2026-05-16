@@ -8,6 +8,8 @@ import 'package:retrofit/retrofit.dart';
 
 import 'package:linglong_store/application/providers/api_provider.dart';
 import 'package:linglong_store/application/providers/application_card_state_provider.dart';
+import 'package:linglong_store/core/config/shell_branch_visibility.dart';
+import 'package:linglong_store/core/config/shell_primary_route.dart';
 import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
@@ -29,16 +31,19 @@ HttpResponse<CategoryListResponse> _buildCategoryResponse(
 HttpResponse<AppListResponse> _buildSearchResponse(
   List<AppListItemDTO> items, {
   int pageSize = 30,
+  int currentPage = 1,
+  int total = 1,
+  int pages = 1,
 }) {
   return HttpResponse(
     AppListResponse(
       code: 200,
       data: AppListPagedData(
         records: items,
-        total: items.length,
+        total: total,
         size: pageSize,
-        current: 1,
-        pages: 1,
+        current: currentPage,
+        pages: pages,
       ),
     ),
     Response(requestOptions: RequestOptions(path: '/visit/getSearchAppList')),
@@ -51,7 +56,11 @@ Widget _buildTestApp(MockAppApiService mockApiService) {
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => const Scaffold(body: AllAppsPage()),
+        builder: (_, __) => const ShellBranchVisibilityScope(
+          activeRoute: ShellPrimaryRoute.allApps,
+          currentRoute: ShellPrimaryRoute.allApps,
+          child: Scaffold(body: AllAppsPage()),
+        ),
       ),
       GoRoute(
         path: '/app/:appId',
@@ -178,6 +187,70 @@ void main() {
       verify(mockApiService.getSearchAppList(any)).called(greaterThan(0));
       verifyNever(mockApiService.getWelcomeAppList(any));
       verifyNever(mockApiService.getSidebarApps(any));
+    });
+
+    testWidgets('auto loads next page when first page cannot fill viewport', (
+      tester,
+    ) async {
+      final mockApiService = MockAppApiService();
+
+      when(mockApiService.getDisCategoryList()).thenAnswer(
+        (_) async => _buildCategoryResponse(const [
+          CategoryDTO(categoryId: '08', categoryName: '系统工具'),
+        ]),
+      );
+
+      when(mockApiService.getSearchAppList(any)).thenAnswer((invocation) async {
+        final request =
+            invocation.positionalArguments.single as SearchAppListRequest;
+
+        if (request.pageNo == 1) {
+          return _buildSearchResponse(
+            const [
+              AppListItemDTO(
+                appId: 'all.one',
+                appName: 'All One',
+                appVersion: '1.0.0',
+              ),
+            ],
+            currentPage: 1,
+            total: 2,
+            pages: 2,
+          );
+        }
+
+        return _buildSearchResponse(
+          const [
+            AppListItemDTO(
+              appId: 'all.two',
+              appName: 'All Two',
+              appVersion: '2.0.0',
+            ),
+          ],
+          currentPage: 2,
+          total: 2,
+          pages: 2,
+        );
+      });
+
+      await tester.binding.setSurfaceSize(const Size(1600, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(_buildTestApp(mockApiService));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.text('All One'), findsOneWidget);
+      expect(find.text('All Two'), findsOneWidget);
+
+      final captured = verify(
+        mockApiService.getSearchAppList(captureAny),
+      ).captured.cast<SearchAppListRequest>();
+
+      expect(captured.map((r) => r.pageNo), containsAllInOrder([1, 2]));
+      expect(captured.every((r) => r.pageSize == 30), isTrue);
     });
   });
 }

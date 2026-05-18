@@ -17,7 +17,13 @@ set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")
 
 # Add GCC C++ headers for clang compatibility
 include_directories(SYSTEM /usr/include/c++/12)
-include_directories(SYSTEM /usr/include/x86_64-linux-gnu/c++/12)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64")
+  include_directories(SYSTEM /usr/include/x86_64-linux-gnu/c++/12)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+  include_directories(SYSTEM /usr/include/aarch64-linux-gnu/c++/12)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "loongarch64|loong64")
+  include_directories(SYSTEM /usr/include/loongarch64-linux-gnu/c++/12)
+endif()
 
 # Root filesystem for cross-building.
 if(FLUTTER_TARGET_PLATFORM_SYSROOT)

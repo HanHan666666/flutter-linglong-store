@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:linglong_store/core/config/app_config.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/core/network/api_client.dart';
+import 'package:linglong_store/core/platform/system_arch_resolver.dart';
 import 'package:linglong_store/core/storage/cache_service.dart';
 import 'package:linglong_store/core/utils/locale_utils.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
@@ -35,32 +34,18 @@ class AppRepositoryImpl implements AppRepository {
 
   /// 获取当前系统架构
   ///
-  /// 通过读取 `/proc/sys/kernel/arch` 获取 Linux 系统架构信息。
-  /// 常见值包括：x86_64, aarch64, armv7l 等。
+  /// 通过 Linux 内核架构和发行版包架构获取请求架构。
+  /// 龙芯旧世界保持 `loongarch64`，新世界 Debian 架构 `loong64` 时请求
+  /// `loong64` 应用信息。
   /// 结果会被缓存以避免重复 IO 操作。
   String get _currentArch {
     if (_cachedArch != null) return _cachedArch!;
 
     try {
-      // 读取 Linux 内核提供的架构信息文件
-      final archFile = File('/proc/sys/kernel/arch');
-      if (archFile.existsSync()) {
-        _cachedArch = archFile.readAsStringSync().trim();
-        return _cachedArch!;
-      }
+      _cachedArch = SystemArchResolver.resolveCurrentLinuxRequestArch();
+      return _cachedArch!;
     } catch (e) {
-      AppLogger.warning('读取 /proc/sys/kernel/arch 失败: $e');
-    }
-
-    // 回退方案：执行 uname -m 命令
-    try {
-      final result = Process.runSync('uname', ['-m']);
-      if (result.exitCode == 0) {
-        _cachedArch = (result.stdout as String).trim();
-        return _cachedArch!;
-      }
-    } catch (e) {
-      AppLogger.warning('执行 uname -m 失败: $e');
+      AppLogger.warning('获取系统架构失败: $e');
     }
 
     // 最终回退：默认使用 x86_64
@@ -279,10 +264,20 @@ class AppRepositoryImpl implements AppRepository {
       final lan = resolveApiLang(ApiClient.getLocale?.call());
       final response = type == 'new'
           ? await _apiService.getNewAppList(
-              PageParams(pageNo: 1, pageSize: limit, arch: _currentArch, lan: lan),
+              PageParams(
+                pageNo: 1,
+                pageSize: limit,
+                arch: _currentArch,
+                lan: lan,
+              ),
             )
           : await _apiService.getInstallAppList(
-              PageParams(pageNo: 1, pageSize: limit, arch: _currentArch, lan: lan),
+              PageParams(
+                pageNo: 1,
+                pageSize: limit,
+                arch: _currentArch,
+                lan: lan,
+              ),
             );
 
       if (response.data.data == null) return [];

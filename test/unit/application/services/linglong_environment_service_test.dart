@@ -225,6 +225,69 @@ void main() {
         expect(result.osVersion, contains('UOS 1070'));
       },
     );
+
+    test('maps LoongArch new-world package architecture to loong64', () async {
+      final service = LinglongEnvironmentService(
+        executor: ShellCommandExecutor(
+          runner: _FakeShellCommandRunner.fromCommands({
+            'uname -m': const ShellCommandResult(
+              stdout: 'loongarch64\n',
+              stderr: '',
+              exitCode: 0,
+            ),
+            'dpkg --print-architecture': const ShellCommandResult(
+              stdout: 'loong64\n',
+              stderr: '',
+              exitCode: 0,
+            ),
+            'ldd --version': const ShellCommandResult(
+              stdout: 'ldd (GNU libc) 2.38\n',
+              stderr: '',
+              exitCode: 0,
+            ),
+            'uname -a': const ShellCommandResult(
+              stdout: 'Linux uos-loong 6.6.0-loong64\n',
+              stderr: '',
+              exitCode: 0,
+            ),
+            'bash -c dpkg -l | grep linglong': const ShellCommandResult(
+              stdout: 'ii linglong-bin 1.9.2\n',
+              stderr: '',
+              exitCode: 0,
+            ),
+            'll-cli --help': const ShellCommandResult(
+              stdout: 'Usage: ll-cli\n',
+              stderr: '',
+              exitCode: 0,
+            ),
+            'll-cli --json repo show': const ShellCommandResult(
+              stdout:
+                  '{"defaultRepo":"stable","repos":[{"name":"stable","url":"https://repo.example"}]}',
+              stderr: '',
+              exitCode: 0,
+            ),
+            'll-cli --json --version': const ShellCommandResult(
+              stdout: '{"version":"1.9.2"}',
+              stderr: '',
+              exitCode: 0,
+            ),
+            'apt-cache policy linglong-bin': const ShellCommandResult(
+              stdout: 'Installed: 1.9.2\n',
+              stderr: '',
+              exitCode: 0,
+            ),
+          }),
+        ),
+        osReleaseReader: () async =>
+            'ID=uos\nNAME="UnionTech OS Desktop"\nPRETTY_NAME="UOS 25"\n',
+        environmentReader: (name) => null,
+      );
+
+      final result = await service.checkEnvironment();
+
+      expect(result.isOk, isTrue);
+      expect(result.arch, 'loong64');
+    });
   });
 }
 

@@ -11,6 +11,7 @@ import 'package:linglong_store/data/repositories/app_repository_impl.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
 import 'package:linglong_store/core/network/api_exceptions.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
+import 'package:linglong_store/core/platform/system_arch_resolver.dart';
 
 import '../../../mocks/mock_classes.mocks.dart';
 
@@ -1041,61 +1042,52 @@ void main() {
         ]);
       });
 
-      test('should preserve repoName in batch detail enrichment requests', () async {
-        final apps = [
-          const InstalledApp(
-            appId: 'org.deepin.calculator',
-            name: 'deepin-calculator',
-            version: '6.5.31.1',
-            arch: 'x86_64',
-            channel: 'main',
-            module: 'binary',
-            repoName: 'stable',
-          ),
-        ];
-
-        when(mockApiService.getAppDetails(any)).thenAnswer(
-          (_) async => HttpResponse(
-            const AppListArrayResponse(
-              code: 200,
-              data: [
-                AppListItemDTO(
-                  appId: 'org.deepin.calculator',
-                  appName: '计算器',
-                  appVersion: '6.5.31.1',
-                ),
-              ],
+      test(
+        'should preserve repoName in batch detail enrichment requests',
+        () async {
+          final apps = [
+            const InstalledApp(
+              appId: 'org.deepin.calculator',
+              name: 'deepin-calculator',
+              version: '6.5.31.1',
+              arch: 'x86_64',
+              channel: 'main',
+              module: 'binary',
+              repoName: 'stable',
             ),
-            Response(requestOptions: RequestOptions(path: '/app/getAppDetails')),
-          ),
-        );
+          ];
 
-        await repository.enrichInstalledAppsWithDetails(apps);
+          when(mockApiService.getAppDetails(any)).thenAnswer(
+            (_) async => HttpResponse(
+              const AppListArrayResponse(
+                code: 200,
+                data: [
+                  AppListItemDTO(
+                    appId: 'org.deepin.calculator',
+                    appName: '计算器',
+                    appVersion: '6.5.31.1',
+                  ),
+                ],
+              ),
+              Response(
+                requestOptions: RequestOptions(path: '/app/getAppDetails'),
+              ),
+            ),
+          );
 
-        final captured =
-            verify(mockApiService.getAppDetails(captureAny)).captured.single
-                as List<AppDetailsBO>;
-        expect(captured.single.repoName, equals('stable'));
-        expect(captured.single.module, equals('binary'));
-      });
+          await repository.enrichInstalledAppsWithDetails(apps);
+
+          final captured =
+              verify(mockApiService.getAppDetails(captureAny)).captured.single
+                  as List<AppDetailsBO>;
+          expect(captured.single.repoName, equals('stable'));
+          expect(captured.single.module, equals('binary'));
+        },
+      );
     });
   });
 }
 
 String _expectedCurrentArch() {
-  try {
-    final archFile = File('/proc/sys/kernel/arch');
-    if (archFile.existsSync()) {
-      return archFile.readAsStringSync().trim();
-    }
-  } catch (_) {}
-
-  try {
-    final result = Process.runSync('uname', ['-m']);
-    if (result.exitCode == 0) {
-      return (result.stdout as String).trim();
-    }
-  } catch (_) {}
-
-  return 'x86_64';
+  return SystemArchResolver.resolveCurrentLinuxRequestArch();
 }

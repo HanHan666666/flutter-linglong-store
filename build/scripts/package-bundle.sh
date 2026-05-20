@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+. "$ROOT_DIR/build/scripts/linux-arch-utils.sh"
 
 if [[ "${1:-}" != "--inner" && -z "${LINGLONG_RELEASE_CONTAINER:-}" ]]; then
   exec "$ROOT_DIR/build/scripts/run-in-release-container.sh" "$ROOT_DIR/build/scripts/package-bundle.sh" "$@"
@@ -25,7 +26,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     *)
-      echo "Usage: $0 [--inner] --version <version> --arch <amd64|arm64>" >&2
+      echo "Usage: $0 [--inner] --version <version> --arch <amd64|arm64|loong64|loongarch64>" >&2
       exit 64
       ;;
   esac
@@ -36,18 +37,7 @@ if [[ -z "$release_version" || -z "$target_arch" ]]; then
   exit 64
 fi
 
-case "$target_arch" in
-  amd64|x86_64)
-    target_arch="amd64"
-    ;;
-  arm64|aarch64)
-    target_arch="arm64"
-    ;;
-  *)
-    echo "Unsupported architecture: $target_arch" >&2
-    exit 64
-    ;;
-esac
+normalize_linux_release_arch "$target_arch"
 
 output_dir="$ROOT_DIR/build/out/linux/$release_version/$target_arch"
 bundle_dir="$output_dir/bundle/linglong-store"

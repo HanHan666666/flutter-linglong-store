@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+. "$ROOT_DIR/build/scripts/linux-arch-utils.sh"
 
 if [[ "${1:-}" != "--inner" && -z "${LINGLONG_RELEASE_CONTAINER:-}" ]]; then
   exec "$ROOT_DIR/build/scripts/run-in-release-container.sh" "$ROOT_DIR/build/scripts/render-packaging-templates.sh" "$@"
@@ -82,7 +83,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     *)
-      echo "Usage: $0 [--inner] --version <version> --arch <amd64|arm64> --output-dir <dir> [--installed-size-kb <kb>] [--release <n>] [--payload-dir <dir>] [--channel stable|nightly]" >&2
+      echo "Usage: $0 [--inner] --version <version> --arch <amd64|arm64|loong64|loongarch64> --output-dir <dir> [--installed-size-kb <kb>] [--release <n>] [--payload-dir <dir>] [--channel stable|nightly]" >&2
       exit 64
       ;;
   esac
@@ -93,20 +94,7 @@ if [[ -z "$release_version" || -z "$target_arch" || -z "$output_dir" ]]; then
   exit 64
 fi
 
-case "$target_arch" in
-  amd64|x86_64)
-    deb_arch="amd64"
-    rpm_arch="x86_64"
-    ;;
-  arm64|aarch64)
-    deb_arch="arm64"
-    rpm_arch="aarch64"
-    ;;
-  *)
-    echo "Unsupported architecture: $target_arch" >&2
-    exit 64
-    ;;
-esac
+normalize_linux_release_arch "$target_arch"
 
 package_name="linglong-store"
 display_name="玲珑应用商店社区版"

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'linux_distribution_resolver.dart';
+import '../../core/platform/system_arch_resolver.dart';
 import '../../core/platform/shell_command_executor.dart';
 import '../../domain/models/linglong_env_check_result.dart';
 
@@ -42,7 +43,7 @@ class LinglongEnvironmentService {
   Future<LinglongEnvCheckResult> checkEnvironment() async {
     final checkedAt = _clock();
 
-    final arch = await _runAndTrim(['uname', '-m']);
+    final arch = await _loadRequestArch();
     final osRelease = await _loadOsRelease();
     final rawOsVersion =
         _extractPrettyName(osRelease) ?? await _runAndTrim(['uname', '-a']);
@@ -221,6 +222,23 @@ class LinglongEnvironmentService {
     }
     final trimmed = result.stdout.trim();
     return trimmed.isEmpty ? null : trimmed;
+  }
+
+  Future<String?> _loadRequestArch() async {
+    final kernelArch = await _runAndTrim(['uname', '-m']);
+    if (kernelArch == null || kernelArch.isEmpty) {
+      return null;
+    }
+
+    final debianArch = SystemArchResolver.isLoongArchKernelArch(kernelArch)
+        ? await _runAndTrim(['dpkg', '--print-architecture'])
+        : null;
+
+    return SystemArchResolver.resolveLinuxRequestArch(
+      kernelArch: kernelArch,
+      debianArch: debianArch,
+      fallbackArch: kernelArch,
+    );
   }
 
   Future<_RepoInfo> _loadRepoInfo() async {

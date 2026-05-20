@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+. "$ROOT_DIR/build/scripts/linux-arch-utils.sh"
 
 if [[ "${1:-}" != "--inner" && -z "${LINGLONG_RELEASE_CONTAINER:-}" ]]; then
   exec "$ROOT_DIR/build/scripts/run-in-release-container.sh" "$ROOT_DIR/build/scripts/build-linux-bundle.sh" "$@"
@@ -25,7 +26,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     *)
-      echo "Usage: $0 [--inner] --version <version> --arch <amd64|arm64>" >&2
+      echo "Usage: $0 [--inner] --version <version> --arch <amd64|arm64|loong64|loongarch64>" >&2
       exit 64
       ;;
   esac
@@ -36,20 +37,25 @@ if [[ -z "$release_version" || -z "$target_arch" ]]; then
   exit 64
 fi
 
-case "$target_arch" in
-  amd64|x86_64)
-    target_arch="amd64"
-    flutter_arch_dir="x64"
-    ;;
-  arm64|aarch64)
-    target_arch="arm64"
-    flutter_arch_dir="arm64"
-    ;;
-  *)
-    echo "Unsupported architecture: $target_arch" >&2
-    exit 64
-    ;;
-esac
+normalize_linux_release_arch "$target_arch"
+
+resolve_flutter_root() {
+  if [[ -n "${FLUTTER_ROOT:-}" && -x "$FLUTTER_ROOT/bin/flutter" ]]; then
+    printf '%s\n' "$FLUTTER_ROOT"
+    return 0
+  fi
+
+  local flutter_bin
+  flutter_bin="$(command -v flutter || true)"
+  if [[ -n "$flutter_bin" ]]; then
+    cd "$(dirname "$flutter_bin")/.." && pwd -P
+    return 0
+  fi
+
+  printf '/opt/flutter\n'
+}
+
+flutter_root="$(resolve_flutter_root)"
 
 output_dir="$ROOT_DIR/build/out/linux/$release_version/$target_arch"
 bundle_dir="$output_dir/bundle/linglong-store"
@@ -78,9 +84,8 @@ run_with_retries() {
 }
 
 bootstrap_flutter_dart_sdk() {
-  local cache_dir="/opt/flutter/bin/cache"
+  local cache_dir="$flutter_root/bin/cache"
   local engine_version
-  local dart_arch
   local sdk_zip
   local sdk_url
 
@@ -88,20 +93,7 @@ bootstrap_flutter_dart_sdk() {
     return 0
   fi
 
-  case "$target_arch" in
-    amd64)
-      dart_arch="x64"
-      ;;
-    arm64)
-      dart_arch="arm64"
-      ;;
-    *)
-      echo "Unsupported Flutter Dart SDK architecture: $target_arch" >&2
-      return 64
-      ;;
-  esac
-
-  engine_version="$(cat /opt/flutter/bin/internal/engine.version)"
+  engine_version="$(cat "$flutter_root/bin/internal/engine.version")"
   sdk_zip="$cache_dir/downloads/dart-sdk-linux-${dart_arch}.zip"
   sdk_url="https://storage.googleapis.com/flutter_infra_release/flutter/${engine_version}/dart-sdk-linux-${dart_arch}.zip"
 
@@ -177,10 +169,22 @@ LINGLONG_RELEASE_TOOL_ROOT="$source_copy_dir" \
   tool/release/update_version_files.dart \
   "$release_version"
 run_with_retries 5 flutter pub get
-run_with_retries 5 dart run build_runner build --delete-conflicting-outputs
-run_with_retries 3 flutter build linux --release \
-  --obfuscate \
+if [[ "${LINGLONG_RELEASE_SKIP_BUILD_RUNNER:-}" == "1" ]]; then
+  echo "Skipping build_runner; using checked-in generated Dart sources."
+else
+  run_with_retries 5 dart run build_runner build --delete-conflicting-outputs
+fi
+flutter_build_args=(
+  build
+  linux
+  --release
+  --obfuscate
   --split-debug-info="$output_dir/symbols"
+)
+if [[ -n "$flutter_target_platform" ]]; then
+  flutter_build_args+=(--target-platform "$flutter_target_platform")
+fi
+run_with_retries 3 flutter "${flutter_build_args[@]}"
 popd > /dev/null
 
 if [[ ! -d "$expected_bundle_dir" ]]; then

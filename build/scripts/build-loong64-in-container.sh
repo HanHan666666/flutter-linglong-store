@@ -109,68 +109,19 @@ docker run --rm \
 
     # The Loong64 Flutter SDK ships with prebuilt engine artifacts but no
     # corresponding engine_stamp.json on Google Flutter infra storage.
-    # During bootstrap, Flutter tools (via Dart VM HTTPS client) validate
-    # the engine by fetching <engine_hash>/engine_stamp.json from
-    # storage.googleapis.com. Since the Loong64 engine is a local build, this
-    # URL returns 404. Run a HTTPS MITM proxy that intercepts only the
-    # engine_stamp.json request while forwarding everything else to the real
-    # server. The proxy uses a self-signed cert trusted by the system CA store.
-    openssl req -x509 -newkey rsa:2048 -days 365 -nodes \
-      -keyout /tmp/mock_gs.key -out /tmp/mock_gs.crt \
-      -subj "/CN=storage.googleapis.com" \
-      -addext "subjectAltName=DNS:storage.googleapis.com" 2>/dev/null
-    cp /tmp/mock_gs.crt /usr/local/share/ca-certificates/mock_gs.crt
-    update-ca-certificates >/dev/null 2>&1
-    cat > /usr/local/bin/mock_gs.py <<'MOCKPY'
-#!/usr/bin/env python3
-import http.server, ssl, urllib.request, os
-
-# Clear proxy env so outbound requests from this process go direct
-for var in ("http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY"):
-    os.environ.pop(var, None)
-proxy = urllib.request.ProxyHandler({})
-opener = urllib.request.build_opener(proxy)
-
-class Handler(http.server.BaseHTTPRequestHandler):
-    def do_GET(self):
-        if "engine_stamp.json" in self.path:
-            body = ('{"hash":"a7a98649a2c80b8a9839795680853428ff6de311"}').encode()
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
-        else:
-            try:
-                real_url = "https://storage.googleapis.com" + self.path
-                req = opener.open(real_url, timeout=10)
-                self.send_response(req.status)
-                for h in ["Content-Type", "Content-Length"]:
-                    v = req.headers.get(h)
-                    if v:
-                        self.send_header(h, v)
-                self.end_headers()
-                data = req.read()
-                if data:
-                    self.wfile.write(data)
-            except Exception:
-                self.send_response(404)
-                self.end_headers()
-    def log_message(self, fmt, *args):
-        pass
-
-httpd = http.server.HTTPServer(("127.0.0.1", 8888), Handler)
-ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ctx.load_cert_chain("/tmp/mock_gs.crt", "/tmp/mock_gs.key")
-httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
-httpd.serve_forever()
-MOCKPY
-    chmod +x /usr/local/bin/mock_gs.py
-    export https_proxy="https://127.0.0.1:8888"
-    export http_proxy="http://127.0.0.1:8888"
-    export no_proxy="localhost,127.0.0.1,github.com,*.github.com,*.githubusercontent.com"
-    python3 /usr/local/bin/mock_gs.py &
-    sleep 2
+    # During bootstrap, Flutter tools validate the engine by fetching
+    # <engine_hash>/engine_stamp.json from storage.googleapis.com and fail
+    # with 404 for Loong64 (a locally built engine).
+    # Instead of intercepting network traffic, we pre-create the engine
+    # stamp and realm files so the Dart VM sees them as already validated.
+    # The Dart engine validation logic checks bin/cache/engine.stamp and
+    # bin/cache/engine.realm -- if both exist, it skips the network fetch.
+    mkdir -p "$FLUTTER_ROOT/bin/cache"
+    echo "a7a98649a2c80b8a9839795680853428ff6de311" > "$FLUTTER_ROOT/bin/cache/engine.stamp"
+    echo "" > "$FLUTTER_ROOT/bin/cache/engine.realm"
+    # Disable analytics to reduce startup chatter
+    touch "$HOME/.flutter"
+    mkdir -p "$HOME/.config"
 
     # The GitHub Actions workspace is bind-mounted from the host, so inside the
     # container root sees both the checked-out repository and the extracted

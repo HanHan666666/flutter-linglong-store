@@ -127,9 +127,9 @@ require_grep 'git -C "$FLUTTER_ROOT" rev-parse --show-toplevel' build/scripts/bu
 require_grep 'Bootstrap packaged Flutter SDK' build/scripts/build-loong64-in-container.sh
 require_grep 'flutter_tools.stamp' build/scripts/build-loong64-in-container.sh
 require_grep 'non-existent upstream Linux loong64 Dart SDK' build/scripts/build-loong64-in-container.sh
-require_grep 'storage.googleapis.com' build/scripts/build-loong64-in-container.sh
-require_grep 'engine_stamp.json' build/scripts/build-loong64-in-container.sh
-require_grep 'mock_gs.py' build/scripts/build-loong64-in-container.sh
+require_grep 'engine.stamp' build/scripts/build-loong64-in-container.sh
+require_grep 'engine.realm' build/scripts/build-loong64-in-container.sh
+require_grep 'flutter_tools.stamp' build/scripts/build-loong64-in-container.sh
 require_grep "git diff --cached --quiet" build/scripts/publish-aur.sh
 require_grep "Generating .SRCINFO requires makepkg or a Docker-based Arch Linux fallback" build/scripts/publish-aur.sh
 

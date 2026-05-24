@@ -89,6 +89,8 @@
 - 自动 `workflow_run` 路径如果找不到与 `workflow_run.head_sha` 匹配的 nightly prerelease，必须直接 skip；不要回退去补丁最新一版无关 nightly
 - `nightly-loong64.yml` 只允许构建 `bundle + deb`；当前禁止擅自扩到 `rpm` / `AppImage` / `AUR`
 - Loong64 构建统一走 `build/scripts/build-loong64-in-container.sh`，使用外部 `Flutter-Dart-loong64/flutter-loong64-releases` SDK；不要复用 Debian 10 release image 试图硬做全格式 parity
+- 默认 Loong64 Flutter SDK 当前固定为 `v2026.05.20.1`（`flutter-sdk-linux-loong64-20260520.1-9b43981fc5d6-dartae9f14de3805-enginea7a98649a2c8-fontconfig.tar.xz`）；上游 release note 明确记录了用这套产物重建 `linglong-store_3.3.6_loong64.deb` 并在 UOS 25 上实际跑通
+- 2026-05-24 已验证 `v3.45.0-1.0.pre-198` 会在 `flutter pub get` 阶段因 `Flutter-Dart-loong64/native.git` 缺少 `pkgs/data_assets` 失败；在没有真实 workflow 验证前，不要仅因为它是 latest 就直接升级默认 SDK tag
 - nightly Loong64 发布前必须先下载当前 nightly release body 与资产，再通过 `build/scripts/augment-nightly-release-notes-loong64.sh` 补齐 `loong64` 下载项，并用 `build/scripts/append-release-asset-hashes.sh --replace-existing` 重写哈希段
 - 如果当前 nightly prerelease 已同时包含 `linglong-store-<nightly_label>-linux-loong64.tar.gz`、对应 `.asc` 和 `linglong-store-<nightly_label>-loong64.deb`，且未显式 `force_rebuild`，则应直接 skip，而不是重复补传
 - Loong64 nightly 当前是“慢链路补位”，它不能阻塞 `nightly.yml` 的主发布完成

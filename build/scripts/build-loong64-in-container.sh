@@ -7,8 +7,11 @@ release_version=""
 package_channel="stable"
 container_image="${LOONG64_QEMU_IMAGE:-ghcr.io/loong64/debian:trixie}"
 flutter_release_repo="${LOONG64_FLUTTER_RELEASE_REPO:-Flutter-Dart-loong64/flutter-loong64-releases}"
-flutter_release_tag="${LOONG64_FLUTTER_RELEASE_TAG:-v3.45.0-1.0.pre-198}"
-flutter_sdk_archive="${LOONG64_FLUTTER_SDK_ARCHIVE:-flutter-sdk-linux-loong64-3.45.0-1.0.pre-198-0fed39475439.tar.xz}"
+# Pin the default SDK to the upstream Loong64 build that explicitly validated a
+# rebuilt linglong-store_3.3.6_loong64.deb on UOS 25. Newer preview SDKs can
+# still be selected via environment overrides after end-to-end verification.
+flutter_release_tag="${LOONG64_FLUTTER_RELEASE_TAG:-v2026.05.20.1}"
+flutter_sdk_archive="${LOONG64_FLUTTER_SDK_ARCHIVE:-flutter-sdk-linux-loong64-20260520.1-9b43981fc5d6-dartae9f14de3805-enginea7a98649a2c8-fontconfig.tar.xz}"
 
 usage() {
   cat >&2 <<'EOF'

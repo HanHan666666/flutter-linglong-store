@@ -130,6 +130,16 @@ docker run --rm \
       git -C "$FLUTTER_ROOT" commit -q -m "Bootstrap packaged Flutter SDK"
     fi
 
+    # Flutter bootstrap compares flutter_tools.stamp against the current git
+    # revision (plus FLUTTER_TOOL_ARGS). Our synthetic local commit changes the
+    # revision hash, so keep the packaged flutter_tools snapshot hot by updating
+    # the stamp to the local revision instead of letting Flutter try to fetch a
+    # non-existent upstream Linux loong64 Dart SDK zip.
+    flutter_local_revision="$(git -C "$FLUTTER_ROOT" rev-parse HEAD)"
+    if [[ -f "$FLUTTER_ROOT/bin/cache/flutter_tools.snapshot" ]]; then
+      printf '%s:%s' "$flutter_local_revision" "${FLUTTER_TOOL_ARGS:-}" > "$FLUTTER_ROOT/bin/cache/flutter_tools.stamp"
+    fi
+
     if [[ ! -f "$FLUTTER_ROOT/bin/cache/artifacts/engine/linux-loong64-release/libflutter_linux_gtk.so" ]]; then
       echo "Loong64 Flutter SDK is missing linux-loong64 release engine artifacts." >&2
       exit 1

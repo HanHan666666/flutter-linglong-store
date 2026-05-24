@@ -92,6 +92,7 @@
 - 默认 Loong64 Flutter SDK 当前固定为 `v2026.05.20.1`（`flutter-sdk-linux-loong64-20260520.1-9b43981fc5d6-dartae9f14de3805-enginea7a98649a2c8-fontconfig.tar.xz`）；上游 release note 明确记录了用这套产物重建 `linglong-store_3.3.6_loong64.deb` 并在 UOS 25 上实际跑通
 - 2026-05-24 已验证 `v3.45.0-1.0.pre-198` 会在 `flutter pub get` 阶段因 `Flutter-Dart-loong64/native.git` 缺少 `pkgs/data_assets` 失败；在没有真实 workflow 验证前，不要仅因为它是 latest 就直接升级默认 SDK tag
 - 2026-05-24 还确认 `v2026.05.20.1` 的 SDK tarball 本身不带可用 `.git` 仓库；`build/scripts/build-loong64-in-container.sh` 需要在容器里为解压后的 SDK 补一个最小本地 Git 仓库，否则 Flutter 启动脚本会在 `git rev-parse HEAD` 处报 `The Flutter directory is not a clone of the GitHub project`。注意 SDK 解压路径位于主仓库工作区内部，探测时必须校验 `git rev-parse --show-toplevel` 等于 `FLUTTER_ROOT`，不能只看 `git rev-parse HEAD`，否则会误命中父仓库 `.git`
+- 2026-05-24 还确认给 SDK 补本地 git repo 后，需要同步把 `bin/cache/flutter_tools.stamp` 重写为当前本地 revision（外加 `FLUTTER_TOOL_ARGS`）；否则 Flutter 会把内置 snapshot 判成过期并尝试下载并不存在的上游 `Linux loong64 Dart SDK zip`
 - nightly Loong64 发布前必须先下载当前 nightly release body 与资产，再通过 `build/scripts/augment-nightly-release-notes-loong64.sh` 补齐 `loong64` 下载项，并用 `build/scripts/append-release-asset-hashes.sh --replace-existing` 重写哈希段
 - 如果当前 nightly prerelease 已同时包含 `linglong-store-<nightly_label>-linux-loong64.tar.gz`、对应 `.asc` 和 `linglong-store-<nightly_label>-loong64.deb`，且未显式 `force_rebuild`，则应直接 skip，而不是重复补传
 - Loong64 nightly 当前是“慢链路补位”，它不能阻塞 `nightly.yml` 的主发布完成

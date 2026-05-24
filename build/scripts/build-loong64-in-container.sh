@@ -108,27 +108,50 @@ docker run --rm \
     export PATH="$FLUTTER_ROOT/bin:$FLUTTER_ROOT/bin/cache/dart-sdk/bin:$PATH"
 
     # The Loong64 Flutter SDK ships with prebuilt engine artifacts but no
-    # corresponding engine_stamp.json on Google'\''s Flutter infra storage.
-    # During bootstrap, Flutter tools validate the engine by fetching
-    # <engine_hash>/engine_stamp.json from storage.googleapis.com.
-    # Since the Loong64 engine is a local build, this URL returns 404.
-    # Wrap curl inside the container so that engine_stamp.json requests
-    # return a synthetic response while all other requests pass through.
-    real_curl="$(command -v curl)"
-    cat > /usr/local/bin/curl <<'\''CURLWRAP'\''
-#!/usr/bin/env bash
-for arg in "$@"; do
-  case "$arg" in
-    *engine_stamp.json*)
-      printf '\''{"hash":"%s"}'\'' "a7a98649a2c80b8a9839795680853428ff6de311"
-      exit 0
-      ;;
-  esac
-done
-exec /usr/bin/curl.real "$@"
-CURLWRAP
-    chmod +x /usr/local/bin/curl
-    mv "$real_curl" /usr/bin/curl.real
+    # corresponding engine_stamp.json on Google Flutter infra storage.
+    # During bootstrap, Flutter tools (via Dart VM HTTP client, not curl)
+    # validate the engine by fetching <engine_hash>/engine_stamp.json from
+    # storage.googleapis.com. Since the Loong64 engine is a local build, this
+    # URL returns 404. Redirect the domain to localhost and serve a mock
+    # response, proxying all other requests to the real server.
+    echo "127.0.0.1 storage.googleapis.com" >> /etc/hosts
+    cat > /usr/local/bin/mock_gs.py <<MOCKPY
+#!/usr/bin/env python3
+import http.server, socketserver, urllib.request
+
+class Handler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        if "engine_stamp.json" in self.path:
+            body = b"{\"hash\":\"a7a98649a2c80b8a9839795680853428ff6de311\"}"
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        else:
+            try:
+                url = "https://storage.googleapis.com" + self.path
+                req = urllib.request.urlopen(url, timeout=10)
+                self.send_response(req.status)
+                for h in ["Content-Type", "Content-Length", "Cache-Control"]:
+                    v = req.getheader(h)
+                    if v:
+                        self.send_header(h, v)
+                self.end_headers()
+                data = req.read()
+                if data:
+                    self.wfile.write(data)
+            except Exception:
+                self.send_response(404)
+                self.end_headers()
+    def log_message(self, fmt, *args):
+        pass
+with socketserver.TCPServer(("127.0.0.1", 80), Handler) as httpd:
+    httpd.serve_forever()
+MOCKPY
+    chmod +x /usr/local/bin/mock_gs.py
+    python3 /usr/local/bin/mock_gs.py &
+    sleep 1
 
     # The GitHub Actions workspace is bind-mounted from the host, so inside the
     # container root sees both the checked-out repository and the extracted
@@ -162,7 +185,7 @@ CURLWRAP
     # zip (259-byte error page) and fails.
     flutter_local_revision="$(git -C "$FLUTTER_ROOT" rev-parse HEAD)"
     if [[ -f "$FLUTTER_ROOT/bin/cache/flutter_tools.snapshot" ]]; then
-      printf '\''%s:%s'\'' "$flutter_local_revision" "${FLUTTER_TOOL_ARGS:-}" > "$FLUTTER_ROOT/bin/cache/flutter_tools.stamp"
+      printf "%s:%s" "$flutter_local_revision" "${FLUTTER_TOOL_ARGS:-}" > "$FLUTTER_ROOT/bin/cache/flutter_tools.stamp"
     fi
 
     if [[ ! -f "$FLUTTER_ROOT/bin/cache/artifacts/engine/linux-loong64-release/libflutter_linux_gtk.so" ]]; then

@@ -4,6 +4,7 @@ set -euo pipefail
 assets_dir=""
 notes_file=""
 hashes_output=""
+replace_existing="false"
 
 usage() {
   cat >&2 <<'EOF'
@@ -26,6 +27,10 @@ while [[ $# -gt 0 ]]; do
       hashes_output="$2"
       shift 2
       ;;
+    --replace-existing)
+      replace_existing="true"
+      shift
+      ;;
     *)
       usage
       ;;
@@ -47,8 +52,23 @@ if [[ ! -f "$notes_file" ]]; then
 fi
 
 if grep -Fq '## SHA256 Hashes of the release artifacts' "$notes_file"; then
-  echo "Release notes already contain a SHA256 artifact section: $notes_file" >&2
-  exit 1
+  if [[ "$replace_existing" != "true" ]]; then
+    echo "Release notes already contain a SHA256 artifact section: $notes_file" >&2
+    exit 1
+  fi
+
+  # Nightly Loong64 uses a follow-up workflow that needs to refresh the hash
+  # block after appending new assets to an existing release.
+  tmp_notes="$(mktemp "${TMPDIR:-/tmp}/release-notes.XXXXXX")"
+  awk '
+    /^## SHA256 Hashes of the release artifacts$/ {
+      exit
+    }
+    {
+      print
+    }
+  ' "$notes_file" > "$tmp_notes"
+  mv "$tmp_notes" "$notes_file"
 fi
 
 declare -A asset_paths=()

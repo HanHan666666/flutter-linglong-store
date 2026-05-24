@@ -161,9 +161,10 @@ fi
 (
   cd "$WORKSPACE_ROOT"
   cat "$context_path" | "$claude_bin" -p \
-    --max-turns 1000 \
+    --bare \
+    --setting-sources user \
+    --max-turns 1 \
     --no-session-persistence \
-    --dangerously-skip-permissions \
     --append-system-prompt-file "$prompt_path" \
     "请分析当前工作区代码库、${docs_root_for_prompt} 文档以及本次变更信息，并为版本 ${release_version}（${build_kind_for_prompt}）生成最终的 Markdown 更新日志段落。"
 ) > "$raw_output_path"

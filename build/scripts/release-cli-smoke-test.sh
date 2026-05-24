@@ -272,7 +272,8 @@ grep -q '<launchable type="desktop-id">linglong-store.desktop</launchable>' "$RE
 
 mkdir -p \
   "$RELEASE_ASSET_DOWNLOAD_FIXTURE_DIR/release-assets-amd64" \
-  "$RELEASE_ASSET_DOWNLOAD_FIXTURE_DIR/release-assets-arm64"
+  "$RELEASE_ASSET_DOWNLOAD_FIXTURE_DIR/release-assets-arm64" \
+  "$RELEASE_ASSET_DOWNLOAD_FIXTURE_DIR/release-assets-loong64"
 
 # 构造 GitHub Actions 下载后的正式 release 双架构资产目录，
 # 校验规范化步骤与 notes 哈希段落的最终格式。
@@ -292,6 +293,9 @@ printf 'arm64 bundle signature\n' > "$RELEASE_ASSET_DOWNLOAD_FIXTURE_DIR/release
 printf 'arm64 deb\n' > "$RELEASE_ASSET_DOWNLOAD_FIXTURE_DIR/release-assets-arm64/linglong-store_${version_output}_arm64.deb"
 printf 'arm64 rpm\n' > "$RELEASE_ASSET_DOWNLOAD_FIXTURE_DIR/release-assets-arm64/linglong-store-${version_output}-1.aarch64.rpm"
 printf 'arm64 appimage\n' > "$RELEASE_ASSET_DOWNLOAD_FIXTURE_DIR/release-assets-arm64/linglong-store-${version_output}-arm64.AppImage"
+printf 'loong64 bundle\n' > "$RELEASE_ASSET_DOWNLOAD_FIXTURE_DIR/release-assets-loong64/linglong-store-${version_output}-linux-loong64.tar.gz"
+printf 'loong64 bundle signature\n' > "$RELEASE_ASSET_DOWNLOAD_FIXTURE_DIR/release-assets-loong64/linglong-store-${version_output}-linux-loong64.tar.gz.asc"
+printf 'loong64 deb\n' > "$RELEASE_ASSET_DOWNLOAD_FIXTURE_DIR/release-assets-loong64/linglong-store_${version_output}_loong64.deb"
 
 bash build/scripts/normalize-release-assets.sh \
   --input-dir "$RELEASE_ASSET_DOWNLOAD_FIXTURE_DIR" \
@@ -311,8 +315,11 @@ grep -q '^- hashes.sha256$' "$RELEASE_NOTES_FIXTURE_PATH"
 grep -q "$notes_hash" "$RELEASE_NOTES_FIXTURE_PATH"
 grep -q 'linglong-store-'"$version_output"'-linux-amd64.tar.gz' "$RELEASE_NOTES_FIXTURE_PATH"
 grep -q "$amd64_bundle_hash" "$RELEASE_NOTES_FIXTURE_PATH"
+grep -q 'linglong-store-'"$version_output"'-linux-loong64.tar.gz' "$RELEASE_NOTES_FIXTURE_PATH"
 grep -q 'linglong-store_'"$version_output"'_arm64.deb$' "$HASHES_OUTPUT_PATH"
 grep -q 'linglong-store-'"$version_output"'-1.aarch64.rpm$' "$HASHES_OUTPUT_PATH"
+grep -q 'linglong-store_'"$version_output"'_loong64.deb$' "$HASHES_OUTPUT_PATH"
+test -f "$RELEASE_ASSET_FIXTURE_DIR/linglong-store-${version_output}-linux-loong64.tar.gz.asc"
 test -f "$RELEASE_ASSET_FIXTURE_DIR/linglong-store-${version_output}-linux-amd64.tar.gz.asc"
 
 echo "Release CLI smoke test passed."

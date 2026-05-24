@@ -1,0 +1,289 @@
+name: Nightly Loong64
+run-name: Nightly Loong64 append (${{ github.event_name == 'workflow_dispatch' && 'manual' || 'workflow_run' }})
+
+on:
+  workflow_run:
+    workflows: ['Nightly']
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      nightly_tag:
+        description: Optional nightly tag to patch, defaults to the latest matching nightly prerelease.
+        required: false
+        default: ''
+        type: string
+      force_rebuild:
+        description: Rebuild and replace Loong64 nightly assets even if they already exist.
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-loong64-nightly:
+    name: Prepare nightly Loong64 target
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.head_branch == github.event.repository.default_branch }}
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.resolve.outputs.should_build }}
+      nightly_tag: ${{ steps.resolve.outputs.nightly_tag }}
+      nightly_label: ${{ steps.resolve.outputs.nightly_label }}
+      base_version: ${{ steps.resolve.outputs.base_version }}
+      source_commit: ${{ steps.resolve.outputs.source_commit }}
+      loong_tarball_name: ${{ steps.resolve.outputs.loong_tarball_name }}
+      loong_signature_name: ${{ steps.resolve.outputs.loong_signature_name }}
+      loong_deb_name: ${{ steps.resolve.outputs.loong_deb_name }}
+    steps:
+      - name: Resolve target nightly release
+        id: resolve
+        uses: actions/github-script@v7
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REQUESTED_NIGHTLY_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.nightly_tag || '' }}
+          LOOKUP_SHA: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || '' }}
+          FORCE_REBUILD: ${{ github.event_name == 'workflow_dispatch' && inputs.force_rebuild || 'false' }}
+        with:
+          script: |
+            const eventName = process.env.EVENT_NAME || '';
+            const requestedTag = (process.env.REQUESTED_NIGHTLY_TAG || '').trim();
+            const lookupSha = (process.env.LOOKUP_SHA || '').trim();
+            const forceRebuild = (process.env.FORCE_REBUILD || 'false') === 'true';
+            const isWorkflowRun = eventName === 'workflow_run';
+
+            const setSkipOutputs = async (message) => {
+              core.setOutput('should_build', 'false');
+              core.setOutput('nightly_tag', '');
+              core.setOutput('nightly_label', '');
+              core.setOutput('base_version', '');
+              core.setOutput('source_commit', '');
+              core.setOutput('loong_tarball_name', '');
+              core.setOutput('loong_signature_name', '');
+              core.setOutput('loong_deb_name', '');
+
+              await core.summary
+                .addRaw(`${message}\n`)
+                .write();
+            };
+
+            const parseMetadata = (release) => {
+              const body = release.body || '';
+              const shaMatch = body.match(/^Nightly source commit:\s*(.+)$/m);
+              const labelMatch = body.match(/^Nightly version label:\s*(.+)$/m);
+              let nightlyLabel = labelMatch ? labelMatch[1].trim() : '';
+
+              if (!nightlyLabel) {
+                for (const asset of release.assets || []) {
+                  const assetMatch = asset.name.match(/^linglong-store-(.+)-linux-(?:amd64|arm64|loong64)\.tar\.gz$/);
+                  if (assetMatch) {
+                    nightlyLabel = assetMatch[1];
+                    break;
+                  }
+                }
+              }
+
+              const sourceCommit = shaMatch ? shaMatch[1].trim() : '';
+              const baseVersion = nightlyLabel.replace(/-nightly\..*$/, '');
+              const loongTarballName = nightlyLabel
+                ? `linglong-store-${nightlyLabel}-linux-loong64.tar.gz`
+                : '';
+              const loongSignatureName = loongTarballName ? `${loongTarballName}.asc` : '';
+              const loongDebName = nightlyLabel
+                ? `linglong-store-${nightlyLabel}-loong64.deb`
+                : '';
+              const assetNames = new Set((release.assets || []).map((asset) => asset.name));
+
+              return {
+                nightlyTag: release.tag_name || '',
+                nightlyLabel,
+                baseVersion,
+                sourceCommit,
+                loongTarballName,
+                loongSignatureName,
+                loongDebName,
+                hasLoongAssets:
+                  assetNames.has(loongTarballName) &&
+                  assetNames.has(loongSignatureName) &&
+                  assetNames.has(loongDebName),
+              };
+            };
+
+            const nightlyReleases = (await github.paginate(github.rest.repos.listReleases, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            }))
+              .filter((release) => release.prerelease && (release.tag_name || '').startsWith('nightly-'))
+              .map((release) => ({ release, metadata: parseMetadata(release) }));
+
+            let target = null;
+
+            if (requestedTag) {
+              const { data } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: requestedTag,
+              });
+              target = { release: data, metadata: parseMetadata(data) };
+            } else if (lookupSha) {
+              target = nightlyReleases.find(({ metadata }) => metadata.sourceCommit === lookupSha) || null;
+            }
+
+            if (!target) {
+              if (isWorkflowRun && lookupSha) {
+                await setSkipOutputs(
+                  `No nightly prerelease matched workflow_run head SHA ${lookupSha}; skipping Loong64 patch because the main Nightly workflow did not publish a matching prerelease.`,
+                );
+                return;
+              }
+
+              target = nightlyReleases[0] || null;
+            }
+
+            if (!target) {
+              throw new Error('No nightly prerelease is available for Loong64 patching.');
+            }
+
+            const { metadata } = target;
+            if (!metadata.nightlyLabel || !metadata.baseVersion || !metadata.sourceCommit) {
+              throw new Error(`Nightly release ${metadata.nightlyTag || '(unknown)'} is missing required metadata.`);
+            }
+
+            core.setOutput('should_build', String(forceRebuild || !metadata.hasLoongAssets));
+            core.setOutput('nightly_tag', metadata.nightlyTag);
+            core.setOutput('nightly_label', metadata.nightlyLabel);
+            core.setOutput('base_version', metadata.baseVersion);
+            core.setOutput('source_commit', metadata.sourceCommit);
+            core.setOutput('loong_tarball_name', metadata.loongTarballName);
+            core.setOutput('loong_signature_name', metadata.loongSignatureName);
+            core.setOutput('loong_deb_name', metadata.loongDebName);
+
+            await core.summary
+              .addRaw(`Nightly target: ${metadata.nightlyTag}\n`)
+              .addRaw(`Nightly label: ${metadata.nightlyLabel}\n`)
+              .addRaw(`Source commit: ${metadata.sourceCommit}\n`)
+              .addRaw(`Loong64 assets already present: ${metadata.hasLoongAssets}\n`)
+              .addRaw(`Force rebuild: ${forceRebuild}\n`)
+              .write();
+
+  build-loong64-nightly:
+    name: Build loong64 nightly ${{ needs.prepare-loong64-nightly.outputs.nightly_label }}
+    needs: prepare-loong64-nightly
+    if: ${{ needs.prepare-loong64-nightly.outputs.should_build == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      LOONG64_QEMU_IMAGE: ${{ vars.LOONG64_QEMU_IMAGE }}
+      LOONG64_FLUTTER_RELEASE_REPO: ${{ vars.LOONG64_FLUTTER_RELEASE_REPO }}
+      LOONG64_FLUTTER_RELEASE_TAG: ${{ vars.LOONG64_FLUTTER_RELEASE_TAG }}
+      LOONG64_FLUTTER_SDK_ARCHIVE: ${{ vars.LOONG64_FLUTTER_SDK_ARCHIVE }}
+    steps:
+      - name: Checkout nightly source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-loong64-nightly.outputs.source_commit }}
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: loong64
+
+      - name: Build Loong64 bundle and Debian package
+        run: |
+          # The helper script runs the actual build inside a linux/loong64
+          # container so this workflow stays asynchronous and isolated.
+          bash build/scripts/build-loong64-in-container.sh \
+            --version "${{ needs.prepare-loong64-nightly.outputs.base_version }}" \
+            --channel nightly
+
+      - name: Stage Loong64 nightly assets
+        run: |
+          source_dir="build/out/linux/${{ needs.prepare-loong64-nightly.outputs.base_version }}/loong64"
+          output_dir="build/out/nightly/${{ needs.prepare-loong64-nightly.outputs.nightly_label }}/loong64"
+          mkdir -p "$output_dir"
+
+          cp \
+            "$source_dir/linglong-store-${{ needs.prepare-loong64-nightly.outputs.base_version }}-linux-loong64.tar.gz" \
+            "$output_dir/${{ needs.prepare-loong64-nightly.outputs.loong_tarball_name }}"
+          cp \
+            "$source_dir/linglong-store_${{ needs.prepare-loong64-nightly.outputs.base_version }}_loong64.deb" \
+            "$output_dir/${{ needs.prepare-loong64-nightly.outputs.loong_deb_name }}"
+
+      - name: Import GPG key for Loong64 nightly tarball
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+
+      - name: Sign Loong64 nightly tarball
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          cd "build/out/nightly/${{ needs.prepare-loong64-nightly.outputs.nightly_label }}/loong64"
+          echo "$GPG_PASSPHRASE" | gpg --batch --pinentry-mode loopback --passphrase-fd 0 \
+            --armor --detach-sign "${{ needs.prepare-loong64-nightly.outputs.loong_tarball_name }}"
+
+      - name: Upload Loong64 nightly assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-loong64-assets
+          path: build/out/nightly/${{ needs.prepare-loong64-nightly.outputs.nightly_label }}/loong64
+          if-no-files-found: error
+
+  publish-loong64-nightly:
+    name: Publish loong64 nightly ${{ needs.prepare-loong64-nightly.outputs.nightly_label }}
+    needs: [prepare-loong64-nightly, build-loong64-nightly]
+    if: ${{ needs.prepare-loong64-nightly.outputs.should_build == 'true' && needs.build-loong64-nightly.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout nightly source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-loong64-nightly.outputs.source_commit }}
+          fetch-depth: 0
+
+      - name: Download Loong64 nightly assets
+        uses: actions/download-artifact@v4
+        with:
+          name: nightly-loong64-assets
+          path: loong64-artifacts
+
+      - name: Download current nightly release assets and notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p nightly-release-assets
+          gh release view "${{ needs.prepare-loong64-nightly.outputs.nightly_tag }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json body \
+            --jq '.body' > nightly-release-notes.md
+          gh release download "${{ needs.prepare-loong64-nightly.outputs.nightly_tag }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir nightly-release-assets
+
+      - name: Refresh nightly notes and hashes for Loong64
+        run: |
+          cp loong64-artifacts/* nightly-release-assets/
+          bash build/scripts/augment-nightly-release-notes-loong64.sh \
+            --notes-file nightly-release-notes.md
+          bash build/scripts/append-release-asset-hashes.sh \
+            --replace-existing \
+            --assets-dir nightly-release-assets \
+            --notes-file nightly-release-notes.md \
+            --hashes-output nightly-release-assets/hashes.sha256
+
+      - name: Upload Loong64 nightly assets and refreshed hashes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ needs.prepare-loong64-nightly.outputs.nightly_tag }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber \
+            loong64-artifacts/* \
+            nightly-release-assets/hashes.sha256
+          gh release edit "${{ needs.prepare-loong64-nightly.outputs.nightly_tag }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --notes-file nightly-release-notes.md

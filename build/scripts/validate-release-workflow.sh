@@ -40,7 +40,6 @@ require_grep "update-uos-store:" .github/workflows/release.yml
 require_grep "guanzi008/appstore@main" .github/workflows/release.yml
 require_grep "APPSTORE_USERNAME" .github/workflows/release.yml
 require_grep "APPSTORE_PASSWORD" .github/workflows/release.yml
-require_grep "Expected exactly 2 Debian packages" .github/workflows/release.yml
 require_grep "Checkout repository for UOS note extraction" .github/workflows/release.yml
 require_grep "Prepare UOS Store note" .github/workflows/release.yml
 require_grep "extract-release-note-summary.sh" .github/workflows/release.yml
@@ -48,7 +47,14 @@ require_grep 'note: ${{ steps.uos_note.outputs.note }}' .github/workflows/releas
 require_grep 'bash build/scripts/generate-changelog.sh "${{ steps.release-version.outputs.version }}" > release-notes.md' .github/workflows/release.yml
 require_grep "artifacts/*.tar.gz.asc" .github/workflows/release.yml
 require_grep "for tarball in *.tar.gz; do" .github/workflows/release.yml
+require_grep "for rpm in *.rpm; do" .github/workflows/release.yml
+require_no_grep "for rpm in **/*.rpm; do" .github/workflows/release.yml
 require_grep "Missing expected signed amd64 tarball signature in signed-assets" .github/workflows/release.yml
+require_grep "build-loong64:" .github/workflows/release.yml
+require_grep "loong64: bundle / deb" .github/workflows/release.yml
+require_grep "build-loong64.result == 'success'" .github/workflows/release.yml
+require_grep "build-loong64-in-container.sh" .github/workflows/release.yml
+require_grep "Expected amd64 and arm64 Debian packages" .github/workflows/release.yml
 require_no_grep "/home/han/flutter" .github/workflows/release.yml
 require_no_grep "git describe --tags --abbrev=0 --match 'v3.0.*'" .github/workflows/release.yml
 require_no_grep "app_constants.dart" .github/workflows/release.yml
@@ -99,11 +105,22 @@ require_grep "publish-aur.sh" .github/workflows/nightly.yml
 require_grep "linglong-store-nightly-bin" .github/workflows/nightly.yml
 require_grep "ssh://aur@aur.archlinux.org/linglong-store-nightly-bin.git" .github/workflows/nightly.yml
 require_grep "listReleases" .github/workflows/nightly.yml
+require_grep "workflow_run" .github/workflows/nightly-loong64.yml
+require_grep "workflow_dispatch" .github/workflows/nightly-loong64.yml
+require_grep "Nightly" .github/workflows/nightly-loong64.yml
+require_grep "linux/loong64" .github/workflows/nightly-loong64.yml
+require_grep "build-loong64-in-container.sh" .github/workflows/nightly-loong64.yml
+require_grep "augment-nightly-release-notes-loong64.sh" .github/workflows/nightly-loong64.yml
+require_grep "--replace-existing" .github/workflows/nightly-loong64.yml
 require_grep 'PACKAGE_CHANNEL="${PACKAGE_CHANNEL:-stable}"' build/scripts/package-smoke-test.sh
 require_grep '--channel "$PACKAGE_CHANNEL"' build/scripts/package-smoke-test.sh
 require_grep "linglong-store-nightly.desktop" build/scripts/package-smoke-test.sh
 require_grep "SHA256 Hashes of the release artifacts" build/scripts/release-cli-smoke-test.sh
 require_grep "SHA256 Hashes of the release artifacts" build/scripts/nightly-cli-smoke-test.sh
+require_grep "linux-loong64.tar.gz" build/scripts/release-cli-smoke-test.sh
+require_grep "linux-loong64.tar.gz" build/scripts/nightly-cli-smoke-test.sh
+require_grep "replace_existing=\"false\"" build/scripts/append-release-asset-hashes.sh
+require_grep "augment-nightly-release-notes-loong64.sh" build/scripts/nightly-cli-smoke-test.sh
 require_grep "git diff --cached --quiet" build/scripts/publish-aur.sh
 require_grep "Generating .SRCINFO requires makepkg or a Docker-based Arch Linux fallback" build/scripts/publish-aur.sh
 

@@ -84,6 +84,7 @@ jobs:
           ## Download
           - amd64: bundle / deb / rpm / AppImage
           - arm64: bundle / deb / rpm / AppImage
+          - loong64: bundle / deb
 
           ## Requirements
           - Linux
@@ -256,10 +257,58 @@ jobs:
           path: build/out/linux/${{ needs.prepare-release.outputs.version }}/arm64/sha256sum-arm64.txt
           if-no-files-found: warn
 
+  build-loong64:
+    name: Build loong64 qemu ${{ needs.prepare-release.outputs.version }}
+    needs: prepare-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      LOONG64_QEMU_IMAGE: ${{ vars.LOONG64_QEMU_IMAGE }}
+      LOONG64_FLUTTER_RELEASE_REPO: ${{ vars.LOONG64_FLUTTER_RELEASE_REPO }}
+      LOONG64_FLUTTER_RELEASE_TAG: ${{ vars.LOONG64_FLUTTER_RELEASE_TAG }}
+      LOONG64_FLUTTER_SDK_ARCHIVE: ${{ vars.LOONG64_FLUTTER_SDK_ARCHIVE }}
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-release.outputs.source_commit }}
+          fetch-depth: 0
+
+      - name: Download versioned release files
+        uses: actions/download-artifact@v4
+        with:
+          name: release-version-files
+          path: release-version-files
+
+      - name: Apply versioned release files
+        run: |
+          cp release-version-files/pubspec.yaml pubspec.yaml
+          cp release-version-files/linux/pubspec.yaml linux/pubspec.yaml
+          cp release-version-files/lib/core/config/app_config.dart lib/core/config/app_config.dart
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: loong64
+
+      - name: Build Loong64 bundle and Debian package
+        run: |
+          # Loong64 currently ships bundle + deb only; AppImage tooling upstream
+          # still lacks Loong64 binaries and AUR/UOS remain dual-arch.
+          bash build/scripts/build-loong64-in-container.sh \
+            --version "${{ needs.prepare-release.outputs.version }}"
+
+      - name: Upload loong64 release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-loong64
+          path: build/out/linux/${{ needs.prepare-release.outputs.version }}/loong64
+          if-no-files-found: error
+
   sign-release:
     name: Sign Release Assets
-    needs: [prepare-release, build-amd64, build-arm64, build-arm64-qemu]
-    if: ${{ always() && needs.build-amd64.result == 'success' && (needs.build-arm64.result == 'success' || (needs.build-arm64.result != 'success' && needs.build-arm64-qemu.result == 'success')) }}
+    needs: [prepare-release, build-amd64, build-arm64, build-arm64-qemu, build-loong64]
+    if: ${{ always() && needs.build-amd64.result == 'success' && needs.build-loong64.result == 'success' && (needs.build-arm64.result == 'success' || (needs.build-arm64.result != 'success' && needs.build-arm64-qemu.result == 'success')) }}
     runs-on: ubuntu-latest
     steps:
       - name: Download release assets
@@ -328,14 +377,18 @@ jobs:
         run: |
           trap 'rm -f ~/.gnupg/rpm-gpg-passphrase' EXIT
           cd artifacts
-          for rpm in **/*.rpm; do
+          if ! ls -la *.rpm; then
+            echo "No RPM files were downloaded under $(pwd)" >&2
+            exit 1
+          fi
+          for rpm in *.rpm; do
             if [[ -f "$rpm" ]]; then
               echo "Signing $rpm..."
               rpmsign --addsign "$rpm"
             fi
           done
           # Verify signatures
-          for rpm in **/*.rpm; do
+          for rpm in *.rpm; do
             if [[ -f "$rpm" ]]; then
               echo "Verifying $rpm..."
               rpm -K "$rpm"
@@ -500,10 +553,12 @@ jobs:
         if: ${{ steps.store_credentials.outputs.enabled == 'true' }}
         id: debian_packages
         run: |
-          mapfile -t debs < <(find signed-release-assets -type f -name '*.deb' | sort)
+          mapfile -t debs < <(
+            find signed-release-assets -type f \( -name '*_amd64.deb' -o -name '*_arm64.deb' \) | sort
+          )
           if [[ "${#debs[@]}" -ne 2 ]]; then
-            printf 'Expected exactly 2 Debian packages, found %s:\n' "${#debs[@]}" >&2
-            printf '%s\n' "${debs[@]}" >&2
+            printf 'Expected amd64 and arm64 Debian packages, found %s:\n' "${#debs[@]}" >&2
+            find signed-release-assets -type f -name '*.deb' | sort >&2
             exit 1
           fi
           {

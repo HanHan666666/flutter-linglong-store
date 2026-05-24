@@ -173,6 +173,7 @@ NOTES_FIXTURE_REPO="$TMP_ROOT/notes-repo"
 NOTES_OUTPUT_WITH_HISTORY="$TMP_ROOT/nightly-release-notes-with-history.md"
 NOTES_OUTPUT_FIRST_RELEASE="$TMP_ROOT/nightly-release-notes-first.md"
 NOTES_OUTPUT_INVALID_BASELINE="$TMP_ROOT/nightly-release-notes-invalid-baseline.md"
+NOTES_OUTPUT_WITH_LOONG64="$TMP_ROOT/nightly-release-notes-with-loong64.md"
 
 mkdir -p "$NOTES_FIXTURE_REPO"
 git init "$NOTES_FIXTURE_REPO" >/dev/null 2>&1
@@ -213,6 +214,16 @@ assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Download"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- amd64: bundle / deb / rpm / AppImage"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- arm64: bundle / deb / rpm / AppImage"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Requirements"
+
+cp "$NOTES_OUTPUT_WITH_HISTORY" "$NOTES_OUTPUT_WITH_LOONG64"
+bash "$ROOT_DIR/build/scripts/augment-nightly-release-notes-loong64.sh" \
+  --notes-file "$NOTES_OUTPUT_WITH_LOONG64"
+bash "$ROOT_DIR/build/scripts/augment-nightly-release-notes-loong64.sh" \
+  --notes-file "$NOTES_OUTPUT_WITH_LOONG64"
+
+assert_file_contains "$NOTES_OUTPUT_WITH_LOONG64" "- Architecture: amd64, arm64, loong64"
+assert_file_contains "$NOTES_OUTPUT_WITH_LOONG64" "- loong64: bundle / deb"
+test "$(grep -c '^- loong64: bundle / deb$' "$NOTES_OUTPUT_WITH_LOONG64")" = "1"
 
 (
   cd "$NOTES_FIXTURE_REPO"
@@ -384,5 +395,26 @@ grep -q 'linglong-store-'"$nightly_label"'-amd64.AppImage$' "$NIGHTLY_HASHES_OUT
 grep -q 'linglong-store-'"$nightly_label"'-x86_64.rpm$' "$NIGHTLY_HASHES_OUTPUT_PATH"
 grep -q 'linglong-store-'"$nightly_label"'-arm64.AppImage$' "$NIGHTLY_HASHES_OUTPUT_PATH"
 grep -q 'linglong-store-'"$nightly_label"'-aarch64.rpm$' "$NIGHTLY_HASHES_OUTPUT_PATH"
+
+printf 'nightly loong64 bundle\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-linux-loong64.tar.gz"
+printf 'nightly loong64 bundle signature\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-linux-loong64.tar.gz.asc"
+printf 'nightly loong64 deb\n' > "$NIGHTLY_ASSET_FIXTURE_DIR/linglong-store-${nightly_label}-loong64.deb"
+
+bash "$ROOT_DIR/build/scripts/augment-nightly-release-notes-loong64.sh" \
+  --notes-file "$NOTES_OUTPUT_WITH_HISTORY"
+
+bash "$ROOT_DIR/build/scripts/append-release-asset-hashes.sh" \
+  --replace-existing \
+  --assets-dir "$NIGHTLY_ASSET_FIXTURE_DIR" \
+  --notes-file "$NOTES_OUTPUT_WITH_HISTORY" \
+  --hashes-output "$NIGHTLY_HASHES_OUTPUT_PATH"
+
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- Architecture: amd64, arm64, loong64"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- loong64: bundle / deb"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "linglong-store-${nightly_label}-linux-loong64.tar.gz"
+test "$(grep -c '^## SHA256 Hashes of the release artifacts$' "$NOTES_OUTPUT_WITH_HISTORY")" = "1"
+grep -q 'linglong-store-'"$nightly_label"'-linux-loong64.tar.gz$' "$NIGHTLY_HASHES_OUTPUT_PATH"
+grep -q 'linglong-store-'"$nightly_label"'-linux-loong64.tar.gz.asc$' "$NIGHTLY_HASHES_OUTPUT_PATH"
+grep -q 'linglong-store-'"$nightly_label"'-loong64.deb$' "$NIGHTLY_HASHES_OUTPUT_PATH"
 
 echo "Nightly CLI smoke test passed."

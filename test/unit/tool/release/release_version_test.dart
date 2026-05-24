@@ -11,6 +11,16 @@ void main() {
       );
     });
 
+    test('increments the latest stable semver tag across minor versions', () {
+      expect(
+        resolveReleaseVersion(
+          tags: ['v3.0.10', 'v3.3.6', 'nightly-20260522'],
+          manualVersion: null,
+        ),
+        '3.3.7',
+      );
+    });
+
     test('falls back to the first release version when no tags exist', () {
       expect(
         resolveReleaseVersion(tags: const [], manualVersion: null),

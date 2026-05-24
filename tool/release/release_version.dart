@@ -21,7 +21,13 @@ String resolveReleaseVersion({
     return '3.0.0';
   }
 
-  return '3.0.${latestVersion.patch + 1}';
+  return _formatVersion(
+    _Version(
+      latestVersion.major,
+      latestVersion.minor,
+      latestVersion.patch + 1,
+    ),
+  );
 }
 
 void main(List<String> args) {
@@ -30,7 +36,7 @@ void main(List<String> args) {
     final tagsResult = Process.runSync('git', const [
       'tag',
       '--list',
-      'v3.0.*',
+      'v*',
     ], runInShell: true);
     if (tagsResult.exitCode != 0) {
       stderr.write(tagsResult.stderr);
@@ -54,7 +60,7 @@ void main(List<String> args) {
 }
 
 final RegExp _semverPattern = RegExp(r'^(\d+)\.(\d+)\.(\d+)$');
-final RegExp _tagPattern = RegExp(r'^v3\.0\.(\d+)$');
+final RegExp _tagPattern = RegExp(r'^v(\d+)\.(\d+)\.(\d+)$');
 
 _Version? _findLatestVersion(List<String> tags) {
   _Version? latest;
@@ -65,7 +71,11 @@ _Version? _findLatestVersion(List<String> tags) {
       continue;
     }
 
-    final version = _Version(3, 0, int.parse(match.group(1)!));
+    final version = _Version(
+      int.parse(match.group(1)!),
+      int.parse(match.group(2)!),
+      int.parse(match.group(3)!),
+    );
     if (latest == null || _compareVersions(version, latest) > 0) {
       latest = version;
     }

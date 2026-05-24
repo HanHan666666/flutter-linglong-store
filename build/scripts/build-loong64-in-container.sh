@@ -104,19 +104,8 @@ docker run --rm \
     fi
 
     export FLUTTER_ROOT="$extract_root/flutter"
+    export FLUTTER_PREBUILT_ENGINE_VERSION="a7a98649a2c80b8a9839795680853428ff6de311"
     export PATH="$FLUTTER_ROOT/bin:$FLUTTER_ROOT/bin/cache/dart-sdk/bin:$PATH"
-
-    # The packaged Loong64 SDK does not ship with bin/internal/engine.version
-    # (unlike upstream Flutter SDKs). During bootstrap,
-    # update_engine_version.sh falls back to content_aware_hash.sh which
-    # computes a git-tree hash — that hash does not correspond to any real
-    # engine commit on Google storage, so Flutter tries to download a
-    # non-existent engine_stamp.json and gets a 404.
-    # Pin the engine version explicitly so bootstrap finds the correct
-    # artifacts already present in bin/cache/artifacts/engine/.
-    if [[ ! -f "$FLUTTER_ROOT/bin/internal/engine.version" ]]; then
-      printf 'a7a98649a2c80b8a9839795680853428ff6de311' > "$FLUTTER_ROOT/bin/internal/engine.version"
-    fi
 
     # The GitHub Actions workspace is bind-mounted from the host, so inside the
     # container root sees both the checked-out repository and the extracted

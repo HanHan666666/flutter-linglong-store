@@ -115,10 +115,12 @@ docker run --rm \
     git config --global --add safe.directory "$FLUTTER_ROOT"
 
     # Some upstream Loong64 SDK archives are shipped as packaged source trees
-    # without Git metadata. Flutter bootstrap still runs `git rev-parse HEAD`,
-    # so seed a local repository when the extracted SDK is not already a valid
-    # Git checkout.
-    if ! git -C "$FLUTTER_ROOT" rev-parse HEAD >/dev/null 2>&1; then
+    # without Git metadata. Since the SDK is unpacked under the workspace,
+    # plain `git rev-parse HEAD` would incorrectly walk up to the parent
+    # repository. Require the Flutter SDK path itself to be the git toplevel
+    # before trusting any existing checkout metadata.
+    flutter_git_toplevel="$(git -C "$FLUTTER_ROOT" rev-parse --show-toplevel 2>/dev/null || true)"
+    if [[ ! -e "$FLUTTER_ROOT/.git" || "$flutter_git_toplevel" != "$FLUTTER_ROOT" ]]; then
       echo "Bootstrapping local Git metadata for packaged Loong64 Flutter SDK"
       rm -rf "$FLUTTER_ROOT/.git"
       git -C "$FLUTTER_ROOT" init -q

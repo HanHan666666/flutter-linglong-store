@@ -123,6 +123,8 @@ require_grep "replace_existing=\"false\"" build/scripts/append-release-asset-has
 require_grep "augment-nightly-release-notes-loong64.sh" build/scripts/nightly-cli-smoke-test.sh
 require_grep 'safe.directory "$WORKSPACE_ROOT"' build/scripts/build-loong64-in-container.sh
 require_grep 'safe.directory "$FLUTTER_ROOT"' build/scripts/build-loong64-in-container.sh
+require_grep 'git -C "$FLUTTER_ROOT" rev-parse HEAD' build/scripts/build-loong64-in-container.sh
+require_grep 'Bootstrap packaged Flutter SDK' build/scripts/build-loong64-in-container.sh
 require_grep "git diff --cached --quiet" build/scripts/publish-aur.sh
 require_grep "Generating .SRCINFO requires makepkg or a Docker-based Arch Linux fallback" build/scripts/publish-aur.sh
 

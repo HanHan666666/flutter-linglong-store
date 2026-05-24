@@ -114,6 +114,20 @@ docker run --rm \
     git config --global --add safe.directory "$WORKSPACE_ROOT"
     git config --global --add safe.directory "$FLUTTER_ROOT"
 
+    # Some upstream Loong64 SDK archives are shipped as packaged source trees
+    # without Git metadata. Flutter bootstrap still runs `git rev-parse HEAD`,
+    # so seed a local repository when the extracted SDK is not already a valid
+    # Git checkout.
+    if ! git -C "$FLUTTER_ROOT" rev-parse HEAD >/dev/null 2>&1; then
+      echo "Bootstrapping local Git metadata for packaged Loong64 Flutter SDK"
+      rm -rf "$FLUTTER_ROOT/.git"
+      git -C "$FLUTTER_ROOT" init -q
+      git -C "$FLUTTER_ROOT" config user.name "Linglong Store CI"
+      git -C "$FLUTTER_ROOT" config user.email "actions@users.noreply.github.com"
+      git -C "$FLUTTER_ROOT" add -A
+      git -C "$FLUTTER_ROOT" commit -q -m "Bootstrap packaged Flutter SDK"
+    fi
+
     if [[ ! -f "$FLUTTER_ROOT/bin/cache/artifacts/engine/linux-loong64-release/libflutter_linux_gtk.so" ]]; then
       echo "Loong64 Flutter SDK is missing linux-loong64 release engine artifacts." >&2
       exit 1

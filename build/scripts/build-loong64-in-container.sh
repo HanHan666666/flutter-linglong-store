@@ -103,6 +103,14 @@ docker run --rm \
     export FLUTTER_ROOT="$extract_root/flutter"
     export PATH="$FLUTTER_ROOT/bin:$FLUTTER_ROOT/bin/cache/dart-sdk/bin:$PATH"
 
+    # The GitHub Actions workspace is bind-mounted from the host, so inside the
+    # container root sees both the checked-out repository and the extracted
+    # Flutter SDK as foreign-owned Git repos. Mark them safe before running the
+    # Flutter tool, otherwise `flutter --version` / `flutter config` aborts with
+    # Git "detected dubious ownership" safety checks.
+    git config --global --add safe.directory "$WORKSPACE_ROOT"
+    git config --global --add safe.directory "$FLUTTER_ROOT"
+
     if [[ ! -f "$FLUTTER_ROOT/bin/cache/artifacts/engine/linux-loong64-release/libflutter_linux_gtk.so" ]]; then
       echo "Loong64 Flutter SDK is missing linux-loong64 release engine artifacts." >&2
       exit 1

@@ -109,19 +109,31 @@ docker run --rm \
 
     # The Loong64 Flutter SDK ships with prebuilt engine artifacts but no
     # corresponding engine_stamp.json on Google Flutter infra storage.
-    # During bootstrap, Flutter tools validate the engine by fetching
-    # <engine_hash>/engine_stamp.json from storage.googleapis.com and fail
-    # with 404 for Loong64 (a locally built engine).
-    # Instead of intercepting network traffic, we pre-create the engine
-    # stamp and realm files so the Dart VM sees them as already validated.
-    # The Dart engine validation logic checks bin/cache/engine.stamp and
-    # bin/cache/engine.realm -- if both exist, it skips the network fetch.
+    # During bootstrap, update_engine_version.sh writes an engine hash,
+    # then flutter_tools tries to validate it via engine_stamp.json from
+    # storage.googleapis.com -- which returns 404 for Loong64.
+    # We patch update_engine_version.sh to write the FLUTTER_PREBUILT hash
+    # directly (bypassing content_aware_hash which computes a bogus git hash)
+    # AND pre-create the stamp files so flutter_tools finds them before
+    # attempting any network fetch.
+    cat > "$FLUTTER_ROOT/bin/internal/update_engine_version.sh" <<'EVSCRIPT'
+#!/usr/bin/env bash
+set -e
+FLUTTER_ROOT="$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")"
+mkdir -p "$FLUTTER_ROOT/bin/cache"
+echo "${FLUTTER_PREBUILT_ENGINE_VERSION:-0000000000000000000000000000000000000000}" > "$FLUTTER_ROOT/bin/cache/engine.stamp"
+echo "" > "$FLUTTER_ROOT/bin/cache/engine.realm"
+EVSCRIPT
+    chmod +x "$FLUTTER_ROOT/bin/internal/update_engine_version.sh"
+
+    # Pre-create engine.stamp, engine.realm, and engine_stamp.json before any
+    # flutter command. The Dart VM checks bin/cache/artifacts/engine.stamp.json
+    # locally before attempting a Google Storage fetch.
     mkdir -p "$FLUTTER_ROOT/bin/cache"
     echo "a7a98649a2c80b8a9839795680853428ff6de311" > "$FLUTTER_ROOT/bin/cache/engine.stamp"
     echo "" > "$FLUTTER_ROOT/bin/cache/engine.realm"
-    # Disable analytics to reduce startup chatter
-    touch "$HOME/.flutter"
-    mkdir -p "$HOME/.config"
+    mkdir -p "$FLUTTER_ROOT/bin/cache/artifacts"
+    printf '{"hash":"a7a98649a2c80b8a9839795680853428ff6de311"}' > "$FLUTTER_ROOT/bin/cache/artifacts/engine_stamp.json"
 
     # The GitHub Actions workspace is bind-mounted from the host, so inside the
     # container root sees both the checked-out repository and the extracted

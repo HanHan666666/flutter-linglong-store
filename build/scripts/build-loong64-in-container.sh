@@ -134,7 +134,7 @@ opener = urllib.request.build_opener(proxy)
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         if "engine_stamp.json" in self.path:
-            body = b'{"hash":"a7a98649a2c80b8a9839795680853428ff6de311"}'
+            body = ('{"hash":"a7a98649a2c80b8a9839795680853428ff6de311"}').encode()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))

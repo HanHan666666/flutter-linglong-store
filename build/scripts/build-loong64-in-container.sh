@@ -107,6 +107,29 @@ docker run --rm \
     export FLUTTER_PREBUILT_ENGINE_VERSION="a7a98649a2c80b8a9839795680853428ff6de311"
     export PATH="$FLUTTER_ROOT/bin:$FLUTTER_ROOT/bin/cache/dart-sdk/bin:$PATH"
 
+    # The Loong64 Flutter SDK ships with prebuilt engine artifacts but no
+    # corresponding engine_stamp.json on Google'\''s Flutter infra storage.
+    # During bootstrap, Flutter tools validate the engine by fetching
+    # <engine_hash>/engine_stamp.json from storage.googleapis.com.
+    # Since the Loong64 engine is a local build, this URL returns 404.
+    # Wrap curl inside the container so that engine_stamp.json requests
+    # return a synthetic response while all other requests pass through.
+    real_curl="$(command -v curl)"
+    cat > /usr/local/bin/curl <<'\''CURLWRAP'\''
+#!/usr/bin/env bash
+for arg in "$@"; do
+  case "$arg" in
+    *engine_stamp.json*)
+      printf '\''{"hash":"%s"}'\'' "a7a98649a2c80b8a9839795680853428ff6de311"
+      exit 0
+      ;;
+  esac
+done
+exec /usr/bin/curl.real "$@"
+CURLWRAP
+    chmod +x /usr/local/bin/curl
+    mv "$real_curl" /usr/bin/curl.real
+
     # The GitHub Actions workspace is bind-mounted from the host, so inside the
     # container root sees both the checked-out repository and the extracted
     # Flutter SDK as foreign-owned Git repos. Mark them safe before running the
@@ -139,7 +162,7 @@ docker run --rm \
     # zip (259-byte error page) and fails.
     flutter_local_revision="$(git -C "$FLUTTER_ROOT" rev-parse HEAD)"
     if [[ -f "$FLUTTER_ROOT/bin/cache/flutter_tools.snapshot" ]]; then
-      printf '%s:%s' "$flutter_local_revision" "${FLUTTER_TOOL_ARGS:-}" > "$FLUTTER_ROOT/bin/cache/flutter_tools.stamp"
+      printf '\''%s:%s'\'' "$flutter_local_revision" "${FLUTTER_TOOL_ARGS:-}" > "$FLUTTER_ROOT/bin/cache/flutter_tools.stamp"
     fi
 
     if [[ ! -f "$FLUTTER_ROOT/bin/cache/artifacts/engine/linux-loong64-release/libflutter_linux_gtk.so" ]]; then

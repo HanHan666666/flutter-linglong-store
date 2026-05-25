@@ -135,6 +135,7 @@ EVSCRIPT
     echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/engine.stamp"
     echo "" > "$FLUTTER_ROOT/bin/cache/engine.realm"
     echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/engine-dart-sdk.stamp"
+    echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/flutter_sdk.stamp"
     echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/engine_stamp.stamp"
     python3 - "$FLUTTER_ROOT/bin/cache/engine_stamp.json" "$engine_version" <<'PY'
 import json
@@ -152,6 +153,18 @@ stamp = {
 }
 path.write_text(json.dumps(stamp, separators=(",", ":")) + "\n")
 PY
+
+    mkdir -p "$FLUTTER_ROOT/bin/cache/pkg"
+    if [[ ! -d "$FLUTTER_ROOT/bin/cache/pkg/sky_engine" ]] &&
+       [[ -d "$FLUTTER_ROOT/engine/src/flutter/sky/packages/sky_engine" ]]; then
+      cp -a "$FLUTTER_ROOT/engine/src/flutter/sky/packages/sky_engine" \
+        "$FLUTTER_ROOT/bin/cache/pkg/sky_engine"
+    fi
+    if [[ ! -d "$FLUTTER_ROOT/bin/cache/pkg/flutter_gpu" ]] &&
+       [[ -d "$FLUTTER_ROOT/engine/src/flutter/lib/gpu" ]]; then
+      cp -a "$FLUTTER_ROOT/engine/src/flutter/lib/gpu" \
+        "$FLUTTER_ROOT/bin/cache/pkg/flutter_gpu"
+    fi
 
     # The GitHub Actions workspace is bind-mounted from the host, so inside the
     # container root sees both the checked-out repository and the extracted

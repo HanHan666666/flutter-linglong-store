@@ -220,6 +220,7 @@ PY
     dart --disable-analytics >/dev/null 2>&1 || true
     flutter config --enable-linux-desktop
     flutter config --enable-loong64
+    export LINGLONG_RELEASE_SKIP_BUILD_RUNNER="${LINGLONG_RELEASE_SKIP_BUILD_RUNNER:-1}"
 
     # Reuse the existing packaging entrypoints so Loong64 stays aligned with the
     # stable release bundle/deb layout instead of forking a parallel build path.

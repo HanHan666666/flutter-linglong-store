@@ -136,6 +136,8 @@ EVSCRIPT
     echo "" > "$FLUTTER_ROOT/bin/cache/engine.realm"
     echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/engine-dart-sdk.stamp"
     echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/flutter_sdk.stamp"
+    echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/linux-sdk.stamp"
+    echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/font-subset.stamp"
     echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/engine_stamp.stamp"
     python3 - "$FLUTTER_ROOT/bin/cache/engine_stamp.json" "$engine_version" <<'PY'
 import json
@@ -165,6 +167,14 @@ PY
       cp -a "$FLUTTER_ROOT/engine/src/flutter/lib/gpu" \
         "$FLUTTER_ROOT/bin/cache/pkg/flutter_gpu"
     fi
+
+    engine_artifacts="$FLUTTER_ROOT/bin/cache/artifacts/engine"
+    release_engine="$engine_artifacts/linux-loong64-release"
+    for cache_name in linux-loong64 linux-loong64-debug linux-loong64-profile linux-loong64-release; do
+      if [[ ! -d "$engine_artifacts/$cache_name" ]] && [[ -d "$release_engine" ]]; then
+        cp -a "$release_engine" "$engine_artifacts/$cache_name"
+      fi
+    done
 
     # The GitHub Actions workspace is bind-mounted from the host, so inside the
     # container root sees both the checked-out repository and the extracted

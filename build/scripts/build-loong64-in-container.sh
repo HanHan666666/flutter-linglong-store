@@ -104,7 +104,8 @@ docker run --rm \
     fi
 
     export FLUTTER_ROOT="$extract_root/flutter"
-    export FLUTTER_PREBUILT_ENGINE_VERSION="a7a98649a2c80b8a9839795680853428ff6de311"
+    engine_version="a7a98649a2c80b8a9839795680853428ff6de311"
+    export FLUTTER_PREBUILT_ENGINE_VERSION="$engine_version"
     export PATH="$FLUTTER_ROOT/bin:$FLUTTER_ROOT/bin/cache/dart-sdk/bin:$PATH"
 
     # The Loong64 Flutter SDK ships with prebuilt engine artifacts but no
@@ -119,21 +120,38 @@ docker run --rm \
     cat > "$FLUTTER_ROOT/bin/internal/update_engine_version.sh" <<'EVSCRIPT'
 #!/usr/bin/env bash
 set -e
-FLUTTER_ROOT="$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")"
+: "${FLUTTER_ROOT:?Set FLUTTER_ROOT before running update_engine_version.sh}"
 mkdir -p "$FLUTTER_ROOT/bin/cache"
-echo "${FLUTTER_PREBUILT_ENGINE_VERSION:-0000000000000000000000000000000000000000}" > "$FLUTTER_ROOT/bin/cache/engine.stamp"
+engine_version="${FLUTTER_PREBUILT_ENGINE_VERSION:-0000000000000000000000000000000000000000}"
+echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/engine.stamp"
 echo "" > "$FLUTTER_ROOT/bin/cache/engine.realm"
 EVSCRIPT
     chmod +x "$FLUTTER_ROOT/bin/internal/update_engine_version.sh"
 
     # Pre-create engine.stamp, engine.realm, and engine_stamp.json before any
-    # flutter command. The Dart VM checks bin/cache/artifacts/engine.stamp.json
-    # locally before attempting a Google Storage fetch.
+    # flutter command. flutter_tools checks the engine_stamp artifact stamp
+    # under bin/cache before attempting a Google Storage fetch.
     mkdir -p "$FLUTTER_ROOT/bin/cache"
-    echo "a7a98649a2c80b8a9839795680853428ff6de311" > "$FLUTTER_ROOT/bin/cache/engine.stamp"
+    echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/engine.stamp"
     echo "" > "$FLUTTER_ROOT/bin/cache/engine.realm"
-    mkdir -p "$FLUTTER_ROOT/bin/cache/artifacts"
-    printf '{"hash":"a7a98649a2c80b8a9839795680853428ff6de311"}' > "$FLUTTER_ROOT/bin/cache/artifacts/engine_stamp.json"
+    echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/engine-dart-sdk.stamp"
+    echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/engine_stamp.stamp"
+    python3 - "$FLUTTER_ROOT/bin/cache/engine_stamp.json" "$engine_version" <<'PY'
+import json
+import sys
+import time
+from pathlib import Path
+
+path = Path(sys.argv[1])
+engine_version = sys.argv[2]
+stamp = {
+    "build_time_ms": int(time.time() * 1000),
+    "git_revision": engine_version,
+    "git_revision_date": "2026-05-20T00:00:00+00:00",
+    "content_hash": engine_version,
+}
+path.write_text(json.dumps(stamp, separators=(",", ":")) + "\n")
+PY
 
     # The GitHub Actions workspace is bind-mounted from the host, so inside the
     # container root sees both the checked-out repository and the extracted

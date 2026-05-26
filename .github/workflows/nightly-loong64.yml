@@ -197,12 +197,14 @@ jobs:
           ref: ${{ github.event.repository.default_branch }}
           path: .loong64-build-helpers
           sparse-checkout: |
+            build/scripts/build-linux-bundle.sh
             build/scripts/build-loong64-in-container.sh
             build/scripts/install-loong64-build-deps.sh
           sparse-checkout-cone-mode: false
 
       - name: Use current Loong64 build helpers
         run: |
+          cp .loong64-build-helpers/build/scripts/build-linux-bundle.sh build/scripts/build-linux-bundle.sh
           cp .loong64-build-helpers/build/scripts/build-loong64-in-container.sh build/scripts/build-loong64-in-container.sh
           cp .loong64-build-helpers/build/scripts/install-loong64-build-deps.sh build/scripts/install-loong64-build-deps.sh
           rm -rf .loong64-build-helpers

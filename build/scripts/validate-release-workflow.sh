@@ -109,6 +109,7 @@ require_grep "workflow_run" .github/workflows/nightly-loong64.yml
 require_grep "workflow_dispatch" .github/workflows/nightly-loong64.yml
 require_grep "Nightly" .github/workflows/nightly-loong64.yml
 require_grep "linux/loong64" .github/workflows/nightly-loong64.yml
+require_grep "build-linux-bundle.sh" .github/workflows/nightly-loong64.yml
 require_grep "build-loong64-in-container.sh" .github/workflows/nightly-loong64.yml
 require_grep "augment-nightly-release-notes-loong64.sh" .github/workflows/nightly-loong64.yml
 require_grep "--replace-existing" .github/workflows/nightly-loong64.yml

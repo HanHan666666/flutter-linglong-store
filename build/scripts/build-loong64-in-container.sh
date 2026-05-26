@@ -220,6 +220,10 @@ PY
     flutter config --enable-linux-desktop
     flutter config --enable-loong64
     export LINGLONG_RELEASE_SKIP_BUILD_RUNNER="${LINGLONG_RELEASE_SKIP_BUILD_RUNNER:-0}"
+    if [[ -z "${LINGLONG_RELEASE_BUILD_RUNNER_FILTERS:-}" ]]; then
+      LINGLONG_RELEASE_BUILD_RUNNER_FILTERS=$'lib/application/providers/*.freezed.dart\nlib/data/models/*.freezed.dart\nlib/data/models/*.g.dart\nlib/domain/models/*.freezed.dart\nlib/domain/models/*.g.dart'
+      export LINGLONG_RELEASE_BUILD_RUNNER_FILTERS
+    fi
 
     # Reuse the existing packaging entrypoints so Loong64 stays aligned with the
     # stable release bundle/deb layout instead of forking a parallel build path.

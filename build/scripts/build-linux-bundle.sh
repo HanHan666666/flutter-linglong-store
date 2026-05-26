@@ -172,7 +172,15 @@ run_with_retries 5 flutter pub get
 if [[ "${LINGLONG_RELEASE_SKIP_BUILD_RUNNER:-}" == "1" ]]; then
   echo "Skipping build_runner; using checked-in generated Dart sources."
 else
-  run_with_retries 5 dart run build_runner build --delete-conflicting-outputs
+  build_runner_args=(build --delete-conflicting-outputs)
+  if [[ -n "${LINGLONG_RELEASE_BUILD_RUNNER_FILTERS:-}" ]]; then
+    while IFS= read -r build_filter; do
+      if [[ -n "$build_filter" ]]; then
+        build_runner_args+=(--build-filter "$build_filter")
+      fi
+    done <<< "$LINGLONG_RELEASE_BUILD_RUNNER_FILTERS"
+  fi
+  run_with_retries 5 dart run build_runner "${build_runner_args[@]}"
 fi
 flutter_build_args=(
   build

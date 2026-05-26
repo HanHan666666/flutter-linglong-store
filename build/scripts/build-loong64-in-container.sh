@@ -220,6 +220,7 @@ PY
     flutter config --enable-linux-desktop
     flutter config --enable-loong64
     export LINGLONG_RELEASE_SKIP_BUILD_RUNNER="${LINGLONG_RELEASE_SKIP_BUILD_RUNNER:-0}"
+    export LINGLONG_RELEASE_ALLOW_RIVERPOD_GENERATOR_FAILURE="${LINGLONG_RELEASE_ALLOW_RIVERPOD_GENERATOR_FAILURE:-1}"
     if [[ -z "${LINGLONG_RELEASE_BUILD_RUNNER_FILTERS:-}" ]]; then
       LINGLONG_RELEASE_BUILD_RUNNER_FILTERS="$(printf "%s\n" \
         "lib/application/providers/*.freezed.dart" \

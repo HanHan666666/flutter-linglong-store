@@ -83,6 +83,33 @@ run_with_retries() {
   done
 }
 
+run_build_runner() {
+  local build_runner_log
+  local status
+
+  build_runner_log="$(mktemp "${TMPDIR:-/tmp}/linglong-store-build-runner.XXXXXX.log")"
+  set +e
+  dart run build_runner "$@" 2>&1 | tee "$build_runner_log"
+  status="${PIPESTATUS[0]}"
+  set -e
+
+  if [[ "$status" -eq 0 ]]; then
+    rm -f "$build_runner_log"
+    return 0
+  fi
+
+  if [[ "${LINGLONG_RELEASE_ALLOW_RIVERPOD_GENERATOR_FAILURE:-}" == "1" ]] \
+    && grep -q "riverpod_generator on lib/application/providers/global_provider.dart" "$build_runner_log" \
+    && grep -q "InvalidTypeException: The type is invalid and cannot be converted to code" "$build_runner_log"; then
+    echo "Continuing after known Loong64 riverpod_generator analyzer failure." >&2
+    rm -f "$build_runner_log"
+    return 0
+  fi
+
+  echo "build_runner failed; log preserved at $build_runner_log" >&2
+  return "$status"
+}
+
 bootstrap_flutter_dart_sdk() {
   local cache_dir="$flutter_root/bin/cache"
   local engine_version
@@ -180,7 +207,7 @@ else
       fi
     done <<< "$LINGLONG_RELEASE_BUILD_RUNNER_FILTERS"
   fi
-  run_with_retries 5 dart run build_runner "${build_runner_args[@]}"
+  run_with_retries 5 run_build_runner "${build_runner_args[@]}"
 fi
 flutter_build_args=(
   build

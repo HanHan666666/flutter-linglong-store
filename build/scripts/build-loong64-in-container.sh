@@ -221,7 +221,12 @@ PY
     flutter config --enable-loong64
     export LINGLONG_RELEASE_SKIP_BUILD_RUNNER="${LINGLONG_RELEASE_SKIP_BUILD_RUNNER:-0}"
     if [[ -z "${LINGLONG_RELEASE_BUILD_RUNNER_FILTERS:-}" ]]; then
-      LINGLONG_RELEASE_BUILD_RUNNER_FILTERS=$'lib/application/providers/*.freezed.dart\nlib/data/models/*.freezed.dart\nlib/data/models/*.g.dart\nlib/domain/models/*.freezed.dart\nlib/domain/models/*.g.dart'
+      LINGLONG_RELEASE_BUILD_RUNNER_FILTERS="$(printf "%s\n" \
+        "lib/application/providers/*.freezed.dart" \
+        "lib/data/models/*.freezed.dart" \
+        "lib/data/models/*.g.dart" \
+        "lib/domain/models/*.freezed.dart" \
+        "lib/domain/models/*.g.dart")"
       export LINGLONG_RELEASE_BUILD_RUNNER_FILTERS
     fi
 

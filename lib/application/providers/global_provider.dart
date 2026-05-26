@@ -1,8 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    show Notifier, NotifierProvider, Provider, Ref;
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging/app_logger.dart';
@@ -178,8 +179,12 @@ class GlobalAppState {
 /// - 主题模式
 /// - 用户偏好设置
 /// - 环境信息
-@Riverpod(keepAlive: true)
-class GlobalApp extends _$GlobalApp {
+final globalAppProvider = NotifierProvider<GlobalApp, GlobalAppState>(
+  GlobalApp.new,
+  name: 'globalAppProvider',
+);
+
+class GlobalApp extends Notifier<GlobalAppState> {
   SharedPreferences? _prefs;
 
   @override
@@ -477,26 +482,52 @@ class GlobalApp extends _$GlobalApp {
 
 /// 便捷访问 Provider
 
+final currentLocaleProvider = Provider.autoDispose<Locale>(
+  currentLocale,
+  name: 'currentLocaleProvider',
+);
+
+final currentThemeModeProvider = Provider.autoDispose<ThemeMode>(
+  currentThemeMode,
+  name: 'currentThemeModeProvider',
+);
+
+final userPreferencesProvider = Provider.autoDispose<UserPreferences>(
+  userPreferences,
+  name: 'userPreferencesProvider',
+);
+
+final isDarkModeProvider = Provider.autoDispose<bool>(
+  isDarkMode,
+  name: 'isDarkModeProvider',
+);
+
+final isEnvReadyProvider = Provider.autoDispose<bool>(
+  isEnvReady,
+  name: 'isEnvReadyProvider',
+);
+
+final isAppInitializedProvider = Provider.autoDispose<bool>(
+  isAppInitialized,
+  name: 'isAppInitializedProvider',
+);
+
 /// 当前语言
-@riverpod
 Locale currentLocale(Ref ref) {
   return ref.watch(globalAppProvider).locale;
 }
 
 /// 当前主题模式
-@riverpod
 ThemeMode currentThemeMode(Ref ref) {
   return ref.watch(globalAppProvider).themeMode;
 }
 
 /// 用户偏好设置
-@riverpod
 UserPreferences userPreferences(Ref ref) {
   return ref.watch(globalAppProvider).userPreferences;
 }
 
 /// 是否深色模式
-@riverpod
 bool isDarkMode(Ref ref) {
   final themeMode = ref.watch(globalAppProvider).themeMode;
   if (themeMode == ThemeMode.system) {
@@ -507,13 +538,11 @@ bool isDarkMode(Ref ref) {
 }
 
 /// 环境是否就绪
-@riverpod
 bool isEnvReady(Ref ref) {
   return ref.watch(globalAppProvider).envReady;
 }
 
 /// 是否已初始化
-@riverpod
 bool isAppInitialized(Ref ref) {
   return ref.watch(globalAppProvider).isInitialized;
 }

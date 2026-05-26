@@ -200,6 +200,7 @@ jobs:
             build/scripts/build-linux-bundle.sh
             build/scripts/build-loong64-in-container.sh
             build/scripts/install-loong64-build-deps.sh
+            lib/application/providers/global_provider.dart
           sparse-checkout-cone-mode: false
 
       - name: Use current Loong64 build helpers
@@ -207,6 +208,7 @@ jobs:
           cp .loong64-build-helpers/build/scripts/build-linux-bundle.sh build/scripts/build-linux-bundle.sh
           cp .loong64-build-helpers/build/scripts/build-loong64-in-container.sh build/scripts/build-loong64-in-container.sh
           cp .loong64-build-helpers/build/scripts/install-loong64-build-deps.sh build/scripts/install-loong64-build-deps.sh
+          cp .loong64-build-helpers/lib/application/providers/global_provider.dart lib/application/providers/global_provider.dart
           rm -rf .loong64-build-helpers
 
       - name: Build Loong64 bundle and Debian package

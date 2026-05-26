@@ -7,11 +7,10 @@ release_version=""
 package_channel="stable"
 container_image="${LOONG64_QEMU_IMAGE:-ghcr.io/loong64/debian:trixie}"
 flutter_release_repo="${LOONG64_FLUTTER_RELEASE_REPO:-Flutter-Dart-loong64/flutter-loong64-releases}"
-# Pin the default SDK to the upstream Loong64 build that explicitly validated a
-# rebuilt linglong-store_3.3.6_loong64.deb on UOS 25. Newer preview SDKs can
-# still be selected via environment overrides after end-to-end verification.
-flutter_release_tag="${LOONG64_FLUTTER_RELEASE_TAG:-v2026.05.20.1}"
-flutter_sdk_archive="${LOONG64_FLUTTER_SDK_ARCHIVE:-flutter-sdk-linux-loong64-20260520.1-9b43981fc5d6-dartae9f14de3805-enginea7a98649a2c8-fontconfig.tar.xz}"
+# Keep the GitHub Actions Loong64 package build aligned with the SDK that was
+# produced in the same Debian 13/QEMU environment.
+flutter_release_tag="${LOONG64_FLUTTER_RELEASE_TAG:-v3.45.0-1.0.pre-198+debian13}"
+flutter_sdk_archive="${LOONG64_FLUTTER_SDK_ARCHIVE:-flutter-sdk-linux-loong64-3.45.0-1.0.pre-198-80696cf07439.tar.xz}"
 
 usage() {
   cat >&2 <<'EOF'
@@ -104,7 +103,7 @@ docker run --rm \
     fi
 
     export FLUTTER_ROOT="$extract_root/flutter"
-    engine_version="a7a98649a2c80b8a9839795680853428ff6de311"
+    engine_version="80696cf07439b4c4d6ed178b49df5065b9f69e6e"
     export FLUTTER_PREBUILT_ENGINE_VERSION="$engine_version"
     export PATH="$FLUTTER_ROOT/bin:$FLUTTER_ROOT/bin/cache/dart-sdk/bin:$PATH"
 
@@ -220,7 +219,7 @@ PY
     dart --disable-analytics >/dev/null 2>&1 || true
     flutter config --enable-linux-desktop
     flutter config --enable-loong64
-    export LINGLONG_RELEASE_SKIP_BUILD_RUNNER="${LINGLONG_RELEASE_SKIP_BUILD_RUNNER:-1}"
+    export LINGLONG_RELEASE_SKIP_BUILD_RUNNER="${LINGLONG_RELEASE_SKIP_BUILD_RUNNER:-0}"
 
     # Reuse the existing packaging entrypoints so Loong64 stays aligned with the
     # stable release bundle/deb layout instead of forking a parallel build path.

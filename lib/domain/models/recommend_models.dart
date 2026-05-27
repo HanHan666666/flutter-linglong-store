@@ -56,6 +56,10 @@ sealed class RecommendAppInfo with _$RecommendAppInfo {
     String? category,
     String? size,
     String? arch,
+    // 详情页需要沿用列表入口的精确身份字段，避免回退匹配到错误条目。
+    String? module,
+    // 详情页需要沿用列表入口的精确身份字段，避免回退匹配到错误条目。
+    String? repoName,
     double? rating,
     int? downloadCount,
     @Default(false) bool isInstalled,
@@ -73,6 +77,8 @@ extension RecommendAppInfoInstalledAppX on RecommendAppInfo {
       description: description,
       icon: icon,
       size: size,
+      module: module,
+      repoName: repoName,
     );
   }
 }

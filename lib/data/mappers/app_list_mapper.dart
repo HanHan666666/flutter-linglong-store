@@ -30,6 +30,10 @@ PaginatedResponse<RecommendAppInfo> mapAppListToRecommendApps(
           category: dto.categoryName,
           size: dto.packageSize,
           arch: dto.arch,
+          // 搜索结果进入详情时必须保留后端返回的真实条目身份。
+          module: dto.module,
+          // 搜索结果进入详情时必须保留后端返回的真实条目身份。
+          repoName: dto.repoName,
           downloadCount: dto.downloadTimes,
         ),
       )

@@ -7,11 +7,10 @@ release_version=""
 package_channel="stable"
 container_image="${LOONG64_QEMU_IMAGE:-ghcr.io/loong64/debian:trixie}"
 flutter_release_repo="${LOONG64_FLUTTER_RELEASE_REPO:-Flutter-Dart-loong64/flutter-loong64-releases}"
-# Pin the default SDK to the upstream Loong64 build that explicitly validated a
-# rebuilt linglong-store_3.3.6_loong64.deb on UOS 25. Newer preview SDKs can
-# still be selected via environment overrides after end-to-end verification.
-flutter_release_tag="${LOONG64_FLUTTER_RELEASE_TAG:-v2026.05.20.1}"
-flutter_sdk_archive="${LOONG64_FLUTTER_SDK_ARCHIVE:-flutter-sdk-linux-loong64-20260520.1-9b43981fc5d6-dartae9f14de3805-enginea7a98649a2c8-fontconfig.tar.xz}"
+# Keep the GitHub Actions Loong64 package build aligned with the SDK that was
+# produced in the same Debian 13/QEMU environment.
+flutter_release_tag="${LOONG64_FLUTTER_RELEASE_TAG:-v3.45.0-1.0.pre-198+debian13}"
+flutter_sdk_archive="${LOONG64_FLUTTER_SDK_ARCHIVE:-flutter-sdk-linux-loong64-3.45.0-1.0.pre-198-80696cf07439.tar.xz}"
 
 usage() {
   cat >&2 <<'EOF'
@@ -104,7 +103,8 @@ docker run --rm \
     fi
 
     export FLUTTER_ROOT="$extract_root/flutter"
-    export FLUTTER_PREBUILT_ENGINE_VERSION="a7a98649a2c80b8a9839795680853428ff6de311"
+    engine_version="80696cf07439b4c4d6ed178b49df5065b9f69e6e"
+    export FLUTTER_PREBUILT_ENGINE_VERSION="$engine_version"
     export PATH="$FLUTTER_ROOT/bin:$FLUTTER_ROOT/bin/cache/dart-sdk/bin:$PATH"
 
     # The Loong64 Flutter SDK ships with prebuilt engine artifacts but no
@@ -119,21 +119,61 @@ docker run --rm \
     cat > "$FLUTTER_ROOT/bin/internal/update_engine_version.sh" <<'EVSCRIPT'
 #!/usr/bin/env bash
 set -e
-FLUTTER_ROOT="$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")"
+: "${FLUTTER_ROOT:?Set FLUTTER_ROOT before running update_engine_version.sh}"
 mkdir -p "$FLUTTER_ROOT/bin/cache"
-echo "${FLUTTER_PREBUILT_ENGINE_VERSION:-0000000000000000000000000000000000000000}" > "$FLUTTER_ROOT/bin/cache/engine.stamp"
+engine_version="${FLUTTER_PREBUILT_ENGINE_VERSION:-0000000000000000000000000000000000000000}"
+echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/engine.stamp"
 echo "" > "$FLUTTER_ROOT/bin/cache/engine.realm"
 EVSCRIPT
     chmod +x "$FLUTTER_ROOT/bin/internal/update_engine_version.sh"
 
     # Pre-create engine.stamp, engine.realm, and engine_stamp.json before any
-    # flutter command. The Dart VM checks bin/cache/artifacts/engine.stamp.json
-    # locally before attempting a Google Storage fetch.
+    # flutter command. flutter_tools checks the engine_stamp artifact stamp
+    # under bin/cache before attempting a Google Storage fetch.
     mkdir -p "$FLUTTER_ROOT/bin/cache"
-    echo "a7a98649a2c80b8a9839795680853428ff6de311" > "$FLUTTER_ROOT/bin/cache/engine.stamp"
+    echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/engine.stamp"
     echo "" > "$FLUTTER_ROOT/bin/cache/engine.realm"
-    mkdir -p "$FLUTTER_ROOT/bin/cache/artifacts"
-    printf '{"hash":"a7a98649a2c80b8a9839795680853428ff6de311"}' > "$FLUTTER_ROOT/bin/cache/artifacts/engine_stamp.json"
+    echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/engine-dart-sdk.stamp"
+    echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/flutter_sdk.stamp"
+    echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/linux-sdk.stamp"
+    echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/font-subset.stamp"
+    echo "$engine_version" > "$FLUTTER_ROOT/bin/cache/engine_stamp.stamp"
+    python3 - "$FLUTTER_ROOT/bin/cache/engine_stamp.json" "$engine_version" <<'PY'
+import json
+import sys
+import time
+from pathlib import Path
+
+path = Path(sys.argv[1])
+engine_version = sys.argv[2]
+stamp = {
+    "build_time_ms": int(time.time() * 1000),
+    "git_revision": engine_version,
+    "git_revision_date": "2026-05-20T00:00:00+00:00",
+    "content_hash": engine_version,
+}
+path.write_text(json.dumps(stamp, separators=(",", ":")) + "\n")
+PY
+
+    mkdir -p "$FLUTTER_ROOT/bin/cache/pkg"
+    if [[ ! -d "$FLUTTER_ROOT/bin/cache/pkg/sky_engine" ]] &&
+       [[ -d "$FLUTTER_ROOT/engine/src/flutter/sky/packages/sky_engine" ]]; then
+      cp -a "$FLUTTER_ROOT/engine/src/flutter/sky/packages/sky_engine" \
+        "$FLUTTER_ROOT/bin/cache/pkg/sky_engine"
+    fi
+    if [[ ! -d "$FLUTTER_ROOT/bin/cache/pkg/flutter_gpu" ]] &&
+       [[ -d "$FLUTTER_ROOT/engine/src/flutter/lib/gpu" ]]; then
+      cp -a "$FLUTTER_ROOT/engine/src/flutter/lib/gpu" \
+        "$FLUTTER_ROOT/bin/cache/pkg/flutter_gpu"
+    fi
+
+    engine_artifacts="$FLUTTER_ROOT/bin/cache/artifacts/engine"
+    release_engine="$engine_artifacts/linux-loong64-release"
+    for cache_name in linux-loong64 linux-loong64-debug linux-loong64-profile linux-loong64-release; do
+      if [[ ! -d "$engine_artifacts/$cache_name" ]] && [[ -d "$release_engine" ]]; then
+        cp -a "$release_engine" "$engine_artifacts/$cache_name"
+      fi
+    done
 
     # The GitHub Actions workspace is bind-mounted from the host, so inside the
     # container root sees both the checked-out repository and the extracted
@@ -179,6 +219,8 @@ EVSCRIPT
     dart --disable-analytics >/dev/null 2>&1 || true
     flutter config --enable-linux-desktop
     flutter config --enable-loong64
+    export LINGLONG_RELEASE_SKIP_BUILD_RUNNER="${LINGLONG_RELEASE_SKIP_BUILD_RUNNER:-0}"
+    export LINGLONG_RELEASE_ALLOW_RIVERPOD_GENERATOR_FAILURE="${LINGLONG_RELEASE_ALLOW_RIVERPOD_GENERATOR_FAILURE:-1}"
 
     # Reuse the existing packaging entrypoints so Loong64 stays aligned with the
     # stable release bundle/deb layout instead of forking a parallel build path.

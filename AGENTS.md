@@ -280,6 +280,7 @@ Semantics(
 测试文件位于 `test/unit/core/accessibility/a11y_semantics_test.dart`。
 
 ## 变更记录
+- 2026-05-27：标题栏搜索候选统一复用 `/visit/getSearchAppList`，候选列表仅展示应用名称；点击候选直接进入详情页，按 `Enter` 或点击搜索图标继续进入 `/search_list`。候选与搜索结果进入详情页时，必须一并透传 `appId + arch + repoName + module`，禁止再丢失身份字段后依赖详情接口回退匹配。
 - 2026-05-24：Loong64 发布链当前采用“nightly 异步补传 + release 并入主流程”的收敛策略：新增 `nightly-loong64.yml` 在主 `Nightly` 成功后补传 `loong64` 的 `bundle + deb` 并刷新 nightly release notes / `hashes.sha256`；正式 `release.yml` 并入 Loong64 `bundle + deb` 构建，但 `publish-aur` 与 `update-uos-store` 仍只允许消费 `amd64 + arm64`，禁止把 Loong64 资产误接入 AUR/UOS。Loong64 构建统一走 `build/scripts/build-loong64-in-container.sh` + 外部 `Flutter-Dart-loong64/flutter-loong64-releases` SDK，当前不要尝试在未验证上游工具链前扩到 Loong64 `AppImage`。
 - 2026-05-10：应用详情契约必须与列表项身份对齐；列表页进入详情页时必须原样透传 `appId + arch + repoName + module`，后端 `/visit/getAppDetails` 与 `/app/getAppDetail` 在这些字段已知时必须精确匹配，仅在字段缺失时才允许回退到 `runtime/binary` 候选；详情接口禁止再额外叠加列表之外的 `app_level` 可见性过滤。
 - 2026-04-29：发行版特殊提示/特殊适配统一走 `LinuxDistributionResolver -> LinglongEnvCheckResult.distribution -> InstallMessages guidance scenario` 链路；启动期环境安装提示由 `LinglongEnvDialog` 按发行版场景渲染，安装失败提醒统一在 `InstallQueue.markFailed()` 收口。新增发行版规则时，禁止重新扩散 `isUos` / `isDeepin` 一类布尔判断。

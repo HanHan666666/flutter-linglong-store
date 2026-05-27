@@ -1,91 +1,71 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../core/network/api_client.dart';
-import '../../core/utils/locale_utils.dart';
-import '../../data/mappers/app_list_mapper.dart';
-import '../../data/models/api_dto.dart';
-import '../../domain/models/recommend_models.dart';
-import 'api_provider.dart';
-import 'global_provider.dart';
+import 'app_search_index_provider.dart';
 
 part 'title_search_suggestions_provider.g.dart';
 
-/// 标题栏搜索候选的轻量状态。
-///
-/// 这里只承载候选列表与加载态，不复用搜索结果页的完整状态机。
+/// 候选条目，用于标题栏候选面板展示。
+class SuggestionItem {
+  const SuggestionItem({required this.appId, required this.name});
+
+  /// 应用唯一标识
+  final String appId;
+
+  /// 应用名称
+  final String name;
+}
+
+/// 标题栏搜索候选状态。
 class TitleSearchSuggestionsState {
   const TitleSearchSuggestionsState({
     this.items = const [],
-    this.isLoading = false,
   });
 
-  final List<RecommendAppInfo> items;
-  final bool isLoading;
+  final List<SuggestionItem> items;
 
   TitleSearchSuggestionsState copyWith({
-    List<RecommendAppInfo>? items,
-    bool? isLoading,
+    List<SuggestionItem>? items,
   }) {
     return TitleSearchSuggestionsState(
       items: items ?? this.items,
-      isLoading: isLoading ?? this.isLoading,
     );
   }
 }
 
 /// 标题栏候选 provider。
 ///
-/// 候选请求始终只取第一页小页量数据，并与搜索结果页状态解耦。
+/// 消费本地搜索索引做同步匹配，不再调用后端 API。
 @riverpod
 class TitleSearchSuggestions extends _$TitleSearchSuggestions {
-  int _requestId = 0;
-
   @override
   TitleSearchSuggestionsState build() {
     return const TitleSearchSuggestionsState();
   }
 
-  Future<void> loadSuggestions(String query) async {
+  /// 根据输入词同步更新候选列表。
+  void updateQuery(String query) {
     final normalizedQuery = query.trim();
-    final requestId = ++_requestId;
-
     if (normalizedQuery.isEmpty) {
       state = const TitleSearchSuggestionsState();
       return;
     }
 
-    // 标题栏候选不保留旧结果，避免新旧关键词交替时出现错位候选。
-    state = const TitleSearchSuggestionsState(isLoading: true);
+    final asyncIndex = ref.read(appSearchIndexProvider);
+    final entries = asyncIndex is AsyncData<List<SearchSuggestionEntry>>
+        ? asyncIndex.value
+        : const <SearchSuggestionEntry>[];
 
-    try {
-      final response = await ref.read(appApiServiceProvider).getSearchAppList(
-        SearchAppListRequest(
-          keyword: normalizedQuery,
-          pageNo: 1,
-          pageSize: 8,
-          arch: resolveRequestArch(ref),
-          lan: resolveApiLang(ApiClient.getLocale?.call()),
-        ),
-      );
-
-      if (requestId != _requestId) {
-        return;
-      }
-
-      final mapped = mapAppListToRecommendApps(response.data.data, pageSize: 8);
-      state = TitleSearchSuggestionsState(items: mapped.items);
-    } catch (_) {
-      if (requestId != _requestId) {
-        return;
-      }
-
-      // 候选失败不阻塞用户继续 Enter 搜索，静默回收即可。
-      state = const TitleSearchSuggestionsState();
-    }
+    final results = searchSuggestions(entries, normalizedQuery);
+    state = TitleSearchSuggestionsState(
+      items: results
+          .map((e) => SuggestionItem(appId: e.appId, name: e.name))
+          .toList(),
+    );
   }
 
+  /// 清空候选。
   void clear() {
-    _requestId++;
     state = const TitleSearchSuggestionsState();
   }
 }

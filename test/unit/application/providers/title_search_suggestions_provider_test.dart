@@ -1,108 +1,121 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:retrofit/retrofit.dart';
 
-import 'package:linglong_store/application/providers/api_provider.dart';
+import 'package:linglong_store/application/providers/app_search_index_provider.dart';
 import 'package:linglong_store/application/providers/title_search_suggestions_provider.dart';
-import 'package:linglong_store/data/models/api_dto.dart';
-
-import '../../../mocks/mock_classes.mocks.dart';
 
 void main() {
   group('titleSearchSuggestionsProvider', () {
-    test('empty query clears state and skips API request', () async {
-      final mockApiService = MockAppApiService();
+    test('empty query clears suggestions', () {
       final container = ProviderContainer(
-        overrides: [appApiServiceProvider.overrideWithValue(mockApiService)],
+        overrides: [
+          appSearchIndexProvider.overrideWith(
+            () => _FakeAppSearchIndex([
+              const SearchSuggestionEntry(
+                appId: 'org.example.browser',
+                name: '浏览器',
+              ),
+            ]),
+          ),
+        ],
       );
       addTearDown(container.dispose);
 
-      await container
+      container
           .read(titleSearchSuggestionsProvider.notifier)
-          .loadSuggestions('   ');
+          .updateQuery('   ');
 
       final state = container.read(titleSearchSuggestionsProvider);
-
       expect(state.items, isEmpty);
-      expect(state.isLoading, isFalse);
-      verifyNever(mockApiService.getSearchAppList(any));
     });
 
-    test('loads first page with page size 8', () async {
-      final mockApiService = MockAppApiService();
-      when(
-        mockApiService.getSearchAppList(any),
-      ).thenAnswer((_) async => _buildSearchResponse());
-
+    test('non-empty query returns local matches', () {
       final container = ProviderContainer(
-        overrides: [appApiServiceProvider.overrideWithValue(mockApiService)],
+        overrides: [
+          appSearchIndexProvider.overrideWith(
+            () => _FakeAppSearchIndex([
+              const SearchSuggestionEntry(
+                appId: 'org.example.browser',
+                name: '浏览器',
+              ),
+              const SearchSuggestionEntry(
+                appId: 'org.example.editor',
+                name: '文本编辑器',
+              ),
+            ]),
+          ),
+        ],
       );
       addTearDown(container.dispose);
 
-      await container
+      container
           .read(titleSearchSuggestionsProvider.notifier)
-          .loadSuggestions('browser');
+          .updateQuery('浏览');
 
       final state = container.read(titleSearchSuggestionsProvider);
-      final captured = verify(
-        mockApiService.getSearchAppList(captureAny),
-      ).captured.single as SearchAppListRequest;
-
-      expect(captured.keyword, 'browser');
-      expect(captured.pageNo, 1);
-      expect(captured.pageSize, 8);
-      expect(state.items.map((item) => item.name), ['浏览器']);
-      expect(state.isLoading, isFalse);
+      expect(state.items.length, 1);
+      expect(state.items.first.appId, 'org.example.browser');
+      expect(state.items.first.name, '浏览器');
     });
 
-    test('request failure clears suggestions and loading state', () async {
-      final mockApiService = MockAppApiService();
-      when(mockApiService.getSearchAppList(any)).thenThrow(
-        DioException(
-          requestOptions: RequestOptions(path: '/visit/getSearchAppList'),
-        ),
-      );
-
+    test('clear resets state', () {
       final container = ProviderContainer(
-        overrides: [appApiServiceProvider.overrideWithValue(mockApiService)],
+        overrides: [
+          appSearchIndexProvider.overrideWith(
+            () => _FakeAppSearchIndex([
+              const SearchSuggestionEntry(
+                appId: 'org.example.browser',
+                name: '浏览器',
+              ),
+            ]),
+          ),
+        ],
       );
       addTearDown(container.dispose);
 
-      await container
+      container
           .read(titleSearchSuggestionsProvider.notifier)
-          .loadSuggestions('browser');
+          .updateQuery('浏览');
+      expect(
+        container.read(titleSearchSuggestionsProvider).items,
+        isNotEmpty,
+      );
+
+      container.read(titleSearchSuggestionsProvider.notifier).clear();
+      expect(container.read(titleSearchSuggestionsProvider).items, isEmpty);
+    });
+
+    test('no matching results returns empty', () {
+      final container = ProviderContainer(
+        overrides: [
+          appSearchIndexProvider.overrideWith(
+            () => _FakeAppSearchIndex([
+              const SearchSuggestionEntry(
+                appId: 'org.example.browser',
+                name: '浏览器',
+              ),
+            ]),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container
+          .read(titleSearchSuggestionsProvider.notifier)
+          .updateQuery('不存在');
 
       final state = container.read(titleSearchSuggestionsProvider);
-
       expect(state.items, isEmpty);
-      expect(state.isLoading, isFalse);
     });
   });
 }
 
-HttpResponse<AppListResponse> _buildSearchResponse() {
-  return HttpResponse(
-    const AppListResponse(
-      code: 200,
-      data: AppListPagedData(
-        records: [
-          AppListItemDTO(
-            appId: 'org.example.browser',
-            appName: '浏览器',
-            appVersion: '1.0.0',
-            arch: 'x86_64',
-            module: 'binary',
-            repoName: 'repo',
-          ),
-        ],
-        total: 1,
-        size: 8,
-        current: 1,
-        pages: 1,
-      ),
-    ),
-    Response(requestOptions: RequestOptions(path: '/visit/getSearchAppList')),
-  );
+/// 假索引，直接返回预设数据
+class _FakeAppSearchIndex extends AppSearchIndex {
+  final List<SearchSuggestionEntry> _entries;
+
+  _FakeAppSearchIndex(this._entries);
+
+  @override
+  AsyncValue<List<SearchSuggestionEntry>> build() => AsyncData(_entries);
 }

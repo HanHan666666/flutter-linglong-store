@@ -1,16 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../application/providers/title_search_suggestions_provider.dart';
-import '../../core/accessibility/accessibility.dart';
 import '../../core/config/routes.dart';
 import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
-import '../../domain/models/recommend_models.dart';
 
 /// 自定义标题栏
 ///
@@ -136,7 +135,10 @@ class _TitleSearchBox extends ConsumerStatefulWidget {
 
 class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
   bool _isFocused = false;
+  int _selectedIndex = -1;
   final FocusNode _focusNode = FocusNode();
+  final FocusNode _keyboardFocusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
   final LayerLink _suggestionsLayerLink = LayerLink();
   final GlobalKey _searchBoxKey = GlobalKey(debugLabel: 'title-search-box');
   late final TextEditingController _controller;
@@ -172,11 +174,15 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
     _controller.dispose();
     _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
+    _keyboardFocusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   void _onTextChanged() {
-    setState(() {});
+    setState(() {
+      _selectedIndex = -1;
+    });
     _queueSuggestionsFetch();
   }
 
@@ -191,7 +197,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
     }
 
     // 失焦后延迟收起，给候选点击事件留出命中窗口。
-    Future<void>.delayed(const Duration(milliseconds: 100), () {
+    Future<void>.delayed(const Duration(milliseconds: 200), () {
       if (!mounted || _focusNode.hasFocus) {
         return;
       }
@@ -224,27 +230,29 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
     final query = _controller.text.trim();
     if (query.isEmpty) {
       ref.read(titleSearchSuggestionsProvider.notifier).clear();
-      _removeSuggestionsOverlay();
+      _selectedIndex = -1;
+      _syncSuggestionsOverlay();
       return;
     }
 
-    // 候选请求放在输入框层做防抖，避免把短时间内的击键全部打到后端。
-    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+    // 本地匹配足够快，100ms 防抖即可。
+    _debounceTimer = Timer(const Duration(milliseconds: 100), () {
       if (!mounted) {
         return;
       }
       ref
           .read(titleSearchSuggestionsProvider.notifier)
-          .loadSuggestions(_controller.text);
+          .updateQuery(_controller.text);
     });
   }
 
-  void _openSuggestion(RecommendAppInfo app) {
+  void _openSuggestion(SuggestionItem item) {
     _debounceTimer?.cancel();
     ref.read(titleSearchSuggestionsProvider.notifier).clear();
     _removeSuggestionsOverlay();
     _focusNode.unfocus();
-    context.goToAppDetail(app.appId, appInfo: app.toInstalledApp());
+    // 只传 appId，详情页自己拉取完整信息。
+    context.goToAppDetail(item.appId);
   }
 
   bool _shouldShowSuggestions(TitleSearchSuggestionsState state) {
@@ -274,6 +282,47 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
   void _removeSuggestionsOverlay() {
     _suggestionsOverlayEntry?.remove();
     _suggestionsOverlayEntry = null;
+  }
+
+  /// 键盘事件处理：↑↓ 选中、Enter 跳转、Escape 关闭。
+  KeyEventResult _onKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+    final state = ref.read(titleSearchSuggestionsProvider);
+    if (!_shouldShowSuggestions(state) || state.items.isEmpty) {
+      return KeyEventResult.ignored;
+    }
+
+    final items = state.items;
+    switch (event.logicalKey) {
+      case LogicalKeyboardKey.arrowDown:
+        setState(() {
+          _selectedIndex = (_selectedIndex + 1) % items.length;
+        });
+        _syncSuggestionsOverlay();
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowUp:
+        setState(() {
+          _selectedIndex = _selectedIndex <= 0
+              ? items.length - 1
+              : _selectedIndex - 1;
+        });
+        _syncSuggestionsOverlay();
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.enter:
+        if (_selectedIndex >= 0 && _selectedIndex < items.length) {
+          _openSuggestion(items[_selectedIndex]);
+        } else {
+          _submitSearch();
+        }
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.escape:
+        _removeSuggestionsOverlay();
+        _selectedIndex = -1;
+        return KeyEventResult.handled;
+      default:
+        return KeyEventResult.ignored;
+    }
   }
 
   Widget _buildSuggestionsOverlay(BuildContext overlayContext) {
@@ -311,32 +360,65 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
                     ),
                   ],
                 ),
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(6),
                   shrinkWrap: true,
                   itemCount: state.items.length,
-                  separatorBuilder: (_, __) => Divider(
-                    height: 1,
-                    color: overlayContext.appColors.borderSecondary,
-                  ),
                   itemBuilder: (context, index) {
-                    final app = state.items[index];
-                    return A11yListItem(
-                      semanticsLabel: app.name,
-                      onTap: () => _openSuggestion(app),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        child: Text(
-                          app.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: overlayContext.appTextStyles.bodyMedium
-                              .copyWith(
-                                color: overlayContext.appColors.textPrimary,
+                    final item = state.items[index];
+                    final isSelected = index == _selectedIndex;
+
+                    return MouseRegion(
+                      onEnter: (_) {
+                        setState(() {
+                          _selectedIndex = index;
+                        });
+                        _syncSuggestionsOverlay();
+                      },
+                      child: GestureDetector(
+                        onTap: () => _openSuggestion(item),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? overlayContext.appColors.primaryLight
+                                : Colors.transparent,
+                            borderRadius: AppRadius.xsRadius,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  item.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: overlayContext.appTextStyles.bodyMedium
+                                      .copyWith(
+                                    color: isSelected
+                                        ? AppColors.primary
+                                        : overlayContext.appColors.textPrimary,
+                                  ),
+                                ),
                               ),
+                              // 选中时显示箭头指示器
+                              if (isSelected)
+                                const Padding(
+                                  padding: EdgeInsets.only(left: 8),
+                                  child: ExcludeSemantics(
+                                    child: Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 12,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -395,51 +477,52 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: TextField(
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  maxLines: 1,
-                  decoration: InputDecoration(
-                    hintText: l10n.searchPlaceholder,
-                    // 搜索框 placeholder：14px 常规说明文字
-                    hintStyle: context.appTextStyles.bodyMedium.copyWith(
-                      color: context.appColors.textTertiary,
+                child: KeyboardListener(
+                  focusNode: _keyboardFocusNode,
+                  onKeyEvent: _onKeyEvent,
+                  child: TextField(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    maxLines: 1,
+                    decoration: InputDecoration(
+                      hintText: l10n.searchPlaceholder,
+                      hintStyle: context.appTextStyles.bodyMedium.copyWith(
+                        color: context.appColors.textTertiary,
+                      ),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      focusedErrorBorder: InputBorder.none,
+                      filled: false,
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                      suffixIconConstraints: const BoxConstraints(
+                        minWidth: 24,
+                        minHeight: 24,
+                      ),
+                      suffixIcon: _controller.text.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.close,
+                                size: 16,
+                                color: context.appColors.textTertiary,
+                              ),
+                              onPressed: _clearSearch,
+                              splashRadius: 14,
+                              padding: EdgeInsets.zero,
+                              tooltip: l10n.clearSearch,
+                            )
+                          : null,
                     ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    disabledBorder: InputBorder.none,
-                    errorBorder: InputBorder.none,
-                    focusedErrorBorder: InputBorder.none,
-                    filled: false,
-                    isDense: true,
-                    // 上下 8px padding 使文字在 32px 容器内垂直居中
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                    suffixIconConstraints: const BoxConstraints(
-                      minWidth: 24,
-                      minHeight: 24,
+                    style: context.appTextStyles.bodyMedium.copyWith(
+                      color: context.appColors.textPrimary,
                     ),
-                    suffixIcon: _controller.text.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(
-                              Icons.close,
-                              size: 16,
-                              color: context.appColors.textTertiary,
-                            ),
-                            onPressed: _clearSearch,
-                            splashRadius: 14,
-                            padding: EdgeInsets.zero,
-                            tooltip: l10n.clearSearch,
-                          )
-                        : null,
+                    textAlignVertical: TextAlignVertical.center,
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (_) => _submitSearch(),
                   ),
-                  // 搜索框输入文字：14px 常规说明文字
-                  style: context.appTextStyles.bodyMedium.copyWith(
-                    color: context.appColors.textPrimary,
-                  ),
-                  textAlignVertical: TextAlignVertical.center,
-                  textInputAction: TextInputAction.search,
-                  onSubmitted: (_) => _submitSearch(),
                 ),
               ),
             ],

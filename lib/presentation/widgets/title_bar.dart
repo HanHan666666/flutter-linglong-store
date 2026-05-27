@@ -1,10 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../../application/providers/title_search_suggestions_provider.dart';
+import '../../core/accessibility/accessibility.dart';
 import '../../core/config/routes.dart';
 import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
+import '../../domain/models/recommend_models.dart';
 
 /// 自定义标题栏
 ///
@@ -118,20 +124,24 @@ class CustomTitleBar extends StatelessWidget {
 }
 
 /// 标题栏搜索框
-class _TitleSearchBox extends StatefulWidget {
+class _TitleSearchBox extends ConsumerStatefulWidget {
   const _TitleSearchBox({required this.currentQuery, required this.onSearch});
 
   final String currentQuery;
   final ValueChanged<String> onSearch;
 
   @override
-  State<_TitleSearchBox> createState() => _TitleSearchBoxState();
+  ConsumerState<_TitleSearchBox> createState() => _TitleSearchBoxState();
 }
 
-class _TitleSearchBoxState extends State<_TitleSearchBox> {
+class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
   bool _isFocused = false;
   final FocusNode _focusNode = FocusNode();
+  final LayerLink _suggestionsLayerLink = LayerLink();
+  final GlobalKey _searchBoxKey = GlobalKey(debugLabel: 'title-search-box');
   late final TextEditingController _controller;
+  OverlayEntry? _suggestionsOverlayEntry;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -156,6 +166,8 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
+    _removeSuggestionsOverlay();
     _controller.removeListener(_onTextChanged);
     _controller.dispose();
     _focusNode.removeListener(_onFocusChange);
@@ -165,11 +177,25 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
 
   void _onTextChanged() {
     setState(() {});
+    _queueSuggestionsFetch();
   }
 
   void _onFocusChange() {
     setState(() {
       _isFocused = _focusNode.hasFocus;
+    });
+
+    if (_focusNode.hasFocus) {
+      _syncSuggestionsOverlay();
+      return;
+    }
+
+    // 失焦后延迟收起，给候选点击事件留出命中窗口。
+    Future<void>.delayed(const Duration(milliseconds: 100), () {
+      if (!mounted || _focusNode.hasFocus) {
+        return;
+      }
+      _removeSuggestionsOverlay();
     });
   }
 
@@ -178,96 +204,246 @@ class _TitleSearchBoxState extends State<_TitleSearchBox> {
     if (query.isEmpty) {
       return;
     }
+    _debounceTimer?.cancel();
+    ref.read(titleSearchSuggestionsProvider.notifier).clear();
+    _removeSuggestionsOverlay();
     widget.onSearch(query);
     _focusNode.unfocus();
   }
 
   void _clearSearch() {
+    _debounceTimer?.cancel();
+    ref.read(titleSearchSuggestionsProvider.notifier).clear();
+    _removeSuggestionsOverlay();
     _controller.clear();
+  }
+
+  void _queueSuggestionsFetch() {
+    _debounceTimer?.cancel();
+
+    final query = _controller.text.trim();
+    if (query.isEmpty) {
+      ref.read(titleSearchSuggestionsProvider.notifier).clear();
+      _removeSuggestionsOverlay();
+      return;
+    }
+
+    // 候选请求放在输入框层做防抖，避免把短时间内的击键全部打到后端。
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) {
+        return;
+      }
+      ref
+          .read(titleSearchSuggestionsProvider.notifier)
+          .loadSuggestions(_controller.text);
+    });
+  }
+
+  void _openSuggestion(RecommendAppInfo app) {
+    _debounceTimer?.cancel();
+    ref.read(titleSearchSuggestionsProvider.notifier).clear();
+    _removeSuggestionsOverlay();
+    _focusNode.unfocus();
+    context.goToAppDetail(app.appId, appInfo: app.toInstalledApp());
+  }
+
+  bool _shouldShowSuggestions(TitleSearchSuggestionsState state) {
+    return _focusNode.hasFocus &&
+        _controller.text.trim().isNotEmpty &&
+        state.items.isNotEmpty;
+  }
+
+  void _syncSuggestionsOverlay() {
+    final state = ref.read(titleSearchSuggestionsProvider);
+    if (!_shouldShowSuggestions(state)) {
+      _removeSuggestionsOverlay();
+      return;
+    }
+
+    if (_suggestionsOverlayEntry == null) {
+      _suggestionsOverlayEntry = OverlayEntry(
+        builder: (overlayContext) => _buildSuggestionsOverlay(overlayContext),
+      );
+      Overlay.of(context, rootOverlay: true).insert(_suggestionsOverlayEntry!);
+      return;
+    }
+
+    _suggestionsOverlayEntry!.markNeedsBuild();
+  }
+
+  void _removeSuggestionsOverlay() {
+    _suggestionsOverlayEntry?.remove();
+    _suggestionsOverlayEntry = null;
+  }
+
+  Widget _buildSuggestionsOverlay(BuildContext overlayContext) {
+    final state = ref.read(titleSearchSuggestionsProvider);
+    final renderBox =
+        _searchBoxKey.currentContext?.findRenderObject() as RenderBox?;
+    final width = renderBox?.size.width ?? 534.0;
+
+    return Positioned.fill(
+      child: IgnorePointer(
+        ignoring: false,
+        child: CompositedTransformFollower(
+          link: _suggestionsLayerLink,
+          showWhenUnlinked: false,
+          offset: const Offset(0, 36),
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                width: width,
+                constraints: const BoxConstraints(maxHeight: 240),
+                decoration: BoxDecoration(
+                  color: overlayContext.appColors.surface,
+                  borderRadius: AppRadius.mdRadius,
+                  border: Border.all(
+                    color: overlayContext.appColors.borderSecondary,
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  shrinkWrap: true,
+                  itemCount: state.items.length,
+                  separatorBuilder: (_, __) => Divider(
+                    height: 1,
+                    color: overlayContext.appColors.borderSecondary,
+                  ),
+                  itemBuilder: (context, index) {
+                    final app = state.items[index];
+                    return A11yListItem(
+                      semanticsLabel: app.name,
+                      onTap: () => _openSuggestion(app),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        child: Text(
+                          app.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: overlayContext.appTextStyles.bodyMedium
+                              .copyWith(
+                                color: overlayContext.appColors.textPrimary,
+                              ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 534),
-      height: 32,
-      decoration: BoxDecoration(
-        color: context.appColors.surfaceContainerHighest,
-        borderRadius: AppRadius.lgRadius,
-        border: Border.all(
-          color: _isFocused
-              ? AppColors.primary
-              : context.appColors.borderSecondary,
-          width: 1,
+    ref.watch(titleSearchSuggestionsProvider);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _syncSuggestionsOverlay();
+    });
+
+    return CompositedTransformTarget(
+      link: _suggestionsLayerLink,
+      child: Container(
+        key: _searchBoxKey,
+        constraints: const BoxConstraints(maxWidth: 534),
+        height: 32,
+        decoration: BoxDecoration(
+          color: context.appColors.surfaceContainerHighest,
+          borderRadius: AppRadius.lgRadius,
+          border: Border.all(
+            color: _isFocused
+                ? AppColors.primary
+                : context.appColors.borderSecondary,
+            width: 1,
+          ),
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            GestureDetector(
-              onTap: _submitSearch,
-              behavior: HitTestBehavior.opaque,
-              child: Icon(
-                Icons.search,
-                size: 16,
-                color: _isFocused
-                    ? AppColors.primary
-                    : context.appColors.textTertiary,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                maxLines: 1,
-                decoration: InputDecoration(
-                  hintText: l10n.searchPlaceholder,
-                  // 搜索框 placeholder：14px 常规说明文字
-                  hintStyle: context.appTextStyles.bodyMedium.copyWith(
-                    color: context.appColors.textTertiary,
-                  ),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  disabledBorder: InputBorder.none,
-                  errorBorder: InputBorder.none,
-                  focusedErrorBorder: InputBorder.none,
-                  filled: false,
-                  isDense: true,
-                  // 上下 8px padding 使文字在 32px 容器内垂直居中
-                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                  suffixIconConstraints: const BoxConstraints(
-                    minWidth: 24,
-                    minHeight: 24,
-                  ),
-                  suffixIcon: _controller.text.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(
-                            Icons.close,
-                            size: 16,
-                            color: context.appColors.textTertiary,
-                          ),
-                          onPressed: _clearSearch,
-                          splashRadius: 14,
-                          padding: EdgeInsets.zero,
-                          tooltip: l10n.clearSearch,
-                        )
-                      : null,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: _submitSearch,
+                behavior: HitTestBehavior.opaque,
+                child: Icon(
+                  Icons.search,
+                  size: 16,
+                  color: _isFocused
+                      ? AppColors.primary
+                      : context.appColors.textTertiary,
                 ),
-                // 搜索框输入文字：14px 常规说明文字
-                style: context.appTextStyles.bodyMedium.copyWith(
-                  color: context.appColors.textPrimary,
-                ),
-                textAlignVertical: TextAlignVertical.center,
-                textInputAction: TextInputAction.search,
-                onSubmitted: (_) => _submitSearch(),
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  maxLines: 1,
+                  decoration: InputDecoration(
+                    hintText: l10n.searchPlaceholder,
+                    // 搜索框 placeholder：14px 常规说明文字
+                    hintStyle: context.appTextStyles.bodyMedium.copyWith(
+                      color: context.appColors.textTertiary,
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
+                    errorBorder: InputBorder.none,
+                    focusedErrorBorder: InputBorder.none,
+                    filled: false,
+                    isDense: true,
+                    // 上下 8px padding 使文字在 32px 容器内垂直居中
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                    suffixIconConstraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
+                    suffixIcon: _controller.text.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(
+                              Icons.close,
+                              size: 16,
+                              color: context.appColors.textTertiary,
+                            ),
+                            onPressed: _clearSearch,
+                            splashRadius: 14,
+                            padding: EdgeInsets.zero,
+                            tooltip: l10n.clearSearch,
+                          )
+                        : null,
+                  ),
+                  // 搜索框输入文字：14px 常规说明文字
+                  style: context.appTextStyles.bodyMedium.copyWith(
+                    color: context.appColors.textPrimary,
+                  ),
+                  textAlignVertical: TextAlignVertical.center,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (_) => _submitSearch(),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

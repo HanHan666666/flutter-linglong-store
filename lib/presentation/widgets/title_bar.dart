@@ -344,118 +344,111 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
         _searchBoxKey.currentContext?.findRenderObject() as RenderBox?;
     final width = renderBox?.size.width ?? 534.0;
 
-    return Stack(
-      children: [
-        // 全屏透明层：点击关闭候选面板
-        Positioned.fill(
-          child: GestureDetector(
-            onTap: () {
-              _removeSuggestionsOverlay();
-              _selectedIndex = -1;
-            },
-            behavior: HitTestBehavior.opaque,
-            child: const SizedBox.expand(),
-          ),
-        ),
-        // 候选面板：跟随搜索框定位
-        CompositedTransformFollower(
-          link: _suggestionsLayerLink,
-          showWhenUnlinked: false,
-          offset: const Offset(0, 36),
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                width: width,
-                constraints: const BoxConstraints(maxHeight: 240),
-                decoration: BoxDecoration(
-                  color: overlayContext.appColors.surface,
-                  borderRadius: AppRadius.mdRadius,
-                  border: Border.all(
-                    color: overlayContext.appColors.borderSecondary,
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(6),
-                  shrinkWrap: true,
-                  itemCount: state.items.length,
-                  itemBuilder: (context, index) {
-                    final item = state.items[index];
-                    final isSelected = index == _selectedIndex;
+    // 直接用 Positioned 定位，不依赖 CompositedTransformFollower
+    final boxOffset = _getSearchBoxOffset();
+    final left = boxOffset.dx;
+    final top = boxOffset.dy + 36;
 
-                    return MouseRegion(
-                      onEnter: (_) {
-                        setState(() {
-                          _selectedIndex = index;
-                        });
-                      },
-                      child: GestureDetector(
-                        onTap: () {
-                          debugPrint('[SearchSuggestion] overlay onTap 触发: index=$index, appId=${item.appId}');
-                          _openSuggestion(item);
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? overlayContext.appColors.primaryLight
-                                : Colors.transparent,
-                            borderRadius: AppRadius.xsRadius,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  item.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: overlayContext.appTextStyles.bodyMedium
-                                      .copyWith(
-                                    color: isSelected
-                                        ? AppColors.primary
-                                        : overlayContext.appColors.textPrimary,
-                                  ),
-                                ),
-                              ),
-                              // 选中时显示箭头指示器
-                              if (isSelected)
-                                const Padding(
-                                  padding: EdgeInsets.only(left: 8),
-                                  child: ExcludeSemantics(
-                                    child: Icon(
-                                      Icons.arrow_forward_ios,
-                                      size: 12,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                ),
-                            ],
+    return Positioned(
+      left: left,
+      top: top,
+      width: width,
+      child: Material(
+        elevation: 4,
+        borderRadius: AppRadius.mdRadius,
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 240),
+          decoration: BoxDecoration(
+            color: overlayContext.appColors.surface,
+            borderRadius: AppRadius.mdRadius,
+            border: Border.all(
+              color: overlayContext.appColors.borderSecondary,
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(6),
+            shrinkWrap: true,
+            itemCount: state.items.length,
+            itemBuilder: (context, index) {
+              final item = state.items[index];
+              final isSelected = index == _selectedIndex;
+
+              return MouseRegion(
+                onEnter: (_) {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                },
+                child: GestureDetector(
+                  onTap: () {
+                    debugPrint('[SearchSuggestion] overlay onTap 触发: index=$index, appId=${item.appId}');
+                    _openSuggestion(item);
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? overlayContext.appColors.primaryLight
+                          : Colors.transparent,
+                      borderRadius: AppRadius.xsRadius,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: overlayContext.appTextStyles.bodyMedium
+                                .copyWith(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : overlayContext.appColors.textPrimary,
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
+                        if (isSelected)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 8),
+                            child: ExcludeSemantics(
+                              child: Icon(
+                                Icons.arrow_forward_ios,
+                                size: 12,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
-      ],
+      ),
     );
+  }
+
+  /// 获取搜索框在屏幕上的偏移量
+  Offset _getSearchBoxOffset() {
+    final renderBox =
+        _searchBoxKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return Offset.zero;
+    return renderBox.localToGlobal(Offset.zero);
   }
 
   @override

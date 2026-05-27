@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/logging/app_logger.dart';
 import '../../core/platform/cli_executor.dart';
+import '../../core/storage/cache_service.dart';
 
 part 'app_search_index_provider.g.dart';
 
@@ -90,10 +91,13 @@ class _ScoredEntry {
   final int position;
 }
 
+/// Hive 缓存 key：ll-cli search 原始 JSON
+const _kCacheKey = 'search_index_json';
+
 /// 应用搜索索引 Provider。
 ///
-/// 启动时异步执行 `ll-cli search . --json`，解析后常驻内存。
-/// 加载失败时静默回退为空列表，不阻塞启动。
+/// 启动时优先从 Hive 本地缓存读取（毫秒级），再后台执行 `ll-cli search . --json`
+/// 刷新缓存。下次启动直接命中缓存，无需等待 ll-cli。
 ///
 /// keepAlive: true — 搜索索引是应用级全局数据，不应被 auto-dispose 回收。
 @Riverpod(keepAlive: true)
@@ -105,24 +109,55 @@ class AppSearchIndex extends _$AppSearchIndex {
   }
 
   Future<void> _loadIndex() async {
+    // 1. 先尝试从本地缓存读取
+    final cached = CacheService.get<String>(_kCacheKey);
+    if (cached != null && cached.isNotEmpty) {
+      final entries = parseSearchIndexJson(cached);
+      if (entries.isNotEmpty) {
+        AppLogger.info('[SearchIndex] 命中本地缓存: ${entries.length} 条应用');
+        if (ref.mounted) state = AsyncData(entries);
+        // 后台异步刷新，不阻塞 UI
+        _refreshInBackground();
+        return;
+      }
+    }
+
+    // 2. 无缓存，直接执行 ll-cli
+    await _fetchFromCli();
+  }
+
+  /// 后台执行 ll-cli 刷新索引并更新缓存。
+  Future<void> _refreshInBackground() async {
+    await _fetchFromCli();
+  }
+
+  Future<void> _fetchFromCli() async {
     try {
       final output = await CliExecutor.execute(
         ['search', '.', '--json'],
         timeout: const Duration(seconds: 30),
       );
-      // ll-cli 执行耗时较长，期间 provider 可能已被重建。
       if (!ref.mounted) return;
       if (!output.success) {
-        state = const AsyncData([]);
+        // 首次加载且无缓存时回退空列表
+        if (state is! AsyncData) {
+          state = const AsyncData([]);
+        }
         return;
       }
       final entries = parseSearchIndexJson(output.stdout);
-      AppLogger.info('[SearchIndex] 加载完成: ${entries.length} 条应用');
+      AppLogger.info('[SearchIndex] ll-cli 加载完成: ${entries.length} 条应用');
+      if (!ref.mounted) return;
       state = AsyncData(entries);
+      // 写入本地缓存供下次启动使用
+      await CacheService.set(_kCacheKey, output.stdout);
     } catch (e, stack) {
       if (!ref.mounted) return;
-      AppLogger.warning('[SearchIndex] 加载失败，候选功能不可用', e, stack);
-      state = const AsyncData([]);
+      AppLogger.warning('[SearchIndex] ll-cli 加载失败', e, stack);
+      // 首次加载且无缓存时回退空列表
+      if (state is! AsyncData) {
+        state = const AsyncData([]);
+      }
     }
   }
 }

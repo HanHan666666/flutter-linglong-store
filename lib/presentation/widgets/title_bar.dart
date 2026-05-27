@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../../core/logging/app_logger.dart';
+
 import '../../application/providers/title_search_suggestions_provider.dart';
 import '../../core/config/routes.dart';
 import '../../core/config/theme.dart';
@@ -249,10 +251,15 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
   void _openSuggestion(SuggestionItem item) {
     _debounceTimer?.cancel();
     ref.read(titleSearchSuggestionsProvider.notifier).clear();
-    _removeSuggestionsOverlay();
+    _selectedIndex = -1;
     _focusNode.unfocus();
-    // 只传 appId，详情页自己拉取完整信息。
-    context.goToAppDetail(item.appId);
+    // 先导航再清理 overlay，避免 overlay 销毁后导航失败。
+    try {
+      context.goToAppDetail(item.appId);
+    } catch (e, stack) {
+      AppLogger.error('[SearchSuggestion] 跳转详情页失败: ${item.appId}', e, stack);
+    }
+    _removeSuggestionsOverlay();
   }
 
   bool _shouldShowSuggestions(TitleSearchSuggestionsState state) {
@@ -374,7 +381,6 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
                         setState(() {
                           _selectedIndex = index;
                         });
-                        _syncSuggestionsOverlay();
                       },
                       child: GestureDetector(
                         onTap: () => _openSuggestion(item),

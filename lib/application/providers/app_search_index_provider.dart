@@ -94,7 +94,9 @@ class _ScoredEntry {
 ///
 /// 启动时异步执行 `ll-cli search . --json`，解析后常驻内存。
 /// 加载失败时静默回退为空列表，不阻塞启动。
-@riverpod
+///
+/// keepAlive: true — 搜索索引是应用级全局数据，不应被 auto-dispose 回收。
+@Riverpod(keepAlive: true)
 class AppSearchIndex extends _$AppSearchIndex {
   @override
   AsyncValue<List<SearchSuggestionEntry>> build() {
@@ -108,6 +110,8 @@ class AppSearchIndex extends _$AppSearchIndex {
         ['search', '.', '--json'],
         timeout: const Duration(seconds: 30),
       );
+      // ll-cli 执行耗时较长，期间 provider 可能已被重建。
+      if (!ref.mounted) return;
       if (!output.success) {
         state = const AsyncData([]);
         return;
@@ -116,6 +120,7 @@ class AppSearchIndex extends _$AppSearchIndex {
       AppLogger.info('[SearchIndex] 加载完成: ${entries.length} 条应用');
       state = AsyncData(entries);
     } catch (e, stack) {
+      if (!ref.mounted) return;
       AppLogger.warning('[SearchIndex] 加载失败，候选功能不可用', e, stack);
       state = const AsyncData([]);
     }

@@ -12,6 +12,8 @@ part of 'app_search_index_provider.dart';
 ///
 /// 启动时异步执行 `ll-cli search . --json`，解析后常驻内存。
 /// 加载失败时静默回退为空列表，不阻塞启动。
+///
+/// keepAlive: true — 搜索索引是应用级全局数据，不应被 auto-dispose 回收。
 
 @ProviderFor(AppSearchIndex)
 final appSearchIndexProvider = AppSearchIndexProvider._();
@@ -20,6 +22,8 @@ final appSearchIndexProvider = AppSearchIndexProvider._();
 ///
 /// 启动时异步执行 `ll-cli search . --json`，解析后常驻内存。
 /// 加载失败时静默回退为空列表，不阻塞启动。
+///
+/// keepAlive: true — 搜索索引是应用级全局数据，不应被 auto-dispose 回收。
 final class AppSearchIndexProvider
     extends
         $NotifierProvider<
@@ -30,13 +34,15 @@ final class AppSearchIndexProvider
   ///
   /// 启动时异步执行 `ll-cli search . --json`，解析后常驻内存。
   /// 加载失败时静默回退为空列表，不阻塞启动。
+  ///
+  /// keepAlive: true — 搜索索引是应用级全局数据，不应被 auto-dispose 回收。
   AppSearchIndexProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'appSearchIndexProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -58,12 +64,14 @@ final class AppSearchIndexProvider
   }
 }
 
-String _$appSearchIndexHash() => r'c5a30c70273a85d10e9fc8fd00bb799cb10d3374';
+String _$appSearchIndexHash() => r'1b8095326ca16c335eb49d51296c5f96806af167';
 
 /// 应用搜索索引 Provider。
 ///
 /// 启动时异步执行 `ll-cli search . --json`，解析后常驻内存。
 /// 加载失败时静默回退为空列表，不阻塞启动。
+///
+/// keepAlive: true — 搜索索引是应用级全局数据，不应被 auto-dispose 回收。
 
 abstract class _$AppSearchIndex
     extends $Notifier<AsyncValue<List<SearchSuggestionEntry>>> {

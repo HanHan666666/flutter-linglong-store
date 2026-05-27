@@ -249,14 +249,18 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
   }
 
   void _openSuggestion(SuggestionItem item) {
+    debugPrint('[SearchSuggestion] _openSuggestion 被调用: appId=${item.appId}, name=${item.name}');
     _debounceTimer?.cancel();
     ref.read(titleSearchSuggestionsProvider.notifier).clear();
     _selectedIndex = -1;
     _focusNode.unfocus();
     // 先导航再清理 overlay，避免 overlay 销毁后导航失败。
     try {
+      debugPrint('[SearchSuggestion] 准备跳转: /app/${item.appId}');
       context.goToAppDetail(item.appId);
+      debugPrint('[SearchSuggestion] 跳转调用完成');
     } catch (e, stack) {
+      debugPrint('[SearchSuggestion] 跳转异常: $e\n$stack');
       AppLogger.error('[SearchSuggestion] 跳转详情页失败: ${item.appId}', e, stack);
     }
     _removeSuggestionsOverlay();
@@ -276,6 +280,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
     }
 
     if (_suggestionsOverlayEntry == null) {
+      debugPrint('[SearchSuggestion] 创建 overlay, ${state.items.length} 个候选');
       _suggestionsOverlayEntry = OverlayEntry(
         builder: (overlayContext) => _buildSuggestionsOverlay(overlayContext),
       );
@@ -317,6 +322,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
         _syncSuggestionsOverlay();
         return KeyEventResult.handled;
       case LogicalKeyboardKey.enter:
+        debugPrint('[SearchSuggestion] Enter 键: selectedIndex=$_selectedIndex, items.length=${items.length}');
         if (_selectedIndex >= 0 && _selectedIndex < items.length) {
           _openSuggestion(items[_selectedIndex]);
         } else {
@@ -383,7 +389,10 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
                         });
                       },
                       child: GestureDetector(
-                        onTap: () => _openSuggestion(item),
+                        onTap: () {
+                          debugPrint('[SearchSuggestion] overlay onTap 触发: index=$index, appId=${item.appId}');
+                          _openSuggestion(item);
+                        },
                         child: Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(

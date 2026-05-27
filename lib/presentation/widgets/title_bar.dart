@@ -198,12 +198,14 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
       return;
     }
 
-    // 失焦后延迟收起，给候选点击事件留出命中窗口。
-    Future<void>.delayed(const Duration(milliseconds: 200), () {
+    // 失焦后延迟关闭 overlay，给候选点击留足窗口。
+    // 候选面板的 GestureDetector 在 overlay 内，失焦不会立即影响它。
+    Future<void>.delayed(const Duration(milliseconds: 300), () {
       if (!mounted || _focusNode.hasFocus) {
         return;
       }
       _removeSuggestionsOverlay();
+      _selectedIndex = -1;
     });
   }
 

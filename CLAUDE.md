@@ -272,7 +272,8 @@ Semantics(
 测试文件位于 `test/unit/core/accessibility/a11y_semantics_test.dart`。
 
 ## 变更记录
-- 2026-05-24：Loong64 发布链当前采用“nightly 异步补传 + release 并入主流程”的收敛策略：新增 `nightly-loong64.yml` 在主 `Nightly` 成功后补传 `loong64` 的 `bundle + deb` 并刷新 nightly release notes / `hashes.sha256`；正式 `release.yml` 并入 Loong64 `bundle + deb` 构建，但 `publish-aur` 与 `update-uos-store` 仍只允许消费 `amd64 + arm64`，禁止把 Loong64 资产误接入 AUR/UOS。Loong64 构建统一走 `build/scripts/build-loong64-in-container.sh` + 外部 `Flutter-Dart-loong64/flutter-loong64-releases` SDK，当前不要尝试在未验证上游工具链前扩到 Loong64 `AppImage`。
+- 2026-05-27：标题栏搜索候选数据源从后端 `/visit/getSearchAppList` 切换为 `ll-cli search . --json` 本地内存索引（`AppSearchIndex` provider）；新增鼠标 hover 高亮、键盘 ↑↓ 选中、Enter/点击跳转详情、Escape 关闭面板等交互；候选防抖从 300ms 降为 100ms；候选项类型从 `RecommendAppInfo` 改为轻量 `SuggestionItem`；候选跳转详情只传 `appId`，详情页自行拉取完整信息。
+- 2026-05-24：Loong64 发布链当前采用”nightly 异步补传 + release 并入主流程”的收敛策略：新增 `nightly-loong64.yml` 在主 `Nightly` 成功后补传 `loong64` 的 `bundle + deb` 并刷新 nightly release notes / `hashes.sha256`；正式 `release.yml` 并入 Loong64 `bundle + deb` 构建，但 `publish-aur` 与 `update-uos-store` 仍只允许消费 `amd64 + arm64`，禁止把 Loong64 资产误接入 AUR/UOS。Loong64 构建统一走 `build/scripts/build-loong64-in-container.sh` + 外部 `Flutter-Dart-loong64/flutter-loong64-releases` SDK，当前不要尝试在未验证上游工具链前扩到 Loong64 `AppImage`。
 - 2026-04-29：发行版特殊提示/特殊适配统一走 `LinuxDistributionResolver -> LinglongEnvCheckResult.distribution -> InstallMessages guidance scenario` 链路；启动期环境安装提示由 `LinglongEnvDialog` 按发行版场景渲染，安装失败提醒统一在 `InstallQueue.markFailed()` 收口。新增发行版规则时，禁止重新扩散 `isUos` / `isDeepin` 一类布尔判断。
 - 2026-04-21：`nightly.yml` 不再只做 `amd64`；必须同时构建 `amd64 + arm64`，其中 `arm64` 优先走 `ubuntu-24.04-arm` 原生 runner，失败/取消时回退到 QEMU；Nightly 的签名、Release notes、GitHub prerelease 与 `linglong-store-nightly-bin` AUR 都必须按双架构资产（`x86_64 + aarch64`）统一处理，禁止继续保留 amd64-only 假设。
 - 2026-03-23：应用详情页评论区统一对接 `/app/getAppCommentList` 与 `/app/saveAppComment`；当前只支持匿名文本评论和只读的帮助数展示，不允许前端擅自增加评分、头像、点赞提交等后端不存在的交互。评论提交成功后必须回源刷新最新评论，不能本地伪造一条临时评论。

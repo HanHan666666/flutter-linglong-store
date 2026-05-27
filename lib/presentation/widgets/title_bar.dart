@@ -344,10 +344,21 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
         _searchBoxKey.currentContext?.findRenderObject() as RenderBox?;
     final width = renderBox?.size.width ?? 534.0;
 
-    return Positioned.fill(
-      child: IgnorePointer(
-        ignoring: false,
-        child: CompositedTransformFollower(
+    return Stack(
+      children: [
+        // 全屏透明层：点击关闭候选面板
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: () {
+              _removeSuggestionsOverlay();
+              _selectedIndex = -1;
+            },
+            behavior: HitTestBehavior.opaque,
+            child: const SizedBox.expand(),
+          ),
+        ),
+        // 候选面板：跟随搜索框定位
+        CompositedTransformFollower(
           link: _suggestionsLayerLink,
           showWhenUnlinked: false,
           offset: const Offset(0, 36),
@@ -443,7 +454,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 

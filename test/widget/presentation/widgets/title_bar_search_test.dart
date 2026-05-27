@@ -223,10 +223,10 @@ Widget _buildRouterApp(MockAppApiService mockApiService) {
 
 HttpResponse<AppListResponse> _buildSearchResponse() {
   return HttpResponse(
-    AppListResponse(
+    const AppListResponse(
       code: 200,
       data: AppListPagedData(
-        records: const [
+        records: [
           AppListItemDTO(
             appId: 'org.example.browser',
             appName: '浏览器',

@@ -6,8 +6,8 @@ import 'package:linglong_store/domain/models/recommend_models.dart';
 void main() {
   group('mapAppListToRecommendApps', () {
     test('keeps detail identity fields when converting search results', () {
-      final data = AppListPagedData(
-        records: const [
+      const data = AppListPagedData(
+        records: [
           AppListItemDTO(
             appId: 'org.example.browser',
             appName: '浏览器',

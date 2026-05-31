@@ -25,5 +25,18 @@ void main() {
         equals('Preparing sandbox permissions'),
       );
     });
+
+    test('keeps long unknown status text complete for tooltip and copy', () {
+      final messages = InstallMessages.fromLocale(const Locale('zh'));
+      const longMessage =
+          'Resolving dependency org.deepin.runtime.webengine version 25.2.1 '
+          'from repo stable with additional package metadata';
+
+      expect(messages.getStatusFromMessage(longMessage), equals(longMessage));
+      expect(
+        messages.getStatusFromMessage(longMessage),
+        isNot(endsWith('...')),
+      );
+    });
   });
 }

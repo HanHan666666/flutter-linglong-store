@@ -120,7 +120,15 @@ extension InstallTaskX on InstallTask {
   }
 
   /// 对旧任务或异常任务兜底，避免把整段 JSON 原文直接渲染到 UI。
-  String? get displayMessage => _extractMessageText(message);
+  String? get displayMessage {
+    final normalizedMessage = _extractMessageText(message);
+    final normalizedRawMessage = _extractMessageText(rawMessage);
+    if (_isEllipsizedPrefixOf(normalizedMessage, normalizedRawMessage)) {
+      // 兼容旧版本持久化的 50 字符省略文案，Tooltip 和复制必须回到完整原文。
+      return normalizedRawMessage;
+    }
+    return normalizedMessage;
+  }
 
   /// 保留原始 message 里的纯文本内容，供诊断或次级展示使用。
   String? get displayRawMessage => _extractMessageText(rawMessage);
@@ -177,5 +185,13 @@ extension InstallTaskX on InstallTask {
     }
 
     return trimmed;
+  }
+
+  static bool _isEllipsizedPrefixOf(String? value, String? fullValue) {
+    if (value == null || fullValue == null || !value.endsWith('...')) {
+      return false;
+    }
+    final prefix = value.substring(0, value.length - 3);
+    return fullValue.length > value.length && fullValue.startsWith(prefix);
   }
 }

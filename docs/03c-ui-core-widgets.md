@@ -292,6 +292,16 @@ TabBar(
            安装完成 ✓
 ```
 
+### 4.5 Tooltip 与复制完整文本约束
+
+Tooltip 的职责是补足界面中被视觉省略的内容，因此数据层、状态层和 Provider 层禁止为了适配 UI 宽度提前对业务文案做 `substring + ...` 截断。界面需要省略时，只能在具体 `Text` 组件上使用 `maxLines` 与 `TextOverflow.ellipsis` 做视觉处理，传入 `Tooltip.message` / `Tooltip.richMessage`、`Semantics.label` 和复制按钮的源文本必须保留完整内容。
+
+安装/更新进度尤其要遵守这一约定：
+- `InstallProgress.message` / `InstallTask.message` 承载完整的规范化展示文案，不能保存已经带 `...` 的短文案。
+- `rawMessage` / `errorDetail` 继续保留原始诊断信息；如果遇到历史持久化任务里 `message` 已经是 `xxx...`，展示层必须能从 `rawMessage` 还原完整文本后再交给 Tooltip 和复制按钮。
+- 失败态复制按钮优先复制完整错误详情；普通状态复制按钮复制完整状态文本，不能复制已经视觉省略后的内容。
+- 回归测试必须覆盖“长状态文本不被业务层截断”“Tooltip 使用完整文本”“复制按钮复制完整文本”三类场景。
+
 ---
 
 ## 五、SpeedTool（网络速度工具）

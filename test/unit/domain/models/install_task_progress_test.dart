@@ -29,5 +29,20 @@ void main() {
       expect(task.progressPercentLabel, '74%');
       expect(task.progressValue, closeTo(0.74, 0.0001));
     });
+
+    test(
+      'restores full raw message when persisted display text is ellipsized',
+      () {
+        const rawMessage =
+            'Resolving dependency org.deepin.runtime.webengine version 25.2.1 '
+            'from repo stable with additional package metadata';
+        final task = buildTask(0.42).copyWith(
+          message: '${rawMessage.substring(0, 50)}...',
+          rawMessage: rawMessage,
+        );
+
+        expect(task.displayMessage, rawMessage);
+      },
+    );
   });
 }

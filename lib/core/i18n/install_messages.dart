@@ -125,10 +125,7 @@ class InstallMessages {
     } else if (lower.contains('success') || lower.contains('completed')) {
       return _l10n.installStatusCompleted;
     } else if (plainMessage.isNotEmpty) {
-      // 截取前50个字符作为状态
-      if (plainMessage.length > 50) {
-        return '${plainMessage.substring(0, 50)}...';
-      }
+      // 保留完整文案给 Tooltip、复制和无障碍语义使用；视觉截断只允许在 UI 层处理。
       return plainMessage;
     }
     return _l10n.installStatusProcessing;
@@ -237,11 +234,13 @@ class InstallMessages {
       (
         LinuxDistributionId.uos,
         LinuxDistributionGuidanceScenario.envInstallDialog,
-      ) => _l10n.uosEnvInstallHint,
+      ) =>
+        _l10n.uosEnvInstallHint,
       (
         LinuxDistributionId.uos,
         LinuxDistributionGuidanceScenario.appInstallFailure,
-      ) => _l10n.uosAppInstallFailureHint,
+      ) =>
+        _l10n.uosAppInstallFailureHint,
       _ => null,
     };
   }

@@ -280,6 +280,7 @@ Semantics(
 测试文件位于 `test/unit/core/accessibility/a11y_semantics_test.dart`。
 
 ## 变更记录
+- 2026-05-31：Tooltip/复制文案完整性约定——Tooltip 是查看完整内容的入口，业务层、状态层和 Provider 层禁止为了 UI 宽度提前 `substring + ...` 截断文案；视觉省略只能在具体 `Text(maxLines, overflow: TextOverflow.ellipsis)` 上处理。传给 `Tooltip.message`/`richMessage`、`Semantics.label` 和复制按钮的必须是完整文本；安装/更新状态如遇历史 `message` 已带 `...`，必须从 `rawMessage/errorDetail` 还原完整内容，复制按钮不得复制省略后的短文案。
 - 2026-05-31：安装/更新任务取消必须以系统级 `pkexec killall -15 ll-cli ll-package-manager` 成功为准；用户取消授权或 killall 失败时，`InstallQueue.cancelTask()` 必须返回 `false` 并保持当前任务 `Installing`，不得清空 `currentTask`、写入 `InstallStatus.cancelled` 历史，或仅凭 Dart 侧 `process.kill()` 判定取消成功。
 - 2026-05-27：标题栏搜索候选统一复用 `/visit/getSearchAppList`，候选列表仅展示应用名称；点击候选直接进入详情页，按 `Enter` 或点击搜索图标继续进入 `/search_list`。候选与搜索结果进入详情页时，必须一并透传 `appId + arch + repoName + module`，禁止再丢失身份字段后依赖详情接口回退匹配。
 - 2026-05-24：Loong64 发布链当前采用“nightly 异步补传 + release 并入主流程”的收敛策略：新增 `nightly-loong64.yml` 在主 `Nightly` 成功后补传 `loong64` 的 `bundle + deb` 并刷新 nightly release notes / `hashes.sha256`；正式 `release.yml` 并入 Loong64 `bundle + deb` 构建，但 `publish-aur` 与 `update-uos-store` 仍只允许消费 `amd64 + arm64`，禁止把 Loong64 资产误接入 AUR/UOS。Loong64 构建统一走 `build/scripts/build-loong64-in-container.sh` + 外部 `Flutter-Dart-loong64/flutter-loong64-releases` SDK，当前不要尝试在未验证上游工具链前扩到 Loong64 `AppImage`。

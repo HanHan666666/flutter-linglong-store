@@ -577,9 +577,9 @@ class _TaskCardState extends State<_TaskCard> {
           children: [
             Expanded(
               child: Tooltip(
-                richMessage: TextSpan(
-                  text: message != null && message.isNotEmpty ? message : '处理中',
-                ),
+                message: message != null && message.isNotEmpty
+                    ? message
+                    : '处理中',
                 constraints: const BoxConstraints(maxWidth: 500),
                 child: Text(
                   message != null && message.isNotEmpty ? message : '处理中',

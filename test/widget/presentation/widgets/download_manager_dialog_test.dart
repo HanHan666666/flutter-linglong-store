@@ -139,6 +139,63 @@ void main() {
       );
     });
 
+    testWidgets('active task progress tooltip keeps full raw message text', (
+      tester,
+    ) async {
+      const fullStatus =
+          'Resolving dependency org.deepin.runtime.webengine version 25.2.1 '
+          'from repo stable with additional package metadata';
+      final ellipsizedStatus = '${fullStatus.substring(0, 50)}...';
+      final installQueue = TestInstallQueue(
+        initialState: InstallQueueState(
+          currentTask: InstallTask(
+            id: 'task-1',
+            appId: 'org.example.demo',
+            appName: 'Demo',
+            kind: InstallTaskKind.install,
+            status: InstallStatus.installing,
+            progress: 0.42,
+            message: ellipsizedStatus,
+            rawMessage: fullStatus,
+            createdAt: DateTime.now().millisecondsSinceEpoch,
+          ),
+          isProcessing: true,
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            installQueueProvider.overrideWith(() => installQueue),
+            networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+          ],
+          child: MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: Center(
+                    child: FilledButton(
+                      onPressed: () => showDownloadManagerDialog(context),
+                      child: const Text('open'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip(fullStatus), findsOneWidget);
+      expect(find.byTooltip(ellipsizedStatus), findsNothing);
+    });
+
     testWidgets(
       'shows slow install hint when progress stalls near completion',
       (tester) async {

@@ -233,6 +233,67 @@ void main() {
       );
     });
 
+    testWidgets('active install status tooltip and copy use full raw text', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(760, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      const fullStatus =
+          'Resolving dependency org.deepin.runtime.webengine version 25.2.1 '
+          'from repo stable with additional package metadata';
+      final ellipsizedStatus = '${fullStatus.substring(0, 50)}...';
+
+      const clipboardChannel = SystemChannels.platform;
+      MethodCall? clipboardCall;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(clipboardChannel, (call) async {
+            clipboardCall = call;
+            return null;
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(clipboardChannel, null);
+      });
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          appId: 'org.example.demo',
+          uninstallService: _RecordingUninstallService(),
+          detailState: _detailState(versions: const []),
+          installedApps: const [],
+          installQueueState: InstallQueueState(
+            currentTask: InstallTask(
+              id: 'active-task',
+              appId: 'org.example.demo',
+              appName: 'Demo',
+              version: '2.0.0',
+              status: InstallStatus.installing,
+              message: ellipsizedStatus,
+              rawMessage: fullStatus,
+              createdAt: DateTime.now().millisecondsSinceEpoch,
+            ),
+            isProcessing: true,
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.byTooltip(fullStatus), findsOneWidget);
+      expect(find.byTooltip(ellipsizedStatus), findsNothing);
+
+      await tester.tap(find.widgetWithText(TextButton, '复制'));
+      await tester.pump();
+
+      expect(clipboardCall?.method, equals('Clipboard.setData'));
+      expect(
+        clipboardCall?.arguments,
+        equals(<String, dynamic>{'text': fullStatus}),
+      );
+    });
+
     testWidgets(
       'restored failed task copies error message when detail is absent',
       (tester) async {

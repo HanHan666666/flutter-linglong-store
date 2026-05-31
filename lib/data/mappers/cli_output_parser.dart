@@ -329,7 +329,8 @@ class CliOutputParser {
         caseSensitive: false,
       ).firstMatch(line);
       if (downloadingMatch != null) {
-        info.progress = (double.tryParse(downloadingMatch.group(1)!) ?? 0.0) / 100;
+        info.progress =
+            (double.tryParse(downloadingMatch.group(1)!) ?? 0.0) / 100;
       }
     }
 
@@ -345,7 +346,8 @@ class CliOutputParser {
         caseSensitive: false,
       ).firstMatch(line);
       if (installingMatch != null) {
-        info.progress = (double.tryParse(installingMatch.group(1)!) ?? 0.0) / 100;
+        info.progress =
+            (double.tryParse(installingMatch.group(1)!) ?? 0.0) / 100;
       }
     }
 
@@ -684,10 +686,7 @@ class InstallErrorCode {
     } else if (lower.contains('success') || lower.contains('completed')) {
       return '安装完成';
     } else if (message.isNotEmpty) {
-      // 截取前50个字符作为状态
-      if (message.length > 50) {
-        return '${message.substring(0, 50)}...';
-      }
+      // 保留完整文案给 Tooltip、复制和无障碍语义使用；视觉截断只允许在 UI 层处理。
       return message;
     }
     return '正在处理';

@@ -703,4 +703,18 @@ com.example.app2          2.0.0
       expect(info.rawLine, equals(line));
     });
   });
+
+  group('getStatusFromMessage', () {
+    test('should keep long unknown messages complete', () {
+      const longMessage =
+          'Resolving dependency org.deepin.runtime.webengine version 25.2.1 '
+          'from repo stable with additional package metadata';
+
+      expect(InstallErrorCode.getStatusFromMessage(longMessage), longMessage);
+      expect(
+        InstallErrorCode.getStatusFromMessage(longMessage),
+        isNot(endsWith('...')),
+      );
+    });
+  });
 }

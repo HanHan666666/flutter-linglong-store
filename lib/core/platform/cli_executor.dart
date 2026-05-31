@@ -404,8 +404,8 @@ class CliExecutor {
 
   /// 取消正在执行的进程（增强版，参考 Rust 版本实现）
   ///
-  /// 1. 先通过内部机制终止 Dart 进程
-  /// 2. 使用 pkexec killall 终止 ll-cli 和 ll-package-manager 进程
+  /// 1. 使用 pkexec killall 终止 ll-cli 和 ll-package-manager 进程
+  /// 2. 系统级终止成功后，再通过内部机制清理 Dart 进程
   ///
   /// 这样可以确保安装相关的所有进程都被正确终止。
   ///
@@ -414,8 +414,8 @@ class CliExecutor {
   /// [killPackageMananger] 是否同时终止 ll-package-manager（默认 true）
   ///
   /// 返回：
-  /// - `true` - 内部进程终止成功 或 系统级 killall 执行成功
-  /// - `false` - 没有找到活跃进程且系统级终止也失败
+  /// - `true` - 系统级 killall 执行成功，目标安装进程已确认终止或不存在
+  /// - `false` - pkexec 授权取消、权限失败，或系统级终止失败
   static Future<bool> cancelWithSystemKill(
     String processId, {
     bool force = false,
@@ -423,10 +423,11 @@ class CliExecutor {
   }) async {
     AppLogger.info('[CLI] 开始系统级取消: $processId');
 
-    // 1. 先通过内部机制终止 Dart 进程
-    final internalCancelled = cancel(processId, force: force);
+    // 必须先确认 pkexec/killall 成功，再清理 Dart 侧进程引用。
+    // 否则用户取消授权时会误把“请求取消”当成“取消成功”。
+    bool internalCancelled = false;
 
-    // 2. 使用 pkexec killall 终止 ll-cli 和 ll-package-manager
+    // 使用 pkexec killall 终止 ll-cli 和 ll-package-manager
     // 参考 Rust 版本: pkexec killall -15 ll-cli ll-package-manager
     bool systemKillSuccess = false;
     try {
@@ -460,8 +461,12 @@ class CliExecutor {
       AppLogger.error('[CLI] 系统级进程终止异常', e, stack);
     }
 
-    // 只要内部取消或系统级终止任一成功，就认为取消成功
-    final success = internalCancelled || systemKillSuccess;
+    if (systemKillSuccess) {
+      internalCancelled = cancel(processId, force: force);
+    }
+
+    // 安装取消依赖系统级 killall 的结果；内部 kill 只做本进程资源收尾。
+    final success = systemKillSuccess;
     AppLogger.info(
       '[CLI] 系统级取消完成: $processId (内部: $internalCancelled, 系统: $systemKillSuccess, 结果: $success)',
     );

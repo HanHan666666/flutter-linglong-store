@@ -244,26 +244,30 @@ sequenceDiagram
     User->>UI: 点击"取消安装"
     UI->>Queue: cancelInstall(appId)
     Queue->>Repo: cancelInstall(appId)
-    Repo->>Repo: 设置取消标志 _cancelFlags[processId] = true
 
-    Note over Repo,CLI: 第一阶段：内部进程终止
+    Note over Repo,CLI: 第一阶段：系统级进程终止
 
     Repo->>CLI: cancelWithSystemKill(processId)
-    CLI->>CLI: 查找 _activeProcesses[processId]
-    CLI->>CLI: 发送取消信号 _cancelSignals[processId].complete()
-    CLI->>Process: process.kill(SIGTERM)
-
-    Note over CLI,System: 第二阶段：系统级进程终止
-
     CLI->>System: pkexec killall -15 ll-cli ll-package-manager
-    System->>Process: SIGTERM 优雅终止
-    Process-->>CLI: 进程退出
-    CLI-->>Repo: cancelWithSystemKill 完成
-
-    Repo->>Repo: 清理 PID 记录 _activeProcessPids.remove(processId)
-    Repo-->>Queue: 取消完成
-    Queue->>UI: 状态更新为 Cancelled
-    UI->>User: 显示"安装已取消"
+    alt 授权成功且 killall 成功
+        System->>Process: SIGTERM 优雅终止
+        CLI->>CLI: 查找 _activeProcesses[processId]
+        CLI->>CLI: 发送取消信号 _cancelSignals[processId].complete()
+        CLI->>Process: process.kill(SIGTERM)
+        Process-->>CLI: 进程退出
+        CLI-->>Repo: cancelWithSystemKill 返回 true
+        Repo->>Repo: 设置取消标志 _cancelFlags[processId] = true
+        Repo->>Repo: 清理 PID 记录 _activeProcessPids.remove(processId)
+        Repo-->>Queue: 取消完成
+        Queue->>UI: 状态更新为 Cancelled
+        UI->>User: 显示"安装已取消"
+    else 用户取消授权或 killall 失败
+        System-->>CLI: exitCode != 0/1
+        CLI-->>Repo: cancelWithSystemKill 返回 false
+        Repo-->>Queue: 取消失败
+        Queue->>UI: 保持 Installing 状态
+        UI->>User: 不显示"安装已取消"
+    end
 ```
 
 ### 5-A.2 为什么需要系统级终止
@@ -285,14 +289,15 @@ Flutter 通过 `Process.start` 启动的子进程存在以下问题：
 stateDiagram-v2
     [*] --> Idle
     Idle --> CancelRequested: 用户点击取消
-    CancelRequested --> InternalCancel: 设置取消标志
-    InternalCancel --> SystemKill: pkexec killall
-    SystemKill --> CleaningUp: 进程已终止
+    CancelRequested --> SystemKill: pkexec killall
+    SystemKill --> InternalCancel: killall 成功后清理 Dart 进程
+    SystemKill --> Installing: 授权取消或 killall 失败
+    InternalCancel --> CleaningUp: 进程已终止
     CleaningUp --> Cancelled: 清理 PID/标志
     Cancelled --> [*]
 
-    note right of CancelRequested: _cancelFlags[processId] = true
     note right of SystemKill: pkexec killall -15 ll-cli ll-package-manager
+    note right of InternalCancel: killall 成功后才能设置取消标志
 ```
 
 ### 5-A.4 关键实现约束
@@ -319,13 +324,15 @@ stateDiagram-v2
 
 4. **资源清理顺序**：
    ```dart
-   // 1. 设置取消标志
-   _cancelFlags[processId] = true;
-   // 2. 系统级终止
-   await CliExecutor.cancelWithSystemKill(processId, ...);
-   // 3. 清理 PID 记录
+   // 1. 系统级终止
+   final success = await CliExecutor.cancelWithSystemKill(processId, ...);
+   // 2. 成功后设置取消标志
+   if (success) _cancelFlags[processId] = true;
+   // 3. 成功后清理 PID 记录
    _activeProcessPids.remove(processId);
    ```
+
+5. **授权取消不能等价为安装取消**：`pkexec` 授权窗口被用户取消时，`killall` 没有执行成功，`ll-package-manager` 仍可能继续运行。此时 `InstallQueue.cancelTask()` 必须返回 `false`，保持当前任务为 `Installing`，不能清空 `currentTask` 或写入 `InstallStatus.cancelled` 历史。
 
 ### 5-A.5 从 Rust 迁移的设计要点
 
@@ -352,10 +359,11 @@ bool _isUserCancelled = false; // 用户取消标志
 ```
 
 当用户点击取消时：
-1. `InstallQueue.cancelTask()` 调用 `markUserCancelled()` 设置用户取消标志
-2. `LinglongCliRepositoryImpl.cancelInstall()` 设置 `_cancelFlags[processId] = true`
-3. 安装流检测到 `_cancelFlags[processId] == true`，发送 `cancelled` 状态
-4. `_handleProgress()` 检测到 `cancelled` 状态，调用 `_handleCancelledProgress()`
+1. `InstallQueue.cancelTask()` 调用 `LinglongCliRepository.cancelOperation()`
+2. `LinglongCliRepositoryImpl.cancelOperation()` 调用 `CliExecutor.cancelWithSystemKill()`
+3. 只有 `pkexec killall` 返回成功时，仓储层才设置 `_cancelFlags[processId] = true`
+4. 只有 `cancelOperation()` 返回 `true` 时，`InstallQueue.cancelTask()` 才调用 `markUserCancelled()` 并写入 `InstallStatus.cancelled`
+5. 若用户取消 `pkexec` 授权或 `killall` 失败，当前任务保持 `Installing`
 
 **2. 系统级终止的返回值处理**
 
@@ -370,6 +378,8 @@ if (result.exitCode == 0 || result.exitCode == 1) {
   systemKillSuccess = true;
 }
 ```
+
+`process.kill()` 只用于系统级 kill 成功后的 Dart 侧资源收尾，不能单独作为取消成功依据。
 
 **3. 取消与失败的区分**
 

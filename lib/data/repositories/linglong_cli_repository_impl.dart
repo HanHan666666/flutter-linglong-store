@@ -243,8 +243,9 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         );
       } else {
         final confirmMessage = _messages.confirmFailed(operationLabel);
-        final targetRef =
-            version != null && version.isNotEmpty ? '$appId/$version' : appId;
+        final targetRef = version != null && version.isNotEmpty
+            ? '$appId/$version'
+            : appId;
 
         yield InstallProgress(
           appId: appId,
@@ -253,7 +254,8 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
           message: confirmMessage,
           error: confirmMessage,
           rawMessage: confirmMessage,
-          errorDetail: 'Installed target not found after $operationLabel: $targetRef',
+          errorDetail:
+              'Installed target not found after $operationLabel: $targetRef',
         );
       }
     } on CliTimeoutException catch (e) {
@@ -449,23 +451,20 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
 
     AppLogger.info('[LinglongCli] 开始取消$operationLabel: $appId');
 
-    // Rust 版本本质是杀掉当前 ll-cli / ll-package-manager，
-    // 这里同时标记 install / update 两类流为已取消，避免流结束前继续上报。
-    _setOperationCancelled(appId);
-
     final success = await _cancelWithSystemKill(
       processId,
       force: true,
       killPackageMananger: true,
     );
 
-    _activeProcessPids.remove(processId);
-
     if (success) {
+      // 只有系统级 kill 确认成功后，安装流才允许切换为 cancelled。
+      _setOperationCancelled(appId);
+      _activeProcessPids.remove(processId);
       AppLogger.info('[LinglongCli] 取消$operationLabel成功: $appId');
     } else {
       AppLogger.warning(
-        '[LinglongCli] 取消$operationLabel返回 false（可能无活跃进程）: $appId',
+        '[LinglongCli] 取消$operationLabel返回 false（系统级进程终止未成功）: $appId',
       );
     }
 

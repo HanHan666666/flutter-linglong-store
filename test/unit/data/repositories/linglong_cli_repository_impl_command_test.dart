@@ -9,10 +9,14 @@ import 'package:linglong_store/core/network/api_exceptions.dart';
 import 'package:linglong_store/core/platform/cli_executor.dart';
 import 'package:linglong_store/data/repositories/linglong_cli_repository_impl.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
+import 'package:linglong_store/domain/models/install_task.dart';
 
 class _RecordingCliExecutor {
   final List<List<String>> executeCalls = [];
   final List<List<String>> progressCalls = [];
+  final List<String> cancelProcessIds = [];
+  final List<bool> cancelForceValues = [];
+  final List<bool> cancelKillPackageManagerValues = [];
   final Map<String, CliOutput> executeOutputsByCommand = {};
   final Map<String, List<CliOutput>> executeOutputSequencesByCommand = {};
   CliOutput nextExecuteOutput = const CliOutput(
@@ -20,6 +24,7 @@ class _RecordingCliExecutor {
     stderr: '',
     exitCode: 0,
   );
+  bool cancelWithSystemKillResult = true;
   List<ProgressEvent> progressEvents = const [
     ProgressEvent(
       line: '{"message":"Install success"}',
@@ -61,7 +66,10 @@ class _RecordingCliExecutor {
     bool force = true,
     bool killPackageMananger = true,
   }) async {
-    return true;
+    cancelProcessIds.add(processId);
+    cancelForceValues.add(force);
+    cancelKillPackageManagerValues.add(killPackageMananger);
+    return cancelWithSystemKillResult;
   }
 }
 
@@ -170,7 +178,8 @@ void main() {
         expect(events.last.error, contains('无法确认安装结果'));
         expect(
           executor.executeCalls.any(
-            (args) => args.length == 2 && args[0] == 'list' && args[1] == '--json',
+            (args) =>
+                args.length == 2 && args[0] == 'list' && args[1] == '--json',
           ),
           isTrue,
         );
@@ -232,6 +241,27 @@ void main() {
         '--json',
         'org.example.demo',
       ]);
+    });
+
+    test('cancelOperation returns false when system kill fails', () async {
+      final executor = _RecordingCliExecutor()
+        ..cancelWithSystemKillResult = false;
+      final repository = LinglongCliRepositoryImpl.withExecutor(
+        InstallMessages.fromLocale(const Locale('zh')),
+        execute: executor.execute,
+        executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+        cancelWithSystemKill: executor.cancelWithSystemKill,
+      );
+
+      final result = await repository.cancelOperation(
+        'org.example.demo',
+        kind: InstallTaskKind.install,
+      );
+
+      expect(result, isFalse);
+      expect(executor.cancelProcessIds, ['install_org.example.demo']);
+      expect(executor.cancelForceValues, [true]);
+      expect(executor.cancelKillPackageManagerValues, [true]);
     });
 
     test('uninstallApp falls back to stdout when stderr is empty', () async {

@@ -280,6 +280,7 @@ Semantics(
 测试文件位于 `test/unit/core/accessibility/a11y_semantics_test.dart`。
 
 ## 变更记录
+- 2026-05-31：安装/更新任务取消必须以系统级 `pkexec killall -15 ll-cli ll-package-manager` 成功为准；用户取消授权或 killall 失败时，`InstallQueue.cancelTask()` 必须返回 `false` 并保持当前任务 `Installing`，不得清空 `currentTask`、写入 `InstallStatus.cancelled` 历史，或仅凭 Dart 侧 `process.kill()` 判定取消成功。
 - 2026-05-27：标题栏搜索候选统一复用 `/visit/getSearchAppList`，候选列表仅展示应用名称；点击候选直接进入详情页，按 `Enter` 或点击搜索图标继续进入 `/search_list`。候选与搜索结果进入详情页时，必须一并透传 `appId + arch + repoName + module`，禁止再丢失身份字段后依赖详情接口回退匹配。
 - 2026-05-24：Loong64 发布链当前采用“nightly 异步补传 + release 并入主流程”的收敛策略：新增 `nightly-loong64.yml` 在主 `Nightly` 成功后补传 `loong64` 的 `bundle + deb` 并刷新 nightly release notes / `hashes.sha256`；正式 `release.yml` 并入 Loong64 `bundle + deb` 构建，但 `publish-aur` 与 `update-uos-store` 仍只允许消费 `amd64 + arm64`，禁止把 Loong64 资产误接入 AUR/UOS。Loong64 构建统一走 `build/scripts/build-loong64-in-container.sh` + 外部 `Flutter-Dart-loong64/flutter-loong64-releases` SDK，当前不要尝试在未验证上游工具链前扩到 Loong64 `AppImage`。
 - 2026-05-10：应用详情契约必须与列表项身份对齐；列表页进入详情页时必须原样透传 `appId + arch + repoName + module`，后端 `/visit/getAppDetails` 与 `/app/getAppDetail` 在这些字段已知时必须精确匹配，仅在字段缺失时才允许回退到 `runtime/binary` 候选；详情接口禁止再额外叠加列表之外的 `app_level` 可见性过滤。

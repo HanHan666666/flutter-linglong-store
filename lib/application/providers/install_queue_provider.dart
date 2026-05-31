@@ -402,6 +402,8 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
   ///
   /// 严格串行安装：同一时间只处理一个任务
   Future<void> startProcessing() async {
+    // 队列完成后会延迟调度下一轮处理；页面/测试容器释放后不能再访问 ref。
+    if (!ref.mounted) return;
     await processQueue();
   }
 
@@ -747,11 +749,29 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
   /// 取消当前正在执行的任务或从队列中移除
   ///
   /// 参考 Rust 版本 `cancel_linglong_install` 的流程：
-  /// 1. 标记取消状态（`markUserCancelled`）
-  /// 2. 调用 CLI 取消方法（`pkexec killall`）
+  /// 1. 调用 CLI 取消方法（`pkexec killall`）
+  /// 2. 系统级 kill 成功后标记取消状态（`markUserCancelled`）
   /// 3. 更新任务状态为 `cancelled`
   Future<bool> cancelTask(String appId) async {
-    if (state.currentTask?.appId == appId) {
+    final currentTask = state.currentTask;
+    if (currentTask != null && currentTask.appId == appId) {
+      // 取消当前任务。只有 pkexec/killall 成功时，才能把 UI 状态落为已取消。
+      bool cancelSuccess = false;
+      try {
+        cancelSuccess = await ref
+            .read(linglongCliRepositoryProvider)
+            .cancelOperation(appId, kind: currentTask.kind);
+      } catch (e) {
+        AppLogger.error('[InstallQueue] 取消安装失败: $appId', e);
+      }
+
+      if (!cancelSuccess) {
+        // 授权取消或 kill 失败时，安装可能仍在后台继续，必须保持当前任务。
+        _resetCancelFlag();
+        AppLogger.warning('[InstallQueue] 取消安装未完成，保持任务继续运行: $appId');
+        return false;
+      }
+
       // 标记为用户取消（参考 Rust 版本 InstallSlot.mark_cancelled）
       markUserCancelled();
 
@@ -760,24 +780,18 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       _stateMachine?.dispose();
       _stateMachine = null;
 
-      // 取消当前任务
-      bool cancelSuccess = false;
-      try {
-        cancelSuccess = await ref
-            .read(linglongCliRepositoryProvider)
-            .cancelOperation(appId, kind: state.currentTask!.kind);
-      } catch (e) {
-        AppLogger.error('[InstallQueue] 取消安装失败: $appId', e);
+      final activeTask = state.currentTask;
+      if (activeTask?.appId != appId) {
+        AppLogger.info('[InstallQueue] 任务已由进度流完成取消: $appId');
+        return true;
       }
 
-      // 无论取消是否成功，都更新任务状态
-      // 因为用户已明确要求取消，即使进程终止失败也应标记为取消
       final messages = ref.read(installMessagesProvider);
-      final operation = state.currentTask!.isUpdateTask
+      final operation = activeTask!.isUpdateTask
           ? messages.updateLabel
           : messages.installLabel;
 
-      final cancelledTask = state.currentTask!.copyWith(
+      final cancelledTask = activeTask.copyWith(
         status: InstallStatus.cancelled,
         message: messages.cancelled(operation),
         finishedAt: DateTime.now().millisecondsSinceEpoch,
@@ -793,12 +807,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       );
 
       clearPersistedCurrentTask();
-
-      if (cancelSuccess) {
-        AppLogger.info('[InstallQueue] 任务已取消: $appId');
-      } else {
-        AppLogger.warning('[InstallQueue] 任务已标记取消（但进程终止可能失败）: $appId');
-      }
+      AppLogger.info('[InstallQueue] 任务已取消: $appId');
 
       // 处理下一个任务
       Future.delayed(
@@ -806,7 +815,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
         () => startProcessing(),
       );
 
-      return cancelSuccess;
+      return true;
     } else {
       // 从队列中移除
       removeFromQueue(appId);

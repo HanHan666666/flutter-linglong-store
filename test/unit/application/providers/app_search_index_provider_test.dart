@@ -9,9 +9,24 @@ void main() {
     test('parses ll-cli search JSON and deduplicates by appId', () {
       final json = jsonEncode({
         'stable': [
-          {'id': 'org.example.browser', 'name': '浏览器', 'arch': ['x86_64']},
-          {'id': 'org.example.browser', 'name': '浏览器', 'arch': ['arm64']},
-          {'id': 'org.example.editor', 'name': '编辑器', 'arch': ['x86_64']},
+          {
+            'id': 'org.example.browser',
+            'name': '浏览器',
+            'version': '1.0.0',
+            'arch': ['x86_64'],
+            'module': 'binary',
+            'repoName': 'stable',
+          },
+          {
+            'id': 'org.example.browser',
+            'name': '浏览器',
+            'arch': ['arm64'],
+          },
+          {
+            'id': 'org.example.editor',
+            'name': '编辑器',
+            'arch': ['x86_64'],
+          },
         ],
       });
 
@@ -21,11 +36,15 @@ void main() {
       expect(entries.length, 2);
       expect(entries[0].appId, 'org.example.browser');
       expect(entries[0].name, '浏览器');
+      expect(entries[0].version, '1.0.0');
+      expect(entries[0].arch, 'x86_64');
+      expect(entries[0].module, 'binary');
+      expect(entries[0].repoName, 'stable');
       expect(entries[1].appId, 'org.example.editor');
     });
 
     test('handles empty JSON object', () {
-      final json = '{}';
+      const json = '{}';
       final entries = parseSearchIndexJson(json);
       expect(entries, isEmpty);
     });
@@ -42,22 +61,10 @@ void main() {
         appId: 'org.mozilla.firefox',
         name: 'Firefox 浏览器',
       ),
-      const SearchSuggestionEntry(
-        appId: 'org.chromium',
-        name: 'Chromium 浏览器',
-      ),
-      const SearchSuggestionEntry(
-        appId: 'org.deepin.browser',
-        name: '浏览器',
-      ),
-      const SearchSuggestionEntry(
-        appId: 'org.deepin.editor',
-        name: '文本编辑器',
-      ),
-      const SearchSuggestionEntry(
-        appId: 'org.deepin.music',
-        name: '音乐播放器',
-      ),
+      const SearchSuggestionEntry(appId: 'org.chromium', name: 'Chromium 浏览器'),
+      const SearchSuggestionEntry(appId: 'org.deepin.browser', name: '浏览器'),
+      const SearchSuggestionEntry(appId: 'org.deepin.editor', name: '文本编辑器'),
+      const SearchSuggestionEntry(appId: 'org.deepin.music', name: '音乐播放器'),
       const SearchSuggestionEntry(
         appId: 'com.visualstudio.code',
         name: 'Visual Studio Code',

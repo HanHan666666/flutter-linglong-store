@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/platform/cli_executor.dart';
 import '../../core/storage/cache_service.dart';
@@ -10,13 +11,26 @@ part 'app_search_index_provider.g.dart';
 
 /// 轻量候选条目，只保留跳转详情页所需的最小字段。
 class SearchSuggestionEntry {
-  const SearchSuggestionEntry({required this.appId, required this.name});
+  const SearchSuggestionEntry({
+    required this.appId,
+    required this.name,
+    this.version,
+    this.arch,
+    this.repoName,
+    this.module,
+  });
 
   /// 应用唯一标识，如 "org.example.browser"
   final String appId;
 
   /// 应用名称，用于候选展示和模糊匹配
   final String name;
+
+  /// 候选进入详情页时用于精确匹配后端详情记录。
+  final String? version;
+  final String? arch;
+  final String? repoName;
+  final String? module;
 }
 
 /// 解析 `ll-cli search . --json` 的 JSON 输出。
@@ -28,7 +42,9 @@ List<SearchSuggestionEntry> parseSearchIndexJson(String jsonStr) {
     final seen = <String>{};
     final entries = <SearchSuggestionEntry>[];
 
-    for (final channel in map.values) {
+    for (final entry in map.entries) {
+      final fallbackRepoName = _normalizeString(entry.key);
+      final channel = entry.value;
       if (channel is! List) continue;
       for (final item in channel) {
         if (item is! Map<String, dynamic>) continue;
@@ -37,7 +53,20 @@ List<SearchSuggestionEntry> parseSearchIndexJson(String jsonStr) {
         if (id is! String || name is! String) continue;
         if (seen.contains(id)) continue;
         seen.add(id);
-        entries.add(SearchSuggestionEntry(appId: id, name: name));
+        entries.add(
+          SearchSuggestionEntry(
+            appId: id,
+            name: name,
+            version: _normalizeString(item['version']),
+            arch: _normalizeArch(item['arch']),
+            repoName:
+                _normalizeString(item['repoName']) ??
+                _normalizeString(item['repo_name']) ??
+                fallbackRepoName ??
+                AppConfig.defaultStoreRepoName,
+            module: _normalizeString(item['module']),
+          ),
+        );
       }
     }
 
@@ -45,6 +74,23 @@ List<SearchSuggestionEntry> parseSearchIndexJson(String jsonStr) {
   } catch (_) {
     return const [];
   }
+}
+
+String? _normalizeString(Object? value) {
+  final text = value?.toString().trim();
+  return text == null || text.isEmpty ? null : text;
+}
+
+String? _normalizeArch(Object? value) {
+  if (value is List) {
+    // `ll-cli search . --json` 可能返回架构数组；详情接口需要单个架构值。
+    for (final item in value) {
+      final text = _normalizeString(item);
+      if (text != null) return text;
+    }
+    return null;
+  }
+  return _normalizeString(value);
 }
 
 /// 在候选列表中做模糊匹配，返回 top N 结果。
@@ -133,10 +179,11 @@ class AppSearchIndex extends _$AppSearchIndex {
 
   Future<void> _fetchFromCli() async {
     try {
-      final output = await CliExecutor.execute(
-        ['search', '.', '--json'],
-        timeout: const Duration(seconds: 30),
-      );
+      final output = await CliExecutor.execute([
+        'search',
+        '.',
+        '--json',
+      ], timeout: const Duration(seconds: 30));
       if (!ref.mounted) return;
       if (!output.success) {
         // 首次加载且无缓存时回退空列表

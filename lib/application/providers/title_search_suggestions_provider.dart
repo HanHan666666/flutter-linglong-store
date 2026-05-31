@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'app_search_index_provider.dart';
@@ -7,29 +6,36 @@ part 'title_search_suggestions_provider.g.dart';
 
 /// 候选条目，用于标题栏候选面板展示。
 class SuggestionItem {
-  const SuggestionItem({required this.appId, required this.name});
+  const SuggestionItem({
+    required this.appId,
+    required this.name,
+    this.version,
+    this.arch,
+    this.repoName,
+    this.module,
+  });
 
   /// 应用唯一标识
   final String appId;
 
   /// 应用名称
   final String name;
+
+  /// 详情页精确查询所需的身份字段，来自本地搜索索引。
+  final String? version;
+  final String? arch;
+  final String? repoName;
+  final String? module;
 }
 
 /// 标题栏搜索候选状态。
 class TitleSearchSuggestionsState {
-  const TitleSearchSuggestionsState({
-    this.items = const [],
-  });
+  const TitleSearchSuggestionsState({this.items = const []});
 
   final List<SuggestionItem> items;
 
-  TitleSearchSuggestionsState copyWith({
-    List<SuggestionItem>? items,
-  }) {
-    return TitleSearchSuggestionsState(
-      items: items ?? this.items,
-    );
+  TitleSearchSuggestionsState copyWith({List<SuggestionItem>? items}) {
+    return TitleSearchSuggestionsState(items: items ?? this.items);
   }
 }
 
@@ -59,7 +65,16 @@ class TitleSearchSuggestions extends _$TitleSearchSuggestions {
     final results = searchSuggestions(entries, normalizedQuery);
     state = TitleSearchSuggestionsState(
       items: results
-          .map((e) => SuggestionItem(appId: e.appId, name: e.name))
+          .map(
+            (e) => SuggestionItem(
+              appId: e.appId,
+              name: e.name,
+              version: e.version,
+              arch: e.arch,
+              repoName: e.repoName,
+              module: e.module,
+            ),
+          )
           .toList(),
     );
   }

@@ -177,7 +177,7 @@ class TitleSearchSuggestions extends _$TitleSearchSuggestions {
 关键变化：
 - `loadSuggestions` 从 `Future<void>` 变为同步 `void updateQuery`
 - 不再调用 `appApiServiceProvider`
-- 候选条目从 `RecommendAppInfo` 改为 `SearchSuggestionEntry`（更轻量）
+- 候选条目从 `RecommendAppInfo` 改为 `SearchSuggestionEntry`，但必须保留详情页精确查询所需的 `appId + arch + repoName + module` 身份字段
 
 ### 三、前端交互增强
 
@@ -264,6 +264,8 @@ void _ensureSelectedVisible() {
 #### 3.4 鼠标 hover 高亮
 
 每个候选项用 `InkWell` 或 `MouseRegion` 包裹：
+
+> 桌面端注意：候选浮层必须包在 `TextFieldTapRegion` 内。否则鼠标按下候选项时会被 `TextField` 判定为外部点击，输入框先失焦并触发 overlay 收起，导致 `GestureDetector.onTap` 在 pointer up 前被销毁，表现为“候选栏消失但不跳转”。
 
 ```dart
 Widget _buildSuggestionItem(
@@ -375,18 +377,17 @@ ListView.builder(
 
 ### 四、跳转详情页适配
 
-当前 `_openSuggestion` 接收 `RecommendAppInfo` 并调用 `app.toInstalledApp()` 转换后跳转。切换为 `SearchSuggestionEntry` 后：
+当前 `_openSuggestion` 接收 `RecommendAppInfo` 并调用 `app.toInstalledApp()` 转换后跳转。切换为 `SearchSuggestionEntry` 后，仍然必须构造带 `arch/repoName/module` 的 `InstalledApp` extra 传给详情页：
 
 ```dart
 void _openSuggestion(SearchSuggestionEntry entry) {
   _closeSuggestions();
   _focusNode.unfocus();
-  // 直接用 appId 跳转，详情页自己会拉取完整信息
-  context.goToAppDetail(entry.appId);
+  context.goToAppDetail(entry.appId, appInfo: entry.toInstalledApp());
 }
 ```
 
-详情页路由 `goToAppDetail` 已支持仅传 `appId` 的模式（内部会触发 `loadDetail` 拉取完整信息），因此无需额外适配。
+详情页路由虽然支持仅传 `appId` 的回退模式，但候选入口不能主动丢失身份字段，避免多架构/多模块应用依赖详情接口回退匹配。
 
 ### 五、启动流程集成
 

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +11,7 @@ import 'package:linglong_store/application/providers/app_search_index_provider.d
 import 'package:linglong_store/core/config/routes.dart';
 import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
+import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/presentation/widgets/title_bar.dart';
 
 void main() {
@@ -36,20 +38,23 @@ void main() {
         .setMockMessageHandler('flutter/assets', null);
   });
 
-  testWidgets('submitting header search navigates to search page with q query', (
+  testWidgets(
+    'submitting header search navigates to search page with q query',
+    (tester) async {
+      await tester.pumpWidget(_buildRouterApp());
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).first, 'firefox');
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+
+      expect(find.text('route:/search_list?q=firefox'), findsOneWidget);
+    },
+  );
+
+  testWidgets('typing in header search shows local suggestions', (
     tester,
   ) async {
-    await tester.pumpWidget(_buildRouterApp());
-    await tester.pumpAndSettle();
-
-    await tester.enterText(find.byType(TextField).first, 'firefox');
-    await tester.testTextInput.receiveAction(TextInputAction.search);
-    await tester.pumpAndSettle();
-
-    expect(find.text('route:/search_list?q=firefox'), findsOneWidget);
-  });
-
-  testWidgets('typing in header search shows local suggestions', (tester) async {
     await tester.pumpWidget(_buildRouterApp());
     await tester.pumpAndSettle();
 
@@ -72,9 +77,50 @@ void main() {
     await tester.tap(find.text('浏览器'));
     await tester.pumpAndSettle();
 
-    // 只传 appId
     expect(find.text('detail:org.example.browser'), findsOneWidget);
   });
+
+  testWidgets('opening header suggestion passes detail identity fields', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_buildRouterApp());
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, '浏览');
+    await tester.pump(const Duration(milliseconds: 150));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('浏览器'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('detail-extra:x86_64|stable|binary'), findsOneWidget);
+  });
+
+  testWidgets(
+    'mouse click on header suggestion survives text field focus loss',
+    (tester) async {
+      await tester.pumpWidget(_buildRouterApp());
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).first, '浏览');
+      await tester.pump(const Duration(milliseconds: 150));
+      await tester.pumpAndSettle();
+
+      final suggestion = find.text('浏览器');
+      final gesture = await tester.startGesture(
+        tester.getCenter(suggestion),
+        kind: PointerDeviceKind.mouse,
+      );
+
+      // 桌面端真实鼠标点击会在 pointer down 时先触发 TextField 外部点击失焦；
+      // 这里推进到超过失焦关闭延迟，覆盖 overlay 在 pointer up 前被移除的竞态。
+      await tester.pump(const Duration(milliseconds: 350));
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(find.text('detail:org.example.browser'), findsOneWidget);
+    },
+  );
 
   testWidgets('keyboard arrow down selects next suggestion', (tester) async {
     await tester.pumpWidget(_buildRouterApp());
@@ -234,9 +280,22 @@ Widget _buildRouterApp() {
       ),
       GoRoute(
         path: '/app/:id',
-        builder: (context, state) => Scaffold(
-          body: Text('detail:${state.pathParameters['id']}'),
-        ),
+        builder: (context, state) {
+          final appInfo = state.extra is InstalledApp
+              ? state.extra! as InstalledApp
+              : null;
+          return Scaffold(
+            body: Column(
+              children: [
+                Text('detail:${state.pathParameters['id']}'),
+                if (appInfo != null)
+                  Text(
+                    'detail-extra:${appInfo.arch}|${appInfo.repoName}|${appInfo.module}',
+                  ),
+              ],
+            ),
+          );
+        },
       ),
     ],
   );
@@ -248,6 +307,10 @@ Widget _buildRouterApp() {
           const SearchSuggestionEntry(
             appId: 'org.example.browser',
             name: '浏览器',
+            version: '1.0.0',
+            arch: 'x86_64',
+            repoName: 'stable',
+            module: 'binary',
           ),
           const SearchSuggestionEntry(
             appId: 'org.deepin.editor',

@@ -12,6 +12,7 @@ import '../../application/providers/title_search_suggestions_provider.dart';
 import '../../core/config/routes.dart';
 import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
+import '../../domain/models/installed_app.dart';
 
 /// 自定义标题栏
 ///
@@ -251,7 +252,9 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
   }
 
   void _openSuggestion(SuggestionItem item) {
-    debugPrint('[SearchSuggestion] _openSuggestion 被调用: appId=${item.appId}, name=${item.name}');
+    debugPrint(
+      '[SearchSuggestion] _openSuggestion 被调用: appId=${item.appId}, name=${item.name}',
+    );
     _debounceTimer?.cancel();
     ref.read(titleSearchSuggestionsProvider.notifier).clear();
     _selectedIndex = -1;
@@ -259,13 +262,25 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
     // 先导航再清理 overlay，避免 overlay 销毁后导航失败。
     try {
       debugPrint('[SearchSuggestion] 准备跳转: /app/${item.appId}');
-      context.goToAppDetail(item.appId);
+      context.goToAppDetail(item.appId, appInfo: _suggestionToAppInfo(item));
       debugPrint('[SearchSuggestion] 跳转调用完成');
     } catch (e, stack) {
       debugPrint('[SearchSuggestion] 跳转异常: $e\n$stack');
       AppLogger.error('[SearchSuggestion] 跳转详情页失败: ${item.appId}', e, stack);
     }
     _removeSuggestionsOverlay();
+  }
+
+  InstalledApp _suggestionToAppInfo(SuggestionItem item) {
+    // 详情页需要这些身份字段做精确查询，不能只传 appId 后依赖回退匹配。
+    return InstalledApp(
+      appId: item.appId,
+      name: item.name,
+      version: item.version ?? '',
+      arch: item.arch,
+      repoName: item.repoName,
+      module: item.module,
+    );
   }
 
   bool _shouldShowSuggestions(TitleSearchSuggestionsState state) {
@@ -324,7 +339,9 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
         _syncSuggestionsOverlay();
         return KeyEventResult.handled;
       case LogicalKeyboardKey.enter:
-        debugPrint('[SearchSuggestion] Enter 键: selectedIndex=$_selectedIndex, items.length=${items.length}');
+        debugPrint(
+          '[SearchSuggestion] Enter 键: selectedIndex=$_selectedIndex, items.length=${items.length}',
+        );
         if (_selectedIndex >= 0 && _selectedIndex < items.length) {
           _openSuggestion(items[_selectedIndex]);
         } else {
@@ -355,90 +372,96 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
       left: left,
       top: top,
       width: width,
-      child: Material(
-        elevation: 4,
-        borderRadius: AppRadius.mdRadius,
-        child: Container(
-          constraints: const BoxConstraints(maxHeight: 240),
-          decoration: BoxDecoration(
-            color: overlayContext.appColors.surface,
-            borderRadius: AppRadius.mdRadius,
-            border: Border.all(
-              color: overlayContext.appColors.borderSecondary,
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+      // 候选浮层属于搜索输入组合控件，点击候选项时不能被 TextField
+      // 识别为外部点击，否则桌面端会在 onTap 前先失焦并销毁 overlay。
+      child: TextFieldTapRegion(
+        child: Material(
+          elevation: 4,
+          borderRadius: AppRadius.mdRadius,
+          child: Container(
+            constraints: const BoxConstraints(maxHeight: 240),
+            decoration: BoxDecoration(
+              color: overlayContext.appColors.surface,
+              borderRadius: AppRadius.mdRadius,
+              border: Border.all(
+                color: overlayContext.appColors.borderSecondary,
+                width: 1,
               ),
-            ],
-          ),
-          child: ListView.builder(
-            controller: _scrollController,
-            padding: const EdgeInsets.all(6),
-            shrinkWrap: true,
-            itemCount: state.items.length,
-            itemBuilder: (context, index) {
-              final item = state.items[index];
-              final isSelected = index == _selectedIndex;
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(6),
+              shrinkWrap: true,
+              itemCount: state.items.length,
+              itemBuilder: (context, index) {
+                final item = state.items[index];
+                final isSelected = index == _selectedIndex;
 
-              return MouseRegion(
-                onEnter: (_) {
-                  setState(() {
-                    _selectedIndex = index;
-                  });
-                },
-                child: GestureDetector(
-                  onTap: () {
-                    debugPrint('[SearchSuggestion] overlay onTap 触发: index=$index, appId=${item.appId}');
-                    _openSuggestion(item);
+                return MouseRegion(
+                  onEnter: (_) {
+                    setState(() {
+                      _selectedIndex = index;
+                    });
                   },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? overlayContext.appColors.primaryLight
-                          : Colors.transparent,
-                      borderRadius: AppRadius.xsRadius,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: overlayContext.appTextStyles.bodyMedium
-                                .copyWith(
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : overlayContext.appColors.textPrimary,
+                  child: GestureDetector(
+                    onTap: () {
+                      debugPrint(
+                        '[SearchSuggestion] overlay onTap 触发: index=$index, appId=${item.appId}',
+                      );
+                      _openSuggestion(item);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? overlayContext.appColors.primaryLight
+                            : Colors.transparent,
+                        borderRadius: AppRadius.xsRadius,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: overlayContext.appTextStyles.bodyMedium
+                                  .copyWith(
+                                    color: isSelected
+                                        ? AppColors.primary
+                                        : overlayContext.appColors.textPrimary,
+                                  ),
                             ),
                           ),
-                        ),
-                        if (isSelected)
-                          const Padding(
-                            padding: EdgeInsets.only(left: 8),
-                            child: ExcludeSemantics(
-                              child: Icon(
-                                Icons.arrow_forward_ios,
-                                size: 12,
-                                color: AppColors.primary,
+                          if (isSelected)
+                            const Padding(
+                              padding: EdgeInsets.only(left: 8),
+                              child: ExcludeSemantics(
+                                child: Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 12,
+                                  color: AppColors.primary,
+                                ),
                               ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),

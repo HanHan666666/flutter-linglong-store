@@ -6,6 +6,7 @@ import '../../core/config/app_config.dart';
 import '../../core/di/providers.dart';
 import '../../core/logging/app_logger.dart';
 import '../../domain/models/linglong_env_check_result.dart';
+import 'app_search_index_provider.dart';
 import 'installed_apps_provider.dart';
 import 'linglong_env_provider.dart';
 
@@ -14,18 +15,18 @@ part 'launch_provider.g.dart';
 /// 启动阶段解析应用版本号。
 ///
 /// 单测可覆盖该 Provider，以避免直接依赖平台 channel。
-final launchAppVersionResolverProvider = Provider<Future<String> Function()>(
-  (ref) {
-    return () async {
-      try {
-        final packageInfo = await PackageInfo.fromPlatform();
-        return packageInfo.version.trim();
-      } catch (_) {
-        return AppConfig.appVersion;
-      }
-    };
-  },
-);
+final launchAppVersionResolverProvider = Provider<Future<String> Function()>((
+  ref,
+) {
+  return () async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      return packageInfo.version.trim();
+    } catch (_) {
+      return AppConfig.appVersion;
+    }
+  };
+});
 
 /// 启动步骤枚举
 enum LaunchStep {
@@ -199,6 +200,7 @@ class LaunchSequence extends _$LaunchSequence {
         return;
       }
 
+      _warmSearchIndex();
       final analyticsPreparation = _prepareStartupAnalyticsContext();
 
       // Step 2: 已安装应用初始化
@@ -217,6 +219,15 @@ class LaunchSequence extends _$LaunchSequence {
     } catch (e, s) {
       AppLogger.error('Launch sequence failed', e, s);
       _setError(e.toString());
+    }
+  }
+
+  void _warmSearchIndex() {
+    try {
+      // 搜索候选索引不阻塞启动；有缓存时同步可用，无缓存时后台执行 ll-cli。
+      ref.read(appSearchIndexProvider);
+    } catch (e, stack) {
+      AppLogger.warning('Failed to warm search index', e, stack);
     }
   }
 

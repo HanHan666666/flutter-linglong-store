@@ -1,10 +1,35 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive/hive.dart';
 
 import 'package:linglong_store/application/providers/app_search_index_provider.dart';
+import 'package:linglong_store/core/logging/app_logger.dart';
 
 void main() {
+  late String hiveTestPath;
+
+  setUpAll(() async {
+    await AppLogger.init();
+    final tempDir = await Directory.systemTemp.createTemp(
+      'app_search_index_cache_test',
+    );
+    hiveTestPath = tempDir.path;
+    Hive.init(hiveTestPath);
+    await Hive.openBox('cache');
+  });
+
+  tearDown(() async {
+    await Hive.box('cache').clear();
+  });
+
+  tearDownAll(() async {
+    await Hive.close();
+    await Directory(hiveTestPath).delete(recursive: true);
+  });
+
   group('parseSearchIndexJson', () {
     test('parses ll-cli search JSON and deduplicates by appId', () {
       final json = jsonEncode({
@@ -104,6 +129,31 @@ void main() {
     test('no match returns empty list', () {
       final results = searchSuggestions(entries, '不存在');
       expect(results, isEmpty);
+    });
+  });
+
+  group('AppSearchIndex', () {
+    test('returns cached index synchronously on first read', () async {
+      final cachedJson = jsonEncode({
+        'stable': [
+          {
+            'id': 'org.example.camera',
+            'name': '相机',
+            'version': '1.0.0',
+            'arch': ['x86_64'],
+            'module': 'binary',
+          },
+        ],
+      });
+      await Hive.box('cache').put('search_index_json', cachedJson);
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final state = container.read(appSearchIndexProvider);
+
+      expect(state, isA<AsyncData<List<SearchSuggestionEntry>>>());
+      final entries = (state as AsyncData<List<SearchSuggestionEntry>>).value;
+      expect(entries.single.appId, 'org.example.camera');
     });
   });
 }

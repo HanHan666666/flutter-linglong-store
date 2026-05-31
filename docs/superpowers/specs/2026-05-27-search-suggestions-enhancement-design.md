@@ -391,14 +391,13 @@ void _openSuggestion(SearchSuggestionEntry entry) {
 
 ### 五、启动流程集成
 
-在 `main.dart` 的启动链中，`appSearchIndexProvider` 会在首次被 watch 时自动触发 `_loadIndex()`。无需在 `main()` 中手动调用。
+在启动流程环境检测通过后，必须非阻塞读取 `appSearchIndexProvider` 预热搜索索引。`AppSearchIndex.build()` 必须先同步读取 Hive 缓存：缓存命中时直接返回 `AsyncData(entries)`，同时后台刷新 `ll-cli search . --json`；缓存缺失时才返回 `AsyncLoading` 并后台执行 `ll-cli`。
 
 加载时机：
-1. 用户首次点击搜索框或开始输入 → provider 被 watch → 触发加载
-2. 后续输入直接使用已加载的索引
-3. 加载期间（首次）不显示候选面板（因为 `state = AsyncLoading`）
-
-可选优化：在首页渲染完成后预触发 provider 初始化，避免用户首次输入时等待。
+1. 启动环境检测成功 → `LaunchSequence` 非阻塞预热 `appSearchIndexProvider`
+2. 有缓存的二次启动 → 首次读取 provider 立即得到 `AsyncData`，候选框可瞬时展示
+3. 无缓存的首次启动 → 后台执行 `ll-cli search . --json`，执行完成前不显示候选
+4. 后续输入直接使用内存中的已加载索引
 
 ---
 

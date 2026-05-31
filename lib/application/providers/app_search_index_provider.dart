@@ -150,26 +150,29 @@ const _kCacheKey = 'search_index_json';
 class AppSearchIndex extends _$AppSearchIndex {
   @override
   AsyncValue<List<SearchSuggestionEntry>> build() {
-    _loadIndex();
+    final cachedEntries = _readCachedEntries();
+    if (cachedEntries != null) {
+      _refreshInBackground();
+      return AsyncData(cachedEntries);
+    }
+
+    _fetchFromCli();
     return const AsyncLoading();
   }
 
-  Future<void> _loadIndex() async {
-    // 1. 先尝试从本地缓存读取
+  List<SearchSuggestionEntry>? _readCachedEntries() {
     final cached = CacheService.get<String>(_kCacheKey);
-    if (cached != null && cached.isNotEmpty) {
-      final entries = parseSearchIndexJson(cached);
-      if (entries.isNotEmpty) {
-        AppLogger.info('[SearchIndex] 命中本地缓存: ${entries.length} 条应用');
-        if (ref.mounted) state = AsyncData(entries);
-        // 后台异步刷新，不阻塞 UI
-        _refreshInBackground();
-        return;
-      }
+    if (cached == null || cached.isEmpty) {
+      return null;
     }
 
-    // 2. 无缓存，直接执行 ll-cli
-    await _fetchFromCli();
+    final entries = parseSearchIndexJson(cached);
+    if (entries.isEmpty) {
+      return null;
+    }
+
+    AppLogger.info('[SearchIndex] 命中本地缓存: ${entries.length} 条应用');
+    return entries;
   }
 
   /// 后台执行 ll-cli 刷新索引并更新缓存。

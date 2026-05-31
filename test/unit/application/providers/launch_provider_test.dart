@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:linglong_store/application/providers/app_search_index_provider.dart';
 import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/installed_apps_provider.dart';
@@ -373,6 +374,9 @@ void main() {
                 ],
               ),
             ),
+            appSearchIndexProvider.overrideWith(
+              () => _RecordingSearchIndex(() {}),
+            ),
             updateAppsProvider.overrideWith(() => _TestUpdateApps()),
             installQueueProvider.overrideWith(() => _TestInstallQueue()),
             analyticsRepositoryProvider.overrideWithValue(
@@ -390,6 +394,47 @@ void main() {
         expect(state.currentStep, LaunchStep.completed);
       },
     );
+
+    test('warms search index after environment check succeeds', () async {
+      var searchIndexBuilds = 0;
+      final container = ProviderContainer(
+        overrides: [
+          globalAppProvider.overrideWith(
+            () => _TestGlobalApp(
+              const GlobalAppState(
+                userPreferences: UserPreferences(autoCheckUpdate: true),
+              ),
+            ),
+          ),
+          linglongEnvProvider.overrideWith(
+            () => _TestLinglongEnv(
+              const LinglongEnvCheckResult(
+                isOk: true,
+                llCliVersion: '1.9.0',
+                repoStatus: RepoStatus.ok,
+                checkedAt: 1,
+              ),
+            ),
+          ),
+          appSearchIndexProvider.overrideWith(
+            () => _RecordingSearchIndex(() => searchIndexBuilds++),
+          ),
+          installedAppsProvider.overrideWith(
+            () => _TestInstalledApps(apps: const []),
+          ),
+          updateAppsProvider.overrideWith(() => _TestUpdateApps()),
+          installQueueProvider.overrideWith(() => _TestInstallQueue()),
+          analyticsRepositoryProvider.overrideWithValue(
+            const _NoopAnalyticsRepository(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(launchSequenceProvider.notifier).runSequence();
+
+      expect(searchIndexBuilds, equals(1));
+    });
 
     test(
       'stops startup when environment result is a blocking failure',
@@ -480,6 +525,9 @@ void main() {
             installedAppsProvider.overrideWith(
               () => _TestInstalledApps(apps: const []),
             ),
+            appSearchIndexProvider.overrideWith(
+              () => _RecordingSearchIndex(() {}),
+            ),
             updateAppsProvider.overrideWith(() => _TestUpdateApps()),
             installQueueProvider.overrideWith(() => _TestInstallQueue()),
             analyticsRepositoryProvider.overrideWithValue(analytics),
@@ -540,6 +588,9 @@ void main() {
             installedAppsProvider.overrideWith(
               () => _TestInstalledApps(apps: const []),
             ),
+            appSearchIndexProvider.overrideWith(
+              () => _RecordingSearchIndex(() {}),
+            ),
             updateAppsProvider.overrideWith(() => _TestUpdateApps()),
             installQueueProvider.overrideWith(() => _TestInstallQueue()),
             analyticsRepositoryProvider.overrideWithValue(analytics),
@@ -556,10 +607,7 @@ void main() {
           analytics.visitReports.single.osVersion,
           equals('OS: Deepin 23 | glibc: 2.36 | kernel: Linux test kernel'),
         );
-        expect(
-          container.read(globalAppProvider).appVersion,
-          equals('3.2.1'),
-        );
+        expect(container.read(globalAppProvider).appVersion, equals('3.2.1'));
       },
     );
   });
@@ -680,6 +728,18 @@ class _TestUpdateApps extends UpdateApps {
   @override
   Future<void> checkUpdates() async {
     state = const UpdateAppsState();
+  }
+}
+
+class _RecordingSearchIndex extends AppSearchIndex {
+  _RecordingSearchIndex(this.onBuild);
+
+  final void Function() onBuild;
+
+  @override
+  AsyncValue<List<SearchSuggestionEntry>> build() {
+    onBuild();
+    return const AsyncData([]);
   }
 }
 

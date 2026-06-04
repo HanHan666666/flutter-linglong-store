@@ -337,10 +337,11 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                       appName: app.name,
                       state: buttonState,
                       progress: progress,
-                      // 下载中显示实时网络速度
+                      // 优先使用 CLI 返回的精确下载速度，回退到系统级网速
                       downloadSpeed:
                           buttonState == InstallButtonState.installing
-                          ? ref.watch(networkSpeedProvider).formatted
+                          ? (installTask?.cliSpeed ??
+                            ref.watch(networkSpeedProvider).formatted)
                           : null,
                       onPressed: () => _handleInstallAction(app, buttonState),
                       onCancel: () => _handleCancelInstall(app),

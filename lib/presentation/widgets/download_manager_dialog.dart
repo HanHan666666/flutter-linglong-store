@@ -249,7 +249,9 @@ class DownloadManagerDialog extends ConsumerWidget {
     WidgetRef ref,
     InstallTask task,
   ) {
-    final downloadSpeed = ref.watch(networkSpeedProvider).formatted;
+    // 优先使用 CLI 返回的精确下载速度，回退到系统级网速
+    final cliSpeed = task.cliSpeed;
+    final downloadSpeed = cliSpeed ?? ref.watch(networkSpeedProvider).formatted;
 
     return _TaskCard(
       task: task,
@@ -308,7 +310,9 @@ class DownloadManagerDialog extends ConsumerWidget {
     InstallQueueState queueState,
   ) {
     final appColors = context.appColors;
-    final speed = ref.watch(networkSpeedProvider).formatted;
+    // 优先使用当前任务的 CLI 速度，回退到系统级网速
+    final cliSpeed = queueState.currentTask?.cliSpeed;
+    final speed = cliSpeed ?? ref.watch(networkSpeedProvider).formatted;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(

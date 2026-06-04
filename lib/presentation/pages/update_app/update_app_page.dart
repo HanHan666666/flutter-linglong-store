@@ -423,9 +423,11 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
                       appName: widget.app.name,
                       state: buttonState,
                       progress: progress,
+                      // 优先使用 CLI 返回的精确下载速度，回退到系统级网速
                       downloadSpeed:
                           buttonState == InstallButtonState.installing
-                          ? ref.watch(networkSpeedProvider).formatted
+                          ? (widget.installTask?.cliSpeed ??
+                            ref.watch(networkSpeedProvider).formatted)
                           : null,
                       onPressed: widget.isUpdateDisabled
                           ? () {}

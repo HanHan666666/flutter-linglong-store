@@ -79,6 +79,11 @@ sealed class InstallTask with _$InstallTask {
       _$InstallTaskFromJson(json);
 }
 
+/// 从 rawMessage 尾部提取 CLI 速度信息的正则。
+///
+/// 匹配格式：`[90.56MB/s]`、`[256.17KB/s]`、`[45.25B/s]` 等。
+final _cliSpeedRegex = RegExp(r'\[(\d+\.?\d*\s*(?:B|KB|MB|GB)/s)\]$');
+
 /// InstallTask 扩展方法
 extension InstallTaskX on InstallTask {
   /// 是否为更新任务。
@@ -119,15 +124,27 @@ extension InstallTaskX on InstallTask {
     return DateTime.fromMillisecondsSinceEpoch(timestamp);
   }
 
+  /// 从 rawMessage 中提取 CLI 返回的下载速度（如 `"90.56MB/s"`）。
+  ///
+  /// 新版 ll-cli 在 message 尾部附加 `[90.56MB/s]` 格式的速度标记，
+  /// 此方法提取纯速度文本。旧版 ll-cli 无此标记时返回 `null`。
+  String? get cliSpeed {
+    final raw = rawMessage;
+    if (raw == null || raw.isEmpty) return null;
+    return _cliSpeedRegex.firstMatch(raw)?.group(1);
+  }
+
   /// 对旧任务或异常任务兜底，避免把整段 JSON 原文直接渲染到 UI。
+  ///
+  /// 同时去除 CLI 速度标记 `[XX/s]`，避免消息和速度区域重复展示。
   String? get displayMessage {
     final normalizedMessage = _extractMessageText(message);
     final normalizedRawMessage = _extractMessageText(rawMessage);
-    if (_isEllipsizedPrefixOf(normalizedMessage, normalizedRawMessage)) {
-      // 兼容旧版本持久化的 50 字符省略文案，Tooltip 和复制必须回到完整原文。
-      return normalizedRawMessage;
-    }
-    return normalizedMessage;
+    final source = _isEllipsizedPrefixOf(normalizedMessage, normalizedRawMessage)
+        // 兼容旧版本持久化的 50 字符省略文案，Tooltip 和复制必须回到完整原文。
+        ? normalizedRawMessage
+        : normalizedMessage;
+    return _stripSpeedSuffix(source);
   }
 
   /// 保留原始 message 里的纯文本内容，供诊断或次级展示使用。
@@ -193,5 +210,11 @@ extension InstallTaskX on InstallTask {
     }
     final prefix = value.substring(0, value.length - 3);
     return fullValue.length > value.length && fullValue.startsWith(prefix);
+  }
+
+  /// 去除消息尾部的 CLI 速度标记 `[XX MB/s]`。
+  static String? _stripSpeedSuffix(String? text) {
+    if (text == null || text.isEmpty) return text;
+    return text.replaceAll(RegExp(r'\s*\[\d+\.?\d*\s*(?:B|KB|MB|GB)/s\]$'), '');
   }
 }

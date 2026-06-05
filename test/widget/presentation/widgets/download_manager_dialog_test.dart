@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
@@ -452,6 +453,82 @@ void main() {
       expect(errorTexts, isNotEmpty);
       expect(errorTexts.first.maxLines, isNull);
       expect(errorTexts.first.overflow, isNull);
+    });
+
+    testWidgets('clicking a history item copies its command output', (
+      tester,
+    ) async {
+      const commandOutput =
+          'll-cli install --json com.tencent.wechat\n'
+          '{"message":"Downloading files","percentage":50}\n'
+          '{"message":"Install complete","percentage":100}';
+      const clipboardChannel = SystemChannels.platform;
+      MethodCall? clipboardCall;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        clipboardChannel,
+        (call) async {
+          clipboardCall = call;
+          return null;
+        },
+      );
+      addTearDown(() {
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          clipboardChannel,
+          null,
+        );
+      });
+
+      final installQueue = TestInstallQueue(
+        initialState: InstallQueueState(
+          history: [
+            InstallTask(
+              id: 'wechat-history-1',
+              appId: 'com.tencent.wechat',
+              appName: '微信',
+              kind: InstallTaskKind.install,
+              status: InstallStatus.success,
+              commandOutput: commandOutput,
+              createdAt: DateTime.now().millisecondsSinceEpoch,
+              finishedAt: DateTime.now().millisecondsSinceEpoch,
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            installQueueProvider.overrideWith(() => installQueue),
+            networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+          ],
+          child: MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: Center(
+                    child: FilledButton(
+                      onPressed: () => showDownloadManagerDialog(context),
+                      child: const Text('open'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('微信'));
+      await tester.pump();
+
+      expect(clipboardCall?.method, equals('Clipboard.setData'));
+      expect(clipboardCall?.arguments, {'text': commandOutput});
+      expect(find.text('命令已复制到剪贴板'), findsOneWidget);
     });
   });
 }

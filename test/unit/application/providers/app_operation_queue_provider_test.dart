@@ -236,5 +236,43 @@ void main() {
         expect(state.history.first.errorMessage, contains('无法确认安装结果'));
       },
     );
+
+    test('records command output lines on completed task history', () async {
+      final fakeRepo = _FakeLinglongCliRepository()
+        ..installEvents = const [
+          InstallProgress(
+            appId: 'ignored',
+            status: InstallStatus.downloading,
+            progress: 0.5,
+            message: '正在下载',
+            outputLine: '{"message":"Downloading files","percentage":50}',
+          ),
+          InstallProgress(
+            appId: 'ignored',
+            status: InstallStatus.success,
+            progress: 100,
+            message: '安装完成',
+            outputLine: '{"message":"Install complete","percentage":100}',
+          ),
+        ];
+      final container = await _createTestContainer(fakeRepo);
+      addTearDown(container.dispose);
+
+      container
+          .read(appOperationQueueControllerProvider)
+          .enqueueAppOperation(
+            const EnqueueAppOperationParams(
+              kind: InstallTaskKind.install,
+              appId: 'com.example.install',
+              appName: 'Install App',
+            ),
+          );
+
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      final historyTask = container.read(installQueueProvider).history.first;
+      expect(historyTask.commandOutput, contains('Downloading files'));
+      expect(historyTask.commandOutput, contains('Install complete'));
+    });
   });
 }

@@ -52,7 +52,7 @@ final class TitleSearchSuggestionsProvider
 }
 
 String _$titleSearchSuggestionsHash() =>
-    r'106e9c0b85981d8affd03d144a7d8cd053ad9960';
+    r'c0ab98ef153a913f7c836579b47234b89163982c';
 
 /// 标题栏候选 provider。
 ///

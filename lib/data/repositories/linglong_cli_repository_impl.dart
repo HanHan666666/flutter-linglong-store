@@ -108,12 +108,22 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
   }) async* {
     final processId = _operationProcessId(appId, kind);
     final operationLabel = _operationLabel(kind);
-    final needsPreInstallSnapshot =
-        kind == InstallTaskKind.update ||
-        (force && version != null && version.isNotEmpty);
-    final installedVersionsBefore = needsPreInstallSnapshot
-        ? await _getInstalledVersionsForApp(appId)
-        : null;
+    // 所有安装/更新都记录执行前版本集合，避免默认安装已存在应用时被误判成功。
+    final installedVersionsBefore = await _getInstalledVersionsForApp(appId);
+
+    // 只有显式指定版本的安装才拼接 appId/version；升级统一走 ll-cli upgrade。
+    final args = <String>[
+      kind == InstallTaskKind.update ? 'upgrade' : 'install',
+      '--json',
+      if (kind == InstallTaskKind.install)
+        version != null ? '$appId/$version' : appId
+      else
+        appId,
+    ];
+    if (force && kind == InstallTaskKind.install) {
+      args.add('--force');
+    }
+    final commandLine = 'll-cli ${args.join(' ')}';
 
     // 每次开始新任务前重置该任务的取消标志。
     _cancelFlags[processId] = false;
@@ -124,25 +134,11 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
       status: InstallStatus.pending,
       message: _messages.preparing(operationLabel, appId),
       rawMessage: _messages.preparing(operationLabel, appId),
+      outputLine: commandLine,
     );
 
     try {
-      // 只有显式指定版本的安装才拼接 appId/version；升级统一走 ll-cli upgrade。
-      final args = <String>[
-        kind == InstallTaskKind.update ? 'upgrade' : 'install',
-        '--json',
-        if (kind == InstallTaskKind.install)
-          version != null ? '$appId/$version' : appId
-        else
-          appId,
-      ];
-      if (force && kind == InstallTaskKind.install) {
-        args.add('--force');
-      }
-
-      AppLogger.info(
-        '[LinglongCli] 开始$operationLabel: ll-cli ${args.join(' ')}',
-      );
+      AppLogger.info('[LinglongCli] 开始$operationLabel: $commandLine');
 
       await for (final event in _executeWithProgressAndProcess(
         args,
@@ -161,6 +157,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
             status: InstallStatus.cancelled,
             message: _messages.cancelled(operationLabel),
             rawMessage: _messages.cancelled(operationLabel),
+            outputLine: _messages.cancelled(operationLabel),
           );
           return;
         }
@@ -178,6 +175,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
             progress: progressInfo.progress,
             message: displayMessage,
             rawMessage: rawMessage,
+            outputLine: event.line,
           );
         } else if (progressInfo.phase == InstallPhase.installing) {
           yield InstallProgress(
@@ -187,6 +185,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
             progress: progressInfo.progress,
             message: displayMessage,
             rawMessage: rawMessage,
+            outputLine: event.line,
           );
         } else if (progressInfo.phase == InstallPhase.completed) {
           yield InstallProgress(
@@ -198,6 +197,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
             rawMessage: rawMessage.isNotEmpty
                 ? rawMessage
                 : _messages.completed(operationLabel),
+            outputLine: event.line,
           );
           return;
         } else if (progressInfo.phase == InstallPhase.failed) {
@@ -219,6 +219,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
             error: errorMessage,
             errorCode: errorCode,
             errorDetail: errorDetail,
+            outputLine: event.line,
           );
           return;
         }
@@ -240,6 +241,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
           progress: 100,
           message: _messages.completed(operationLabel),
           rawMessage: _messages.completed(operationLabel),
+          outputLine: _messages.completed(operationLabel),
         );
       } else {
         final confirmMessage = _messages.confirmFailed(operationLabel);
@@ -254,6 +256,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
           message: confirmMessage,
           error: confirmMessage,
           rawMessage: confirmMessage,
+          outputLine: confirmMessage,
           errorDetail:
               'Installed target not found after $operationLabel: $targetRef',
         );
@@ -264,6 +267,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         eventType: InstallProgressEventType.error,
         status: InstallStatus.failed,
         message: _messages.timeout(operationLabel),
+        outputLine: e.message,
         error: e.message,
         errorCode: -2,
         rawMessage: e.message,
@@ -276,6 +280,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         status: InstallStatus.cancelled,
         message: _messages.cancelled(operationLabel),
         rawMessage: _messages.cancelled(operationLabel),
+        outputLine: _messages.cancelled(operationLabel),
       );
     } catch (e, stack) {
       AppLogger.error('[LinglongCli] $operationLabel异常: $appId', e, stack);
@@ -284,6 +289,7 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
         eventType: InstallProgressEventType.error,
         status: InstallStatus.failed,
         message: _messages.failed(operationLabel),
+        outputLine: e.toString(),
         error: e.toString(),
         rawMessage: e.toString(),
         errorDetail: e.toString(),

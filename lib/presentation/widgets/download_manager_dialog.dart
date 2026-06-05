@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/providers/network_speed_provider.dart';
 import '../../core/config/theme.dart';
 import '../../core/di/providers.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
+import '../../core/utils/app_notification_helpers.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_task.dart';
 import 'app_icon.dart';
@@ -258,6 +260,7 @@ class DownloadManagerDialog extends ConsumerWidget {
       featured: true,
       showProgress: true,
       downloadSpeed: downloadSpeed,
+      onCopyOutput: () => _copyCommandOutput(context, task),
       onCancel: () async {
         await ref.read(installQueueProvider.notifier).cancelTask(task.appId);
       },
@@ -273,8 +276,9 @@ class DownloadManagerDialog extends ConsumerWidget {
     return _TaskCard(
       task: task,
       compact: true,
+      onCopyOutput: () => _copyCommandOutput(context, task),
       onCancel: () {
-        ref.read(installQueueProvider.notifier).removeFromQueue(task.appId);
+        ref.read(installQueueProvider.notifier).removeQueuedTask(task.id);
       },
     );
   }
@@ -288,6 +292,7 @@ class DownloadManagerDialog extends ConsumerWidget {
     return _TaskCard(
       task: task,
       compact: true,
+      onCopyOutput: () => _copyCommandOutput(context, task),
       onOpen: task.status == InstallStatus.success
           ? () async {
               await ref.read(linglongCliRepositoryProvider).runApp(task.appId);
@@ -295,13 +300,29 @@ class DownloadManagerDialog extends ConsumerWidget {
           : null,
       onRetry: task.isFailed
           ? () {
-              ref.read(installQueueProvider.notifier).retryFailed(task.appId);
+              ref.read(installQueueProvider.notifier).retryFailedTask(task.id);
             }
           : null,
       onRemove: () {
-        ref.read(installQueueProvider.notifier).removeFromQueue(task.appId);
+        ref.read(installQueueProvider.notifier).removeHistoryTask(task.id);
       },
     );
+  }
+
+  Future<void> _copyCommandOutput(
+    BuildContext context,
+    InstallTask task,
+  ) async {
+    final output = task.commandOutput.trim();
+    if (output.isEmpty) {
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: output));
+    if (!context.mounted) {
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    showAppNotification(context, l10n?.commandCopiedToClipboard ?? '命令已复制到剪贴板');
   }
 
   Widget _buildFooter(
@@ -381,6 +402,7 @@ class _TaskCard extends StatefulWidget {
     this.onOpen,
     this.onRetry,
     this.onRemove,
+    this.onCopyOutput,
   });
 
   final InstallTask task;
@@ -392,6 +414,7 @@ class _TaskCard extends StatefulWidget {
   final VoidCallback? onOpen;
   final VoidCallback? onRetry;
   final VoidCallback? onRemove;
+  final VoidCallback? onCopyOutput;
 
   @override
   State<_TaskCard> createState() => _TaskCardState();
@@ -455,113 +478,121 @@ class _TaskCardState extends State<_TaskCard> {
         widget.task.progressPercentLabel,
       ),
       value: widget.task.isProcessing ? widget.task.progressPercentLabel : null,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: EdgeInsets.all(
-          widget.featured ? AppSpacing.lg : AppSpacing.md,
-        ),
-        decoration: BoxDecoration(
-          color: widget.featured
-              ? appColors.primaryLight.withValues(alpha: 0.6)
-              : appColors.cardBackground.withValues(alpha: 0.7),
-          borderRadius: BorderRadius.circular(widget.featured ? 18 : 16),
-          border: Border.all(
-            color: widget.featured
-                ? appColors.primaryLight
-                : appColors.borderSecondary,
+      child: InkWell(
+        onTap: widget.onCopyOutput,
+        borderRadius: BorderRadius.circular(widget.featured ? 18 : 16),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+          padding: EdgeInsets.all(
+            widget.featured ? AppSpacing.lg : AppSpacing.md,
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppIcon(
-                  iconUrl: widget.task.icon,
-                  size: widget.featured ? 48 : 42,
-                  borderRadius: widget.featured ? 16 : 14,
-                  appName: widget.task.appName,
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              widget.task.appName,
-                              // featured 用 16px 正文级别，普通用 14px 说明级别
-                              style:
-                                  (widget.featured
-                                          ? context.appTextStyles.body
-                                          : context.appTextStyles.bodyMedium)
-                                      .copyWith(
-                                        fontWeight: context.appFontWeight(
-                                          FontWeight.w600,
-                                        ),
-                                      ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          _buildStatusPill(context),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        _buildSubtitle(context),
-                        style: context.appTextStyles.caption.copyWith(
-                          color: appColors.textSecondary,
-                        ),
-                        maxLines: widget.compact ? 1 : 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                _buildActionButtons(context),
-              ],
+          decoration: BoxDecoration(
+            color: widget.featured
+                ? appColors.primaryLight.withValues(alpha: 0.6)
+                : appColors.cardBackground.withValues(alpha: 0.7),
+            borderRadius: BorderRadius.circular(widget.featured ? 18 : 16),
+            border: Border.all(
+              color: widget.featured
+                  ? appColors.primaryLight
+                  : appColors.borderSecondary,
             ),
-            if (widget.showProgress &&
-                (widget.task.isProcessing ||
-                    widget.task.status == InstallStatus.downloading)) ...[
-              const SizedBox(height: AppSpacing.md),
-              _buildProgressBar(context),
-            ],
-            if (widget.task.shouldShowSlowInstallHint(_now)) ...[
-              const SizedBox(height: AppSpacing.xs),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, size: 14, color: appColors.warning),
-                  const SizedBox(width: AppSpacing.xs),
+                  AppIcon(
+                    iconUrl: widget.task.icon,
+                    size: widget.featured ? 48 : 42,
+                    borderRadius: widget.featured ? 16 : 14,
+                    appName: widget.task.appName,
+                  ),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
-                    child: Text(
-                      l10n.downloadManagerSlowInstallHint,
-                      style: context.appTextStyles.caption.copyWith(
-                        color: appColors.textSecondary,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.task.appName,
+                                // featured 用 16px 正文级别，普通用 14px 说明级别
+                                style:
+                                    (widget.featured
+                                            ? context.appTextStyles.body
+                                            : context.appTextStyles.bodyMedium)
+                                        .copyWith(
+                                          fontWeight: context.appFontWeight(
+                                            FontWeight.w600,
+                                          ),
+                                        ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            _buildStatusPill(context),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          _buildSubtitle(context),
+                          style: context.appTextStyles.caption.copyWith(
+                            color: appColors.textSecondary,
+                          ),
+                          maxLines: widget.compact ? 1 : 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
+                  const SizedBox(width: AppSpacing.sm),
+                  _buildActionButtons(context),
                 ],
               ),
-            ],
-            if (widget.task.isFailed && widget.task.errorMessage != null) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                widget.task.errorMessage!,
-                style: context.appTextStyles.caption.copyWith(
-                  color: AppColors.error,
+              if (widget.showProgress &&
+                  (widget.task.isProcessing ||
+                      widget.task.status == InstallStatus.downloading)) ...[
+                const SizedBox(height: AppSpacing.md),
+                _buildProgressBar(context),
+              ],
+              if (widget.task.shouldShowSlowInstallHint(_now)) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 14,
+                      color: appColors.warning,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: Text(
+                        l10n.downloadManagerSlowInstallHint,
+                        style: context.appTextStyles.caption.copyWith(
+                          color: appColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                softWrap: true,
-              ),
+              ],
+              if (widget.task.isFailed && widget.task.errorMessage != null) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  widget.task.errorMessage!,
+                  style: context.appTextStyles.caption.copyWith(
+                    color: AppColors.error,
+                  ),
+                  softWrap: true,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

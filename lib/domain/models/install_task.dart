@@ -56,6 +56,9 @@ sealed class InstallTask with _$InstallTask {
     /// 安装链路中保留的原始 message 文本，用于诊断。
     String? rawMessage,
 
+    /// 当前任务累计的 ll-cli 命令与原始输出，随下载中心 item 生命周期保存。
+    @Default('') String commandOutput,
+
     /// 错误消息
     String? errorMessage,
 
@@ -140,7 +143,8 @@ extension InstallTaskX on InstallTask {
   String? get displayMessage {
     final normalizedMessage = _extractMessageText(message);
     final normalizedRawMessage = _extractMessageText(rawMessage);
-    final source = _isEllipsizedPrefixOf(normalizedMessage, normalizedRawMessage)
+    final source =
+        _isEllipsizedPrefixOf(normalizedMessage, normalizedRawMessage)
         // 兼容旧版本持久化的 50 字符省略文案，Tooltip 和复制必须回到完整原文。
         ? normalizedRawMessage
         : normalizedMessage;

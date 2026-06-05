@@ -201,12 +201,31 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
   /// 参考 Rust 版本 InstallSlot.is_cancelled
   bool _isUserCancelled = false;
 
+  String _appendOutputLine(String currentOutput, String? outputLine) {
+    final line = outputLine?.trimRight();
+    if (line == null || line.isEmpty) {
+      return currentOutput;
+    }
+    if (currentOutput.isEmpty) {
+      return line;
+    }
+    return '$currentOutput\n$line';
+  }
+
+  InstallTask _appendCommandOutput(InstallTask task, String? outputLine) {
+    final nextOutput = _appendOutputLine(task.commandOutput, outputLine);
+    if (nextOutput == task.commandOutput) {
+      return task;
+    }
+    return task.copyWith(commandOutput: nextOutput);
+  }
+
   // -----------------------------------------------------------------------
   // 超时检查
   // -----------------------------------------------------------------------
 
   /// 启动超时检查定时器
-  void _startTimeoutCheck(String appId) {
+  void _startTimeoutCheck(String taskId, String appId) {
     _stopTimeoutCheck();
     // 每隔超时时间的一半检查一次
     final checkInterval = Duration(
@@ -216,8 +235,8 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       if (_stateMachine?.checkTimeout() == true) {
         AppLogger.warning('Install timeout for $appId');
         _stateMachine?.onFailure();
-        markFailed(
-          appId,
+        _markFailed(
+          taskId,
           '安装超时：长时间未收到进度更新',
           errorCode: -2, // 超时错误码
         );
@@ -459,7 +478,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
     // 启动状态机和超时检查
     _stateMachine = InstallStateMachine();
     _stateMachine!.start();
-    _startTimeoutCheck(task.appId);
+    _startTimeoutCheck(task.id, task.appId);
 
     AppLogger.info('Processing task: ${task.id} for app: ${task.appId}');
 
@@ -476,29 +495,29 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
               force: task.force,
             );
       await for (final progress in progressStream) {
-        _handleProgress(task.appId, progress);
+        _handleProgress(task.id, progress);
       }
 
       // 注意：安装成功的标记可能由进度流中的 success 状态触发
       // 如果流正常结束但没有标记成功/取消/失败，这里手动检查
-      if (state.currentTask?.appId == task.appId &&
+      if (state.currentTask?.id == task.id &&
           state.currentTask?.status != InstallStatus.success &&
           state.currentTask?.status != InstallStatus.cancelled &&
           state.currentTask?.status != InstallStatus.failed) {
         // 检查状态机状态
         if (_stateMachine?.state == InstallStateMachineState.succeeded) {
-          markSuccess(task.appId);
+          _markSuccess(task.id);
         } else if (_stateMachine?.state != InstallStateMachineState.failed) {
           // 若底层流结束时仍未给出 success/failed/cancelled 终态，
           // 不能乐观推断成功；否则历史版本安装会出现“假完成”。
           _stateMachine?.onFailure();
-          markFailed(task.appId, messages.confirmFailed(operation));
+          _markFailed(task.id, messages.confirmFailed(operation));
         }
       }
     } catch (e, s) {
       AppLogger.error('Install request failed for ${task.appId}', e, s);
       _stateMachine?.onFailure();
-      markFailed(task.appId, e.toString());
+      _markFailed(task.id, e.toString());
     }
   }
 
@@ -507,8 +526,11 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
   // -----------------------------------------------------------------------
 
   /// 处理安装进度
-  void _handleProgress(String appId, InstallProgress progress) {
-    if (state.currentTask?.appId != appId) return;
+  void _handleProgress(String taskId, InstallProgress progress) {
+    final currentTask = state.currentTask;
+    if (currentTask == null || currentTask.id != taskId) return;
+
+    final appId = currentTask.appId;
 
     // 更新状态机
     if (progress.status == InstallStatus.success) {
@@ -526,38 +548,40 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       _stateMachine?.onMessage();
     }
 
-    final updatedTask = state.currentTask!.copyWith(
-      status: progress.status,
-      progress: progress.progress,
-      message: progress.message,
-      rawMessage: progress.rawMessage,
-      errorMessage: progress.error,
-      errorCode: progress.errorCode,
-      errorDetail: progress.errorDetail ?? progress.rawMessage,
-    );
+    final updatedTask = _appendCommandOutput(currentTask, progress.outputLine)
+        .copyWith(
+          status: progress.status,
+          progress: progress.progress,
+          message: progress.message,
+          rawMessage: progress.rawMessage,
+          errorMessage: progress.error,
+          errorCode: progress.errorCode,
+          errorDetail: progress.errorDetail ?? progress.rawMessage,
+        );
 
     state = state.copyWith(currentTask: updatedTask);
     persistCurrentTask(updatedTask);
 
     // 检查是否完成
     if (progress.status == InstallStatus.success) {
-      markSuccess(appId);
+      _markSuccess(taskId);
     } else if (progress.status == InstallStatus.failed) {
-      markFailed(
-        appId,
+      _markFailed(
+        taskId,
         progress.error ?? '安装失败',
         errorCode: progress.errorCode,
         errorDetail: progress.errorDetail ?? progress.rawMessage,
       );
     } else if (progress.status == InstallStatus.cancelled) {
       // 取消状态：停止超时检查，更新历史记录
-      _handleCancelledProgress(appId);
+      _handleCancelledProgress(taskId);
     }
   }
 
   /// 处理取消状态（从安装流中收到 cancelled 状态）
-  void _handleCancelledProgress(String appId) {
-    if (state.currentTask?.appId != appId) return;
+  void _handleCancelledProgress(String taskId) {
+    final currentTask = state.currentTask;
+    if (currentTask == null || currentTask.id != taskId) return;
 
     // 停止超时检查和清理状态机
     _stopTimeoutCheck();
@@ -566,11 +590,11 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
 
     // 使用国际化消息
     final messages = ref.read(installMessagesProvider);
-    final operation = state.currentTask!.isUpdateTask
+    final operation = currentTask.isUpdateTask
         ? messages.updateLabel
         : messages.installLabel;
 
-    final cancelledTask = state.currentTask!.copyWith(
+    final cancelledTask = currentTask.copyWith(
       status: InstallStatus.cancelled,
       message: messages.cancelled(operation),
       finishedAt: DateTime.now().millisecondsSinceEpoch,
@@ -583,7 +607,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
     );
 
     clearPersistedCurrentTask();
-    AppLogger.info('[InstallQueue] 任务已从流中标记取消: $appId');
+    AppLogger.info('[InstallQueue] 任务已从流中标记取消: ${currentTask.appId}');
 
     // 处理下一个任务
     Future.delayed(const Duration(milliseconds: 100), () => startProcessing());
@@ -596,13 +620,16 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
   /// 标记成功
   ///
   /// 将当前任务标记为成功，添加到历史记录，并处理下一个任务
-  void markSuccess(String appId) {
-    if (state.currentTask?.appId != appId) {
+  void _markSuccess(String taskId) {
+    final currentTask = state.currentTask;
+    if (currentTask == null || currentTask.id != taskId) {
       AppLogger.warning(
-        'markSuccess called for $appId but current task is ${state.currentTask?.appId}',
+        'markSuccess called for task $taskId but current task is ${currentTask?.id}',
       );
       return;
     }
+
+    final appId = currentTask.appId;
 
     // 停止超时检查和清理状态机
     _stopTimeoutCheck();
@@ -611,11 +638,11 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
 
     // 使用国际化消息
     final messages = ref.read(installMessagesProvider);
-    final operation = state.currentTask!.isUpdateTask
+    final operation = currentTask.isUpdateTask
         ? messages.updateLabel
         : messages.installLabel;
 
-    final completedTask = state.currentTask!.copyWith(
+    final completedTask = currentTask.copyWith(
       status: InstallStatus.success,
       progress: 100,
       message: messages.completed(operation),
@@ -648,18 +675,21 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
   ///
   /// 将当前任务标记为失败，记录错误信息，继续处理下一个任务
   /// 会自动检测是否为用户取消，并设置正确的状态
-  void markFailed(
-    String appId,
+  void _markFailed(
+    String taskId,
     String error, {
     int? errorCode,
     String? errorDetail,
   }) {
-    if (state.currentTask?.appId != appId) {
+    final currentTask = state.currentTask;
+    if (currentTask == null || currentTask.id != taskId) {
       AppLogger.warning(
-        'markFailed called for $appId but current task is ${state.currentTask?.appId}',
+        'markFailed called for task $taskId but current task is ${currentTask?.id}',
       );
       return;
     }
+
+    final appId = currentTask.appId;
 
     // 停止超时检查和清理状态机
     _stopTimeoutCheck();
@@ -671,20 +701,20 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
 
     // 使用国际化消息
     final messages = ref.read(installMessagesProvider);
-    final operation = state.currentTask!.isUpdateTask
+    final operation = currentTask.isUpdateTask
         ? messages.updateLabel
         : messages.installLabel;
     final cancelledMsg = messages.cancelled(operation);
     final resolvedError = wasCancelled
         ? cancelledMsg
         : _decorateFailureMessageForCurrentPlatform(
-            task: state.currentTask!,
+            task: currentTask,
             message: error,
             messages: messages,
           );
 
     // 根据取消状态决定任务状态
-    final failedTask = state.currentTask!.copyWith(
+    final failedTask = currentTask.copyWith(
       status: wasCancelled ? InstallStatus.cancelled : InstallStatus.failed,
       errorMessage: resolvedError,
       errorCode: wasCancelled ? null : errorCode,
@@ -781,7 +811,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       _stateMachine = null;
 
       final activeTask = state.currentTask;
-      if (activeTask?.appId != appId) {
+      if (activeTask?.id != currentTask.id) {
         AppLogger.info('[InstallQueue] 任务已由进度流完成取消: $appId');
         return true;
       }
@@ -790,12 +820,14 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       final operation = activeTask!.isUpdateTask
           ? messages.updateLabel
           : messages.installLabel;
+      final cancelledMessage = messages.cancelled(operation);
 
-      final cancelledTask = activeTask.copyWith(
-        status: InstallStatus.cancelled,
-        message: messages.cancelled(operation),
-        finishedAt: DateTime.now().millisecondsSinceEpoch,
-      );
+      final cancelledTask = _appendCommandOutput(activeTask, cancelledMessage)
+          .copyWith(
+            status: InstallStatus.cancelled,
+            message: cancelledMessage,
+            finishedAt: DateTime.now().millisecondsSinceEpoch,
+          );
 
       state = state.copyWith(
         clearCurrentTask: true,
@@ -816,20 +848,38 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       );
 
       return true;
-    } else {
-      // 从队列中移除
-      removeFromQueue(appId);
-      return true;
     }
+
+    return _removeFirstQueuedTaskForApp(appId);
   }
 
-  /// 从队列中移除任务
-  void removeFromQueue(String appId) {
+  /// 从等待队列中移除指定任务，不影响同应用的其他 item 或历史记录。
+  void removeQueuedTask(String taskId) {
     state = state.copyWith(
-      queue: state.queue.where((t) => t.appId != appId).toList(),
-      history: state.history.where((t) => t.appId != appId).toList(),
+      queue: state.queue.where((task) => task.id != taskId).toList(),
     );
     unawaited(persistQueue(state.queue));
+  }
+
+  /// 从历史记录中移除指定任务，不影响同应用的其他历史 item。
+  void removeHistoryTask(String taskId) {
+    state = state.copyWith(
+      history: state.history.where((task) => task.id != taskId).toList(),
+    );
+  }
+
+  /// 兼容旧调用：按 appId 只移除第一个等待任务，不再触碰历史记录。
+  void removeFromQueue(String appId) {
+    _removeFirstQueuedTaskForApp(appId);
+  }
+
+  bool _removeFirstQueuedTaskForApp(String appId) {
+    final index = state.queue.indexWhere((task) => task.appId == appId);
+    if (index < 0) {
+      return false;
+    }
+    removeQueuedTask(state.queue[index].id);
+    return true;
   }
 
   /// 清空历史记录
@@ -910,26 +960,43 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
     clearPersistedCurrentTask();
   }
 
-  /// 重试失败的任务
+  /// 重试失败的任务。
+  ///
+  /// 旧入口按 appId 找到第一条失败记录后委托给精确的 taskId 入口，
+  /// 保持外部兼容但避免一次删除同应用的多条历史。
   void retryFailed(String appId) {
-    InstallTask? failedTask;
-    for (final task in state.history) {
-      if (task.appId == appId) {
-        failedTask = task;
-        break;
-      }
+    final failedTask = state.history
+        .where(
+          (task) => task.appId == appId && task.status == InstallStatus.failed,
+        )
+        .firstOrNull;
+    if (failedTask == null) {
+      return;
     }
+    retryFailedTask(failedTask.id);
+  }
+
+  /// 按任务 ID 重试失败记录，并保留原始 install/update 类型与版本参数。
+  void retryFailedTask(String taskId) {
+    final failedTask = state.history
+        .where((task) => task.id == taskId)
+        .firstOrNull;
     if (failedTask == null || failedTask.status != InstallStatus.failed) {
       return;
     }
+    if (state.isAppInQueue(failedTask.appId)) {
+      AppLogger.warning(
+        'App ${failedTask.appId} is already in queue, skipping retry',
+      );
+      return;
+    }
 
-    // 从历史中移除
     state = state.copyWith(
-      history: state.history.where((t) => t.appId != appId).toList(),
+      history: state.history.where((task) => task.id != taskId).toList(),
     );
 
-    // 重新入队
-    enqueueInstall(
+    enqueueOperation(
+      kind: failedTask.kind,
       appId: failedTask.appId,
       appName: failedTask.appName,
       icon: failedTask.icon,

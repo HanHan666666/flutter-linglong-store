@@ -3,8 +3,8 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 文档指引
-/home/han/linglong-store/linglong-server 这个是后端代码，你在对接接口的时候需要参考
-/home/han/linglong-store/rust-linglong-store 这里是旧版rust商店，你要参考这里的逻辑
+/home/han/code/linglong-store/linglong-server 这个是后端代码，你在对接接口的时候需要参考。  
+
 
 
 ## 重点（极其重要）

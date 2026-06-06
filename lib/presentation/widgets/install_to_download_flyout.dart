@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 
 import 'app_icon.dart';
 
-const Duration _kInstallFlyoutDuration = Duration(milliseconds: 780);
-const Duration _kDownloadPulseDuration = Duration(milliseconds: 320);
+const Duration _kInstallFlyoutDuration = Duration(milliseconds: 920);
+const Duration _kDownloadPulseDuration = Duration(milliseconds: 520);
 
 /// Shell 级安装反馈动画层。
 ///
@@ -37,6 +37,7 @@ class _InstallToDownloadFlyoutLayerState
   GlobalKey? _downloadTargetKey;
   int _sequence = 0;
 
+  /// 遵循系统减少/禁用动画偏好，避免用户关闭系统动画后仍看到强反馈。
   bool get _animationsDisabled {
     final mediaQuery = MediaQuery.maybeOf(context);
     return mediaQuery?.disableAnimations ??
@@ -348,6 +349,10 @@ class _InstallFlightWidgetState extends State<_InstallFlightWidget>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final primaryColor = colorScheme.primary;
+    final shadowColor = colorScheme.shadow;
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
@@ -355,25 +360,37 @@ class _InstallFlightWidgetState extends State<_InstallFlightWidget>
         final center = _evaluateCurve(progress);
         final iconSize = lerpDouble(
           widget.entry.sourceRect.shortestSide,
-          math.max(22, widget.entry.targetRect.shortestSide * 0.52),
+          math.max(30, widget.entry.targetRect.shortestSide * 0.68),
           progress,
         )!;
-        final opacity = progress < 0.82
+        final opacity = progress < 0.9
             ? 1.0
             : lerpDouble(
                 1,
                 0,
-                (progress - 0.82) / 0.18,
+                (progress - 0.9) / 0.1,
               )!.clamp(0.0, 1.0).toDouble();
-        final scale = progress < 0.2
-            ? lerpDouble(0.96, 1.04, progress / 0.2)!
-            : lerpDouble(1.04, 0.68, (progress - 0.2) / 0.8)!;
-        final rotation = lerpDouble(0, -0.14, progress)!;
-        final shadowOpacity = lerpDouble(0.22, 0.06, progress)!;
+        final scale = progress < 0.24
+            ? lerpDouble(0.94, 1.12, progress / 0.24)!
+            : lerpDouble(1.12, 0.82, (progress - 0.24) / 0.76)!;
+        final rotation = lerpDouble(0.04, -0.18, progress)!;
+        final haloSize = iconSize + lerpDouble(26, 16, progress)!;
+        final glowOpacity = progress < 0.72
+            ? lerpDouble(0.28, 0.2, progress / 0.72)!
+            : lerpDouble(0.2, 0.08, (progress - 0.72) / 0.28)!;
+        final outlineOpacity = progress < 0.82
+            ? lerpDouble(0.5, 0.34, progress / 0.82)!
+            : lerpDouble(0.34, 0.0, (progress - 0.82) / 0.18)!;
+        final shadowOpacity = lerpDouble(0.3, 0.12, progress)!;
+        final iconRadius = lerpDouble(
+          widget.entry.sourceRect.shortestSide * 0.18,
+          11,
+          progress,
+        )!;
 
         return Positioned(
-          left: center.dx - (iconSize / 2),
-          top: center.dy - (iconSize / 2),
+          left: center.dx - (haloSize / 2),
+          top: center.dy - (haloSize / 2),
           child: Opacity(
             key: const Key('install-download-flyout'),
             opacity: opacity,
@@ -381,27 +398,60 @@ class _InstallFlightWidgetState extends State<_InstallFlightWidget>
               angle: rotation,
               child: Transform.scale(
                 scale: scale,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: shadowOpacity),
-                        blurRadius: 22,
-                        offset: const Offset(0, 10),
+                child: SizedBox(
+                  width: haloSize,
+                  height: haloSize,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // 用主题色光晕强调飞行轨迹，避免图标在复杂背景中被吃掉。
+                      Container(
+                        key: const Key('install-download-flyout-glow'),
+                        width: haloSize,
+                        height: haloSize,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: primaryColor.withValues(alpha: glowOpacity),
+                          boxShadow: [
+                            BoxShadow(
+                              color: primaryColor.withValues(
+                                alpha: glowOpacity * 0.72,
+                              ),
+                              blurRadius: 30,
+                              spreadRadius: 2,
+                            ),
+                            BoxShadow(
+                              color: shadowColor.withValues(
+                                alpha: shadowOpacity,
+                              ),
+                              blurRadius: 24,
+                              offset: const Offset(0, 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: iconSize + 8,
+                        height: iconSize + 8,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(iconRadius + 4),
+                          border: Border.all(
+                            color: primaryColor.withValues(
+                              alpha: outlineOpacity,
+                            ),
+                            width: 1.6,
+                          ),
+                        ),
+                      ),
+                      AppIcon(
+                        iconUrl: widget.entry.iconUrl,
+                        appName: widget.entry.appName,
+                        size: iconSize,
+                        borderRadius: iconRadius,
+                        memCacheWidth: math.max(64, (iconSize * 2).round()),
+                        maxDiskCacheWidth: math.max(96, (iconSize * 3).round()),
                       ),
                     ],
-                  ),
-                  child: AppIcon(
-                    iconUrl: widget.entry.iconUrl,
-                    appName: widget.entry.appName,
-                    size: iconSize,
-                    borderRadius: lerpDouble(
-                      widget.entry.sourceRect.shortestSide * 0.18,
-                      10,
-                      progress,
-                    )!,
-                    memCacheWidth: math.max(64, (iconSize * 2).round()),
-                    maxDiskCacheWidth: math.max(96, (iconSize * 3).round()),
                   ),
                 ),
               ),
@@ -486,6 +536,9 @@ class _DownloadPulseWidgetState extends State<_DownloadPulseWidget>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final primaryColor = colorScheme.primary;
+    final shadowColor = colorScheme.shadow;
     final center = widget.entry.targetRect.center;
     return AnimatedBuilder(
       animation: _controller,
@@ -493,16 +546,22 @@ class _DownloadPulseWidgetState extends State<_DownloadPulseWidget>
         final progress = _progress.value;
         final primarySize = lerpDouble(
           widget.entry.targetRect.width,
-          widget.entry.targetRect.width + 26,
+          widget.entry.targetRect.width + 38,
           progress,
         )!;
         final secondarySize = lerpDouble(
-          widget.entry.targetRect.width * 0.8,
-          widget.entry.targetRect.width + 44,
+          widget.entry.targetRect.width * 0.9,
+          widget.entry.targetRect.width + 72,
           progress,
         )!;
-        final primaryOpacity = lerpDouble(0.22, 0, progress)!;
-        final secondaryOpacity = lerpDouble(0.14, 0, progress)!;
+        final highlightSize = lerpDouble(
+          widget.entry.targetRect.width * 0.72,
+          widget.entry.targetRect.width * 1.08,
+          progress,
+        )!;
+        final primaryOpacity = lerpDouble(0.42, 0, progress)!;
+        final secondaryOpacity = lerpDouble(0.18, 0, progress)!;
+        final highlightOpacity = lerpDouble(0.24, 0, progress)!;
 
         return Stack(
           children: [
@@ -515,7 +574,14 @@ class _DownloadPulseWidgetState extends State<_DownloadPulseWidget>
                 height: secondarySize,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: secondaryOpacity),
+                  color: primaryColor.withValues(alpha: secondaryOpacity),
+                  boxShadow: [
+                    BoxShadow(
+                      color: primaryColor.withValues(alpha: secondaryOpacity),
+                      blurRadius: 24,
+                      spreadRadius: 1,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -528,9 +594,31 @@ class _DownloadPulseWidgetState extends State<_DownloadPulseWidget>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: primaryOpacity),
-                    width: 1.4,
+                    color: primaryColor.withValues(alpha: primaryOpacity),
+                    width: 2.0,
                   ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: center.dx - (highlightSize / 2),
+              top: center.dy - (highlightSize / 2),
+              child: Container(
+                key: const Key('install-download-target-highlight'),
+                width: highlightSize,
+                height: highlightSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: primaryColor.withValues(alpha: highlightOpacity),
+                  boxShadow: [
+                    BoxShadow(
+                      color: shadowColor.withValues(
+                        alpha: highlightOpacity * 0.8,
+                      ),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
               ),
             ),

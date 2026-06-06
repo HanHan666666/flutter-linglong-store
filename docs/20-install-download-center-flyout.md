@@ -38,16 +38,34 @@
 
 禁止把动画直接绑在按钮点击事件上，否则重复点击、已在队列中、禁用态等场景会出现假反馈。
 
+### 5. 系统动画开关以 Flutter 暴露的系统偏好为准
+
+动画层必须读取 `MediaQuery.disableAnimations`，并在缺少 `MediaQuery` 时回退到 `PlatformDispatcher.accessibilityFeatures.disableAnimations`。
+
+这是当前 Flutter Linux 对系统“减少/禁用动画”偏好的统一入口。GNOME、Portal 等 Flutter 已支持来源会映射到该值；不同 Linux 桌面环境并不存在一个完全统一的“窗口动画开关”业务 API，因此本项目不在 Dart 层新增发行版专有分支，也不直接调用 `gsettings`、KDE 配置文件或 shell 命令读取动画设置。
+
+如果系统设置关闭或减少动画，安装飞行和下载中心脉冲都必须跳过；安装/更新入队结果不得受影响。
+
+## 视觉约定
+
+- 飞行时长保持在约 `900ms` 量级，让用户能看清源点、轨迹和落点。
+- 飞行图标必须包含主题色光晕和描边，避免在浅色内容区、深色侧边栏或复杂图标背景上不可见。
+- 图标末段不应过早消失，淡出只发生在接近下载中心入口时。
+- 下载中心落点必须使用主题色双层脉冲和中心高亮，不再依赖低透明白色圆环。
+- 动画只用于“已加入下载管理”的空间反馈，不承载进度、错误或队列状态。
+
 ## 降级规则
 
 - source 不可见、目标锚点不可用、动画宿主不存在时：不得阻断安装流程。
 - 单项安装/更新：优先尝试飞行；若无法起飞，退化为下载中心脉冲。
 - 批量更新：固定退化为下载中心脉冲，不做多图标飞行。
-- 系统声明禁用动画时：直接跳过飞行反馈。
+- 系统声明禁用动画时：直接跳过飞行和脉冲反馈。
 
 ## 测试约定
 
 - `install_to_download_flyout_test.dart`：验证动画宿主的出现与回收。
+- `install_to_download_flyout_test.dart`：验证系统禁用动画时不出现飞行或脉冲反馈。
+- `install_to_download_flyout_test.dart`：验证增强视觉节点包含飞行光晕和下载中心落点高亮。
 - `app_card_state_test.dart`：验证 `AppCard` 会把图标 source key 传给主动作回调。
 - `sidebar_test.dart`：验证下载中心按钮存在稳定 flyout target。
 - 更新页、详情页与 AppShell 继续依赖现有页面级 widget 测试覆盖回归。

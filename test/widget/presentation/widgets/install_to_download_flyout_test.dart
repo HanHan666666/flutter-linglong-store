@@ -150,4 +150,165 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets('skips visual feedback when system disables animations', (
+    tester,
+  ) async {
+    final sourceKey = GlobalKey(debugLabel: 'disabled-animation-source');
+    var launched = true;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: InstallToDownloadFlyoutLayer(
+            child: Scaffold(
+              body: Stack(
+                children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Container(
+                      key: sourceKey,
+                      width: 48,
+                      height: 48,
+                      margin: const EdgeInsets.only(top: 24, right: 24),
+                      color: Colors.blue,
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: DownloadCenterFlyoutTarget(
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Builder(
+                    builder: (context) {
+                      return Center(
+                        child: FilledButton(
+                          onPressed: () {
+                            final controller =
+                                InstallToDownloadFlyoutLayer.maybeOf(context);
+                            launched =
+                                controller?.launch(
+                                  appId: 'org.example.disabled',
+                                  appName: '禁用动画应用',
+                                  sourceKey: sourceKey,
+                                ) ??
+                                false;
+                            controller?.pulseDownloadCenter();
+                          },
+                          child: const Text('disabled'),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('disabled'));
+    await tester.pump();
+
+    expect(launched, isFalse);
+    expect(find.byKey(const Key('install-download-flyout')), findsNothing);
+    expect(
+      find.byKey(const Key('install-download-target-pulse')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('renders enhanced flyout glow and landing highlight', (
+    tester,
+  ) async {
+    final sourceKey = GlobalKey(debugLabel: 'enhanced-install-source');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Theme(
+          data: ThemeData(colorSchemeSeed: Colors.blue),
+          child: InstallToDownloadFlyoutLayer(
+            child: Scaffold(
+              body: Stack(
+                children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Container(
+                      key: sourceKey,
+                      width: 48,
+                      height: 48,
+                      margin: const EdgeInsets.only(top: 24, right: 24),
+                      color: Colors.blue,
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: DownloadCenterFlyoutTarget(
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Builder(
+                    builder: (context) {
+                      return Center(
+                        child: FilledButton(
+                          onPressed: () {
+                            InstallToDownloadFlyoutLayer.maybeOf(
+                              context,
+                            )?.launch(
+                              appId: 'org.example.enhanced',
+                              appName: '增强动画应用',
+                              sourceKey: sourceKey,
+                            );
+                          },
+                          child: const Text('enhanced'),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('enhanced'));
+    await tester.pump();
+
+    expect(find.byKey(const Key('install-download-flyout')), findsOneWidget);
+    expect(
+      find.byKey(const Key('install-download-flyout-glow')),
+      findsOneWidget,
+    );
+
+    await tester.pump(const Duration(milliseconds: 1000));
+    expect(
+      find.byKey(const Key('install-download-target-highlight')),
+      findsOneWidget,
+    );
+  });
 }

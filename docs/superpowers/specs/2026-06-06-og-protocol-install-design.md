@@ -54,7 +54,8 @@ og://org.example.App
 解析规则：
 
 - scheme 必须是 `og`，大小写归一为小写。
-- appId 来自 `Uri.host`；若 host 为空，再允许从 `Uri.path` 去掉前导 `/` 后读取，用于兼容少数浏览器可能传入的 `og:///appId`。
+- `og://appId` 的 appId 从原始 URL authority 提取，不能直接使用 `Uri.host`，因为 Dart 会按 URI 规范把 host 归一为小写，可能改写旧协议传来的业务 ID。
+- 若 authority 为空，再允许从 `Uri.path` 去掉前导 `/` 后读取，用于兼容少数浏览器可能传入的 `og:///appId`。
 - 不接受空 appId。
 - query 参数暂不使用，避免扩大旧协议语义。
 
@@ -69,12 +70,20 @@ appOperationQueueControllerProvider.enqueueAppOperation(
     appId: detail.appId,
     appName: detail.name,
     icon: detail.icon,
-    version: detail.version,
+    version: null,
   ),
 )
 ```
 
-安装执行仍由 `InstallQueue` 串行处理，不新增 `ll-cli` 调用。
+旧协议只表达 appId，不携带版本语义，因此入队时不指定版本，由现有安装队列按默认安装规则处理。安装执行仍由 `InstallQueue` 串行处理，不新增 `ll-cli` 调用。
+
+## 实现落点
+
+- `lib/main.dart`：接收 `main(List<String> arguments)`，筛选冷启动阶段的 `og://appId` 参数并注入 `initialOgProtocolUrlsProvider`。
+- `lib/core/platform/single_instance.dart`：第二个进程通过 Unix socket 向主实例发送结构化 `openUrl` 消息，同时兼容历史 `ACTIVATE`。
+- `lib/app.dart`：根组件 `_OgProtocolInstallBootstrap` 订阅冷启动 URL、单实例 URL 流和控制器事件，并用现有通知 helper 展示反馈。
+- `lib/application/providers/og_install_controller.dart`：等待启动完成、检查玲珑环境、加载详情并复用 `AppOperationQueueController` 入队。
+- `build/packaging/linux/linglong-store.desktop.in`：通过 `%u` 和 `x-scheme-handler/og` 声明 XDG URL handler 能力。
 
 ## 边界处理
 
@@ -90,4 +99,3 @@ appOperationQueueControllerProvider.enqueueAppOperation(
 - 单元测试覆盖单实例消息序列化和 URL 转发解析。
 - 单元测试覆盖 `OgInstallController` 的启动完成等待、环境拦截、详情入队、重复请求。
 - 打包元数据测试覆盖 `.desktop` 包含 `%u` 和 `x-scheme-handler/og`。
-

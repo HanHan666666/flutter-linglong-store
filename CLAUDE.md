@@ -288,6 +288,7 @@ Semantics(
 测试文件位于 `test/unit/core/accessibility/a11y_semantics_test.dart`。
 
 ## 变更记录
+- 2026-06-06：网页版商店拉起安装只兼容旧协议 `og://appId`，禁止新增替代 scheme 或扩展 query 业务语义；Linux 包通过 `.desktop` 的 `Exec=... %u` 与 `MimeType=x-scheme-handler/og;` 按 XDG 方式声明能力，应用运行时不得调用 `xdg-mime` 强行覆盖用户默认 handler。冷启动 URL 由 `main(List<String> args)` 注入 `initialOgProtocolUrlsProvider`，已运行实例由 `SingleInstance.protocolUrls` 转发，业务必须统一进入 `OgInstallController -> AppRepository.getAppDetail() -> AppOperationQueueController.enqueueAppOperation()`，不得绕过安装队列或直接新增 `ll-cli` 调用。
 - 2026-05-27：标题栏搜索候选数据源从后端 `/visit/getSearchAppList` 切换为 `ll-cli search . --json` 本地内存索引（`AppSearchIndex` provider）；新增鼠标 hover 高亮、键盘 ↑↓ 选中、Enter/点击跳转详情、Escape 关闭面板等交互；候选防抖从 300ms 降为 100ms；候选项类型从 `RecommendAppInfo` 改为轻量 `SuggestionItem`；候选跳转详情只传 `appId`，详情页自行拉取完整信息。
 - 2026-05-24：Loong64 发布链当前采用”nightly 异步补传 + release 并入主流程”的收敛策略：新增 `nightly-loong64.yml` 在主 `Nightly` 成功后补传 `loong64` 的 `bundle + deb` 并刷新 nightly release notes / `hashes.sha256`；正式 `release.yml` 并入 Loong64 `bundle + deb` 构建，但 `publish-aur` 与 `update-uos-store` 仍只允许消费 `amd64 + arm64`，禁止把 Loong64 资产误接入 AUR/UOS。Loong64 构建统一走 `build/scripts/build-loong64-in-container.sh` + 外部 `Flutter-Dart-loong64/flutter-loong64-releases` SDK，当前不要尝试在未验证上游工具链前扩到 Loong64 `AppImage`。
 - 2026-04-29：发行版特殊提示/特殊适配统一走 `LinuxDistributionResolver -> LinglongEnvCheckResult.distribution -> InstallMessages guidance scenario` 链路；启动期环境安装提示由 `LinglongEnvDialog` 按发行版场景渲染，安装失败提醒统一在 `InstallQueue.markFailed()` 收口。新增发行版规则时，禁止重新扩散 `isUos` / `isDeepin` 一类布尔判断。

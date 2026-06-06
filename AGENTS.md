@@ -295,6 +295,7 @@ Semantics(
 测试文件位于 `test/unit/core/accessibility/a11y_semantics_test.dart`。
 
 ## 变更记录
+- 2026-06-06：网页版商店拉起安装只兼容旧协议 `og://appId`，禁止新增替代 scheme 或扩展 query 业务语义；Linux 包通过 `.desktop` 的 `Exec=... %u` 与 `MimeType=x-scheme-handler/og;` 按 XDG 方式声明能力，应用运行时不得调用 `xdg-mime` 强行覆盖用户默认 handler。冷启动 URL 由 `main(List<String> args)` 注入 `initialOgProtocolUrlsProvider`，已运行实例由 `SingleInstance.protocolUrls` 转发，业务必须统一进入 `OgInstallController -> AppRepository.getAppDetail() -> AppOperationQueueController.enqueueAppOperation()`，不得绕过安装队列或直接新增 `ll-cli` 调用。
 - 2026-06-05：下载中心 item 操作必须以 `InstallTask.id` 为唯一身份；删除、取消排队项、重试失败项都不得再按 `appId` 批量影响同应用的其他记录。安装/更新任务需要随 item 保存 `commandOutput`，点击 item 复制该任务的 `ll-cli` 命令与输出，item 删除后对应输出自然随任务记录删除。
 - 2026-05-31：Tooltip/复制文案完整性约定——Tooltip 是查看完整内容的入口，业务层、状态层和 Provider 层禁止为了 UI 宽度提前 `substring + ...` 截断文案；视觉省略只能在具体 `Text(maxLines, overflow: TextOverflow.ellipsis)` 上处理。传给 `Tooltip.message`/`richMessage`、`Semantics.label` 和复制按钮的必须是完整文本；安装/更新状态如遇历史 `message` 已带 `...`，必须从 `rawMessage/errorDetail` 还原完整内容，复制按钮不得复制省略后的短文案。
 - 2026-05-31：安装/更新任务取消必须以系统级 `pkexec killall -15 ll-cli ll-package-manager` 成功为准；用户取消授权或 killall 失败时，`InstallQueue.cancelTask()` 必须返回 `false` 并保持当前任务 `Installing`，不得清空 `currentTask`、写入 `InstallStatus.cancelled` 历史，或仅凭 Dart 侧 `process.kill()` 判定取消成功。

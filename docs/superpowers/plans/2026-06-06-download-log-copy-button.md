@@ -19,11 +19,11 @@
   - Add a compact copy button to `_TaskCard` when `commandOutput` exists.
   - Keep copy feedback inside `_TaskCardState` with a 1200ms timer.
 - Modify: `lib/core/i18n/l10n/app_zh.arb`
-  - Add `copySucceeded`.
+- Add `copyLog` and `copySucceeded`.
 - Modify: `lib/core/i18n/l10n/app_en.arb`
-  - Add `copySucceeded`.
+- Add `copyLog` and `copySucceeded`.
 - Regenerate/modify: `lib/core/i18n/l10n/app_localizations*.dart`
-  - Expose the new `copySucceeded` getter.
+- Expose the new `copyLog` and `copySucceeded` getters.
 
 ## Task 1: Write The Regression Test
 
@@ -42,7 +42,7 @@ await tester.tap(find.text('微信'));
 await tester.pump();
 expect(clipboardCall, isNull);
 
-await tester.tap(find.text('复制'));
+await tester.tap(find.text('复制日志'));
 await tester.pump();
 expect(clipboardCall?.method, equals('Clipboard.setData'));
 expect(clipboardCall?.arguments, {'text': commandOutput});
@@ -50,7 +50,7 @@ expect(find.text('复制成功'), findsOneWidget);
 expect(find.text('命令已复制到剪贴板'), findsNothing);
 
 await tester.pump(const Duration(milliseconds: 1200));
-expect(find.text('复制'), findsOneWidget);
+expect(find.text('复制日志'), findsOneWidget);
 expect(find.text('复制成功'), findsNothing);
 ```
 
@@ -72,15 +72,17 @@ Expected: FAIL because the current implementation copies from the whole task ite
 - Modify: `lib/core/i18n/l10n/app_en.arb`
 - Regenerate/modify: `lib/core/i18n/l10n/app_localizations*.dart`
 
-- [ ] **Step 1: Add `copySucceeded` localization**
+- [ ] **Step 1: Add `copyLog` and `copySucceeded` localization**
 
 Add these ARB entries near `copy`:
 
 ```json
+"copyLog": "复制日志",
 "copySucceeded": "复制成功"
 ```
 
 ```json
+"copyLog": "Copy Log",
 "copySucceeded": "Copied"
 ```
 
@@ -92,7 +94,7 @@ Run:
 flutter gen-l10n
 ```
 
-Expected: generated `app_localizations.dart`, `app_localizations_zh.dart`, and `app_localizations_en.dart` expose `copySucceeded`.
+Expected: generated `app_localizations.dart`, `app_localizations_zh.dart`, and `app_localizations_en.dart` expose `copyLog` and `copySucceeded`.
 
 - [ ] **Step 3: Move copy behavior into `_TaskCardState`**
 
@@ -104,7 +106,7 @@ In `download_manager_dialog.dart`:
 - remove `InkWell.onTap`;
 - add `_isOutputCopied`, `_copyFeedbackTimer`, and `_handleCopyOutputPressed()`;
 - add a `TextButton` rendered only when `widget.task.commandOutput.trim().isNotEmpty`;
-- make the button label `copySucceeded` while copied, otherwise `copy`.
+- make the button label `copySucceeded` while copied, otherwise `copyLog`.
 
 Implementation details:
 

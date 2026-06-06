@@ -533,7 +533,7 @@ void main() {
 
         expect(clipboardCall, isNull);
 
-        await tester.tap(find.text('复制'));
+        await tester.tap(find.text('复制日志'));
         await tester.pump();
         expect(clipboardCall?.method, equals('Clipboard.setData'));
         expect(clipboardCall?.arguments, {'text': commandOutput});
@@ -542,7 +542,7 @@ void main() {
 
         await tester.pump(const Duration(milliseconds: 1200));
 
-        expect(find.text('复制'), findsOneWidget);
+        expect(find.text('复制日志'), findsOneWidget);
         expect(find.text('复制成功'), findsNothing);
       },
     );

@@ -277,6 +277,7 @@
   },
   "commandCopied": "Command copied to clipboard, paste and run in terminal",
   "copy": "Copy",
+  "copyLog": "Copy Log",
   "copySucceeded": "Copied",
   "copyErrorMessage": "Copy error message",
   "skipCheck": "Skip Check",

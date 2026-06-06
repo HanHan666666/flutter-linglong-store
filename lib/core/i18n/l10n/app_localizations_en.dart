@@ -563,6 +563,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copy => 'Copy';
 
   @override
+  String get copyLog => 'Copy Log';
+
+  @override
   String get copySucceeded => 'Copied';
 
   @override

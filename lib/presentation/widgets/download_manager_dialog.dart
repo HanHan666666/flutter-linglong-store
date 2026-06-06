@@ -733,7 +733,7 @@ class _TaskCardState extends State<_TaskCard> {
     final appColors = context.appColors;
     final buttonLabel = _isOutputCopied
         ? (l10n?.copySucceeded ?? '复制成功')
-        : (l10n?.copy ?? '复制');
+        : (l10n?.copyLog ?? '复制日志');
 
     return Tooltip(
       message: buttonLabel,

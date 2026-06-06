@@ -453,6 +453,35 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadManager => '下载管理';
 
   @override
+  String ogInstallRequestReceived(String appName) {
+    return '已收到来自网页的安装请求：$appName';
+  }
+
+  @override
+  String ogInstallEnqueued(String appName) {
+    return '已加入下载管理：$appName';
+  }
+
+  @override
+  String get ogInstallInvalidLink => '无法识别网页安装链接，仅支持 og://appId';
+
+  @override
+  String get ogInstallEnvironmentUnavailable => '玲珑运行环境不可用，暂不能从网页自动安装';
+
+  @override
+  String ogInstallDuplicate(String appName) {
+    return '$appName 已在下载管理中';
+  }
+
+  @override
+  String get ogInstallDetailFailed => '无法获取应用信息，安装未开始';
+
+  @override
+  String ogInstallDetailFailedWithError(String error) {
+    return '无法获取应用信息，安装未开始：$error';
+  }
+
+  @override
   String get clearRecords => '清空记录';
 
   @override

@@ -944,6 +944,48 @@ abstract class AppLocalizations {
   /// **'下载管理'**
   String get downloadManager;
 
+  /// No description provided for @ogInstallRequestReceived.
+  ///
+  /// In zh, this message translates to:
+  /// **'已收到来自网页的安装请求：{appName}'**
+  String ogInstallRequestReceived(String appName);
+
+  /// No description provided for @ogInstallEnqueued.
+  ///
+  /// In zh, this message translates to:
+  /// **'已加入下载管理：{appName}'**
+  String ogInstallEnqueued(String appName);
+
+  /// No description provided for @ogInstallInvalidLink.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法识别网页安装链接，仅支持 og://appId'**
+  String get ogInstallInvalidLink;
+
+  /// No description provided for @ogInstallEnvironmentUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑运行环境不可用，暂不能从网页自动安装'**
+  String get ogInstallEnvironmentUnavailable;
+
+  /// No description provided for @ogInstallDuplicate.
+  ///
+  /// In zh, this message translates to:
+  /// **'{appName} 已在下载管理中'**
+  String ogInstallDuplicate(String appName);
+
+  /// No description provided for @ogInstallDetailFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法获取应用信息，安装未开始'**
+  String get ogInstallDetailFailed;
+
+  /// No description provided for @ogInstallDetailFailedWithError.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法获取应用信息，安装未开始：{error}'**
+  String ogInstallDetailFailedWithError(String error);
+
   /// No description provided for @clearRecords.
   ///
   /// In zh, this message translates to:

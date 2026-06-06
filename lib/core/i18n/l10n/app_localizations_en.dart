@@ -474,6 +474,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadManager => 'Download Manager';
 
   @override
+  String ogInstallRequestReceived(String appName) {
+    return 'Received a web install request for $appName';
+  }
+
+  @override
+  String ogInstallEnqueued(String appName) {
+    return 'Added to Download Manager: $appName';
+  }
+
+  @override
+  String get ogInstallInvalidLink =>
+      'Cannot recognize this web install link. Only og://appId is supported.';
+
+  @override
+  String get ogInstallEnvironmentUnavailable =>
+      'The Linyaps environment is unavailable, so web install cannot start yet.';
+
+  @override
+  String ogInstallDuplicate(String appName) {
+    return '$appName is already in Download Manager';
+  }
+
+  @override
+  String get ogInstallDetailFailed =>
+      'Could not load app information. Installation was not started.';
+
+  @override
+  String ogInstallDetailFailedWithError(String error) {
+    return 'Could not load app information. Installation was not started: $error';
+  }
+
+  @override
   String get clearRecords => 'Clear Records';
 
   @override

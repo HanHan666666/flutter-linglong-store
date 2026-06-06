@@ -198,6 +198,41 @@
   "exitWithInstalling": "有正在进行的安装任务，确定要退出吗？",
   "exitBtn": "退出",
   "downloadManager": "下载管理",
+  "ogInstallRequestReceived": "已收到来自网页的安装请求：{appName}",
+  "@ogInstallRequestReceived": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallEnqueued": "已加入下载管理：{appName}",
+  "@ogInstallEnqueued": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallInvalidLink": "无法识别网页安装链接，仅支持 og://appId",
+  "ogInstallEnvironmentUnavailable": "玲珑运行环境不可用，暂不能从网页自动安装",
+  "ogInstallDuplicate": "{appName} 已在下载管理中",
+  "@ogInstallDuplicate": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallDetailFailed": "无法获取应用信息，安装未开始",
+  "ogInstallDetailFailedWithError": "无法获取应用信息，安装未开始：{error}",
+  "@ogInstallDetailFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "clearRecords": "清空记录",
   "noDownloadTasks": "暂无下载任务",
   "cannotOpenLink": "无法打开链接: {url}",

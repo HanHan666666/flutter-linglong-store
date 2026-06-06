@@ -198,6 +198,41 @@
   "exitWithInstalling": "There are ongoing installation tasks. Are you sure you want to exit?",
   "exitBtn": "Exit",
   "downloadManager": "Download Manager",
+  "ogInstallRequestReceived": "Received a web install request for {appName}",
+  "@ogInstallRequestReceived": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallEnqueued": "Added to Download Manager: {appName}",
+  "@ogInstallEnqueued": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallInvalidLink": "Cannot recognize this web install link. Only og://appId is supported.",
+  "ogInstallEnvironmentUnavailable": "The Linyaps environment is unavailable, so web install cannot start yet.",
+  "ogInstallDuplicate": "{appName} is already in Download Manager",
+  "@ogInstallDuplicate": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallDetailFailed": "Could not load app information. Installation was not started.",
+  "ogInstallDetailFailedWithError": "Could not load app information. Installation was not started: {error}",
+  "@ogInstallDetailFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "clearRecords": "Clear Records",
   "noDownloadTasks": "No download tasks",
   "cannotOpenLink": "Cannot open link: {url}",

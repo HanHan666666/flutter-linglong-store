@@ -546,6 +546,66 @@ void main() {
         expect(find.text('复制成功'), findsNothing);
       },
     );
+
+    testWidgets('aligns failed status with action buttons', (tester) async {
+      const commandOutput =
+          'll-cli install --json com.qq.wemeet\n'
+          '{"code":-1,"message":"Could not resolve hostname"}';
+      final installQueue = TestInstallQueue(
+        initialState: InstallQueueState(
+          history: [
+            InstallTask(
+              id: 'wemeet-history-1',
+              appId: 'com.qq.wemeet',
+              appName: '腾讯会议',
+              kind: InstallTaskKind.install,
+              status: InstallStatus.failed,
+              message: '安装失败',
+              errorMessage: '安装失败：Could not resolve hostname',
+              commandOutput: commandOutput,
+              createdAt: DateTime.now().millisecondsSinceEpoch,
+              finishedAt: DateTime.now().millisecondsSinceEpoch,
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            installQueueProvider.overrideWith(() => installQueue),
+            networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+          ],
+          child: MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: Center(
+                    child: FilledButton(
+                      onPressed: () => showDownloadManagerDialog(context),
+                      child: const Text('open'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      final statusCenter = tester.getCenter(find.text('失败'));
+      final copyCenter = tester.getCenter(find.text('复制日志'));
+      final retryCenter = tester.getCenter(find.byIcon(Icons.refresh));
+
+      expect((statusCenter.dy - copyCenter.dy).abs(), lessThanOrEqualTo(2.0));
+      expect((statusCenter.dy - retryCenter.dy).abs(), lessThanOrEqualTo(2.0));
+    });
   });
 }
 

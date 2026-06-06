@@ -243,6 +243,59 @@ void main() {
       ]);
     });
 
+    test(
+      'includes ll-cli json message for generic error code without generic wording',
+      () async {
+        const detail =
+            'ostree_repo_pull_with_options [code 24]: Could not resolve hostname';
+        final executor = _RecordingCliExecutor()
+          ..progressEvents = const [
+            ProgressEvent(
+              line: '{"code":-1,"message":"$detail"}',
+              type: ProgressEventType.stdout,
+            ),
+          ];
+        final repository = LinglongCliRepositoryImpl.withExecutor(
+          InstallMessages.fromLocale(const Locale('zh')),
+          execute: executor.execute,
+          executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+          cancelWithSystemKill: executor.cancelWithSystemKill,
+        );
+
+        final events = await repository.installApp('org.example.demo').toList();
+
+        expect(events.last.status, InstallStatus.failed);
+        expect(events.last.error, contains('安装失败'));
+        expect(events.last.error, contains('Could not resolve hostname'));
+        expect(events.last.error, isNot(contains('通用错误')));
+        expect(events.last.errorDetail, equals(detail));
+      },
+    );
+
+    test('includes ll-cli json message for specific error code', () async {
+      const detail = 'mirror unavailable while fetching object';
+      final executor = _RecordingCliExecutor()
+        ..progressEvents = const [
+          ProgressEvent(
+            line: '{"code":3001,"message":"$detail"}',
+            type: ProgressEventType.stdout,
+          ),
+        ];
+      final repository = LinglongCliRepositoryImpl.withExecutor(
+        InstallMessages.fromLocale(const Locale('zh')),
+        execute: executor.execute,
+        executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+        cancelWithSystemKill: executor.cancelWithSystemKill,
+      );
+
+      final events = await repository.installApp('org.example.demo').toList();
+
+      expect(events.last.status, InstallStatus.failed);
+      expect(events.last.error, contains('网络错误'));
+      expect(events.last.error, contains('mirror unavailable'));
+      expect(events.last.errorDetail, equals(detail));
+    });
+
     test('cancelOperation returns false when system kill fails', () async {
       final executor = _RecordingCliExecutor()
         ..cancelWithSystemKillResult = false;

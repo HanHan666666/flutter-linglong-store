@@ -606,9 +606,9 @@ class InstallErrorCode {
   /// 根据错误码获取用户友好的错误消息
   static String getStatusFromCode(int code) {
     switch (code) {
-      // 通用错误
+      // 基础错误
       case -1:
-        return '安装失败: 通用错误';
+        return '安装失败';
       case -2:
         return '安装失败: 进度超时';
 
@@ -616,7 +616,7 @@ class InstallErrorCode {
       case 1:
         return '安装已取消';
 
-      // 1000 系列：通用错误
+      // 1000 系列：基础错误
       case 1000:
         return '安装失败: 未知错误';
       case 1001:

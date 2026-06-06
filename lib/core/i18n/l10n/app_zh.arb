@@ -543,7 +543,7 @@
   "sidebarAllApps": "全 部",
   "sidebarRanking": "排 行",
 
-  "installErrorGeneric": "安装失败: 通用错误",
+  "installErrorGeneric": "安装失败",
   "installErrorTimeout": "安装失败: 进度超时",
   "installCancelled": "安装已取消",
   "installErrorUnknown": "安装失败: 未知错误",

@@ -1034,7 +1034,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sidebarRanking => '排 行';
 
   @override
-  String get installErrorGeneric => '安装失败: 通用错误';
+  String get installErrorGeneric => '安装失败';
 
   @override
   String get installErrorTimeout => '安装失败: 进度超时';

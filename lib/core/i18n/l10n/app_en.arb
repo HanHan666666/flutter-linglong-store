@@ -542,7 +542,7 @@
   "sidebarAllApps": "All Apps",
   "sidebarRanking": "Ranking",
 
-  "installErrorGeneric": "Installation failed: Generic error",
+  "installErrorGeneric": "Installation failed",
   "installErrorTimeout": "Installation failed: Progress timeout",
   "installCancelled": "Installation cancelled",
   "installErrorUnknown": "Installation failed: Unknown error",

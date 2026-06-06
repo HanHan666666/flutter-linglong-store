@@ -1066,7 +1066,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sidebarRanking => 'Ranking';
 
   @override
-  String get installErrorGeneric => 'Installation failed: Generic error';
+  String get installErrorGeneric => 'Installation failed';
 
   @override
   String get installErrorTimeout => 'Installation failed: Progress timeout';

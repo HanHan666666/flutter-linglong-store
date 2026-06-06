@@ -100,6 +100,26 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
     return raw.trim();
   }
 
+  String _buildFailureMessage({
+    required String operationLabel,
+    required String errorDetail,
+    int? errorCode,
+  }) {
+    final detail = _messages.extractMessageText(errorDetail).trim();
+    final summary = errorCode == -1
+        ? _messages.failed(operationLabel)
+        : errorCode != null
+        ? _messages.getErrorMessageFromCode(errorCode)
+        : _messages.getStatusFromMessage(detail);
+
+    if (detail.isEmpty || detail == summary || summary.contains(detail)) {
+      return summary;
+    }
+
+    // ll-cli 的 code 只能提供粗分类，真实排障原因必须保留 message 详情。
+    return '$summary：$detail';
+  }
+
   Stream<InstallProgress> _runInstallLikeOperation(
     String appId, {
     required InstallTaskKind kind,
@@ -206,9 +226,11 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
           final errorDetail = rawMessage.isNotEmpty
               ? rawMessage
               : (progressInfo.errorMessage ?? event.line).trim();
-          final errorMessage = errorCode != null
-              ? _messages.getErrorMessageFromCode(errorCode)
-              : _messages.getStatusFromMessage(errorDetail);
+          final errorMessage = _buildFailureMessage(
+            operationLabel: operationLabel,
+            errorDetail: errorDetail,
+            errorCode: errorCode,
+          );
 
           yield InstallProgress(
             appId: appId,

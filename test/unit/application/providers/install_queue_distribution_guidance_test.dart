@@ -28,7 +28,7 @@ void main() {
             InstallProgress(
               appId: 'ignored',
               status: InstallStatus.failed,
-              error: '安装失败: 通用错误',
+              error: '安装失败',
               errorCode: 2001,
             ),
           ];
@@ -71,7 +71,7 @@ void main() {
             InstallProgress(
               appId: 'ignored',
               status: InstallStatus.failed,
-              error: '更新失败: 通用错误',
+              error: '更新失败',
               errorCode: 2001,
             ),
           ];
@@ -113,7 +113,7 @@ void main() {
             InstallProgress(
               appId: 'ignored',
               status: InstallStatus.failed,
-              error: '安装失败: 通用错误',
+              error: '安装失败',
               errorCode: 2001,
             ),
           ];
@@ -143,7 +143,7 @@ void main() {
 
         final failedTask = await _waitForFirstHistoryTask(container);
         expect(failedTask.status, InstallStatus.failed);
-        expect(failedTask.errorMessage, equals('安装失败: 通用错误'));
+        expect(failedTask.errorMessage, equals('安装失败'));
       },
     );
   });

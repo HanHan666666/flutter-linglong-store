@@ -2013,7 +2013,7 @@ abstract class AppLocalizations {
   /// No description provided for @installErrorGeneric.
   ///
   /// In zh, this message translates to:
-  /// **'安装失败: 通用错误'**
+  /// **'安装失败'**
   String get installErrorGeneric;
 
   /// No description provided for @installErrorTimeout.

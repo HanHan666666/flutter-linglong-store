@@ -521,28 +521,20 @@ class _TaskCardState extends State<_TaskCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              widget.task.appName,
-                              // featured 用 16px 正文级别，普通用 14px 说明级别
-                              style:
-                                  (widget.featured
-                                          ? context.appTextStyles.body
-                                          : context.appTextStyles.bodyMedium)
-                                      .copyWith(
-                                        fontWeight: context.appFontWeight(
-                                          FontWeight.w600,
-                                        ),
-                                      ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          _buildStatusPill(context),
-                        ],
+                      Text(
+                        widget.task.appName,
+                        // featured 用 16px 正文级别，普通用 14px 说明级别
+                        style:
+                            (widget.featured
+                                    ? context.appTextStyles.body
+                                    : context.appTextStyles.bodyMedium)
+                                .copyWith(
+                                  fontWeight: context.appFontWeight(
+                                    FontWeight.w600,
+                                  ),
+                                ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       Text(
@@ -716,6 +708,7 @@ class _TaskCardState extends State<_TaskCard> {
   /// 构建操作按钮
   Widget _buildActionButtons(BuildContext context) {
     final actionWidgets = <Widget>[
+      _buildStatusPill(context),
       if (widget.task.commandOutput.trim().isNotEmpty)
         _buildCopyOutputButton(context),
       ..._buildTaskActionWidgets(context),
@@ -725,7 +718,11 @@ class _TaskCardState extends State<_TaskCard> {
       return const SizedBox.shrink();
     }
 
-    return Row(mainAxisSize: MainAxisSize.min, children: actionWidgets);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: actionWidgets,
+    );
   }
 
   Widget _buildCopyOutputButton(BuildContext context) {

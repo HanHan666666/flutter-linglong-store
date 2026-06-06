@@ -59,6 +59,21 @@ Shame in breaking architecture, Honor in following specifications.
 Shame in pretending to understand, Honor in honest ignorance.
 Shame in blind modification, Honor in careful refactoring.
 
+## 代码注释规则（强制）
+
+## 注释规范
+
+所有生成或修改的代码必须遵守以下注释要求：
+1. 注释语言统一使用中文。
+2. 注释格式必须符合当前编程语言的标准文档注释规范，例如 JavaDoc、JSDoc、docstring、GoDoc 等。
+3. 核心文件顶部应添加文件级注释，说明该文件的业务定位、适用场景，以及为什么需要该文件。
+4. 字段、接口、类型、类、方法、函数上方必须添加中文注释。
+5. 注释不能只是复述代码逻辑，也不要逐行解释代码本身。
+6. 注释应重点说明设计原因、适用场景、边界条件、调用注意事项，以及该代码在整体流程中的作用。
+7. 对显而易见的代码不要添加低价值注释，例如“获取名称”“设置值”“返回结果”等。
+8. 涉及业务规则、兼容逻辑、异常兜底、性能取舍、安全限制或历史原因时，必须在注释中说明为什么这样处理。
+9. 修改代码时必须同步维护相关注释，避免注释与实际代码行为不一致。
+
 ## 根据需要，必须严格遵守这些skill
 ### 核心开发技能
 brainstorming - 创意工作前必须使用，探索用户意图和设计

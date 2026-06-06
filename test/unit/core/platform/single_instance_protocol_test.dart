@@ -13,7 +13,7 @@ void main() {
 
     test('round trips open url command', () {
       const url = 'og://org.example.App';
-      final encoded = SingleInstanceMessage.openUrl(url).toWire();
+      final encoded = (const SingleInstanceMessage.openUrl(url)).toWire();
       final decoded = SingleInstanceMessage.fromWire(encoded);
 
       expect(decoded.kind, SingleInstanceMessageKind.openUrl);
@@ -28,4 +28,3 @@ void main() {
     });
   });
 }
-

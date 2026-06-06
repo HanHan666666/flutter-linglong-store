@@ -5,9 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'application/providers/og_install_controller.dart';
 import 'application/providers/install_queue_provider.dart';
 import 'core/network/api_client.dart';
 import 'core/logging/app_logger.dart';
+import 'core/protocol/og_protocol_request.dart';
 import 'core/platform/single_instance.dart';
 import 'core/platform/window_service.dart';
 import 'core/config/app_config.dart';
@@ -15,7 +17,7 @@ import 'core/storage/app_data_directory_migration.dart';
 import 'core/storage/cache_service.dart';
 import 'core/storage/preferences_service.dart';
 
-void main() async {
+void main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // 先迁移历史数据目录，确保日志、SharedPreferences 与 Hive 都落到新目录。
@@ -29,9 +31,15 @@ void main() async {
   // 初始化日志（同步执行）
   await AppLogger.init();
 
+  // 冷启动时 XDG 会通过 desktop Exec 的 %u 把 og 链接传进来。
+  // 这里只筛选旧协议链接，普通启动参数不进入安装流程，避免误触发提示。
+  final initialOgProtocolUrls = arguments
+      .where((argument) => OgProtocolRequest.tryParse(argument) != null)
+      .toList(growable: false);
+
   // 单实例检测：必须在窗口初始化之前执行
   // 如果已有实例运行，激活其窗口并退出当前实例
-  final isFirstInstance = await SingleInstance.ensure();
+  final isFirstInstance = await SingleInstance.ensure(arguments);
   if (!isFirstInstance) {
     AppLogger.info('Another instance is running, exiting...');
     exit(0);
@@ -65,6 +73,8 @@ void main() async {
       overrides: [
         // 注入 SharedPreferences 实例
         sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+        // 注入冷启动阶段收到的旧 og 协议链接，App 层会等启动流程完成后入队。
+        initialOgProtocolUrlsProvider.overrideWithValue(initialOgProtocolUrls),
       ],
       child: const LinglongStoreApp(),
     ),

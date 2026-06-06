@@ -538,6 +538,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get copy => '复制';
 
   @override
+  String get copySucceeded => '复制成功';
+
+  @override
   String get copyErrorMessage => '复制错误信息';
 
   @override

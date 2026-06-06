@@ -455,81 +455,97 @@ void main() {
       expect(errorTexts.first.overflow, isNull);
     });
 
-    testWidgets('clicking a history item copies its command output', (
-      tester,
-    ) async {
-      const commandOutput =
-          'll-cli install --json com.tencent.wechat\n'
-          '{"message":"Downloading files","percentage":50}\n'
-          '{"message":"Install complete","percentage":100}';
-      const clipboardChannel = SystemChannels.platform;
-      MethodCall? clipboardCall;
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        clipboardChannel,
-        (call) async {
-          clipboardCall = call;
-          return null;
-        },
-      );
-      addTearDown(() {
+    testWidgets(
+      'copy button copies command output and shows local success text',
+      (tester) async {
+        const commandOutput =
+            'll-cli install --json com.tencent.wechat\n'
+            '{"message":"Downloading files","percentage":50}\n'
+            '{"message":"Install complete","percentage":100}';
+        const clipboardChannel = SystemChannels.platform;
+        MethodCall? clipboardCall;
         tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
           clipboardChannel,
-          null,
+          (call) async {
+            if (call.method == 'Clipboard.setData') {
+              clipboardCall = call;
+            }
+            return null;
+          },
         );
-      });
+        addTearDown(() {
+          tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+            clipboardChannel,
+            null,
+          );
+        });
 
-      final installQueue = TestInstallQueue(
-        initialState: InstallQueueState(
-          history: [
-            InstallTask(
-              id: 'wechat-history-1',
-              appId: 'com.tencent.wechat',
-              appName: '微信',
-              kind: InstallTaskKind.install,
-              status: InstallStatus.success,
-              commandOutput: commandOutput,
-              createdAt: DateTime.now().millisecondsSinceEpoch,
-              finishedAt: DateTime.now().millisecondsSinceEpoch,
-            ),
-          ],
-        ),
-      );
+        final installQueue = TestInstallQueue(
+          initialState: InstallQueueState(
+            history: [
+              InstallTask(
+                id: 'wechat-history-1',
+                appId: 'com.tencent.wechat',
+                appName: '微信',
+                kind: InstallTaskKind.install,
+                status: InstallStatus.success,
+                commandOutput: commandOutput,
+                createdAt: DateTime.now().millisecondsSinceEpoch,
+                finishedAt: DateTime.now().millisecondsSinceEpoch,
+              ),
+            ],
+          ),
+        );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            installQueueProvider.overrideWith(() => installQueue),
-            networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
-          ],
-          child: MaterialApp(
-            locale: const Locale('zh'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Builder(
-              builder: (context) {
-                return Scaffold(
-                  body: Center(
-                    child: FilledButton(
-                      onPressed: () => showDownloadManagerDialog(context),
-                      child: const Text('open'),
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              installQueueProvider.overrideWith(() => installQueue),
+              networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+            ],
+            child: MaterialApp(
+              locale: const Locale('zh'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Builder(
+                builder: (context) {
+                  return Scaffold(
+                    body: Center(
+                      child: FilledButton(
+                        onPressed: () => showDownloadManagerDialog(context),
+                        child: const Text('open'),
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.tap(find.text('open'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('微信'));
-      await tester.pump();
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
 
-      expect(clipboardCall?.method, equals('Clipboard.setData'));
-      expect(clipboardCall?.arguments, {'text': commandOutput});
-      expect(find.text('命令已复制到剪贴板'), findsOneWidget);
-    });
+        expect(clipboardCall, isNull);
+
+        await tester.tap(find.text('微信'));
+        await tester.pump();
+
+        expect(clipboardCall, isNull);
+
+        await tester.tap(find.text('复制'));
+        await tester.pump();
+        expect(clipboardCall?.method, equals('Clipboard.setData'));
+        expect(clipboardCall?.arguments, {'text': commandOutput});
+        expect(find.text('复制成功'), findsOneWidget);
+        expect(find.text('命令已复制到剪贴板'), findsNothing);
+
+        await tester.pump(const Duration(milliseconds: 1200));
+
+        expect(find.text('复制'), findsOneWidget);
+        expect(find.text('复制成功'), findsNothing);
+      },
+    );
   });
 }
 

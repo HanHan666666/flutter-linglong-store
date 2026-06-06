@@ -1082,6 +1082,12 @@ abstract class AppLocalizations {
   /// **'复制'**
   String get copy;
 
+  /// No description provided for @copySucceeded.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制成功'**
+  String get copySucceeded;
+
   /// No description provided for @copyErrorMessage.
   ///
   /// In zh, this message translates to:

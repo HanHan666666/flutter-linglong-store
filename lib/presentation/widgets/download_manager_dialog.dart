@@ -8,7 +8,6 @@ import '../../application/providers/network_speed_provider.dart';
 import '../../core/config/theme.dart';
 import '../../core/di/providers.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
-import '../../core/utils/app_notification_helpers.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_task.dart';
 import 'app_icon.dart';
@@ -260,7 +259,6 @@ class DownloadManagerDialog extends ConsumerWidget {
       featured: true,
       showProgress: true,
       downloadSpeed: downloadSpeed,
-      onCopyOutput: () => _copyCommandOutput(context, task),
       onCancel: () async {
         await ref.read(installQueueProvider.notifier).cancelTask(task.appId);
       },
@@ -276,7 +274,6 @@ class DownloadManagerDialog extends ConsumerWidget {
     return _TaskCard(
       task: task,
       compact: true,
-      onCopyOutput: () => _copyCommandOutput(context, task),
       onCancel: () {
         ref.read(installQueueProvider.notifier).removeQueuedTask(task.id);
       },
@@ -292,7 +289,6 @@ class DownloadManagerDialog extends ConsumerWidget {
     return _TaskCard(
       task: task,
       compact: true,
-      onCopyOutput: () => _copyCommandOutput(context, task),
       onOpen: task.status == InstallStatus.success
           ? () async {
               await ref.read(linglongCliRepositoryProvider).runApp(task.appId);
@@ -307,22 +303,6 @@ class DownloadManagerDialog extends ConsumerWidget {
         ref.read(installQueueProvider.notifier).removeHistoryTask(task.id);
       },
     );
-  }
-
-  Future<void> _copyCommandOutput(
-    BuildContext context,
-    InstallTask task,
-  ) async {
-    final output = task.commandOutput.trim();
-    if (output.isEmpty) {
-      return;
-    }
-    await Clipboard.setData(ClipboardData(text: output));
-    if (!context.mounted) {
-      return;
-    }
-    final l10n = AppLocalizations.of(context);
-    showAppNotification(context, l10n?.commandCopiedToClipboard ?? '命令已复制到剪贴板');
   }
 
   Widget _buildFooter(
@@ -402,7 +382,6 @@ class _TaskCard extends StatefulWidget {
     this.onOpen,
     this.onRetry,
     this.onRemove,
-    this.onCopyOutput,
   });
 
   final InstallTask task;
@@ -414,15 +393,18 @@ class _TaskCard extends StatefulWidget {
   final VoidCallback? onOpen;
   final VoidCallback? onRetry;
   final VoidCallback? onRemove;
-  final VoidCallback? onCopyOutput;
 
   @override
   State<_TaskCard> createState() => _TaskCardState();
 }
 
 class _TaskCardState extends State<_TaskCard> {
+  static const _copyFeedbackDuration = Duration(milliseconds: 1200);
+
   Timer? _ticker;
+  Timer? _copyFeedbackTimer;
   DateTime _now = DateTime.now();
+  bool _isOutputCopied = false;
 
   @override
   void initState() {
@@ -437,12 +419,40 @@ class _TaskCardState extends State<_TaskCard> {
         oldWidget.task != widget.task) {
       _syncTicker();
     }
+    if (oldWidget.task.id != widget.task.id ||
+        oldWidget.task.commandOutput != widget.task.commandOutput) {
+      _copyFeedbackTimer?.cancel();
+      _isOutputCopied = false;
+    }
   }
 
   @override
   void dispose() {
     _ticker?.cancel();
+    _copyFeedbackTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _handleCopyOutputPressed() async {
+    final output = widget.task.commandOutput.trim();
+    if (output.isEmpty) {
+      return;
+    }
+
+    await Clipboard.setData(ClipboardData(text: output));
+    if (!mounted) {
+      return;
+    }
+
+    // 复制反馈只影响当前按钮，避免下载中心触发全局底部通知。
+    _copyFeedbackTimer?.cancel();
+    setState(() => _isOutputCopied = true);
+    _copyFeedbackTimer = Timer(_copyFeedbackDuration, () {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _isOutputCopied = false);
+    });
   }
 
   void _syncTicker() {
@@ -478,121 +488,113 @@ class _TaskCardState extends State<_TaskCard> {
         widget.task.progressPercentLabel,
       ),
       value: widget.task.isProcessing ? widget.task.progressPercentLabel : null,
-      child: InkWell(
-        onTap: widget.onCopyOutput,
-        borderRadius: BorderRadius.circular(widget.featured ? 18 : 16),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-          padding: EdgeInsets.all(
-            widget.featured ? AppSpacing.lg : AppSpacing.md,
-          ),
-          decoration: BoxDecoration(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: EdgeInsets.all(
+          widget.featured ? AppSpacing.lg : AppSpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: widget.featured
+              ? appColors.primaryLight.withValues(alpha: 0.6)
+              : appColors.cardBackground.withValues(alpha: 0.7),
+          borderRadius: BorderRadius.circular(widget.featured ? 18 : 16),
+          border: Border.all(
             color: widget.featured
-                ? appColors.primaryLight.withValues(alpha: 0.6)
-                : appColors.cardBackground.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(widget.featured ? 18 : 16),
-            border: Border.all(
-              color: widget.featured
-                  ? appColors.primaryLight
-                  : appColors.borderSecondary,
-            ),
+                ? appColors.primaryLight
+                : appColors.borderSecondary,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppIcon(
-                    iconUrl: widget.task.icon,
-                    size: widget.featured ? 48 : 42,
-                    borderRadius: widget.featured ? 16 : 14,
-                    appName: widget.task.appName,
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                widget.task.appName,
-                                // featured 用 16px 正文级别，普通用 14px 说明级别
-                                style:
-                                    (widget.featured
-                                            ? context.appTextStyles.body
-                                            : context.appTextStyles.bodyMedium)
-                                        .copyWith(
-                                          fontWeight: context.appFontWeight(
-                                            FontWeight.w600,
-                                          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppIcon(
+                  iconUrl: widget.task.icon,
+                  size: widget.featured ? 48 : 42,
+                  borderRadius: widget.featured ? 16 : 14,
+                  appName: widget.task.appName,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              widget.task.appName,
+                              // featured 用 16px 正文级别，普通用 14px 说明级别
+                              style:
+                                  (widget.featured
+                                          ? context.appTextStyles.body
+                                          : context.appTextStyles.bodyMedium)
+                                      .copyWith(
+                                        fontWeight: context.appFontWeight(
+                                          FontWeight.w600,
                                         ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                                      ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(width: AppSpacing.sm),
-                            _buildStatusPill(context),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          _buildSubtitle(context),
-                          style: context.appTextStyles.caption.copyWith(
-                            color: appColors.textSecondary,
                           ),
-                          maxLines: widget.compact ? 1 : 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  _buildActionButtons(context),
-                ],
-              ),
-              if (widget.showProgress &&
-                  (widget.task.isProcessing ||
-                      widget.task.status == InstallStatus.downloading)) ...[
-                const SizedBox(height: AppSpacing.md),
-                _buildProgressBar(context),
-              ],
-              if (widget.task.shouldShowSlowInstallHint(_now)) ...[
-                const SizedBox(height: AppSpacing.xs),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 14,
-                      color: appColors.warning,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(
-                      child: Text(
-                        l10n.downloadManagerSlowInstallHint,
+                          const SizedBox(width: AppSpacing.sm),
+                          _buildStatusPill(context),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        _buildSubtitle(context),
                         style: context.appTextStyles.caption.copyWith(
                           color: appColors.textSecondary,
                         ),
+                        maxLines: widget.compact ? 1 : 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                _buildActionButtons(context),
+              ],
+            ),
+            if (widget.showProgress &&
+                (widget.task.isProcessing ||
+                    widget.task.status == InstallStatus.downloading)) ...[
+              const SizedBox(height: AppSpacing.md),
+              _buildProgressBar(context),
+            ],
+            if (widget.task.shouldShowSlowInstallHint(_now)) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline, size: 14, color: appColors.warning),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      l10n.downloadManagerSlowInstallHint,
+                      style: context.appTextStyles.caption.copyWith(
+                        color: appColors.textSecondary,
                       ),
                     ),
-                  ],
-                ),
-              ],
-              if (widget.task.isFailed && widget.task.errorMessage != null) ...[
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  widget.task.errorMessage!,
-                  style: context.appTextStyles.caption.copyWith(
-                    color: AppColors.error,
                   ),
-                  softWrap: true,
-                ),
-              ],
+                ],
+              ),
             ],
-          ),
+            if (widget.task.isFailed && widget.task.errorMessage != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                widget.task.errorMessage!,
+                style: context.appTextStyles.caption.copyWith(
+                  color: AppColors.error,
+                ),
+                softWrap: true,
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -713,67 +715,106 @@ class _TaskCardState extends State<_TaskCard> {
 
   /// 构建操作按钮
   Widget _buildActionButtons(BuildContext context) {
+    final actionWidgets = <Widget>[
+      if (widget.task.commandOutput.trim().isNotEmpty)
+        _buildCopyOutputButton(context),
+      ..._buildTaskActionWidgets(context),
+    ];
+
+    if (actionWidgets.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Row(mainAxisSize: MainAxisSize.min, children: actionWidgets);
+  }
+
+  Widget _buildCopyOutputButton(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final appColors = context.appColors;
+    final buttonLabel = _isOutputCopied
+        ? (l10n?.copySucceeded ?? '复制成功')
+        : (l10n?.copy ?? '复制');
+
+    return Tooltip(
+      message: buttonLabel,
+      child: TextButton(
+        onPressed: _handleCopyOutputPressed,
+        style: TextButton.styleFrom(
+          minimumSize: const Size(64, 40),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          tapTargetSize: MaterialTapTargetSize.padded,
+        ),
+        child: Text(
+          buttonLabel,
+          style: context.appTextStyles.caption.copyWith(
+            color: appColors.primary,
+            fontWeight: context.appFontWeight(FontWeight.w600),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildTaskActionWidgets(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
     if (widget.task.isProcessing ||
         widget.task.status == InstallStatus.downloading ||
         widget.task.status == InstallStatus.pending) {
       // 可取消
-      return IconButton(
-        icon: const Icon(Icons.close, size: 18),
-        onPressed: widget.onCancel,
-        tooltip: l10n?.cancel ?? '取消',
-      );
+      return [
+        IconButton(
+          icon: const Icon(Icons.close, size: 18),
+          onPressed: widget.onCancel,
+          tooltip: l10n?.cancel ?? '取消',
+        ),
+      ];
     }
 
     if (widget.task.isFailed && widget.onRetry != null) {
       // 可重试
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+      return [
+        IconButton(
+          icon: const Icon(Icons.refresh, size: 18),
+          onPressed: widget.onRetry,
+          tooltip: l10n?.retry ?? '重试',
+        ),
+        if (widget.onRemove != null)
           IconButton(
-            icon: const Icon(Icons.refresh, size: 18),
-            onPressed: widget.onRetry,
-            tooltip: l10n?.retry ?? '重试',
+            icon: const Icon(Icons.close, size: 18),
+            onPressed: widget.onRemove,
+            tooltip: l10n?.remove ?? '移除',
           ),
-          if (widget.onRemove != null)
-            IconButton(
-              icon: const Icon(Icons.close, size: 18),
-              onPressed: widget.onRemove,
-              tooltip: l10n?.remove ?? '移除',
-            ),
-        ],
-      );
+      ];
     }
 
     if (widget.task.status == InstallStatus.success && widget.onOpen != null) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+      return [
+        IconButton(
+          icon: const Icon(Icons.open_in_new, size: 18),
+          onPressed: widget.onOpen,
+          tooltip: l10n?.open ?? '打开',
+        ),
+        if (widget.onRemove != null)
           IconButton(
-            icon: const Icon(Icons.open_in_new, size: 18),
-            onPressed: widget.onOpen,
-            tooltip: l10n?.open ?? '打开',
+            icon: const Icon(Icons.close, size: 18),
+            onPressed: widget.onRemove,
+            tooltip: l10n?.remove ?? '移除',
           ),
-          if (widget.onRemove != null)
-            IconButton(
-              icon: const Icon(Icons.close, size: 18),
-              onPressed: widget.onRemove,
-              tooltip: l10n?.remove ?? '移除',
-            ),
-        ],
-      );
+      ];
     }
 
     if (widget.onRemove != null) {
-      return IconButton(
-        icon: const Icon(Icons.close, size: 18),
-        onPressed: widget.onRemove,
-        tooltip: l10n?.remove ?? '移除',
-      );
+      return [
+        IconButton(
+          icon: const Icon(Icons.close, size: 18),
+          onPressed: widget.onRemove,
+          tooltip: l10n?.remove ?? '移除',
+        ),
+      ];
     }
 
-    return const SizedBox.shrink();
+    return const [];
   }
 }
 

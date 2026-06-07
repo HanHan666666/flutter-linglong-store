@@ -64,30 +64,48 @@ class AppDetailSecondaryActions extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final errorColor = theme.colorScheme.error;
 
-    // 按钮高度与 InstallButton.large (40px) 保持一致
-    const buttonHeight = 40.0;
+    // 详情页头部次级操作需要与主操作形成统一热区，满足桌面端键鼠与无障碍触达。
+    const buttonHeight = 48.0;
     const iconSize = 18.0;
 
     // 次级动作保持紧凑横向排布，由外层决定何时整体换行。
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          height: buttonHeight,
-          child: OutlinedButton.icon(
-            onPressed: onCreateShortcut,
-            icon: const Icon(Icons.shortcut_outlined, size: iconSize),
-            label: Text(l10n.createDesktopShortcut),
+        Tooltip(
+          message: l10n.createDesktopShortcut,
+          child: Semantics(
+            button: true,
+            label: l10n.createDesktopShortcut,
+            child: SizedBox(
+              height: buttonHeight,
+              child: OutlinedButton.icon(
+                onPressed: onCreateShortcut,
+                icon: const ExcludeSemantics(
+                  child: Icon(Icons.shortcut_outlined, size: iconSize),
+                ),
+                label: Text(l10n.createDesktopShortcut),
+              ),
+            ),
           ),
         ),
         const SizedBox(width: 12),
-        SizedBox(
-          height: buttonHeight,
-          child: OutlinedButton.icon(
-            onPressed: onUninstall,
-            icon: const Icon(Icons.delete_outline_rounded, size: iconSize),
-            label: Text(l10n.uninstall),
-            style: _buildDestructiveActionStyle(errorColor),
+        Tooltip(
+          message: l10n.uninstall,
+          child: Semantics(
+            button: true,
+            label: l10n.uninstall,
+            child: SizedBox(
+              height: buttonHeight,
+              child: OutlinedButton.icon(
+                onPressed: onUninstall,
+                icon: const ExcludeSemantics(
+                  child: Icon(Icons.delete_outline_rounded, size: iconSize),
+                ),
+                label: Text(l10n.uninstall),
+                style: _buildDestructiveActionStyle(errorColor),
+              ),
+            ),
           ),
         ),
       ],

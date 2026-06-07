@@ -152,16 +152,21 @@ class _InstallButtonState extends State<InstallButton> {
       semanticsLabel: semanticsLabel,
       onTap: widget.onPressed ?? () {},
       enabled: enabled && !widget.disabled,
-      child: SizedBox(
-        height: buttonHeight,
-        child: FilledButton.icon(
-          onPressed: widget.disabled || !enabled ? null : widget.onPressed,
-          icon: ExcludeSemantics(child: Icon(icon, size: _getIconSize())),
-          label: Text(label),
-          style: FilledButton.styleFrom(
-            padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding()),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(buttonHeight / 2),
+      child: ConstrainedBox(
+        constraints: _getButtonConstraints(),
+        child: SizedBox(
+          height: buttonHeight,
+          child: FilledButton.icon(
+            onPressed: widget.disabled || !enabled ? null : widget.onPressed,
+            icon: ExcludeSemantics(child: Icon(icon, size: _getIconSize())),
+            label: Text(label),
+            style: FilledButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                horizontal: _getHorizontalPadding(),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(buttonHeight / 2),
+              ),
             ),
           ),
         ),
@@ -183,16 +188,21 @@ class _InstallButtonState extends State<InstallButton> {
       semanticsLabel: semanticsLabel,
       onTap: widget.onPressed ?? () {},
       enabled: enabled && !widget.disabled,
-      child: SizedBox(
-        height: buttonHeight,
-        child: OutlinedButton.icon(
-          onPressed: widget.disabled || !enabled ? null : widget.onPressed,
-          icon: ExcludeSemantics(child: Icon(icon, size: _getIconSize())),
-          label: Text(label),
-          style: OutlinedButton.styleFrom(
-            padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding()),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(buttonHeight / 2),
+      child: ConstrainedBox(
+        constraints: _getButtonConstraints(),
+        child: SizedBox(
+          height: buttonHeight,
+          child: OutlinedButton.icon(
+            onPressed: widget.disabled || !enabled ? null : widget.onPressed,
+            icon: ExcludeSemantics(child: Icon(icon, size: _getIconSize())),
+            label: Text(label),
+            style: OutlinedButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                horizontal: _getHorizontalPadding(),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(buttonHeight / 2),
+              ),
             ),
           ),
         ),
@@ -214,20 +224,25 @@ class _InstallButtonState extends State<InstallButton> {
       semanticsLabel: semanticsLabel,
       onTap: widget.onPressed ?? () {},
       enabled: enabled && !widget.disabled,
-      child: SizedBox(
-        height: buttonHeight,
-        child: OutlinedButton.icon(
-          onPressed: widget.disabled || !enabled ? null : widget.onPressed,
-          icon: ExcludeSemantics(
-            child: Icon(icon, size: _getIconSize(), color: Colors.red),
-          ),
-          label: Text(label, style: const TextStyle(color: Colors.red)),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.red,
-            side: const BorderSide(color: Colors.red),
-            padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding()),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(buttonHeight / 2),
+      child: ConstrainedBox(
+        constraints: _getButtonConstraints(),
+        child: SizedBox(
+          height: buttonHeight,
+          child: OutlinedButton.icon(
+            onPressed: widget.disabled || !enabled ? null : widget.onPressed,
+            icon: ExcludeSemantics(
+              child: Icon(icon, size: _getIconSize(), color: Colors.red),
+            ),
+            label: Text(label, style: const TextStyle(color: Colors.red)),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.red,
+              side: const BorderSide(color: Colors.red),
+              padding: EdgeInsets.symmetric(
+                horizontal: _getHorizontalPadding(),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(buttonHeight / 2),
+              ),
             ),
           ),
         ),
@@ -268,66 +283,69 @@ class _InstallButtonState extends State<InstallButton> {
       button: true,
       label: semanticsLabel,
       enabled: enabled,
-      child: SizedBox(
-        height: buttonHeight,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // 让前景文本决定按钮宽度，避免在 Row 的无界宽度约束中请求 double.infinity。
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  // 轨道保持浅主色，既保留进度存在感，又不会把未覆盖区文字吞掉。
-                  color: progressTrackColor,
-                  borderRadius: BorderRadius.circular(buttonHeight / 2),
-                  border: Border.all(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.18),
-                    width: 1,
-                  ),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(buttonHeight / 2),
-                  child: LinearProgressIndicator(
-                    value: task.progressValue,
-                    color: progressFillColor,
-                    backgroundColor: Colors.transparent,
-                    minHeight: buttonHeight,
-                  ),
-                ),
-              ),
-            ),
-            // 进度文本和取消按钮
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: _getHorizontalPadding(),
-              ),
-              child: Stack(
-                children: [
-                  ExcludeSemantics(
-                    child: _buildProgressForegroundLayer(
-                      label: progressLabel,
-                      cancelLabel: cancelLabel,
-                      foregroundColor: progressBaseForegroundColor,
+      child: ConstrainedBox(
+        constraints: _getButtonConstraints(),
+        child: SizedBox(
+          height: buttonHeight,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // 让前景文本决定按钮宽度，避免在 Row 的无界宽度约束中请求 double.infinity。
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    // 轨道保持浅主色，既保留进度存在感，又不会把未覆盖区文字吞掉。
+                    color: progressTrackColor,
+                    borderRadius: BorderRadius.circular(buttonHeight / 2),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.18),
+                      width: 1,
                     ),
                   ),
-                  // 用与进度同宽的裁剪层覆盖白色前景，实现进度区黑白切换。
-                  ClipRect(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: progressValue,
-                      child: ExcludeSemantics(
-                        child: _buildProgressForegroundLayer(
-                          label: progressLabel,
-                          cancelLabel: cancelLabel,
-                          foregroundColor: progressFilledForegroundColor,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(buttonHeight / 2),
+                    child: LinearProgressIndicator(
+                      value: task.progressValue,
+                      color: progressFillColor,
+                      backgroundColor: Colors.transparent,
+                      minHeight: buttonHeight,
+                    ),
+                  ),
+                ),
+              ),
+              // 进度文本和取消按钮
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: _getHorizontalPadding(),
+                ),
+                child: Stack(
+                  children: [
+                    ExcludeSemantics(
+                      child: _buildProgressForegroundLayer(
+                        label: progressLabel,
+                        cancelLabel: cancelLabel,
+                        foregroundColor: progressBaseForegroundColor,
+                      ),
+                    ),
+                    // 用与进度同宽的裁剪层覆盖白色前景，实现进度区黑白切换。
+                    ClipRect(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: progressValue,
+                        child: ExcludeSemantics(
+                          child: _buildProgressForegroundLayer(
+                            label: progressLabel,
+                            cancelLabel: cancelLabel,
+                            foregroundColor: progressFilledForegroundColor,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -392,65 +410,70 @@ class _InstallButtonState extends State<InstallButton> {
       button: true,
       label: semanticsLabel,
       enabled: enabled,
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovering = true),
-        onExit: (_) => setState(() => _isHovering = false),
-        cursor: widget.onCancel != null
-            ? SystemMouseCursors.click
-            : MouseCursor.defer,
-        child: GestureDetector(
-          onTap: isHovering ? widget.onCancel : null,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            height: buttonHeight,
-            padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding()),
-            decoration: BoxDecoration(
-              color: isHovering
-                  ? theme.colorScheme.errorContainer.withValues(alpha: 0.3)
-                  : theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(buttonHeight / 2),
-              border: Border.all(
-                color: isHovering
-                    ? theme.colorScheme.error.withValues(alpha: 0.5)
-                    : theme.colorScheme.outlineVariant,
-                width: 1,
+      child: ConstrainedBox(
+        constraints: _getButtonConstraints(),
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _isHovering = true),
+          onExit: (_) => setState(() => _isHovering = false),
+          cursor: widget.onCancel != null
+              ? SystemMouseCursors.click
+              : MouseCursor.defer,
+          child: GestureDetector(
+            onTap: isHovering ? widget.onCancel : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              height: buttonHeight,
+              padding: EdgeInsets.symmetric(
+                horizontal: _getHorizontalPadding(),
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (!isHovering) ...[
-                  ExcludeSemantics(
-                    child: SizedBox(
-                      width: _getIconSize(),
-                      height: _getIconSize(),
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: theme.colorScheme.onSurfaceVariant,
+              decoration: BoxDecoration(
+                color: isHovering
+                    ? theme.colorScheme.errorContainer.withValues(alpha: 0.3)
+                    : theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(buttonHeight / 2),
+                border: Border.all(
+                  color: isHovering
+                      ? theme.colorScheme.error.withValues(alpha: 0.5)
+                      : theme.colorScheme.outlineVariant,
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!isHovering) ...[
+                    ExcludeSemantics(
+                      child: SizedBox(
+                        width: _getIconSize(),
+                        height: _getIconSize(),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                ] else ...[
-                  ExcludeSemantics(
-                    child: Icon(
-                      Icons.close,
-                      size: _getIconSize(),
-                      color: theme.colorScheme.error,
+                    const SizedBox(width: 8),
+                  ] else ...[
+                    ExcludeSemantics(
+                      child: Icon(
+                        Icons.close,
+                        size: _getIconSize(),
+                        color: theme.colorScheme.error,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontWeight: context.appFontWeight(FontWeight.w500),
+                      color: isHovering
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(width: 8),
                 ],
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontWeight: context.appFontWeight(FontWeight.w500),
-                    color: isHovering
-                        ? theme.colorScheme.error
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -467,6 +490,8 @@ class _InstallButtonState extends State<InstallButton> {
         return 32;
       case ButtonSize.large:
         return 40;
+      case ButtonSize.hero:
+        return 48;
     }
   }
 
@@ -479,6 +504,8 @@ class _InstallButtonState extends State<InstallButton> {
         return 16;
       case ButtonSize.large:
         return 18;
+      case ButtonSize.hero:
+        return 20;
     }
   }
 
@@ -491,9 +518,25 @@ class _InstallButtonState extends State<InstallButton> {
         return 16;
       case ButtonSize.large:
         return 20;
+      case ButtonSize.hero:
+        return 24;
+    }
+  }
+
+  /// 获取按钮外层约束。
+  ///
+  /// 详情页头部主按钮需要稳定宽度，避免安装、更新、打开等不同文案导致操作区跳动。
+  BoxConstraints _getButtonConstraints() {
+    switch (widget.size) {
+      case ButtonSize.hero:
+        return const BoxConstraints(minWidth: 144, maxWidth: 184);
+      case ButtonSize.small:
+      case ButtonSize.medium:
+      case ButtonSize.large:
+        return const BoxConstraints();
     }
   }
 }
 
 /// 按钮大小枚举
-enum ButtonSize { small, medium, large }
+enum ButtonSize { small, medium, large, hero }

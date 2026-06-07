@@ -548,6 +548,31 @@ void main() {
         final sizedBox = tester.widget<SizedBox>(find.byType(SizedBox).first);
         expect(sizedBox.height, 40);
       });
+
+      testWidgets('hero size uses 48px height and stable width constraints', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            locale: Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: Center(
+                child: InstallButton(
+                  state: InstallButtonState.notInstalled,
+                  size: ButtonSize.hero,
+                ),
+              ),
+            ),
+          ),
+        );
+
+        final buttonSize = tester.getSize(find.byType(FilledButton));
+        expect(buttonSize.height, 48);
+        expect(buttonSize.width, greaterThanOrEqualTo(144));
+        expect(buttonSize.width, lessThanOrEqualTo(184));
+      });
     });
   });
 }

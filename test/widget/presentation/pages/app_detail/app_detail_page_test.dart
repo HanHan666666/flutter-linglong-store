@@ -667,6 +667,146 @@ void main() {
       },
     );
 
+    testWidgets(
+      'header uninstalled state shows install and hides installed-only actions',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1280, 900));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        await tester.pumpWidget(
+          _buildTestApp(
+            appId: 'org.example.demo',
+            uninstallService: _RecordingUninstallService(),
+            detailState: _detailState(versions: const []),
+            installedApps: const [],
+          ),
+        );
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('app-detail-hero-header')), findsOneWidget);
+        expect(
+          find.byKey(const Key('app-detail-hero-primary-action')),
+          findsOneWidget,
+        );
+        expect(find.text('安 装'), findsOneWidget);
+        expect(find.text('创建桌面快捷方式'), findsNothing);
+        expect(find.text('卸 载'), findsNothing);
+        expect(find.byTooltip('分享'), findsOneWidget);
+      },
+    );
+
+    testWidgets('header installed state groups primary and secondary actions', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          appId: 'org.example.demo',
+          uninstallService: _RecordingUninstallService(),
+          detailState: _detailState(versions: const []),
+          installedApps: const [
+            InstalledApp(
+              appId: 'org.example.demo',
+              name: 'Demo',
+              version: '2.0.0',
+              arch: 'x86_64',
+              channel: 'main',
+              module: 'main',
+            ),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final actionPanel = find.byKey(const Key('app-detail-hero-action-panel'));
+      expect(actionPanel, findsOneWidget);
+      expect(
+        find.descendant(of: actionPanel, matching: find.text('打 开')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: actionPanel, matching: find.text('创建桌面快捷方式')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: actionPanel, matching: find.text('卸 载')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: actionPanel, matching: find.byTooltip('分享')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+      'header installing state renders independent copyable status bar',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(760, 900));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        const displayedMessage = '准备安装...';
+        const rawMessage = '{"message":"raw install message"}';
+        MethodCall? clipboardCall;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+              clipboardCall = call;
+              return null;
+            });
+        addTearDown(() {
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockMethodCallHandler(SystemChannels.platform, null);
+        });
+
+        await tester.pumpWidget(
+          _buildTestApp(
+            appId: 'org.example.demo',
+            uninstallService: _RecordingUninstallService(),
+            detailState: _detailState(versions: const []),
+            installedApps: const [],
+            installQueueState: const InstallQueueState(
+              currentTask: InstallTask(
+                id: 'active-task',
+                appId: 'org.example.demo',
+                appName: 'Demo',
+                version: '2.0.0',
+                status: InstallStatus.installing,
+                message: displayedMessage,
+                rawMessage: rawMessage,
+                createdAt: 0,
+              ),
+              isProcessing: true,
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        final statusBar = find.byKey(const Key('app-detail-hero-status-bar'));
+        expect(statusBar, findsOneWidget);
+        expect(
+          find.descendant(of: statusBar, matching: find.text(displayedMessage)),
+          findsOneWidget,
+        );
+
+        await tester.tap(
+          find.descendant(
+            of: statusBar,
+            matching: find.widgetWithText(TextButton, '复制'),
+          ),
+        );
+        await tester.pump();
+
+        expect(
+          clipboardCall?.arguments,
+          equals(<String, dynamic>{'text': displayedMessage}),
+        );
+      },
+    );
+
     testWidgets('main install action launches download flyout on success', (
       tester,
     ) async {

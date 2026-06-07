@@ -89,4 +89,20 @@ void main() {
       AppTheme.lightTheme.colorScheme.error.withValues(alpha: 0.08),
     );
   });
+
+  testWidgets('次级操作保持 48px 热区并提供工具提示', (tester) async {
+    await pumpSecondaryActions(tester, isVisible: true);
+    final l10n = l10nFor(tester);
+
+    final shortcutButton = find.widgetWithText(
+      OutlinedButton,
+      l10n.createDesktopShortcut,
+    );
+    final uninstallButton = find.widgetWithText(OutlinedButton, l10n.uninstall);
+
+    expect(tester.getSize(shortcutButton).height, greaterThanOrEqualTo(48));
+    expect(tester.getSize(uninstallButton).height, greaterThanOrEqualTo(48));
+    expect(find.byTooltip(l10n.createDesktopShortcut), findsOneWidget);
+    expect(find.byTooltip(l10n.uninstall), findsOneWidget);
+  });
 }

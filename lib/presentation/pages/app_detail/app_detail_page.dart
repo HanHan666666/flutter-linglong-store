@@ -12,11 +12,9 @@ import '../../../domain/models/install_task.dart';
 import '../../../domain/models/install_progress.dart';
 import '../../../domain/models/app_version.dart';
 import '../../../core/logging/app_logger.dart';
-import '../../../domain/models/app_detail.dart' as dm;
 import '../../helpers/app_uninstall_flow.dart';
-import '../../widgets/app_icon.dart';
 import '../../widgets/app_detail_comment_section.dart';
-import '../../widgets/app_detail_secondary_actions.dart';
+import '../../widgets/app_detail_hero_header.dart';
 import '../../widgets/app_detail_info_section.dart';
 import '../../widgets/install_to_download_flyout.dart';
 import '../../widgets/install_button.dart';
@@ -249,7 +247,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     required bool hasInstalledInstance,
     required bool hasUpdate,
   }) {
-    final theme = Theme.of(context);
     final appDetail = detailState.appDetail;
 
     // 确定安装按钮状态
@@ -259,210 +256,34 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       hasUpdate: hasUpdate,
     );
     final progress = installTask?.progress ?? 0.0;
+    final displayMessage = installTask?.displayMessage;
+    final statusCopyText = displayMessage == null
+        ? null
+        : installTask!.isFailed
+        ? _resolveFailedInstallStatusCopyText(installTask, displayMessage)
+        : displayMessage;
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 应用图标
-          SizedBox(
-            key: _installSourceKey,
-            width: 80,
-            height: 80,
-            child: AppIcon(
-              iconUrl: app.icon,
-              size: 80,
-              borderRadius: 16,
-              appName: app.name,
-            ),
-          ),
-          const SizedBox(width: 16),
-          // 应用信息
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 应用名称 - 使用 headlineLarge(28px) 作为详情页主标题
-                Text(
-                  app.name,
-                  style: theme.textTheme.headlineLarge?.copyWith(
-                    fontWeight: context.appFontWeight(FontWeight.w700),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                // 简短描述（在应用名称下方）
-                if (appDetail?.description != null &&
-                    appDetail!.description!.isNotEmpty)
-                  Text(
-                    appDetail.description!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                // 标签列表（Chip 样式）
-                if (appDetail?.tags.isNotEmpty ?? false) ...[
-                  const SizedBox(height: 8),
-                  _buildTags(context, appDetail!.tags),
-                ],
-                const SizedBox(height: 4),
-                // 版本信息
-                Text(
-                  '${AppLocalizations.of(context)?.version ?? '版本'} ${app.version}',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                // 开发者/仓库信息
-                if (app.repoName != null)
-                  Text(
-                    app.repoName!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                const SizedBox(height: 12),
-                // 主动作与次级动作统一编排，优先同一行展示，不足时再整体换行。
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    InstallButton(
-                      appName: app.name,
-                      state: buttonState,
-                      progress: progress,
-                      // 优先使用 CLI 返回的精确下载速度，回退到系统级网速
-                      downloadSpeed:
-                          buttonState == InstallButtonState.installing
-                          ? (installTask?.cliSpeed ??
-                            ref.watch(networkSpeedProvider).formatted)
-                          : null,
-                      onPressed: () => _handleInstallAction(app, buttonState),
-                      onCancel: () => _handleCancelInstall(app),
-                      size: ButtonSize.large,
-                    ),
-                    AppDetailSecondaryActions(
-                      isVisible: hasInstalledInstance,
-                      onCreateShortcut: () => _createShortcut(app),
-                      onUninstall: () => _showUninstallDialog(app),
-                    ),
-                    // 分享按钮：始终可见，不受安装状态影响
-                    _buildShareButton(context, app),
-                  ],
-                ),
-                // 安装状态消息
-                if (installTask != null &&
-                    installTask.displayMessage != null) ...[
-                  const SizedBox(height: 8),
-                  _buildInstallStatusMessage(context, installTask),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInstallStatusMessage(
-    BuildContext context,
-    InstallTask installTask,
-  ) {
-    final theme = Theme.of(context);
-    final displayMessage = installTask.displayMessage;
-    if (displayMessage == null || displayMessage.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    // 失败态让错误文本独占整行，避免复制按钮挤压后出现截断。
-    if (installTask.isFailed) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Tooltip(
-            message: displayMessage,
-            child: Text(
-              displayMessage,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.error,
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Align(
-            alignment: Alignment.centerRight,
-            child: _buildInstallStatusCopyButton(
-              context,
-              _resolveFailedInstallStatusCopyText(installTask, displayMessage),
-              isFailed: true,
-            ),
-          ),
-        ],
-      );
-    }
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Tooltip(
-            message: displayMessage,
-            child: Text(
-              displayMessage,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        _buildInstallStatusCopyButton(context, displayMessage, isFailed: false),
-      ],
-    );
-  }
-
-  Widget _buildInstallStatusCopyButton(
-    BuildContext context,
-    String copyText, {
-    required bool isFailed,
-  }) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final label = isFailed
-        ? (l10n?.copyErrorMessage ?? 'Copy error message')
-        : (l10n?.copy ?? 'Copy');
-
-    return Semantics(
-      label: label,
-      button: true,
-      child: Tooltip(
-        message: label,
-        child: TextButton(
-          onPressed: () {
-            Clipboard.setData(ClipboardData(text: copyText));
-          },
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: Text(
-            l10n?.copy ?? 'Copy',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.primary,
-              fontSize: 12,
-            ),
-          ),
-        ),
-      ),
+    return AppDetailHeroHeader(
+      app: app,
+      installSourceKey: _installSourceKey,
+      buttonState: buttonState,
+      progress: progress,
+      downloadSpeed: buttonState == InstallButtonState.installing
+          ? (installTask?.cliSpeed ?? ref.watch(networkSpeedProvider).formatted)
+          : null,
+      showInstalledActions: hasInstalledInstance,
+      description: appDetail?.description,
+      tags:
+          appDetail?.tags.map((tag) => tag.name).toList(growable: false) ??
+          const [],
+      statusMessage: displayMessage,
+      statusCopyText: statusCopyText,
+      isStatusFailed: installTask?.isFailed ?? false,
+      onPrimaryPressed: () => _handleInstallAction(app, buttonState),
+      onCancel: () => _handleCancelInstall(app),
+      onCreateShortcut: () => _createShortcut(app),
+      onUninstall: () => _showUninstallDialog(app),
+      onShare: () => _shareApp(context, app),
     );
   }
 
@@ -486,33 +307,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     }
 
     return fallback;
-  }
-
-  /// 构建标签列表（Chip 样式）
-  Widget _buildTags(BuildContext context, List<dm.AppTag> tags) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 4,
-      children: tags.map((tag) => _buildTag(context, tag.name)).toList(),
-    );
-  }
-
-  /// 构建单个标签 Chip
-  Widget _buildTag(BuildContext context, String label) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer,
-        borderRadius: AppRadius.fullRadius,
-      ),
-      child: Text(
-        label,
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.onPrimaryContainer,
-        ),
-      ),
-    );
   }
 
   /// 构建截图轮播区（使用真实截图数据）
@@ -1565,22 +1359,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       score += 1;
     }
     return score;
-  }
-
-  /// 构建分享按钮。
-  ///
-  /// 始终可见，不受应用安装状态影响。
-  /// 图标按钮风格，视觉上轻量不抢主操作焦点。
-  Widget _buildShareButton(BuildContext context, InstalledApp app) {
-    final l10n = AppLocalizations.of(context);
-
-    return IconButton(
-      onPressed: () => _shareApp(context, app),
-      tooltip: l10n?.shareLink ?? '分享',
-      icon: const Icon(Icons.share_outlined, size: 20),
-      // 与 InstallButton.large (40px) 高度对齐
-      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-    );
   }
 
   /// 分享应用链接。

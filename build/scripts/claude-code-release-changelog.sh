@@ -98,6 +98,7 @@ fi
 
 baseline_ref_display="${baseline_ref:-<none>}"
 
+# 渲染 release notes 任务提示词，避免把临时起点规则写死在 prompt 里。
 render_prompt_template() {
   local rendered_prompt=""
 
@@ -111,20 +112,70 @@ render_prompt_template() {
   printf '%s' "$rendered_prompt"
 }
 
+# 输出给 Claude 的提交列表，只保留范围内的 hash 与标题，避免大段日志诱导复述。
+render_commit_summary() {
+  if [[ -n "$baseline_ref" ]] && git -C "$WORKSPACE_ROOT" rev-parse --verify "${baseline_ref}^{commit}" >/dev/null 2>&1; then
+    git -C "$WORKSPACE_ROOT" log --reverse --format='commit %H%nsubject: %s%n---' "${baseline_ref}..HEAD"
+  else
+    git -C "$WORKSPACE_ROOT" log --reverse -n 40 --format='commit %H%nsubject: %s%n---'
+  fi
+}
+
+# 输出每个提交触达的文件，帮助 Claude 识别“同一功能链路”而不是逐条复述提交。
+render_changed_files_by_commit() {
+  local commit_hash=""
+  local commit_subject=""
+
+  if [[ -n "$baseline_ref" ]] && git -C "$WORKSPACE_ROOT" rev-parse --verify "${baseline_ref}^{commit}" >/dev/null 2>&1; then
+    git -C "$WORKSPACE_ROOT" log --reverse --format='%H%x1f%s' "${baseline_ref}..HEAD"
+  else
+    git -C "$WORKSPACE_ROOT" log --reverse -n 40 --format='%H%x1f%s'
+  fi | while IFS=$'\x1f' read -r commit_hash commit_subject; do
+    [[ -z "$commit_hash" ]] && continue
+    printf '### %s\n' "$commit_hash"
+    printf 'subject: %s\n' "$commit_subject"
+    printf 'files:\n'
+    git -C "$WORKSPACE_ROOT" diff-tree --no-commit-id --name-only -r "$commit_hash" \
+      | sed 's/^/- /'
+    printf '\n'
+  done
+}
+
+# 摘录范围内改动过的业务文档，最多取少量文件，避免上下文膨胀拖慢 CI。
+render_changed_docs_excerpts() {
+  local docs_count="0"
+  local doc_path=""
+
+  if [[ -z "$baseline_ref" ]] || ! git -C "$WORKSPACE_ROOT" rev-parse --verify "${baseline_ref}^{commit}" >/dev/null 2>&1; then
+    printf 'No explicit docs range is available.\n'
+    return 0
+  fi
+
+  while IFS= read -r doc_path; do
+    [[ -z "$doc_path" ]] && continue
+    [[ ! -f "$WORKSPACE_ROOT/$doc_path" ]] && continue
+
+    docs_count="$((docs_count + 1))"
+    if [[ "$docs_count" -gt 4 ]]; then
+      break
+    fi
+
+    printf '### %s\n' "$doc_path"
+    sed -n '1,120p' "$WORKSPACE_ROOT/$doc_path"
+    printf '\n'
+  done < <(
+    git -C "$WORKSPACE_ROOT" diff --name-only "${baseline_ref}..HEAD" -- 'docs/*.md' 'docs/**/*.md' \
+      | sort
+  )
+
+  if [[ "$docs_count" == "0" ]]; then
+    printf 'No docs markdown files changed in this range.\n'
+  fi
+}
+
 range_args=()
 if [[ -n "$baseline_ref" ]] && git -C "$WORKSPACE_ROOT" rev-parse --verify "${baseline_ref}^{commit}" >/dev/null 2>&1; then
   range_args=("${baseline_ref}..HEAD")
-fi
-
-git_log_output=""
-if [[ "${#range_args[@]}" -gt 0 ]]; then
-  git_log_output="$({
-    git -C "$WORKSPACE_ROOT" log --format='commit %H%nsubject: %s%nbody:%n%b%n---' "${range_args[@]}"
-  })"
-else
-  git_log_output="$({
-    git -C "$WORKSPACE_ROOT" log -n 40 --format='commit %H%nsubject: %s%nbody:%n%b%n---'
-  })"
 fi
 
 cat > "$context_path" <<EOF
@@ -132,23 +183,21 @@ cat > "$context_path" <<EOF
 
 Kind: $build_kind_for_prompt
 Target version: $release_version
-Baseline ref: $baseline_ref_display
+Start ref: $baseline_ref_display
+End ref: HEAD
+Range: ${range_args[*]:-last 40 commits}
 
-## Existing deterministic changelog
+## Candidate commits
 
-$(cat "$base_changelog_file")
+$(render_commit_summary)
 
-## Workflow constraints
+## Changed files by commit
 
-$(sed -n '1,220p' "$ROOT_DIR/docs/12-github-workflow-maintenance.md")
+$(render_changed_files_by_commit)
 
-## Project summary
+## Changed docs excerpts
 
-$(sed -n '1,120p' "$ROOT_DIR/README.md")
-
-## Commit log
-
-$git_log_output
+$(render_changed_docs_excerpts)
 EOF
 
 render_prompt_template > "$prompt_path"
@@ -163,93 +212,94 @@ fi
   cat "$context_path" | "$claude_bin" -p \
     --bare \
     --setting-sources user \
+    --tools "" \
     --max-turns 1 \
     --no-session-persistence \
     --append-system-prompt-file "$prompt_path" \
-    "请分析当前工作区代码库、${docs_root_for_prompt} 文档以及本次变更信息，并为版本 ${release_version}（${build_kind_for_prompt}）生成最终的 Markdown 更新日志段落。"
+    "请根据输入中的 release notes 范围和候选变更，为版本 ${release_version}（${build_kind_for_prompt}）生成最终的 JSON 更新日志条目。"
 ) > "$raw_output_path"
 
-extract_release_notes_markdown() {
-  local raw_path="$1"
-  local extracted=""
+# 尝试从 Claude 原始输出中提取 {"items":[...]}，兼容纯 JSON 和 JSON envelope。
+try_extract_items_json_from_text() {
+  local raw_text="$1"
+  local cleaned_text=""
 
-  if extracted="$(jq -er '.release_notes_markdown' "$raw_path" 2>/dev/null)"; then
-    printf '%s' "$extracted"
-    return 0
-  fi
-
-  if extracted="$(jq -er '.structured_output.release_notes_markdown' "$raw_path" 2>/dev/null)"; then
-    printf '%s' "$extracted"
-    return 0
-  fi
-
-  if extracted="$(jq -er '.result.structured_output.release_notes_markdown' "$raw_path" 2>/dev/null)"; then
-    printf '%s' "$extracted"
-    return 0
-  fi
-
-  extracted="$(cat "$raw_path")"
-  if [[ "$extracted" == '```'* ]]; then
-    extracted="$(printf '%s' "$extracted" | sed -e '/^```[[:alnum:]]*$/d' -e '/^```$/d')"
-  fi
-
-  if [[ "$extracted" == '## Release Notes'* ]]; then
-    printf '%s' "$extracted"
+  cleaned_text="$(printf '%s' "$raw_text" | sed -e '/^```json$/d' -e '/^```[[:alnum:]]*$/d' -e '/^```$/d')"
+  if printf '%s' "$cleaned_text" | jq -e 'type == "object" and (.items | type == "array")' >/dev/null 2>&1; then
+    printf '%s' "$cleaned_text" | jq -c '{items: .items}'
     return 0
   fi
 
   return 1
 }
 
-validate_release_notes_markdown() {
-  local candidate_path="$1"
-  local first_line=""
-  local numbered_line_count="0"
-  local expected_number="1"
-  local line=""
+# 提取结构化条目，不能解析时返回失败并触发上层 deterministic fallback。
+extract_release_notes_items_json() {
+  local raw_path="$1"
+  local extracted=""
+  local raw_content=""
 
-  first_line="$(sed -n '1p' "$candidate_path")"
-  if [[ "$first_line" != "## Release Notes" ]]; then
-    return 1
+  raw_content="$(cat "$raw_path")"
+  if try_extract_items_json_from_text "$raw_content"; then
+    return 0
   fi
 
-  if grep -Fq '## SHA256 Hashes of the release artifacts' "$candidate_path"; then
-    return 1
+  if extracted="$(jq -er '.result // empty' "$raw_path" 2>/dev/null)" \
+    && try_extract_items_json_from_text "$extracted"; then
+    return 0
   fi
 
-  if grep -Fq 'Nightly source commit:' "$candidate_path"; then
-    return 1
+  if extracted="$(jq -cer '.structured_output // empty' "$raw_path" 2>/dev/null)" \
+    && try_extract_items_json_from_text "$extracted"; then
+    return 0
   fi
 
-  if grep -Fq 'Nightly source date:' "$candidate_path"; then
-    return 1
+  if extracted="$(jq -cer '.release_notes // empty' "$raw_path" 2>/dev/null)" \
+    && try_extract_items_json_from_text "$extracted"; then
+    return 0
   fi
 
-  if grep -Fq 'Nightly version label:' "$candidate_path"; then
-    return 1
-  fi
-
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    if [[ -z "$line" || "$line" == "## Release Notes" ]]; then
-      continue
-    fi
-
-    if [[ ! "$line" =~ ^${expected_number}、 ]]; then
-      return 1
-    fi
-
-    numbered_line_count="$((numbered_line_count + 1))"
-    expected_number="$((expected_number + 1))"
-  done < "$candidate_path"
-
-  if [[ "$numbered_line_count" -lt 1 || "$numbered_line_count" -gt 5 ]]; then
-    return 1
-  fi
-
-  return 0
+  return 1
 }
 
-candidate_path="$tmp_dir/release-notes.md"
-extract_release_notes_markdown "$raw_output_path" > "$candidate_path"
-validate_release_notes_markdown "$candidate_path"
-printf '%s' "$(cat "$candidate_path")"
+# 校验 JSON 条目，避免维护项、编号和 Markdown 污染最终发布说明。
+validate_release_notes_items_json() {
+  local candidate_path="$1"
+
+  jq -e '
+    type == "object"
+    and (.items | type == "array")
+    and (.items | length <= 5)
+    and all(.items[]; (
+      (.kind == "新增" or .kind == "修复")
+      and (.text | type == "string")
+      and (.text | length > 0)
+      and (.text | length <= 120)
+      and ((.text | test("[\r\n#]")) | not)
+      and ((.text | test("^(新增|修复)[：:]")) | not)
+      and ((.text | test("^[0-9０-９]+[、.]")) | not)
+      and ((.text | test("(AI|prompt|Prompt|commit|Git|git|CI|workflow|Workflow|AUR|UOS|AGENTS|CLAUDE|文档|测试|重构|打包|发布流程|工具链|脚本|注释规范|哈希|签名)")) | not)
+    ))
+  ' "$candidate_path" >/dev/null
+}
+
+# 只有脚本负责 Markdown 编号，避免模型再次生成 0 起始列表。
+render_release_notes_markdown_from_items_json() {
+  local candidate_path="$1"
+  local item_count=""
+
+  item_count="$(jq '.items | length' "$candidate_path")"
+  printf '## Release Notes\n\n'
+
+  if [[ "$item_count" == "0" ]]; then
+    printf '1、本次版本暂无需要特别说明的功能新增或问题修复。'
+    return 0
+  fi
+
+  jq -r '.items | to_entries[] | "\(.key + 1)、\(.value.kind)：\(.value.text)"' "$candidate_path"
+}
+
+candidate_path="$tmp_dir/release-notes-items.json"
+extract_release_notes_items_json "$raw_output_path" > "$candidate_path"
+validate_release_notes_items_json "$candidate_path"
+render_release_notes_markdown_from_items_json "$candidate_path"

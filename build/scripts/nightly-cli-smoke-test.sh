@@ -30,7 +30,8 @@ unset \
   LINGLONG_CLAUDE_CODE_INSTALL_DIR \
   LINGLONG_CLAUDE_CODE_VERSION \
   LINGLONG_REINSTALL_CLAUDE_CODE \
-  LINGLONG_USE_SYSTEM_CLAUDE_CODE
+  LINGLONG_USE_SYSTEM_CLAUDE_CODE \
+  LINGLONG_RELEASE_NOTES_START_REF
 
 assert_no_template_placeholders() {
   local file_path="$1"
@@ -282,9 +283,7 @@ fi
 cat > "$FAKE_CLAUDE_INPUT_PATH"
 test "$(jq -S . "$HOME/.claude/settings.json")" = "$(jq -S . "$FAKE_CLAUDE_SETTINGS_PATH")"
 cat <<'OUT'
-## Release Notes
-
-1、修复：AI generated nightly summary.
+{"items":[{"kind":"修复","text":"修复 Nightly 构建中的更新日志展示问题。"}]}
 OUT
 EOF
 chmod +x "$FAKE_CLAUDE_SUCCESS_PATH"
@@ -316,7 +315,7 @@ NOTES_OUTPUT_WITH_AI="$TMP_ROOT/nightly-release-notes-with-ai.md"
     --output "$NOTES_OUTPUT_WITH_AI"
 )
 
-assert_file_contains "$NOTES_OUTPUT_WITH_AI" "1、修复：AI generated nightly summary."
+assert_file_contains "$NOTES_OUTPUT_WITH_AI" "1、修复：修复 Nightly 构建中的更新日志展示问题。"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly source commit: $current_source_commit"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly source date: $nightly_date"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly version label: $nightly_label"
@@ -325,15 +324,20 @@ assert_file_contains "$NOTES_OUTPUT_WITH_AI" "## Download"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI" "## Requirements"
 assert_file_contains "$FAKE_CLAUDE_INPUT_PATH" "subject: fix: append nightly changelog"
 assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "--setting-sources user"
-assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "请分析当前工作区代码库、${ROOT_DIR}/docs 文档以及本次变更信息，并为版本 ${nightly_label}（nightly）生成最终的 Markdown 更新日志段落。"
+assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "--tools"
+assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "请根据输入中的 release notes 范围和候选变更，为版本 ${nightly_label}（nightly）生成最终的 JSON 更新日志条目。"
 assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前版本：${nightly_label}"
 assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前构建类型：nightly"
 assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前基线引用：${previous_source_commit}"
 assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前代码库根目录：${NOTES_FIXTURE_REPO}"
 assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前文档目录：${ROOT_DIR}/docs"
-assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "允许分析当前代码库中的相关实现。"
-if grep -Fq -- '--tools' "$FAKE_CLAUDE_ARGS_PATH"; then
-  echo "Expected nightly Claude CLI invocation to allow default tools for repository analysis." >&2
+assert_file_contains "$FAKE_CLAUDE_INPUT_PATH" "Start ref: ${previous_source_commit}"
+if grep -Fq '特殊用户要求' "$FAKE_CLAUDE_PROMPT_PATH"; then
+  echo "Expected nightly release notes prompt to avoid temporary special user requirements." >&2
+  exit 1
+fi
+if grep -Fq 'git提交' "$FAKE_CLAUDE_PROMPT_PATH"; then
+  echo "Expected nightly release notes prompt to avoid repository mutation instructions." >&2
   exit 1
 fi
 

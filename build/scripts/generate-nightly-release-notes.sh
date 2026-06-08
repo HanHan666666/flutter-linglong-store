@@ -61,16 +61,24 @@ fi
 mkdir -p "$(dirname "$output_path")"
 
 if [[ -n "$previous_source_commit" ]]; then
+  effective_source_baseline="${LINGLONG_RELEASE_NOTES_START_REF:-$previous_source_commit}"
+
+  if [[ -n "${LINGLONG_RELEASE_NOTES_START_REF:-}" ]] \
+    && ! git -C "$PWD" rev-parse --verify "${effective_source_baseline}^{commit}" >/dev/null 2>&1; then
+    echo "Release notes start ref does not exist: $effective_source_baseline" >&2
+    exit 1
+  fi
+
   # release body 里的历史 SHA 可能被人工编辑或因历史改写失效；不可用时降级为首版文案而不是直接炸掉 nightly。
-  if git -C "$PWD" rev-parse --verify "${previous_source_commit}^{commit}" >/dev/null 2>&1 \
-    && git -C "$PWD" merge-base --is-ancestor "$previous_source_commit" HEAD; then
+  if git -C "$PWD" rev-parse --verify "${effective_source_baseline}^{commit}" >/dev/null 2>&1 \
+    && git -C "$PWD" merge-base --is-ancestor "$effective_source_baseline" HEAD; then
     # 直接复用正式 release 的 changelog 入口，这样 stable/nightly 可以共享同一条 AI fallback 链路。
     changelog_content="$({
       LINGLONG_CHANGELOG_CONTEXT_KIND=nightly \
       LINGLONG_RELEASE_TOOL_ROOT="$PWD" \
         bash "$ROOT_DIR/build/scripts/generate-changelog.sh" \
         "$nightly_label" \
-        "$previous_source_commit"
+        "$effective_source_baseline"
     })"
   else
     changelog_content="$(render_fallback_changelog)"

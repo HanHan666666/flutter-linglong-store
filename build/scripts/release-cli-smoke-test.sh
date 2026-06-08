@@ -10,6 +10,7 @@ RELEASE_NOTES_FIXTURE_PATH="$TMP_ROOT/release-notes.md"
 HASHES_OUTPUT_PATH="$RELEASE_ASSET_FIXTURE_DIR/hashes.sha256"
 FAKE_CLAUDE_SUCCESS_PATH="$TMP_ROOT/fake-claude-success.sh"
 FAKE_CLAUDE_INVALID_PATH="$TMP_ROOT/fake-claude-invalid.sh"
+FAKE_CLAUDE_ZERO_NUMBER_PATH="$TMP_ROOT/fake-claude-zero-number.sh"
 FAKE_CLAUDE_FAILURE_PATH="$TMP_ROOT/fake-claude-failure.sh"
 FAKE_CLAUDE_INPUT_PATH="$TMP_ROOT/fake-claude-input.txt"
 FAKE_CLAUDE_ARGS_PATH="$TMP_ROOT/fake-claude-args.txt"
@@ -29,7 +30,8 @@ unset \
   LINGLONG_CLAUDE_CODE_INSTALL_DIR \
   LINGLONG_CLAUDE_CODE_VERSION \
   LINGLONG_REINSTALL_CLAUDE_CODE \
-  LINGLONG_USE_SYSTEM_CLAUDE_CODE
+  LINGLONG_USE_SYSTEM_CLAUDE_CODE \
+  LINGLONG_RELEASE_NOTES_START_REF
 
 cd "$ROOT_DIR"
 
@@ -150,9 +152,7 @@ fi
 cat > "$FAKE_CLAUDE_INPUT_PATH"
 test "$(jq -S . "$HOME/.claude/settings.json")" = "$(jq -S . "$FAKE_CLAUDE_SETTINGS_PATH")"
 cat <<'OUT'
-## Release Notes
-
-1、新增：AI generated summary for the current release candidate.
+{"items":[{"kind":"新增","text":"支持从网页商店拉起客户端并加入安装队列。"}]}
 OUT
 EOF
 chmod +x "$FAKE_CLAUDE_SUCCESS_PATH"
@@ -162,13 +162,22 @@ cat > "$FAKE_CLAUDE_INVALID_PATH" <<'EOF'
 set -euo pipefail
 cat >/dev/null
 cat <<'OUT'
-## Release Notes
-
-1、新增：AI generated summary for the current release candidate.
-1、修复：This duplicate numbering should be rejected.
+{"items":[{"kind":"优化","text":"非法 kind 应被拒绝。"}]}
 OUT
 EOF
 chmod +x "$FAKE_CLAUDE_INVALID_PATH"
+
+cat > "$FAKE_CLAUDE_ZERO_NUMBER_PATH" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+cat >/dev/null
+cat <<'OUT'
+## Release Notes
+
+0、新增：错误编号不应进入最终发布说明。
+OUT
+EOF
+chmod +x "$FAKE_CLAUDE_ZERO_NUMBER_PATH"
 
 cat > "$FAKE_CLAUDE_FAILURE_PATH" <<'EOF'
 #!/usr/bin/env bash
@@ -191,25 +200,29 @@ ai_changelog="$({
 })"
 
 grep -q '^## Release Notes$' <<< "$ai_changelog"
-grep -q '^1、新增：AI generated summary for the current release candidate\.$' <<< "$ai_changelog"
+grep -q '^1、新增：支持从网页商店拉起客户端并加入安装队列。$' <<< "$ai_changelog"
 grep -q -- '--bare' "$FAKE_CLAUDE_ARGS_PATH"
 grep -q -- '--setting-sources user' "$FAKE_CLAUDE_ARGS_PATH"
+grep -q -- '--tools' "$FAKE_CLAUDE_ARGS_PATH"
 grep -q -- '--max-turns 1' "$FAKE_CLAUDE_ARGS_PATH"
-if grep -Fq -- '--tools' "$FAKE_CLAUDE_ARGS_PATH"; then
-  echo "Expected Claude CLI invocation to allow default tools for repository analysis." >&2
+if grep -Fq '特殊用户要求' "$FAKE_CLAUDE_PROMPT_PATH"; then
+  echo "Expected release notes prompt to avoid temporary special user requirements." >&2
   exit 1
 fi
-grep -q '请分析当前工作区代码库、.*/docs 文档以及本次变更信息，并为版本 3.1.1（release）生成最终的 Markdown 更新日志段落。' "$FAKE_CLAUDE_ARGS_PATH"
+if grep -Fq 'git提交' "$FAKE_CLAUDE_PROMPT_PATH"; then
+  echo "Expected release notes prompt to avoid repository mutation instructions." >&2
+  exit 1
+fi
+grep -q '请根据输入中的 release notes 范围和候选变更，为版本 3.1.1（release）生成最终的 JSON 更新日志条目。' "$FAKE_CLAUDE_ARGS_PATH"
 grep -q '^# Release Notes Context$' "$FAKE_CLAUDE_INPUT_PATH"
-grep -q '^# 12 GitHub Workflow Maintenance$' "$FAKE_CLAUDE_INPUT_PATH"
-grep -q '^# flutter-linglong-store GitHub Release 更新日志生成 Prompt$' "$FAKE_CLAUDE_PROMPT_PATH"
+grep -q '^# flutter-linglong-store GitHub Release 更新日志条目生成 Prompt$' "$FAKE_CLAUDE_PROMPT_PATH"
 grep -q '当前版本：3.1.1' "$FAKE_CLAUDE_PROMPT_PATH"
 grep -q '当前构建类型：release' "$FAKE_CLAUDE_PROMPT_PATH"
 grep -q '当前基线引用：v3.1.0' "$FAKE_CLAUDE_PROMPT_PATH"
 grep -q '当前代码库根目录：.*/changelog-fixture' "$FAKE_CLAUDE_PROMPT_PATH"
 grep -q '当前文档目录：.*/docs' "$FAKE_CLAUDE_PROMPT_PATH"
-grep -q '允许分析当前代码库中的相关实现。' "$FAKE_CLAUDE_PROMPT_PATH"
-grep -q '允许分析 `.*/docs` 目录中的相关文档。' "$FAKE_CLAUDE_PROMPT_PATH"
+grep -q '^Start ref: v3.1.0$' "$FAKE_CLAUDE_INPUT_PATH"
+grep -q '^End ref: HEAD$' "$FAKE_CLAUDE_INPUT_PATH"
 grep -q 'subject: feat: current release candidate' "$FAKE_CLAUDE_INPUT_PATH"
 
 release_notes_for_uos="$TMP_ROOT/release-notes-for-uos.md"
@@ -225,7 +238,25 @@ uos_note="$({
   bash build/scripts/extract-release-note-summary.sh "$release_notes_for_uos"
 })"
 
-test "$uos_note" = '1、新增：AI generated summary for the current release candidate.'
+test "$uos_note" = '1、新增：支持从网页商店拉起客户端并加入安装队列。'
+
+ai_changelog_from_env="$({
+  HOME="$FAKE_CLAUDE_HOME" \
+  CLAUDE_CODE_SETTINGS_JSON="$(cat "$FAKE_CLAUDE_SETTINGS_PATH")" \
+  FAKE_CLAUDE_ARGS_PATH="$FAKE_CLAUDE_ARGS_PATH" \
+  FAKE_CLAUDE_INPUT_PATH="$FAKE_CLAUDE_INPUT_PATH" \
+  FAKE_CLAUDE_PROMPT_PATH="$FAKE_CLAUDE_PROMPT_PATH" \
+  FAKE_CLAUDE_SETTINGS_PATH="$FAKE_CLAUDE_SETTINGS_PATH" \
+  LINGLONG_CLAUDE_CODE_EXECUTABLE="$FAKE_CLAUDE_SUCCESS_PATH" \
+  LINGLONG_USE_SYSTEM_CLAUDE_CODE=0 \
+  LINGLONG_RELEASE_NOTES_START_REF=v3.1.0 \
+  LINGLONG_RELEASE_TOOL_ROOT="$CHANGELOG_FIXTURE_DIR" \
+    bash build/scripts/generate-changelog.sh 3.1.1
+})"
+
+grep -q '^1、新增：支持从网页商店拉起客户端并加入安装队列。$' <<< "$ai_changelog_from_env"
+grep -q '当前基线引用：v3.1.0' "$FAKE_CLAUDE_PROMPT_PATH"
+grep -q '^Start ref: v3.1.0$' "$FAKE_CLAUDE_INPUT_PATH"
 
 invalid_ai_changelog="$({
   HOME="$FAKE_CLAUDE_HOME" \
@@ -240,6 +271,24 @@ invalid_ai_changelog="$({
 })"
 
 test "$invalid_ai_changelog" = "$fixture_changelog"
+
+zero_number_ai_changelog="$({
+  HOME="$FAKE_CLAUDE_HOME" \
+  CLAUDE_CODE_SETTINGS_JSON="$(cat "$FAKE_CLAUDE_SETTINGS_PATH")" \
+  FAKE_CLAUDE_ARGS_PATH="$FAKE_CLAUDE_ARGS_PATH" \
+  FAKE_CLAUDE_INPUT_PATH="$FAKE_CLAUDE_INPUT_PATH" \
+  FAKE_CLAUDE_SETTINGS_PATH="$FAKE_CLAUDE_SETTINGS_PATH" \
+  LINGLONG_CLAUDE_CODE_EXECUTABLE="$FAKE_CLAUDE_ZERO_NUMBER_PATH" \
+  LINGLONG_USE_SYSTEM_CLAUDE_CODE=0 \
+  LINGLONG_RELEASE_TOOL_ROOT="$CHANGELOG_FIXTURE_DIR" \
+    bash build/scripts/generate-changelog.sh 3.1.1 v3.1.0
+})"
+
+test "$zero_number_ai_changelog" = "$fixture_changelog"
+if grep -q '^0、' <<< "$zero_number_ai_changelog"; then
+  echo "Expected invalid AI output starting from 0 to be rejected." >&2
+  exit 1
+fi
 
 fallback_ai_changelog="$({
   HOME="$FAKE_CLAUDE_HOME" \

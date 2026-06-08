@@ -14,12 +14,21 @@ import 'app_icon.dart';
 
 /// 下载管理弹窗
 ///
-/// 显示安装队列和安装历史记录
+/// 以轻工作面板形式显示安装队列和安装历史记录，业务动作仍统一回到安装队列。
 class DownloadManagerDialog extends ConsumerWidget {
   const DownloadManagerDialog({super.key});
 
-  static const double _dialogWidth = 440;
-  static const double _dialogHeight = 472;
+  /// 工作面板宽度；比旧弹窗更宽，用于容纳当前任务和行级操作区。
+  static const double _dialogWidth = 640;
+
+  /// 工作面板最小高度，避免短列表时弹窗视觉塌缩。
+  static const double _dialogMinHeight = 480;
+
+  /// 工作面板最大高度，避免大屏上任务面板过高影响扫描效率。
+  static const double _dialogMaxHeight = 620;
+
+  /// 面板圆角与截图预览灯箱保持一致，减少弹层风格割裂。
+  static const double _dialogRadius = 12;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,123 +36,137 @@ class DownloadManagerDialog extends ConsumerWidget {
     final appColors = context.appColors;
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x2l,
+        vertical: AppSpacing.xl,
+      ),
       backgroundColor: Colors.transparent,
-      child: Container(
-        width: _dialogWidth,
-        height: _dialogHeight,
-        decoration: BoxDecoration(
-          color: appColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: appColors.borderSecondary),
-          boxShadow: AppShadows.modal,
-        ),
-        child: Column(
-          children: [
-            _buildHeader(context, ref, queueState),
-            _buildOverview(context, queueState),
-            Divider(height: 1, color: appColors.divider),
-            Expanded(child: _buildContent(context, ref, queueState)),
-            _buildFooter(context, ref, queueState),
-          ],
-        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final availableHeight =
+              MediaQuery.sizeOf(context).height - AppSpacing.x5l;
+          final dialogHeight = availableHeight
+              .clamp(_dialogMinHeight, _dialogMaxHeight)
+              .toDouble();
+
+          return SizedBox(
+            width: _dialogWidth,
+            height: dialogHeight,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: appColors.surface,
+                borderRadius: BorderRadius.circular(_dialogRadius),
+                border: Border.all(color: appColors.borderSecondary),
+                boxShadow: AppShadows.modal,
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(_dialogRadius),
+                child: Column(
+                  children: [
+                    _buildTitleBar(context, ref, queueState),
+                    _buildOverview(context, queueState),
+                    Divider(height: 1, color: appColors.divider),
+                    Expanded(child: _buildContent(context, ref, queueState)),
+                    _buildFooter(context, ref, queueState),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  /// 构建标题栏
-  Widget _buildHeader(
+  /// 构建固定顶栏，参考截图预览灯箱的桌面面板结构。
+  Widget _buildTitleBar(
     BuildContext context,
     WidgetRef ref,
     InstallQueueState queueState,
   ) {
     final appColors = context.appColors;
+    final l10n = AppLocalizations.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.md,
-        AppSpacing.md,
+    return Container(
+      key: const Key('downloadManagerTitleBar'),
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: appColors.surfaceContainerLow,
+        border: Border(bottom: BorderSide(color: appColors.borderSecondary)),
       ),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: appColors.primaryLight,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(Icons.download_rounded, color: appColors.primary),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppLocalizations.of(context)?.downloadManager ?? '下载管理',
-                  style: context.appTextStyles.title3.copyWith(
-                    fontWeight: context.appFontWeight(FontWeight.w600),
-                  ),
-                ),
-                Text(
-                  _buildHeaderSummary(context, queueState),
-                  style: context.appTextStyles.caption.copyWith(
-                    color: appColors.textSecondary,
-                  ),
-                ),
-              ],
+          ExcludeSemantics(
+            child: Icon(
+              Icons.download_rounded,
+              color: appColors.primary,
+              size: 18,
             ),
           ),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            l10n?.downloadManager ?? '下载管理',
+            style: context.appTextStyles.bodyMedium.copyWith(
+              color: appColors.textPrimary,
+              fontWeight: context.appFontWeight(FontWeight.w600),
+            ),
+          ),
+          const Spacer(),
           if (queueState.history.isNotEmpty)
             TextButton(
               onPressed: () {
                 ref.read(installQueueProvider.notifier).clearHistory();
               },
-              child: Text(AppLocalizations.of(context)?.clearRecords ?? '清空记录'),
+              style: TextButton.styleFrom(
+                minimumSize: const Size(64, 32),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(l10n?.clearRecords ?? '清空记录'),
             ),
-          // 关闭按钮
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+          const SizedBox(width: AppSpacing.sm),
+          _PanelCloseButton(onTap: () => Navigator.of(context).pop()),
         ],
       ),
     );
   }
 
+  /// 构建任务概览条，承担工作面板的全局状态总览。
   Widget _buildOverview(BuildContext context, InstallQueueState queueState) {
-    final l10n = AppLocalizations.of(context)!;
     final activeCount = queueState.currentTask == null ? 0 : 1;
-    return Padding(
+    return Container(
+      key: const Key('downloadManagerOverviewBar'),
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
-        0,
+        AppSpacing.md,
         AppSpacing.lg,
         AppSpacing.md,
       ),
+      color: context.appColors.surface,
       child: Row(
         children: [
           Expanded(
-            child: _OverviewPill(
-              label: l10n.downloading,
+            child: _OverviewTile(
+              icon: Icons.downloading_rounded,
+              label: '进行中',
               count: activeCount,
               highlighted: activeCount > 0,
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: _OverviewPill(
-              label: l10n.waitingCount(queueState.queue.length),
+            child: _OverviewTile(
+              icon: Icons.schedule_rounded,
+              label: '等待中',
               count: queueState.queue.length,
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: _OverviewPill(
-              label: l10n.completed,
+            child: _OverviewTile(
+              icon: Icons.done_all_rounded,
+              label: '已完成',
               count: queueState.history.length,
             ),
           ),
@@ -168,9 +191,10 @@ class DownloadManagerDialog extends ConsumerWidget {
 
     return Scrollbar(
       child: SingleChildScrollView(
+        key: const Key('downloadManagerTaskList'),
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg,
-          AppSpacing.md,
+          AppSpacing.lg,
           AppSpacing.lg,
           AppSpacing.lg,
         ),
@@ -180,7 +204,7 @@ class DownloadManagerDialog extends ConsumerWidget {
             if (queueState.currentTask != null) ...[
               _buildSectionTitle(context, l10n.installingLabel),
               _buildCurrentTask(context, ref, queueState.currentTask!),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.lg),
             ],
             if (queueState.queue.isNotEmpty) ...[
               _buildSectionTitle(
@@ -190,7 +214,7 @@ class DownloadManagerDialog extends ConsumerWidget {
               ...queueState.queue.map(
                 (task) => _buildQueueItem(context, ref, task),
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.lg),
             ],
             if (queueState.history.isNotEmpty) ...[
               _buildSectionTitle(context, l10n.completed),
@@ -206,9 +230,9 @@ class DownloadManagerDialog extends ConsumerWidget {
 
   /// 构建空状态
   Widget _buildEmptyState(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.x2l),
-      child: Center(
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.x2l),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -232,16 +256,7 @@ class DownloadManagerDialog extends ConsumerWidget {
 
   /// 构建区域标题
   Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Text(
-        title,
-        style: context.appTextStyles.caption.copyWith(
-          color: context.appColors.textSecondary,
-          fontWeight: context.appFontWeight(FontWeight.w600),
-        ),
-      ),
-    );
+    return _SectionHeader(title: title);
   }
 
   /// 构建当前任务（带进度条）
@@ -315,16 +330,17 @@ class DownloadManagerDialog extends ConsumerWidget {
     final cliSpeed = queueState.currentTask?.cliSpeed;
     final speed = cliSpeed ?? ref.watch(networkSpeedProvider).formatted;
     return Container(
+      key: const Key('downloadManagerStatusBar'),
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
-        AppSpacing.md,
+        AppSpacing.sm,
         AppSpacing.lg,
-        AppSpacing.md,
+        AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: appColors.cardBackground.withValues(alpha: 0.6),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+        color: appColors.surfaceContainerLow,
+        border: Border(top: BorderSide(color: appColors.borderSecondary)),
       ),
       child: Row(
         children: [
@@ -347,26 +363,6 @@ class DownloadManagerDialog extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  String _buildHeaderSummary(
-    BuildContext context,
-    InstallQueueState queueState,
-  ) {
-    final parts = <String>[];
-    if (queueState.currentTask != null) {
-      parts.add('1 个活跃任务');
-    }
-    if (queueState.queue.isNotEmpty) {
-      parts.add('${queueState.queue.length} 个等待中');
-    }
-    if (queueState.history.isNotEmpty) {
-      parts.add('${queueState.history.length} 条最近记录');
-    }
-    if (parts.isEmpty) {
-      return AppLocalizations.of(context)!.noDownloadTasks;
-    }
-    return parts.join('，');
   }
 }
 
@@ -488,111 +484,159 @@ class _TaskCardState extends State<_TaskCard> {
         widget.task.progressPercentLabel,
       ),
       value: widget.task.isProcessing ? widget.task.progressPercentLabel : null,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: EdgeInsets.all(
-          widget.featured ? AppSpacing.lg : AppSpacing.md,
-        ),
-        decoration: BoxDecoration(
-          color: widget.featured
-              ? appColors.primaryLight.withValues(alpha: 0.6)
-              : appColors.cardBackground.withValues(alpha: 0.7),
-          borderRadius: BorderRadius.circular(widget.featured ? 18 : 16),
-          border: Border.all(
-            color: widget.featured
-                ? appColors.primaryLight
-                : appColors.borderSecondary,
+      child: widget.featured
+          ? _buildFeaturedCard(context, l10n, appColors)
+          : _buildCompactCard(context, appColors),
+    );
+  }
+
+  /// 构建当前任务主卡片，突出进度和可取消动作。
+  Widget _buildFeaturedCard(
+    BuildContext context,
+    AppLocalizations l10n,
+    AppColorPalette appColors,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: appColors.primaryLight.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: appColors.primary.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppIcon(
+                iconUrl: widget.task.icon,
+                size: 48,
+                borderRadius: 14,
+                appName: widget.task.appName,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: _buildTaskText(context, featured: true)),
+              const SizedBox(width: AppSpacing.md),
+              _buildActionButtons(context),
+            ],
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          if (widget.showProgress &&
+              (widget.task.isProcessing ||
+                  widget.task.status == InstallStatus.downloading)) ...[
+            const SizedBox(height: AppSpacing.md),
+            _buildProgressBar(context),
+          ],
+          if (widget.task.shouldShowSlowInstallHint(_now)) ...[
+            const SizedBox(height: AppSpacing.xs),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppIcon(
-                  iconUrl: widget.task.icon,
-                  size: widget.featured ? 48 : 42,
-                  borderRadius: widget.featured ? 16 : 14,
-                  appName: widget.task.appName,
-                ),
-                const SizedBox(width: AppSpacing.md),
+                Icon(Icons.info_outline, size: 14, color: appColors.warning),
+                const SizedBox(width: AppSpacing.xs),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.task.appName,
-                        // featured 用 16px 正文级别，普通用 14px 说明级别
-                        style:
-                            (widget.featured
-                                    ? context.appTextStyles.body
-                                    : context.appTextStyles.bodyMedium)
-                                .copyWith(
-                                  fontWeight: context.appFontWeight(
-                                    FontWeight.w600,
-                                  ),
-                                ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        _buildSubtitle(context),
-                        style: context.appTextStyles.caption.copyWith(
-                          color: appColors.textSecondary,
-                        ),
-                        maxLines: widget.compact ? 1 : 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                _buildActionButtons(context),
-              ],
-            ),
-            if (widget.showProgress &&
-                (widget.task.isProcessing ||
-                    widget.task.status == InstallStatus.downloading)) ...[
-              const SizedBox(height: AppSpacing.md),
-              _buildProgressBar(context),
-            ],
-            if (widget.task.shouldShowSlowInstallHint(_now)) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.info_outline, size: 14, color: appColors.warning),
-                  const SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    child: Text(
-                      l10n.downloadManagerSlowInstallHint,
-                      style: context.appTextStyles.caption.copyWith(
-                        color: appColors.textSecondary,
-                      ),
+                  child: Text(
+                    l10n.downloadManagerSlowInstallHint,
+                    style: context.appTextStyles.caption.copyWith(
+                      color: appColors.textSecondary,
                     ),
                   ),
-                ],
-              ),
-            ],
-            if (widget.task.isFailed && widget.task.errorMessage != null) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                widget.task.errorMessage!,
-                style: context.appTextStyles.caption.copyWith(
-                  color: AppColors.error,
                 ),
-                softWrap: true,
-              ),
-            ],
+              ],
+            ),
           ],
-        ),
+          _buildErrorText(context),
+        ],
       ),
     );
   }
 
-  /// 构建状态图标
+  /// 构建等待队列和历史记录行，保持信息密度但不抢当前任务焦点。
+  Widget _buildCompactCard(BuildContext context, AppColorPalette appColors) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: appColors.cardBackground.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: appColors.borderSecondary),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              AppIcon(
+                iconUrl: widget.task.icon,
+                size: 40,
+                borderRadius: 12,
+                appName: widget.task.appName,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(child: _buildTaskText(context, featured: false)),
+              const SizedBox(width: AppSpacing.sm),
+              _buildActionButtons(context),
+            ],
+          ),
+          _buildErrorText(context),
+        ],
+      ),
+    );
+  }
+
+  /// 构建任务标题和副标题，避免卡片布局直接读业务字段散落多处。
+  Widget _buildTaskText(BuildContext context, {required bool featured}) {
+    final appColors = context.appColors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.task.appName,
+          style:
+              (featured
+                      ? context.appTextStyles.body
+                      : context.appTextStyles.bodyMedium)
+                  .copyWith(
+                    color: appColors.textPrimary,
+                    fontWeight: context.appFontWeight(FontWeight.w600),
+                  ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          _buildSubtitle(context),
+          style: context.appTextStyles.caption.copyWith(
+            color: appColors.textSecondary,
+          ),
+          maxLines: featured ? 2 : 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
+  /// 构建失败信息，失败原因必须完整展示，不能为了行高裁剪。
+  Widget _buildErrorText(BuildContext context) {
+    if (!widget.task.isFailed || widget.task.errorMessage == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Text(
+        widget.task.errorMessage!,
+        style: context.appTextStyles.caption.copyWith(color: AppColors.error),
+        softWrap: true,
+      ),
+    );
+  }
+
   /// 构建进度条
   Widget _buildProgressBar(BuildContext context) {
     final appColors = context.appColors;
@@ -662,17 +706,19 @@ class _TaskCardState extends State<_TaskCard> {
       InstallStatus.failed => ('失败', appColors.error),
       InstallStatus.cancelled => ('已取消', appColors.warning),
     };
+    final resolvedLabel = widget.featured ? '当前任务' : label;
+    final resolvedColor = widget.featured ? appColors.primary : color;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: resolvedColor.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.full),
       ),
       child: Text(
-        label,
+        resolvedLabel,
         style: context.appTextStyles.tiny.copyWith(
-          color: color,
+          color: resolvedColor,
           fontWeight: context.appFontWeight(FontWeight.w600),
         ),
       ),
@@ -721,8 +767,20 @@ class _TaskCardState extends State<_TaskCard> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: actionWidgets,
+      children: _spacedActionWidgets(actionWidgets),
     );
+  }
+
+  /// 为状态标签和行级动作补充固定间距，避免不同任务状态下按钮贴在一起。
+  List<Widget> _spacedActionWidgets(List<Widget> actionWidgets) {
+    final result = <Widget>[];
+    for (var i = 0; i < actionWidgets.length; i++) {
+      if (i > 0) {
+        result.add(const SizedBox(width: AppSpacing.xs));
+      }
+      result.add(actionWidgets[i]);
+    }
+    return result;
   }
 
   Widget _buildCopyOutputButton(BuildContext context) {
@@ -760,8 +818,8 @@ class _TaskCardState extends State<_TaskCard> {
         widget.task.status == InstallStatus.pending) {
       // 可取消
       return [
-        IconButton(
-          icon: const Icon(Icons.close, size: 18),
+        _buildIconActionButton(
+          icon: Icons.close,
           onPressed: widget.onCancel,
           tooltip: l10n?.cancel ?? '取消',
         ),
@@ -771,14 +829,14 @@ class _TaskCardState extends State<_TaskCard> {
     if (widget.task.isFailed && widget.onRetry != null) {
       // 可重试
       return [
-        IconButton(
-          icon: const Icon(Icons.refresh, size: 18),
+        _buildIconActionButton(
+          icon: Icons.refresh,
           onPressed: widget.onRetry,
           tooltip: l10n?.retry ?? '重试',
         ),
         if (widget.onRemove != null)
-          IconButton(
-            icon: const Icon(Icons.close, size: 18),
+          _buildIconActionButton(
+            icon: Icons.close,
             onPressed: widget.onRemove,
             tooltip: l10n?.remove ?? '移除',
           ),
@@ -787,14 +845,14 @@ class _TaskCardState extends State<_TaskCard> {
 
     if (widget.task.status == InstallStatus.success && widget.onOpen != null) {
       return [
-        IconButton(
-          icon: const Icon(Icons.open_in_new, size: 18),
+        _buildIconActionButton(
+          icon: Icons.open_in_new,
           onPressed: widget.onOpen,
           tooltip: l10n?.open ?? '打开',
         ),
         if (widget.onRemove != null)
-          IconButton(
-            icon: const Icon(Icons.close, size: 18),
+          _buildIconActionButton(
+            icon: Icons.close,
             onPressed: widget.onRemove,
             tooltip: l10n?.remove ?? '移除',
           ),
@@ -803,8 +861,8 @@ class _TaskCardState extends State<_TaskCard> {
 
     if (widget.onRemove != null) {
       return [
-        IconButton(
-          icon: const Icon(Icons.close, size: 18),
+        _buildIconActionButton(
+          icon: Icons.close,
           onPressed: widget.onRemove,
           tooltip: l10n?.remove ?? '移除',
         ),
@@ -812,6 +870,22 @@ class _TaskCardState extends State<_TaskCard> {
     }
 
     return const [];
+  }
+
+  /// 构建紧凑行级图标按钮，确保不同动作在任务行内保持相同视觉重心。
+  Widget _buildIconActionButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required String tooltip,
+  }) {
+    return IconButton(
+      constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+      padding: EdgeInsets.zero,
+      iconSize: 18,
+      icon: Icon(icon),
+      onPressed: onPressed,
+      tooltip: tooltip,
+    );
   }
 }
 
@@ -823,15 +897,61 @@ Future<void> showDownloadManagerDialog(BuildContext context) {
   );
 }
 
-class _OverviewPill extends StatelessWidget {
-  const _OverviewPill({
+/// 分组标题，使用轻量强调线帮助用户快速扫描任务区域。
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title});
+
+  /// 分组标题文案，来自当前下载任务区块语义。
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final appColors = context.appColors;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 14,
+            decoration: BoxDecoration(
+              color: appColors.primary,
+              borderRadius: BorderRadius.circular(AppRadius.full),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            title,
+            style: context.appTextStyles.caption.copyWith(
+              color: appColors.textSecondary,
+              fontWeight: context.appFontWeight(FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 工作面板概览指标，展示当前任务、等待队列和历史记录数量。
+class _OverviewTile extends StatelessWidget {
+  const _OverviewTile({
+    required this.icon,
     required this.label,
     required this.count,
     this.highlighted = false,
   });
 
+  /// 指标图标，仅用于视觉扫描，语义由外层文本承载。
+  final IconData icon;
+
+  /// 指标名称，例如进行中、等待中、已完成。
   final String label;
+
+  /// 指标数量，直接由安装队列状态派生。
   final int count;
+
+  /// 是否强调当前指标；目前仅进行中任务存在时启用。
   final bool highlighted;
 
   @override
@@ -840,21 +960,29 @@ class _OverviewPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
+        vertical: AppSpacing.md,
       ),
       decoration: BoxDecoration(
         color: highlighted
-            ? appColors.primaryLight.withValues(alpha: 0.75)
-            : appColors.cardBackground.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+            ? appColors.primaryLight.withValues(alpha: 0.62)
+            : appColors.cardBackground.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
           color: highlighted
-              ? appColors.primaryLight
+              ? appColors.primary.withValues(alpha: 0.18)
               : appColors.borderSecondary,
         ),
       ),
       child: Row(
         children: [
+          ExcludeSemantics(
+            child: Icon(
+              icon,
+              size: 18,
+              color: highlighted ? appColors.primary : appColors.textTertiary,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               label,
@@ -877,6 +1005,56 @@ class _OverviewPill extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 顶栏关闭按钮，复用截图灯箱的小尺寸桌面关闭控件语言。
+class _PanelCloseButton extends StatefulWidget {
+  const _PanelCloseButton({required this.onTap});
+
+  /// 关闭下载中心弹窗，不影响安装队列任务本身。
+  final VoidCallback onTap;
+
+  @override
+  State<_PanelCloseButton> createState() => _PanelCloseButtonState();
+}
+
+class _PanelCloseButtonState extends State<_PanelCloseButton> {
+  /// 桌面端 hover 状态，用于呈现危险关闭色。
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final appColors = context.appColors;
+    final l10n = AppLocalizations.of(context);
+    final backgroundColor = _hovered
+        ? AppColors.error.withValues(alpha: 0.88)
+        : appColors.textPrimary.withValues(alpha: 0.06);
+    final iconColor = _hovered
+        ? AppColors.textLight
+        : appColors.textSecondary.withValues(alpha: 0.86);
+
+    return Tooltip(
+      message: l10n?.close ?? '关闭',
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 120),
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(AppRadius.xs),
+            ),
+            child: Icon(Icons.close, size: 16, color: iconColor),
+          ),
+        ),
       ),
     );
   }

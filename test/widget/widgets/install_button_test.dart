@@ -185,6 +185,32 @@ void main() {
           expect(progressIndicator.color, theme.primary);
         },
       );
+
+      testWidgets(
+        'hero installing state should fit progress speed and cancel action',
+        (tester) async {
+          await tester.pumpWidget(
+            MaterialApp(
+              locale: const Locale('zh'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: Center(
+                  child: InstallButton(
+                    state: InstallButtonState.installing,
+                    progress: 0.01391375021972114,
+                    downloadSpeed: '870.75KB/s',
+                    onCancel: () {},
+                    size: ButtonSize.hero,
+                  ),
+                ),
+              ),
+            ),
+          );
+
+          expect(tester.takeException(), isNull);
+        },
+      );
     });
 
     group('Pending state', () {

@@ -359,34 +359,49 @@ class _InstallButtonState extends State<InstallButton> {
     required String cancelLabel,
     required Color foregroundColor,
   }) {
-    // 仅按内容尺寸布局前景层，避免在 Row 提供的无界宽度约束中向外请求无限宽度。
-    return Center(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: context.appFontWeight(FontWeight.w500),
-              color: foregroundColor,
-            ),
-          ),
-          if (widget.onCancel != null) ...[
-            const SizedBox(width: 8),
-            Tooltip(
-              message: cancelLabel,
-              child: GestureDetector(
-                onTap: widget.onCancel,
-                child: Icon(
-                  Icons.close,
-                  size: _getIconSize(),
-                  color: foregroundColor,
+    final labelStyle = TextStyle(
+      fontWeight: context.appFontWeight(FontWeight.w500),
+      color: foregroundColor,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 详情页 hero 按钮有稳定最大宽度，进度百分比、速度和取消图标需要在
+        // 有界宽度内协同收缩；普通无界场景继续按内容自然宽度布局。
+        final shouldConstrainText = constraints.hasBoundedWidth;
+        final labelWidget = Text(
+          label,
+          maxLines: shouldConstrainText ? 1 : null,
+          overflow: shouldConstrainText ? TextOverflow.ellipsis : null,
+          style: labelStyle,
+        );
+
+        return Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (shouldConstrainText)
+                Flexible(child: labelWidget)
+              else
+                labelWidget,
+              if (widget.onCancel != null) ...[
+                const SizedBox(width: 8),
+                Tooltip(
+                  message: cancelLabel,
+                  child: GestureDetector(
+                    onTap: widget.onCancel,
+                    child: Icon(
+                      Icons.close,
+                      size: _getIconSize(),
+                      color: foregroundColor,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ],
-        ],
-      ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 

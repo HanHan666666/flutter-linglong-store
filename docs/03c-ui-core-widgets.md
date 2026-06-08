@@ -500,6 +500,7 @@ Widget _buildPendingButton(BuildContext context) {
 - 使用 `LinearProgressIndicator` 显示安装进度
 - 进度值由 `progress` 参数传入（0.0 - 1.0）
 - 显示格式：`75%` 或 `75% · 2.5 MB/s`
+- 详情页 `ButtonSize.hero` 使用稳定宽度时，进度文本允许单行视觉省略，但取消图标必须保留可点击，避免网速文本过长导致 `RenderFlex` 溢出
 
 **网速来源**：
 - 网速由 `networkSpeedProvider` 提供
@@ -516,7 +517,7 @@ downloadSpeed: buttonState == InstallButtonState.installing
 ### 8.6 按钮尺寸
 
 ```dart
-enum ButtonSize { small, medium, large }
+enum ButtonSize { small, medium, large, hero }
 ```
 
 | 尺寸 | 高度 | 图标 | 水平内边距 |
@@ -524,6 +525,9 @@ enum ButtonSize { small, medium, large }
 | `small` | 28px | 14px | 12px |
 | `medium` | 32px | 16px | 16px |
 | `large` | 40px | 18px | 20px |
+| `hero` | 48px | 20px | 24px |
+
+`hero` 尺寸用于详情页头部主操作按钮，外层宽度稳定在 `144~184px`。安装中状态需要在这个宽度内优先保证取消动作可见，进度百分比和网速文本使用单行省略处理。
 
 ### 8.7 组件 API
 
@@ -596,7 +600,7 @@ InstallButtonState _getButtonState() {
 |------|------|
 | `lib/presentation/widgets/install_button.dart` | 组件实现 |
 | `lib/presentation/pages/update_app/update_app_page.dart` | 更新页面使用示例 |
-| `test/widget/widgets/install_button_test.dart` | 单元测试（24 个测试用例） |
+| `test/widget/widgets/install_button_test.dart` | Widget 测试，覆盖状态渲染、尺寸约束和安装中防溢出回归 |
 | `test/widget/presentation/pages/update_app/update_app_page_test.dart` | 更新页面测试 |
 
 ### 8.10 设计决策记录

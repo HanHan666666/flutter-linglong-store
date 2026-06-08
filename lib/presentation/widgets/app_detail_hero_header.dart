@@ -29,7 +29,7 @@ class AppDetailHeroHeader extends StatelessWidget {
     this.tags = const [],
     this.downloadSpeed,
     this.statusMessage,
-    this.statusCopyText,
+    this.statusLogCopyText,
     this.isStatusFailed = false,
     super.key,
   });
@@ -61,8 +61,8 @@ class AppDetailHeroHeader extends StatelessWidget {
   /// 安装或更新状态条展示文案。
   final String? statusMessage;
 
-  /// 状态条复制按钮使用的完整文案。
-  final String? statusCopyText;
+  /// 状态条复制按钮使用的下载管理安装日志。
+  final String? statusLogCopyText;
 
   /// 状态条是否为失败态。
   final bool isStatusFailed;
@@ -333,9 +333,11 @@ class AppDetailHeroHeader extends StatelessWidget {
   Widget _buildStatusBar(BuildContext context) {
     final theme = Theme.of(context);
     final statusText = statusMessage ?? '';
-    final copyText = statusCopyText?.isNotEmpty == true
-        ? statusCopyText!
-        : statusText;
+    final trimmedLogCopyText = statusLogCopyText?.trim();
+    final logCopyText =
+        trimmedLogCopyText != null && trimmedLogCopyText.isNotEmpty
+        ? trimmedLogCopyText
+        : null;
     final borderColor = isStatusFailed
         ? theme.colorScheme.error.withValues(alpha: 0.45)
         : theme.colorScheme.primary.withValues(alpha: 0.22);
@@ -353,8 +355,8 @@ class AppDetailHeroHeader extends StatelessWidget {
         border: Border.all(color: borderColor),
       ),
       child: isStatusFailed
-          ? _buildFailedStatusContent(context, statusText, copyText)
-          : _buildNormalStatusContent(context, statusText, copyText),
+          ? _buildFailedStatusContent(context, statusText, logCopyText)
+          : _buildNormalStatusContent(context, statusText, logCopyText),
     );
   }
 
@@ -362,7 +364,7 @@ class AppDetailHeroHeader extends StatelessWidget {
   Widget _buildNormalStatusContent(
     BuildContext context,
     String statusText,
-    String copyText,
+    String? logCopyText,
   ) {
     final theme = Theme.of(context);
 
@@ -390,8 +392,10 @@ class AppDetailHeroHeader extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 8),
-        _buildStatusCopyButton(context, copyText, isFailed: false),
+        if (logCopyText != null) ...[
+          const SizedBox(width: 8),
+          _buildStatusCopyButton(context, logCopyText),
+        ],
       ],
     );
   }
@@ -400,7 +404,7 @@ class AppDetailHeroHeader extends StatelessWidget {
   Widget _buildFailedStatusContent(
     BuildContext context,
     String statusText,
-    String copyText,
+    String? logCopyText,
   ) {
     final theme = Theme.of(context);
 
@@ -431,24 +435,24 @@ class AppDetailHeroHeader extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 6),
-        Align(
-          alignment: Alignment.centerRight,
-          child: _buildStatusCopyButton(context, copyText, isFailed: true),
-        ),
+        if (logCopyText != null) ...[
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerRight,
+            child: _buildStatusCopyButton(context, logCopyText),
+          ),
+        ],
       ],
     );
   }
 
-  /// 构建状态条复制按钮。
-  Widget _buildStatusCopyButton(
-    BuildContext context,
-    String copyText, {
-    required bool isFailed,
-  }) {
+  /// 构建状态条安装日志复制按钮。
+  ///
+  /// 只复制下载管理记录中的完整日志，不回退到状态文案或失败摘要。
+  Widget _buildStatusCopyButton(BuildContext context, String logCopyText) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final label = isFailed ? l10n.copyErrorMessage : l10n.copy;
+    final label = l10n.copyLog;
 
     return Semantics(
       label: label,
@@ -457,7 +461,7 @@ class AppDetailHeroHeader extends StatelessWidget {
         message: label,
         child: TextButton(
           onPressed: () {
-            Clipboard.setData(ClipboardData(text: copyText));
+            Clipboard.setData(ClipboardData(text: logCopyText));
           },
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -465,7 +469,7 @@ class AppDetailHeroHeader extends StatelessWidget {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           child: Text(
-            l10n.copy,
+            label,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.primary,
               fontSize: 12,

@@ -294,6 +294,7 @@ Semantics(
 测试文件位于 `test/unit/core/accessibility/a11y_semantics_test.dart`。
 
 ## 变更记录
+- 2026-06-08：应用详情页头部安装状态条的复制入口必须复用下载管理任务记录的 `InstallTask.commandOutput`，按钮文案统一为“复制日志”；当匹配任务没有 `commandOutput` 时隐藏复制入口，禁止回退复制 `statusMessage`、`rawMessage`、`errorDetail` 或 `errorMessage`，避免详情页与下载管理日志来源漂移。
 - 2026-06-08：`InstallButton(size: ButtonSize.hero)` 在详情页安装中状态必须保持 `144~184px` 稳定宽度；百分比和网速文本在有界宽度内使用单行省略，取消图标和点击取消能力必须保留，禁止通过隐藏网速、隐藏取消入口或放大详情页主按钮来规避 `RenderFlex` 溢出。
 - 2026-06-06：网页版商店拉起安装只兼容旧协议 `og://appId`，禁止新增替代 scheme 或扩展 query 业务语义；Linux 包通过 `.desktop` 的 `Exec=... %u` 与 `MimeType=x-scheme-handler/og;` 按 XDG 方式声明能力，应用运行时不得调用 `xdg-mime` 强行覆盖用户默认 handler。冷启动 URL 由 `main(List<String> args)` 注入 `initialOgProtocolUrlsProvider`，已运行实例由 `SingleInstance.protocolUrls` 转发，业务必须统一进入 `OgInstallController -> AppRepository.getAppDetail() -> AppOperationQueueController.enqueueAppOperation()`，不得绕过安装队列或直接新增 `ll-cli` 调用。
 - 2026-06-05：下载中心 item 操作必须以 `InstallTask.id` 为唯一身份；删除、取消排队项、重试失败项都不得再按 `appId` 批量影响同应用的其他记录。安装/更新任务需要随 item 保存 `commandOutput`，点击 item 复制该任务的 `ll-cli` 命令与输出，item 删除后对应输出自然随任务记录删除。

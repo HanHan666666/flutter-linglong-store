@@ -84,7 +84,7 @@ void main() {
       );
     });
 
-    testWidgets('failed install message wraps fully and copies full detail', (
+    testWidgets('failed install message wraps fully and copies install log', (
       tester,
     ) async {
       await tester.binding.setSurfaceSize(const Size(760, 900));
@@ -94,6 +94,9 @@ void main() {
           'Error executing command as another user: Request denied because authentication dialog was dismissed before the command could continue.';
       const fullErrorDetail =
           'Error executing command as another user: Request denied because authentication dialog was dismissed before the command could continue. pkexec exited with code 126.';
+      const commandOutput =
+          'll-cli install --json org.example.demo\n'
+          '[CLI stderr] pkexec exited with code 126';
 
       const clipboardChannel = SystemChannels.platform;
       MethodCall? clipboardCall;
@@ -124,6 +127,7 @@ void main() {
                 message: displayedMessage,
                 errorMessage: displayedMessage,
                 errorDetail: fullErrorDetail,
+                commandOutput: commandOutput,
                 createdAt: DateTime.now().millisecondsSinceEpoch,
                 finishedAt: DateTime.now().millisecondsSinceEpoch,
               ),
@@ -136,11 +140,12 @@ void main() {
       await tester.pumpAndSettle();
 
       final errorText = find.text(displayedMessage);
-      final copyButton = find.byTooltip('复制错误信息');
+      final copyButton = find.byTooltip('复制日志');
       final errorTextWidget = tester.widget<Text>(errorText);
 
       expect(errorText, findsOneWidget);
       expect(copyButton, findsOneWidget);
+      expect(find.byTooltip('复制错误信息'), findsNothing);
       expect(errorTextWidget.maxLines, isNull);
       expect(
         tester.getTopLeft(copyButton).dy,
@@ -153,11 +158,11 @@ void main() {
       expect(clipboardCall?.method, equals('Clipboard.setData'));
       expect(
         clipboardCall?.arguments,
-        equals(<String, dynamic>{'text': fullErrorDetail}),
+        equals(<String, dynamic>{'text': commandOutput}),
       );
     });
 
-    testWidgets('non-failed install message keeps copying displayed message', (
+    testWidgets('non-failed install message hides copy action without log', (
       tester,
     ) async {
       await tester.binding.setSurfaceSize(const Size(760, 900));
@@ -165,18 +170,6 @@ void main() {
 
       const displayedMessage = '准备安装...';
       const rawMessage = '{"message":"raw install message"}';
-
-      const clipboardChannel = SystemChannels.platform;
-      MethodCall? clipboardCall;
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(clipboardChannel, (call) async {
-            clipboardCall = call;
-            return null;
-          });
-      addTearDown(() {
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(clipboardChannel, null);
-      });
 
       await tester.pumpWidget(
         _buildTestApp(
@@ -207,10 +200,6 @@ void main() {
         of: find.text(displayedMessage),
         matching: find.byType(Row),
       );
-      final copyButton = find.descendant(
-        of: statusRow.first,
-        matching: find.widgetWithText(TextButton, '复制'),
-      );
       final neutralTooltip = find.descendant(
         of: statusRow.first,
         matching: find.byTooltip('复制'),
@@ -219,89 +208,29 @@ void main() {
         of: statusRow.first,
         matching: find.byTooltip('复制错误信息'),
       );
+      final logTooltip = find.descendant(
+        of: statusRow.first,
+        matching: find.byTooltip('复制日志'),
+      );
 
-      expect(neutralTooltip, findsOneWidget);
+      expect(neutralTooltip, findsNothing);
       expect(errorTooltip, findsNothing);
-
-      await tester.tap(copyButton);
-      await tester.pump();
-
-      expect(clipboardCall?.method, equals('Clipboard.setData'));
-      expect(
-        clipboardCall?.arguments,
-        equals(<String, dynamic>{'text': displayedMessage}),
-      );
-    });
-
-    testWidgets('active install status tooltip and copy use full raw text', (
-      tester,
-    ) async {
-      await tester.binding.setSurfaceSize(const Size(760, 900));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-
-      const fullStatus =
-          'Resolving dependency org.deepin.runtime.webengine version 25.2.1 '
-          'from repo stable with additional package metadata';
-      final ellipsizedStatus = '${fullStatus.substring(0, 50)}...';
-
-      const clipboardChannel = SystemChannels.platform;
-      MethodCall? clipboardCall;
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(clipboardChannel, (call) async {
-            clipboardCall = call;
-            return null;
-          });
-      addTearDown(() {
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(clipboardChannel, null);
-      });
-
-      await tester.pumpWidget(
-        _buildTestApp(
-          appId: 'org.example.demo',
-          uninstallService: _RecordingUninstallService(),
-          detailState: _detailState(versions: const []),
-          installedApps: const [],
-          installQueueState: InstallQueueState(
-            currentTask: InstallTask(
-              id: 'active-task',
-              appId: 'org.example.demo',
-              appName: 'Demo',
-              version: '2.0.0',
-              status: InstallStatus.installing,
-              message: ellipsizedStatus,
-              rawMessage: fullStatus,
-              createdAt: DateTime.now().millisecondsSinceEpoch,
-            ),
-            isProcessing: true,
-          ),
-        ),
-      );
-
-      await tester.pump();
-      await tester.pumpAndSettle();
-
-      expect(find.byTooltip(fullStatus), findsOneWidget);
-      expect(find.byTooltip(ellipsizedStatus), findsNothing);
-
-      await tester.tap(find.widgetWithText(TextButton, '复制'));
-      await tester.pump();
-
-      expect(clipboardCall?.method, equals('Clipboard.setData'));
-      expect(
-        clipboardCall?.arguments,
-        equals(<String, dynamic>{'text': fullStatus}),
-      );
+      expect(logTooltip, findsNothing);
     });
 
     testWidgets(
-      'restored failed task copies error message when detail is absent',
+      'active install status tooltip uses full raw text and copies log',
       (tester) async {
         await tester.binding.setSurfaceSize(const Size(760, 900));
         addTearDown(() => tester.binding.setSurfaceSize(null));
 
-        const displayedMessage = '任务异常中断';
-        const errorMessage = '请重试安装，若仍失败请检查认证授权。';
+        const fullStatus =
+            'Resolving dependency org.deepin.runtime.webengine version 25.2.1 '
+            'from repo stable with additional package metadata';
+        final ellipsizedStatus = '${fullStatus.substring(0, 50)}...';
+        const commandOutput =
+            'll-cli install --json org.example.demo\n'
+            '{"message":"Resolving dependency org.deepin.runtime.webengine"}';
 
         const clipboardChannel = SystemChannels.platform;
         MethodCall? clipboardCall;
@@ -322,19 +251,18 @@ void main() {
             detailState: _detailState(versions: const []),
             installedApps: const [],
             installQueueState: InstallQueueState(
-              history: [
-                InstallTask(
-                  id: 'restored-failed-task',
-                  appId: 'org.example.demo',
-                  appName: 'Demo',
-                  version: '2.0.0',
-                  status: InstallStatus.failed,
-                  message: displayedMessage,
-                  errorMessage: errorMessage,
-                  createdAt: DateTime.now().millisecondsSinceEpoch,
-                  finishedAt: DateTime.now().millisecondsSinceEpoch,
-                ),
-              ],
+              currentTask: InstallTask(
+                id: 'active-task',
+                appId: 'org.example.demo',
+                appName: 'Demo',
+                version: '2.0.0',
+                status: InstallStatus.installing,
+                message: ellipsizedStatus,
+                rawMessage: fullStatus,
+                commandOutput: commandOutput,
+                createdAt: DateTime.now().millisecondsSinceEpoch,
+              ),
+              isProcessing: true,
             ),
           ),
         );
@@ -342,19 +270,71 @@ void main() {
         await tester.pump();
         await tester.pumpAndSettle();
 
-        await tester.tap(find.byTooltip('复制错误信息'));
+        expect(find.byTooltip(fullStatus), findsOneWidget);
+        expect(find.byTooltip(ellipsizedStatus), findsNothing);
+
+        await tester.tap(find.widgetWithText(TextButton, '复制日志'));
         await tester.pump();
 
         expect(clipboardCall?.method, equals('Clipboard.setData'));
         expect(
           clipboardCall?.arguments,
-          equals(<String, dynamic>{'text': errorMessage}),
+          equals(<String, dynamic>{'text': commandOutput}),
         );
       },
     );
 
+    testWidgets('restored failed task hides copy action when log is absent', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(760, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      const displayedMessage = '任务异常中断';
+      const errorMessage = '请重试安装，若仍失败请检查认证授权。';
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          appId: 'org.example.demo',
+          uninstallService: _RecordingUninstallService(),
+          detailState: _detailState(versions: const []),
+          installedApps: const [],
+          installQueueState: InstallQueueState(
+            history: [
+              InstallTask(
+                id: 'restored-failed-task',
+                appId: 'org.example.demo',
+                appName: 'Demo',
+                version: '2.0.0',
+                status: InstallStatus.failed,
+                message: displayedMessage,
+                errorMessage: errorMessage,
+                createdAt: DateTime.now().millisecondsSinceEpoch,
+                finishedAt: DateTime.now().millisecondsSinceEpoch,
+              ),
+            ],
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final statusBar = find.byKey(const Key('app-detail-hero-status-bar'));
+      expect(statusBar, findsOneWidget);
+      expect(
+        find.descendant(of: statusBar, matching: find.text(displayedMessage)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: statusBar, matching: find.byTooltip('复制日志')),
+        findsNothing,
+      );
+      expect(find.byTooltip('复制错误信息'), findsNothing);
+    });
+
     testWidgets(
-      'failed install message copies raw message when it is the only detail',
+      'failed install raw message hides copy action when log is absent',
       (tester) async {
         await tester.binding.setSurfaceSize(const Size(760, 900));
         addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -362,18 +342,6 @@ void main() {
         const displayedMessage = '安装失败';
         const rawMessage =
             '{"message":"polkit denied request","stdout":"","stderr":"Request dismissed by user"}';
-
-        const clipboardChannel = SystemChannels.platform;
-        MethodCall? clipboardCall;
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(clipboardChannel, (call) async {
-              clipboardCall = call;
-              return null;
-            });
-        addTearDown(() {
-          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-              .setMockMethodCallHandler(clipboardChannel, null);
-        });
 
         await tester.pumpWidget(
           _buildTestApp(
@@ -402,14 +370,17 @@ void main() {
         await tester.pump();
         await tester.pumpAndSettle();
 
-        await tester.tap(find.byTooltip('复制错误信息'));
-        await tester.pump();
-
-        expect(clipboardCall?.method, equals('Clipboard.setData'));
+        final statusBar = find.byKey(const Key('app-detail-hero-status-bar'));
+        expect(statusBar, findsOneWidget);
         expect(
-          clipboardCall?.arguments,
-          equals(<String, dynamic>{'text': rawMessage}),
+          find.descendant(of: statusBar, matching: find.text(displayedMessage)),
+          findsOneWidget,
         );
+        expect(
+          find.descendant(of: statusBar, matching: find.byTooltip('复制日志')),
+          findsNothing,
+        );
+        expect(find.byTooltip('复制错误信息'), findsNothing);
       },
     );
 
@@ -750,6 +721,10 @@ void main() {
 
         const displayedMessage = '准备安装...';
         const rawMessage = '{"message":"raw install message"}';
+        const commandOutput =
+            'll-cli install --json org.example.demo\n'
+            '{"message":"准备安装..."}\n'
+            '{"message":"正在下载","percentage":42}';
         MethodCall? clipboardCall;
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockMethodCallHandler(SystemChannels.platform, (call) async {
@@ -776,6 +751,7 @@ void main() {
                 status: InstallStatus.installing,
                 message: displayedMessage,
                 rawMessage: rawMessage,
+                commandOutput: commandOutput,
                 createdAt: 0,
               ),
               isProcessing: true,
@@ -791,18 +767,76 @@ void main() {
           find.descendant(of: statusBar, matching: find.text(displayedMessage)),
           findsOneWidget,
         );
+        expect(
+          find.descendant(of: statusBar, matching: find.text('复制日志')),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: statusBar, matching: find.text('复制')),
+          findsNothing,
+        );
 
         await tester.tap(
           find.descendant(
             of: statusBar,
-            matching: find.widgetWithText(TextButton, '复制'),
+            matching: find.widgetWithText(TextButton, '复制日志'),
           ),
         );
         await tester.pump();
 
         expect(
           clipboardCall?.arguments,
-          equals(<String, dynamic>{'text': displayedMessage}),
+          equals(<String, dynamic>{'text': commandOutput}),
+        );
+      },
+    );
+
+    testWidgets(
+      'header hides install log copy action when matched task has no command output',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(760, 900));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        const displayedMessage = '安装完成';
+
+        await tester.pumpWidget(
+          _buildTestApp(
+            appId: 'org.example.demo',
+            uninstallService: _RecordingUninstallService(),
+            detailState: _detailState(versions: const []),
+            installedApps: const [],
+            installQueueState: const InstallQueueState(
+              history: [
+                InstallTask(
+                  id: 'history-task-without-output',
+                  appId: 'org.example.demo',
+                  appName: 'Demo',
+                  version: '2.0.0',
+                  status: InstallStatus.success,
+                  message: displayedMessage,
+                  createdAt: 0,
+                  finishedAt: 1,
+                ),
+              ],
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        final statusBar = find.byKey(const Key('app-detail-hero-status-bar'));
+        expect(statusBar, findsOneWidget);
+        expect(
+          find.descendant(of: statusBar, matching: find.text(displayedMessage)),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: statusBar, matching: find.text('复制日志')),
+          findsNothing,
+        );
+        expect(
+          find.descendant(of: statusBar, matching: find.byType(TextButton)),
+          findsNothing,
         );
       },
     );

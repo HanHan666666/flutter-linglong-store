@@ -257,11 +257,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     );
     final progress = installTask?.progress ?? 0.0;
     final displayMessage = installTask?.displayMessage;
-    final statusCopyText = displayMessage == null
-        ? null
-        : installTask!.isFailed
-        ? _resolveFailedInstallStatusCopyText(installTask, displayMessage)
-        : displayMessage;
+    final installLogCopyText = _resolveInstallLogCopyText(installTask);
 
     return AppDetailHeroHeader(
       app: app,
@@ -277,7 +273,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           appDetail?.tags.map((tag) => tag.name).toList(growable: false) ??
           const [],
       statusMessage: displayMessage,
-      statusCopyText: statusCopyText,
+      statusLogCopyText: installLogCopyText,
       isStatusFailed: installTask?.isFailed ?? false,
       onPrimaryPressed: () => _handleInstallAction(app, buttonState),
       onCancel: () => _handleCancelInstall(app),
@@ -287,26 +283,16 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     );
   }
 
-  String _resolveFailedInstallStatusCopyText(
-    InstallTask installTask,
-    String fallback,
-  ) {
-    final errorDetail = installTask.errorDetail?.trim();
-    if (errorDetail != null && errorDetail.isNotEmpty) {
-      return errorDetail;
+  /// 解析详情页状态条可复制的安装日志。
+  ///
+  /// 详情页必须复用下载管理 item 上保存的 `commandOutput`，避免复制 UI
+  /// 状态文案或失败摘要。没有日志时返回 null，由头部组件隐藏复制入口。
+  String? _resolveInstallLogCopyText(InstallTask? installTask) {
+    final output = installTask?.commandOutput.trim();
+    if (output == null || output.isEmpty) {
+      return null;
     }
-
-    final errorMessage = installTask.errorMessage?.trim();
-    if (errorMessage != null && errorMessage.isNotEmpty) {
-      return errorMessage;
-    }
-
-    final rawMessage = installTask.rawMessage?.trim();
-    if (rawMessage != null && rawMessage.isNotEmpty) {
-      return rawMessage;
-    }
-
-    return fallback;
+    return output;
   }
 
   /// 构建截图轮播区（使用真实截图数据）

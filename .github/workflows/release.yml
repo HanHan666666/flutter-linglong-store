@@ -86,6 +86,7 @@ jobs:
           - amd64: bundle / deb / rpm / AppImage
           - arm64: bundle / deb / rpm / AppImage
           - loong64: bundle / deb
+          - Arch Linux (AUR): `paru -S linglong-store-bin`
 
           ## Requirements
           - Linux

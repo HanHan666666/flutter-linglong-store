@@ -214,6 +214,7 @@ assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- Architecture: amd64, arm64"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Download"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- amd64: bundle / deb / rpm / AppImage"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- arm64: bundle / deb / rpm / AppImage"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "paru -S linglong-store-bin"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Requirements"
 
 cp "$NOTES_OUTPUT_WITH_HISTORY" "$NOTES_OUTPUT_WITH_LOONG64"

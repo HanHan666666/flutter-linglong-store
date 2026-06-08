@@ -232,6 +232,7 @@ $ai_changelog
 ## Download
 - amd64: bundle / deb / rpm / AppImage
 - arm64: bundle / deb / rpm / AppImage
+- Arch Linux (AUR): `paru -S linglong-store-bin`
 EOF
 
 uos_note="$({

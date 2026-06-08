@@ -492,6 +492,7 @@ jobs:
         env:
           CLAUDE_CODE_SETTINGS_JSON: ${{ secrets['CLAUDE_CODE_SETTINGS_JSON'] }}
           LINGLONG_CLAUDE_CODE_VERSION: 2.1.126
+          LINGLONG_RELEASE_NOTES_START_REF: ${{ vars.LINGLONG_RELEASE_NOTES_START_REF }}
           LINGLONG_USE_SYSTEM_CLAUDE_CODE: '0'
         run: |
           # Secret 为空时脚本会在 changelog 段回退到 deterministic/fallback 文案，不阻断 nightly 发布。

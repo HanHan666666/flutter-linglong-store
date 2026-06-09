@@ -316,7 +316,7 @@ NOTES_OUTPUT_WITH_AI="$TMP_ROOT/nightly-release-notes-with-ai.md"
     --output "$NOTES_OUTPUT_WITH_AI"
 )
 
-assert_file_contains "$NOTES_OUTPUT_WITH_AI" "1、修复：修复 Nightly 构建中的更新日志展示问题。"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI" "1、修复 Nightly 构建中的更新日志展示问题。"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly source commit: $current_source_commit"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly source date: $nightly_date"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly version label: $nightly_label"

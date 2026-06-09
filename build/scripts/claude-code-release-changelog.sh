@@ -283,7 +283,7 @@ validate_release_notes_items_json() {
   ' "$candidate_path" >/dev/null
 }
 
-# 只有脚本负责 Markdown 编号，避免模型再次生成 0 起始列表。
+# kind 仅用于分类校验；最终 Markdown 只展示编号和用户可读文案。
 render_release_notes_markdown_from_items_json() {
   local candidate_path="$1"
   local item_count=""
@@ -296,7 +296,7 @@ render_release_notes_markdown_from_items_json() {
     return 0
   fi
 
-  jq -r '.items | to_entries[] | "\(.key + 1)、\(.value.kind)：\(.value.text)"' "$candidate_path"
+  jq -r '.items | to_entries[] | "\(.key + 1)、\(.value.text)"' "$candidate_path"
 }
 
 candidate_path="$tmp_dir/release-notes-items.json"

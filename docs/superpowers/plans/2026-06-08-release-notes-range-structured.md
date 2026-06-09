@@ -46,7 +46,7 @@ git commit -m "docs: 记录 release notes 结构化生成方案"
 断言最终 Markdown 包含：
 
 ```text
-1、新增：支持从网页商店拉起客户端并加入安装队列。
+1、支持从网页商店拉起客户端并加入安装队列。
 ```
 
 - [ ] **Step 2: release smoke test 增加非法 `0、` 输出**

@@ -97,8 +97,8 @@ fixture_changelog="$({
     v3.1.0
 })"
 
-grep -q '^1、新增：current release candidate$' <<< "$fixture_changelog"
-grep -q '^2、修复：hotfix merged after the previous release$' <<< "$fixture_changelog"
+grep -q '^1、current release candidate$' <<< "$fixture_changelog"
+grep -q '^2、hotfix merged after the previous release$' <<< "$fixture_changelog"
 if grep -q -- 'release line 3.1.0 work' <<< "$fixture_changelog"; then
   echo "Expected auto-resolved previous release tag to exclude the already released mainline commit." >&2
   exit 1
@@ -200,7 +200,7 @@ ai_changelog="$({
 })"
 
 grep -q '^## Release Notes$' <<< "$ai_changelog"
-grep -q '^1、新增：支持从网页商店拉起客户端并加入安装队列。$' <<< "$ai_changelog"
+grep -q '^1、支持从网页商店拉起客户端并加入安装队列。$' <<< "$ai_changelog"
 grep -q -- '--bare' "$FAKE_CLAUDE_ARGS_PATH"
 grep -q -- '--setting-sources user' "$FAKE_CLAUDE_ARGS_PATH"
 grep -q -- '--tools' "$FAKE_CLAUDE_ARGS_PATH"
@@ -232,14 +232,14 @@ $ai_changelog
 ## Download
 - amd64: bundle / deb / rpm / AppImage
 - arm64: bundle / deb / rpm / AppImage
-- Arch Linux (AUR): `paru -S linglong-store-bin`
+- Arch Linux (AUR): \`paru -S linglong-store-bin\`
 EOF
 
 uos_note="$({
   bash build/scripts/extract-release-note-summary.sh "$release_notes_for_uos"
 })"
 
-test "$uos_note" = '1、新增：支持从网页商店拉起客户端并加入安装队列。'
+test "$uos_note" = '1、支持从网页商店拉起客户端并加入安装队列。'
 
 ai_changelog_from_env="$({
   HOME="$FAKE_CLAUDE_HOME" \
@@ -255,7 +255,7 @@ ai_changelog_from_env="$({
     bash build/scripts/generate-changelog.sh 3.1.1
 })"
 
-grep -q '^1、新增：支持从网页商店拉起客户端并加入安装队列。$' <<< "$ai_changelog_from_env"
+grep -q '^1、支持从网页商店拉起客户端并加入安装队列。$' <<< "$ai_changelog_from_env"
 grep -q '当前基线引用：v3.1.0' "$FAKE_CLAUDE_PROMPT_PATH"
 grep -q '^Start ref: v3.1.0$' "$FAKE_CLAUDE_INPUT_PATH"
 

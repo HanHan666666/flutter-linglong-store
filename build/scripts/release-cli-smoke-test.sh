@@ -152,7 +152,7 @@ fi
 cat > "$FAKE_CLAUDE_INPUT_PATH"
 test "$(jq -S . "$HOME/.claude/settings.json")" = "$(jq -S . "$FAKE_CLAUDE_SETTINGS_PATH")"
 cat <<'OUT'
-{"items":[{"kind":"新增","text":"支持从网页商店拉起客户端并加入安装队列。"}]}
+{"items":["支持从网页商店拉起客户端并加入安装队列。"]}
 OUT
 EOF
 chmod +x "$FAKE_CLAUDE_SUCCESS_PATH"
@@ -162,7 +162,7 @@ cat > "$FAKE_CLAUDE_INVALID_PATH" <<'EOF'
 set -euo pipefail
 cat >/dev/null
 cat <<'OUT'
-{"items":[{"kind":"优化","text":"非法 kind 应被拒绝。"}]}
+{"items":[123]}
 OUT
 EOF
 chmod +x "$FAKE_CLAUDE_INVALID_PATH"
@@ -174,7 +174,7 @@ cat >/dev/null
 cat <<'OUT'
 ## Release Notes
 
-0、新增：错误编号不应进入最终发布说明。
+0、错误编号不应进入最终发布说明。
 OUT
 EOF
 chmod +x "$FAKE_CLAUDE_ZERO_NUMBER_PATH"
@@ -213,7 +213,7 @@ if grep -Fq 'git提交' "$FAKE_CLAUDE_PROMPT_PATH"; then
   echo "Expected release notes prompt to avoid repository mutation instructions." >&2
   exit 1
 fi
-grep -q '请根据输入中的 release notes 范围和候选变更，为版本 3.1.1（release）生成最终的 JSON 更新日志条目。' "$FAKE_CLAUDE_ARGS_PATH"
+grep -q '请根据输入中的 release notes 范围和候选变更，为版本 3.1.1（release）生成最终的 JSON 文案条目。' "$FAKE_CLAUDE_ARGS_PATH"
 grep -q '^# Release Notes Context$' "$FAKE_CLAUDE_INPUT_PATH"
 grep -q '^# flutter-linglong-store GitHub Release 更新日志条目生成 Prompt$' "$FAKE_CLAUDE_PROMPT_PATH"
 grep -q '当前版本：3.1.1' "$FAKE_CLAUDE_PROMPT_PATH"

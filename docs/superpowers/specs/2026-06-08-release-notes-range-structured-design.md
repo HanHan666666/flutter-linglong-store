@@ -4,7 +4,7 @@
 
 ## 背景
 
-`nightly-20260607` 的 GitHub Release body 曾出现 `0、新增：...`，并且内容直接复述 commit 标题，例如把 `og` 协议注册、解析、单实例转发和安装入队拆成多条工程实现说明。用户期望 release notes 面向普通用户：说明实际能感知到的功能和修复，而不是展示提交记录。
+`nightly-20260607` 的 GitHub Release body 曾出现 `0、...` 这类错误编号，并且内容直接复述 commit 标题，例如把 `og` 协议注册、解析、单实例转发和安装入队拆成多条工程实现说明。用户期望 release notes 面向普通用户：说明实际能感知到的变化，而不是展示提交记录。
 
 当前链路是：
 
@@ -65,22 +65,19 @@ Claude 必须输出严格 JSON：
 ```json
 {
   "items": [
-    {
-      "kind": "新增",
-      "text": "支持从网页商店拉起客户端并加入安装队列。"
-    }
+    "支持从网页商店拉起客户端并加入安装队列。"
   ]
 }
 ```
 
 约束：
 
-- `kind` 只能是 `新增` 或 `修复`，仅用于筛选校验，不作为最终用户可见前缀。
-- `text` 是不含编号、不含 `新增：`/`修复：` 前缀的一句话中文。
+- `items` 只能包含字符串文案，不再携带分类字段。
+- 每条文案是不含编号、不含分类前缀的一句话中文。
 - 最多 5 条。
 - 没有用户可见变化时输出 `{"items":[]}`。
 
-脚本负责把 JSON 渲染为编号加描述，不展示 `kind` 前缀：
+脚本负责把 JSON 渲染为编号加描述：
 
 ```markdown
 ## Release Notes
@@ -94,8 +91,8 @@ Claude 必须输出严格 JSON：
 
 - JSON 结构合法。
 - 条目数量为 0 到 5。
-- 每条包含合法 `kind` 和非空 `text`。
-- `text` 不得包含换行、Markdown 标题、编号前缀、AI/prompt/commit/CI/workflow/AUR/UOS/文档/测试/重构等维护性词汇。
+- 每条必须是非空字符串。
+- 文案不得包含换行、Markdown 标题、编号前缀、分类前缀、AI/prompt/commit/CI/workflow/AUR/UOS/文档/测试/重构等维护性词汇。
 
 如果 AI 输出非法或 Claude 失败，回退 deterministic changelog。deterministic 过滤规则同步增强，避免把 `AGENTS.md` / `CLAUDE.md` 注释规范、技术栈模板、发布脚本和 workflow 改动写给普通用户。
 

@@ -206,7 +206,7 @@ current_source_commit="$(git -C "$NOTES_FIXTURE_REPO" rev-parse HEAD)"
 )
 
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Release Notes"
-assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "1、本次版本暂无需要特别说明的功能新增或问题修复。"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "1、本次版本暂无需要特别说明的用户可见变化。"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly source commit: $current_source_commit"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly source date: $nightly_date"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly version label: $nightly_label"
@@ -284,7 +284,7 @@ fi
 cat > "$FAKE_CLAUDE_INPUT_PATH"
 test "$(jq -S . "$HOME/.claude/settings.json")" = "$(jq -S . "$FAKE_CLAUDE_SETTINGS_PATH")"
 cat <<'OUT'
-{"items":[{"kind":"修复","text":"修复 Nightly 构建中的更新日志展示问题。"}]}
+{"items":["修复 Nightly 构建中的更新日志展示问题。"]}
 OUT
 EOF
 chmod +x "$FAKE_CLAUDE_SUCCESS_PATH"
@@ -326,7 +326,7 @@ assert_file_contains "$NOTES_OUTPUT_WITH_AI" "## Requirements"
 assert_file_contains "$FAKE_CLAUDE_INPUT_PATH" "subject: fix: append nightly changelog"
 assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "--setting-sources user"
 assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "--tools"
-assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "请根据输入中的 release notes 范围和候选变更，为版本 ${nightly_label}（nightly）生成最终的 JSON 更新日志条目。"
+assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "请根据输入中的 release notes 范围和候选变更，为版本 ${nightly_label}（nightly）生成最终的 JSON 文案条目。"
 assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前版本：${nightly_label}"
 assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前构建类型：nightly"
 assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前基线引用：${previous_source_commit}"
@@ -362,7 +362,7 @@ NOTES_OUTPUT_WITH_AI_FALLBACK="$TMP_ROOT/nightly-release-notes-with-ai-fallback.
 )
 
 assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "## Release Notes"
-assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "1、本次版本暂无需要特别说明的功能新增或问题修复。"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "1、本次版本暂无需要特别说明的用户可见变化。"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "Nightly source commit: $current_source_commit"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "Nightly source date: $nightly_date"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "Nightly version label: $nightly_label"

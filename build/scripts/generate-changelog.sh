@@ -6,7 +6,7 @@ WORKSPACE_ROOT="${LINGLONG_RELEASE_TOOL_ROOT:-$ROOT_DIR}"
 
 cd "$ROOT_DIR"
 
-# 将 Dart 原始分组 changelog 规整为发布页使用的编号描述列表，分组只用于筛选。
+# 将 Dart 原始分组 changelog 规整为发布页使用的编号描述列表，提交分组只用于筛选。
 format_release_notes_markdown() {
 	awk '
 		function is_internal_change(text, lower_text) {
@@ -24,7 +24,7 @@ format_release_notes_markdown() {
 		}
 
 		function is_visible_change(section, text) {
-			if (section != "新增" && section != "修复") {
+			if (section != "visible") {
 				return 0
 			}
 
@@ -52,12 +52,12 @@ format_release_notes_markdown() {
 		}
 
 		/^## feat$/ {
-			section = "新增"
+			section = "visible"
 			next
 		}
 
 		/^## fix$/ {
-			section = "修复"
+			section = "visible"
 			next
 		}
 
@@ -96,7 +96,7 @@ format_release_notes_markdown() {
 				exit 0
 			}
 
-			print "1、本次版本暂无需要特别说明的功能新增或问题修复。"
+			print "1、本次版本暂无需要特别说明的用户可见变化。"
 		}
 	'
 }

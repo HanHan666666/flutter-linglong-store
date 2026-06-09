@@ -68,7 +68,7 @@
 - nightly 必须同时构建 `amd64` / `arm64`；`arm64` 优先走 `ubuntu-24.04-arm` 原生 runner，失败或取消时再回退到 QEMU
 - nightly Release notes 必须通过 `build/scripts/generate-nightly-release-notes.sh` 生成，禁止再把 changelog / 下载说明 / metadata 直接内联写回 workflow heredoc
 - nightly changelog 默认范围为“最近一次 nightly prerelease 的 `Nightly source commit` → 当前 `source_commit`”；如需临时扩大或收窄范围，只能通过仓库变量 `LINGLONG_RELEASE_NOTES_START_REF` 显式指定起点，禁止把起点写进 AI prompt 的自然语言特殊要求
-- nightly AI changelog 只能输出结构化 JSON 条目，Markdown 标题和 `1、2、3` 编号必须由 `build/scripts/claude-code-release-changelog.sh` 渲染；`kind` 仅用于筛选校验，最终用户可见列表只显示编号和描述，不显示 `新增：` / `修复：` 前缀；禁止让 AI 直接输出 release notes 编号列表，避免再次出现 `0、` 起始编号
+- nightly AI changelog 只能输出 `{"items":["用户可读描述"]}` 结构化文案数组，Markdown 标题和 `1、2、3` 编号必须由 `build/scripts/claude-code-release-changelog.sh` 渲染；禁止让 AI 直接输出 release notes 编号列表、分类前缀或 Markdown，避免再次出现 `0、` 起始编号
 - nightly 发布前必须基于最终签名后的发布资产追加 `SHA256 Hashes of the release artifacts` 段落，并同时产出 `hashes.sha256`；禁止在 prepare/build 阶段对未签名产物提前固化哈希
 - nightly 的 build/sign/publish/AUR 阶段都必须消费合并后的多架构 artifact；不要再在签名后保留 `*-amd64` 这种误导性的单架构 artifact 名
 
@@ -120,7 +120,7 @@
 - 只有在正式构建与签名成功后，才允许进入独立的 `finalize-release-state` job 推送 release commit 并创建正式 tag
 - `publish-release` 必须依赖 `finalize-release-state`，不要在 tag 尚未落库时抢先创建 GitHub Release
 - 正式 release changelog 必须通过 `build/scripts/generate-changelog.sh` 自动解析“当前 `HEAD` 可达的最近一个稳定 semver tag → 当前源码”范围；如需临时覆盖起点，只能通过 `generate-changelog.sh <version> <start-ref>` 或仓库变量 `LINGLONG_RELEASE_NOTES_START_REF` 显式指定，禁止再在 workflow 或 prompt 里写死 `v3.0.*` 一类 tag 模式
-- 正式 release AI changelog 只能输出结构化 JSON 条目，最终 `## Release Notes` 与 `1、2、3` 编号由脚本统一渲染；`kind` 仅用于筛选校验，最终用户可见列表只显示编号和描述，不显示 `新增：` / `修复：` 前缀；prompt 中禁止保留一次性“特殊用户要求”、git 提交、删除 prompt 等会污染 CI 的指令
+- 正式 release AI changelog 只能输出 `{"items":["用户可读描述"]}` 结构化文案数组，最终 `## Release Notes` 与 `1、2、3` 编号由脚本统一渲染；prompt 中禁止保留一次性“特殊用户要求”、git 提交、删除 prompt 等会污染 CI 的指令，也禁止让 AI 直接输出编号、分类前缀或 Markdown
 - 用户可见的正式 release notes 必须过滤 `chore: release x.y.z` 这类 release bookkeeping commit，避免把历史发版提交刷进 changelog
 - release notes 的 `SHA256 Hashes of the release artifacts` 段落只能在 `publish-release` 下载最终签名资产后追加，并与同一份 `hashes.sha256` 一起发布，避免展示未签名产物的旧哈希
 - `release.yml` 中的 Loong64 构建当前只允许发布 `linglong-store-<version>-linux-loong64.tar.gz` 与 `linglong-store_<version>_loong64.deb`；不要在没有验证上游工具链可用前擅自增加 Loong64 `AppImage`

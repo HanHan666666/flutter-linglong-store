@@ -216,7 +216,7 @@ fi
     --max-turns 1 \
     --no-session-persistence \
     --append-system-prompt-file "$prompt_path" \
-    "请根据输入中的 release notes 范围和候选变更，为版本 ${release_version}（${build_kind_for_prompt}）生成最终的 JSON 更新日志条目。"
+    "请根据输入中的 release notes 范围和候选变更，为版本 ${release_version}（${build_kind_for_prompt}）生成最终的 JSON 文案条目。"
 ) > "$raw_output_path"
 
 # 尝试从 Claude 原始输出中提取 {"items":[...]}，兼容纯 JSON 和 JSON envelope。
@@ -262,7 +262,7 @@ extract_release_notes_items_json() {
   return 1
 }
 
-# 校验 JSON 条目，避免维护项、编号和 Markdown 污染最终发布说明。
+# 校验 JSON 文案条目，避免维护项、编号和 Markdown 污染最终发布说明。
 validate_release_notes_items_json() {
   local candidate_path="$1"
 
@@ -271,19 +271,18 @@ validate_release_notes_items_json() {
     and (.items | type == "array")
     and (.items | length <= 5)
     and all(.items[]; (
-      (.kind == "新增" or .kind == "修复")
-      and (.text | type == "string")
-      and (.text | length > 0)
-      and (.text | length <= 120)
-      and ((.text | test("[\r\n#]")) | not)
-      and ((.text | test("^(新增|修复)[：:]")) | not)
-      and ((.text | test("^[0-9０-９]+[、.]")) | not)
-      and ((.text | test("(AI|prompt|Prompt|commit|Git|git|CI|workflow|Workflow|AUR|UOS|AGENTS|CLAUDE|文档|测试|重构|打包|发布流程|工具链|脚本|注释规范|哈希|签名)")) | not)
+      (type == "string")
+      and (length > 0)
+      and (length <= 120)
+      and ((test("[\r\n#]")) | not)
+      and ((test("^[^：:\r\n]{1,8}[：:]")) | not)
+      and ((test("^[0-9０-９]+[、.]")) | not)
+      and ((test("(AI|prompt|Prompt|commit|Git|git|CI|workflow|Workflow|AUR|UOS|AGENTS|CLAUDE|文档|测试|重构|打包|发布流程|工具链|脚本|注释规范|哈希|签名)")) | not)
     ))
   ' "$candidate_path" >/dev/null
 }
 
-# kind 仅用于分类校验；最终 Markdown 只展示编号和用户可读文案。
+# 最终 Markdown 只展示脚本编号和用户可读文案，避免模型输出编号漂移。
 render_release_notes_markdown_from_items_json() {
   local candidate_path="$1"
   local item_count=""
@@ -292,11 +291,11 @@ render_release_notes_markdown_from_items_json() {
   printf '## Release Notes\n\n'
 
   if [[ "$item_count" == "0" ]]; then
-    printf '1、本次版本暂无需要特别说明的功能新增或问题修复。'
+    printf '1、本次版本暂无需要特别说明的用户可见变化。'
     return 0
   fi
 
-  jq -r '.items | to_entries[] | "\(.key + 1)、\(.value.text)"' "$candidate_path"
+  jq -r '.items | to_entries[] | "\(.key + 1)、\(.value)"' "$candidate_path"
 }
 
 candidate_path="$tmp_dir/release-notes-items.json"

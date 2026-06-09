@@ -294,7 +294,7 @@ Semantics(
 测试文件位于 `test/unit/core/accessibility/a11y_semantics_test.dart`。
 
 ## 变更记录
-- 2026-06-08：GitHub Release / Nightly release notes 的总结范围必须由 `generate-changelog.sh <version> <start-ref>` 或仓库变量 `LINGLONG_RELEASE_NOTES_START_REF` 显式指定，禁止把“从某个版本开始总结”写进 AI prompt 的临时自然语言要求；Claude Code 只允许输出 `{"items":[{"kind":"新增|修复","text":"用户可读描述"}]}` 结构化条目，`kind` 仅用于筛选校验，最终 `## Release Notes` 和 `1、2、3` 编号描述列表必须由脚本渲染，且不得显示 `新增：` / `修复：` 前缀，避免再次出现 `0、` 起始编号或 commit 标题复述。prompt 中禁止保留让 AI 删除文件、git 提交或修改仓库的指令。
+- 2026-06-08：GitHub Release / Nightly release notes 的总结范围必须由 `generate-changelog.sh <version> <start-ref>` 或仓库变量 `LINGLONG_RELEASE_NOTES_START_REF` 显式指定，禁止把“从某个版本开始总结”写进 AI prompt 的临时自然语言要求；Claude Code 只允许输出 `{"items":["用户可读描述"]}` 结构化文案数组，最终 `## Release Notes` 和 `1、2、3` 编号描述列表必须由脚本渲染，禁止 AI 输出编号、分类前缀或 Markdown，避免再次出现 `0、` 起始编号或 commit 标题复述。prompt 中禁止保留让 AI 删除文件、git 提交或修改仓库的指令。
 - 2026-06-08：下载中心 UI 统一采用轻工作面板结构，保持 `showDownloadManagerDialog(context)` 单一入口；面板包含固定顶栏、概览条、当前任务主卡、等待/历史紧凑行和底部状态栏。后续优化只允许调整展示层，不得新增 `ll-cli` 调用、绕过 `installQueueProvider`，也不得改变 `InstallTask.commandOutput` 作为“复制日志”唯一来源的约定。
 - 2026-06-08：应用详情页头部安装状态条的复制入口必须复用下载管理任务记录的 `InstallTask.commandOutput`，按钮文案统一为“复制日志”；当匹配任务没有 `commandOutput` 时隐藏复制入口，禁止回退复制 `statusMessage`、`rawMessage`、`errorDetail` 或 `errorMessage`，避免详情页与下载管理日志来源漂移。
 - 2026-06-08：`InstallButton(size: ButtonSize.hero)` 在详情页安装中状态必须保持 `144~184px` 稳定宽度；百分比和网速文本在有界宽度内使用单行省略，取消图标和点击取消能力必须保留，禁止通过隐藏网速、隐藏取消入口或放大详情页主按钮来规避 `RenderFlex` 溢出。

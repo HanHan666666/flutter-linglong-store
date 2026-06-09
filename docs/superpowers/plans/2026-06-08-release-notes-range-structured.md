@@ -40,7 +40,7 @@ git commit -m "docs: 记录 release notes 结构化生成方案"
 把 fake Claude 成功输出改为：
 
 ```json
-{"items":[{"kind":"新增","text":"支持从网页商店拉起客户端并加入安装队列。"}]}
+{"items":["支持从网页商店拉起客户端并加入安装队列。"]}
 ```
 
 断言最终 Markdown 包含：
@@ -56,7 +56,7 @@ fake Claude 输出 Markdown：
 ```markdown
 ## Release Notes
 
-0、新增：错误编号不应进入最终发布说明。
+0、错误编号不应进入最终发布说明。
 ```
 
 断言最终结果不包含 `0、`，并回退到 deterministic 输出。

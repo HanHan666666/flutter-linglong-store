@@ -85,6 +85,58 @@ void main() {
       },
     );
 
+    testWidgets('shows active task progress message only once', (tester) async {
+      const progressMessage =
+          'Updating main:com.tencent.wechat/4.1.1.7/x86_64/binary';
+      final installQueue = TestInstallQueue(
+        initialState: InstallQueueState(
+          currentTask: InstallTask(
+            id: 'task-duplicate-message',
+            appId: 'com.tencent.wechat',
+            appName: '微信',
+            kind: InstallTaskKind.update,
+            status: InstallStatus.installing,
+            progress: 0.99,
+            message: progressMessage,
+            createdAt: DateTime.now().millisecondsSinceEpoch,
+          ),
+          isProcessing: true,
+        ),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            installQueueProvider.overrideWith(() => installQueue),
+            networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+          ],
+          child: MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (context) {
+                return Scaffold(
+                  body: Center(
+                    child: FilledButton(
+                      onPressed: () => showDownloadManagerDialog(context),
+                      child: const Text('open'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text(progressMessage), findsOneWidget);
+      expect(find.byTooltip(progressMessage), findsOneWidget);
+    });
+
     testWidgets('renders refined work panel structure for active tasks', (
       tester,
     ) async {
@@ -325,6 +377,18 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('如果进度看起来较慢，可能正在安装软件必备依赖，请再等等……'), findsOneWidget);
+        final hintRow = find.ancestor(
+          of: find.text('如果进度看起来较慢，可能正在安装软件必备依赖，请再等等……'),
+          matching: find.byType(Row),
+        );
+        expect(hintRow, findsOneWidget);
+        expect(
+          find.descendant(
+            of: hintRow,
+            matching: find.byIcon(Icons.info_outline),
+          ),
+          findsOneWidget,
+        );
       },
     );
 

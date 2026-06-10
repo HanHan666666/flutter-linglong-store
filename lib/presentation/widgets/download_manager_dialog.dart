@@ -533,7 +533,7 @@ class _TaskCardState extends State<_TaskCard> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline, size: 14, color: appColors.warning),
+                _buildSlowInstallHintIcon(appColors),
                 const SizedBox(width: AppSpacing.xs),
                 Expanded(
                   child: Text(
@@ -592,6 +592,7 @@ class _TaskCardState extends State<_TaskCard> {
   /// 构建任务标题和副标题，避免卡片布局直接读业务字段散落多处。
   Widget _buildTaskText(BuildContext context, {required bool featured}) {
     final appColors = context.appColors;
+    final subtitle = _buildSubtitle(includeProgressMessage: !featured);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -608,15 +609,17 @@ class _TaskCardState extends State<_TaskCard> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          _buildSubtitle(context),
-          style: context.appTextStyles.caption.copyWith(
-            color: appColors.textSecondary,
+        if (subtitle.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            subtitle,
+            style: context.appTextStyles.caption.copyWith(
+              color: appColors.textSecondary,
+            ),
+            maxLines: featured ? 2 : 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          maxLines: featured ? 2 : 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        ],
       ],
     );
   }
@@ -634,6 +637,14 @@ class _TaskCardState extends State<_TaskCard> {
         style: context.appTextStyles.caption.copyWith(color: AppColors.error),
         softWrap: true,
       ),
+    );
+  }
+
+  /// 构建慢安装提示图标；中文 caption 行高高于 14px 图标，需要轻微下移保证首行视觉对齐。
+  Widget _buildSlowInstallHintIcon(AppColorPalette appColors) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Icon(Icons.info_outline, size: 14, color: appColors.warning),
     );
   }
 
@@ -725,20 +736,23 @@ class _TaskCardState extends State<_TaskCard> {
     );
   }
 
-  String _buildSubtitle(BuildContext context) {
+  /// 构建任务副标题；当前任务的阶段文案由进度区承载，避免同一卡片内重复展示。
+  String _buildSubtitle({bool includeProgressMessage = true}) {
     if (widget.task.isFailed &&
         widget.task.errorMessage != null &&
         widget.task.errorMessage!.isNotEmpty) {
       return widget.task.errorMessage!;
     }
+    final displayMessage = widget.task.displayMessage?.trim();
     final parts = <String>[
       if (widget.task.version != null && widget.task.version!.isNotEmpty)
         widget.task.version!,
-      if (widget.task.displayMessage != null &&
-          widget.task.displayMessage!.trim().isNotEmpty)
-        widget.task.displayMessage!.trim(),
-      if ((widget.task.displayMessage == null ||
-          widget.task.displayMessage!.trim().isEmpty))
+      if (includeProgressMessage &&
+          displayMessage != null &&
+          displayMessage.isNotEmpty)
+        displayMessage,
+      if (includeProgressMessage &&
+          (displayMessage == null || displayMessage.isEmpty))
         switch (widget.task.status) {
           InstallStatus.pending => widget.task.waitingMessage,
           InstallStatus.downloading => '正在下载资源',

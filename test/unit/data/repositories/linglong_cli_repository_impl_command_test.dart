@@ -349,5 +349,112 @@ void main() {
         ['uninstall', 'com.browser.softedge.stable/138.0.3351.95'],
       ]);
     });
+
+    test('getRepositoryConfig parses json repo show output', () async {
+      final executor = _RecordingCliExecutor()
+        ..executeOutputsByCommand['--json repo show'] = const CliOutput(
+          stdout:
+              '{"defaultRepo":"stable","repos":[{"name":"stable","priority":0,"url":"https://mirror-repo-linglong.uniontech.com"}],"version":2}',
+          stderr: '',
+          exitCode: 0,
+        );
+      final repository = LinglongCliRepositoryImpl.withExecutor(
+        InstallMessages.fromLocale(const Locale('zh')),
+        execute: executor.execute,
+        executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+        cancelWithSystemKill: executor.cancelWithSystemKill,
+      );
+
+      final config = await repository.getRepositoryConfig();
+
+      expect(config.defaultRepo, 'stable');
+      expect(config.version, 2);
+      expect(config.repos, hasLength(1));
+      expect(config.repos.single.name, 'stable');
+      expect(
+        config.repos.single.url,
+        'https://mirror-repo-linglong.uniontech.com',
+      );
+      expect(config.repos.single.priority, '0');
+      expect(executor.executeCalls.first, ['--json', 'repo', 'show']);
+    });
+
+    test('getRepositoryConfig falls back to ansi colored text output', () async {
+      final executor = _RecordingCliExecutor()
+        ..executeOutputsByCommand['--json repo show'] = const CliOutput(
+          stdout: 'not json',
+          stderr: '',
+          exitCode: 0,
+        )
+        ..executeOutputsByCommand['repo show'] = const CliOutput(
+          stdout:
+              'Default: stable\n\u001B[38;5;214mName    Url                                         Alias   Priority  \u001B[0m\nstable  https://mirror-repo-linglong.uniontech.com  stable  0\n',
+          stderr: '',
+          exitCode: 0,
+        );
+      final repository = LinglongCliRepositoryImpl.withExecutor(
+        InstallMessages.fromLocale(const Locale('zh')),
+        execute: executor.execute,
+        executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+        cancelWithSystemKill: executor.cancelWithSystemKill,
+      );
+
+      final config = await repository.getRepositoryConfig();
+
+      expect(config.defaultRepo, 'stable');
+      expect(config.repos, hasLength(1));
+      expect(config.repos.single.name, 'stable');
+      expect(config.repos.single.alias, 'stable');
+      expect(config.repos.single.priority, '0');
+      expect(executor.executeCalls, [
+        ['--json', 'repo', 'show'],
+        ['repo', 'show'],
+      ]);
+    });
+
+    test(
+      'repository mutation methods build documented ll-cli commands',
+      () async {
+        final executor = _RecordingCliExecutor();
+        final repository = LinglongCliRepositoryImpl.withExecutor(
+          InstallMessages.fromLocale(const Locale('zh')),
+          execute: executor.execute,
+          executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+          cancelWithSystemKill: executor.cancelWithSystemKill,
+        );
+
+        await repository.addRepository(
+          name: 'test',
+          url: 'https://repo.example.com',
+          alias: 'test-alias',
+        );
+        await repository.updateRepository(
+          aliasOrName: 'test-alias',
+          url: 'https://repo2.example.com',
+        );
+        await repository.setDefaultRepository('test-alias');
+        await repository.setRepositoryPriority('test-alias', 50);
+        await repository.setRepositoryMirror('test-alias', enabled: true);
+        await repository.setRepositoryMirror('test-alias', enabled: false);
+        await repository.removeRepository('test-alias');
+
+        expect(executor.executeCalls, [
+          [
+            'repo',
+            'add',
+            '--alias',
+            'test-alias',
+            'test',
+            'https://repo.example.com',
+          ],
+          ['repo', 'update', 'test-alias', 'https://repo2.example.com'],
+          ['repo', 'set-default', 'test-alias'],
+          ['repo', 'set-priority', 'test-alias', '50'],
+          ['repo', 'enable-mirror', 'test-alias'],
+          ['repo', 'disable-mirror', 'test-alias'],
+          ['repo', 'remove', 'test-alias'],
+        ]);
+      },
+    );
   });
 }

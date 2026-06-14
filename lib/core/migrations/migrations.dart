@@ -1,6 +1,7 @@
 import 'package:app_data_migrations/app_data_migrations.dart';
 
 import 'scripts/v001_migrate_legacy_data_directory.dart';
+import 'scripts/v002_migrate_renderer_prefs_to_config_dir.dart';
 
 /// 玲珑应用商店的迁移注册表。
 ///
@@ -17,4 +18,6 @@ final List<Migration> appMigrations = <Migration>[
   // v001：把旧 application-id 数据目录迁移到当前目录。
   // 必须排在所有依赖应用数据目录的服务初始化之前执行。
   V001MigrateLegacyDataDirectory(),
+  // v002：把 renderer_preferences.ini 从 data 目录搬到 config 目录（XDG 规范）。
+  V002MigrateRendererPrefsToConfigDir(),
 ];

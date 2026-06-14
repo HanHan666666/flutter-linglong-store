@@ -2,9 +2,14 @@ import 'dart:io';
 
 import 'package:path/path.dart' as path;
 
+import '../../core/storage/app_xdg_paths.dart';
+
 typedef InstallLogClock = DateTime Function();
 
 /// 自动安装日志文件管理服务。
+///
+/// 日志目录遵守 XDG：`$XDG_DATA_HOME/<app-id>/logs/`，
+/// 与 [AppLogger] 的运行时日志同位置。
 class LinglongInstallLogService {
   LinglongInstallLogService({
     String? logDirectoryPath,
@@ -23,17 +28,12 @@ class LinglongInstallLogService {
       return _logDirectoryPath;
     }
 
-    final home = Platform.environment['HOME'];
-    if (home != null && home.isNotEmpty) {
-      return path.join(
-        home,
-        '.local',
-        'share',
-        'com.dongpl.linglong-store.v2',
-        'logs',
-      );
+    final resolved = AppXdgPaths.resolveLogsDirectoryPath();
+    if (resolved != null && resolved.isNotEmpty) {
+      return resolved;
     }
 
+    // XDG_DATA_HOME 与 HOME 都缺失的极端情况，回退到系统临时目录。
     return path.join(Directory.systemTemp.path, 'linglong-store', 'logs');
   }
 

@@ -24,7 +24,7 @@ void main() {
     }
   });
 
-  /// 构造一个使用临时目录的 V001（绕过 AppDataDirectoryPaths 的环境变量解析）。
+  /// 构造一个使用临时目录的 V001（绕过 AppXdgPaths 的环境变量解析）。
   V001MigrateLegacyDataDirectory createV001() {
     return _TempV001MigrateLegacyDataDirectory(
       legacyDir: legacyDir,
@@ -99,7 +99,7 @@ class _TempV001MigrateLegacyDataDirectory
 
   @override
   Future<void> up() async {
-    // 直接搬一份迁移逻辑，绕过 AppDataDirectoryPaths 静态方法
+    // 直接搬一份迁移逻辑，绕过 AppXdgPaths 静态方法
     if (!await legacyDir.exists()) return;
 
     if (!await currentDir.exists()) {

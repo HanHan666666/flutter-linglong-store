@@ -16,7 +16,7 @@ import 'core/protocol/og_protocol_request.dart';
 import 'core/platform/single_instance.dart';
 import 'core/platform/window_service.dart';
 import 'core/config/app_config.dart';
-import 'core/storage/app_data_directory_paths.dart';
+import 'core/storage/app_xdg_paths.dart';
 import 'core/storage/cache_service.dart';
 import 'core/storage/preferences_service.dart';
 
@@ -122,9 +122,9 @@ void _registerExitHandler() {
 ///   runApp 后第一个画面里执行迁移，但本项目选择"启动失败即退出"的简单策略。
 Future<void> _runMigrations() async {
   final stateFilePath =
-      AppDataDirectoryPaths.resolveMigrationStateFilePath();
+      AppXdgPaths.resolveMigrationStateFilePath();
   final lockFilePath =
-      AppDataDirectoryPaths.resolveMigrationLockFilePath();
+      AppXdgPaths.resolveMigrationLockFilePath();
   if (stateFilePath == null || lockFilePath == null) {
     AppLogger.warning(
       '无法解析应用数据目录，跳过数据迁移。这可能导致旧数据无法被迁移到新版本。',

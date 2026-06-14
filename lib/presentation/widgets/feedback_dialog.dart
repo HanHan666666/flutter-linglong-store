@@ -11,11 +11,8 @@ import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/network/api_client.dart';
+import '../../core/storage/app_xdg_paths.dart';
 import '../../core/utils/app_notification_helpers.dart';
-
-/// 日志文件相对路径（相对于 $HOME）
-const _kLogFileRelative =
-    '.local/share/com.dongpl.linglong-store.v2/logs/linglong-store.log';
 
 /// 意见反馈对话框
 ///
@@ -217,10 +214,14 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
   /// 上传日志文件，返回服务端存储 URL；失败返回 null
   Future<String?> _uploadLog() async {
     try {
-      final home = Platform.environment['HOME'];
-      if (home == null) return null;
+      // 日志路径遵守 XDG：$XDG_DATA_HOME/<app-id>/logs/linglong-store.log。
+      final logPath = AppXdgPaths.resolveCurrentLogFilePath();
+      if (logPath == null) {
+        AppLogger.warning('[FeedbackDialog] 无法解析日志文件路径');
+        return null;
+      }
 
-      final logFile = File('$home/$_kLogFileRelative');
+      final logFile = File(logPath);
       if (!logFile.existsSync()) {
         AppLogger.warning('[FeedbackDialog] 日志文件不存在: ${logFile.path}');
         return null;

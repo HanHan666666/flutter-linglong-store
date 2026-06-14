@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 
 import '../logging/app_logger.dart';
 import '../protocol/og_protocol_request.dart';
+import '../storage/app_xdg_paths.dart';
 import 'window_service.dart';
 
 /// 单实例消息类型。
@@ -100,16 +101,17 @@ class SingleInstanceMessage {
 /// 单实例控制
 ///
 /// 使用文件锁 + Unix Socket 实现单实例检测：
-/// 1. 尝试获取文件锁 (`/tmp/linglong-store.lock`)
+/// 1. 尝试获取文件锁（`$XDG_RUNTIME_DIR/<app-id>/linglong-store.lock`，
+///    XDG_RUNTIME_DIR 缺失时回退到 `/tmp/linglong-store.lock`）
 /// 2. 成功：创建 Socket 服务端，监听激活请求
 /// 3. 失败：连接 Socket 服务端，发送激活命令，退出当前实例
 class SingleInstance {
   SingleInstance._();
 
-  /// 锁文件路径
+  /// 锁文件名（XDG_RUNTIME_DIR 缺失时回退到 /tmp 用）
   static const String _lockFileName = 'linglong-store.lock';
 
-  /// Socket 文件路径
+  /// Socket 文件名（XDG_RUNTIME_DIR 缺失时回退到 /tmp 用）
   static const String _socketFileName = 'linglong-store.sock';
 
   /// 激活命令
@@ -131,11 +133,56 @@ class SingleInstance {
   static final StreamController<String> _urlController =
       StreamController<String>.broadcast();
 
-  /// 锁文件完整路径
-  static String get _lockFilePath => p.join(Directory.systemTemp.path, _lockFileName);
+  /// 锁文件完整路径。
+  ///
+  /// 优先用 `$XDG_RUNTIME_DIR/<app-id>/linglong-store.lock`（XDG 运行时规范）；
+  /// `$XDG_RUNTIME_DIR` 未设置时回退到 `/tmp/linglong-store.lock`（保留旧行为）。
+  ///
+  /// 第一次访问时会确保目录存在并设置 0700 权限。
+  static String get _lockFilePath {
+    final xdgPath = AppXdgPaths.resolveSingleInstanceLockFilePath();
+    if (xdgPath != null) {
+      _ensureRuntimeDirExists(xdgPath);
+      return xdgPath;
+    }
+    // XDG_RUNTIME_DIR 缺失，回退到 /tmp（POSIX 标准临时目录）。
+    return p.join(Directory.systemTemp.path, _lockFileName);
+  }
 
-  /// Socket 文件完整路径
-  static String get _socketFilePath => p.join(Directory.systemTemp.path, _socketFileName);
+  /// Socket 文件完整路径。
+  ///
+  /// 同 [_lockFilePath]：优先 `$XDG_RUNTIME_DIR/<app-id>/`，回退 `/tmp/`。
+  static String get _socketFilePath {
+    final xdgPath = AppXdgPaths.resolveSingleInstanceSocketFilePath();
+    if (xdgPath != null) {
+      _ensureRuntimeDirExists(xdgPath);
+      return xdgPath;
+    }
+    return p.join(Directory.systemTemp.path, _socketFileName);
+  }
+
+  /// 确保运行时目录存在且权限为 0700（XDG_RUNTIME_DIR 规范要求）。
+  ///
+  /// XDG_RUNTIME_DIR 由 systemd 创建时已设置正确权限，这里只在
+  /// 应用子目录缺失时补建。权限设置失败仅记日志，不阻塞启动。
+  static void _ensureRuntimeDirExists(String filePath) {
+    try {
+      final dir = Directory(File(filePath).parent.path);
+      if (!dir.existsSync()) {
+        dir.createSync(recursive: true);
+      }
+      // XDG 规范要求 0700。对已存在的目录不会改变其原有权限，但新建子目录按 0700 创建。
+      // 显式 chmod 以防 umask 干扰。
+      final result = Process.runSync('chmod', ['700', dir.path]);
+      if (result.exitCode != 0) {
+        AppLogger.warning(
+          'Failed to chmod 700 on runtime dir ${dir.path}: ${result.stderr}',
+        );
+      }
+    } catch (e, st) {
+      AppLogger.warning('Failed to ensure runtime dir for $filePath', e, st);
+    }
+  }
 
   /// 已运行主实例收到的 og 协议链接。
   static Stream<String> get protocolUrls => _urlController.stream;

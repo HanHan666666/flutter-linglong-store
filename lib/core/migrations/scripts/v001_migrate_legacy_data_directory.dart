@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:app_data_migrations/app_data_migrations.dart';
 import 'package:path/path.dart' as path;
 
-import '../../storage/app_data_directory_paths.dart';
+import '../../storage/app_xdg_paths.dart';
 
 /// V001：把历史 application-id 数据目录迁移到当前 application-id 目录。
 ///
@@ -36,9 +36,9 @@ class V001MigrateLegacyDataDirectory implements Migration {
   @override
   Future<void> up() async {
     final legacyDataDirectoryPath =
-        AppDataDirectoryPaths.resolveLegacyDataDirectoryPath();
+        AppXdgPaths.resolveLegacyAppDataDirectory();
     final currentDataDirectoryPath =
-        AppDataDirectoryPaths.resolveCurrentDataDirectoryPath();
+        AppXdgPaths.resolveAppDataDirectory();
 
     if (legacyDataDirectoryPath == null || currentDataDirectoryPath == null) {
       _onWarning(

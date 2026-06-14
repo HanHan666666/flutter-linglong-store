@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 
 import '../logging/app_logger.dart';
-import '../storage/app_data_directory_paths.dart';
+import '../storage/app_xdg_paths.dart';
 
 enum LinuxRendererMode { software, hardware }
 
@@ -220,7 +220,7 @@ class LinuxRendererService {
   LinuxRendererRecoveryInfo buildRecoveryInfo() {
     final dataDirectoryPath =
         _dataDirectoryPathOverride ??
-        AppDataDirectoryPaths.resolveCurrentDataDirectoryPath();
+        AppXdgPaths.resolveAppDataDirectory();
     if (dataDirectoryPath == null || dataDirectoryPath.isEmpty) {
       return const LinuxRendererRecoveryInfo(
         dataDirectoryPath: null,
@@ -283,17 +283,11 @@ class LinuxRendererService {
       return _configFilePathOverride;
     }
 
-    final currentDataDirectoryPath =
-        AppDataDirectoryPaths.resolveCurrentDataDirectoryPath();
-    if (currentDataDirectoryPath == null || currentDataDirectoryPath.isEmpty) {
-      return null;
-    }
-
-    return [
-      currentDataDirectoryPath,
-      configDirectoryName,
-      configFileName,
-    ].join(Platform.pathSeparator);
+    // 用户配置按 XDG 规范放 $XDG_CONFIG_HOME/<app-id>/startup/renderer_preferences.ini。
+    // 旧版本曾放在 $XDG_DATA_HOME 下，已由 V002 迁移到 config 目录。
+    final path = AppXdgPaths.resolveRendererConfigFilePath();
+    if (path == null || path.isEmpty) return null;
+    return path;
   }
 }
 

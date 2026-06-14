@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/logging/app_logger.dart';
 import '../../data/repositories/linglong_cli_repository_impl.dart';
+import '../../domain/models/install_queue_state.dart';
 import '../../domain/models/linglong_environment_management.dart';
 import '../../domain/models/linglong_repository_config.dart';
 import '../../domain/repositories/linglong_repository_management_repository.dart';
@@ -157,12 +158,48 @@ class LinglongEnvironmentManagement
 
   Future<LinglongEnvironmentRepairResult> moveLinglongStorage(
     String targetPath,
-  ) {
+  ) async {
+    final blockedResult = _buildStorageMoveBlockedResult(
+      ref.read(installQueueProvider),
+    );
+    if (blockedResult != null) {
+      state = state.copyWith(
+        status: LinglongEnvironmentManagementStatus.failed,
+        activeAction: LinglongEnvironmentRepairAction.moveStorageRoot,
+        repairResult: blockedResult,
+        errorMessage: blockedResult.message,
+      );
+      return blockedResult;
+    }
+
     return _runRepairAction(
       LinglongEnvironmentRepairAction.moveStorageRoot,
       () => ref
           .read(linglongEnvironmentManagementServiceProvider)
           .moveLinglongStorage(targetPath),
+    );
+  }
+
+  LinglongEnvironmentRepairResult? _buildStorageMoveBlockedResult(
+    InstallQueueState installQueue,
+  ) {
+    if (!installQueue.hasActiveTasks()) return null;
+
+    final currentTask = installQueue.currentTask;
+    final activeName = currentTask == null
+        ? null
+        : (currentTask.appName.isNotEmpty
+              ? currentTask.appName
+              : currentTask.appId);
+    final message = activeName == null
+        ? '下载管理中仍有安装或更新任务，请等待完成或取消任务后再移动玲珑保存位置。'
+        : '当前正在处理「$activeName」，请等待完成或取消任务后再移动玲珑保存位置。';
+
+    // 保存位置迁移会整体操作 /var/lib/linglong，必须避免与 ll-cli 安装队列并发。
+    return LinglongEnvironmentRepairResult(
+      action: LinglongEnvironmentRepairAction.moveStorageRoot,
+      success: false,
+      message: message,
     );
   }
 

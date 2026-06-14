@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:path/path.dart' as path;
 
@@ -94,6 +95,7 @@ class LinglongEnvironmentManagementService {
     String targetPath, {
     String? logFilePath,
   }) async {
+    final normalizedTargetPath = _normalizeStorageTargetPath(targetPath);
     final runningAppCount = await _loadRunningAppCount();
     if (runningAppCount > 0) {
       return LinglongEnvironmentRepairResult(
@@ -103,7 +105,18 @@ class LinglongEnvironmentManagementService {
       );
     }
 
-    final script = buildStorageMigrationScript(targetPath);
+    final validationError = await _validateStorageMovePreconditions(
+      normalizedTargetPath,
+    );
+    if (validationError != null) {
+      return LinglongEnvironmentRepairResult(
+        action: LinglongEnvironmentRepairAction.moveStorageRoot,
+        success: false,
+        message: validationError,
+      );
+    }
+
+    final script = buildStorageMigrationScript(normalizedTargetPath);
     final scriptFile = await _writeTemporaryScript(script);
     final resolvedLogFilePath =
         logFilePath ?? await _createLogFilePath('linglong-storage-move');
@@ -143,6 +156,7 @@ set -euo pipefail
 SRC=${_shellSingleQuote(_linglongRootPath)}
 DST=${_shellSingleQuote(normalizedTargetPath)}
 UNIT=/etc/systemd/system/var-lib-linglong.mount
+BACKUP="\${SRC}.backup-\$(date +%Y%m%d-%H%M%S)"
 
 if ll-cli --json ps 2>/dev/null | grep -q '"pid"'; then
   echo "仍有玲珑应用正在运行，请关闭后重试。" >&2
@@ -157,8 +171,24 @@ else
   cp -a "\$SRC"/. "\$DST"/
 fi
 
+if [ ! -d "\$DST/repo" ] || [ ! -f "\$DST/repo/config" ]; then
+  echo "目标目录缺少 repo/config，复制校验失败。" >&2
+  exit 3
+fi
+
 chown --reference="\$SRC" "\$DST" 2>/dev/null || true
 chmod --reference="\$SRC" "\$DST" 2>/dev/null || true
+
+restore_backup() {
+  if findmnt "\$SRC" >/dev/null 2>&1; then
+    return
+  fi
+  rmdir "\$SRC" 2>/dev/null || true
+  if [ -d "\$BACKUP" ] && [ ! -e "\$SRC" ]; then
+    mv "\$BACKUP" "\$SRC"
+  fi
+}
+trap restore_backup ERR
 
 cat > "\$UNIT" <<'EOF'
 [Unit]
@@ -175,10 +205,54 @@ Options=bind
 WantedBy=multi-user.target
 EOF
 
+mv "\$SRC" "\$BACKUP"
+mkdir -p "\$SRC"
+
 systemctl daemon-reload
 systemctl enable --now var-lib-linglong.mount
-findmnt ${_shellSingleQuote(_linglongRootPath)}
+findmnt "\$SRC"
+
+if command -v ostree >/dev/null 2>&1; then
+  ostree fsck --repo="\$SRC/repo" --quiet
+fi
+
+trap - ERR
+echo "旧目录备份：\$BACKUP"
 ''';
+  }
+
+  Future<String?> _validateStorageMovePreconditions(
+    String normalizedTargetPath,
+  ) async {
+    final storage = await _loadStorageInfo();
+    if (storage.isBindMounted) {
+      return '$_linglongRootPath 当前已经是 bind mount，请先确认现有挂载配置后再迁移。';
+    }
+
+    final targetProbePath = await _nearestExistingPath(normalizedTargetPath);
+    final targetDfResult = await _run(['df', '-PB1', targetProbePath]);
+    if (targetDfResult == null || !targetDfResult.success) {
+      return '无法读取目标路径所在文件系统空间：$targetProbePath';
+    }
+
+    final targetInfo = _parseDfOutput(targetDfResult.stdout);
+    final sourceUsedBytes = storage.usedBytes;
+    final targetAvailableBytes = targetInfo.availableBytes;
+    if (sourceUsedBytes == null || targetAvailableBytes == null) {
+      return '无法确认当前目录或目标路径的磁盘空间，请检查后重试。';
+    }
+
+    final safetyMarginBytes = math.max(
+      512 * 1024 * 1024,
+      (sourceUsedBytes * 0.1).round(),
+    );
+    final requiredBytes = sourceUsedBytes + safetyMarginBytes;
+    if (targetAvailableBytes < requiredBytes) {
+      return '目标路径可用空间不足，需要至少 ${_formatBytes(requiredBytes)}，'
+          '当前可用 ${_formatBytes(targetAvailableBytes)}。';
+    }
+
+    return null;
   }
 
   List<LinglongEnvironmentIssue> _buildIssues({
@@ -431,13 +505,35 @@ findmnt ${_shellSingleQuote(_linglongRootPath)}
     if (trimmed.isEmpty || !path.isAbsolute(trimmed)) {
       throw ArgumentError.value(targetPath, 'targetPath', '必须是绝对路径');
     }
-    if (trimmed == _linglongRootPath) {
-      throw ArgumentError.value(targetPath, 'targetPath', '不能与当前玲珑目录相同');
-    }
     if (trimmed.contains('\n') || trimmed.contains('\r')) {
       throw ArgumentError.value(targetPath, 'targetPath', '路径不能包含换行符');
     }
-    return path.normalize(trimmed);
+    final normalized = path.normalize(trimmed);
+    final currentRoot = path.normalize(_linglongRootPath);
+    const blockedTargets = {'/', '/var', '/var/lib'};
+    if (blockedTargets.contains(normalized) || normalized == currentRoot) {
+      throw ArgumentError.value(
+        targetPath,
+        'targetPath',
+        '目标路径不能是系统根目录或当前玲珑目录',
+      );
+    }
+    if (path.isWithin(currentRoot, normalized)) {
+      throw ArgumentError.value(targetPath, 'targetPath', '目标路径不能位于当前玲珑目录内部');
+    }
+    return normalized;
+  }
+
+  Future<String> _nearestExistingPath(String targetPath) async {
+    var probe = Directory(targetPath);
+    while (!await probe.exists()) {
+      final parent = probe.parent;
+      if (parent.path == probe.path) {
+        return parent.path;
+      }
+      probe = parent;
+    }
+    return probe.path;
   }
 
   Future<File> _writeTemporaryScript(String script) async {
@@ -496,6 +592,16 @@ findmnt ${_shellSingleQuote(_linglongRootPath)}
 
   String _shellSingleQuote(String value) {
     return "'${value.replaceAll("'", "'\"'\"'")}'";
+  }
+
+  String _formatBytes(int bytes) {
+    if (bytes >= 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GiB';
+    }
+    if (bytes >= 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MiB';
+    }
+    return '$bytes B';
   }
 }
 

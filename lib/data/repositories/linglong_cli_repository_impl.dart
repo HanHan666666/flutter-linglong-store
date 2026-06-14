@@ -1,13 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import '../../core/i18n/install_messages.dart';
 import '../../core/network/api_exceptions.dart';
+import '../../domain/models/linglong_env_check_result.dart';
 import '../../domain/models/installed_app.dart';
 import '../../domain/models/running_app.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_task.dart';
+import '../../domain/models/linglong_repository_config.dart';
 import '../../domain/repositories/linglong_cli_repository.dart';
+import '../../domain/repositories/linglong_repository_management_repository.dart';
 import '../../core/platform/cli_executor.dart';
 import '../../core/logging/app_logger.dart';
 import '../mappers/cli_output_parser.dart';
@@ -36,7 +40,8 @@ typedef CliCancelWithSystemKillFn =
     });
 
 /// ll-cli Repository 实现
-class LinglongCliRepositoryImpl implements LinglongCliRepository {
+class LinglongCliRepositoryImpl
+    implements LinglongCliRepository, LinglongRepositoryManagementRepository {
   LinglongCliRepositoryImpl(this._messages)
     : _execute = CliExecutor.execute,
       _executeWithProgressAndProcess =
@@ -374,6 +379,208 @@ class LinglongCliRepositoryImpl implements LinglongCliRepository {
 
   bool _sameVersionSet(Set<String> left, Set<String> right) {
     return left.length == right.length && left.containsAll(right);
+  }
+
+  String _stripAnsi(String input) {
+    return input.replaceAll(RegExp(r'\x1B\[[0-9;]*m'), '');
+  }
+
+  String? _stringValue(Object? value) {
+    final stringValue = value?.toString().trim();
+    return stringValue == null || stringValue.isEmpty ? null : stringValue;
+  }
+
+  int? _intValue(Object? value) {
+    if (value is int) {
+      return value;
+    }
+    return int.tryParse(value?.toString() ?? '');
+  }
+
+  LinglongRepoInfo? _mapRepoInfo(Map<String, dynamic> json) {
+    final name = _stringValue(json['name'] ?? json['alias']);
+    final url = _stringValue(json['url']);
+    if (name == null || url == null) {
+      return null;
+    }
+
+    return LinglongRepoInfo(
+      name: name,
+      url: url,
+      alias: _stringValue(json['alias']),
+      priority: _stringValue(json['priority']),
+    );
+  }
+
+  LinglongRepositoryConfig? _parseRepositoryConfigJson(String output) {
+    try {
+      final decoded = jsonDecode(output.trim());
+      if (decoded is! Map<String, dynamic>) {
+        return null;
+      }
+
+      final rawRepos = decoded['repos'];
+      final repos = rawRepos is List<dynamic>
+          ? rawRepos
+                .whereType<Map<String, dynamic>>()
+                .map(_mapRepoInfo)
+                .whereType<LinglongRepoInfo>()
+                .toList()
+          : const <LinglongRepoInfo>[];
+
+      return LinglongRepositoryConfig(
+        defaultRepo: _stringValue(
+          decoded['defaultRepo'] ??
+              decoded['default_repo'] ??
+              decoded['default'],
+        ),
+        version: _intValue(decoded['version']),
+        repos: repos,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  LinglongRepositoryConfig _parseRepositoryConfigText(String output) {
+    final sanitizedOutput = _stripAnsi(output);
+    final repos = <LinglongRepoInfo>[];
+    String? defaultRepo;
+
+    for (final rawLine in sanitizedOutput.split('\n')) {
+      final line = rawLine.trim();
+      if (line.isEmpty) {
+        continue;
+      }
+
+      final defaultMatch = RegExp(
+        r'^Default:\s*(.+)$',
+        caseSensitive: false,
+      ).firstMatch(line);
+      if (defaultMatch != null) {
+        defaultRepo = defaultMatch.group(1)?.trim();
+        continue;
+      }
+
+      final lowerLine = line.toLowerCase();
+      if (lowerLine.contains('name') && lowerLine.contains('url')) {
+        continue;
+      }
+
+      final columns = line
+          .split(RegExp(r'\s{2,}'))
+          .map((part) => part.trim())
+          .where((part) => part.isNotEmpty)
+          .toList();
+      if (columns.length < 2) {
+        continue;
+      }
+
+      repos.add(
+        LinglongRepoInfo(
+          name: columns[0],
+          url: columns[1],
+          alias: columns.length > 2 ? columns[2] : null,
+          priority: columns.length > 3 ? columns[3] : null,
+        ),
+      );
+    }
+
+    return LinglongRepositoryConfig(defaultRepo: defaultRepo, repos: repos);
+  }
+
+  Future<String> _runRepositoryCommand(List<String> args) async {
+    final output = await _execute(args, timeout: kQueryTimeout);
+    if (!output.success) {
+      throw Exception(
+        output.primaryMessage.isNotEmpty ? output.primaryMessage : '仓库命令执行失败',
+      );
+    }
+    return output.stdout.trim().isNotEmpty ? output.stdout.trim() : 'ok';
+  }
+
+  @override
+  Future<LinglongRepositoryConfig> getRepositoryConfig() async {
+    final jsonOutput = await _execute([
+      '--json',
+      'repo',
+      'show',
+    ], timeout: kQueryTimeout);
+    if (jsonOutput.success) {
+      final config = _parseRepositoryConfigJson(jsonOutput.stdout);
+      if (config != null) {
+        return config;
+      }
+    }
+
+    final textOutput = await _execute(['repo', 'show'], timeout: kQueryTimeout);
+    if (!textOutput.success) {
+      final detail = textOutput.primaryMessage.isNotEmpty
+          ? textOutput.primaryMessage
+          : jsonOutput.primaryMessage;
+      throw Exception(detail.isNotEmpty ? detail : '读取仓库配置失败');
+    }
+
+    final config = _parseRepositoryConfigText(textOutput.stdout);
+    if (config.repos.isEmpty && config.defaultRepo == null) {
+      throw Exception('无法解析仓库配置输出');
+    }
+    return config;
+  }
+
+  @override
+  Future<String> addRepository({
+    required String name,
+    required String url,
+    String? alias,
+  }) {
+    return _runRepositoryCommand([
+      'repo',
+      'add',
+      if (alias != null && alias.trim().isNotEmpty) ...['--alias', alias],
+      name,
+      url,
+    ]);
+  }
+
+  @override
+  Future<String> updateRepository({
+    required String aliasOrName,
+    required String url,
+  }) {
+    return _runRepositoryCommand(['repo', 'update', aliasOrName, url]);
+  }
+
+  @override
+  Future<String> removeRepository(String aliasOrName) {
+    return _runRepositoryCommand(['repo', 'remove', aliasOrName]);
+  }
+
+  @override
+  Future<String> setDefaultRepository(String aliasOrName) {
+    return _runRepositoryCommand(['repo', 'set-default', aliasOrName]);
+  }
+
+  @override
+  Future<String> setRepositoryPriority(String aliasOrName, int priority) {
+    return _runRepositoryCommand([
+      'repo',
+      'set-priority',
+      aliasOrName,
+      priority.toString(),
+    ]);
+  }
+
+  @override
+  Future<String> setRepositoryMirror(
+    String aliasOrName, {
+    required bool enabled,
+  }) {
+    return _runRepositoryCommand([
+      'repo',
+      enabled ? 'enable-mirror' : 'disable-mirror',
+      aliasOrName,
+    ]);
   }
 
   @override

@@ -33,6 +33,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.0"
+  app_data_migrations:
+    dependency: "direct main"
+    description:
+      path: "../../app_data_migrations"
+      relative: true
+    source: path
+    version: "0.1.0"
   args:
     dependency: transitive
     description:

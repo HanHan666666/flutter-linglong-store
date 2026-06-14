@@ -221,7 +221,7 @@ class _TestHarness extends StatefulWidget {
 class _TestHarnessState extends State<_TestHarness>
     with AutoLoadWhenNotScrollable {
   late final ScrollController _scrollController;
-  bool _isPageVisible = true;
+  final bool _isPageVisible = true;
 
   @override
   ScrollController get scrollController => _scrollController;

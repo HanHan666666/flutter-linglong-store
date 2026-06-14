@@ -114,7 +114,7 @@ void main() {
         },
       );
 
-      final app = const InstalledApp(
+      const app = InstalledApp(
         appId: 'org.example.demo',
         name: 'Demo',
         version: '1.0.0',
@@ -165,7 +165,7 @@ void main() {
         reportUninstall: (appId, version, {appName}) async {},
       );
 
-      final app = const InstalledApp(
+      const app = InstalledApp(
         appId: 'org.example.demo',
         name: 'Demo',
         version: '1.0.0',
@@ -204,7 +204,7 @@ void main() {
         reportUninstall: (appId, version, {appName}) async {},
       );
 
-      final app = const InstalledApp(
+      const app = InstalledApp(
         appId: 'org.example.demo',
         name: 'Demo',
         version: '1.0.0',
@@ -230,7 +230,7 @@ void main() {
           reportUninstall: (appId, version, {appName}) async {},
         );
 
-        final app = const InstalledApp(
+        const app = InstalledApp(
           appId: 'org.example.demo',
           name: 'Demo',
           version: '1.0.0',

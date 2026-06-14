@@ -6,28 +6,27 @@ import 'package:linglong_store/core/config/shell_primary_route.dart';
 
 void main() {
   group('ShellBranchVisibilityScope', () {
-    testWidgets(
-      'isActive is true when activeRoute equals currentRoute',
-      (tester) async {
-        await tester.pumpWidget(
-          _VisibilityTestHarness(
-            activeRoute: ShellPrimaryRoute.recommend,
-            currentRoute: ShellPrimaryRoute.recommend,
-          ),
-        );
+    testWidgets('isActive is true when activeRoute equals currentRoute', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const _VisibilityTestHarness(
+          activeRoute: ShellPrimaryRoute.recommend,
+          currentRoute: ShellPrimaryRoute.recommend,
+        ),
+      );
 
-        final isActiveState = tester.state<_VisibilityConsumerState>(
-          find.byType(_VisibilityConsumer),
-        );
-        expect(isActiveState.lastIsActive, isTrue);
-      },
-    );
+      final isActiveState = tester.state<_VisibilityConsumerState>(
+        find.byType(_VisibilityConsumer),
+      );
+      expect(isActiveState.lastIsActive, isTrue);
+    });
 
     testWidgets(
       'isActive is false when activeRoute differs from currentRoute',
       (tester) async {
         await tester.pumpWidget(
-          _VisibilityTestHarness(
+          const _VisibilityTestHarness(
             activeRoute: ShellPrimaryRoute.allApps,
             currentRoute: ShellPrimaryRoute.recommend,
           ),
@@ -44,7 +43,7 @@ void main() {
       'isActive is false when activeRoute is null (secondary route)',
       (tester) async {
         await tester.pumpWidget(
-          _VisibilityTestHarness(
+          const _VisibilityTestHarness(
             activeRoute: null,
             currentRoute: ShellPrimaryRoute.recommend,
           ),
@@ -61,7 +60,7 @@ void main() {
       'updateShouldNotify triggers rebuild when activeRoute changes',
       (tester) async {
         await tester.pumpWidget(
-          _VisibilityTestHarness(
+          const _VisibilityTestHarness(
             activeRoute: ShellPrimaryRoute.recommend,
             currentRoute: ShellPrimaryRoute.recommend,
           ),
@@ -75,7 +74,7 @@ void main() {
 
         // 切换到另一个主路由（当前页面变为隐藏）
         await tester.pumpWidget(
-          _VisibilityTestHarness(
+          const _VisibilityTestHarness(
             activeRoute: ShellPrimaryRoute.allApps,
             currentRoute: ShellPrimaryRoute.recommend,
           ),
@@ -90,7 +89,7 @@ void main() {
       'updateShouldNotify does not trigger rebuild when nothing changes',
       (tester) async {
         await tester.pumpWidget(
-          _VisibilityTestHarness(
+          const _VisibilityTestHarness(
             activeRoute: ShellPrimaryRoute.recommend,
             currentRoute: ShellPrimaryRoute.recommend,
           ),
@@ -103,7 +102,7 @@ void main() {
 
         // 相同的状态，不应触发重建
         await tester.pumpWidget(
-          _VisibilityTestHarness(
+          const _VisibilityTestHarness(
             activeRoute: ShellPrimaryRoute.recommend,
             currentRoute: ShellPrimaryRoute.recommend,
           ),
@@ -159,73 +158,71 @@ void main() {
       },
     );
 
-    testWidgets(
-      'receives callback when switching from active to hidden',
-      (tester) async {
-        final callbackLog = <VisibilityCallbackRecord>[];
+    testWidgets('receives callback when switching from active to hidden', (
+      tester,
+    ) async {
+      final callbackLog = <VisibilityCallbackRecord>[];
 
-        await tester.pumpWidget(
-          _MixinTestHarness(
-            activeRoute: ShellPrimaryRoute.recommend,
-            watchedRoute: ShellPrimaryRoute.recommend,
-            callbackLog: callbackLog,
-          ),
-        );
+      await tester.pumpWidget(
+        _MixinTestHarness(
+          activeRoute: ShellPrimaryRoute.recommend,
+          watchedRoute: ShellPrimaryRoute.recommend,
+          callbackLog: callbackLog,
+        ),
+      );
 
-        await tester.pump();
-        expect(callbackLog.length, 1);
-        expect(callbackLog[0].isActive, isTrue);
-        expect(callbackLog[0].isInitial, isTrue);
+      await tester.pump();
+      expect(callbackLog.length, 1);
+      expect(callbackLog[0].isActive, isTrue);
+      expect(callbackLog[0].isInitial, isTrue);
 
-        // 切换到另一个路由，当前页面变为隐藏
-        await tester.pumpWidget(
-          _MixinTestHarness(
-            activeRoute: ShellPrimaryRoute.allApps,
-            watchedRoute: ShellPrimaryRoute.recommend,
-            callbackLog: callbackLog,
-          ),
-        );
+      // 切换到另一个路由，当前页面变为隐藏
+      await tester.pumpWidget(
+        _MixinTestHarness(
+          activeRoute: ShellPrimaryRoute.allApps,
+          watchedRoute: ShellPrimaryRoute.recommend,
+          callbackLog: callbackLog,
+        ),
+      );
 
-        await tester.pump();
-        expect(callbackLog.length, 2);
-        expect(callbackLog[1].isActive, isFalse);
-        expect(callbackLog[1].isInitial, isFalse);
-      },
-    );
+      await tester.pump();
+      expect(callbackLog.length, 2);
+      expect(callbackLog[1].isActive, isFalse);
+      expect(callbackLog[1].isInitial, isFalse);
+    });
 
-    testWidgets(
-      'receives callback when switching from hidden to active',
-      (tester) async {
-        final callbackLog = <VisibilityCallbackRecord>[];
+    testWidgets('receives callback when switching from hidden to active', (
+      tester,
+    ) async {
+      final callbackLog = <VisibilityCallbackRecord>[];
 
-        await tester.pumpWidget(
-          _MixinTestHarness(
-            activeRoute: ShellPrimaryRoute.allApps,
-            watchedRoute: ShellPrimaryRoute.recommend,
-            callbackLog: callbackLog,
-          ),
-        );
+      await tester.pumpWidget(
+        _MixinTestHarness(
+          activeRoute: ShellPrimaryRoute.allApps,
+          watchedRoute: ShellPrimaryRoute.recommend,
+          callbackLog: callbackLog,
+        ),
+      );
 
-        await tester.pump();
-        expect(callbackLog.length, 1);
-        expect(callbackLog[0].isActive, isFalse);
-        expect(callbackLog[0].isInitial, isTrue);
+      await tester.pump();
+      expect(callbackLog.length, 1);
+      expect(callbackLog[0].isActive, isFalse);
+      expect(callbackLog[0].isInitial, isTrue);
 
-        // 切换回当前路由，页面变为激活
-        await tester.pumpWidget(
-          _MixinTestHarness(
-            activeRoute: ShellPrimaryRoute.recommend,
-            watchedRoute: ShellPrimaryRoute.recommend,
-            callbackLog: callbackLog,
-          ),
-        );
+      // 切换回当前路由，页面变为激活
+      await tester.pumpWidget(
+        _MixinTestHarness(
+          activeRoute: ShellPrimaryRoute.recommend,
+          watchedRoute: ShellPrimaryRoute.recommend,
+          callbackLog: callbackLog,
+        ),
+      );
 
-        await tester.pump();
-        expect(callbackLog.length, 2);
-        expect(callbackLog[1].isActive, isTrue);
-        expect(callbackLog[1].isInitial, isFalse);
-      },
-    );
+      await tester.pump();
+      expect(callbackLog.length, 2);
+      expect(callbackLog[1].isActive, isTrue);
+      expect(callbackLog[1].isInitial, isFalse);
+    });
 
     testWidgets(
       'receives isActive=false when secondary route overlay shows (activeRoute=null)',
@@ -292,52 +289,48 @@ void main() {
   });
 
   group('ShellBranchVisibilityExtension', () {
-    testWidgets(
-      'isShellBranchActive returns correct value',
-      (tester) async {
-        await tester.pumpWidget(
-          _VisibilityTestHarness(
-            activeRoute: ShellPrimaryRoute.recommend,
-            currentRoute: ShellPrimaryRoute.recommend,
-          ),
-        );
+    testWidgets('isShellBranchActive returns correct value', (tester) async {
+      await tester.pumpWidget(
+        const _VisibilityTestHarness(
+          activeRoute: ShellPrimaryRoute.recommend,
+          currentRoute: ShellPrimaryRoute.recommend,
+        ),
+      );
 
-        final consumerState = tester.state<_VisibilityConsumerState>(
-          find.byType(_VisibilityConsumer),
-        );
-        expect(consumerState.context.isShellBranchActive, isTrue);
-      },
-    );
+      final consumerState = tester.state<_VisibilityConsumerState>(
+        find.byType(_VisibilityConsumer),
+      );
+      expect(consumerState.context.isShellBranchActive, isTrue);
+    });
 
-    testWidgets(
-      'currentShellBranch returns correct route',
-      (tester) async {
-        await tester.pumpWidget(
-          _VisibilityTestHarness(
-            activeRoute: ShellPrimaryRoute.recommend,
-            currentRoute: ShellPrimaryRoute.allApps,
-          ),
-        );
+    testWidgets('currentShellBranch returns correct route', (tester) async {
+      await tester.pumpWidget(
+        const _VisibilityTestHarness(
+          activeRoute: ShellPrimaryRoute.recommend,
+          currentRoute: ShellPrimaryRoute.allApps,
+        ),
+      );
 
-        final consumerState = tester.state<_VisibilityConsumerState>(
-          find.byType(_VisibilityConsumer),
-        );
-        expect(consumerState.context.currentShellBranch, ShellPrimaryRoute.allApps);
-      },
-    );
+      final consumerState = tester.state<_VisibilityConsumerState>(
+        find.byType(_VisibilityConsumer),
+      );
+      expect(
+        consumerState.context.currentShellBranch,
+        ShellPrimaryRoute.allApps,
+      );
+    });
 
-    testWidgets(
-      'isShellBranchActive returns false when not in scope',
-      (tester) async {
-        await tester.pumpWidget(const MaterialApp(home: _VisibilityConsumer()));
+    testWidgets('isShellBranchActive returns false when not in scope', (
+      tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: _VisibilityConsumer()));
 
-        final consumerState = tester.state<_VisibilityConsumerState>(
-          find.byType(_VisibilityConsumer),
-        );
-        expect(consumerState.context.isShellBranchActive, isFalse);
-        expect(consumerState.context.currentShellBranch, isNull);
-      },
-    );
+      final consumerState = tester.state<_VisibilityConsumerState>(
+        find.byType(_VisibilityConsumer),
+      );
+      expect(consumerState.context.isShellBranchActive, isFalse);
+      expect(consumerState.context.currentShellBranch, isNull);
+    });
   });
 }
 
@@ -377,7 +370,7 @@ class _VisibilityTestHarness extends StatelessWidget {
 ///
 /// 用于验证 ShellBranchVisibilityScope 提供的 isActive 状态
 class _VisibilityConsumer extends StatefulWidget {
-  const _VisibilityConsumer({super.key});
+  const _VisibilityConsumer();
 
   @override
   State<_VisibilityConsumer> createState() => _VisibilityConsumerState();

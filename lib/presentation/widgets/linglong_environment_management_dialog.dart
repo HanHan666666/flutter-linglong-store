@@ -9,7 +9,6 @@ import '../../core/platform/local_path_opener.dart';
 import '../../core/utils/app_notification_helpers.dart';
 import '../../domain/models/linglong_env_check_result.dart';
 import '../../domain/models/linglong_environment_management.dart';
-import '../../domain/models/linglong_repository_config.dart';
 
 Future<void> showLinglongEnvironmentManagementDialog(BuildContext context) {
   return showDialog<void>(
@@ -603,7 +602,7 @@ class _StorageManagementTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        _InlineInfoPanel(
+        const _InlineInfoPanel(
           icon: Icons.info_outline,
           title: '移动方式',
           message:

@@ -26,15 +26,24 @@ void main() {
       final provider = container.read(appDetailProvider('test-app').notifier);
 
       // 初始状态
-      expect(container.read(appDetailProvider('test-app')).isVersionListExpanded, false);
+      expect(
+        container.read(appDetailProvider('test-app')).isVersionListExpanded,
+        false,
+      );
 
       // 第一次切换：展开
       provider.toggleVersionList();
-      expect(container.read(appDetailProvider('test-app')).isVersionListExpanded, true);
+      expect(
+        container.read(appDetailProvider('test-app')).isVersionListExpanded,
+        true,
+      );
 
       // 第二次切换：折叠
       provider.toggleVersionList();
-      expect(container.read(appDetailProvider('test-app')).isVersionListExpanded, false);
+      expect(
+        container.read(appDetailProvider('test-app')).isVersionListExpanded,
+        false,
+      );
 
       container.dispose();
     });
@@ -43,13 +52,12 @@ void main() {
   group('_computeCollapsedVersions 版本计算逻辑（概念验证）', () {
     test('版本数为 0 返回空列表', () {
       final versions = <AppVersion>[];
-      final installedVersions = <String>{};
 
       expect(versions.isEmpty, true);
     });
 
     test('版本数为 1 返回该版本', () {
-      final versions = [AppVersion(versionNo: '1.0')];
+      final versions = [const AppVersion(versionNo: '1.0')];
       expect(versions.length, 1);
     });
   });

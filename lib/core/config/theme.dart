@@ -7,4 +7,6 @@
 /// ```dart
 /// import 'package:flutter_linglong_store/core/config/theme.dart';
 /// ```
+library;
+
 export 'theme/index.dart';

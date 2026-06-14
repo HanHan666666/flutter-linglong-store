@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -88,9 +87,9 @@ void main() {
 
     when(mockApiService.getSearchAppList(any)).thenAnswer(
       (_) async => HttpResponse(
-        AppListResponse(
+        const AppListResponse(
           code: 200,
-          data: const AppListPagedData(
+          data: AppListPagedData(
             records: [],
             total: 123,
             size: 1,
@@ -177,9 +176,9 @@ void main() {
 
     when(mockApiService.getSearchAppList(any)).thenAnswer(
       (_) async => HttpResponse(
-        AppListResponse(
+        const AppListResponse(
           code: 200,
-          data: const AppListPagedData(
+          data: AppListPagedData(
             records: [],
             total: 123,
             size: 1,

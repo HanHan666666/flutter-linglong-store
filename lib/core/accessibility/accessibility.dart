@@ -4,6 +4,7 @@
 /// ```dart
 /// import 'package:linglong_store/core/accessibility/accessibility.dart';
 /// ```
+library;
 
 // Focus 遍历策略
 export 'a11y_focus_traversal.dart';

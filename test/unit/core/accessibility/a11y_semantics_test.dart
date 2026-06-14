@@ -1,4 +1,4 @@
-import 'dart:ui' show SemanticsFlag;
+import 'dart:ui' show Tristate;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/core/accessibility/a11y_semantics.dart';
@@ -20,7 +20,7 @@ void main() {
 
       final semantics = tester.getSemantics(find.byType(A11yButton));
       expect(semantics.label, contains('测试按钮'));
-      expect(semantics.hasFlag(SemanticsFlag.isButton), isTrue);
+      expect(semantics.flagsCollection.isButton, isTrue);
     });
 
     testWidgets('禁用态不可点击', (tester) async {
@@ -38,8 +38,8 @@ void main() {
       );
 
       final semantics = tester.getSemantics(find.byType(A11yButton));
-      expect(semantics.hasFlag(SemanticsFlag.hasEnabledState), isTrue);
-      expect(semantics.hasFlag(SemanticsFlag.isEnabled), isFalse);
+      expect(semantics.flagsCollection.isEnabled, isNot(Tristate.none));
+      expect(semantics.flagsCollection.isEnabled, Tristate.isFalse);
     });
 
     testWidgets('启用态可点击', (tester) async {
@@ -96,7 +96,7 @@ void main() {
 
       final semantics = tester.getSemantics(find.byType(A11yIconButton));
       expect(semantics.label, '关闭');
-      expect(semantics.hasFlag(SemanticsFlag.isButton), isTrue);
+      expect(semantics.flagsCollection.isButton, isTrue);
     });
 
     testWidgets('禁用态不可点击', (tester) async {
@@ -114,24 +114,19 @@ void main() {
       );
 
       final semantics = tester.getSemantics(find.byType(A11yIconButton));
-      expect(semantics.hasFlag(SemanticsFlag.hasEnabledState), isTrue);
-      expect(semantics.hasFlag(SemanticsFlag.isEnabled), isFalse);
+      expect(semantics.flagsCollection.isEnabled, isNot(Tristate.none));
+      expect(semantics.flagsCollection.isEnabled, Tristate.isFalse);
     });
   });
 
   group('A11yListItem', () {
     testWidgets('使用 MergeSemantics 合并语义', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Material(
             child: A11yListItem(
               semanticsLabel: '列表项',
-              child: const Column(
-                children: [
-                  Text('标题'),
-                  Text('描述'),
-                ],
-              ),
+              child: Column(children: [Text('标题'), Text('描述')]),
             ),
           ),
         ),
@@ -162,12 +157,12 @@ void main() {
 
     testWidgets('支持语义值 value', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Material(
             child: A11yListItem(
               semanticsLabel: '带值列表项',
               semanticsValue: '已安装',
-              child: const Text('列表项内容'),
+              child: Text('列表项内容'),
             ),
           ),
         ),
@@ -195,7 +190,7 @@ void main() {
 
       final semantics = tester.getSemantics(find.byType(A11yTab));
       expect(semantics.label, contains('标签1'));
-      expect(semantics.hasFlag(SemanticsFlag.isSelected), isTrue);
+      expect(semantics.flagsCollection.isSelected, Tristate.isTrue);
     });
 
     testWidgets('未选中状态', (tester) async {
@@ -213,7 +208,7 @@ void main() {
       );
 
       final semantics = tester.getSemantics(find.byType(A11yTab));
-      expect(semantics.hasFlag(SemanticsFlag.isSelected), isFalse);
+      expect(semantics.flagsCollection.isSelected, Tristate.isFalse);
     });
 
     testWidgets('具有 48px 高度', (tester) async {
@@ -297,12 +292,9 @@ void main() {
 
     testWidgets('无 onTap 时不包含 InkWell', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Material(
-            child: A11yCard(
-              semanticsLabel: '静态卡片',
-              child: const Text('卡片内容'),
-            ),
+            child: A11yCard(semanticsLabel: '静态卡片', child: Text('卡片内容')),
           ),
         ),
       );

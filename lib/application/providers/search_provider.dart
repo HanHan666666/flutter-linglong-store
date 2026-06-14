@@ -1,7 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../core/utils/locale_utils.dart';
 import '../../data/mappers/app_list_mapper.dart';
 import '../../domain/models/recommend_models.dart';
 import '../../core/logging/app_logger.dart';
@@ -82,7 +81,10 @@ class Search extends _$Search {
         ),
       );
 
-      final results = mapAppListToRecommendApps(response.data.data, pageSize: 20);
+      final results = mapAppListToRecommendApps(
+        response.data.data,
+        pageSize: 20,
+      );
 
       state = state.copyWith(
         isLoading: false,
@@ -118,7 +120,10 @@ class Search extends _$Search {
         ),
       );
 
-      final newResults = mapAppListToRecommendApps(response.data.data, pageSize: 20);
+      final newResults = mapAppListToRecommendApps(
+        response.data.data,
+        pageSize: 20,
+      );
 
       state = state.copyWith(
         isLoadingMore: false,

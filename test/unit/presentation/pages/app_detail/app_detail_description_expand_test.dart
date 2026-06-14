@@ -5,7 +5,7 @@ import 'package:linglong_store/presentation/pages/app_detail/app_detail_page.dar
 void main() {
   group('App detail description expand visibility', () {
     test('does not show expand button for a short single-line description', () {
-      final textStyle = const TextStyle(fontSize: 14, height: 1.4);
+      const textStyle = TextStyle(fontSize: 14, height: 1.4);
 
       final shouldShow = shouldShowDescriptionExpandButton(
         text: '这是一个很短的应用简介，不应该出现展开按钮。',
@@ -21,7 +21,7 @@ void main() {
     test(
       'shows expand button when the description actually exceeds three lines',
       () {
-        final textStyle = const TextStyle(fontSize: 14, height: 1.4);
+        const textStyle = TextStyle(fontSize: 14, height: 1.4);
         final longDescription = List.filled(
           12,
           '这是一个用于验证应用详情页简介折叠逻辑的较长描述文本',

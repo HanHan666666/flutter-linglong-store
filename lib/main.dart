@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:app_data_migrations/app_data_migrations.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,8 +8,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart';
 import 'application/providers/og_install_controller.dart';
 import 'application/providers/install_queue_provider.dart';
-import 'core/network/api_client.dart';
 import 'core/logging/app_logger.dart';
+import 'core/migrations/file_migration_lock.dart';
+import 'core/migrations/migrations.dart';
+import 'core/migrations/shared_prefs_migration_state_repository.dart';
+import 'core/network/api_client.dart';
 import 'core/protocol/og_protocol_request.dart';
 import 'core/platform/single_instance.dart';
 import 'core/platform/window_service.dart';
@@ -51,6 +55,10 @@ void main(List<String> arguments) async {
   // 初始化 SharedPreferences
   await PreferencesService.init();
   final sharedPreferences = await SharedPreferences.getInstance();
+
+  // 执行数据迁移：必须在 SharedPreferences 就绪后、ApiClient/CacheService 初始化前。
+  // 失败时打印日志并退出，业务层兜底 UI 由后续启动失败的统一流程处理。
+  await _runMigrations(sharedPreferences);
 
   // 初始化网络客户端，避免 Provider 首次读取时访问未初始化的 Dio 单例
   ApiClient.init(
@@ -95,4 +103,63 @@ void _registerExitHandler() {
     await SingleInstance.dispose();
     exit(0);
   });
+}
+
+/// 执行数据迁移。
+///
+/// 在 [PreferencesService.init] 之后调用，确保 [SharedPrefsMigrationStateRepository] 可用。
+///
+/// 锁文件位于应用数据目录下（与其他状态文件同居），跨进程并发由 [FileMigrationLock]
+/// 基于 POSIX flock 保证。任何一个 V 脚本失败都会抛 [MigrationFailedException]，
+/// 此处记录详细日志后退出进程，避免在不一致状态下继续启动。
+///
+/// 启动阶段无 Flutter UI 上下文，无法弹窗兜底。如需 UI 提示，
+/// 可改为在 runApp 后第一个画面里执行迁移，但本项目选择"启动失败即退出"的简单策略。
+Future<void> _runMigrations(SharedPreferences prefs) async {
+  // 数据目录由 [AppDataDirectoryMigration] 在更早阶段迁移完成，
+  // 这里取当前数据目录路径用于放置 .migration.lock 文件。
+  final dataDirPath =
+      AppDataDirectoryMigration.resolveCurrentDataDirectoryPath();
+  if (dataDirPath == null) {
+    AppLogger.warning(
+      '无法解析应用数据目录，跳过数据迁移。这可能导致旧数据无法被迁移到新版本。',
+    );
+    return;
+  }
+
+  final lockFile = File('$dataDirPath/.migration.lock');
+  final lock = FileMigrationLock(lockFile);
+  final repo = SharedPrefsMigrationStateRepository(prefs);
+
+  final runner = MigrationRunner(
+    repository: repo,
+    migrations: appMigrations,
+    lock: lock,
+  );
+
+  try {
+    final result = await runner.run();
+    AppLogger.info(
+      '迁移完成: 应用 ${result.applied.length} 个 / 跳过 ${result.skipped.length} 个',
+    );
+    for (final record in result.applied) {
+      AppLogger.info(
+        '  - ${record.id} (${record.elapsed}): ${record.description}',
+      );
+    }
+  } on MigrationFailedException catch (e, st) {
+    AppLogger.error(
+      '迁移失败: ${e.failedMigrationId}',
+      e.cause,
+      st,
+    );
+    exit(1);
+  } on MigrationIdConflictException catch (e, st) {
+    AppLogger.error(
+      '迁移注册表 id 冲突: ${e.conflictingId}',
+      e,
+      st,
+    );
+    exit(1);
+  }
 }

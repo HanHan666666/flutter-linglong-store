@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 
 import '../logging/app_logger.dart';
-import '../storage/app_data_directory_migration.dart';
+import '../storage/app_data_directory_paths.dart';
 
 enum LinuxRendererMode { software, hardware }
 
@@ -220,7 +220,7 @@ class LinuxRendererService {
   LinuxRendererRecoveryInfo buildRecoveryInfo() {
     final dataDirectoryPath =
         _dataDirectoryPathOverride ??
-        AppDataDirectoryMigration.resolveCurrentDataDirectoryPath();
+        AppDataDirectoryPaths.resolveCurrentDataDirectoryPath();
     if (dataDirectoryPath == null || dataDirectoryPath.isEmpty) {
       return const LinuxRendererRecoveryInfo(
         dataDirectoryPath: null,
@@ -284,7 +284,7 @@ class LinuxRendererService {
     }
 
     final currentDataDirectoryPath =
-        AppDataDirectoryMigration.resolveCurrentDataDirectoryPath();
+        AppDataDirectoryPaths.resolveCurrentDataDirectoryPath();
     if (currentDataDirectoryPath == null || currentDataDirectoryPath.isEmpty) {
       return null;
     }

@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:logger/logger.dart';
 
-import '../storage/app_data_directory_migration.dart';
+import '../storage/app_data_directory_paths.dart';
 
 /// 日志文件最大容量 10 MB，超出后滚动轮转
 const _kMaxFileSize = 10 * 1024 * 1024;
@@ -20,7 +20,7 @@ class AppLogger {
 
   /// 初始化日志
   static Future<void> init() async {
-    final logFilePath = AppDataDirectoryMigration.resolveCurrentLogFilePath();
+    final logFilePath = AppDataDirectoryPaths.resolveCurrentLogFilePath();
 
     _logger = Logger(
       printer: PrettyPrinter(

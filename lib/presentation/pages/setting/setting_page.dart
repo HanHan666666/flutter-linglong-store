@@ -18,6 +18,7 @@ import '../../../data/datasources/remote/app_api_service.dart';
 import '../../../data/models/api_dto.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/feedback_dialog.dart';
+import '../../widgets/linglong_environment_management_dialog.dart';
 import 'widgets/renderer_preference_tile.dart';
 
 /// 设置页
@@ -644,6 +645,17 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             },
           ),
           _buildDivider(context),
+          ListTile(
+            leading: Icon(
+              Icons.settings_suggest_outlined,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('玲珑环境管理'),
+            subtitle: const Text('分析环境、管理仓库、修复基础环境和移动保存位置'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showLinglongEnvironmentManagementDialog(context),
+          ),
+          _buildDivider(context),
           // 清理废弃基础服务
           ListTile(
             leading: Icon(
@@ -828,8 +840,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   label: const Text('GitHub'),
                 ),
                 TextButton.icon(
-                  onPressed: () =>
-                      _openUrl('https://gitee.com/hanplus/flutter-linglong-store'),
+                  onPressed: () => _openUrl(
+                    'https://gitee.com/hanplus/flutter-linglong-store',
+                  ),
                   icon: const Icon(Icons.code_outlined, size: 18),
                   label: const Text('Gitee'),
                 ),

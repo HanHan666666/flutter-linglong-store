@@ -39,6 +39,7 @@ void main() {
       expect(find.text('仓库配置'), findsNothing);
       expect(find.text('当前仓库源'), findsNothing);
       expect(find.text('可选仓库'), findsNothing);
+      expect(find.text('玲珑环境管理'), findsOneWidget);
     },
   );
 

@@ -1,60 +1,50 @@
-# 玲珑环境管理、修复与保存位置迁移设计
+# 玲珑环境管理、修复与保存位置迁移
 
-> 文档版本：1.0  
-> 创建日期：2026-06-14  
-> 适用范围：设置页玲珑环境管理入口、仓库管理、环境分析与修复、保存位置迁移
+> 文档版本：1.1  
+> 更新日期：2026-06-14  
+> 适用范围：设置页「玲珑环境管理」入口、仓库管理、环境分析与修复、保存位置迁移
 
 ## 背景
 
-当前项目已经具备启动期玲珑环境检测、自动安装、安装队列和清理废弃基础服务能力，但缺少运行期的集中环境管理入口。用户遇到仓库配置错误、OSTree 本地仓库损坏、玲珑根目录空间不足时，只能从安装失败日志里看到零散错误，无法在商店内主动诊断和修复。
+项目已有启动期玲珑环境检测、自动安装、安装队列和废弃 base 清理能力，但运行期缺少集中诊断入口。用户遇到仓库配置错误、OSTree 本地仓库损坏、`/var/lib/linglong` 空间不足时，过去只能从安装失败日志里看到零散错误。
 
-本功能新增一个集中入口，放在设置页「商店选项」附近，命名为「玲珑环境管理」。入口打开统一对话框，对话框内分为「环境分析」「仓库管理」「保存位置」三个页签。
+本功能在设置页新增「玲珑环境管理」入口，打开统一对话框，包含：
 
-## 参考结论
+- 「环境分析」：展示 ll-cli、仓库、磁盘、OSTree、运行中应用等诊断结果。
+- 「仓库管理」：查看、添加、修改、删除仓库，设置默认仓库、优先级和镜像开关。
+- 「保存位置」：按上游建议通过 systemd bind mount 迁移 `/var/lib/linglong`。
 
-1. 官方 `ll-cli repo` 在 1.10.x 文档中支持 `add/remove/update/set-default/show/set-priority/enable-mirror/disable-mirror`。
-2. 远程 UOS 25 / Loong64 机器实测 `ll-cli 1.12.2` 的 `ll-cli --json repo show` 返回：
-   - `defaultRepo`
-   - `repos`
-   - `version`
-3. 玲珑本地根目录为 `/var/lib/linglong`，OSTree 仓库为 `/var/lib/linglong/repo`。
-4. 官方 issue OpenAtom-Linyaps/linyaps#1411 明确说明当前不支持直接自定义安装位置，推荐通过 systemd `.mount` 把目标目录 bind 到 `/var/lib/linglong`。
-5. OSTree 完整性检查使用 `ostree fsck --repo=/var/lib/linglong/repo --quiet`。远程实测可发现 corrupted file object。
+## 参考依据
 
-## 目标
+1. 远程 UOS 25 / Loong64 环境实测 `ll-cli 1.12.2` 支持 `repo add/remove/update/set-default/show/set-priority/enable-mirror/disable-mirror`。
+2. `ll-cli --json repo show` 返回 `defaultRepo`、`repos`、`version`，可作为仓库列表首选解析来源；文本表格输出作为兜底。
+3. 玲珑本地根目录为 `/var/lib/linglong`，OSTree 仓库位于 `/var/lib/linglong/repo`。
+4. OpenAtom-Linyaps/linyaps#1411 中上游维护者说明当前不支持直接自定义安装位置，推荐通过 systemd `.mount` 将目标目录 bind 到 `/var/lib/linglong`。
+5. 远程环境实测 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 可发现 corrupted file object，输出量可能很大，UI 必须截断摘要并保留完整日志。
 
-- 在设置页新增「玲珑环境管理」入口。
-- 支持查看、添加、编辑、删除玲珑仓库。
-- 支持设置默认仓库、调整仓库优先级、启用/禁用镜像。
-- 支持主动环境分析，展示发现的问题和诊断详情。
-- 支持对可修复问题执行用户确认后的修复操作。
-- 支持按 systemd bind mount 方案迁移玲珑保存位置。
-- 所有命令集中在 Repository / Service 层，页面不直接拼命令。
-- 所有有副作用操作必须二次确认，并保留执行日志。
-
-## 非目标
+## 实现边界
 
 - 不新增“任意配置玲珑安装目录”的业务语义。
-- 不绕过 Linyaps 上游机制直接修改内部数据库。
-- 不在安装队列执行中、玲珑应用运行中迁移保存位置。
-- 不静默执行 `ostree fsck --delete`。
-- 不把仓库源选择重新变成商店业务配置。后端接口仍使用 `AppConfig.defaultStoreRepoName`。
+- 不把仓库源重新变成商店业务配置；后端接口仍使用 `AppConfig.defaultStoreRepoName`。
+- 不直接修改玲珑内部数据库。
+- 不在页面或 Provider 中散写 `ll-cli repo`、`ostree fsck`、`pkexec`、`rsync`、`systemctl` 命令。
+- 不静默执行 `ostree fsck --delete` 或保存位置迁移，所有副作用操作必须由用户确认。
+- 不在安装/更新队列仍有活跃任务或玲珑应用仍在运行时迁移保存位置。
 
-## 架构
+## 分层契约
 
 ### Domain
 
-新增轻量模型：
-
-- `LinglongRepositoryConfig`：默认仓库、仓库列表、配置版本。
-- `LinglongEnvironmentAnalysis`：环境检测结果、存储信息、OSTree 完整性结果、问题列表。
-- `LinglongEnvironmentIssue`：问题类型、严重级别、展示摘要、诊断详情、可用修复动作。
-- `LinglongStorageInfo`：根目录、repo 路径、挂载状态、磁盘空间、运行中应用数量。
-- `LinglongActionResult`：命令执行结果、输出摘要、日志路径。
+- `LinglongRepositoryConfig`：仓库配置版本、默认仓库、仓库列表。
+- `LinglongRepoInfo`：单个仓库的 `name/url/alias/priority/isDefault/isMirrorEnabled`。
+- `LinglongEnvironmentAnalysis`：环境检测结果、存储信息、OSTree 检查、问题列表、运行中应用数量。
+- `LinglongEnvironmentIssue`：问题 code、严重级别、标题、说明、诊断详情和可执行修复动作。
+- `LinglongStorageInfo`：根目录、文件系统、挂载源、容量、已用、可用、使用率、bind mount 状态。
+- `LinglongEnvironmentRepairResult`：修复动作、成功状态、展示消息、日志路径和截断输出。
 
 ### Data / Platform
 
-`LinglongCliRepository` 继续作为所有 `ll-cli` 操作入口，新增仓库管理方法：
+`LinglongRepositoryManagementRepository` 是仓库管理唯一抽象，当前由 `LinglongCliRepositoryImpl` 实现。所有 `ll-cli repo ...` 调用必须收敛到这一层：
 
 - `getRepositoryConfig()`
 - `addRepository(name, url, alias)`
@@ -64,90 +54,101 @@
 - `setRepositoryPriority(aliasOrName, priority)`
 - `setRepositoryMirror(aliasOrName, enabled)`
 
-非 `ll-cli` 系统操作集中到 `LinglongEnvironmentManagementService`：
+解析策略：
 
-- 读取 `/var/lib/linglong`、`/var/lib/linglong/repo` 状态。
-- 运行 `df`、`findmnt`、`systemd-escape`、`systemctl cat` 等只读诊断命令。
-- 运行 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 做完整性检查。
-- 通过 `pkexec bash <temp-script>` 执行受控修复脚本。
+- 优先执行 `ll-cli --json repo show`。
+- JSON 失败时执行 `ll-cli repo show`，去除 ANSI 控制符后解析 `Default:` 与表格行。
+- 命令失败文案优先使用 `stderr`，为空时回退 `stdout`。
+
+`LinglongEnvironmentManagementService` 负责非仓库管理的系统诊断和受控特权修复：
+
+- 聚合现有 `LinglongEnvironmentService.checkEnvironment()`。
+- 执行 `ll-cli --json ps` 统计运行中玲珑应用。
+- 执行 `df -PB1 /var/lib/linglong` 读取空间。
+- 执行 `findmnt --json /var/lib/linglong` 读取挂载状态。
+- 执行 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 做完整性检查。
+- 通过 `pkexec ostree fsck --repo=/var/lib/linglong/repo --all --delete` 执行 OSTree 修复。
+- 通过 `pkexec bash <temp-script>` 执行保存位置迁移脚本。
+- 修复与迁移日志写入 XDG logs 目录；UI 只展示截断摘要。
 
 ### Application
 
-新增两个 Provider：
+`linglongEnvironmentManagementProvider` 是 UI 唯一状态编排入口：
 
-- `linglongRepositoryManagementProvider`
-  - 缓存仓库列表。
-  - 负责仓库增删改、默认仓库、优先级、镜像开关。
-  - 每次写操作成功后重新加载仓库配置。
-
-- `linglongEnvironmentManagementProvider`
-  - 执行环境分析。
-  - 汇总 `LinglongEnvCheckResult`、仓库配置、磁盘空间、OSTree fsck、运行中应用。
-  - 执行修复动作并保留状态。
+- `load()` 同时加载环境分析和仓库配置。
+- 仓库写操作成功后刷新仓库配置。
+- OSTree 修复后重新执行完整分析。
+- 保存位置迁移前读取 `installQueueProvider`，只要当前任务或等待队列仍存在，就直接返回失败结果，不进入特权脚本。
 
 ### Presentation
 
-新增对话框：
+`LinglongEnvironmentManagementDialog` 是统一对话框：
 
-- `LinglongEnvironmentManagementDialog`
-  - Tab 1：环境分析
-  - Tab 2：仓库管理
-  - Tab 3：保存位置
+- Tab 1：环境分析。
+- Tab 2：仓库管理。
+- Tab 3：保存位置。
 
-新增表单：
+设置页入口位于「商店选项」卡片：
 
-- `LinglongRepositoryFormDialog`：添加/编辑仓库。
-- `LinglongStorageMigrationDialog`：输入目标目录并展示迁移风险。
+- 标题：`玲珑环境管理`
+- 副标题：`分析环境、管理仓库、修复基础环境和移动保存位置`
+- 图标：`Icons.health_and_safety_outlined`
 
 ## 环境分析规则
 
-分析项：
+当前分析项：
 
-1. `ll-cli` 可用性和版本。
-2. 玲珑仓库配置是否存在。
-3. `/var/lib/linglong` 是否存在。
-4. `/var/lib/linglong/repo` 是否存在。
-5. 根目录所在分区剩余空间。
-6. `ostree fsck --repo=/var/lib/linglong/repo --quiet` 完整性。
+1. `ll-cli` 可用性、版本、仓库状态。
+2. 仓库是否已配置。
+3. `/var/lib/linglong` 所在文件系统容量、已用、可用和使用率。
+4. `/var/lib/linglong` 是否处于 bind mount。
+5. `ostree` 命令是否可用。
+6. `/var/lib/linglong/repo` OSTree 完整性。
 7. `ll-cli --json ps` 是否存在运行中应用。
-8. `var-lib-linglong.mount` 是否已配置。
+
+问题 code：
+
+- `llCliUnavailable`
+- `repositoryNotConfigured`
+- `ostreeToolUnavailable`
+- `ostreeRepositoryCorrupted`
+- `storageNearlyFull`
+- `runningAppsBlockStorageMove`
 
 严重级别：
 
-- `fatal`：`ll-cli` 缺失、玲珑根目录缺失、迁移目标不可用。
-- `error`：仓库未配置、OSTree 损坏、空间不足。
-- `warning`：版本过低、有运行中应用、空间偏低、已有手工挂载但缺少 systemd 持久化配置。
-- `info`：当前状态说明。
+- `error`：缺少可用 ll-cli、仓库未配置、OSTree 损坏、空间严重不足。
+- `warning`：ostree 工具不可用、空间偏高、有运行中应用阻断迁移。
+- `info`：保留给后续状态说明。
 
 ## 修复动作
 
-### 自动安装/修复基础环境
+### 刷新仓库配置
 
-沿用现有 `LinglongEnvProvider.performAutoInstall()`，脚本来源仍为后端 `/app/findShellString`，执行方式仍为 `pkexec bash <temp-script>`。
+仓库配置异常时，环境分析页提供跳转或刷新入口；真实仓库增删改在「仓库管理」页完成。
 
 ### 修复 OSTree 仓库
 
-默认只分析，不修复。
+默认只分析，不自动修复。用户点击修复并确认后执行：
 
-用户点击修复后：
+```bash
+pkexec ostree fsck --repo=/var/lib/linglong/repo --all --delete
+```
 
-1. 显示风险说明。
-2. 确认无安装任务运行。
-3. 确认无玲珑应用运行。
-4. 执行 `pkexec ostree fsck --repo=/var/lib/linglong/repo --delete`。
-5. 修复后重新执行环境分析。
+要求：
 
-说明：`--delete` 会删除损坏对象，后续安装/更新可重新拉取缺失内容。该操作不是静默自愈，必须显式确认。
+- 必须显示风险说明。
+- 必须写完整日志。
+- UI 只展示截断输出。
+- 修复后自动重新执行环境分析。
 
-### 清理废弃基础服务
-
-复用现有 `Setting.pruneBaseService()` / `LinglongCliRepository.pruneApps()`。
+`--delete` 会删除损坏对象，后续安装或更新可重新拉取缺失内容。这个动作不能静默执行。
 
 ## 保存位置迁移
 
-### 方案
+### 上游方案
 
-遵循 OpenAtom-Linyaps/linyaps#1411 的建议，不创造新的“安装目录配置”语义。迁移通过 systemd bind mount 完成：
+遵循 OpenAtom-Linyaps/linyaps#1411 的 systemd bind mount 方案：
 
 ```ini
 [Unit]
@@ -162,118 +163,95 @@ Options=bind
 WantedBy=multi-user.target
 ```
 
-真实 unit 名通过：
-
-```bash
-systemd-escape --path --suffix=mount /var/lib/linglong
-```
-
-得到 `var-lib-linglong.mount`。
+本项目固定使用 `var-lib-linglong.mount`，目标是把目标目录挂载到 `/var/lib/linglong`，而不是创建新的玲珑安装目录配置。
 
 ### 前置校验
 
-迁移前必须满足：
+执行迁移前必须满足：
 
-- 目标路径为绝对路径。
-- 目标路径不是 `/`、`/var`、`/var/lib`、`/var/lib/linglong`。
-- 目标路径不在 `/var/lib/linglong` 内部。
-- 目标所在文件系统可写。
-- 目标可用空间大于当前 `/var/lib/linglong` 已用空间，并保留安全余量。
+- 目标路径必须是绝对路径。
+- 目标路径不能是 `/`、`/var`、`/var/lib`、`/var/lib/linglong`。
+- 目标路径不能位于 `/var/lib/linglong` 内部。
+- 目标路径不能包含换行。
 - `ll-cli --json ps` 没有运行中应用。
-- 安装/更新队列没有正在处理的任务。
-- 当前没有活跃的 `/var/lib/linglong` bind mount。
+- `installQueueProvider` 没有当前任务或等待任务。
+- 当前 `/var/lib/linglong` 不是已存在的 bind mount。
+- 目标所在文件系统可用空间必须大于当前已用空间，并额外保留安全余量。
 
 ### 执行脚本
 
 通过 `pkexec bash <temp-script>` 执行受控脚本：
 
-1. `set -euo pipefail`
-2. 创建目标目录。
-3. 使用 `rsync -aHAX --numeric-ids /var/lib/linglong/ <target>/` 复制数据。
-4. 校验复制后的 `repo/config`、`states.json`、`.version`。
-5. 设置目标目录属主和权限，与原目录保持一致。
-6. 将原目录移动为带时间戳的备份目录。
-7. 重新创建 `/var/lib/linglong` 挂载点。
-8. 写入 `/etc/systemd/system/var-lib-linglong.mount`。
-9. `systemctl daemon-reload`
-10. `systemctl enable --now var-lib-linglong.mount`
-11. 运行 `findmnt /var/lib/linglong` 验证挂载生效。
-12. 运行 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 做迁移后校验。
+1. `set -euo pipefail`。
+2. 再次检查 `ll-cli --json ps`，避免确认后有新应用启动。
+3. 创建源目录和目标目录。
+4. 优先使用 `rsync -aHAX --numeric-ids "$SRC"/ "$DST"/` 复制数据，缺少 `rsync` 时回退 `cp -a`。
+5. 校验目标目录存在 `repo/config`。
+6. 复制源目录属主和权限到目标目录。
+7. 写入 `/etc/systemd/system/var-lib-linglong.mount`。
+8. 将旧 `/var/lib/linglong` 移动为 `/var/lib/linglong.backup-YYYYmmdd-HHMMSS`。
+9. 重新创建空的 `/var/lib/linglong` 挂载点。
+10. `systemctl daemon-reload`。
+11. `systemctl enable --now var-lib-linglong.mount`。
+12. `findmnt /var/lib/linglong` 验证挂载。
+13. 若存在 `ostree`，执行 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 做迁移后校验。
+14. 输出旧目录备份路径。
+
+脚本带 `ERR` trap：如果挂载前失败，会尝试把备份目录恢复回 `/var/lib/linglong`。挂载成功后的 fsck 失败会保留挂载状态和备份路径，便于用户查看日志后人工处理。
 
 ### 备份清理
 
-迁移默认保留旧目录备份，例如 `/var/lib/linglong.backup-20260614-235959`。UI 显示备份路径，后续由用户确认后再清理。第一版提供“复制清理命令”与“打开日志目录”，不自动删除备份。
+迁移不会自动删除 `/var/lib/linglong.backup-*`。这是为了避免迁移后立即丢失回滚数据。UI 会展示执行输出和日志路径，用户确认新挂载可用后，再手动清理旧备份释放原分区空间。
 
 ## UI 行为
 
-### 设置页入口
+### 环境分析
 
-在「商店选项」卡片中新增 ListTile：
+- 顶部展示 ll-cli 版本、运行中应用数量、空间使用率、OSTree 状态。
+- 问题按严重程度排序展示。
+- 每个问题展示标题、描述、原始诊断详情和可执行动作。
+- 修复按钮必须先弹出确认对话框。
 
-- 标题：玲珑环境管理
-- 副标题：仓库、完整性检查、保存位置迁移
-- 图标：`Icons.health_and_safety_outlined`
+### 仓库管理
 
-### 环境分析页签
+- 顶部展示默认仓库。
+- 仓库列表展示名称、别名、URL、优先级、默认/镜像状态。
+- 每行支持修改地址、设为默认、设置优先级、启用/禁用镜像、删除。
+- 添加/修改表单校验仓库名称、URL 和优先级。
 
-- 顶部显示总状态。
-- 问题按 `fatal/error/warning/info` 排序。
-- 每个问题显示摘要、详情、建议动作。
-- 详情可复制。
-- 可执行动作必须弹确认。
+### 保存位置
 
-### 仓库管理页签
-
-- 显示默认仓库。
-- 列表显示名称、URL、别名、优先级。
-- 每行支持编辑、设为默认、调整优先级、启用/禁用镜像、删除。
-- 添加/编辑使用表单校验 URL 和名称。
-
-### 保存位置页签
-
-- 显示当前根目录、repo 路径、分区空间、挂载状态、运行中应用数量。
-- 提供目标路径输入。
-- 展示 systemd bind mount 方案和风险。
-- 执行前二次确认。
-- 执行后展示日志路径、备份路径和重新分析按钮。
+- 展示当前根目录、挂载源、容量、已用、可用和使用率。
+- 展示运行中应用数量和迁移风险说明。
+- 目标路径默认填 `/data/linglong`。
+- 执行迁移前二次确认。
+- 执行后展示结果、截断输出和日志目录入口。
 
 ## 性能与响应
 
-- `ostree fsck` 可能耗时较长，必须异步执行，UI 显示进度文案。
-- fsck 输出必须截断保存摘要，避免大量 corrupt object 输出导致 UI 卡顿。
-- 完整日志写入 XDG 日志目录，UI 仅展示前若干行和路径。
-- 仓库列表刷新只在打开对话框或写操作后触发。
+- `ostree fsck` 和保存位置迁移都可能耗时较长，必须异步执行。
+- UI 操作期间只显示轻量进度状态，不阻塞主线程。
+- 命令输出截断到 4000 字符，避免大量 corrupted object 输出导致 UI 卡顿。
+- 仓库列表只在打开对话框、刷新或写操作成功后重新加载。
 
-## 测试要求
+## 测试覆盖
 
-单元测试：
+已覆盖：
 
-- repo JSON 解析。
-- ANSI 文本 repo 输出兜底解析。
-- 仓库管理命令参数。
-- OSTree fsck 成功/失败解析。
-- 保存位置迁移脚本生成前置校验。
-- 分析结果问题排序和修复动作映射。
+- 仓库 JSON 解析、ANSI 文本兜底解析、仓库命令参数。
+- 环境分析中的 OSTree 损坏、空间不足和运行中应用阻断。
+- OSTree 修复命令和日志参数。
+- 保存位置迁移脚本内容、危险目标路径拒绝、目标空间不足拒绝。
+- Provider 状态加载、修复后刷新、仓库写操作刷新、安装队列活跃时阻断迁移。
+- 设置页入口和三 Tab 对话框基础展示。
 
-Widget 测试：
+最终变更必须至少运行：
 
-- 设置页出现「玲珑环境管理」入口。
-- 环境管理对话框显示三个页签。
-- 仓库表单校验空名称和非法 URL。
-- 环境分析问题展示和修复确认按钮存在。
-- 保存位置迁移在有运行中应用时禁用执行。
-
-验证：
-
-- `dart run build_runner build --delete-conflicting-outputs`
-- `flutter test test/unit/`
-- `flutter test test/widget/`
-- `flutter analyze`
-
-## 后续维护约定
-
-- 新增玲珑环境类命令必须优先走 `LinglongEnvironmentManagementService` 或 `LinglongCliRepository`。
-- 页面层禁止直接写 `ll-cli`、`ostree`、`systemctl`、`pkexec` 命令。
-- OSTree 修复和保存位置迁移必须保留二次确认。
-- 保存位置迁移只能实现 bind mount 方案，禁止伪造“ll-cli 安装目录配置”。
-- 修改 Riverpod 注解或 Freezed 模型后必须重新生成代码。
+```bash
+/home/hao/Flutter/flutter-stable/bin/flutter analyze
+/home/hao/Flutter/flutter-stable/bin/flutter test test/unit/data/repositories/linglong_cli_repository_impl_command_test.dart
+/home/hao/Flutter/flutter-stable/bin/flutter test test/unit/application/services/linglong_environment_management_service_test.dart
+/home/hao/Flutter/flutter-stable/bin/flutter test test/unit/application/providers/linglong_environment_management_provider_test.dart
+/home/hao/Flutter/flutter-stable/bin/flutter test test/widget/presentation/widgets/linglong_environment_management_dialog_test.dart
+/home/hao/Flutter/flutter-stable/bin/flutter test test/widget/presentation/pages/setting_page_test.dart
+```

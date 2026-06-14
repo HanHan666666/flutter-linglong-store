@@ -6,7 +6,7 @@
 
 采用完整集中式实现：
 
-1. `LinglongCliRepository` 扩展正式 `ll-cli repo` 管理命令。
+1. 新增 `LinglongRepositoryManagementRepository`，由 `LinglongCliRepositoryImpl` 实现正式 `ll-cli repo` 管理命令。
 2. 新增 `LinglongEnvironmentManagementService` 负责非 `ll-cli` 系统诊断与受控 `pkexec` 修复。
 3. 新增 Riverpod Provider 管理仓库状态和环境分析状态。
 4. 新增统一对话框，使用三个 Tab 承载所有管理功能。

@@ -418,6 +418,14 @@ def main(argv: list[str] | None = None) -> int:
             release["tag_name"]: release for release in get_gitee_releases(config)
         }
         for github_release in github_releases:
+            # 仅同步正式 Release，跳过 nightly 等 pre-release，避免在 Gitee 上
+            # 因缺少对应 tag 而创建失败
+            if github_release.get("prerelease"):
+                print(
+                    f"\nSkipping {github_release.get('tag_name', '<unknown>')}: "
+                    "pre-release."
+                )
+                continue
             sync_release(
                 config,
                 github_release,

@@ -288,6 +288,7 @@ Semantics(
 测试文件位于 `test/unit/core/accessibility/a11y_semantics_test.dart`。
 
 ## 变更记录
+- 2026-06-14：玲珑环境管理统一入口为设置页「玲珑环境管理」对话框；仓库增删改、默认仓库、优先级和镜像开关必须走 `LinglongRepositoryManagementRepository`（当前由 `LinglongCliRepositoryImpl` 实现），页面和 Provider 禁止直接拼 `ll-cli repo` 命令。环境分析、OSTree 完整性检查、`pkexec ostree fsck --all --delete` 修复、保存位置迁移脚本统一收敛到 `LinglongEnvironmentManagementService`；UI 只能通过 `linglongEnvironmentManagementProvider` 触发。保存位置迁移必须遵循 OpenAtom-Linyaps/linyaps#1411 的 systemd bind mount 方案，不得创造“自定义安装目录”业务语义；迁移前必须阻断运行中玲珑应用和安装/更新队列活跃任务，拒绝危险目标路径和目标空间不足场景；迁移脚本必须写日志、保留旧目录备份并在挂载后做 OSTree fsck 校验。OSTree 修复和保存位置迁移都必须显式二次确认，UI 只展示截断输出，完整输出以日志文件为准。
 - 2026-06-14：所有用户文件严格遵循 [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir/latest/)。统一入口为 `lib/core/storage/app_xdg_paths.dart` 的 `AppXdgPaths` 类，覆盖 `$XDG_DATA_HOME` / `$XDG_CONFIG_HOME` / `$XDG_CACHE_HOME` / `$XDG_RUNTIME_DIR` 四类目录解析。**禁止再硬编码 `$HOME/.local/share/...` 或 `/tmp/...` 等路径**，新增文件一律走 `AppXdgPaths` 的对应方法。本次整改：
   - single_instance lock/socket 从 `/tmp/` 迁到 `$XDG_RUNTIME_DIR/<app-id>/`（自动 chmod 0700）
   - Hive cache 从 `$XDG_DATA_HOME` 迁到 `$XDG_CACHE_HOME`（缓存按规范不属于 data）

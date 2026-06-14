@@ -1,9 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/linglong_environment_management_provider.dart';
 import 'package:linglong_store/application/services/linglong_environment_management_service.dart';
 import 'package:linglong_store/application/services/linglong_environment_service.dart';
 import 'package:linglong_store/core/platform/shell_command_executor.dart';
+import 'package:linglong_store/domain/models/install_progress.dart';
+import 'package:linglong_store/domain/models/install_queue_state.dart';
+import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/linglong_env_check_result.dart';
 import 'package:linglong_store/domain/models/linglong_environment_management.dart';
 import 'package:linglong_store/domain/models/linglong_repository_config.dart';
@@ -54,6 +58,39 @@ void main() {
     );
 
     test(
+      'moveLinglongStorage is blocked when install queue has active tasks',
+      () async {
+        final service = _FakeManagementService();
+        final repository = _FakeRepositoryManagementRepository();
+        final container = _createContainer(
+          service,
+          repository,
+          installQueueState: InstallQueueState(
+            currentTask: _installTask(
+              id: 'task-1',
+              appId: 'org.example.demo',
+              appName: 'Demo',
+              status: InstallStatus.installing,
+            ),
+            isProcessing: true,
+          ),
+        );
+        addTearDown(container.dispose);
+
+        final result = await container
+            .read(linglongEnvironmentManagementProvider.notifier)
+            .moveLinglongStorage('/data/linglong');
+
+        final state = container.read(linglongEnvironmentManagementProvider);
+        expect(result.success, isFalse);
+        expect(result.message, contains('Demo'));
+        expect(state.status, LinglongEnvironmentManagementStatus.failed);
+        expect(state.repairResult?.success, isFalse);
+        expect(service.moveStorageCallCount, 0);
+      },
+    );
+
+    test(
       'addRepository delegates to repository and refreshes config',
       () async {
         final service = _FakeManagementService();
@@ -85,13 +122,17 @@ void main() {
 
 ProviderContainer _createContainer(
   _FakeManagementService service,
-  _FakeRepositoryManagementRepository repository,
-) {
+  _FakeRepositoryManagementRepository repository, {
+  InstallQueueState installQueueState = const InstallQueueState(),
+}) {
   return ProviderContainer(
     overrides: [
       linglongEnvironmentManagementServiceProvider.overrideWithValue(service),
       linglongRepositoryManagementRepositoryProvider.overrideWithValue(
         repository,
+      ),
+      installQueueProvider.overrideWith(
+        () => _TestInstallQueue(initialState: installQueueState),
       ),
     ],
   );
@@ -112,6 +153,7 @@ class _FakeManagementService extends LinglongEnvironmentManagementService {
 
   int analyzeCallCount = 0;
   int repairOstreeCallCount = 0;
+  int moveStorageCallCount = 0;
 
   @override
   Future<LinglongEnvironmentAnalysis> analyzeEnvironment() async {
@@ -141,6 +183,20 @@ class _FakeManagementService extends LinglongEnvironmentManagementService {
       success: true,
       message: 'ok',
       logFilePath: '/tmp/repair.log',
+    );
+  }
+
+  @override
+  Future<LinglongEnvironmentRepairResult> moveLinglongStorage(
+    String targetPath, {
+    String? logFilePath,
+  }) async {
+    moveStorageCallCount += 1;
+    return const LinglongEnvironmentRepairResult(
+      action: LinglongEnvironmentRepairAction.moveStorageRoot,
+      success: true,
+      message: 'moved',
+      logFilePath: '/tmp/move.log',
     );
   }
 }
@@ -212,4 +268,32 @@ class _FixedShellCommandRunner implements ShellCommandRunner {
   }) async {
     return const ShellCommandResult(stdout: '', stderr: '', exitCode: 0);
   }
+}
+
+InstallTask _installTask({
+  required String id,
+  required String appId,
+  required String appName,
+  required InstallStatus status,
+}) {
+  return InstallTask(
+    id: id,
+    appId: appId,
+    appName: appName,
+    status: status,
+    createdAt: 1,
+  );
+}
+
+class _TestInstallQueue extends InstallQueue {
+  _TestInstallQueue({required InstallQueueState initialState})
+    : _initialState = initialState;
+
+  final InstallQueueState _initialState;
+
+  @override
+  InstallQueueState build() => _initialState;
+
+  @override
+  Future<void> startProcessing() async {}
 }

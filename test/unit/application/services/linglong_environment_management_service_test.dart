@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/application/services/linglong_environment_management_service.dart';
 import 'package:linglong_store/application/services/linglong_environment_service.dart';
@@ -141,7 +143,23 @@ void main() {
       expect(script, contains('What=/data/linglong'));
       expect(script, contains('Where=/var/lib/linglong'));
       expect(script, contains('Options=bind'));
+      expect(script, contains(r'mv "$SRC" "$BACKUP"'));
+      expect(script, contains(r'ostree fsck --repo="$SRC/repo" --quiet'));
+      expect(script, contains(r'旧目录备份：$BACKUP'));
       expect(script, contains('systemctl enable --now var-lib-linglong.mount'));
+    });
+
+    test('buildStorageMigrationScript rejects unsafe target paths', () {
+      final service = _buildManagementService(_FakeShellCommandRunner());
+
+      expect(
+        () => service.buildStorageMigrationScript('/'),
+        throwsArgumentError,
+      );
+      expect(
+        () => service.buildStorageMigrationScript('/var/lib/linglong/repo'),
+        throwsArgumentError,
+      );
     });
 
     test('moveLinglongStorage refuses to run while apps are running', () async {
@@ -164,6 +182,52 @@ void main() {
         ['ll-cli', '--json', 'ps'],
       ]);
     });
+
+    test(
+      'moveLinglongStorage refuses target filesystem with insufficient space',
+      () async {
+        final tempRoot = Directory.systemTemp.path;
+        final runner = _FakeShellCommandRunner.fromCommands({
+          'll-cli --json ps': const ShellCommandResult(
+            stdout: '[]',
+            stderr: '',
+            exitCode: 0,
+          ),
+          'df -PB1 /var/lib/linglong': const ShellCommandResult(
+            stdout:
+                'Filesystem 1-blocks Used Available Capacity Mounted on\n/dev/nvme0n1p5 2000000000 1000000000 1000000000 50% /var\n',
+            stderr: '',
+            exitCode: 0,
+          ),
+          'findmnt --json /var/lib/linglong': const ShellCommandResult(
+            stdout:
+                '{"filesystems":[{"target":"/var/lib/linglong","source":"/dev/nvme0n1p5","fstype":"ext4","options":"rw"}]}',
+            stderr: '',
+            exitCode: 0,
+          ),
+          'df -PB1 $tempRoot': const ShellCommandResult(
+            stdout:
+                'Filesystem 1-blocks Used Available Capacity Mounted on\n/dev/nvme0n1p6 2000000000 1900000000 100000000 95% /tmp\n',
+            stderr: '',
+            exitCode: 0,
+          ),
+        });
+        final service = _buildManagementService(runner);
+
+        final result = await service.moveLinglongStorage(
+          '$tempRoot/linglong-target-unit-test-not-existing',
+        );
+
+        expect(result.success, isFalse);
+        expect(result.message, contains('目标路径可用空间不足'));
+        expect(
+          runner.commands.any(
+            (command) => command.length >= 2 && command.first == 'pkexec',
+          ),
+          isFalse,
+        );
+      },
+    );
   });
 }
 
@@ -227,7 +291,7 @@ Map<String, ShellCommandResult> _healthyEnvironmentCommands() {
 }
 
 class _FakeShellCommandRunner implements ShellCommandRunner {
-  _FakeShellCommandRunner([this._results = const {}]);
+  _FakeShellCommandRunner() : _results = const {};
 
   _FakeShellCommandRunner.fromCommands(this._results);
 

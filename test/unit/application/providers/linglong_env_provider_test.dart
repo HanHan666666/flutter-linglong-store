@@ -128,12 +128,8 @@ void main() {
             ),
             shellCommandExecutorProvider.overrideWithValue(
               ShellCommandExecutor(
-                runner: _LoggingShellCommandRunner(
-                  const ShellCommandResult(
-                    stdout: 'ok',
-                    stderr: '',
-                    exitCode: 0,
-                  ),
+                runner: const _LoggingShellCommandRunner(
+                  ShellCommandResult(stdout: 'ok', stderr: '', exitCode: 0),
                   logContent: 'install step 1\ninstall step 2\n',
                 ),
               ),

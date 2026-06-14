@@ -268,12 +268,10 @@ class LinglongEnv extends _$LinglongEnv {
           .run(
             ['pkexec', 'bash', scriptFile.path],
             timeout: const Duration(minutes: 30),
-            logOptions: installLogFile == null
-                ? null
-                : ShellCommandLogOptions(
-                    filePath: installLogFile.path,
-                    overwrite: true,
-                  ),
+            logOptions: ShellCommandLogOptions(
+              filePath: installLogFile.path,
+              overwrite: true,
+            ),
           );
 
       if (!installResult.success) {

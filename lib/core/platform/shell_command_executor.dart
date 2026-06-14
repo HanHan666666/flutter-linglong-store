@@ -208,8 +208,8 @@ class _ShellCommandLogWriter {
   }
 
   Future<void> writeLine(String line) {
-    _pending = _pending.then((_) {
-      return _file.writeAsString('$line\n', mode: FileMode.append, flush: true);
+    _pending = _pending.then((_) async {
+      await _file.writeAsString('$line\n', mode: FileMode.append, flush: true);
     });
     return _pending;
   }

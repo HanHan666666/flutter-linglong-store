@@ -6,28 +6,27 @@ import 'package:linglong_store/core/config/shell_primary_route.dart';
 
 void main() {
   group('PrimaryIndexedStackConcept', () {
-    testWidgets(
-      'first entry only creates first route (lazy loading)',
-      (tester) async {
-        await tester.pumpWidget(
-          MaterialApp(
-            home: _StatefulPrimaryStackHarness(
-              initialActiveRoute: ShellPrimaryRoute.recommend,
-            ),
+    testWidgets('first entry only creates first route (lazy loading)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: _StatefulPrimaryStackHarness(
+            initialActiveRoute: ShellPrimaryRoute.recommend,
           ),
-        );
+        ),
+      );
 
-        // 只有 recommend 页面被创建（首次访问）
-        // 其他 3 个槽位应该是 SizedBox.shrink
-        final stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
-        expect(stack.children.length, 4);
-        // 第一个槽位是 ShellBranchVisibilityScope 包装的 _TestPrimaryPage
-        expect(stack.children[0], isA<ShellBranchVisibilityScope>());
-        expect(stack.children[1], isA<SizedBox>());
-        expect(stack.children[2], isA<SizedBox>());
-        expect(stack.children[3], isA<SizedBox>());
-      },
-    );
+      // 只有 recommend 页面被创建（首次访问）
+      // 其他 3 个槽位应该是 SizedBox.shrink
+      final stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
+      expect(stack.children.length, 4);
+      // 第一个槽位是 ShellBranchVisibilityScope 包装的 _TestPrimaryPage
+      expect(stack.children[0], isA<ShellBranchVisibilityScope>());
+      expect(stack.children[1], isA<SizedBox>());
+      expect(stack.children[2], isA<SizedBox>());
+      expect(stack.children[3], isA<SizedBox>());
+    });
 
     testWidgets(
       'visiting new route adds it to visited set and creates the page',
@@ -61,39 +60,38 @@ void main() {
       },
     );
 
-    testWidgets(
-      'switching back to previous route preserves page state',
-      (tester) async {
-        final harnessKey = GlobalKey<_StatefulPrimaryStackHarnessState>();
+    testWidgets('switching back to previous route preserves page state', (
+      tester,
+    ) async {
+      final harnessKey = GlobalKey<_StatefulPrimaryStackHarnessState>();
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: _StatefulPrimaryStackHarness(
-              initialActiveRoute: ShellPrimaryRoute.recommend,
-              key: harnessKey,
-            ),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: _StatefulPrimaryStackHarness(
+            initialActiveRoute: ShellPrimaryRoute.recommend,
+            key: harnessKey,
           ),
-        );
+        ),
+      );
 
-        // 设置 recommend 页面的计数器值
-        final recommendState = tester.state<_TestPageState>(
-          find.byType(_TestPrimaryPage),
-        );
-        recommendState.counter = 5;
+      // 设置 recommend 页面的计数器值
+      final recommendState = tester.state<_TestPageState>(
+        find.byType(_TestPrimaryPage),
+      );
+      recommendState.counter = 5;
 
-        // 导航到 allApps
-        harnessKey.currentState!.navigateTo(ShellPrimaryRoute.allApps);
-        await tester.pump();
+      // 导航到 allApps
+      harnessKey.currentState!.navigateTo(ShellPrimaryRoute.allApps);
+      await tester.pump();
 
-        // 导航回 recommend
-        harnessKey.currentState!.navigateTo(ShellPrimaryRoute.recommend);
-        await tester.pump();
+      // 导航回 recommend
+      harnessKey.currentState!.navigateTo(ShellPrimaryRoute.recommend);
+      await tester.pump();
 
-        // 状态仍然保留（因为 IndexedStack 保留了所有子组件）
-        expect(recommendState.counter, 5);
-        expect(recommendState.mounted, isTrue);
-      },
-    );
+      // 状态仍然保留（因为 IndexedStack 保留了所有子组件）
+      expect(recommendState.counter, 5);
+      expect(recommendState.mounted, isTrue);
+    });
 
     testWidgets(
       'secondary route overlay preserves primary stack (activeRoute=null)',
@@ -114,7 +112,7 @@ void main() {
         await tester.pump();
 
         // 两个页面都存在
-        var stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
+        final stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
         expect(stack.children[0], isA<ShellBranchVisibilityScope>());
         expect(stack.children[1], isA<ShellBranchVisibilityScope>());
 
@@ -126,72 +124,74 @@ void main() {
         expect(find.text('secondary-overlay'), findsOneWidget);
 
         // 通过 harness state 直接检查 visitedRoutes 来验证页面未被销毁
-        expect(harnessKey.currentState!.visitedPrimaryRoutes, contains(ShellPrimaryRoute.recommend));
-        expect(harnessKey.currentState!.visitedPrimaryRoutes, contains(ShellPrimaryRoute.allApps));
+        expect(
+          harnessKey.currentState!.visitedPrimaryRoutes,
+          contains(ShellPrimaryRoute.recommend),
+        );
+        expect(
+          harnessKey.currentState!.visitedPrimaryRoutes,
+          contains(ShellPrimaryRoute.allApps),
+        );
       },
     );
 
-    testWidgets(
-      'after overlay dismissed, primary page state is preserved',
-      (tester) async {
-        final harnessKey = GlobalKey<_StatefulPrimaryStackHarnessState>();
+    testWidgets('after overlay dismissed, primary page state is preserved', (
+      tester,
+    ) async {
+      final harnessKey = GlobalKey<_StatefulPrimaryStackHarnessState>();
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: _StatefulPrimaryStackHarness(
-              initialActiveRoute: ShellPrimaryRoute.recommend,
-              key: harnessKey,
-            ),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: _StatefulPrimaryStackHarness(
+            initialActiveRoute: ShellPrimaryRoute.recommend,
+            key: harnessKey,
           ),
-        );
+        ),
+      );
 
-        // 设置计数器值
-        final recommendState = tester.state<_TestPageState>(
-          find.byType(_TestPrimaryPage),
-        );
-        recommendState.counter = 42;
+      // 设置计数器值
+      final recommendState = tester.state<_TestPageState>(
+        find.byType(_TestPrimaryPage),
+      );
+      recommendState.counter = 42;
 
-        // 二级路由覆盖
-        harnessKey.currentState!.showSecondaryOverlay();
-        await tester.pump();
+      // 二级路由覆盖
+      harnessKey.currentState!.showSecondaryOverlay();
+      await tester.pump();
 
-        // 二级路由消失，返回主页面
-        harnessKey.currentState!.dismissSecondaryOverlay();
-        await tester.pump();
+      // 二级路由消失，返回主页面
+      harnessKey.currentState!.dismissSecondaryOverlay();
+      await tester.pump();
 
-        // 状态仍然保留
-        expect(recommendState.counter, 42);
-        expect(recommendState.mounted, isTrue);
-      },
-    );
+      // 状态仍然保留
+      expect(recommendState.counter, 42);
+      expect(recommendState.mounted, isTrue);
+    });
 
-    testWidgets(
-      'IndexedStack index follows activeRoute',
-      (tester) async {
-        final harnessKey = GlobalKey<_StatefulPrimaryStackHarnessState>();
+    testWidgets('IndexedStack index follows activeRoute', (tester) async {
+      final harnessKey = GlobalKey<_StatefulPrimaryStackHarnessState>();
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: _StatefulPrimaryStackHarness(
-              initialActiveRoute: ShellPrimaryRoute.recommend,
-              key: harnessKey,
-            ),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: _StatefulPrimaryStackHarness(
+            initialActiveRoute: ShellPrimaryRoute.recommend,
+            key: harnessKey,
           ),
-        );
+        ),
+      );
 
-        // 访问所有主页面
-        for (final route in ShellPrimaryRoute.values) {
-          harnessKey.currentState!.navigateTo(route);
-          await tester.pump();
-        }
-
-        harnessKey.currentState!.navigateTo(ShellPrimaryRoute.ranking);
+      // 访问所有主页面
+      for (final route in ShellPrimaryRoute.values) {
+        harnessKey.currentState!.navigateTo(route);
         await tester.pump();
+      }
 
-        final stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
-        expect(stack.index, ShellPrimaryRoute.ranking.index);
-      },
-    );
+      harnessKey.currentState!.navigateTo(ShellPrimaryRoute.ranking);
+      await tester.pump();
+
+      final stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
+      expect(stack.index, ShellPrimaryRoute.ranking.index);
+    });
 
     testWidgets(
       'when activeRoute=null, IndexedStack keeps first index (hidden by Offstage)',
@@ -225,37 +225,36 @@ void main() {
       },
     );
 
-    testWidgets(
-      'all visited pages exist in IndexedStack children',
-      (tester) async {
-        final harnessKey = GlobalKey<_StatefulPrimaryStackHarnessState>();
+    testWidgets('all visited pages exist in IndexedStack children', (
+      tester,
+    ) async {
+      final harnessKey = GlobalKey<_StatefulPrimaryStackHarnessState>();
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: _StatefulPrimaryStackHarness(
-              initialActiveRoute: ShellPrimaryRoute.recommend,
-              key: harnessKey,
-            ),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: _StatefulPrimaryStackHarness(
+            initialActiveRoute: ShellPrimaryRoute.recommend,
+            key: harnessKey,
           ),
-        );
+        ),
+      );
 
-        // 访问所有主页面
-        for (final route in ShellPrimaryRoute.values) {
-          harnessKey.currentState!.navigateTo(route);
-          await tester.pump();
-        }
-
-        harnessKey.currentState!.navigateTo(ShellPrimaryRoute.recommend);
+      // 访问所有主页面
+      for (final route in ShellPrimaryRoute.values) {
+        harnessKey.currentState!.navigateTo(route);
         await tester.pump();
+      }
 
-        // 所有 4 个页面都存在
-        final stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
-        expect(stack.children.length, 4);
-        for (int i = 0; i < 4; i++) {
-          expect(stack.children[i], isA<ShellBranchVisibilityScope>());
-        }
-      },
-    );
+      harnessKey.currentState!.navigateTo(ShellPrimaryRoute.recommend);
+      await tester.pump();
+
+      // 所有 4 个页面都存在
+      final stack = tester.widget<IndexedStack>(find.byType(IndexedStack));
+      expect(stack.children.length, 4);
+      for (int i = 0; i < 4; i++) {
+        expect(stack.children[i], isA<ShellBranchVisibilityScope>());
+      }
+    });
 
     testWidgets(
       'ShellBranchVisibilityScope provides correct isActive for each page',
@@ -269,7 +268,9 @@ void main() {
               initialActiveRoute: ShellPrimaryRoute.recommend,
               key: harnessKey,
               onVisibilityChanged: (route, isActive) {
-                visibilityRecords.add(_VisibilityRecord(route: route, isActive: isActive));
+                visibilityRecords.add(
+                  _VisibilityRecord(route: route, isActive: isActive),
+                );
               },
             ),
           ),
@@ -293,40 +294,39 @@ void main() {
       },
     );
 
-    testWidgets(
-      'visibility updates correctly when switching activeRoute',
-      (tester) async {
-        final harnessKey = GlobalKey<_StatefulPrimaryStackHarnessState>();
-        final visibilityStates = <ShellPrimaryRoute, bool>{};
+    testWidgets('visibility updates correctly when switching activeRoute', (
+      tester,
+    ) async {
+      final harnessKey = GlobalKey<_StatefulPrimaryStackHarnessState>();
+      final visibilityStates = <ShellPrimaryRoute, bool>{};
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: _StatefulPrimaryStackHarness(
-              initialActiveRoute: ShellPrimaryRoute.recommend,
-              key: harnessKey,
-              onVisibilityChanged: (route, isActive) {
-                visibilityStates[route] = isActive;
-              },
-            ),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: _StatefulPrimaryStackHarness(
+            initialActiveRoute: ShellPrimaryRoute.recommend,
+            key: harnessKey,
+            onVisibilityChanged: (route, isActive) {
+              visibilityStates[route] = isActive;
+            },
           ),
-        );
+        ),
+      );
 
-        // 访问所有页面
-        for (final route in ShellPrimaryRoute.values) {
-          harnessKey.currentState!.navigateTo(route);
-          await tester.pump();
-        }
-
-        // 切到 ranking
-        harnessKey.currentState!.navigateTo(ShellPrimaryRoute.ranking);
+      // 访问所有页面
+      for (final route in ShellPrimaryRoute.values) {
+        harnessKey.currentState!.navigateTo(route);
         await tester.pump();
+      }
 
-        expect(visibilityStates[ShellPrimaryRoute.ranking], isTrue);
-        expect(visibilityStates[ShellPrimaryRoute.recommend], isFalse);
-        expect(visibilityStates[ShellPrimaryRoute.allApps], isFalse);
-        expect(visibilityStates[ShellPrimaryRoute.myApps], isFalse);
-      },
-    );
+      // 切到 ranking
+      harnessKey.currentState!.navigateTo(ShellPrimaryRoute.ranking);
+      await tester.pump();
+
+      expect(visibilityStates[ShellPrimaryRoute.ranking], isTrue);
+      expect(visibilityStates[ShellPrimaryRoute.recommend], isFalse);
+      expect(visibilityStates[ShellPrimaryRoute.allApps], isFalse);
+      expect(visibilityStates[ShellPrimaryRoute.myApps], isFalse);
+    });
 
     testWidgets(
       'all pages receive isActive=false when secondary overlay shows',
@@ -387,7 +387,8 @@ class _StatefulPrimaryStackHarness extends StatefulWidget {
   });
 
   final ShellPrimaryRoute initialActiveRoute;
-  final void Function(ShellPrimaryRoute route, bool isActive)? onVisibilityChanged;
+  final void Function(ShellPrimaryRoute route, bool isActive)?
+  onVisibilityChanged;
 
   @override
   State<_StatefulPrimaryStackHarness> createState() =>
@@ -401,7 +402,8 @@ class _StatefulPrimaryStackHarnessState
   bool _showSecondaryOverlay = false;
 
   /// 暴露已访问路由集合用于测试验证
-  Set<ShellPrimaryRoute> get visitedPrimaryRoutes => Set.unmodifiable(_visitedPrimaryRoutes);
+  Set<ShellPrimaryRoute> get visitedPrimaryRoutes =>
+      Set.unmodifiable(_visitedPrimaryRoutes);
 
   @override
   void initState() {
@@ -467,7 +469,8 @@ class _TestPrimaryIndexedStack extends StatelessWidget {
 
   final ShellPrimaryRoute? activeRoute;
   final Set<ShellPrimaryRoute> visitedRoutes;
-  final void Function(ShellPrimaryRoute route, bool isActive)? onVisibilityChanged;
+  final void Function(ShellPrimaryRoute route, bool isActive)?
+  onVisibilityChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -488,7 +491,6 @@ class _TestPrimaryIndexedStack extends StatelessWidget {
 
   Widget _buildPrimarySlot(ShellPrimaryRoute route) {
     final hasVisited = visitedRoutes.contains(route);
-    final isActive = activeRoute != null && route == activeRoute;
 
     if (!hasVisited) {
       return const SizedBox.shrink();
@@ -517,7 +519,8 @@ class _TestPrimaryPage extends StatefulWidget {
   });
 
   final ShellPrimaryRoute route;
-  final void Function(ShellPrimaryRoute route, bool isActive)? onVisibilityChanged;
+  final void Function(ShellPrimaryRoute route, bool isActive)?
+  onVisibilityChanged;
 
   @override
   State<_TestPrimaryPage> createState() => _TestPageState();
@@ -539,10 +542,8 @@ class _TestPageState extends State<_TestPrimaryPage> {
   Widget build(BuildContext context) {
     final scope = ShellBranchVisibilityScope.maybeOf(context);
     final isActive = scope?.isActive ?? false;
-    return Container(
-      child: Center(
-        child: Text('${widget.route.name}: $counter (active: $isActive)'),
-      ),
+    return Center(
+      child: Text('${widget.route.name}: $counter (active: $isActive)'),
     );
   }
 }

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../application/services/app_uninstall_service.dart';
 import '../../../domain/models/installed_app.dart';
 import '../../../domain/models/uninstall_result.dart';
-import '../../../domain/models/uninstall_blocked_action.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/download_manager_dialog.dart';
 import '../widgets/uninstall_blocked_dialog.dart';
@@ -56,10 +55,7 @@ class AppUninstallFlow {
         appName: app.name,
       );
     } else {
-      confirmed = await ConfirmDialog.showUninstall(
-        context,
-        appName: app.name,
-      );
+      confirmed = await ConfirmDialog.showUninstall(context, appName: app.name);
     }
 
     if (confirmed != true || !context.mounted) return false;

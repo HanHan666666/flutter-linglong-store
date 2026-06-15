@@ -52,9 +52,11 @@ dependencies:
   path: ^1.9.1
   flutter_desktop_context_menu: ^0.2.0
 
-  # 数据迁移框架（开发期 path，发版后切 pub.dev）
+  # 数据迁移框架（独立仓库，已发 v0.2.0 tag；本地若需改动请临时切回 path）
   app_data_migrations:
-    path: ../../app_data_migrations
+    git:
+      url: https://github.com/HanHan666666/app_data_migrations.git
+      ref: v0.2.0
 
   # 系统托盘 (暂时禁用 - system_tray 不支持 Dart 3.x)
   # system_tray: ^2.0.3

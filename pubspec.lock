@@ -36,9 +36,11 @@ packages:
   app_data_migrations:
     dependency: "direct main"
     description:
-      path: "../../app_data_migrations"
-      relative: true
-    source: path
+      path: "."
+      ref: "v0.2.0"
+      resolved-ref: d965ce707df8f110a14391c2146b1077b02f0b69
+      url: "https://github.com/HanHan666666/app_data_migrations.git"
+    source: git
     version: "0.2.0"
   args:
     dependency: transitive

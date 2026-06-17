@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:linglong_store/application/providers/app_search_index_provider.dart';
+import 'package:linglong_store/application/providers/search_hint_provider.dart';
 import 'package:linglong_store/core/config/routes.dart';
 import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
@@ -179,6 +180,8 @@ void main() {
       ProviderScope(
         overrides: [
           appSearchIndexProvider.overrideWith(() => _EmptyFakeIndex()),
+          // placeholder 轮播与样式断言无关，override 为空避免触发网络/日志依赖。
+          searchHintAppsProvider.overrideWithValue(const <SearchHintApp>[]),
         ],
         child: MaterialApp(
           locale: const Locale('zh'),
@@ -222,6 +225,8 @@ void main() {
       ProviderScope(
         overrides: [
           appSearchIndexProvider.overrideWith(() => _EmptyFakeIndex()),
+          // placeholder 轮播与样式断言无关，override 为空避免触发网络/日志依赖。
+          searchHintAppsProvider.overrideWithValue(const <SearchHintApp>[]),
         ],
         child: MaterialApp(
           locale: const Locale('zh'),
@@ -318,6 +323,9 @@ Widget _buildRouterApp() {
           ),
         ]),
       ),
+      // placeholder 轮播数据与本测试关注的搜索/候选逻辑无关，
+      // override 为空列表，避免真实构建 provider 触发网络请求与日志依赖。
+      searchHintAppsProvider.overrideWithValue(const <SearchHintApp>[]),
     ],
     child: MaterialApp.router(
       locale: const Locale('zh'),

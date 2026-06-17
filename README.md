@@ -10,6 +10,36 @@
 
 **[English Version](README_EN.md) | 中文文档**
 ![截图](assets/image.png)
+## 下载与安装
+
+> 如果你只是想使用玲珑应用商店（而不是参与开发），直接下载预编译包即可，无需自行构建。
+
+支持架构：amd64 / arm64 / loong64；包格式：deb / rpm / AppImage / bundle。
+
+### 正式版（稳定）
+
+推荐大多数用户使用。最新版本：[![GitHub Release](https://img.shields.io/github/v/release/HanHan666666/flutter-linglong-store?label=)](https://github.com/HanHan666666/flutter-linglong-store/releases/latest)
+
+- **下载安装包**：[GitHub Releases（最新版）](https://github.com/HanHan666666/flutter-linglong-store/releases/latest)
+- **Arch Linux (AUR)**：
+
+  ```bash
+  paru -S linglong-store-bin
+  # 或 yay -S linglong-store-bin
+  ```
+
+### Nightly 版（每日构建）
+
+每天自动从 master 构建的尝鲜版本，包含最新功能，但**可能不稳定**。Nightly 与稳定版共用安装路径，**二者不可并存**（请先卸载稳定版再安装 Nightly）。
+
+- **下载安装包**：[GitHub Releases（Nightly 预发布）](https://github.com/HanHan666666/flutter-linglong-store/releases)
+- **Arch Linux (AUR)**：
+
+  ```bash
+  paru -S linglong-store-nightly-bin
+  # 或 yay -S linglong-store-nightly-bin
+  ```
+
 ## 环境要求
 
 - Flutter SDK (最新稳定版)

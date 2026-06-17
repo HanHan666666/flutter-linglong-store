@@ -15,6 +15,36 @@
 
 Provide a beautiful, fast, and reliable app store experience for Linux desktop users, offering seamless app discovery, installation, and management.
 
+## 📥 Download & Installation
+
+> If you just want to use Linglong App Store (rather than develop it), grab a prebuilt package — no need to build from source.
+
+Supported architectures: amd64 / arm64 / loong64. Package formats: deb / rpm / AppImage / bundle.
+
+### Stable Release (Recommended)
+
+Recommended for most users. Latest version: [![GitHub Release](https://img.shields.io/github/v/release/HanHan666666/flutter-linglong-store?label=)](https://github.com/HanHan666666/flutter-linglong-store/releases/latest)
+
+- **Download packages**: [GitHub Releases (Latest)](https://github.com/HanHan666666/flutter-linglong-store/releases/latest)
+- **Arch Linux (AUR)**:
+
+  ```bash
+  paru -S linglong-store-bin
+  # or yay -S linglong-store-bin
+  ```
+
+### Nightly Build (Daily)
+
+Auto-built from master every day with the latest features, but **may be unstable**. Nightly shares the install path with the stable release and the **two cannot coexist** (uninstall the stable version before installing Nightly).
+
+- **Download packages**: [GitHub Releases (Nightly pre-releases)](https://github.com/HanHan666666/flutter-linglong-store/releases)
+- **Arch Linux (AUR)**:
+
+  ```bash
+  paru -S linglong-store-nightly-bin
+  # or yay -S linglong-store-nightly-bin
+  ```
+
 ## 📋 Environment Requirements
 
 - **Flutter SDK** (Latest stable version)

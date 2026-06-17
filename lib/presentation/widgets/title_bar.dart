@@ -151,12 +151,16 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
 
   /// placeholder 轮播相关状态。
   ///
-  /// 下载量榜数据由 [searchHintAppsProvider] 提供，到位后每 5 秒顺序切换
-  /// 一个应用名作为搜索框 placeholder；空输入回车时跳转当前 placeholder 对应
-  /// 应用的详情页。数据未就绪或为空时回退到静态文案 [l10n.searchPlaceholder]。
+  /// 下载量榜数据由 [searchHintAppsProvider] 提供，到位后每 5 秒切换一个应用名
+  /// 作为搜索框 placeholder；空输入回车时跳转当前 placeholder 对应应用的详情页。
+  /// 数据未就绪或为空时回退到静态文案 [l10n.searchPlaceholder]。
+  ///
+  /// 轮播顺序为每次数据到位时随机洗牌后顺序循环，单轮内不重复、每次启动顺序不同。
   Timer? _hintTimer;
   int _hintIndex = 0;
   SearchHintApp? _currentHintApp;
+  /// 洗牌后的轮播序列，由 [_resetHintRotation] 在数据到位时生成。
+  List<SearchHintApp> _hintSequence = const <SearchHintApp>[];
 
   @override
   void initState() {
@@ -269,7 +273,8 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
 
   /// 根据下载量榜数据重置 placeholder 轮播。
   ///
-  /// 列表非空时立即定位到第一个应用并启动每 5 秒一次的顺序轮播；
+  /// 列表非空时随机洗牌后顺序轮播：每次数据到位都重新洗牌，保证每次启动
+  /// 轮播顺序不同；单轮内每个应用只出现一次，循环到末尾后从头再来。
   /// 列表为空（未就绪/失败/无数据）时停止轮播并清空当前 placeholder 应用，
   /// 由 UI 侧回退到静态文案。
   void _resetHintRotation(List<SearchHintApp> apps) {
@@ -278,6 +283,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
 
     if (apps.isEmpty) {
       _hintIndex = 0;
+      _hintSequence = const <SearchHintApp>[];
       if (_currentHintApp != null) {
         _currentHintApp = null;
         if (mounted) setState(() {});
@@ -285,8 +291,10 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
       return;
     }
 
-    _hintIndex = _hintIndex.clamp(0, apps.length - 1);
-    final next = apps[_hintIndex];
+    // 随机洗牌生成本轮轮播序列，避免每次启动顺序固定。
+    _hintSequence = List<SearchHintApp>.of(apps)..shuffle();
+    _hintIndex = 0;
+    final next = _hintSequence.first;
     final changed = _currentHintApp?.appId != next.appId ||
         _currentHintApp?.name != next.name;
     _currentHintApp = next;
@@ -297,8 +305,8 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
         _hintTimer?.cancel();
         return;
       }
-      _hintIndex = (_hintIndex + 1) % apps.length;
-      _currentHintApp = apps[_hintIndex];
+      _hintIndex = (_hintIndex + 1) % _hintSequence.length;
+      _currentHintApp = _hintSequence[_hintIndex];
       setState(() {});
     });
   }

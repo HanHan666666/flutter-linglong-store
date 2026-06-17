@@ -8,6 +8,7 @@ import 'package:window_manager/window_manager.dart';
 
 import '../../core/logging/app_logger.dart';
 
+import '../../application/providers/search_hint_provider.dart';
 import '../../application/providers/title_search_suggestions_provider.dart';
 import '../../core/config/routes.dart';
 import '../../core/config/theme.dart';
@@ -148,12 +149,27 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
   OverlayEntry? _suggestionsOverlayEntry;
   Timer? _debounceTimer;
 
+  /// placeholder 轮播相关状态。
+  ///
+  /// 下载量榜数据由 [searchHintAppsProvider] 提供，到位后每 5 秒顺序切换
+  /// 一个应用名作为搜索框 placeholder；空输入回车时跳转当前 placeholder 对应
+  /// 应用的详情页。数据未就绪或为空时回退到静态文案 [l10n.searchPlaceholder]。
+  Timer? _hintTimer;
+  int _hintIndex = 0;
+  SearchHintApp? _currentHintApp;
+
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.currentQuery);
     _controller.addListener(_onTextChanged);
     _focusNode.addListener(_onFocusChange);
+
+    // 订阅下载量榜数据：非空时启动 5 秒轮播，空则回退静态文案。
+    // 下载量榜仅取前 20 条，循环轮播；组件销毁时在 dispose 取消 Timer。
+    ref.listenManual(searchHintAppsProvider, (previous, next) {
+      _resetHintRotation(next);
+    }, fireImmediately: true);
   }
 
   @override
@@ -172,6 +188,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
   @override
   void dispose() {
     _debounceTimer?.cancel();
+    _hintTimer?.cancel();
     _removeSuggestionsOverlay();
     _controller.removeListener(_onTextChanged);
     _controller.dispose();
@@ -213,6 +230,27 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
   void _submitSearch() {
     final query = _controller.text.trim();
     if (query.isEmpty) {
+      // 空输入回车：若当前 placeholder 正轮播某个下载量榜应用，
+      // 直接跳转该应用详情页；否则维持原行为（什么都不做）。
+      final hint = _currentHintApp;
+      if (hint != null) {
+        _debounceTimer?.cancel();
+        ref.read(titleSearchSuggestionsProvider.notifier).clear();
+        _removeSuggestionsOverlay();
+        _focusNode.unfocus();
+        // 跳转必须带全身份字段，避免详情页接口回退匹配到错误条目。
+        context.goToAppDetail(
+          hint.appId,
+          appInfo: InstalledApp(
+            appId: hint.appId,
+            name: hint.name,
+            version: hint.version,
+            arch: hint.arch,
+            repoName: hint.repoName,
+            module: hint.module,
+          ),
+        );
+      }
       return;
     }
     _debounceTimer?.cancel();
@@ -227,6 +265,42 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
     ref.read(titleSearchSuggestionsProvider.notifier).clear();
     _removeSuggestionsOverlay();
     _controller.clear();
+  }
+
+  /// 根据下载量榜数据重置 placeholder 轮播。
+  ///
+  /// 列表非空时立即定位到第一个应用并启动每 5 秒一次的顺序轮播；
+  /// 列表为空（未就绪/失败/无数据）时停止轮播并清空当前 placeholder 应用，
+  /// 由 UI 侧回退到静态文案。
+  void _resetHintRotation(List<SearchHintApp> apps) {
+    _hintTimer?.cancel();
+    _hintTimer = null;
+
+    if (apps.isEmpty) {
+      _hintIndex = 0;
+      if (_currentHintApp != null) {
+        _currentHintApp = null;
+        if (mounted) setState(() {});
+      }
+      return;
+    }
+
+    _hintIndex = _hintIndex.clamp(0, apps.length - 1);
+    final next = apps[_hintIndex];
+    final changed = _currentHintApp?.appId != next.appId ||
+        _currentHintApp?.name != next.name;
+    _currentHintApp = next;
+    if (changed && mounted) setState(() {});
+
+    _hintTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!mounted) {
+        _hintTimer?.cancel();
+        return;
+      }
+      _hintIndex = (_hintIndex + 1) % apps.length;
+      _currentHintApp = apps[_hintIndex];
+      setState(() {});
+    });
   }
 
   void _queueSuggestionsFetch() {
@@ -529,7 +603,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
                     focusNode: _focusNode,
                     maxLines: 1,
                     decoration: InputDecoration(
-                      hintText: l10n.searchPlaceholder,
+                      hintText: _currentHintApp?.name ?? l10n.searchPlaceholder,
                       hintStyle: context.appTextStyles.bodyMedium.copyWith(
                         color: context.appColors.textTertiary,
                       ),

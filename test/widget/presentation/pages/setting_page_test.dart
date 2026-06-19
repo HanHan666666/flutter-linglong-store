@@ -197,4 +197,41 @@ void main() {
       'https://github.com/HanHan666666/flutter-linglong-store/releases/tag/v3.3.2',
     );
   });
+
+  // 入口图标颜色应与其他列表项一致使用中性灰（onSurfaceVariant），不再使用主题蓝
+  testWidgets(
+    'setting page linglong environment entry icon uses neutral grey color',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('zh'),
+            home: const Scaffold(body: SettingPage()),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // 定位「玲珑环境管理」所在 ListTile 的 leading 图标
+      final tile = find.ancestor(
+        of: find.text('玲珑环境管理'),
+        matching: find.byType(ListTile),
+      );
+      final icon = tester.widget<Icon>(
+        find.descendant(of: tile, matching: find.byIcon(Icons.settings_suggest_outlined)),
+      );
+
+      expect(
+        icon.color,
+        AppTheme.lightTheme.colorScheme.onSurfaceVariant,
+      );
+    },
+  );
 }

@@ -646,9 +646,11 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           ),
           _buildDivider(context),
           ListTile(
+            // 入口图标统一使用中性灰（onSurfaceVariant），与主题选项等其他列表项保持一致，
+            // 避免单独使用主题蓝（primary）造成视觉上与其他设置项不一致。
             leading: Icon(
               Icons.settings_suggest_outlined,
-              color: Theme.of(context).colorScheme.primary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             title: const Text('玲珑环境管理'),
             subtitle: const Text('分析环境、管理仓库、修复基础环境和移动保存位置'),

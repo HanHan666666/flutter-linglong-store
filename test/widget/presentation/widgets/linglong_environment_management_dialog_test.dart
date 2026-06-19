@@ -62,6 +62,9 @@ void main() {
     expect(find.text('默认仓库：stable'), findsOneWidget);
     expect(find.text('stable'), findsWidgets);
     expect(find.text('添加仓库'), findsOneWidget);
+    // 仓库管理说明提示：标题 + 正文，提示仅限官方 stable 仓库数据、勿删 stable
+    expect(find.text(l10n.repoManagementHintTitle), findsOneWidget);
+    expect(find.text(l10n.repoManagementHintMessage), findsOneWidget);
 
     await tester.tap(find.text('保存位置'));
     await tester.pumpAndSettle();
@@ -103,6 +106,13 @@ void main() {
 
     final l10n = await AppLocalizations.delegate.load(const Locale('en'));
     expect(find.text(l10n.envManagementWarning), findsOneWidget);
+
+    // 验证仓库管理说明提示在英文 locale 下也正确渲染。
+    // 注意：Tab 标签当前为硬编码中文，不随 locale 变化，故仍按 '仓库管理' 定位。
+    await tester.tap(find.text('仓库管理'));
+    await tester.pumpAndSettle();
+    expect(find.text(l10n.repoManagementHintTitle), findsOneWidget);
+    expect(find.text(l10n.repoManagementHintMessage), findsOneWidget);
   });
 }
 

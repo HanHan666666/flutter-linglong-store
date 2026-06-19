@@ -2711,6 +2711,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'该功能尚不稳定，如无问题请勿使用；遇到问题请谨慎操作。'**
   String get envManagementWarning;
+
+  /// No description provided for @repoManagementHintTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅提供仓库管理功能'**
+  String get repoManagementHintTitle;
+
+  /// No description provided for @repoManagementHintMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'本商店仅能获取官方 stable 仓库的应用数据，请勿删除 stable 仓库，否则将导致无法安装应用。'**
+  String get repoManagementHintMessage;
 }
 
 class _AppLocalizationsDelegate

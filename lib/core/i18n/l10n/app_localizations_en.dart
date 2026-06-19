@@ -1505,4 +1505,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get envManagementWarning =>
       'This feature is not yet stable. Do not use it unless necessary; proceed with caution if you encounter issues.';
+
+  @override
+  String get repoManagementHintTitle => 'Repository management only';
+
+  @override
+  String get repoManagementHintMessage =>
+      'This store can only fetch app data from the official stable repository. Do not remove the stable repository, otherwise app installation will fail.';
 }

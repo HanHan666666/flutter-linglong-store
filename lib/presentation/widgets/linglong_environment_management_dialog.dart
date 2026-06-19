@@ -536,6 +536,14 @@ class _RepositoryManagementTab extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
+        // 仓库管理说明提示：本商店仅能获取官方 stable 仓库数据，删除 stable 会导致无法安装应用。
+        // 采用中性 primary 主题色（普通信息面板，非警告），避免与弹窗顶部的 amber 警示横幅重复施压。
+        _InlineInfoPanel(
+          icon: Icons.info_outline,
+          title: AppLocalizations.of(context)!.repoManagementHintTitle,
+          message: AppLocalizations.of(context)!.repoManagementHintMessage,
+        ),
+        const SizedBox(height: 12),
         Expanded(
           child: config.repos.isEmpty
               ? const _EmptyManagementState(

@@ -1455,4 +1455,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get envManagementWarning => '该功能尚不稳定，如无问题请勿使用；遇到问题请谨慎操作。';
+
+  @override
+  String get repoManagementHintTitle => '仅提供仓库管理功能';
+
+  @override
+  String get repoManagementHintMessage =>
+      '本商店仅能获取官方 stable 仓库的应用数据，请勿删除 stable 仓库，否则将导致无法安装应用。';
 }

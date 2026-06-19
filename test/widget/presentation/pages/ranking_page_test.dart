@@ -23,14 +23,19 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('更新榜'), findsOneWidget);
+      // RankingType 当前只有 download/rising 两种榜单；初始选中 download，
+      // 这里取“最新上架榜（rising）”作为非活跃 Tab 的 hover 目标。
+      // 文案通过 l10n 动态获取，避免与实现层硬编码字符串脱节后再次失效。
+      final l10n = AppLocalizations.of(tester.element(find.byType(RankingPage)))!;
+      final inactiveTabText = l10n.rankingTabNewUpload;
+      expect(find.text(inactiveTabText), findsOneWidget);
 
       final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await gesture.addPointer(location: Offset.zero);
       addTearDown(gesture.removePointer);
       await tester.pump();
 
-      await gesture.moveTo(tester.getCenter(find.text('更新榜')));
+      await gesture.moveTo(tester.getCenter(find.text(inactiveTabText)));
       await tester.pump();
 
       final exceptions = <Object>[];

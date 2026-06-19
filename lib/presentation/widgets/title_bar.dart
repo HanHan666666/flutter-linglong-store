@@ -606,52 +606,152 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
                 child: KeyboardListener(
                   focusNode: _keyboardFocusNode,
                   onKeyEvent: _onKeyEvent,
-                  child: TextField(
-                    controller: _controller,
-                    focusNode: _focusNode,
-                    maxLines: 1,
-                    decoration: InputDecoration(
-                      hintText: _currentHintApp?.name ?? l10n.searchPlaceholder,
-                      hintStyle: context.appTextStyles.bodyMedium.copyWith(
-                        color: context.appColors.textTertiary,
+                  child: Stack(
+                    children: [
+                      // 底层输入框：承载真实输入与光标，不再使用 InputDecoration.hintText，
+                      // 改由上层 [_AnimatedSearchHint] 负责带过渡动画的 placeholder 展示。
+                      TextField(
+                        controller: _controller,
+                        focusNode: _focusNode,
+                        maxLines: 1,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          disabledBorder: InputBorder.none,
+                          errorBorder: InputBorder.none,
+                          focusedErrorBorder: InputBorder.none,
+                          filled: false,
+                          isDense: true,
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 8),
+                          suffixIconConstraints: const BoxConstraints(
+                            minWidth: 24,
+                            minHeight: 24,
+                          ),
+                          suffixIcon: _controller.text.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: context.appColors.textTertiary,
+                                  ),
+                                  onPressed: _clearSearch,
+                                  splashRadius: 14,
+                                  padding: EdgeInsets.zero,
+                                  tooltip: l10n.clearSearch,
+                                )
+                              : null,
+                        ),
+                        style: context.appTextStyles.bodyMedium.copyWith(
+                          color: context.appColors.textPrimary,
+                        ),
+                        textAlignVertical: TextAlignVertical.center,
+                        textInputAction: TextInputAction.search,
+                        onSubmitted: (_) => _submitSearch(),
                       ),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      disabledBorder: InputBorder.none,
-                      errorBorder: InputBorder.none,
-                      focusedErrorBorder: InputBorder.none,
-                      filled: false,
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                      suffixIconConstraints: const BoxConstraints(
-                        minWidth: 24,
-                        minHeight: 24,
+                      // 上层动画 placeholder：仅输入为空时展示当前轮播应用名/兜底文案。
+                      // IgnorePointer 保证点击会穿透到下层 TextField，聚焦与候选浮层逻辑不受影响。
+                      // Positioned.fill 让其撑满整个 Stack，使内部文案能垂直居中到搜索框中心，
+                      // 与底层 TextField 的 textAlignVertical.center 对齐。
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          key: const Key('title-search-placeholder'),
+                          child: _AnimatedSearchHint(
+                            // 输入非空时清空展示文案，等价于原 hintText 被输入覆盖的行为。
+                            text: _controller.text.isEmpty
+                                ? (_currentHintApp?.name ??
+                                    l10n.searchPlaceholder)
+                                : '',
+                            // 与原 hintText 的字体/颜色保持完全一致，避免视觉漂移。
+                            style: context.appTextStyles.bodyMedium.copyWith(
+                              color: context.appColors.textTertiary,
+                            ),
+                          ),
+                        ),
                       ),
-                      suffixIcon: _controller.text.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.close,
-                                size: 16,
-                                color: context.appColors.textTertiary,
-                              ),
-                              onPressed: _clearSearch,
-                              splashRadius: 14,
-                              padding: EdgeInsets.zero,
-                              tooltip: l10n.clearSearch,
-                            )
-                          : null,
-                    ),
-                    style: context.appTextStyles.bodyMedium.copyWith(
-                      color: context.appColors.textPrimary,
-                    ),
-                    textAlignVertical: TextAlignVertical.center,
-                    textInputAction: TextInputAction.search,
-                    onSubmitted: (_) => _submitSearch(),
+                    ],
                   ),
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 搜索框动画 placeholder。
+///
+/// 替代 `InputDecoration.hintText`（后者只能瞬切，无法挂自定义进出动画）。
+/// 通过 [AnimatedSwitcher] 以「淡入淡出 + 轻微上滑」交叉切换文案，文案变化由
+/// [ValueKey] 触发。
+///
+/// 遵循系统「减少动态效果」无障碍设置：当 [MediaQuery.disableAnimations] 为真
+/// （或平台 accessibilityFeatures 同样声明禁用动画）时，duration 降级为
+/// [Duration.zero]，等价于瞬切，保持与全局零动画策略一致。
+/// 参见 `install_to_download_flyout.dart` 中同样的系统偏好读取约定。
+class _AnimatedSearchHint extends StatelessWidget {
+  const _AnimatedSearchHint({required this.text, required this.style});
+
+  /// 当前展示的 placeholder 文案，输入非空时由上层置为空串以隐藏。
+  final String text;
+
+  /// 文案样式，需与原 hintText 的 hintStyle 完全一致。
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    // 读取系统「减少动态效果」设置；MediaQuery 不可用时回退到平台无障碍特性。
+    final mediaQuery = MediaQuery.maybeOf(context);
+    final animationsDisabled = mediaQuery?.disableAnimations ??
+        WidgetsBinding.instance.platformDispatcher.accessibilityFeatures
+            .disableAnimations;
+    const animDuration = Duration(milliseconds: 500);
+
+    // 外层 SizedBox.expand + Align 把 placeholder 文案垂直居中到搜索框可用区，
+    // 对齐底层 TextField 的 textAlignVertical.center，避免动画 Text 贴在 Stack
+    // 顶部导致与输入文字基线不一致。水平方向居左，保持从左到右阅读。
+    return SizedBox.expand(
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: AnimatedSwitcher(
+          // 关闭系统动画时降级为瞬切，遵守无障碍偏好。
+          duration: animationsDisabled ? Duration.zero : animDuration,
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeIn,
+          // 淡入淡出叠加轻微上滑：新词从下方淡入上移，旧词向上淡出。
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.5),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            );
+          },
+          layoutBuilder: (currentChild, previousChildren) {
+            // 让新旧文案在切换瞬间重叠堆叠，避免切换期高度跳动。
+            return Stack(
+              alignment: Alignment.centerLeft,
+              children: <Widget>[
+                ...previousChildren,
+                if (currentChild != null) currentChild,
+              ],
+            );
+          },
+          child: Text(
+            text,
+            // ValueKey 随文案变化，触发 AnimatedSwitcher 的新旧交替动画。
+            key: ValueKey<String>(text),
+            style: style,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            softWrap: false,
           ),
         ),
       ),

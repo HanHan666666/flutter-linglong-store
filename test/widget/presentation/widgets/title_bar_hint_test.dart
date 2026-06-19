@@ -142,6 +142,84 @@ void main() {
     // 不应跳转到任何详情页。
     expect(find.byKey(const Key('detail-page')), findsNothing);
   });
+
+  testWidgets('系统关闭动画时 placeholder 切换为瞬切', (tester) async {
+    // 模拟系统「减少动态效果」开启：disableAnimations = true。
+    // 此时 _AnimatedSearchHint 的 AnimatedSwitcher duration 应回退为 Duration.zero，
+    // 切换后无需等待 300ms 动画即可稳定显示新文案。
+    await tester.pumpWidget(_buildApp(disableAnimations: true));
+    await tester.pumpAndSettle();
+
+    final first = _currentHintText(tester);
+    expect(first, isNotNull);
+
+    // 推进 5 秒触发轮播 Timer，但不调用 pumpAndSettle，仅推进一帧。
+    // 若 duration 正确降级为 0，新文案应在该单帧内立即呈现为唯一可见 Text。
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump(const Duration(milliseconds: 20));
+
+    final second = _currentHintText(tester);
+    expect(second, isNotNull);
+    // 切换后立即（未跑完任何 300ms 动画）就能取到新的非空文案，证明动画被瞬切跳过。
+    expect(second, isNot(equals(first)));
+    expect(['应用一', '应用二', '应用三'].contains(second), isTrue);
+
+    // 进一步验证：动画关闭时 placeholder 容器内不应残留正在淡出的旧 Text。
+    final visibleHintTexts = tester
+        .widgetList<Text>(find.descendant(
+          of: find.byKey(const Key('title-search-placeholder')),
+          matching: find.byType(Text),
+        ))
+        .map((t) => t.data)
+        .where((d) => d != null && d.isNotEmpty)
+        .toList();
+    expect(visibleHintTexts, hasLength(1));
+    expect(visibleHintTexts.single, equals(second));
+  });
+
+  testWidgets('placeholder 文案在搜索框内垂直居中', (tester) async {
+    await tester.pumpWidget(_buildApp());
+    await tester.pumpAndSettle();
+
+    // 搜索框内 TextField 与上层 placeholder 动画 Text 同处一个 Stack。
+    // placeholder 动画 Text 必须与 TextField 输入区垂直居中对齐，
+    // 否则会出现 placeholder 偏上/偏下、与输入文字基线不一致的视觉错位。
+    final placeholderFinder = find.descendant(
+      of: find.byKey(const Key('title-search-placeholder')),
+      matching: find.byType(Text),
+    );
+    expect(placeholderFinder, findsWidgets);
+
+    final textFieldFinder = find.byType(TextField);
+    final placeholderRect = tester.getRect(placeholderFinder.first);
+    final textFieldRect = tester.getRect(textFieldFinder.first);
+
+    // 断言 placeholder 文字中心 Y 与其所在 TextField 输入区中心 Y 一致（容差 1px），
+    // 这等价于「与未来输入的文字基线垂直居中」。
+    final delta = (placeholderRect.center.dy - textFieldRect.center.dy).abs();
+    expect(
+      delta,
+      lessThan(1.0),
+      reason:
+          'placeholder 文字中心(${placeholderRect.center.dy}) 应与 TextField '
+          '中心(${textFieldRect.center.dy}) 对齐，偏差 $delta',
+    );
+  });
+
+  testWidgets('placeholder 切换动画时长为 500ms', (tester) async {
+    // 系统开启动画时，_AnimatedSearchHint 的 AnimatedSwitcher duration 应为 500ms。
+    // 这是与用户确认的渐变节奏（300ms 太快）。
+    await tester.pumpWidget(_buildApp());
+    await tester.pumpAndSettle();
+
+    final switcherFinder = find.descendant(
+      of: find.byKey(const Key('title-search-placeholder')),
+      matching: find.byType(AnimatedSwitcher),
+    );
+    expect(switcherFinder, findsOneWidget);
+    final switcher = tester.widget<AnimatedSwitcher>(switcherFinder);
+    expect(switcher.duration, const Duration(milliseconds: 500));
+  });
 }
 
 /// 测试样本应用名 -> [appId, module] 的映射，供跳转一致性断言反查身份字段。
@@ -151,22 +229,42 @@ const Map<String, List<String>> _kHintIdentity = {
   '应用三': ['com.app3', 'runtime'],
 };
 
-/// 在 TextField 的 hintText 里定位文案。
+/// 定位当前 placeholder 显示的文案。
+///
+/// placeholder 已从 `InputDecoration.hintText` 迁移为搜索框上层动画 Text
+/// （`_AnimatedSearchHint`），通过固定 `Key('title-search-placeholder')` 的
+/// IgnorePointer 容器精确定位其内部 Text，避免误命中标题栏其他文案。
 Finder _findHintText(String text) {
-  return find.byWidgetPredicate(
-    (widget) =>
-        widget is TextField &&
-        widget.decoration?.hintText == text,
+  return find.descendant(
+    of: find.byKey(const Key('title-search-placeholder')),
+    matching: find.byWidgetPredicate(
+      (widget) => widget is Text && widget.data == text,
+    ),
   );
 }
 
-/// 读取当前搜索框 placeholder 显示的文案（可能为空，代表回退静态文案）。
+/// 读取当前搜索框 placeholder 显示的文案。
+///
+/// 在 placeholder 容器内查找非空 Text，取第一条。空输入回退静态文案时也能命中。
+/// 切换动画进行中可能短暂同时存在新旧 Text，调用方应在 pumpAndSettle 后使用。
 String? _currentHintText(WidgetTester tester) {
-  final textField = tester.widget<TextField>(find.byType(TextField).first);
-  return textField.decoration?.hintText;
+  final hintTextFinder = find.descendant(
+    of: find.byKey(const Key('title-search-placeholder')),
+    matching: find.byWidgetPredicate(
+      (widget) =>
+          widget is Text && widget.data != null && widget.data!.isNotEmpty,
+    ),
+  );
+  if (hintTextFinder.evaluate().isEmpty) {
+    return null;
+  }
+  return tester.widget<Text>(hintTextFinder.first).data;
 }
 
-Widget _buildApp({List<SearchHintApp>? hints}) {
+Widget _buildApp({
+  List<SearchHintApp>? hints,
+  bool disableAnimations = false,
+}) {
   final router = GoRouter(
     routes: [
       GoRoute(
@@ -255,6 +353,18 @@ Widget _buildApp({List<SearchHintApp>? hints}) {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: router,
+      // 在 MaterialApp 内部合成 MediaQuery 时强制覆盖 disableAnimations，
+      // 模拟系统「减少动态效果」开启，验证 _AnimatedSearchHint 据此降级为瞬切。
+      builder: (context, child) {
+        final wrapped = child ?? const SizedBox.shrink();
+        if (!disableAnimations) {
+          return wrapped;
+        }
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: wrapped,
+        );
+      },
     ),
   );
 }

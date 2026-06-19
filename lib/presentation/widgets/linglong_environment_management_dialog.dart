@@ -949,9 +949,24 @@ class _RepositoryTile extends StatelessWidget {
                     ),
                     if (isDefault) ...[
                       const SizedBox(width: 8),
-                      const Chip(
-                        label: Text('默认'),
-                        visualDensity: VisualDensity.compact,
+                      // 默认仓库徽章：使用 AppColors.warning 与左侧星标呼应，
+                      // 12% 透明度背景 + 纯色文字，对比度明显优于默认 Chip。
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(AppRadius.full),
+                        ),
+                        child: Text(
+                          '默认',
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: AppColors.warning,
+                                fontWeight: context.appFontWeight(FontWeight.w600),
+                              ),
+                        ),
                       ),
                     ],
                   ],

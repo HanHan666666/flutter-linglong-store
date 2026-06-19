@@ -1,7 +1,7 @@
 # 玲珑环境管理、修复与保存位置迁移
 
-> 文档版本：1.1  
-> 更新日期：2026-06-14  
+> 文档版本：1.2
+> 更新日期：2026-06-19
 > 适用范围：设置页「玲珑环境管理」入口、仓库管理、环境分析与修复、保存位置迁移
 
 ## 背景
@@ -20,7 +20,8 @@
 2. `ll-cli --json repo show` 返回 `defaultRepo`、`repos`、`version`，可作为仓库列表首选解析来源；文本表格输出作为兜底。
 3. 玲珑本地根目录为 `/var/lib/linglong`，OSTree 仓库位于 `/var/lib/linglong/repo`。
 4. OpenAtom-Linyaps/linyaps#1411 中上游维护者说明当前不支持直接自定义安装位置，推荐通过 systemd `.mount` 将目标目录 bind 到 `/var/lib/linglong`。
-5. 远程环境实测 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 可发现 corrupted file object，输出量可能很大，UI 必须截断摘要并保留完整日志。
+5. linyaps 1.13.0 源码中仓库运行路径主要通过 `OSTreeRepo::init/loadFromPath/create` 打开仓库、读取 refs/cache/states，并通过 `/var/lib/linglong/layers/<commit>` checkout 目录支撑运行；源码未把 `ostree fsck` 作为启动或运行前置条件。
+6. 远程环境实测 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 可发现 corrupted file object，但 `ll-cli --json repo show`、`ll-cli --json list`、`ll-cli --json ps` 和 `ostree refs --repo=/var/lib/linglong/repo` 仍可正常执行。UI 必须区分“仓库不可读”和“深度对象完整性风险”，不能仅凭 `fsck` 非零码展示笼统的运行异常。
 
 ## 实现边界
 
@@ -66,7 +67,8 @@
 - 执行 `ll-cli --json ps` 统计运行中玲珑应用。
 - 执行 `df -PB1 /var/lib/linglong` 读取空间。
 - 执行 `findmnt --json /var/lib/linglong` 读取挂载状态。
-- 执行 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 做完整性检查。
+- 先执行 `ostree refs --repo=/var/lib/linglong/repo` 做轻量只读可用性检查。
+- 仅在 refs 可读时执行 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 做深度对象完整性审计。
 - 通过 `pkexec ostree fsck --repo=/var/lib/linglong/repo --all --delete` 执行 OSTree 修复。
 - 通过 `pkexec bash <temp-script>` 执行保存位置迁移脚本。
 - 修复与迁移日志写入 XDG logs 目录；UI 只展示截断摘要。
@@ -103,8 +105,16 @@
 3. `/var/lib/linglong` 所在文件系统容量、已用、可用和使用率。
 4. `/var/lib/linglong` 是否处于 bind mount。
 5. `ostree` 命令是否可用。
-6. `/var/lib/linglong/repo` OSTree 完整性。
-7. `ll-cli --json ps` 是否存在运行中应用。
+6. `/var/lib/linglong/repo` refs 是否可读取。
+7. `/var/lib/linglong/repo` 深度对象完整性审计是否存在风险。
+8. `ll-cli --json ps` 是否存在运行中应用。
+
+OSTree 状态模型：
+
+- `isAvailable=false`：`ostree` 命令不可用或无法执行基础检查，展示“OSTree 工具不可用”警告。
+- `isOk=false`：`ostree refs --repo=/var/lib/linglong/repo` 无法读取本地仓库，展示“OSTree 仓库不可用”错误，可引导尝试修复。
+- `isOk=true && hasIntegrityWarning=true`：refs 可读但 `ostree fsck --quiet` 发现对象损坏，展示“OSTree 对象完整性风险”警告，并保留修复入口。
+- `isOk=true && hasIntegrityWarning=false`：仓库可读且深度审计未发现风险，展示“正常”。
 
 问题 code：
 
@@ -117,8 +127,8 @@
 
 严重级别：
 
-- `error`：缺少可用 ll-cli、仓库未配置、OSTree 损坏、空间严重不足。
-- `warning`：ostree 工具不可用、空间偏高、有运行中应用阻断迁移。
+- `error`：缺少可用 ll-cli、仓库未配置、OSTree 仓库 refs 不可读、空间严重不足。
+- `warning`：ostree 工具不可用、OSTree 深度对象完整性风险、空间偏高、有运行中应用阻断迁移。
 - `info`：保留给后续状态说明。
 
 ## 修复动作
@@ -215,7 +225,7 @@ WantedBy=multi-user.target
 
 ### 环境分析
 
-- 顶部展示 ll-cli 版本、运行中应用数量、空间使用率、OSTree 状态。
+- 顶部展示 ll-cli 版本、运行中应用数量、空间使用率、OSTree 状态；OSTree 必须区分“正常”“可用，有风险”“不可用”“工具不可用”。
 - 问题按严重程度排序展示。
 - 每个问题展示标题、描述、原始诊断详情和可执行动作。
 - 修复按钮必须先弹出确认对话框。
@@ -247,7 +257,7 @@ WantedBy=multi-user.target
 已覆盖：
 
 - 仓库 JSON 解析、ANSI 文本兜底解析、仓库命令参数。
-- 环境分析中的 OSTree 损坏、空间不足和运行中应用阻断。
+- 环境分析中的 OSTree refs 不可读、OSTree 深度对象完整性风险、空间不足和运行中应用阻断。
 - OSTree 修复命令和日志参数。
 - 保存位置迁移脚本内容、危险目标路径拒绝、目标空间不足拒绝。
 - Provider 状态加载、修复后刷新、仓库写操作刷新、安装队列活跃时阻断迁移。

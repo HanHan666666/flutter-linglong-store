@@ -319,8 +319,20 @@ echo "旧目录备份：\$BACKUP"
         LinglongEnvironmentIssue(
           code: LinglongEnvironmentIssueCode.ostreeRepositoryCorrupted,
           severity: LinglongEnvironmentIssueSeverity.error,
-          title: 'OSTree 仓库完整性异常',
-          description: '检测到玲珑本地 OSTree 仓库可能存在损坏对象，可执行修复后重试安装或更新。',
+          title: 'OSTree 仓库不可用',
+          description: '无法读取玲珑本地 OSTree 仓库 refs，可尝试执行修复；若目录缺失或权限异常，请先恢复仓库路径。',
+          repairAction: LinglongEnvironmentRepairAction.ostreeFsckDelete,
+          rawDetail: ostree.detail,
+        ),
+      );
+    } else if (ostree.hasIntegrityWarning) {
+      issues.add(
+        LinglongEnvironmentIssue(
+          code: LinglongEnvironmentIssueCode.ostreeRepositoryCorrupted,
+          severity: LinglongEnvironmentIssueSeverity.warning,
+          title: 'OSTree 对象完整性风险',
+          description:
+              '深度校验发现对象存储存在损坏记录，但当前玲珑仓库仍可读取。建议在空闲时执行修复，并重新安装或更新受影响应用/基础环境。',
           repairAction: LinglongEnvironmentRepairAction.ostreeFsckDelete,
           rawDetail: ostree.detail,
         ),
@@ -414,33 +426,70 @@ echo "旧目录备份：\$BACKUP"
   }
 
   Future<LinglongOstreeCheckResult> _checkOstreeRepository() async {
-    final result = await _run([
+    // linyaps 启动和运行时主要依赖仓库能被打开并读取 refs/cache。
+    // 因此先执行轻量只读检查，避免把深度 fsck 的对象风险误判为整体不可用。
+    final refsResult = await _run([
+      'ostree',
+      'refs',
+      '--repo=$_linglongRootPath/repo',
+    ], timeout: const Duration(minutes: 2));
+
+    if (refsResult == null) {
+      return const LinglongOstreeCheckResult(
+        isAvailable: false,
+        isOk: false,
+        detail: 'ostree refs 命令执行失败',
+      );
+    }
+
+    if (refsResult.exitCode == 127) {
+      return LinglongOstreeCheckResult(
+        isAvailable: false,
+        isOk: false,
+        detail: _truncateOutput(_primaryOutput(refsResult)),
+      );
+    }
+
+    if (!refsResult.success) {
+      return LinglongOstreeCheckResult(
+        isAvailable: true,
+        isOk: false,
+        detail: _truncateOutput(_primaryOutput(refsResult)),
+      );
+    }
+
+    // fsck 作为深度对象审计保留；它发现风险时只影响完整性提示，
+    // 不覆盖上面的 linyaps 可用性判断。
+    final fsckResult = await _run([
       'ostree',
       'fsck',
       '--repo=$_linglongRootPath/repo',
       '--quiet',
     ], timeout: const Duration(minutes: 2));
 
-    if (result == null) {
+    if (fsckResult == null) {
       return const LinglongOstreeCheckResult(
         isAvailable: false,
         isOk: false,
-        detail: 'ostree 命令执行失败',
+        detail: 'ostree fsck 命令执行失败',
       );
     }
 
-    if (result.exitCode == 127) {
+    if (fsckResult.exitCode == 127) {
       return LinglongOstreeCheckResult(
         isAvailable: false,
         isOk: false,
-        detail: _truncateOutput(_primaryOutput(result)),
+        detail: _truncateOutput(_primaryOutput(fsckResult)),
       );
     }
 
     return LinglongOstreeCheckResult(
       isAvailable: true,
-      isOk: result.success,
-      detail: result.success ? null : _truncateOutput(_primaryOutput(result)),
+      isOk: true,
+      hasIntegrityWarning: !fsckResult.success,
+      detail: fsckResult.success
+          ? null
+          : _truncateOutput(_combinedCommandOutput(fsckResult)),
     );
   }
 

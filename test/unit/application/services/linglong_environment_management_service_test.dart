@@ -9,7 +9,7 @@ import 'package:linglong_store/domain/models/linglong_environment_management.dar
 void main() {
   group('LinglongEnvironmentManagementService', () {
     test(
-      'analyzeEnvironment reports ostree corruption and high storage usage',
+      'analyzeEnvironment reports ostree integrity warning while repository remains usable',
       () async {
         final runner = _FakeShellCommandRunner.fromCommands({
           ..._healthyEnvironmentCommands(),
@@ -43,7 +43,8 @@ void main() {
 
         expect(analysis.envResult.isOk, isTrue);
         expect(analysis.storage.usagePercent, 94);
-        expect(analysis.ostree.isOk, isFalse);
+        expect(analysis.ostree.isOk, isTrue);
+        expect(analysis.ostree.hasIntegrityWarning, isTrue);
         expect(
           analysis.issues.map((issue) => issue.code),
           containsAll([
@@ -56,11 +57,102 @@ void main() {
               issue.code ==
               LinglongEnvironmentIssueCode.ostreeRepositoryCorrupted,
         );
+        expect(ostreeIssue.severity, LinglongEnvironmentIssueSeverity.warning);
+        expect(ostreeIssue.title, 'OSTree 对象完整性风险');
         expect(
           ostreeIssue.repairAction,
           LinglongEnvironmentRepairAction.ostreeFsckDelete,
         );
         expect(ostreeIssue.rawDetail, contains('Corrupted file object'));
+      },
+    );
+
+    test(
+      'analyzeEnvironment reports ostree repository unavailable when refs cannot be read',
+      () async {
+        final runner = _FakeShellCommandRunner.fromCommands({
+          ..._healthyEnvironmentCommands(),
+          'll-cli --json ps': const ShellCommandResult(
+            stdout: '[]',
+            stderr: '',
+            exitCode: 0,
+          ),
+          'df -PB1 /var/lib/linglong': const ShellCommandResult(
+            stdout:
+                'Filesystem 1-blocks Used Available Capacity Mounted on\n/dev/nvme0n1p5 1000000000 400000000 600000000 40% /var\n',
+            stderr: '',
+            exitCode: 0,
+          ),
+          'findmnt --json /var/lib/linglong': const ShellCommandResult(
+            stdout:
+                '{"filesystems":[{"target":"/var/lib/linglong","source":"/dev/nvme0n1p5","fstype":"ext4","options":"rw"}]}',
+            stderr: '',
+            exitCode: 0,
+          ),
+          'ostree refs --repo=/var/lib/linglong/repo': const ShellCommandResult(
+            stdout: '',
+            stderr: 'error: opening repo: No such file or directory',
+            exitCode: 1,
+          ),
+        });
+        final service = _buildManagementService(runner);
+
+        final analysis = await service.analyzeEnvironment();
+
+        expect(analysis.ostree.isAvailable, isTrue);
+        expect(analysis.ostree.isOk, isFalse);
+        expect(analysis.ostree.hasIntegrityWarning, isFalse);
+        final ostreeIssue = analysis.issues.firstWhere(
+          (issue) =>
+              issue.code ==
+              LinglongEnvironmentIssueCode.ostreeRepositoryCorrupted,
+        );
+        expect(ostreeIssue.severity, LinglongEnvironmentIssueSeverity.error);
+        expect(ostreeIssue.title, 'OSTree 仓库不可用');
+        expect(ostreeIssue.rawDetail, contains('opening repo'));
+        expect(
+          runner.commands.map((command) => command.join(' ')),
+          isNot(contains('ostree fsck --repo=/var/lib/linglong/repo --quiet')),
+        );
+      },
+    );
+
+    test(
+      'analyzeEnvironment reports ostree tool unavailable when deep check cannot run',
+      () async {
+        final runner = _FakeShellCommandRunner.fromCommands({
+          ..._healthyEnvironmentCommands(),
+          'll-cli --json ps': const ShellCommandResult(
+            stdout: '[]',
+            stderr: '',
+            exitCode: 0,
+          ),
+          'df -PB1 /var/lib/linglong': const ShellCommandResult(
+            stdout:
+                'Filesystem 1-blocks Used Available Capacity Mounted on\n/dev/nvme0n1p5 1000000000 400000000 600000000 40% /var\n',
+            stderr: '',
+            exitCode: 0,
+          ),
+          'findmnt --json /var/lib/linglong': const ShellCommandResult(
+            stdout:
+                '{"filesystems":[{"target":"/var/lib/linglong","source":"/dev/nvme0n1p5","fstype":"ext4","options":"rw"}]}',
+            stderr: '',
+            exitCode: 0,
+          ),
+        });
+        final service = _buildManagementService(runner);
+
+        final analysis = await service.analyzeEnvironment();
+
+        expect(analysis.ostree.isAvailable, isFalse);
+        expect(analysis.ostree.isOk, isFalse);
+        expect(analysis.ostree.hasIntegrityWarning, isFalse);
+        final ostreeIssue = analysis.issues.firstWhere(
+          (issue) =>
+              issue.code == LinglongEnvironmentIssueCode.ostreeToolUnavailable,
+        );
+        expect(ostreeIssue.severity, LinglongEnvironmentIssueSeverity.warning);
+        expect(ostreeIssue.rawDetail, contains('ostree fsck 命令执行失败'));
       },
     );
 
@@ -401,6 +493,11 @@ Map<String, ShellCommandResult> _healthyEnvironmentCommands() {
     ),
     'apt-cache policy linglong-bin': ShellCommandResult(
       stdout: 'Installed: 1.12.2\n',
+      stderr: '',
+      exitCode: 0,
+    ),
+    'ostree refs --repo=/var/lib/linglong/repo': ShellCommandResult(
+      stdout: 'stable:main/org.deepin.base/25.2.2.5/x86_64/binary\n',
       stderr: '',
       exitCode: 0,
     ),

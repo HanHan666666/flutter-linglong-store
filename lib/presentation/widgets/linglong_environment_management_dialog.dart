@@ -677,12 +677,10 @@ class _StatusSummary extends StatelessWidget {
         color: theme.colorScheme.secondary,
       ),
       _MetricChip(
-        icon: analysis.ostree.isOk
-            ? Icons.verified_outlined
-            : Icons.report_problem_outlined,
+        icon: _ostreeMetricIcon(analysis.ostree),
         label: 'OSTree',
-        value: analysis.ostree.isOk ? '正常' : '异常',
-        color: analysis.ostree.isOk ? AppColors.success : AppColors.warning,
+        value: _ostreeMetricValue(analysis.ostree),
+        color: _ostreeMetricColor(analysis.ostree),
       ),
       _MetricChip(
         icon: Icons.storage_outlined,
@@ -734,6 +732,45 @@ class _StatusSummary extends StatelessWidget {
       RepoStatus.unknown => '未知',
     };
   }
+
+  /// 根据服务层给出的双通道状态展示 OSTree 指标文案。
+  ///
+  /// 深度 fsck 风险不等同于玲珑仓库不可用，因此这里要显式展示“可用，有风险”，
+  /// 让用户知道可以择机修复，而不是误解为基础环境已经整体损坏。
+  static String _ostreeMetricValue(LinglongOstreeCheckResult ostree) {
+    if (!ostree.isAvailable) {
+      return '工具不可用';
+    }
+    if (!ostree.isOk) {
+      return '不可用';
+    }
+    if (ostree.hasIntegrityWarning) {
+      return '可用，有风险';
+    }
+    return '正常';
+  }
+
+  /// 为 OSTree 指标选择状态图标，保持与文案语义一致。
+  static IconData _ostreeMetricIcon(LinglongOstreeCheckResult ostree) {
+    if (ostree.isOk && !ostree.hasIntegrityWarning) {
+      return Icons.verified_outlined;
+    }
+    if (!ostree.isAvailable || ostree.hasIntegrityWarning) {
+      return Icons.report_problem_outlined;
+    }
+    return Icons.error_outline;
+  }
+
+  /// 为 OSTree 指标选择状态颜色，区分不可用错误和可用但有风险的警告。
+  static Color _ostreeMetricColor(LinglongOstreeCheckResult ostree) {
+    if (ostree.isOk && !ostree.hasIntegrityWarning) {
+      return AppColors.success;
+    }
+    if (!ostree.isOk && ostree.isAvailable) {
+      return AppColors.error;
+    }
+    return AppColors.warning;
+  }
 }
 
 class _MetricChip extends StatelessWidget {
@@ -760,10 +797,7 @@ class _MetricChip extends StatelessWidget {
         // 卡片用 surface 色保持中性，状态含义统一交给左侧色条与图标色表达
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant,
-          width: 1,
-        ),
+        border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -962,9 +996,12 @@ class _RepositoryTile extends StatelessWidget {
                         ),
                         child: Text(
                           '默认',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
                                 color: AppColors.warning,
-                                fontWeight: context.appFontWeight(FontWeight.w600),
+                                fontWeight: context.appFontWeight(
+                                  FontWeight.w600,
+                                ),
                               ),
                         ),
                       ),
@@ -1236,7 +1273,9 @@ class _EnvManagementWarningBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // 背景用 AppColors.error 的低透明度填充；深色主题下透明度略低避免过亮刺眼。
-    final backgroundColor = AppColors.error.withValues(alpha: isDark ? 0.18 : 0.10);
+    final backgroundColor = AppColors.error.withValues(
+      alpha: isDark ? 0.18 : 0.10,
+    );
 
     return Container(
       width: double.infinity,
@@ -1270,9 +1309,9 @@ class _EnvManagementWarningBanner extends StatelessWidget {
               child: Text(
                 text,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      height: 1.4,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurface,
+                  height: 1.4,
+                ),
               ),
             ),
           ),
@@ -1298,10 +1337,7 @@ class _SegmentedTabBar extends StatelessWidget {
   final VoidCallback onRefresh;
 
   static const _tabs = <_SegmentedTabData>[
-    _SegmentedTabData(
-      icon: Icons.health_and_safety_outlined,
-      label: '环境分析',
-    ),
+    _SegmentedTabData(icon: Icons.health_and_safety_outlined, label: '环境分析'),
     _SegmentedTabData(icon: Icons.hub_outlined, label: '仓库管理'),
     _SegmentedTabData(icon: Icons.storage_outlined, label: '保存位置'),
   ];
@@ -1348,8 +1384,8 @@ class _SegmentedTabBar extends StatelessWidget {
                   ),
                   style: IconButton.styleFrom(
                     foregroundColor: theme.colorScheme.onSurfaceVariant,
-                    disabledForegroundColor:
-                        theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.38),
+                    disabledForegroundColor: theme.colorScheme.onSurfaceVariant
+                        .withValues(alpha: 0.38),
                   ),
                 ),
               ),
@@ -1376,7 +1412,9 @@ class _SegmentedTabItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final foreground = selected ? Colors.white : theme.colorScheme.onSurfaceVariant;
+    final foreground = selected
+        ? Colors.white
+        : theme.colorScheme.onSurfaceVariant;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),

@@ -89,7 +89,11 @@ class _LinglongEnvironmentManagementDialogState
                   Tab(icon: Icon(Icons.storage_outlined), text: '保存位置'),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+              // 警示横幅：该功能尚不稳定，需提示用户无问题勿用、遇问题谨慎操作。
+              // 横贯三个 Tab 顶部，使用 amber 警告色保证醒目；深色主题下用半透明 amber 适配。
+              _EnvManagementWarningBanner(text: l10n.envManagementWarning),
+              const SizedBox(height: 12),
               Expanded(
                 child: Stack(
                   children: [
@@ -1134,6 +1138,69 @@ class _BlockingProgressOverlay extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 玲珑环境管理弹窗顶部的警示横幅。
+///
+/// 设计原因：该功能涉及 OSTree 修复、保存位置迁移等高危操作，当前尚不稳定，
+/// 需在弹窗显眼位置统一提示用户「无问题勿用、遇问题谨慎操作」，
+/// 避免用户在不知风险的情况下随意触发高危流程。
+/// 横幅使用 amber 警告色保证醒目，并适配深色主题。
+class _EnvManagementWarningBanner extends StatelessWidget {
+  const _EnvManagementWarningBanner({required this.text});
+
+  /// 警示文案，由调用方通过 l10n 传入，保证多语言正确。
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // 浅色用 amber.shade50 背景 + amber.shade800 图标/边框；
+    // 深色用半透明 amber 适配，避免在深色背景上过亮刺眼。
+    final backgroundColor = isDark
+        ? Colors.amber.withValues(alpha: 0.15)
+        : Colors.amber.shade50;
+    final accentColor = isDark ? Colors.amber.shade300 : Colors.amber.shade800;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(8),
+        // 用与图标同色的细边框增强警示感，但不过分抢眼
+        border: Border.all(color: accentColor.withValues(alpha: 0.5), width: 1),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 装饰性警示图标，排除语义避免屏幕阅读器重复朗读无意义内容
+          ExcludeSemantics(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8, top: 1),
+              child: Icon(
+                Icons.warning_amber_rounded,
+                size: 18,
+                color: accentColor,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Semantics(
+              label: text,
+              child: Text(
+                text,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      height: 1.4,
+                    ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -2705,6 +2705,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'下载 {count}次'**
   String downloadedXTimes(String count);
+
+  /// No description provided for @envManagementWarning.
+  ///
+  /// In zh, this message translates to:
+  /// **'该功能尚不稳定，如无问题请勿使用；遇到问题请谨慎操作。'**
+  String get envManagementWarning;
 }
 
 class _AppLocalizationsDelegate

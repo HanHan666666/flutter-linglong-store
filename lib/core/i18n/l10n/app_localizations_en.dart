@@ -1501,4 +1501,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String downloadedXTimes(String count) {
     return '$count downloads';
   }
+
+  @override
+  String get envManagementWarning =>
+      'This feature is not yet stable. Do not use it unless necessary; proceed with caution if you encounter issues.';
 }

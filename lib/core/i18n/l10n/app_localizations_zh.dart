@@ -1452,4 +1452,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String downloadedXTimes(String count) {
     return '下载 $count次';
   }
+
+  @override
+  String get envManagementWarning => '该功能尚不稳定，如无问题请勿使用；遇到问题请谨慎操作。';
 }

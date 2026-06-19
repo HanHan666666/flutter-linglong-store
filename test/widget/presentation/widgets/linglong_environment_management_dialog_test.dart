@@ -49,6 +49,14 @@ void main() {
     expect(find.text('OSTree 仓库完整性异常'), findsOneWidget);
     expect(find.text('修复'), findsOneWidget);
 
+    // 警示横幅：提示功能尚不稳定，三个 Tab 共享，位于标题与 TabBar 之间
+    final l10n = await AppLocalizations.delegate.load(const Locale('zh'));
+    expect(find.text(l10n.envManagementWarning), findsOneWidget);
+    expect(
+      find.byIcon(Icons.warning_amber_rounded),
+      findsWidgets,
+    );
+
     await tester.tap(find.text('仓库管理'));
     await tester.pumpAndSettle();
     expect(find.text('默认仓库：stable'), findsOneWidget);
@@ -60,6 +68,41 @@ void main() {
     expect(find.text('当前保存位置'), findsOneWidget);
     expect(find.text('新的保存位置'), findsOneWidget);
     expect(find.text('移动保存位置'), findsOneWidget);
+  });
+
+  // 警示横幅文案需随 locale 切换为英文，验证 l10n key 正确接入
+  testWidgets('dialog renders localized warning banner in English', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          linglongEnvironmentManagementServiceProvider.overrideWithValue(
+            _FakeManagementService(),
+          ),
+          linglongRepositoryManagementRepositoryProvider.overrideWithValue(
+            _FakeRepositoryManagementRepository(),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: Center(child: LinglongEnvironmentManagementDialog()),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+    expect(find.text(l10n.envManagementWarning), findsOneWidget);
   });
 }
 

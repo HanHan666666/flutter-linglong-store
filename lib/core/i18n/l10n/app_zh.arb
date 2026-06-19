@@ -863,5 +863,6 @@
         "type": "String"
       }
     }
-  }
+  },
+  "envManagementWarning": "该功能尚不稳定，如无问题请勿使用；遇到问题请谨慎操作。"
 }

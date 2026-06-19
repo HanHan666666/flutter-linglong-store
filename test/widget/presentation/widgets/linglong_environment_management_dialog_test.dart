@@ -49,17 +49,31 @@ void main() {
     expect(find.text('OSTree 仓库完整性异常'), findsOneWidget);
     expect(find.text('修复'), findsOneWidget);
 
-    // 警示横幅：提示功能尚不稳定，三个 Tab 共享，位于标题与 TabBar 之间
+    // 警示横幅：提示功能尚不稳定，三个 Tab 共享，位于标题与 TabBar 之间。
+    // 采用红色强烈警告（AppColors.error），图标为 error_outline。
     final l10n = await AppLocalizations.delegate.load(const Locale('zh'));
     expect(find.text(l10n.envManagementWarning), findsOneWidget);
     expect(
-      find.byIcon(Icons.warning_amber_rounded),
+      find.byIcon(Icons.error_outline),
       findsWidgets,
     );
+
+    // 分段式 TabBar：默认选中第一个 Tab「环境分析」，其文字应为白色（主题色填充态）
+    final analysisTabStyle = tester.widget<Text>(find.text('环境分析')).style!;
+    expect(analysisTabStyle.color, Colors.white);
 
     await tester.tap(find.text('仓库管理'));
     await tester.pumpAndSettle();
     expect(find.text('默认仓库：stable'), findsOneWidget);
+    // 切换后「仓库管理」应高亮（白字），「环境分析」恢复为次级灰字
+    expect(
+      tester.widget<Text>(find.text('仓库管理')).style!.color,
+      Colors.white,
+    );
+    expect(
+      tester.widget<Text>(find.text('环境分析')).style!.color,
+      AppTheme.lightTheme.colorScheme.onSurfaceVariant,
+    );
     expect(find.text('stable'), findsWidgets);
     expect(find.text('添加仓库'), findsOneWidget);
     // 仓库管理说明提示：标题 + 正文，提示仅限官方 stable 仓库数据、勿删 stable

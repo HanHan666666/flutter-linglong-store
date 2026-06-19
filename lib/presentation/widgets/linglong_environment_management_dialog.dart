@@ -79,20 +79,13 @@ class _LinglongEnvironmentManagementDialogState
           height: 560,
           child: Column(
             children: [
-              const TabBar(
-                tabs: [
-                  Tab(
-                    icon: Icon(Icons.health_and_safety_outlined),
-                    text: '环境分析',
-                  ),
-                  Tab(icon: Icon(Icons.hub_outlined), text: '仓库管理'),
-                  Tab(icon: Icon(Icons.storage_outlined), text: '保存位置'),
-                ],
-              ),
-              const SizedBox(height: 12),
               // 警示横幅：该功能尚不稳定，需提示用户无问题勿用、遇问题谨慎操作。
-              // 横贯三个 Tab 顶部，使用 amber 警告色保证醒目；深色主题下用半透明 amber 适配。
+              // 放置在标题与 TabBar 之间，红色强烈警告，横贯三个 Tab 共享。
               _EnvManagementWarningBanner(text: l10n.envManagementWarning),
+              const SizedBox(height: 12),
+              // 分段式胶囊 TabBar：复用 DefaultTabController，保持与 TabBarView 联动。
+              // 选中项填主题色 + 白字，比默认 Material 下划线 TabBar 更精致、更桌面感。
+              const _SegmentedTabBar(),
               const SizedBox(height: 12),
               Expanded(
                 child: Stack(
@@ -662,45 +655,72 @@ class _StatusSummary extends StatelessWidget {
     final storage = analysis.storage;
     final theme = Theme.of(context);
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        _MetricChip(
-          icon: env.isOk ? Icons.check_circle_outline : Icons.error_outline,
-          label: '基础环境',
-          value: env.statusDescription,
-          color: env.isOk ? AppColors.success : AppColors.warning,
-        ),
-        _MetricChip(
-          icon: Icons.terminal_outlined,
-          label: 'll-cli',
-          value: env.llCliVersion ?? '未检测到',
-          color: theme.colorScheme.primary,
-        ),
-        _MetricChip(
-          icon: Icons.hub_outlined,
-          label: '仓库',
-          value: _repoStatusLabel(env.repoStatus),
-          color: theme.colorScheme.secondary,
-        ),
-        _MetricChip(
-          icon: analysis.ostree.isOk
-              ? Icons.verified_outlined
-              : Icons.report_problem_outlined,
-          label: 'OSTree',
-          value: analysis.ostree.isOk ? '正常' : '异常',
-          color: analysis.ostree.isOk ? AppColors.success : AppColors.warning,
-        ),
-        _MetricChip(
-          icon: Icons.storage_outlined,
-          label: '保存位置',
-          value: storage.usagePercent == null
-              ? '未知'
-              : '使用率 ${storage.usagePercent}%',
-          color: storage.isNearlyFull ? AppColors.warning : AppColors.info,
-        ),
-      ],
+    // 状态指标卡片。固定一行四列等宽布局，避免 Wrap 在内容不足时让单卡占满整行。
+    final chips = <_MetricChip>[
+      _MetricChip(
+        icon: env.isOk ? Icons.check_circle_outline : Icons.error_outline,
+        label: '基础环境',
+        value: env.statusDescription,
+        color: env.isOk ? AppColors.success : AppColors.warning,
+      ),
+      _MetricChip(
+        icon: Icons.terminal_outlined,
+        label: 'll-cli',
+        value: env.llCliVersion ?? '未检测到',
+        color: theme.colorScheme.primary,
+      ),
+      _MetricChip(
+        icon: Icons.hub_outlined,
+        label: '仓库',
+        value: _repoStatusLabel(env.repoStatus),
+        color: theme.colorScheme.secondary,
+      ),
+      _MetricChip(
+        icon: analysis.ostree.isOk
+            ? Icons.verified_outlined
+            : Icons.report_problem_outlined,
+        label: 'OSTree',
+        value: analysis.ostree.isOk ? '正常' : '异常',
+        color: analysis.ostree.isOk ? AppColors.success : AppColors.warning,
+      ),
+      _MetricChip(
+        icon: Icons.storage_outlined,
+        label: '保存位置',
+        value: storage.usagePercent == null
+            ? '未知'
+            : '使用率 ${storage.usagePercent}%',
+        color: storage.isNearlyFull ? AppColors.warning : AppColors.info,
+      ),
+    ];
+
+    const columns = 4;
+    const spacing = 10.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 单元格固定宽度：总宽减去列间距后均分，保证每行严格四列、等宽。
+        // 不足一行时剩余位置留空，最后一个卡片不会独占整行。
+        final cellWidth =
+            (constraints.maxWidth - spacing * (columns - 1)) / columns;
+        final rows = <Widget>[];
+        for (var i = 0; i < chips.length; i += columns) {
+          final rowChildren = <Widget>[];
+          for (var j = 0; j < columns; j++) {
+            final index = i + j;
+            if (j > 0) rowChildren.add(const SizedBox(width: spacing));
+            rowChildren.add(
+              SizedBox(
+                width: cellWidth,
+                child: index < chips.length ? chips[index] : const SizedBox(),
+              ),
+            );
+          }
+          rows.add(Row(children: rowChildren));
+          if (i + columns < chips.length) {
+            rows.add(const SizedBox(height: spacing));
+          }
+        }
+        return Column(children: rows);
+      },
     );
   }
 
@@ -730,38 +750,70 @@ class _MetricChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      constraints: const BoxConstraints(minWidth: 160),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      // 卡片宽度由父级（_StatusSummary 的等宽网格）精确控制，不设内部宽度约束
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.26)),
+        // 卡片用 surface 色保持中性，状态含义统一交给左侧色条与图标色表达
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant,
+          width: 1,
+        ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(label, style: Theme.of(context).textTheme.labelSmall),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: context.appFontWeight(FontWeight.w600),
-                  ),
-                ),
-              ],
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 左侧 4px 状态色条，强化指标的状态语义
+            VerticalDivider(
+              width: 4,
+              thickness: 4,
+              color: color,
+              indent: 2,
+              endIndent: 2,
             ),
-          ),
-        ],
+            const SizedBox(width: 10),
+            // 图标置于淡色圆形背景内，提升精致度与状态辨识
+            Container(
+              width: 28,
+              height: 28,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 16, color: color),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: context.appFontWeight(FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1156,7 +1208,8 @@ class _BlockingProgressOverlay extends StatelessWidget {
 /// 设计原因：该功能涉及 OSTree 修复、保存位置迁移等高危操作，当前尚不稳定，
 /// 需在弹窗显眼位置统一提示用户「无问题勿用、遇问题谨慎操作」，
 /// 避免用户在不知风险的情况下随意触发高危流程。
-/// 横幅使用 amber 警告色保证醒目，并适配深色主题。
+/// 横幅采用红色强烈警告（[AppColors.error]），区别于普通提示，强调高风险性质；
+/// 图标使用 error_outline 与红色语义保持一致。深色主题下用半透明红底适配。
 class _EnvManagementWarningBanner extends StatelessWidget {
   const _EnvManagementWarningBanner({required this.text});
 
@@ -1166,12 +1219,8 @@ class _EnvManagementWarningBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    // 浅色用 amber.shade50 背景 + amber.shade800 图标/边框；
-    // 深色用半透明 amber 适配，避免在深色背景上过亮刺眼。
-    final backgroundColor = isDark
-        ? Colors.amber.withValues(alpha: 0.15)
-        : Colors.amber.shade50;
-    final accentColor = isDark ? Colors.amber.shade300 : Colors.amber.shade800;
+    // 背景用 AppColors.error 的低透明度填充；深色主题下透明度略低避免过亮刺眼。
+    final backgroundColor = AppColors.error.withValues(alpha: isDark ? 0.18 : 0.10);
 
     return Container(
       width: double.infinity,
@@ -1179,20 +1228,23 @@ class _EnvManagementWarningBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(8),
-        // 用与图标同色的细边框增强警示感，但不过分抢眼
-        border: Border.all(color: accentColor.withValues(alpha: 0.5), width: 1),
+        // 用同色边框增强警示感
+        border: Border.all(
+          color: AppColors.error.withValues(alpha: 0.5),
+          width: 1,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 装饰性警示图标，排除语义避免屏幕阅读器重复朗读无意义内容
-          ExcludeSemantics(
+          const ExcludeSemantics(
             child: Padding(
-              padding: const EdgeInsets.only(right: 8, top: 1),
+              padding: EdgeInsets.only(right: 8, top: 1),
               child: Icon(
-                Icons.warning_amber_rounded,
+                Icons.error_outline,
                 size: 18,
-                color: accentColor,
+                color: AppColors.error,
               ),
             ),
           ),
@@ -1212,6 +1264,118 @@ class _EnvManagementWarningBanner extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 玲珑环境管理弹窗的分段式胶囊 TabBar。
+///
+/// 设计原因：默认 Material TabBar 的下划线指示器在桌面端观感偏粗糙，
+/// 改为 SegmentedControl（分段控件）风格：外层中性灰底容器，内部三个等宽胶囊，
+/// 选中项填主题色 + 白字，未选中透明。整体更紧凑精致，贴合桌面系统设置的语言。
+///
+/// 复用上层 [DefaultTabController] 的 [TabController]，通过监听其
+/// animation 实时刷新选中态，点击时调用 animateTo 切换，保持与下方
+/// [TabBarView] 的联动关系不变，不引入新的状态管理。
+class _SegmentedTabBar extends StatelessWidget {
+  const _SegmentedTabBar();
+
+  static const _tabs = <_SegmentedTabData>[
+    _SegmentedTabData(
+      icon: Icons.health_and_safety_outlined,
+      label: '环境分析',
+    ),
+    _SegmentedTabData(icon: Icons.hub_outlined, label: '仓库管理'),
+    _SegmentedTabData(icon: Icons.storage_outlined, label: '保存位置'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = DefaultTabController.of(context);
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        // 中性灰底容器，作为分段控件的轨道
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+      ),
+      child: AnimatedBuilder(
+        animation: controller,
+        builder: (context, _) {
+          final selectedIndex = controller.animation!.value.round();
+          return Row(
+            children: [
+              for (var i = 0; i < _tabs.length; i++)
+                Expanded(
+                  child: _SegmentedTabItem(
+                    data: _tabs[i],
+                    selected: i == selectedIndex,
+                    onTap: () => controller.animateTo(i),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// 分段控件的单个胶囊项。
+class _SegmentedTabItem extends StatelessWidget {
+  const _SegmentedTabItem({
+    required this.data,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final _SegmentedTabData data;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final foreground = selected ? Colors.white : theme.colorScheme.onSurfaceVariant;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Material(
+        color: selected ? theme.colorScheme.primary : Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadius.xs + 2),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(data.icon, size: 16, color: foreground),
+                const SizedBox(width: 6),
+                Text(
+                  data.label,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: foreground,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 分段控件 Tab 的静态数据。
+class _SegmentedTabData {
+  const _SegmentedTabData({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
 }
 
 extension on LinglongRepoInfo {

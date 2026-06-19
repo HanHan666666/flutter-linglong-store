@@ -133,6 +133,123 @@ void main() {
       );
     });
 
+    test(
+      'repairOstreeRepository treats fsck-detected partial commits as repaired with follow-up guidance',
+      () async {
+        final runner = _FakeShellCommandRunner.fromCommands({
+          'pkexec ostree fsck --repo=/var/lib/linglong/repo --all --delete':
+              const ShellCommandResult(
+                stdout:
+                    'fsck objects (41652/41652) 100%\n'
+                    '32 partial commits not verified\n',
+                stderr:
+                    'error: 32 partial commits from fsck-detected corruption\n',
+                exitCode: 1,
+              ),
+        });
+        final service = _buildManagementService(runner);
+
+        final result = await service.repairOstreeRepository(
+          logFilePath: '/tmp/linglong-ostree-repair.log',
+        );
+
+        expect(result.success, isTrue);
+        expect(result.message, contains('32 个 partial commits'));
+        expect(result.message, contains('重新拉取'));
+        expect(result.output, contains('fsck-detected corruption'));
+        expect(runner.commands, [
+          [
+            'pkexec',
+            'ostree',
+            'fsck',
+            '--repo=/var/lib/linglong/repo',
+            '--all',
+            '--delete',
+          ],
+        ]);
+      },
+    );
+
+    test(
+      'repairOstreeRepository retries without all option for older ostree',
+      () async {
+        final runner = _FakeShellCommandRunner.fromCommands({
+          'pkexec ostree fsck --repo=/var/lib/linglong/repo --all --delete':
+              const ShellCommandResult(
+                stdout: '',
+                stderr: 'error: Unknown option --all\n',
+                exitCode: 1,
+              ),
+          'pkexec ostree fsck --repo=/var/lib/linglong/repo --delete':
+              const ShellCommandResult(
+                stdout: 'Deleted corrupted object\n',
+                stderr: '',
+                exitCode: 0,
+              ),
+        });
+        final service = _buildManagementService(runner);
+
+        final result = await service.repairOstreeRepository(
+          logFilePath: '/tmp/linglong-ostree-repair.log',
+        );
+
+        expect(result.success, isTrue);
+        expect(result.message, contains('已兼容旧版 OSTree'));
+        expect(runner.commands, [
+          [
+            'pkexec',
+            'ostree',
+            'fsck',
+            '--repo=/var/lib/linglong/repo',
+            '--all',
+            '--delete',
+          ],
+          [
+            'pkexec',
+            'ostree',
+            'fsck',
+            '--repo=/var/lib/linglong/repo',
+            '--delete',
+          ],
+        ]);
+        expect(runner.logOptions.first?.overwrite, isTrue);
+        expect(runner.logOptions.last?.overwrite, isFalse);
+      },
+    );
+
+    test(
+      'repairOstreeRepository reports unsupported delete option without pretending repair succeeded',
+      () async {
+        final runner = _FakeShellCommandRunner.fromCommands({
+          'pkexec ostree fsck --repo=/var/lib/linglong/repo --all --delete':
+              const ShellCommandResult(
+                stdout: '',
+                stderr: 'error: Unrecognized option --delete\n',
+                exitCode: 1,
+              ),
+        });
+        final service = _buildManagementService(runner);
+
+        final result = await service.repairOstreeRepository(
+          logFilePath: '/tmp/linglong-ostree-repair.log',
+        );
+
+        expect(result.success, isFalse);
+        expect(result.message, contains('不支持 --delete'));
+        expect(result.message, contains('无法自动删除损坏对象'));
+        expect(runner.commands, [
+          [
+            'pkexec',
+            'ostree',
+            'fsck',
+            '--repo=/var/lib/linglong/repo',
+            '--all',
+            '--delete',
+          ],
+        ]);
+      },
+    );
+
     test('buildStorageMigrationScript uses systemd bind mount plan', () {
       final service = _buildManagementService(_FakeShellCommandRunner());
 

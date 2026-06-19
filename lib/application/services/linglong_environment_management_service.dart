@@ -1,3 +1,9 @@
+/// 玲珑运行期环境管理应用服务。
+///
+/// 该文件集中承载设置页「玲珑环境管理」所需的环境分析、OSTree 修复和保存位置迁移编排。
+/// 这些能力都涉及系统命令、管理员权限或磁盘状态，必须收敛在服务层，避免页面层直接拼接命令导致行为漂移。
+library;
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -12,6 +18,10 @@ import 'linglong_environment_service.dart';
 
 typedef ManagementClock = DateTime Function();
 
+/// 玲珑环境管理服务。
+///
+/// 负责把底层 shell/Rust 能力整理为 UI 可消费的诊断结果和修复结果。
+/// 所有会改变系统状态的动作都必须由上层显式确认后再调用这里的方法。
 class LinglongEnvironmentManagementService {
   LinglongEnvironmentManagementService({
     required ShellCommandExecutor executor,
@@ -60,34 +70,41 @@ class LinglongEnvironmentManagementService {
     );
   }
 
+  /// 执行 OSTree 仓库修复。
+  ///
+  /// 新版 OSTree 在 `--delete` 删除损坏对象后，可能因为 affected commit 被标记为 partial
+  /// 而返回非零码；这类结果代表自动清理步骤已经完成，后续需要重新拉取受影响内容。
+  /// 旧版 OSTree 可能不支持 `--all`，此处会降级到仅带 `--delete` 的修复命令。
   Future<LinglongEnvironmentRepairResult> repairOstreeRepository({
     String? logFilePath,
   }) async {
     final resolvedLogFilePath =
         logFilePath ?? await _createLogFilePath('linglong-ostree-repair');
-    final result = await _executor.run(
-      [
-        'pkexec',
-        'ostree',
-        'fsck',
-        '--repo=$_linglongRootPath/repo',
-        '--all',
-        '--delete',
-      ],
-      timeout: const Duration(minutes: 20),
-      environment: _englishLocaleEnv,
-      logOptions: ShellCommandLogOptions(
-        filePath: resolvedLogFilePath,
-        overwrite: true,
-      ),
+
+    final primaryResult = await _runOstreeRepairCommand(
+      includeAllObjects: true,
+      logFilePath: resolvedLogFilePath,
+      overwriteLog: true,
     );
 
-    return LinglongEnvironmentRepairResult(
-      action: LinglongEnvironmentRepairAction.ostreeFsckDelete,
-      success: result.success,
-      message: result.success ? 'OSTree 仓库完整性修复已执行' : 'OSTree 仓库完整性修复失败',
+    if (_isUnsupportedOstreeOption(primaryResult, '--all')) {
+      final fallbackResult = await _runOstreeRepairCommand(
+        includeAllObjects: false,
+        logFilePath: resolvedLogFilePath,
+        overwriteLog: false,
+      );
+      return _buildOstreeRepairResult(
+        result: fallbackResult,
+        logFilePath: resolvedLogFilePath,
+        outputResults: [primaryResult, fallbackResult],
+        usedLegacyFallback: true,
+      );
+    }
+
+    return _buildOstreeRepairResult(
+      result: primaryResult,
       logFilePath: resolvedLogFilePath,
-      output: _truncateOutput(_primaryOutput(result)),
+      outputResults: [primaryResult],
     );
   }
 
@@ -557,6 +574,126 @@ echo "旧目录备份：\$BACKUP"
     }
   }
 
+  /// 按当前 OSTree 版本能力执行一次修复命令。
+  ///
+  /// `includeAllObjects` 只控制是否携带 `--all`，`--delete` 是修复语义必须项；
+  /// 如果目标 OSTree 不支持 `--delete`，调用方会返回明确失败而不是退化成只检查。
+  Future<ShellCommandResult> _runOstreeRepairCommand({
+    required bool includeAllObjects,
+    required String logFilePath,
+    required bool overwriteLog,
+  }) {
+    final command = [
+      'pkexec',
+      'ostree',
+      'fsck',
+      '--repo=$_linglongRootPath/repo',
+      if (includeAllObjects) '--all',
+      '--delete',
+    ];
+
+    return _executor.run(
+      command,
+      timeout: const Duration(minutes: 20),
+      environment: _englishLocaleEnv,
+      logOptions: ShellCommandLogOptions(
+        filePath: logFilePath,
+        overwrite: overwriteLog,
+      ),
+    );
+  }
+
+  /// 将 OSTree 修复命令结果归类为 UI 可理解的业务状态。
+  ///
+  /// 这里刻意不只看退出码：新版 OSTree 会在删除损坏对象后返回 partial commit 错误，
+  /// 这种状态需要提示用户重新拉取受影响内容；旧版缺少参数则需要给出可操作的版本兼容信息。
+  LinglongEnvironmentRepairResult _buildOstreeRepairResult({
+    required ShellCommandResult result,
+    required String logFilePath,
+    required List<ShellCommandResult> outputResults,
+    bool usedLegacyFallback = false,
+  }) {
+    final output = _truncateOutput(_combinedPrimaryOutput(outputResults));
+    const action = LinglongEnvironmentRepairAction.ostreeFsckDelete;
+
+    if (_isUnsupportedOstreeOption(result, '--delete')) {
+      return LinglongEnvironmentRepairResult(
+        action: action,
+        success: false,
+        message: '当前 OSTree 版本不支持 --delete，无法自动删除损坏对象，请升级 ostree 或使用发行版工具手动修复。',
+        logFilePath: logFilePath,
+        output: output,
+      );
+    }
+
+    if (_isFsckDetectedPartialCommitState(result)) {
+      final count = _extractPartialCommitCount(result);
+      final countText = count == null ? '部分' : '$count 个';
+      final legacySuffix = usedLegacyFallback ? '（已兼容旧版 OSTree 参数）' : '';
+      return LinglongEnvironmentRepairResult(
+        action: action,
+        success: true,
+        message:
+            'OSTree 已删除可自动清理的损坏对象，但仍有 $countText partial commits 需要重新拉取。'
+            '请重新安装或更新受影响应用/基础环境后再次执行环境分析$legacySuffix。',
+        logFilePath: logFilePath,
+        output: output,
+      );
+    }
+
+    final successMessage = usedLegacyFallback
+        ? 'OSTree 仓库完整性修复已执行（已兼容旧版 OSTree）'
+        : 'OSTree 仓库完整性修复已执行';
+    return LinglongEnvironmentRepairResult(
+      action: action,
+      success: result.success,
+      message: result.success ? successMessage : 'OSTree 仓库完整性修复失败',
+      logFilePath: logFilePath,
+      output: output,
+    );
+  }
+
+  /// 判断 OSTree 输出是否表示当前版本不支持指定参数。
+  ///
+  /// 不同发行版会使用 `unknown option`、`unrecognized option` 或 `invalid option`
+  /// 等不同措辞，因此匹配时同时要求出现参数名，避免误判普通错误。
+  bool _isUnsupportedOstreeOption(ShellCommandResult result, String option) {
+    final output = _combinedCommandOutput(result).toLowerCase();
+    final normalizedOption = option.toLowerCase();
+    if (!output.contains(normalizedOption)) {
+      return false;
+    }
+    return output.contains('unknown option') ||
+        output.contains('unrecognized option') ||
+        output.contains('invalid option') ||
+        output.contains('no such option') ||
+        output.contains('unsupported option');
+  }
+
+  /// 判断 `fsck --delete` 是否进入“损坏对象已处理但仍有 partial commits”的新版 OSTree 状态。
+  ///
+  /// 这类状态通常退出码非 0，但继续提示“修复失败”会误导用户；
+  /// 正确处理是告知自动删除已执行，并引导重新拉取受影响对象。
+  bool _isFsckDetectedPartialCommitState(ShellCommandResult result) {
+    final output = _combinedCommandOutput(result).toLowerCase();
+    return output.contains('partial commits from fsck-detected corruption') ||
+        (output.contains('partial commits') &&
+            output.contains('fsck-detected corruption')) ||
+        output.contains('partial commits not verified');
+  }
+
+  /// 从 OSTree 输出中提取 partial commit 数量，用于给用户展示具体影响规模。
+  int? _extractPartialCommitCount(ShellCommandResult result) {
+    final match = RegExp(
+      r'(\d+)\s+partial\s+commits?',
+      caseSensitive: false,
+    ).firstMatch(_combinedCommandOutput(result));
+    if (match == null) {
+      return null;
+    }
+    return int.tryParse(match.group(1) ?? '');
+  }
+
   Future<String> _createLogFilePath(String prefix) async {
     final directoryPath =
         _logDirectoryPath ??
@@ -581,6 +718,25 @@ echo "旧目录备份：\$BACKUP"
       return primary;
     }
     return result.stdout.trim();
+  }
+
+  /// 合并一次命令的 stdout/stderr，供兼容判断使用。
+  ///
+  /// `ShellCommandResult.primaryMessage` 会优先取 stderr，但 OSTree 的进度、partial 计数和错误原因
+  /// 可能分散在两个流里，因此兼容判断必须读取完整输出。
+  String _combinedCommandOutput(ShellCommandResult result) {
+    return [
+      result.stdout.trim(),
+      result.stderr.trim(),
+    ].where((item) => item.isNotEmpty).join('\n');
+  }
+
+  /// 合并多次修复尝试的输出，确保旧版参数降级时 UI 和日志入口能看到完整上下文。
+  String _combinedPrimaryOutput(List<ShellCommandResult> results) {
+    return results
+        .map(_combinedCommandOutput)
+        .where((item) => item.isNotEmpty)
+        .join('\n');
   }
 
   String _truncateOutput(String output, {int maxLength = 4000}) {

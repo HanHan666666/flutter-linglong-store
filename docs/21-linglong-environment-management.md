@@ -144,6 +144,14 @@ pkexec ostree fsck --repo=/var/lib/linglong/repo --all --delete
 
 `--delete` 会删除损坏对象，后续安装或更新可重新拉取缺失内容。这个动作不能静默执行。
 
+OSTree 版本兼容规则：
+
+- 优先执行 `pkexec ostree fsck --repo=/var/lib/linglong/repo --all --delete`。
+- 如果输出明确表示当前 OSTree 不支持 `--all`，降级重试 `pkexec ostree fsck --repo=/var/lib/linglong/repo --delete`，并继续写入同一个日志文件。
+- 如果输出明确表示当前 OSTree 不支持 `--delete`，不能退化成只检查命令，也不能提示修复成功；必须告知用户该版本无法自动删除损坏对象，需要升级 ostree 或使用发行版工具手动修复。
+- 新版 OSTree 可能在删除损坏对象后输出 `partial commits from fsck-detected corruption` 并以非零码退出。这类结果表示可自动清理的损坏对象已处理，但仍有受影响 commit 被标记为 partial；UI 应提示用户重新安装或更新受影响应用/基础环境后再次执行环境分析，而不是展示普通“修复失败”。
+- partial commit 数量优先从 OSTree 输出中提取，例如 `32 partial commits not verified` 展示为“32 个 partial commits”。完整输出仍以日志文件为准。
+
 ## 保存位置迁移
 
 ### 上游方案

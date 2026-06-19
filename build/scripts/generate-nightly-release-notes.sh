@@ -98,7 +98,9 @@ $changelog_content
 ## Download
 - amd64: bundle / deb / rpm / AppImage
 - arm64: bundle / deb / rpm / AppImage
-- Arch Linux (AUR): \`paru -S linglong-store-bin\`
+- Arch Linux (AUR):
+  \`paru -S linglong-store-nightly-bin\`
+  # 或 yay -S linglong-store-nightly-bin\
 
 ## Requirements
 - Linux

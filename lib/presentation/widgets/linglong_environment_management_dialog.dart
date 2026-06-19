@@ -64,13 +64,9 @@ class _LinglongEnvironmentManagementDialogState
             const SizedBox(width: 10),
             const Expanded(child: Text('玲珑环境管理')),
             IconButton(
-              tooltip: l10n.refresh,
-              onPressed: state.isBusy
-                  ? null
-                  : () => ref
-                        .read(linglongEnvironmentManagementProvider.notifier)
-                        .load(),
-              icon: const Icon(Icons.refresh),
+              tooltip: l10n.close,
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.close),
             ),
           ],
         ),
@@ -85,7 +81,12 @@ class _LinglongEnvironmentManagementDialogState
               const SizedBox(height: 12),
               // 分段式胶囊 TabBar：复用 DefaultTabController，保持与 TabBarView 联动。
               // 选中项填主题色 + 白字，比默认 Material 下划线 TabBar 更精致、更桌面感。
-              const _SegmentedTabBar(),
+              _SegmentedTabBar(
+                isBusy: state.isBusy,
+                onRefresh: () => ref
+                    .read(linglongEnvironmentManagementProvider.notifier)
+                    .load(),
+              ),
               const SizedBox(height: 12),
               Expanded(
                 child: Stack(
@@ -1276,7 +1277,10 @@ class _EnvManagementWarningBanner extends StatelessWidget {
 /// animation 实时刷新选中态，点击时调用 animateTo 切换，保持与下方
 /// [TabBarView] 的联动关系不变，不引入新的状态管理。
 class _SegmentedTabBar extends StatelessWidget {
-  const _SegmentedTabBar();
+  const _SegmentedTabBar({required this.isBusy, required this.onRefresh});
+
+  final bool isBusy;
+  final VoidCallback onRefresh;
 
   static const _tabs = <_SegmentedTabData>[
     _SegmentedTabData(
@@ -1313,6 +1317,27 @@ class _SegmentedTabBar extends StatelessWidget {
                     onTap: () => controller.animateTo(i),
                   ),
                 ),
+              const SizedBox(width: 4),
+              // 刷新按钮置于分段控件右侧，三个 Tab 共享，视觉上与胶囊同高
+              SizedBox(
+                width: 36,
+                height: 36,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  iconSize: 18,
+                  tooltip: '刷新',
+                  onPressed: isBusy ? null : onRefresh,
+                  icon: Icon(
+                    Icons.refresh,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  style: IconButton.styleFrom(
+                    foregroundColor: theme.colorScheme.onSurfaceVariant,
+                    disabledForegroundColor:
+                        theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.38),
+                  ),
+                ),
+              ),
             ],
           );
         },

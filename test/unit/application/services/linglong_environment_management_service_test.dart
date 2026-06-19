@@ -194,6 +194,65 @@ void main() {
       },
     );
 
+    test('analyzeEnvironment reports linglong data permission mismatch', () async {
+      final runner = _FakeShellCommandRunner.fromCommands({
+        ..._healthyEnvironmentCommands(),
+        'll-cli --json ps': const ShellCommandResult(
+          stdout: '[]',
+          stderr: '',
+          exitCode: 0,
+        ),
+        'df -PB1 /var/lib/linglong': const ShellCommandResult(
+          stdout:
+              'Filesystem 1-blocks Used Available Capacity Mounted on\n/dev/nvme0n1p5 1000000000 400000000 600000000 40% /var\n',
+          stderr: '',
+          exitCode: 0,
+        ),
+        'findmnt --json /var/lib/linglong': const ShellCommandResult(
+          stdout:
+              '{"filesystems":[{"target":"/var/lib/linglong","source":"/dev/nvme0n1p5","fstype":"ext4","options":"rw"}]}',
+          stderr: '',
+          exitCode: 0,
+        ),
+        'stat -c %U:%G:%a:%n /var/lib/linglong /var/lib/linglong/.version /var/lib/linglong/config.yaml /var/lib/linglong/states.json /var/lib/linglong/repo /var/lib/linglong/layers /var/lib/linglong/entries /var/lib/linglong/merged':
+            const ShellCommandResult(
+              stdout:
+                  'deepin-linglong:deepin-linglong:755:/var/lib/linglong\n'
+                  'root:root:664:/var/lib/linglong/.version\n'
+                  'deepin-linglong:deepin-linglong:644:/var/lib/linglong/config.yaml\n'
+                  'root:root:664:/var/lib/linglong/states.json\n'
+                  'root:root:775:/var/lib/linglong/repo\n'
+                  'root:root:775:/var/lib/linglong/layers\n'
+                  'root:root:775:/var/lib/linglong/entries\n'
+                  'root:root:775:/var/lib/linglong/merged\n',
+              stderr: '',
+              exitCode: 0,
+            ),
+        'ostree fsck --repo=/var/lib/linglong/repo --quiet':
+            const ShellCommandResult(stdout: '', stderr: '', exitCode: 0),
+      });
+      final service = _buildManagementService(runner);
+
+      final analysis = await service.analyzeEnvironment();
+
+      expect(analysis.dataPermission.isOk, isFalse);
+      expect(
+        analysis.dataPermission.detail,
+        contains('/var/lib/linglong/.version'),
+      );
+      final issue = analysis.issues.firstWhere(
+        (issue) =>
+            issue.code ==
+            LinglongEnvironmentIssueCode.linglongDataPermissionAbnormal,
+      );
+      expect(issue.severity, LinglongEnvironmentIssueSeverity.error);
+      expect(issue.title, '玲珑数据目录权限异常');
+      expect(
+        issue.repairAction,
+        LinglongEnvironmentRepairAction.fixDataPermissions,
+      );
+    });
+
     test('repairOstreeRepository runs privileged fsck with log file', () async {
       final runner = _FakeShellCommandRunner.fromCommands({
         'pkexec ostree fsck --repo=/var/lib/linglong/repo --all --delete':
@@ -371,6 +430,75 @@ void main() {
       );
     });
 
+    test(
+      'buildDataPermissionRepairScript restores linglong service ownership',
+      () {
+        final service = _buildManagementService(_FakeShellCommandRunner());
+
+        final script = service.buildDataPermissionRepairScript();
+
+        expect(script, contains("ROOT='/var/lib/linglong'"));
+        expect(
+          script,
+          contains("SERVICE='org.deepin.linglong.PackageManager.service'"),
+        );
+        expect(script, contains("USER_NAME='deepin-linglong'"));
+        expect(script, contains("GROUP_NAME='deepin-linglong'"));
+        expect(
+          script,
+          contains(r'chown -R "$USER_NAME:$GROUP_NAME" "$ROOT/repo"'),
+        );
+        expect(
+          script,
+          contains(r'chown -R "$USER_NAME:$GROUP_NAME" "$ROOT/layers"'),
+        );
+        expect(
+          script,
+          contains(r'chown "$USER_NAME:$GROUP_NAME" "$ROOT/.version"'),
+        );
+        expect(script, contains(r'systemctl restart "$SERVICE"'));
+        expect(script, contains('ll-cli --json repo show'));
+      },
+    );
+
+    test(
+      'repairLinglongDataPermissions runs privileged repair script with log file',
+      () async {
+        final runner = _FakeShellCommandRunner.fromCommands(
+          const {},
+          dynamicResult: (command) {
+            if (command.length == 3 &&
+                command[0] == 'pkexec' &&
+                command[1] == 'bash' &&
+                command[2].endsWith('.sh')) {
+              return const ShellCommandResult(
+                stdout: '玲珑数据目录权限已修复。\n',
+                stderr: '',
+                exitCode: 0,
+              );
+            }
+            return null;
+          },
+        );
+        final service = _buildManagementService(runner);
+
+        final result = await service.repairLinglongDataPermissions(
+          logFilePath: '/tmp/linglong-permission-repair.log',
+        );
+
+        expect(result.success, isTrue);
+        expect(
+          result.action,
+          LinglongEnvironmentRepairAction.fixDataPermissions,
+        );
+        expect(runner.commands.single.take(2), ['pkexec', 'bash']);
+        expect(
+          runner.logOptions.single?.filePath,
+          '/tmp/linglong-permission-repair.log',
+        );
+      },
+    );
+
     test('moveLinglongStorage refuses to run while apps are running', () async {
       final runner = _FakeShellCommandRunner.fromCommands({
         'll-cli --json ps': const ShellCommandResult(
@@ -491,6 +619,20 @@ Map<String, ShellCommandResult> _healthyEnvironmentCommands() {
       stderr: '',
       exitCode: 0,
     ),
+    'stat -c %U:%G:%a:%n /var/lib/linglong /var/lib/linglong/.version /var/lib/linglong/config.yaml /var/lib/linglong/states.json /var/lib/linglong/repo /var/lib/linglong/layers /var/lib/linglong/entries /var/lib/linglong/merged':
+        ShellCommandResult(
+          stdout:
+              'deepin-linglong:deepin-linglong:755:/var/lib/linglong\n'
+              'deepin-linglong:deepin-linglong:644:/var/lib/linglong/.version\n'
+              'deepin-linglong:deepin-linglong:644:/var/lib/linglong/config.yaml\n'
+              'deepin-linglong:deepin-linglong:644:/var/lib/linglong/states.json\n'
+              'deepin-linglong:deepin-linglong:755:/var/lib/linglong/repo\n'
+              'deepin-linglong:deepin-linglong:755:/var/lib/linglong/layers\n'
+              'deepin-linglong:deepin-linglong:755:/var/lib/linglong/entries\n'
+              'deepin-linglong:deepin-linglong:755:/var/lib/linglong/merged\n',
+          stderr: '',
+          exitCode: 0,
+        ),
     'apt-cache policy linglong-bin': ShellCommandResult(
       stdout: 'Installed: 1.12.2\n',
       stderr: '',
@@ -505,11 +647,15 @@ Map<String, ShellCommandResult> _healthyEnvironmentCommands() {
 }
 
 class _FakeShellCommandRunner implements ShellCommandRunner {
-  _FakeShellCommandRunner() : _results = const {};
+  _FakeShellCommandRunner() : _results = const {}, _dynamicResult = null;
 
-  _FakeShellCommandRunner.fromCommands(this._results);
+  _FakeShellCommandRunner.fromCommands(
+    this._results, {
+    ShellCommandResult? Function(List<String> command)? dynamicResult,
+  }) : _dynamicResult = dynamicResult;
 
   final Map<String, ShellCommandResult> _results;
+  final ShellCommandResult? Function(List<String> command)? _dynamicResult;
   final List<List<String>> commands = [];
   final List<ShellCommandLogOptions?> logOptions = [];
 
@@ -523,7 +669,7 @@ class _FakeShellCommandRunner implements ShellCommandRunner {
     commands.add(List<String>.from(command));
     this.logOptions.add(logOptions);
     final key = command.join(' ');
-    final result = _results[key];
+    final result = _results[key] ?? _dynamicResult?.call(command);
     if (result == null) {
       throw StateError('Unexpected command: $key');
     }

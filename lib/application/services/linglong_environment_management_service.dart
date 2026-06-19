@@ -41,6 +41,21 @@ class LinglongEnvironmentManagementService {
   final String _linglongRootPath;
   final String? _logDirectoryPath;
 
+  static const String _linglongServiceName =
+      'org.deepin.linglong.PackageManager.service';
+  static const String _linglongServiceUser = 'deepin-linglong';
+  static const String _linglongServiceGroup = 'deepin-linglong';
+  static const List<String> _permissionCheckRelativePaths = [
+    '',
+    '.version',
+    'config.yaml',
+    'states.json',
+    'repo',
+    'layers',
+    'entries',
+    'merged',
+  ];
+
   static const Map<String, String> _englishLocaleEnv = {
     'LC_ALL': 'C.UTF-8',
     'LANG': 'C.UTF-8',
@@ -52,10 +67,12 @@ class LinglongEnvironmentManagementService {
     final envResult = await _environmentService.checkEnvironment();
     final runningAppCount = await _loadRunningAppCount();
     final storage = await _loadStorageInfo();
+    final dataPermission = await _checkDataPermissions();
     final ostree = await _checkOstreeRepository();
     final issues = _buildIssues(
       envResult: envResult,
       storage: storage,
+      dataPermission: dataPermission,
       ostree: ostree,
       runningAppCount: runningAppCount,
     );
@@ -63,6 +80,7 @@ class LinglongEnvironmentManagementService {
     return LinglongEnvironmentAnalysis(
       envResult: envResult,
       storage: storage,
+      dataPermission: dataPermission,
       ostree: ostree,
       issues: issues,
       runningAppCount: runningAppCount,
@@ -106,6 +124,44 @@ class LinglongEnvironmentManagementService {
       logFilePath: resolvedLogFilePath,
       outputResults: [primaryResult],
     );
+  }
+
+  /// 修复玲珑数据目录属主。
+  ///
+  /// `ll-package-manager` 以 `deepin-linglong` 身份运行，数据目录如果被 root 接管，
+  /// 会导致 `.version` 打不开、OSTree pull 无法 mkdir、layer 目录无法创建。
+  Future<LinglongEnvironmentRepairResult> repairLinglongDataPermissions({
+    String? logFilePath,
+  }) async {
+    final script = buildDataPermissionRepairScript();
+    final scriptFile = await _writeTemporaryScript(
+      script,
+      prefix: 'linglong-permission-repair',
+    );
+    final resolvedLogFilePath =
+        logFilePath ?? await _createLogFilePath('linglong-permission-repair');
+
+    try {
+      final result = await _executor.run(
+        ['pkexec', 'bash', scriptFile.path],
+        timeout: const Duration(minutes: 20),
+        environment: _englishLocaleEnv,
+        logOptions: ShellCommandLogOptions(
+          filePath: resolvedLogFilePath,
+          overwrite: true,
+        ),
+      );
+
+      return LinglongEnvironmentRepairResult(
+        action: LinglongEnvironmentRepairAction.fixDataPermissions,
+        success: result.success,
+        message: result.success ? '玲珑数据目录权限已修复' : '玲珑数据目录权限修复失败',
+        logFilePath: resolvedLogFilePath,
+        output: _truncateOutput(_combinedCommandOutput(result)),
+      );
+    } finally {
+      await _deleteFileIfExists(scriptFile);
+    }
   }
 
   Future<LinglongEnvironmentRepairResult> moveLinglongStorage(
@@ -238,6 +294,80 @@ echo "旧目录备份：\$BACKUP"
 ''';
   }
 
+  /// 构建数据目录权限修复脚本。
+  ///
+  /// 脚本只处理玲珑运行所需的本地数据树，不创建新仓库、不删除损坏对象；
+  /// 修复后通过重启 package-manager 和读取仓库配置验证运行路径恢复。
+  String buildDataPermissionRepairScript() {
+    return '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT=${_shellSingleQuote(_linglongRootPath)}
+SERVICE=${_shellSingleQuote(_linglongServiceName)}
+USER_NAME=${_shellSingleQuote(_linglongServiceUser)}
+GROUP_NAME=${_shellSingleQuote(_linglongServiceGroup)}
+
+if ! id "\$USER_NAME" >/dev/null 2>&1; then
+  echo "玲珑服务用户不存在：\$USER_NAME" >&2
+  exit 2
+fi
+
+if ! getent group "\$GROUP_NAME" >/dev/null 2>&1; then
+  echo "玲珑服务用户组不存在：\$GROUP_NAME" >&2
+  exit 3
+fi
+
+if [ ! -d "\$ROOT" ]; then
+  echo "玲珑数据目录不存在：\$ROOT" >&2
+  exit 4
+fi
+
+systemctl stop "\$SERVICE" 2>/dev/null || true
+
+chown "\$USER_NAME:\$GROUP_NAME" "\$ROOT"
+
+if [ -e "\$ROOT/.version" ]; then
+  chown "\$USER_NAME:\$GROUP_NAME" "\$ROOT/.version"
+  chmod u+rw "\$ROOT/.version" 2>/dev/null || true
+fi
+if [ -e "\$ROOT/config.yaml" ]; then
+  chown "\$USER_NAME:\$GROUP_NAME" "\$ROOT/config.yaml"
+  chmod u+rw "\$ROOT/config.yaml" 2>/dev/null || true
+fi
+if [ -e "\$ROOT/states.json" ]; then
+  chown "\$USER_NAME:\$GROUP_NAME" "\$ROOT/states.json"
+  chmod u+rw "\$ROOT/states.json" 2>/dev/null || true
+fi
+
+if [ -d "\$ROOT/repo" ]; then
+  chown -R "\$USER_NAME:\$GROUP_NAME" "\$ROOT/repo"
+fi
+if [ -d "\$ROOT/layers" ]; then
+  chown -R "\$USER_NAME:\$GROUP_NAME" "\$ROOT/layers"
+fi
+if [ -d "\$ROOT/entries" ]; then
+  chown -R "\$USER_NAME:\$GROUP_NAME" "\$ROOT/entries"
+fi
+if [ -d "\$ROOT/merged" ]; then
+  chown -R "\$USER_NAME:\$GROUP_NAME" "\$ROOT/merged"
+fi
+
+for dir in repo layers entries merged; do
+  target="\$ROOT/\$dir"
+  if [ -d "\$target" ]; then
+    find "\$target" -type d -exec chmod u+rwx {} +
+  fi
+done
+
+systemctl reset-failed "\$SERVICE" 2>/dev/null || true
+systemctl restart "\$SERVICE"
+ll-cli --json repo show >/dev/null
+
+echo "玲珑数据目录权限已修复。"
+''';
+  }
+
   Future<String?> _validateStorageMovePreconditions(
     String normalizedTargetPath,
   ) async {
@@ -275,6 +405,7 @@ echo "旧目录备份：\$BACKUP"
   List<LinglongEnvironmentIssue> _buildIssues({
     required LinglongEnvCheckResult envResult,
     required LinglongStorageInfo storage,
+    required LinglongDataPermissionCheckResult dataPermission,
     required LinglongOstreeCheckResult ostree,
     required int runningAppCount,
   }) {
@@ -300,6 +431,21 @@ echo "旧目录备份：\$BACKUP"
           description: '当前没有可用的玲珑仓库配置，需要先添加或修复仓库。',
           repairAction: LinglongEnvironmentRepairAction.refreshRepositoryConfig,
           rawDetail: envResult.errorDetail,
+        ),
+      );
+    }
+
+    if (!dataPermission.isOk) {
+      issues.add(
+        LinglongEnvironmentIssue(
+          code: LinglongEnvironmentIssueCode.linglongDataPermissionAbnormal,
+          severity: LinglongEnvironmentIssueSeverity.error,
+          title: '玲珑数据目录权限异常',
+          description:
+              'll-package-manager 以 $_linglongServiceUser 用户运行，但玲珑数据目录或关键状态文件属主异常，'
+              '可能导致仓库迁移、下载对象或创建 layer 失败。',
+          repairAction: LinglongEnvironmentRepairAction.fixDataPermissions,
+          rawDetail: dataPermission.detail,
         ),
       );
     }
@@ -366,6 +512,69 @@ echo "旧目录备份：\$BACKUP"
     }
 
     return issues;
+  }
+
+  Future<LinglongDataPermissionCheckResult> _checkDataPermissions() async {
+    final statPaths = _permissionCheckRelativePaths
+        .map(
+          (relativePath) => relativePath.isEmpty
+              ? _linglongRootPath
+              : path.join(_linglongRootPath, relativePath),
+        )
+        .toList(growable: false);
+    final result = await _run([
+      'stat',
+      '-c',
+      '%U:%G:%a:%n',
+      ...statPaths,
+    ], timeout: const Duration(minutes: 1));
+
+    if (result == null) {
+      return const LinglongDataPermissionCheckResult(
+        isAvailable: false,
+        isOk: false,
+        detail: '无法读取玲珑数据目录权限信息',
+      );
+    }
+
+    if (!result.success) {
+      return LinglongDataPermissionCheckResult(
+        isAvailable: false,
+        isOk: false,
+        detail: _truncateOutput(_combinedCommandOutput(result)),
+      );
+    }
+
+    final entries = _parsePermissionEntries(result.stdout);
+    final abnormalEntries = entries
+        .where((entry) {
+          final expectedOwner =
+              entry.owner == _linglongServiceUser &&
+              entry.group == _linglongServiceGroup;
+          return !expectedOwner || !entry.ownerCanWrite;
+        })
+        .toList(growable: false);
+
+    if (abnormalEntries.isEmpty) {
+      return const LinglongDataPermissionCheckResult(
+        isAvailable: true,
+        isOk: true,
+      );
+    }
+
+    final detail = abnormalEntries
+        .map(
+          (entry) =>
+              '${entry.path} 当前 ${entry.owner}:${entry.group} mode=${entry.mode}，'
+              '期望 $_linglongServiceUser:$_linglongServiceGroup 且 owner 可写',
+        )
+        .join('\n');
+
+    return LinglongDataPermissionCheckResult(
+      isAvailable: true,
+      isOk: false,
+      detail: _truncateOutput(detail),
+    );
   }
 
   Future<int> _loadRunningAppCount() async {
@@ -551,6 +760,31 @@ echo "旧目录备份：\$BACKUP"
     }
   }
 
+  /// 解析 `stat -c %U:%G:%a:%n` 的输出。
+  ///
+  /// 路径理论上不包含冒号，但这里仍保留剩余字段拼接，避免后续测试路径或非标准挂载点中
+  /// 出现冒号时把权限记录误拆坏。
+  List<_PermissionEntry> _parsePermissionEntries(String output) {
+    return const LineSplitter()
+        .convert(output)
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .map((line) {
+          final parts = line.split(':');
+          if (parts.length < 4) {
+            return null;
+          }
+          return _PermissionEntry(
+            owner: parts[0],
+            group: parts[1],
+            mode: parts[2],
+            path: parts.sublist(3).join(':'),
+          );
+        })
+        .nonNulls
+        .toList(growable: false);
+  }
+
   Future<ShellCommandResult?> _run(
     List<String> command, {
     Duration timeout = const Duration(minutes: 5),
@@ -602,11 +836,14 @@ echo "旧目录备份：\$BACKUP"
     return probe.path;
   }
 
-  Future<File> _writeTemporaryScript(String script) async {
+  Future<File> _writeTemporaryScript(
+    String script, {
+    String prefix = 'linglong-storage-move',
+  }) async {
     final file = File(
       path.join(
         Directory.systemTemp.path,
-        'linglong-storage-move-${_clock().millisecondsSinceEpoch}.sh',
+        '$prefix-${_clock().millisecondsSinceEpoch}.sh',
       ),
     );
     await file.writeAsString(script, flush: true);
@@ -834,4 +1071,35 @@ class _FindmntInfo {
   final String? target;
   final String? source;
   final bool isBindMounted;
+}
+
+class _PermissionEntry {
+  const _PermissionEntry({
+    required this.owner,
+    required this.group,
+    required this.mode,
+    required this.path,
+  });
+
+  final String owner;
+  final String group;
+  final String mode;
+  final String path;
+
+  /// 判断属主是否具备写权限。
+  ///
+  /// `stat %a` 可能输出 `755` 或带特殊位的 `2755`，权限判断只取最后三位中的 owner 位。
+  bool get ownerCanWrite {
+    final normalizedMode = mode.length > 3
+        ? mode.substring(mode.length - 3)
+        : mode;
+    if (normalizedMode.isEmpty) {
+      return false;
+    }
+    final ownerDigit = int.tryParse(normalizedMode.substring(0, 1));
+    if (ownerDigit == null) {
+      return false;
+    }
+    return (ownerDigit & 2) == 2;
+  }
 }

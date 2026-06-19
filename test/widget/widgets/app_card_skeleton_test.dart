@@ -2,18 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shimmer/shimmer.dart';
 
+import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/presentation/widgets/app_card.dart';
+
+/// 构建带国际化支持的测试宿主。
+///
+/// AppCard.skeleton 渲染链路内部依赖 AppLocalizations（状态文案、无障碍语义等）。
+/// 若用裸 MaterialApp 不注入 localizationsDelegates，AppLocalizations.of(context)
+/// 返回 null 会触发空断言崩溃，骨架屏无法渲染。这里统一注入 l10n delegate。
+Widget _harness(Widget child, {ThemeData? theme}) {
+  return MaterialApp(
+    theme: theme,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(body: child),
+  );
+}
 
 void main() {
   group('AppCard Skeleton Tests', () {
     testWidgets('skeleton constructor should display shimmer loading', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: AppCard.skeleton(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_harness(const AppCard.skeleton()));
 
       // 应该显示 Shimmer 组件
       expect(find.byType(Shimmer), findsWidgets);
@@ -23,13 +32,7 @@ void main() {
     });
 
     testWidgets('skeleton should have correct layout structure', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: AppCard.skeleton(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_harness(const AppCard.skeleton()));
 
       // 验证骨架屏结构：图标占位 + 内容占位 + 按钮占位
       final row = tester.widget<Row>(find.byType(Row).first);
@@ -39,16 +42,14 @@ void main() {
 
     testWidgets('multiple skeletons should display correctly', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: Column(
-                children: [
-                  AppCard.skeleton(),
-                  AppCard.skeleton(),
-                  AppCard.skeleton(),
-                ],
-              ),
+        _harness(
+          const SingleChildScrollView(
+            child: Column(
+              children: [
+                AppCard.skeleton(),
+                AppCard.skeleton(),
+                AppCard.skeleton(),
+              ],
             ),
           ),
         ),
@@ -59,28 +60,14 @@ void main() {
     });
 
     testWidgets('skeleton should adapt to dark theme', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData.dark(),
-          home: const Scaffold(
-            body: AppCard.skeleton(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_harness(const AppCard.skeleton(), theme: ThemeData.dark()));
 
       // 骨架屏应该在深色主题下正常渲染
       expect(find.byType(Shimmer), findsWidgets);
     });
 
     testWidgets('skeleton should adapt to light theme', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData.light(),
-          home: const Scaffold(
-            body: AppCard.skeleton(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(_harness(const AppCard.skeleton(), theme: ThemeData.light()));
 
       // 骨架屏应该在浅色主题下正常渲染
       expect(find.byType(Shimmer), findsWidgets);

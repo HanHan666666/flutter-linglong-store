@@ -587,7 +587,9 @@ class AppRepositoryImpl implements AppRepository {
             ),
           )
           .toList(),
-      tags: (dto.tagList ?? []).map((t) => AppTag(name: t.name)).toList(),
+      tags: (dto.tagList ?? [])
+          .map((t) => AppTag(name: t.name, language: t.language))
+          .toList(),
       repoName: dto.repoName,
       repoUrl: dto.repoUrl,
       homePage: dto.homePage,

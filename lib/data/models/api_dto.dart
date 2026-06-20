@@ -224,7 +224,8 @@ sealed class AppScreenshotDTO with _$AppScreenshotDTO {
 sealed class AppTagDTO with _$AppTagDTO {
   const factory AppTagDTO({
     @JsonKey(name: 'name') required String name,
-    @JsonKey(name: 'lan') String? language,
+    // 后端契约保证详情接口每个标签都带 lan，改为 required 以保留标签语言身份
+    @JsonKey(name: 'lan') required String language,
   }) = _AppTagDTO;
 
   factory AppTagDTO.fromJson(Map<String, dynamic> json) =>
@@ -460,6 +461,11 @@ sealed class SearchAppListRequest with _$SearchAppListRequest {
     /// null 表示全部应用，与 Rust 旧版语义一致。
     /// includeIfNull: false 确保 null 时不向后端发送该字段。
     @JsonKey(includeIfNull: false) String? categoryId,
+
+    /// 标签搜索：tagName + tagLan 必须成对提供，普通文本搜索不传这两个字段。
+    /// includeIfNull: false 确保普通搜索不会把 null 标签字段发给后端，避免误走标签 JOIN。
+    @JsonKey(includeIfNull: false) String? tagName,
+    @JsonKey(includeIfNull: false) String? tagLan,
     @JsonKey(name: 'pageNo') @Default(1) int pageNo,
     @JsonKey(name: 'pageSize') @Default(20) int pageSize,
     @JsonKey(name: 'repoName')

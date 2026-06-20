@@ -12,6 +12,7 @@ import 'package:linglong_store/application/providers/search_hint_provider.dart';
 import 'package:linglong_store/core/config/routes.dart';
 import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
+import 'package:linglong_store/domain/models/app_detail.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/presentation/widgets/title_bar.dart';
 
@@ -259,29 +260,133 @@ void main() {
     expect(border!.top.color, AppColors.primary);
     expect(border.top.width, 1);
   });
+
+  group('tag chip', () {
+    testWidgets('tag route renders one non-editable chip and no suggestions',
+        (tester) async {
+      await tester.pumpWidget(_buildRouterApp(
+        initialLocation: '/search_list?tag=办公&tagLan=zh_CN',
+      ));
+      await tester.pumpAndSettle();
+
+      // 标签模式：渲染单个不可编辑胶囊，不渲染 TextField，不拉候选
+      expect(find.widgetWithText(InputChip, '办公'), findsOneWidget);
+      expect(find.byType(TextField), findsNothing);
+      expect(find.text('浏览器'), findsNothing);
+    });
+
+    testWidgets('deleting tag chip returns to empty text search',
+        (tester) async {
+      await tester.pumpWidget(_buildRouterApp(
+        initialLocation: '/search_list?tag=办公&tagLan=zh_CN',
+      ));
+      await tester.pumpAndSettle();
+
+      final chip =
+          tester.widget<InputChip>(find.widgetWithText(InputChip, '办公'));
+      chip.onDeleted!.call();
+      await tester.pumpAndSettle();
+
+      // 删除胶囊后回到普通文本搜索模式（空查询），TextField 重新出现
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.widgetWithText(InputChip, '办公'), findsNothing);
+      expect(find.text('route:/search_list?q='), findsOneWidget);
+    });
+
+    testWidgets('backspace removes focused tag chip', (tester) async {
+      await tester.pumpWidget(_buildRouterApp(
+        initialLocation: '/search_list?tag=办公&tagLan=zh_CN',
+      ));
+      await tester.pumpAndSettle();
+
+      // 胶囊自动聚焦后 Backspace 应删除标签并回到文本搜索
+      await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(InputChip, '办公'), findsNothing);
+      expect(find.byType(TextField), findsOneWidget);
+    });
+
+    testWidgets('tag chip exposes localized search semantics and 48px target',
+        (tester) async {
+      // 直接渲染标题栏（与现有样式测试一致）：
+      // 标签语义是组件自身属性，不依赖路由上下文；ShellRoute 的 navigator 重建会干扰
+      // 测试框架 getSemantics(byKey) 读取，故这里用直接渲染验证语义与尺寸契约。
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appSearchIndexProvider.overrideWith(() => _EmptyFakeIndex()),
+            searchHintAppsProvider.overrideWithValue(const <SearchHintApp>[]),
+          ],
+          child: MaterialApp(
+            locale: const Locale('zh'),
+            theme: AppTheme.lightTheme,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: CustomTitleBar(
+                isMaximized: false,
+                onMinimize: () {},
+                onMaximize: () {},
+                onClose: () {},
+                currentSearchTag:
+                    const AppTag(name: '办公', language: 'zh_CN'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final chip = find.byKey(const Key('title-search-tag-chip'));
+      expect(chip, findsOneWidget);
+      // 无障碍：最小 48px 交互高度，label 含“按标签搜索：办公”
+      expect(tester.getSize(chip).height, greaterThanOrEqualTo(48));
+      expect(tester.getSemantics(chip).label, contains('按标签搜索：办公'));
+    });
+  });
 }
 
-Widget _buildRouterApp() {
+Widget _buildRouterApp({String initialLocation = '/'}) {
   final router = GoRouter(
+    initialLocation: initialLocation,
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => Scaffold(
-          body: CustomTitleBar(
-            isMaximized: false,
-            onMinimize: () {},
-            onMaximize: () {},
-            onClose: () {},
+      ShellRoute(
+        builder: (context, state, child) {
+          final query = state.uri.queryParameters['q'] ?? '';
+          final tagName = state.uri.queryParameters['tag'];
+          final tagLan = state.uri.queryParameters['tagLan'];
+          final currentTag = tagName != null && tagLan != null
+              ? AppTag(name: tagName, language: tagLan)
+              : null;
+          return Scaffold(
+            body: Column(
+              children: [
+                CustomTitleBar(
+                  isMaximized: false,
+                  onMinimize: () {},
+                  onMaximize: () {},
+                  onClose: () {},
+                  currentSearchQuery: query,
+                  currentSearchTag: currentTag,
+                ),
+                Expanded(child: child),
+              ],
+            ),
+          );
+        },
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, __) => const SizedBox.shrink(),
           ),
-        ),
-      ),
-      GoRoute(
-        path: AppRoutes.searchList,
-        builder: (context, state) => Scaffold(
-          body: Text(
-            'route:${state.uri.path}?q=${state.uri.queryParameters['q'] ?? ''}',
+          GoRoute(
+            path: AppRoutes.searchList,
+            builder: (_, state) => Text(
+              'route:${state.uri.path}?q=${state.uri.queryParameters['q'] ?? ''}',
+            ),
           ),
-        ),
+        ],
       ),
       GoRoute(
         path: '/app/:id',

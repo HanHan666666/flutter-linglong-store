@@ -162,6 +162,12 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
   OverlayEntry? _suggestionsOverlayEntry;
   Timer? _debounceTimer;
 
+  /// 标签胶囊专用焦点节点，用于接收 Backspace/Delete 删除快捷键。
+  ///
+  /// 标签模式下不构建 TextField，必须用独立 FocusNode + CallbackShortcuts
+  /// 承接键盘删除事件，保证与输入框模式一致的键盘可操作性。
+  final FocusNode _tagFocusNode = FocusNode(debugLabel: 'title-search-tag');
+
   /// placeholder 轮播相关状态。
   ///
   /// 下载量榜数据由 [searchHintAppsProvider] 提供，到位后每 5 秒切换一个应用名
@@ -212,6 +218,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
     _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
     _keyboardFocusNode.dispose();
+    _tagFocusNode.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -571,9 +578,45 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
     return renderBox.localToGlobal(Offset.zero);
   }
 
+  /// 删除当前标签胶囊，回到普通文本搜索模式（空查询）。
+  ///
+  /// 设计原因：标签与文本模式互斥；删除标签等同于清空搜索条件，
+  /// 统一导航到无 query 的搜索页，由标题栏恢复为可编辑输入框。
+  void _removeTag() {
+    _tagFocusNode.unfocus();
+    // 进入标签模式前已清空输入控制器，这里导航后页面重建会切回输入框
+    widget.onSearch('');
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
+    // 标签模式：渲染不可拆分、不可编辑的 Tag 胶囊，不构建 TextField/候选浮层。
+    // 进入标签模式时确保控制器为空、候选 overlay 已关闭、防抖已取消，
+    // 避免隐藏的输入框或候选请求继续执行。
+    // 注意：build 内禁止修改 provider，候选清理放到 postFrame 回调。
+    final tag = widget.currentTag;
+    if (tag != null) {
+      // 标签胶囊需要键盘焦点以承接 Backspace/Delete 删除；autofocus 在路由重建后
+      // 可能未及时生效，这里在首帧后显式请求焦点，保证键盘删除可用。
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        if (_controller.text.isNotEmpty) {
+          _controller.clear();
+        }
+        _removeSuggestionsOverlay();
+        _debounceTimer?.cancel();
+        ref.read(titleSearchSuggestionsProvider.notifier).clear();
+        if (!_tagFocusNode.hasFocus) {
+          _tagFocusNode.requestFocus();
+        }
+      });
+      return _buildTagChip(context, tag, l10n);
+    }
+
     ref.watch(titleSearchSuggestionsProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
@@ -693,9 +736,56 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
       ),
     );
   }
-}
 
-/// 搜索框动画 placeholder。
+  /// 构建标签模式下的不可拆分 Tag 胶囊。
+  ///
+  /// - 不构建 TextField，胶囊不可编辑；
+  /// - 通过关闭按钮或 Backspace/Delete（CallbackShortcuts）删除后回到普通文本搜索；
+  /// - 满足无障碍：最小 48px 交互高度、本地化语义 label；
+  /// - 进入标签模式后自动聚焦，便于键盘删除。
+  Widget _buildTagChip(BuildContext context, AppTag tag, AppLocalizations l10n) {
+    // Focus 放在 Semantics 外层：Focus 会注入自己的语义作用域，放在内部会让
+    // getSemantics(byKey) 命中的节点 label 变空。外层 Focus + Semantics(key,label,container)
+    // + 内层 ExcludeSemantics 屏蔽 InputChip/Text 默认语义，保证读到的 label 为本地化文案。
+    // 标签模式没有 TextField，Backspace 无法用 CallbackShortcuts 捕获（无修饰键的按键会被
+    // Shortcuts 机制忽略），改用 FocusNode.onKeyEvent 直接拦截 Backspace/Delete 并交给删除回调。
+    return Focus(
+      focusNode: _tagFocusNode,
+      autofocus: true,
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent &&
+            (event.logicalKey == LogicalKeyboardKey.backspace ||
+                event.logicalKey == LogicalKeyboardKey.delete)) {
+          _removeTag();
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+      child: Semantics(
+        key: const Key('title-search-tag-chip'),
+        label: l10n.a11ySearchByTag(tag.name),
+        button: true,
+        container: true,
+        child: ExcludeSemantics(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: InputChip(
+              label: Text(
+                tag.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              onDeleted: _removeTag,
+              deleteButtonTooltipMessage: l10n.a11yRemoveSearchTag(tag.name),
+              // padded 保证删除按钮热区达到最小交互尺寸
+              materialTapTargetSize: MaterialTapTargetSize.padded,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 ///
 /// 替代 `InputDecoration.hintText`（后者只能瞬切，无法挂自定义进出动画）。
 /// 通过 [AnimatedSwitcher] 以「淡入淡出 + 轻微上滑」交叉切换文案，文案变化由

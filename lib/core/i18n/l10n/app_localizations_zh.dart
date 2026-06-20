@@ -1289,6 +1289,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get viewDownloadManager => '查看下载管理';
 
   @override
+  String a11ySearchByTag(Object tag) {
+    return '按标签搜索：$tag';
+  }
+
+  @override
+  String a11yRemoveSearchTag(Object tag) {
+    return '移除搜索标签：$tag';
+  }
+
+  @override
   String a11yInstallApp(Object appName) {
     return '安装 $appName';
   }

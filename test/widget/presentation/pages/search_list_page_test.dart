@@ -10,6 +10,7 @@ import 'package:linglong_store/application/providers/application_card_state_prov
 import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
+import 'package:linglong_store/domain/models/app_detail.dart';
 import 'package:linglong_store/presentation/pages/search_list/search_list_page.dart';
 
 import '../../../mocks/mock_classes.mocks.dart';
@@ -111,6 +112,48 @@ void main() {
     expect(captured.map((r) => r.pageNo), containsAllInOrder([1, 2]));
     expect(captured.every((r) => r.keyword == 'browser'), isTrue);
     expect(captured.every((r) => r.pageSize == 20), isTrue);
+  });
+
+  testWidgets('initial tag triggers exact tag search', (tester) async {
+    // 详情页点击标签进入时，页面应使用标签身份搜索（tagName+tagLan），而非普通关键词
+    final api = MockAppApiService();
+    when(api.getSearchAppList(any)).thenAnswer((_) async => _buildSearchResponse(
+          const [],
+          currentPage: 1,
+          total: 0,
+          pages: 1,
+        ));
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appApiServiceProvider.overrideWithValue(api),
+          applicationCardStateIndexProvider.overrideWithValue(
+            const ApplicationCardStateIndex(
+              installedVersionByAppId: {},
+              updateAppIds: {},
+              activeTasksByAppId: {},
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const SearchListPage(
+            initialTag: AppTag(name: '办公', language: 'zh_CN'),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final request = verify(api.getSearchAppList(captureAny))
+        .captured
+        .single as SearchAppListRequest;
+    expect(request.tagName, '办公');
+    expect(request.tagLan, 'zh_CN');
   });
 }
 

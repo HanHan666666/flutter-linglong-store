@@ -5,16 +5,23 @@ import '../../../application/providers/search_provider.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
+import '../../../domain/models/app_detail.dart';
 import '../../../domain/models/recommend_models.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/widgets.dart';
 
 /// 搜索结果页
+///
+/// 支持两种进入条件：普通文本关键词（[initialQuery]）或标签（[initialTag]）。
+/// 标签优先级高于关键词：当两者同时提供时以标签为准，禁止把标签伪装成普通关键词。
 class SearchListPage extends ConsumerStatefulWidget {
-  const SearchListPage({this.initialQuery, super.key});
+  const SearchListPage({this.initialQuery, this.initialTag, super.key});
 
-  /// 初始搜索关键词
+  /// 初始搜索关键词（普通文本搜索模式）
   final String? initialQuery;
+
+  /// 初始标签条件（标签搜索模式），优先级高于 [initialQuery]
+  final AppTag? initialTag;
 
   @override
   ConsumerState<SearchListPage> createState() => _SearchListPageState();
@@ -56,7 +63,9 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
   @override
   void didUpdateWidget(covariant SearchListPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.initialQuery != widget.initialQuery) {
+    // 关键词或标签任一变化都需重新同步搜索条件
+    if (oldWidget.initialQuery != widget.initialQuery ||
+        oldWidget.initialTag != widget.initialTag) {
       _syncSearchQuery();
     }
   }
@@ -70,12 +79,21 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
   }
 
   void _syncSearchQuery() {
+    final tag = widget.initialTag;
     final query = widget.initialQuery?.trim() ?? '';
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
       }
       final notifier = ref.read(searchProvider.notifier);
+      // 标签优先级高于关键词：有标签走标签搜索
+      if (tag != null) {
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(0);
+        }
+        notifier.searchByTag(tag);
+        return;
+      }
       if (query.isEmpty) {
         notifier.clear();
         return;
@@ -95,8 +113,8 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
   }
 
   Widget _buildBody(SearchState state) {
-    // 未搜索状态
-    if (state.query.isEmpty) {
+    // 未搜索状态：既无关键词也无标签
+    if (!state.hasCriteria) {
       return _buildEmptySearch();
     }
 
@@ -186,6 +204,9 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
 
   Widget _buildResultHeader(SearchState state) {
     final l10n = AppLocalizations.of(context);
+    // 结果标题统一读取当前条件（标签名称优先，回退到文本关键词），
+    // 避免标签搜索时因 query 为空被误判为未搜索状态
+    final displayTerm = state.tag?.name ?? state.query;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
@@ -200,9 +221,9 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
             ),
           ),
           const Spacer(),
-          if (state.query.isNotEmpty)
+          if (displayTerm.isNotEmpty)
             Text(
-              '"${state.query}"',
+              '"$displayTerm"',
               style: context.appTextStyles.bodyMedium.copyWith(
                 color: AppColors.primary,
                 fontWeight: context.appFontWeight(FontWeight.w500),

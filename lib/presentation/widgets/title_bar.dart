@@ -13,6 +13,7 @@ import '../../application/providers/title_search_suggestions_provider.dart';
 import '../../core/config/routes.dart';
 import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
+import '../../domain/models/app_detail.dart';
 import '../../domain/models/installed_app.dart';
 
 /// 自定义标题栏
@@ -26,6 +27,7 @@ class CustomTitleBar extends StatelessWidget {
     required this.onMaximize,
     required this.onClose,
     this.currentSearchQuery = '',
+    this.currentSearchTag,
     this.showSearch = true,
     super.key,
   });
@@ -42,8 +44,11 @@ class CustomTitleBar extends StatelessWidget {
   /// 关闭回调
   final VoidCallback onClose;
 
-  /// 当前搜索关键词
+  /// 当前搜索关键词（普通文本搜索模式）
   final String currentSearchQuery;
+
+  /// 当前标签搜索条件（标签模式，与 [currentSearchQuery] 互斥）
+  final AppTag? currentSearchTag;
 
   /// 是否显示搜索框
   final bool showSearch;
@@ -119,6 +124,7 @@ class CustomTitleBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         child: _TitleSearchBox(
           currentQuery: currentSearchQuery,
+          currentTag: currentSearchTag,
           onSearch: context.goToSearch,
         ),
       ),
@@ -128,10 +134,17 @@ class CustomTitleBar extends StatelessWidget {
 
 /// 标题栏搜索框
 class _TitleSearchBox extends ConsumerStatefulWidget {
-  const _TitleSearchBox({required this.currentQuery, required this.onSearch});
+  const _TitleSearchBox({
+    required this.currentQuery,
+    required this.onSearch,
+    this.currentTag,
+  });
 
   final String currentQuery;
   final ValueChanged<String> onSearch;
+
+  /// 标签搜索条件；非空时进入标签模式，渲染不可拆分 Tag 胶囊（Task 9 实现）
+  final AppTag? currentTag;
 
   @override
   ConsumerState<_TitleSearchBox> createState() => _TitleSearchBoxState();

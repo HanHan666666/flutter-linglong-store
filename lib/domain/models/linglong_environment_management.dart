@@ -8,7 +8,7 @@ enum LinglongEnvironmentIssueCode {
   ostreeRepositoryCorrupted,
   ostreeToolUnavailable,
 
-  /// 玲珑服务用户无法读写本地数据树时使用，避免误归类为 OSTree 对象损坏。
+  /// 玲珑服务用户无法读写本地数据树时使用，避免误归类为本地仓库对象损坏。
   linglongDataPermissionAbnormal,
   storageNearlyFull,
   runningAppsBlockStorageMove,
@@ -74,7 +74,7 @@ class LinglongStorageInfo {
 /// 玲珑数据目录权限检查结果。
 ///
 /// `ll-package-manager` 以 `deepin-linglong` 用户运行，本地数据目录如果被 root 接管，
-/// 会导致 `.version` 迁移、OSTree pull 或 layer 生成在运行期失败。
+/// 会导致 `.version` 迁移、对象拉取或 layer 生成在运行期失败。
 class LinglongDataPermissionCheckResult {
   const LinglongDataPermissionCheckResult({
     required this.isAvailable,
@@ -92,10 +92,11 @@ class LinglongDataPermissionCheckResult {
   final String? detail;
 }
 
-/// OSTree 仓库检查结果。
+/// 玲珑本地数据检查结果。
 ///
-/// `isOk` 表示玲珑运行路径能否读取本地仓库，不等同于深度 `fsck` 完全干净；
-/// 深度校验发现对象风险时通过 `hasIntegrityWarning` 单独表达，避免把仍可运行的环境误判为不可用。
+/// 该类型沿用历史命名以减少 Provider 和 UI 改动面，但业务语义已经收敛到
+/// linyaps 运行路径：`isOk` 表示 `ll-cli`/package-manager 能否读取本地数据。
+/// 深度对象审计只属于手动修复日志和高级诊断，不参与默认环境健康结论。
 class LinglongOstreeCheckResult {
   const LinglongOstreeCheckResult({
     required this.isAvailable,
@@ -104,16 +105,15 @@ class LinglongOstreeCheckResult {
     this.detail,
   });
 
-  /// `ostree` 命令是否可用于本地仓库检查。
+  /// 是否成功执行 linyaps 本地数据读取检查。
   final bool isAvailable;
 
-  /// 本地仓库是否能完成玲珑运行所依赖的只读访问。
+  /// 本地数据是否能完成玲珑运行所依赖的只读访问。
   final bool isOk;
 
-  /// 深度对象完整性校验是否发现风险。
+  /// 历史字段，保留给手动深度诊断结果表达。
   ///
-  /// 该字段为 `true` 时代表需要提示用户择机修复或重新拉取受影响内容，
-  /// 但不能直接推导为玲珑基础环境不可用。
+  /// 默认环境分析不再设置该字段，避免把底层存储审计结果误判为 linyaps 运行异常。
   final bool hasIntegrityWarning;
 
   /// 面向诊断展示的命令输出摘要，完整输出仍应以日志文件为准。

@@ -142,16 +142,16 @@ class _LinglongEnvironmentManagementDialogState
     );
   }
 
-  /// 二次确认后执行 OSTree 修复与必要的受影响 ref 重拉。
+  /// 二次确认后执行玲珑本地数据修复与必要的受影响 ref 重拉。
   ///
-  /// `fsck-detected corruption` 不能仅靠删除坏对象判断成功；服务层会在需要时追加
-  /// full pull 和复验，因此这里的确认文案必须提示可能产生下载与较长耗时。
+  /// 该动作内部可能触发底层对象清理和重新拉取，但用户侧只表达 linyaps
+  /// 本地数据修复语义，避免把存储实现细节暴露成主健康模型。
   Future<void> _confirmAndRepairOstree() async {
     final confirmed = await _showConfirmDialog(
-      title: '修复 OSTree 仓库',
+      title: '修复玲珑本地数据',
       content:
-          '将以管理员权限执行 OSTree 完整性修复，删除可清理的损坏对象；'
-          '如果检测到 fsck 标记的 partial commits，还会重新拉取受影响应用或基础环境并再次校验。是否继续？',
+          '将以管理员权限尝试修复玲珑本地数据；'
+          '如果检测到需要重新拉取的应用或基础环境数据，可能产生下载并耗时较长。是否继续？',
       confirmText: '执行修复',
     );
     if (!confirmed || !mounted) return;
@@ -165,7 +165,7 @@ class _LinglongEnvironmentManagementDialogState
 
   /// 二次确认后修复玲珑数据目录权限。
   ///
-  /// 权限修复会改变系统数据目录属主并重启 package-manager，所以必须与 OSTree 修复一样
+  /// 权限修复会改变系统数据目录属主并重启 package-manager，所以必须与本地数据修复一样
   /// 经由用户显式确认，且只通过环境管理 Provider 触发服务层脚本。
   Future<void> _confirmAndRepairDataPermissions() async {
     final confirmed = await _showConfirmDialog(
@@ -486,7 +486,7 @@ class _EnvironmentAnalysisTab extends StatelessWidget {
           const _InlineInfoPanel(
             icon: Icons.check_circle_outline,
             title: '未发现需要处理的问题',
-            message: '玲珑基础环境、仓库与本地 OSTree 仓库当前状态正常。',
+            message: '玲珑基础环境、仓库与本地数据当前状态正常。',
           )
         else
           ...issues.map(
@@ -709,10 +709,10 @@ class _StatusSummary extends StatelessWidget {
         color: theme.colorScheme.secondary,
       ),
       _MetricChip(
-        icon: _ostreeMetricIcon(analysis.ostree),
-        label: 'OSTree',
-        value: _ostreeMetricValue(analysis.ostree),
-        color: _ostreeMetricColor(analysis.ostree),
+        icon: _localDataMetricIcon(analysis.ostree),
+        label: '本地数据',
+        value: _localDataMetricValue(analysis.ostree),
+        color: _localDataMetricColor(analysis.ostree),
       ),
       _MetricChip(
         icon: Icons.storage_outlined,
@@ -765,37 +765,34 @@ class _StatusSummary extends StatelessWidget {
     };
   }
 
-  /// 根据服务层给出的双通道状态展示 OSTree 指标文案。
+  /// 根据服务层给出的 linyaps 本地数据状态展示指标文案。
   ///
-  /// 深度 fsck 风险不等同于玲珑仓库不可用，因此这里要显式展示“可用，有风险”，
-  /// 让用户知道可以择机修复，而不是误解为基础环境已经整体损坏。
-  static String _ostreeMetricValue(LinglongOstreeCheckResult ostree) {
+  /// 这里刻意不展示底层存储实现细节；默认健康模型只表达 linyaps
+  /// 能否读取本地数据，不把深度审计结果作为用户侧主状态。
+  static String _localDataMetricValue(LinglongOstreeCheckResult ostree) {
     if (!ostree.isAvailable) {
-      return '工具不可用';
+      return '检测失败';
     }
     if (!ostree.isOk) {
       return '不可用';
     }
-    if (ostree.hasIntegrityWarning) {
-      return '可用，有风险';
-    }
     return '正常';
   }
 
-  /// 为 OSTree 指标选择状态图标，保持与文案语义一致。
-  static IconData _ostreeMetricIcon(LinglongOstreeCheckResult ostree) {
-    if (ostree.isOk && !ostree.hasIntegrityWarning) {
+  /// 为本地数据指标选择状态图标，保持与文案语义一致。
+  static IconData _localDataMetricIcon(LinglongOstreeCheckResult ostree) {
+    if (ostree.isOk) {
       return Icons.verified_outlined;
     }
-    if (!ostree.isAvailable || ostree.hasIntegrityWarning) {
+    if (!ostree.isAvailable) {
       return Icons.report_problem_outlined;
     }
     return Icons.error_outline;
   }
 
-  /// 为 OSTree 指标选择状态颜色，区分不可用错误和可用但有风险的警告。
-  static Color _ostreeMetricColor(LinglongOstreeCheckResult ostree) {
-    if (ostree.isOk && !ostree.hasIntegrityWarning) {
+  /// 为本地数据指标选择状态颜色，区分检测失败和运行路径不可用。
+  static Color _localDataMetricColor(LinglongOstreeCheckResult ostree) {
+    if (ostree.isOk) {
       return AppColors.success;
     }
     if (!ostree.isOk && ostree.isAvailable) {
@@ -1298,7 +1295,7 @@ class _BlockingProgressOverlay extends StatelessWidget {
 
 /// 玲珑环境管理弹窗顶部的警示横幅。
 ///
-/// 设计原因：该功能涉及 OSTree 修复、保存位置迁移等高危操作，当前尚不稳定，
+/// 设计原因：该功能涉及玲珑本地数据修复、保存位置迁移等高危操作，当前尚不稳定，
 /// 需在弹窗显眼位置统一提示用户「无问题勿用、遇问题谨慎操作」，
 /// 避免用户在不知风险的情况下随意触发高危流程。
 /// 横幅采用红色强烈警告（[AppColors.error]），区别于普通提示，强调高风险性质；

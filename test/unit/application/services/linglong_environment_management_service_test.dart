@@ -9,7 +9,7 @@ import 'package:linglong_store/domain/models/linglong_environment_management.dar
 void main() {
   group('LinglongEnvironmentManagementService', () {
     test(
-      'analyzeEnvironment reports ostree integrity warning while repository remains usable',
+      'analyzeEnvironment follows linyaps health model without running fsck',
       () async {
         final runner = _FakeShellCommandRunner.fromCommands({
           ..._healthyEnvironmentCommands(),
@@ -44,34 +44,32 @@ void main() {
         expect(analysis.envResult.isOk, isTrue);
         expect(analysis.storage.usagePercent, 94);
         expect(analysis.ostree.isOk, isTrue);
-        expect(analysis.ostree.hasIntegrityWarning, isTrue);
+        expect(analysis.ostree.hasIntegrityWarning, isFalse);
         expect(
           analysis.issues.map((issue) => issue.code),
-          containsAll([
-            LinglongEnvironmentIssueCode.ostreeRepositoryCorrupted,
-            LinglongEnvironmentIssueCode.storageNearlyFull,
-          ]),
+          contains(LinglongEnvironmentIssueCode.storageNearlyFull),
         );
-        final ostreeIssue = analysis.issues.firstWhere(
-          (issue) =>
-              issue.code ==
-              LinglongEnvironmentIssueCode.ostreeRepositoryCorrupted,
-        );
-        expect(ostreeIssue.severity, LinglongEnvironmentIssueSeverity.warning);
-        expect(ostreeIssue.title, 'OSTree 对象完整性风险');
         expect(
-          ostreeIssue.repairAction,
-          LinglongEnvironmentRepairAction.ostreeFsckDelete,
+          analysis.issues.map((issue) => issue.title),
+          isNot(contains('OSTree 对象完整性风险')),
         );
-        expect(ostreeIssue.rawDetail, contains('Corrupted file object'));
+        expect(
+          runner.commands.map((command) => command.join(' ')),
+          isNot(contains('ostree fsck --repo=/var/lib/linglong/repo --quiet')),
+        );
       },
     );
 
     test(
-      'analyzeEnvironment reports ostree repository unavailable when refs cannot be read',
+      'analyzeEnvironment reports local data unavailable when ll-cli list fails',
       () async {
         final runner = _FakeShellCommandRunner.fromCommands({
           ..._healthyEnvironmentCommands(),
+          'll-cli --json list': const ShellCommandResult(
+            stdout: '',
+            stderr: 'error: failed to load repo cache',
+            exitCode: 1,
+          ),
           'll-cli --json ps': const ShellCommandResult(
             stdout: '[]',
             stderr: '',
@@ -89,11 +87,6 @@ void main() {
             stderr: '',
             exitCode: 0,
           ),
-          'ostree refs --repo=/var/lib/linglong/repo': const ShellCommandResult(
-            stdout: '',
-            stderr: 'error: opening repo: No such file or directory',
-            exitCode: 1,
-          ),
         });
         final service = _buildManagementService(runner);
 
@@ -102,14 +95,14 @@ void main() {
         expect(analysis.ostree.isAvailable, isTrue);
         expect(analysis.ostree.isOk, isFalse);
         expect(analysis.ostree.hasIntegrityWarning, isFalse);
-        final ostreeIssue = analysis.issues.firstWhere(
+        final localDataIssue = analysis.issues.firstWhere(
           (issue) =>
               issue.code ==
               LinglongEnvironmentIssueCode.ostreeRepositoryCorrupted,
         );
-        expect(ostreeIssue.severity, LinglongEnvironmentIssueSeverity.error);
-        expect(ostreeIssue.title, 'OSTree 仓库不可用');
-        expect(ostreeIssue.rawDetail, contains('opening repo'));
+        expect(localDataIssue.severity, LinglongEnvironmentIssueSeverity.error);
+        expect(localDataIssue.title, '玲珑本地数据不可用');
+        expect(localDataIssue.rawDetail, contains('failed to load repo cache'));
         expect(
           runner.commands.map((command) => command.join(' ')),
           isNot(contains('ostree fsck --repo=/var/lib/linglong/repo --quiet')),
@@ -118,10 +111,13 @@ void main() {
     );
 
     test(
-      'analyzeEnvironment reports ostree tool unavailable when deep check cannot run',
+      'analyzeEnvironment reports local data detection failure when ll-cli list cannot run',
       () async {
+        final commands = Map<String, ShellCommandResult>.of(
+          _healthyEnvironmentCommands(),
+        )..remove('ll-cli --json list');
         final runner = _FakeShellCommandRunner.fromCommands({
-          ..._healthyEnvironmentCommands(),
+          ...commands,
           'll-cli --json ps': const ShellCommandResult(
             stdout: '[]',
             stderr: '',
@@ -146,13 +142,54 @@ void main() {
 
         expect(analysis.ostree.isAvailable, isFalse);
         expect(analysis.ostree.isOk, isFalse);
-        expect(analysis.ostree.hasIntegrityWarning, isFalse);
-        final ostreeIssue = analysis.issues.firstWhere(
+        final localDataIssue = analysis.issues.firstWhere(
           (issue) =>
-              issue.code == LinglongEnvironmentIssueCode.ostreeToolUnavailable,
+              issue.code ==
+              LinglongEnvironmentIssueCode.ostreeRepositoryCorrupted,
         );
-        expect(ostreeIssue.severity, LinglongEnvironmentIssueSeverity.warning);
-        expect(ostreeIssue.rawDetail, contains('ostree fsck 命令执行失败'));
+        expect(localDataIssue.title, '玲珑本地数据检测失败');
+        expect(localDataIssue.rawDetail, contains('ll-cli list 命令执行失败'));
+      },
+    );
+
+    test(
+      'analyzeEnvironment does not require ostree command when linyaps checks pass',
+      () async {
+        final runner = _FakeShellCommandRunner.fromCommands({
+          ..._healthyEnvironmentCommands(),
+          'll-cli --json ps': const ShellCommandResult(
+            stdout: '[]',
+            stderr: '',
+            exitCode: 0,
+          ),
+          'df -PB1 /var/lib/linglong': const ShellCommandResult(
+            stdout:
+                'Filesystem 1-blocks Used Available Capacity Mounted on\n/dev/nvme0n1p5 1000000000 400000000 600000000 40% /var\n',
+            stderr: '',
+            exitCode: 0,
+          ),
+          'findmnt --json /var/lib/linglong': const ShellCommandResult(
+            stdout:
+                '{"filesystems":[{"target":"/var/lib/linglong","source":"/dev/nvme0n1p5","fstype":"ext4","options":"rw"}]}',
+            stderr: '',
+            exitCode: 0,
+          ),
+        });
+        final service = _buildManagementService(runner);
+
+        final analysis = await service.analyzeEnvironment();
+
+        expect(analysis.ostree.isAvailable, isTrue);
+        expect(analysis.ostree.isOk, isTrue);
+        expect(analysis.ostree.hasIntegrityWarning, isFalse);
+        expect(
+          analysis.issues.map((issue) => issue.code),
+          isNot(contains(LinglongEnvironmentIssueCode.ostreeToolUnavailable)),
+        );
+        expect(
+          runner.commands.map((command) => command.join(' ')),
+          isNot(contains('ostree refs --repo=/var/lib/linglong/repo')),
+        );
       },
     );
 
@@ -379,7 +416,7 @@ void main() {
             '--all',
             '--delete',
           ],
-          ['pkexec', 'bash', startsWith('/tmp/linglong-ostree-repull-')],
+          ['pkexec', 'bash', startsWith('/tmp/linglong-local-data-repull-')],
         ]);
       },
     );
@@ -445,7 +482,7 @@ void main() {
             '--all',
             '--delete',
           ],
-          ['pkexec', 'bash', startsWith('/tmp/linglong-ostree-repull-')],
+          ['pkexec', 'bash', startsWith('/tmp/linglong-local-data-repull-')],
         ]);
       },
     );
@@ -474,7 +511,7 @@ void main() {
         );
 
         expect(result.success, isTrue);
-        expect(result.message, contains('已兼容旧版 OSTree'));
+        expect(result.message, contains('已兼容旧版系统参数'));
         expect(runner.commands, [
           [
             'pkexec',
@@ -515,8 +552,8 @@ void main() {
         );
 
         expect(result.success, isFalse);
-        expect(result.message, contains('不支持 --delete'));
-        expect(result.message, contains('无法自动删除损坏对象'));
+        expect(result.message, contains('系统组件不支持自动清理'));
+        expect(result.message, contains('无法自动修复玲珑本地数据'));
         expect(runner.commands, [
           [
             'pkexec',
@@ -783,8 +820,8 @@ Map<String, ShellCommandResult> _healthyEnvironmentCommands() {
       stderr: '',
       exitCode: 0,
     ),
-    'ostree refs --repo=/var/lib/linglong/repo': ShellCommandResult(
-      stdout: 'stable:main/org.deepin.base/25.2.2.5/x86_64/binary\n',
+    'll-cli --json list': ShellCommandResult(
+      stdout: '[]',
       stderr: '',
       exitCode: 0,
     ),

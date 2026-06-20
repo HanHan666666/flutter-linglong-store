@@ -385,6 +385,72 @@ void main() {
     );
 
     test(
+      'repairOstreeRepository repulls when fsck marks commit partial before repository corruption error',
+      () async {
+        final runner = _FakeShellCommandRunner.fromCommands(
+          {
+            'pkexec ostree fsck --repo=/var/lib/linglong/repo --all --delete':
+                const ShellCommandResult(
+                  stdout:
+                      'fsck objects (67125/67125) 100%\n'
+                      '22 partial commits not verified\n',
+                  stderr:
+                      'In commits 709ea377dcbd1bee43b8f603c23e7e6bbd9eaf875c308b185cc4b76e9e48b464: '
+                      'fsck content object 3010a52cfe8cc41bfce748d18ebcd333d9c8f2c0535294a3de5b32856aa5d200: '
+                      'Corrupted file object; checksum expected=... actual=...\n'
+                      'Marking commit as partial: 709ea377dcbd1bee43b8f603c23e7e6bbd9eaf875c308b185cc4b76e9e48b464\n'
+                      'error: Repository corruption encountered\n',
+                  exitCode: 1,
+                ),
+          },
+          dynamicResult: (command) {
+            if (command.length == 3 &&
+                command[0] == 'pkexec' &&
+                command[1] == 'bash' &&
+                command[2].endsWith('.sh')) {
+              return const ShellCommandResult(
+                stdout:
+                    'OSTree repo mode: bare-user-only\n'
+                    'RE-PULL stable:main/org.deepin.calculator/6.5.34.1/loong64/binary\n',
+                stderr:
+                    'error: In commits 709ea377dcbd1bee43b8f603c23e7e6bbd9eaf875c308b185cc4b76e9e48b464: '
+                    'fsck content object d32b89d111565f54716844e6c3fb5424926ad2a41ffc9827730e77ba09e58b50: '
+                    'Corrupted file object; checksum expected=... actual=...\n',
+                exitCode: 1,
+              );
+            }
+            return null;
+          },
+        );
+        final service = _buildManagementService(runner);
+
+        final result = await service.repairOstreeRepository(
+          logFilePath: '/tmp/linglong-ostree-repair.log',
+        );
+
+        expect(result.success, isFalse);
+        expect(result.message, contains('22 个 partial commits'));
+        expect(result.message, contains('重新拉取后复验仍未通过'));
+        expect(result.output, contains('Repository corruption encountered'));
+        expect(
+          result.output,
+          contains('RE-PULL stable:main/org.deepin.calculator'),
+        );
+        expect(runner.commands, [
+          [
+            'pkexec',
+            'ostree',
+            'fsck',
+            '--repo=/var/lib/linglong/repo',
+            '--all',
+            '--delete',
+          ],
+          ['pkexec', 'bash', startsWith('/tmp/linglong-ostree-repull-')],
+        ]);
+      },
+    );
+
+    test(
       'repairOstreeRepository retries without all option for older ostree',
       () async {
         final runner = _FakeShellCommandRunner.fromCommands({

@@ -206,7 +206,7 @@ OSTree 版本兼容规则：
 - 如果输出明确表示当前 OSTree 不支持 `--all`，降级重试 `pkexec ostree fsck --repo=/var/lib/linglong/repo --delete`，并继续写入同一个日志文件。
 - 如果输出明确表示当前 OSTree 不支持 `--delete`，不能退化成只检查命令，也不能提示修复成功；必须告知用户该版本无法自动删除损坏对象，需要升级 ostree 或使用发行版工具手动修复。
 - 普通 `partial commits not verified` 可能来自 linyaps 元数据/子路径拉取；只有同时出现 `fsck-detected corruption`，或 `.commitpartial` marker 内容为 `f`，才进入损坏修复后续流程。
-- 新版 OSTree 可能在删除损坏对象后输出 `partial commits from fsck-detected corruption` 并以非零码退出。服务层必须追加执行受控 `pkexec bash` 脚本：扫描 `/var/lib/linglong/repo/state/*.commitpartial`，只选择 marker 内容为 `f` 且能映射到 `ostree refs` 的 ref，使用仓库 ref 中的 remote 重新执行 `ostree pull --disable-static-deltas <remote> <ref>`，然后再次执行 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 复验。
+- 新版 OSTree 可能在删除损坏对象后输出 `partial commits from fsck-detected corruption` 并以非零码退出；部分版本会先输出 `Marking commit as partial` 和 `Repository corruption encountered`，不会继续走到 `fsck-detected corruption` 汇总错误。两类结果都表示需要进入 fsck partial 后续流程。服务层必须追加执行受控 `pkexec bash` 脚本：扫描 `/var/lib/linglong/repo/state/*.commitpartial`，只选择 marker 内容为 `f` 且能映射到 `ostree refs` 的 ref，使用仓库 ref 中的 remote 重新执行 `ostree pull --disable-static-deltas <remote> <ref>`，然后再次执行 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 复验。
 - 重新拉取必须尽量以 `deepin-linglong` 用户执行，避免 root 拉取后再次制造数据目录权限问题；如果系统缺少 `runuser` 或服务用户不存在，脚本可回退为当前特权上下文执行，但日志必须保留完整命令输出。
 - 复验通过时才能提示修复成功；复验仍出现 `Corrupted file object`、`checksum expected=... actual=...` 或其他 corruption 时，必须提示“重新拉取后复验仍未通过”，并说明可能需要上游仓库数据或 OSTree/玲珑兼容性修复。
 - partial commit 数量优先从 OSTree 输出中提取，例如 `32 partial commits not verified` 展示为“32 个 partial commits”。完整输出仍以日志文件为准。

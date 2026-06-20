@@ -113,7 +113,7 @@ class LinglongEnvironmentManagementService {
       );
 
       if (!_isUnsupportedOstreeOption(fallbackResult, '--delete') &&
-          _isFsckDetectedPartialCommitState(fallbackResult)) {
+          _needsOstreePartialRepull(fallbackResult)) {
         final repullResult = await _runOstreePartialRepullCommand(
           logFilePath: resolvedLogFilePath,
         );
@@ -135,7 +135,7 @@ class LinglongEnvironmentManagementService {
     }
 
     if (!_isUnsupportedOstreeOption(primaryResult, '--delete') &&
-        _isFsckDetectedPartialCommitState(primaryResult)) {
+        _needsOstreePartialRepull(primaryResult)) {
       final repullResult = await _runOstreePartialRepullCommand(
         logFilePath: resolvedLogFilePath,
       );
@@ -1147,6 +1147,22 @@ exit "\$verify_rc"
     return output.contains('partial commits from fsck-detected corruption') ||
         (output.contains('partial commits') &&
             output.contains('fsck-detected corruption'));
+  }
+
+  /// 判断 `fsck --delete` 后是否需要进入 fsck partial 重拉流程。
+  ///
+  /// OSTree 在部分版本中会先返回 `Repository corruption encountered`，不会继续走到
+  /// `partial commits from fsck-detected corruption` 分支；但日志中已经写出
+  /// `Marking commit as partial`，这同样表示后续应按 fsck partial 处理。
+  bool _needsOstreePartialRepull(ShellCommandResult result) {
+    if (_isFsckDetectedPartialCommitState(result)) {
+      return true;
+    }
+
+    final output = _combinedCommandOutput(result).toLowerCase();
+    return output.contains('marking commit as partial') &&
+        output.contains('repository corruption encountered') &&
+        _hasChecksumCorruption(result);
   }
 
   /// 判断输出是否包含对象 checksum 损坏。

@@ -169,7 +169,9 @@ class Search extends _$Search {
       final apiService = ref.read(appApiServiceProvider);
       final nextPage = state.currentPage + 1;
 
-      final response = await apiService.getSearchAppList(_buildRequest(nextPage));
+      final response = await apiService.getSearchAppList(
+        _buildRequest(nextPage),
+      );
 
       final newResults = mapAppListToRecommendApps(
         response.data.data,

@@ -262,11 +262,12 @@ void main() {
   });
 
   group('tag chip', () {
-    testWidgets('tag route renders one non-editable chip and no suggestions',
-        (tester) async {
-      await tester.pumpWidget(_buildRouterApp(
-        initialLocation: '/search_list?tag=办公&tagLan=zh_CN',
-      ));
+    testWidgets('tag route renders one non-editable chip and no suggestions', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildRouterApp(initialLocation: '/search_list?tag=办公&tagLan=zh_CN'),
+      );
       await tester.pumpAndSettle();
 
       // 标签模式：渲染单个不可编辑胶囊，不渲染 TextField，不拉候选
@@ -275,15 +276,17 @@ void main() {
       expect(find.text('浏览器'), findsNothing);
     });
 
-    testWidgets('deleting tag chip returns to empty text search',
-        (tester) async {
-      await tester.pumpWidget(_buildRouterApp(
-        initialLocation: '/search_list?tag=办公&tagLan=zh_CN',
-      ));
+    testWidgets('deleting tag chip returns to empty text search', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildRouterApp(initialLocation: '/search_list?tag=办公&tagLan=zh_CN'),
+      );
       await tester.pumpAndSettle();
 
-      final chip =
-          tester.widget<InputChip>(find.widgetWithText(InputChip, '办公'));
+      final chip = tester.widget<InputChip>(
+        find.widgetWithText(InputChip, '办公'),
+      );
       chip.onDeleted!.call();
       await tester.pumpAndSettle();
 
@@ -294,9 +297,9 @@ void main() {
     });
 
     testWidgets('backspace removes focused tag chip', (tester) async {
-      await tester.pumpWidget(_buildRouterApp(
-        initialLocation: '/search_list?tag=办公&tagLan=zh_CN',
-      ));
+      await tester.pumpWidget(
+        _buildRouterApp(initialLocation: '/search_list?tag=办公&tagLan=zh_CN'),
+      );
       await tester.pumpAndSettle();
 
       // 胶囊自动聚焦后 Backspace 应删除标签并回到文本搜索
@@ -307,8 +310,9 @@ void main() {
       expect(find.byType(TextField), findsOneWidget);
     });
 
-    testWidgets('tag chip exposes localized search semantics and 48px target',
-        (tester) async {
+    testWidgets('tag chip exposes localized search semantics and 48px target', (
+      tester,
+    ) async {
       // 直接渲染标题栏（与现有样式测试一致）：
       // 标签语义是组件自身属性，不依赖路由上下文；ShellRoute 的 navigator 重建会干扰
       // 测试框架 getSemantics(byKey) 读取，故这里用直接渲染验证语义与尺寸契约。
@@ -329,8 +333,7 @@ void main() {
                 onMinimize: () {},
                 onMaximize: () {},
                 onClose: () {},
-                currentSearchTag:
-                    const AppTag(name: '办公', language: 'zh_CN'),
+                currentSearchTag: const AppTag(name: '办公', language: 'zh_CN'),
               ),
             ),
           ),
@@ -376,10 +379,7 @@ Widget _buildRouterApp({String initialLocation = '/'}) {
           );
         },
         routes: [
-          GoRoute(
-            path: '/',
-            builder: (_, __) => const SizedBox.shrink(),
-          ),
+          GoRoute(path: '/', builder: (_, __) => const SizedBox.shrink()),
           GoRoute(
             path: AppRoutes.searchList,
             builder: (_, state) => Text(

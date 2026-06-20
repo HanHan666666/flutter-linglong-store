@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:linglong_store/core/config/theme.dart';
@@ -10,15 +9,18 @@ import 'package:linglong_store/presentation/widgets/app_detail_hero_header.dart'
 import 'package:linglong_store/presentation/widgets/install_button.dart';
 
 void main() {
-  testWidgets('detail tag is accessible and emits full tag identity',
-      (tester) async {
+  testWidgets('detail tag is accessible and emits full tag identity', (
+    tester,
+  ) async {
     // 标签必须可点击、有最小 48px 交互高度、按钮语义，且点击回调原样透传 name+language，
     // 禁止只传名称丢失语言身份
     AppTag? selected;
-    await tester.pumpWidget(_buildHeader(
-      tags: const [AppTag(name: '办公', language: 'zh_CN')],
-      onTagPressed: (tag) => selected = tag,
-    ));
+    await tester.pumpWidget(
+      _buildHeader(
+        tags: const [AppTag(name: '办公', language: 'zh_CN')],
+        onTagPressed: (tag) => selected = tag,
+      ),
+    );
     await tester.pumpAndSettle();
 
     final tag = find.byKey(const ValueKey('app-detail-tag-办公-zh_CN'));
@@ -30,7 +32,8 @@ void main() {
     expect(selected, const AppTag(name: '办公', language: 'zh_CN'));
 
     final semantics = tester.getSemantics(tag);
-    expect(semantics.hasFlag(SemanticsFlag.isButton), isTrue);
+    // flagsCollection 取代已废弃的 hasFlag（v3.32.0 后弃用）
+    expect(semantics.flagsCollection.isButton, isTrue);
   });
 }
 

@@ -178,6 +178,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
   Timer? _hintTimer;
   int _hintIndex = 0;
   SearchHintApp? _currentHintApp;
+
   /// 洗牌后的轮播序列，由 [_resetHintRotation] 在数据到位时生成。
   List<SearchHintApp> _hintSequence = const <SearchHintApp>[];
 
@@ -315,7 +316,8 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
     _hintSequence = List<SearchHintApp>.of(apps)..shuffle();
     _hintIndex = 0;
     final next = _hintSequence.first;
-    final changed = _currentHintApp?.appId != next.appId ||
+    final changed =
+        _currentHintApp?.appId != next.appId ||
         _currentHintApp?.name != next.name;
     _currentHintApp = next;
     if (changed && mounted) setState(() {});
@@ -679,8 +681,9 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
                           focusedErrorBorder: InputBorder.none,
                           filled: false,
                           isDense: true,
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 8),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                          ),
                           suffixIconConstraints: const BoxConstraints(
                             minWidth: 24,
                             minHeight: 24,
@@ -717,7 +720,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
                             // 输入非空时清空展示文案，等价于原 hintText 被输入覆盖的行为。
                             text: _controller.text.isEmpty
                                 ? (_currentHintApp?.name ??
-                                    l10n.searchPlaceholder)
+                                      l10n.searchPlaceholder)
                                 : '',
                             // 与原 hintText 的字体/颜色保持完全一致，避免视觉漂移。
                             style: context.appTextStyles.bodyMedium.copyWith(
@@ -743,7 +746,11 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
   /// - 通过关闭按钮或 Backspace/Delete（CallbackShortcuts）删除后回到普通文本搜索；
   /// - 满足无障碍：最小 48px 交互高度、本地化语义 label；
   /// - 进入标签模式后自动聚焦，便于键盘删除。
-  Widget _buildTagChip(BuildContext context, AppTag tag, AppLocalizations l10n) {
+  Widget _buildTagChip(
+    BuildContext context,
+    AppTag tag,
+    AppLocalizations l10n,
+  ) {
     // Focus 放在 Semantics 外层：Focus 会注入自己的语义作用域，放在内部会让
     // getSemantics(byKey) 命中的节点 label 变空。外层 Focus + Semantics(key,label,container)
     // + 内层 ExcludeSemantics 屏蔽 InputChip/Text 默认语义，保证读到的 label 为本地化文案。
@@ -786,6 +793,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
     );
   }
 }
+
 ///
 /// 替代 `InputDecoration.hintText`（后者只能瞬切，无法挂自定义进出动画）。
 /// 通过 [AnimatedSwitcher] 以「淡入淡出 + 轻微上滑」交叉切换文案，文案变化由
@@ -808,8 +816,12 @@ class _AnimatedSearchHint extends StatelessWidget {
   Widget build(BuildContext context) {
     // 读取系统「减少动态效果」设置；MediaQuery 不可用时回退到平台无障碍特性。
     final mediaQuery = MediaQuery.maybeOf(context);
-    final animationsDisabled = mediaQuery?.disableAnimations ??
-        WidgetsBinding.instance.platformDispatcher.accessibilityFeatures
+    final animationsDisabled =
+        mediaQuery?.disableAnimations ??
+        WidgetsBinding
+            .instance
+            .platformDispatcher
+            .accessibilityFeatures
             .disableAnimations;
     const animDuration = Duration(milliseconds: 500);
 

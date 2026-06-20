@@ -175,9 +175,9 @@ void main() {
           .searchByTag(const AppTag(name: '办公', language: 'zh_CN'));
       await container.read(searchProvider.notifier).loadMore();
 
-      final requests = verify(api.getSearchAppList(captureAny))
-          .captured
-          .cast<SearchAppListRequest>();
+      final requests = verify(
+        api.getSearchAppList(captureAny),
+      ).captured.cast<SearchAppListRequest>();
       expect(requests.map((item) => item.pageNo), [1, 2]);
       expect(requests.every((item) => item.keyword.isEmpty), isTrue);
       expect(requests.every((item) => item.tagName == '办公'), isTrue);

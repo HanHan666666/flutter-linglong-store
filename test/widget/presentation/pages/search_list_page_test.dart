@@ -117,12 +117,10 @@ void main() {
   testWidgets('initial tag triggers exact tag search', (tester) async {
     // 详情页点击标签进入时，页面应使用标签身份搜索（tagName+tagLan），而非普通关键词
     final api = MockAppApiService();
-    when(api.getSearchAppList(any)).thenAnswer((_) async => _buildSearchResponse(
-          const [],
-          currentPage: 1,
-          total: 0,
-          pages: 1,
-        ));
+    when(api.getSearchAppList(any)).thenAnswer(
+      (_) async =>
+          _buildSearchResponse(const [], currentPage: 1, total: 0, pages: 1),
+    );
 
     await tester.pumpWidget(
       ProviderScope(
@@ -149,9 +147,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final request = verify(api.getSearchAppList(captureAny))
-        .captured
-        .single as SearchAppListRequest;
+    final request =
+        verify(api.getSearchAppList(captureAny)).captured.single
+            as SearchAppListRequest;
     expect(request.tagName, '办公');
     expect(request.tagLan, 'zh_CN');
   });

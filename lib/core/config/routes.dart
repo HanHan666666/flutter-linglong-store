@@ -110,7 +110,8 @@ List<RouteBase> _buildShellRoutes() {
             // 标签搜索条件从 tag/tagLan 恢复，保证前进/后退/重建都能回到标签模式
             final tagName = state.uri.queryParameters['tag']?.trim();
             final tagLan = state.uri.queryParameters['tagLan']?.trim();
-            final tag = tagName != null &&
+            final tag =
+                tagName != null &&
                     tagName.isNotEmpty &&
                     tagLan != null &&
                     tagLan.isNotEmpty

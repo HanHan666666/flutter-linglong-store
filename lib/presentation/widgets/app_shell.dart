@@ -231,13 +231,18 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
   Widget build(BuildContext context) {
     // 仅在搜索结果页解析搜索条件；其它页面保持空查询与空标签
     final isSearchList = widget.currentPath == '/search_list';
-    final currentSearchQuery =
-        isSearchList ? (widget.currentUri.queryParameters['q'] ?? '') : '';
+    final currentSearchQuery = isSearchList
+        ? (widget.currentUri.queryParameters['q'] ?? '')
+        : '';
     // 标签搜索条件：仅在 /search_list 且 tag/tagLan 同时存在时恢复
-    final tagName = isSearchList ? widget.currentUri.queryParameters['tag'] : null;
-    final tagLan =
-        isSearchList ? widget.currentUri.queryParameters['tagLan'] : null;
-    final currentSearchTag = tagName != null &&
+    final tagName = isSearchList
+        ? widget.currentUri.queryParameters['tag']
+        : null;
+    final tagLan = isSearchList
+        ? widget.currentUri.queryParameters['tagLan']
+        : null;
+    final currentSearchTag =
+        tagName != null &&
             tagName.isNotEmpty &&
             tagLan != null &&
             tagLan.isNotEmpty

@@ -69,7 +69,9 @@ format_release_notes_markdown() {
 		/^- / {
 			text = substr($0, 3)
 			if (item_count < 5 && is_visible_change(section, text)) {
-				items[++item_count] = item_count "、" text
+				# awk 对赋值左右两侧求值顺序没有统一保证，拆开递增可避免 mawk 输出 0 起始编号。
+				item_count++
+				items[item_count] = item_count "、" text
 			}
 			next
 		}

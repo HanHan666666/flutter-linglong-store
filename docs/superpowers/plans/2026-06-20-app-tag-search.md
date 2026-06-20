@@ -1603,7 +1603,7 @@ git commit -m "feat: 应用详情标签支持搜索联动"
 
 - Modify: `AGENTS.md`
 
-- [ ] **Step 1: 更新 Flutter 约定**
+- [x] **Step 1: 更新 Flutter 约定**（AGENTS.md 变更记录追加 2026-06-20 标签搜索约定）
 
 在变更记录追加：
 
@@ -1611,41 +1611,13 @@ git commit -m "feat: 应用详情标签支持搜索联动"
 - 2026-06-20：应用详情标签点击统一进入 `/search_list?tag=...&tagLan=...`，标题栏显示不可拆分 Tag 胶囊；标签搜索继续复用 `searchProvider`、分页和 `/visit/getSearchAppList`，不得把标签伪装成普通 `q` 关键词。`AppTag` 必须保留 `name + language`，Tag 删除后回到普通文本搜索模式。
 ```
 
-- [ ] **Step 2: 格式化并检查生成产物**
+- [x] **Step 2: 格式化并检查生成产物**（dart format 仅对本次相关文件生效，回退了 90+ 个无关历史格式漂移；build_runner 61 outputs 成功；gen-l10n 无变化；git diff --check 无输出）
 
-```bash
-dart format lib test
-dart run build_runner build --delete-conflicting-outputs
-flutter gen-l10n
-git diff --check
-```
+- [x] **Step 3: 运行定向测试**（7 个目标测试文件共 81 测试全部通过）
 
-Expected: 格式化和生成命令成功，`git diff --check` 无输出。
+- [x] **Step 4: 运行发布质量门禁**（flutter analyze 0 issues；flutter test 全量 832 通过、11 跳过、0 失败）
 
-- [ ] **Step 3: 运行定向测试**
-
-```bash
-flutter test test/unit/data/models/search_request_test.dart \
-  test/unit/data/repositories/app_repository_impl_test.dart \
-  test/unit/application/providers/search_provider_test.dart \
-  test/widget/presentation/pages/search_list_page_test.dart \
-  test/widget/presentation/widgets/title_bar_search_test.dart \
-  test/widget/presentation/widgets/app_detail_hero_header_test.dart \
-  test/widget/presentation/pages/app_detail/app_detail_page_test.dart
-```
-
-Expected: `All tests passed.`
-
-- [ ] **Step 4: 运行发布质量门禁**
-
-```bash
-flutter analyze
-flutter test
-```
-
-Expected: `flutter analyze` 为 0 error/0 warning；全量测试通过。
-
-- [ ] **Step 5: 手工联调验收**
+- [ ] **Step 5: 手工联调验收**（需人工执行 `flutter run -d linux` 完成下列 7 项交互验收；自动化已覆盖路由恢复/不可编辑/Backspace 删除/48px/语义/分页身份，但中英文标签语言隔离匹配与“当前应用允许出现在结果中”需真实后端联调确认）
 
 ```bash
 flutter run -d linux
@@ -1661,12 +1633,7 @@ flutter run -d linux
 6. 中文和英文标签分别只匹配对应语言记录。
 7. 当前详情应用本身包含该标签时允许出现在搜索结果中，前后端不得增加排除 appId 条件。
 
-- [ ] **Step 6: Commit 项目约定文档**
-
-```bash
-git add AGENTS.md
-git commit -m "docs: 同步应用标签搜索约定"
-```
+- [x] **Step 6: Commit 项目约定文档**（commit 7597f33: docs: 同步应用标签搜索约定；另含 commit e11a109: style: 应用标签搜索相关代码格式化）
 
 ---
 

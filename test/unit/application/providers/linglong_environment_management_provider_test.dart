@@ -58,6 +58,30 @@ void main() {
     );
 
     test(
+      'repairLinglongDataPermissions stores result and refreshes analysis',
+      () async {
+        final service = _FakeManagementService();
+        final repository = _FakeRepositoryManagementRepository();
+        final container = _createContainer(service, repository);
+        addTearDown(container.dispose);
+
+        final result = await container
+            .read(linglongEnvironmentManagementProvider.notifier)
+            .repairLinglongDataPermissions();
+
+        final state = container.read(linglongEnvironmentManagementProvider);
+        expect(result.success, isTrue);
+        expect(state.status, LinglongEnvironmentManagementStatus.ready);
+        expect(
+          state.repairResult?.action,
+          LinglongEnvironmentRepairAction.fixDataPermissions,
+        );
+        expect(service.repairDataPermissionCallCount, 1);
+        expect(service.analyzeCallCount, 1);
+      },
+    );
+
+    test(
       'moveLinglongStorage is blocked when install queue has active tasks',
       () async {
         final service = _FakeManagementService();
@@ -153,6 +177,7 @@ class _FakeManagementService extends LinglongEnvironmentManagementService {
 
   int analyzeCallCount = 0;
   int repairOstreeCallCount = 0;
+  int repairDataPermissionCallCount = 0;
   int moveStorageCallCount = 0;
 
   @override
@@ -166,6 +191,10 @@ class _FakeManagementService extends LinglongEnvironmentManagementService {
         checkedAt: 1,
       ),
       storage: const LinglongStorageInfo(rootPath: '/var/lib/linglong'),
+      dataPermission: const LinglongDataPermissionCheckResult(
+        isAvailable: true,
+        isOk: true,
+      ),
       ostree: const LinglongOstreeCheckResult(isAvailable: true, isOk: true),
       issues: const [],
       runningAppCount: 0,
@@ -183,6 +212,19 @@ class _FakeManagementService extends LinglongEnvironmentManagementService {
       success: true,
       message: 'ok',
       logFilePath: '/tmp/repair.log',
+    );
+  }
+
+  @override
+  Future<LinglongEnvironmentRepairResult> repairLinglongDataPermissions({
+    String? logFilePath,
+  }) async {
+    repairDataPermissionCallCount += 1;
+    return const LinglongEnvironmentRepairResult(
+      action: LinglongEnvironmentRepairAction.fixDataPermissions,
+      success: true,
+      message: 'fixed',
+      logFilePath: '/tmp/permission.log',
     );
   }
 

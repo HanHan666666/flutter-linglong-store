@@ -7,6 +7,9 @@ enum LinglongEnvironmentIssueCode {
   repositoryNotConfigured,
   ostreeRepositoryCorrupted,
   ostreeToolUnavailable,
+
+  /// 玲珑服务用户无法读写本地数据树时使用，避免误归类为 OSTree 对象损坏。
+  linglongDataPermissionAbnormal,
   storageNearlyFull,
   runningAppsBlockStorageMove,
 }
@@ -14,6 +17,9 @@ enum LinglongEnvironmentIssueCode {
 enum LinglongEnvironmentRepairAction {
   refreshRepositoryConfig,
   ostreeFsckDelete,
+
+  /// 通过受控特权脚本恢复 `/var/lib/linglong` 关键路径属主和 owner 写权限。
+  fixDataPermissions,
   moveStorageRoot,
 }
 
@@ -65,6 +71,27 @@ class LinglongStorageInfo {
   bool get isNearlyFull => (usagePercent ?? 0) >= 90;
 }
 
+/// 玲珑数据目录权限检查结果。
+///
+/// `ll-package-manager` 以 `deepin-linglong` 用户运行，本地数据目录如果被 root 接管，
+/// 会导致 `.version` 迁移、OSTree pull 或 layer 生成在运行期失败。
+class LinglongDataPermissionCheckResult {
+  const LinglongDataPermissionCheckResult({
+    required this.isAvailable,
+    required this.isOk,
+    this.detail,
+  });
+
+  /// 是否成功读取本地数据目录权限信息。
+  final bool isAvailable;
+
+  /// 关键目录和状态文件是否由玲珑服务用户持有，并具备 owner 写权限。
+  final bool isOk;
+
+  /// 面向诊断展示的权限异常摘要。
+  final String? detail;
+}
+
 /// OSTree 仓库检查结果。
 ///
 /// `isOk` 表示玲珑运行路径能否读取本地仓库，不等同于深度 `fsck` 完全干净；
@@ -97,6 +124,7 @@ class LinglongEnvironmentAnalysis {
   const LinglongEnvironmentAnalysis({
     required this.envResult,
     required this.storage,
+    required this.dataPermission,
     required this.ostree,
     required this.issues,
     required this.runningAppCount,
@@ -105,6 +133,7 @@ class LinglongEnvironmentAnalysis {
 
   final LinglongEnvCheckResult envResult;
   final LinglongStorageInfo storage;
+  final LinglongDataPermissionCheckResult dataPermission;
   final LinglongOstreeCheckResult ostree;
   final List<LinglongEnvironmentIssue> issues;
   final int runningAppCount;

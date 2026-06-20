@@ -96,6 +96,8 @@ class _LinglongEnvironmentManagementDialogState
                         _EnvironmentAnalysisTab(
                           state: state,
                           onRepairOstree: _confirmAndRepairOstree,
+                          onRepairDataPermissions:
+                              _confirmAndRepairDataPermissions,
                           onOpenStorageTab: () {
                             DefaultTabController.of(context).animateTo(2);
                           },
@@ -140,10 +142,16 @@ class _LinglongEnvironmentManagementDialogState
     );
   }
 
+  /// 二次确认后执行 OSTree 修复与必要的受影响 ref 重拉。
+  ///
+  /// `fsck-detected corruption` 不能仅靠删除坏对象判断成功；服务层会在需要时追加
+  /// full pull 和复验，因此这里的确认文案必须提示可能产生下载与较长耗时。
   Future<void> _confirmAndRepairOstree() async {
     final confirmed = await _showConfirmDialog(
       title: '修复 OSTree 仓库',
-      content: '将以管理员权限执行 OSTree 完整性修复，并删除损坏对象。是否继续？',
+      content:
+          '将以管理员权限执行 OSTree 完整性修复，删除可清理的损坏对象；'
+          '如果检测到 fsck 标记的 partial commits，还会重新拉取受影响应用或基础环境并再次校验。是否继续？',
       confirmText: '执行修复',
     );
     if (!confirmed || !mounted) return;
@@ -151,6 +159,27 @@ class _LinglongEnvironmentManagementDialogState
     final result = await ref
         .read(linglongEnvironmentManagementProvider.notifier)
         .repairOstreeRepository();
+    if (!mounted) return;
+    _showRepairResult(result);
+  }
+
+  /// 二次确认后修复玲珑数据目录权限。
+  ///
+  /// 权限修复会改变系统数据目录属主并重启 package-manager，所以必须与 OSTree 修复一样
+  /// 经由用户显式确认，且只通过环境管理 Provider 触发服务层脚本。
+  Future<void> _confirmAndRepairDataPermissions() async {
+    final confirmed = await _showConfirmDialog(
+      title: '修复玲珑数据目录权限',
+      content:
+          '将以管理员权限把 $_kLinglongRootPath 的关键目录和状态文件属主恢复为 '
+          'deepin-linglong:deepin-linglong，并重启玲珑 package-manager。是否继续？',
+      confirmText: '修复权限',
+    );
+    if (!confirmed || !mounted) return;
+
+    final result = await ref
+        .read(linglongEnvironmentManagementProvider.notifier)
+        .repairLinglongDataPermissions();
     if (!mounted) return;
     _showRepairResult(result);
   }
@@ -427,12 +456,14 @@ class _EnvironmentAnalysisTab extends StatelessWidget {
   const _EnvironmentAnalysisTab({
     required this.state,
     required this.onRepairOstree,
+    required this.onRepairDataPermissions,
     required this.onOpenStorageTab,
     required this.onOpenLogDirectory,
   });
 
   final LinglongEnvironmentManagementState state;
   final VoidCallback onRepairOstree;
+  final VoidCallback onRepairDataPermissions;
   final VoidCallback onOpenStorageTab;
   final ValueChanged<String> onOpenLogDirectory;
 
@@ -464,6 +495,7 @@ class _EnvironmentAnalysisTab extends StatelessWidget {
               child: _IssueTile(
                 issue: issue,
                 onRepairOstree: onRepairOstree,
+                onRepairDataPermissions: onRepairDataPermissions,
                 onOpenStorageTab: onOpenStorageTab,
               ),
             ),
@@ -858,11 +890,13 @@ class _IssueTile extends StatelessWidget {
   const _IssueTile({
     required this.issue,
     required this.onRepairOstree,
+    required this.onRepairDataPermissions,
     required this.onOpenStorageTab,
   });
 
   final LinglongEnvironmentIssue issue;
   final VoidCallback onRepairOstree;
+  final VoidCallback onRepairDataPermissions;
   final VoidCallback onOpenStorageTab;
 
   @override
@@ -912,6 +946,12 @@ class _IssueTile extends StatelessWidget {
               LinglongEnvironmentRepairAction.ostreeFsckDelete)
             FilledButton.tonal(
               onPressed: onRepairOstree,
+              child: const Text('修复'),
+            )
+          else if (issue.repairAction ==
+              LinglongEnvironmentRepairAction.fixDataPermissions)
+            FilledButton.tonal(
+              onPressed: onRepairDataPermissions,
               child: const Text('修复'),
             )
           else if (issue.repairAction ==

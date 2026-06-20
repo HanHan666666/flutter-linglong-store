@@ -7,6 +7,9 @@ enum LinglongEnvironmentIssueCode {
   repositoryNotConfigured,
   ostreeRepositoryCorrupted,
   ostreeToolUnavailable,
+
+  /// 玲珑服务用户无法读写本地数据树时使用，避免误归类为 OSTree 对象损坏。
+  linglongDataPermissionAbnormal,
   storageNearlyFull,
   runningAppsBlockStorageMove,
 }
@@ -14,6 +17,9 @@ enum LinglongEnvironmentIssueCode {
 enum LinglongEnvironmentRepairAction {
   refreshRepositoryConfig,
   ostreeFsckDelete,
+
+  /// 通过受控特权脚本恢复 `/var/lib/linglong` 关键路径属主和 owner 写权限。
+  fixDataPermissions,
   moveStorageRoot,
 }
 
@@ -65,15 +71,52 @@ class LinglongStorageInfo {
   bool get isNearlyFull => (usagePercent ?? 0) >= 90;
 }
 
-class LinglongOstreeCheckResult {
-  const LinglongOstreeCheckResult({
+/// 玲珑数据目录权限检查结果。
+///
+/// `ll-package-manager` 以 `deepin-linglong` 用户运行，本地数据目录如果被 root 接管，
+/// 会导致 `.version` 迁移、OSTree pull 或 layer 生成在运行期失败。
+class LinglongDataPermissionCheckResult {
+  const LinglongDataPermissionCheckResult({
     required this.isAvailable,
     required this.isOk,
     this.detail,
   });
 
+  /// 是否成功读取本地数据目录权限信息。
   final bool isAvailable;
+
+  /// 关键目录和状态文件是否由玲珑服务用户持有，并具备 owner 写权限。
   final bool isOk;
+
+  /// 面向诊断展示的权限异常摘要。
+  final String? detail;
+}
+
+/// OSTree 仓库检查结果。
+///
+/// `isOk` 表示玲珑运行路径能否读取本地仓库，不等同于深度 `fsck` 完全干净；
+/// 深度校验发现对象风险时通过 `hasIntegrityWarning` 单独表达，避免把仍可运行的环境误判为不可用。
+class LinglongOstreeCheckResult {
+  const LinglongOstreeCheckResult({
+    required this.isAvailable,
+    required this.isOk,
+    this.hasIntegrityWarning = false,
+    this.detail,
+  });
+
+  /// `ostree` 命令是否可用于本地仓库检查。
+  final bool isAvailable;
+
+  /// 本地仓库是否能完成玲珑运行所依赖的只读访问。
+  final bool isOk;
+
+  /// 深度对象完整性校验是否发现风险。
+  ///
+  /// 该字段为 `true` 时代表需要提示用户择机修复或重新拉取受影响内容，
+  /// 但不能直接推导为玲珑基础环境不可用。
+  final bool hasIntegrityWarning;
+
+  /// 面向诊断展示的命令输出摘要，完整输出仍应以日志文件为准。
   final String? detail;
 }
 
@@ -81,6 +124,7 @@ class LinglongEnvironmentAnalysis {
   const LinglongEnvironmentAnalysis({
     required this.envResult,
     required this.storage,
+    required this.dataPermission,
     required this.ostree,
     required this.issues,
     required this.runningAppCount,
@@ -89,6 +133,7 @@ class LinglongEnvironmentAnalysis {
 
   final LinglongEnvCheckResult envResult;
   final LinglongStorageInfo storage;
+  final LinglongDataPermissionCheckResult dataPermission;
   final LinglongOstreeCheckResult ostree;
   final List<LinglongEnvironmentIssue> issues;
   final int runningAppCount;

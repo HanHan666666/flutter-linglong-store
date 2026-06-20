@@ -96,6 +96,8 @@ class _LinglongEnvironmentManagementDialogState
                         _EnvironmentAnalysisTab(
                           state: state,
                           onRepairOstree: _confirmAndRepairOstree,
+                          onRepairDataPermissions:
+                              _confirmAndRepairDataPermissions,
                           onOpenStorageTab: () {
                             DefaultTabController.of(context).animateTo(2);
                           },
@@ -140,10 +142,16 @@ class _LinglongEnvironmentManagementDialogState
     );
   }
 
+  /// 二次确认后执行 OSTree 修复与必要的受影响 ref 重拉。
+  ///
+  /// `fsck-detected corruption` 不能仅靠删除坏对象判断成功；服务层会在需要时追加
+  /// full pull 和复验，因此这里的确认文案必须提示可能产生下载与较长耗时。
   Future<void> _confirmAndRepairOstree() async {
     final confirmed = await _showConfirmDialog(
       title: '修复 OSTree 仓库',
-      content: '将以管理员权限执行 OSTree 完整性修复，并删除损坏对象。是否继续？',
+      content:
+          '将以管理员权限执行 OSTree 完整性修复，删除可清理的损坏对象；'
+          '如果检测到 fsck 标记的 partial commits，还会重新拉取受影响应用或基础环境并再次校验。是否继续？',
       confirmText: '执行修复',
     );
     if (!confirmed || !mounted) return;
@@ -151,6 +159,27 @@ class _LinglongEnvironmentManagementDialogState
     final result = await ref
         .read(linglongEnvironmentManagementProvider.notifier)
         .repairOstreeRepository();
+    if (!mounted) return;
+    _showRepairResult(result);
+  }
+
+  /// 二次确认后修复玲珑数据目录权限。
+  ///
+  /// 权限修复会改变系统数据目录属主并重启 package-manager，所以必须与 OSTree 修复一样
+  /// 经由用户显式确认，且只通过环境管理 Provider 触发服务层脚本。
+  Future<void> _confirmAndRepairDataPermissions() async {
+    final confirmed = await _showConfirmDialog(
+      title: '修复玲珑数据目录权限',
+      content:
+          '将以管理员权限把 $_kLinglongRootPath 的关键目录和状态文件属主恢复为 '
+          'deepin-linglong:deepin-linglong，并重启玲珑 package-manager。是否继续？',
+      confirmText: '修复权限',
+    );
+    if (!confirmed || !mounted) return;
+
+    final result = await ref
+        .read(linglongEnvironmentManagementProvider.notifier)
+        .repairLinglongDataPermissions();
     if (!mounted) return;
     _showRepairResult(result);
   }
@@ -427,12 +456,14 @@ class _EnvironmentAnalysisTab extends StatelessWidget {
   const _EnvironmentAnalysisTab({
     required this.state,
     required this.onRepairOstree,
+    required this.onRepairDataPermissions,
     required this.onOpenStorageTab,
     required this.onOpenLogDirectory,
   });
 
   final LinglongEnvironmentManagementState state;
   final VoidCallback onRepairOstree;
+  final VoidCallback onRepairDataPermissions;
   final VoidCallback onOpenStorageTab;
   final ValueChanged<String> onOpenLogDirectory;
 
@@ -464,6 +495,7 @@ class _EnvironmentAnalysisTab extends StatelessWidget {
               child: _IssueTile(
                 issue: issue,
                 onRepairOstree: onRepairOstree,
+                onRepairDataPermissions: onRepairDataPermissions,
                 onOpenStorageTab: onOpenStorageTab,
               ),
             ),
@@ -677,12 +709,10 @@ class _StatusSummary extends StatelessWidget {
         color: theme.colorScheme.secondary,
       ),
       _MetricChip(
-        icon: analysis.ostree.isOk
-            ? Icons.verified_outlined
-            : Icons.report_problem_outlined,
+        icon: _ostreeMetricIcon(analysis.ostree),
         label: 'OSTree',
-        value: analysis.ostree.isOk ? '正常' : '异常',
-        color: analysis.ostree.isOk ? AppColors.success : AppColors.warning,
+        value: _ostreeMetricValue(analysis.ostree),
+        color: _ostreeMetricColor(analysis.ostree),
       ),
       _MetricChip(
         icon: Icons.storage_outlined,
@@ -734,6 +764,45 @@ class _StatusSummary extends StatelessWidget {
       RepoStatus.unknown => '未知',
     };
   }
+
+  /// 根据服务层给出的双通道状态展示 OSTree 指标文案。
+  ///
+  /// 深度 fsck 风险不等同于玲珑仓库不可用，因此这里要显式展示“可用，有风险”，
+  /// 让用户知道可以择机修复，而不是误解为基础环境已经整体损坏。
+  static String _ostreeMetricValue(LinglongOstreeCheckResult ostree) {
+    if (!ostree.isAvailable) {
+      return '工具不可用';
+    }
+    if (!ostree.isOk) {
+      return '不可用';
+    }
+    if (ostree.hasIntegrityWarning) {
+      return '可用，有风险';
+    }
+    return '正常';
+  }
+
+  /// 为 OSTree 指标选择状态图标，保持与文案语义一致。
+  static IconData _ostreeMetricIcon(LinglongOstreeCheckResult ostree) {
+    if (ostree.isOk && !ostree.hasIntegrityWarning) {
+      return Icons.verified_outlined;
+    }
+    if (!ostree.isAvailable || ostree.hasIntegrityWarning) {
+      return Icons.report_problem_outlined;
+    }
+    return Icons.error_outline;
+  }
+
+  /// 为 OSTree 指标选择状态颜色，区分不可用错误和可用但有风险的警告。
+  static Color _ostreeMetricColor(LinglongOstreeCheckResult ostree) {
+    if (ostree.isOk && !ostree.hasIntegrityWarning) {
+      return AppColors.success;
+    }
+    if (!ostree.isOk && ostree.isAvailable) {
+      return AppColors.error;
+    }
+    return AppColors.warning;
+  }
 }
 
 class _MetricChip extends StatelessWidget {
@@ -760,10 +829,7 @@ class _MetricChip extends StatelessWidget {
         // 卡片用 surface 色保持中性，状态含义统一交给左侧色条与图标色表达
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant,
-          width: 1,
-        ),
+        border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -824,11 +890,13 @@ class _IssueTile extends StatelessWidget {
   const _IssueTile({
     required this.issue,
     required this.onRepairOstree,
+    required this.onRepairDataPermissions,
     required this.onOpenStorageTab,
   });
 
   final LinglongEnvironmentIssue issue;
   final VoidCallback onRepairOstree;
+  final VoidCallback onRepairDataPermissions;
   final VoidCallback onOpenStorageTab;
 
   @override
@@ -878,6 +946,12 @@ class _IssueTile extends StatelessWidget {
               LinglongEnvironmentRepairAction.ostreeFsckDelete)
             FilledButton.tonal(
               onPressed: onRepairOstree,
+              child: const Text('修复'),
+            )
+          else if (issue.repairAction ==
+              LinglongEnvironmentRepairAction.fixDataPermissions)
+            FilledButton.tonal(
+              onPressed: onRepairDataPermissions,
               child: const Text('修复'),
             )
           else if (issue.repairAction ==
@@ -962,9 +1036,12 @@ class _RepositoryTile extends StatelessWidget {
                         ),
                         child: Text(
                           '默认',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
                                 color: AppColors.warning,
-                                fontWeight: context.appFontWeight(FontWeight.w600),
+                                fontWeight: context.appFontWeight(
+                                  FontWeight.w600,
+                                ),
                               ),
                         ),
                       ),
@@ -1236,7 +1313,9 @@ class _EnvManagementWarningBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // 背景用 AppColors.error 的低透明度填充；深色主题下透明度略低避免过亮刺眼。
-    final backgroundColor = AppColors.error.withValues(alpha: isDark ? 0.18 : 0.10);
+    final backgroundColor = AppColors.error.withValues(
+      alpha: isDark ? 0.18 : 0.10,
+    );
 
     return Container(
       width: double.infinity,
@@ -1270,9 +1349,9 @@ class _EnvManagementWarningBanner extends StatelessWidget {
               child: Text(
                 text,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      height: 1.4,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurface,
+                  height: 1.4,
+                ),
               ),
             ),
           ),
@@ -1298,10 +1377,7 @@ class _SegmentedTabBar extends StatelessWidget {
   final VoidCallback onRefresh;
 
   static const _tabs = <_SegmentedTabData>[
-    _SegmentedTabData(
-      icon: Icons.health_and_safety_outlined,
-      label: '环境分析',
-    ),
+    _SegmentedTabData(icon: Icons.health_and_safety_outlined, label: '环境分析'),
     _SegmentedTabData(icon: Icons.hub_outlined, label: '仓库管理'),
     _SegmentedTabData(icon: Icons.storage_outlined, label: '保存位置'),
   ];
@@ -1348,8 +1424,8 @@ class _SegmentedTabBar extends StatelessWidget {
                   ),
                   style: IconButton.styleFrom(
                     foregroundColor: theme.colorScheme.onSurfaceVariant,
-                    disabledForegroundColor:
-                        theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.38),
+                    disabledForegroundColor: theme.colorScheme.onSurfaceVariant
+                        .withValues(alpha: 0.38),
                   ),
                 ),
               ),
@@ -1376,7 +1452,9 @@ class _SegmentedTabItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final foreground = selected ? Colors.white : theme.colorScheme.onSurfaceVariant;
+    final foreground = selected
+        ? Colors.white
+        : theme.colorScheme.onSurfaceVariant;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),

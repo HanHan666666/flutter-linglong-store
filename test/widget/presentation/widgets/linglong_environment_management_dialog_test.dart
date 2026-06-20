@@ -46,17 +46,15 @@ void main() {
 
     expect(find.text('玲珑环境管理'), findsOneWidget);
     expect(find.text('环境分析'), findsOneWidget);
-    expect(find.text('OSTree 仓库完整性异常'), findsOneWidget);
+    expect(find.text('可用，有风险'), findsOneWidget);
+    expect(find.text('OSTree 对象完整性风险'), findsOneWidget);
     expect(find.text('修复'), findsOneWidget);
 
     // 警示横幅：提示功能尚不稳定，三个 Tab 共享，位于标题与 TabBar 之间。
     // 采用红色强烈警告（AppColors.error），图标为 error_outline。
     final l10n = await AppLocalizations.delegate.load(const Locale('zh'));
     expect(find.text(l10n.envManagementWarning), findsOneWidget);
-    expect(
-      find.byIcon(Icons.error_outline),
-      findsWidgets,
-    );
+    expect(find.byIcon(Icons.error_outline), findsWidgets);
 
     // 分段式 TabBar：默认选中第一个 Tab「环境分析」，其文字应为白色（主题色填充态）
     final analysisTabStyle = tester.widget<Text>(find.text('环境分析')).style!;
@@ -66,10 +64,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('默认仓库：stable'), findsOneWidget);
     // 切换后「仓库管理」应高亮（白字），「环境分析」恢复为次级灰字
-    expect(
-      tester.widget<Text>(find.text('仓库管理')).style!.color,
-      Colors.white,
-    );
+    expect(tester.widget<Text>(find.text('仓库管理')).style!.color, Colors.white);
     expect(
       tester.widget<Text>(find.text('环境分析')).style!.color,
       AppTheme.lightTheme.colorScheme.onSurfaceVariant,
@@ -128,11 +123,56 @@ void main() {
     expect(find.text(l10n.repoManagementHintTitle), findsOneWidget);
     expect(find.text(l10n.repoManagementHintMessage), findsOneWidget);
   });
+
+  testWidgets('dialog confirms linglong data permission repair', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final service = _FakeManagementService(
+      analysis: _permissionIssueAnalysis(),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          linglongEnvironmentManagementServiceProvider.overrideWithValue(
+            service,
+          ),
+          linglongRepositoryManagementRepositoryProvider.overrideWithValue(
+            _FakeRepositoryManagementRepository(),
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: Center(child: LinglongEnvironmentManagementDialog()),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.text('玲珑数据目录权限异常'), findsOneWidget);
+
+    await tester.tap(find.text('修复'));
+    await tester.pumpAndSettle();
+    expect(find.text('修复玲珑数据目录权限'), findsOneWidget);
+
+    await tester.tap(find.text('修复权限'));
+    await tester.pumpAndSettle();
+    expect(service.repairDataPermissionCallCount, 1);
+  });
 }
 
 class _FakeManagementService extends LinglongEnvironmentManagementService {
-  _FakeManagementService()
-    : super(
+  _FakeManagementService({LinglongEnvironmentAnalysis? analysis})
+    : _analysis = analysis,
+      super(
         executor: ShellCommandExecutor(
           runner: const _FixedShellCommandRunner(),
         ),
@@ -143,38 +183,93 @@ class _FakeManagementService extends LinglongEnvironmentManagementService {
         ),
       );
 
+  final LinglongEnvironmentAnalysis? _analysis;
+  int repairDataPermissionCallCount = 0;
+
   @override
   Future<LinglongEnvironmentAnalysis> analyzeEnvironment() async {
-    return LinglongEnvironmentAnalysis(
-      envResult: const LinglongEnvCheckResult(
-        isOk: true,
-        llCliVersion: '1.12.2',
-        repoStatus: RepoStatus.ok,
-        checkedAt: 1,
-      ),
-      storage: const LinglongStorageInfo(
-        rootPath: '/var/lib/linglong',
-        usagePercent: 94,
-      ),
-      ostree: const LinglongOstreeCheckResult(
-        isAvailable: true,
-        isOk: false,
-        detail: 'Corrupted file object found',
-      ),
-      issues: const [
-        LinglongEnvironmentIssue(
-          code: LinglongEnvironmentIssueCode.ostreeRepositoryCorrupted,
-          severity: LinglongEnvironmentIssueSeverity.error,
-          title: 'OSTree 仓库完整性异常',
-          description: '检测到玲珑本地 OSTree 仓库可能存在损坏对象。',
-          repairAction: LinglongEnvironmentRepairAction.ostreeFsckDelete,
-          rawDetail: 'Corrupted file object found',
-        ),
-      ],
-      runningAppCount: 0,
-      analyzedAt: DateTime.fromMillisecondsSinceEpoch(1),
+    return _analysis ?? _defaultAnalysis();
+  }
+
+  @override
+  Future<LinglongEnvironmentRepairResult> repairLinglongDataPermissions({
+    String? logFilePath,
+  }) async {
+    repairDataPermissionCallCount += 1;
+    return const LinglongEnvironmentRepairResult(
+      action: LinglongEnvironmentRepairAction.fixDataPermissions,
+      success: true,
+      message: '玲珑数据目录权限已修复',
+      logFilePath: '/tmp/permission.log',
     );
   }
+}
+
+LinglongEnvironmentAnalysis _defaultAnalysis() {
+  return LinglongEnvironmentAnalysis(
+    envResult: const LinglongEnvCheckResult(
+      isOk: true,
+      llCliVersion: '1.12.2',
+      repoStatus: RepoStatus.ok,
+      checkedAt: 1,
+    ),
+    storage: const LinglongStorageInfo(
+      rootPath: '/var/lib/linglong',
+      usagePercent: 94,
+    ),
+    dataPermission: const LinglongDataPermissionCheckResult(
+      isAvailable: true,
+      isOk: true,
+    ),
+    ostree: const LinglongOstreeCheckResult(
+      isAvailable: true,
+      isOk: true,
+      hasIntegrityWarning: true,
+      detail: 'Corrupted file object found',
+    ),
+    issues: const [
+      LinglongEnvironmentIssue(
+        code: LinglongEnvironmentIssueCode.ostreeRepositoryCorrupted,
+        severity: LinglongEnvironmentIssueSeverity.warning,
+        title: 'OSTree 对象完整性风险',
+        description: '深度校验发现对象损坏，但当前玲珑仓库仍可读取。',
+        repairAction: LinglongEnvironmentRepairAction.ostreeFsckDelete,
+        rawDetail: 'Corrupted file object found',
+      ),
+    ],
+    runningAppCount: 0,
+    analyzedAt: DateTime.fromMillisecondsSinceEpoch(1),
+  );
+}
+
+LinglongEnvironmentAnalysis _permissionIssueAnalysis() {
+  return LinglongEnvironmentAnalysis(
+    envResult: const LinglongEnvCheckResult(
+      isOk: true,
+      llCliVersion: '1.12.2',
+      repoStatus: RepoStatus.ok,
+      checkedAt: 1,
+    ),
+    storage: const LinglongStorageInfo(rootPath: '/var/lib/linglong'),
+    dataPermission: const LinglongDataPermissionCheckResult(
+      isAvailable: true,
+      isOk: false,
+      detail: '/var/lib/linglong/repo 当前 root:root mode=775',
+    ),
+    ostree: const LinglongOstreeCheckResult(isAvailable: true, isOk: true),
+    issues: const [
+      LinglongEnvironmentIssue(
+        code: LinglongEnvironmentIssueCode.linglongDataPermissionAbnormal,
+        severity: LinglongEnvironmentIssueSeverity.error,
+        title: '玲珑数据目录权限异常',
+        description: '关键目录属主异常，可能导致仓库迁移、下载对象或创建 layer 失败。',
+        repairAction: LinglongEnvironmentRepairAction.fixDataPermissions,
+        rawDetail: '/var/lib/linglong/repo 当前 root:root mode=775',
+      ),
+    ],
+    runningAppCount: 0,
+    analyzedAt: DateTime.fromMillisecondsSinceEpoch(1),
+  );
 }
 
 class _FakeRepositoryManagementRepository

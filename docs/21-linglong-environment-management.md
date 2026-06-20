@@ -1,7 +1,7 @@
 # 玲珑环境管理、修复与保存位置迁移
 
-> 文档版本：1.1  
-> 更新日期：2026-06-14  
+> 文档版本：1.4
+> 更新日期：2026-06-20
 > 适用范围：设置页「玲珑环境管理」入口、仓库管理、环境分析与修复、保存位置迁移
 
 ## 背景
@@ -10,7 +10,7 @@
 
 本功能在设置页新增「玲珑环境管理」入口，打开统一对话框，包含：
 
-- 「环境分析」：展示 ll-cli、仓库、磁盘、OSTree、运行中应用等诊断结果。
+- 「环境分析」：展示 ll-cli、仓库、数据目录权限、磁盘、OSTree、运行中应用等诊断结果。
 - 「仓库管理」：查看、添加、修改、删除仓库，设置默认仓库、优先级和镜像开关。
 - 「保存位置」：按上游建议通过 systemd bind mount 迁移 `/var/lib/linglong`。
 
@@ -20,7 +20,11 @@
 2. `ll-cli --json repo show` 返回 `defaultRepo`、`repos`、`version`，可作为仓库列表首选解析来源；文本表格输出作为兜底。
 3. 玲珑本地根目录为 `/var/lib/linglong`，OSTree 仓库位于 `/var/lib/linglong/repo`。
 4. OpenAtom-Linyaps/linyaps#1411 中上游维护者说明当前不支持直接自定义安装位置，推荐通过 systemd `.mount` 将目标目录 bind 到 `/var/lib/linglong`。
-5. 远程环境实测 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 可发现 corrupted file object，输出量可能很大，UI 必须截断摘要并保留完整日志。
+5. linyaps 1.13.0 源码中仓库运行路径主要通过 `OSTreeRepo::init/loadFromPath/create` 打开仓库、读取 refs/cache/states，并通过 `/var/lib/linglong/layers/<commit>` checkout 目录支撑运行；源码未把 `ostree fsck` 作为启动或运行前置条件。
+6. 远程环境实测 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 可发现 corrupted file object，但 `ll-cli --json repo show`、`ll-cli --json list`、`ll-cli --json ps` 和 `ostree refs --repo=/var/lib/linglong/repo` 仍可正常执行。UI 必须区分“仓库不可读”和“深度对象完整性风险”，不能仅凭 `fsck` 非零码展示笼统的运行异常。
+7. 远程 Loong64 环境实测 `ll-package-manager` 以 `deepin-linglong:deepin-linglong` 运行；当 `/var/lib/linglong/.version`、`states.json`、`repo`、`layers`、`entries`、`merged` 被 root 接管时，会出现 `couldn't open "/var/lib/linglong/.version"`、`ostree_repo_pull_with_options [code 14]: mkdirat: 权限不够`、`failed to create layer dir ... 权限不够` 等错误。环境管理必须把这类问题识别为“玲珑数据目录权限异常”，不能混同为 OSTree 仓库完整性异常。
+8. linyaps 1.13.0 的 `OSTreeRepo::fetchRefMetaData()` 会使用 `OSTREE_REPO_PULL_FLAGS_COMMIT_ONLY` 或 `/info.json` subdir pull，因此普通 `.commitpartial` 或 `partial commits not verified` 不能直接等同于仓库损坏。
+9. OSTree 源码中 `.commitpartial` 内容为 `f` 时表示 `OSTREE_REPO_COMMIT_STATE_FSCK_PARTIAL`，后续 `ostree fsck` 会以 `partial commits from fsck-detected corruption` 返回错误。远程 Loong64 环境和本机干净 `bare-user-only` 仓库对照验证显示，部分 `stable` loong64 ref 重新拉取后仍会出现 `Corrupted file object; checksum expected=... actual=...`，这类结果应提示上游仓库数据或 OSTree/玲珑仓库模式兼容风险，不能继续伪装成已修复。
 
 ## 实现边界
 
@@ -28,7 +32,7 @@
 - 不把仓库源重新变成商店业务配置；后端接口仍使用 `AppConfig.defaultStoreRepoName`。
 - 不直接修改玲珑内部数据库。
 - 不在页面或 Provider 中散写 `ll-cli repo`、`ostree fsck`、`pkexec`、`rsync`、`systemctl` 命令。
-- 不静默执行 `ostree fsck --delete` 或保存位置迁移，所有副作用操作必须由用户确认。
+- 不静默执行数据目录权限修复、`ostree fsck --delete` 或保存位置迁移，所有副作用操作必须由用户确认。
 - 不在安装/更新队列仍有活跃任务或玲珑应用仍在运行时迁移保存位置。
 
 ## 分层契约
@@ -37,7 +41,8 @@
 
 - `LinglongRepositoryConfig`：仓库配置版本、默认仓库、仓库列表。
 - `LinglongRepoInfo`：单个仓库的 `name/url/alias/priority/isDefault/isMirrorEnabled`。
-- `LinglongEnvironmentAnalysis`：环境检测结果、存储信息、OSTree 检查、问题列表、运行中应用数量。
+- `LinglongEnvironmentAnalysis`：环境检测结果、数据目录权限、存储信息、OSTree 检查、问题列表、运行中应用数量。
+- `LinglongDataPermissionCheckResult`：`/var/lib/linglong` 关键目录和状态文件是否由玲珑服务用户持有，并具备 owner 写权限。
 - `LinglongEnvironmentIssue`：问题 code、严重级别、标题、说明、诊断详情和可执行修复动作。
 - `LinglongStorageInfo`：根目录、文件系统、挂载源、容量、已用、可用、使用率、bind mount 状态。
 - `LinglongEnvironmentRepairResult`：修复动作、成功状态、展示消息、日志路径和截断输出。
@@ -64,10 +69,13 @@
 
 - 聚合现有 `LinglongEnvironmentService.checkEnvironment()`。
 - 执行 `ll-cli --json ps` 统计运行中玲珑应用。
+- 执行 `stat -c %U:%G:%a:%n` 检查 `/var/lib/linglong`、`.version`、`config.yaml`、`states.json`、`repo`、`layers`、`entries`、`merged` 的属主和 owner 写权限。
 - 执行 `df -PB1 /var/lib/linglong` 读取空间。
 - 执行 `findmnt --json /var/lib/linglong` 读取挂载状态。
-- 执行 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 做完整性检查。
+- 先执行 `ostree refs --repo=/var/lib/linglong/repo` 做轻量只读可用性检查。
+- 仅在 refs 可读时执行 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 做深度对象完整性审计。
 - 通过 `pkexec ostree fsck --repo=/var/lib/linglong/repo --all --delete` 执行 OSTree 修复。
+- 通过 `pkexec bash <temp-script>` 执行数据目录权限修复脚本。
 - 通过 `pkexec bash <temp-script>` 执行保存位置迁移脚本。
 - 修复与迁移日志写入 XDG logs 目录；UI 只展示截断摘要。
 
@@ -77,6 +85,7 @@
 
 - `load()` 同时加载环境分析和仓库配置。
 - 仓库写操作成功后刷新仓库配置。
+- 数据目录权限修复后重新执行完整分析。
 - OSTree 修复后重新执行完整分析。
 - 保存位置迁移前读取 `installQueueProvider`，只要当前任务或等待队列仍存在，就直接返回失败结果，不进入特权脚本。
 
@@ -102,14 +111,30 @@
 2. 仓库是否已配置。
 3. `/var/lib/linglong` 所在文件系统容量、已用、可用和使用率。
 4. `/var/lib/linglong` 是否处于 bind mount。
-5. `ostree` 命令是否可用。
-6. `/var/lib/linglong/repo` OSTree 完整性。
-7. `ll-cli --json ps` 是否存在运行中应用。
+5. `/var/lib/linglong` 关键目录和状态文件是否由 `deepin-linglong:deepin-linglong` 持有，并具备 owner 写权限。
+6. `ostree` 命令是否可用。
+7. `/var/lib/linglong/repo` refs 是否可读取。
+8. `/var/lib/linglong/repo` 深度对象完整性审计是否存在风险。
+9. `ll-cli --json ps` 是否存在运行中应用。
+
+数据目录权限状态模型：
+
+- `isAvailable=false`：无法执行 `stat` 或读取权限信息，展示“玲珑数据目录权限异常”错误，并保留原始输出。
+- `isOk=false`：关键路径不是 `deepin-linglong:deepin-linglong`，或 owner 不具备写权限，展示“玲珑数据目录权限异常”错误，并列出异常路径。
+- `isOk=true`：关键路径属主和 owner 写权限符合玲珑服务运行要求。
+
+OSTree 状态模型：
+
+- `isAvailable=false`：`ostree` 命令不可用或无法执行基础检查，展示“OSTree 工具不可用”警告。
+- `isOk=false`：`ostree refs --repo=/var/lib/linglong/repo` 无法读取本地仓库，展示“OSTree 仓库不可用”错误，可引导尝试修复。
+- `isOk=true && hasIntegrityWarning=true`：refs 可读但 `ostree fsck --quiet` 发现对象损坏，展示“OSTree 对象完整性风险”警告，并保留修复入口。
+- `isOk=true && hasIntegrityWarning=false`：仓库可读且深度审计未发现风险，展示“正常”。
 
 问题 code：
 
 - `llCliUnavailable`
 - `repositoryNotConfigured`
+- `linglongDataPermissionAbnormal`
 - `ostreeToolUnavailable`
 - `ostreeRepositoryCorrupted`
 - `storageNearlyFull`
@@ -117,8 +142,8 @@
 
 严重级别：
 
-- `error`：缺少可用 ll-cli、仓库未配置、OSTree 损坏、空间严重不足。
-- `warning`：ostree 工具不可用、空间偏高、有运行中应用阻断迁移。
+- `error`：缺少可用 ll-cli、仓库未配置、玲珑数据目录权限异常、OSTree 仓库 refs 不可读、空间严重不足。
+- `warning`：ostree 工具不可用、OSTree 深度对象完整性风险、空间偏高、有运行中应用阻断迁移。
 - `info`：保留给后续状态说明。
 
 ## 修复动作
@@ -126,6 +151,37 @@
 ### 刷新仓库配置
 
 仓库配置异常时，环境分析页提供跳转或刷新入口；真实仓库增删改在「仓库管理」页完成。
+
+### 修复玲珑数据目录权限
+
+默认只分析，不自动修复。用户点击修复并确认后执行受控脚本：
+
+```bash
+pkexec bash <linglong-permission-repair-temp-script>
+```
+
+检查范围：
+
+- `/var/lib/linglong`
+- `/var/lib/linglong/.version`
+- `/var/lib/linglong/config.yaml`
+- `/var/lib/linglong/states.json`
+- `/var/lib/linglong/repo`
+- `/var/lib/linglong/layers`
+- `/var/lib/linglong/entries`
+- `/var/lib/linglong/merged`
+
+修复规则：
+
+- 修复目标属主固定为 `deepin-linglong:deepin-linglong`，与 `ll-package-manager` 服务运行身份一致。
+- `.version`、`config.yaml`、`states.json` 只处理文件属主并确保 owner 可读写。
+- `repo`、`layers`、`entries`、`merged` 递归恢复属主，并确保目录 owner 可进入和写入。
+- 修复前停止 `org.deepin.linglong.PackageManager.service`，修复后执行 `systemctl reset-failed` 与 `systemctl restart`。
+- 修复后执行 `ll-cli --json repo show` 验证 package-manager 能正常读取仓库配置。
+- 脚本必须写完整日志；UI 只展示截断输出。
+- 修复后自动重新执行环境分析。
+
+该动作不能替代 OSTree 对象修复，也不能删除损坏对象；它只处理服务用户无法读写本地数据树导致的权限类故障。
 
 ### 修复 OSTree 仓库
 
@@ -149,7 +205,10 @@ OSTree 版本兼容规则：
 - 优先执行 `pkexec ostree fsck --repo=/var/lib/linglong/repo --all --delete`。
 - 如果输出明确表示当前 OSTree 不支持 `--all`，降级重试 `pkexec ostree fsck --repo=/var/lib/linglong/repo --delete`，并继续写入同一个日志文件。
 - 如果输出明确表示当前 OSTree 不支持 `--delete`，不能退化成只检查命令，也不能提示修复成功；必须告知用户该版本无法自动删除损坏对象，需要升级 ostree 或使用发行版工具手动修复。
-- 新版 OSTree 可能在删除损坏对象后输出 `partial commits from fsck-detected corruption` 并以非零码退出。这类结果表示可自动清理的损坏对象已处理，但仍有受影响 commit 被标记为 partial；UI 应提示用户重新安装或更新受影响应用/基础环境后再次执行环境分析，而不是展示普通“修复失败”。
+- 普通 `partial commits not verified` 可能来自 linyaps 元数据/子路径拉取；只有同时出现 `fsck-detected corruption`，或 `.commitpartial` marker 内容为 `f`，才进入损坏修复后续流程。
+- 新版 OSTree 可能在删除损坏对象后输出 `partial commits from fsck-detected corruption` 并以非零码退出；部分版本会先输出 `Marking commit as partial` 和 `Repository corruption encountered`，不会继续走到 `fsck-detected corruption` 汇总错误。两类结果都表示需要进入 fsck partial 后续流程。服务层必须追加执行受控 `pkexec bash` 脚本：扫描 `/var/lib/linglong/repo/state/*.commitpartial`，只选择 marker 内容为 `f` 且能映射到 `ostree refs` 的 ref，使用仓库 ref 中的 remote 重新执行 `ostree pull --disable-static-deltas <remote> <ref>`，然后再次执行 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 复验。
+- 重新拉取必须尽量以 `deepin-linglong` 用户执行，避免 root 拉取后再次制造数据目录权限问题；如果系统缺少 `runuser` 或服务用户不存在，脚本可回退为当前特权上下文执行，但日志必须保留完整命令输出。
+- 复验通过时才能提示修复成功；复验仍出现 `Corrupted file object`、`checksum expected=... actual=...` 或其他 corruption 时，必须提示“重新拉取后复验仍未通过”，并说明可能需要上游仓库数据或 OSTree/玲珑兼容性修复。
 - partial commit 数量优先从 OSTree 输出中提取，例如 `32 partial commits not verified` 展示为“32 个 partial commits”。完整输出仍以日志文件为准。
 
 ## 保存位置迁移
@@ -215,7 +274,8 @@ WantedBy=multi-user.target
 
 ### 环境分析
 
-- 顶部展示 ll-cli 版本、运行中应用数量、空间使用率、OSTree 状态。
+- 顶部展示 ll-cli 版本、运行中应用数量、空间使用率、OSTree 状态；OSTree 必须区分“正常”“可用，有风险”“不可用”“工具不可用”。
+- 数据目录权限异常必须在环境分析问题列表中展示，修复入口和 OSTree 修复入口同级，不进入保存位置 Tab。
 - 问题按严重程度排序展示。
 - 每个问题展示标题、描述、原始诊断详情和可执行动作。
 - 修复按钮必须先弹出确认对话框。
@@ -237,7 +297,7 @@ WantedBy=multi-user.target
 
 ## 性能与响应
 
-- `ostree fsck` 和保存位置迁移都可能耗时较长，必须异步执行。
+- 权限修复、`ostree fsck` 和保存位置迁移都可能耗时较长，必须异步执行。
 - UI 操作期间只显示轻量进度状态，不阻塞主线程。
 - 命令输出截断到 4000 字符，避免大量 corrupted object 输出导致 UI 卡顿。
 - 仓库列表只在打开对话框、刷新或写操作成功后重新加载。
@@ -247,7 +307,8 @@ WantedBy=multi-user.target
 已覆盖：
 
 - 仓库 JSON 解析、ANSI 文本兜底解析、仓库命令参数。
-- 环境分析中的 OSTree 损坏、空间不足和运行中应用阻断。
+- 环境分析中的数据目录权限异常、OSTree refs 不可读、OSTree 深度对象完整性风险、空间不足和运行中应用阻断。
+- 数据目录权限修复脚本、修复命令和日志参数。
 - OSTree 修复命令和日志参数。
 - 保存位置迁移脚本内容、危险目标路径拒绝、目标空间不足拒绝。
 - Provider 状态加载、修复后刷新、仓库写操作刷新、安装队列活跃时阻断迁移。

@@ -156,6 +156,18 @@ class LinglongEnvironmentManagement
     );
   }
 
+  /// 修复玲珑数据目录权限。
+  ///
+  /// 入口放在统一管理 Provider 中，确保 UI 不直接执行 `pkexec` 脚本，并复用修复后的重新分析流程。
+  Future<LinglongEnvironmentRepairResult> repairLinglongDataPermissions() {
+    return _runRepairAction(
+      LinglongEnvironmentRepairAction.fixDataPermissions,
+      () => ref
+          .read(linglongEnvironmentManagementServiceProvider)
+          .repairLinglongDataPermissions(),
+    );
+  }
+
   Future<LinglongEnvironmentRepairResult> moveLinglongStorage(
     String targetPath,
   ) async {

@@ -46,9 +46,10 @@ void main() {
 
     expect(find.text('玲珑环境管理'), findsOneWidget);
     expect(find.text('环境分析'), findsOneWidget);
-    expect(find.text('可用，有风险'), findsOneWidget);
-    expect(find.text('OSTree 对象完整性风险'), findsOneWidget);
-    expect(find.text('修复'), findsOneWidget);
+    expect(find.text('本地数据'), findsOneWidget);
+    expect(find.text('正常'), findsWidgets);
+    expect(find.text('OSTree'), findsNothing);
+    expect(find.text('OSTree 对象完整性风险'), findsNothing);
 
     // 警示横幅：提示功能尚不稳定，三个 Tab 共享，位于标题与 TabBar 之间。
     // 采用红色强烈警告（AppColors.error），图标为 error_outline。
@@ -221,22 +222,8 @@ LinglongEnvironmentAnalysis _defaultAnalysis() {
       isAvailable: true,
       isOk: true,
     ),
-    ostree: const LinglongOstreeCheckResult(
-      isAvailable: true,
-      isOk: true,
-      hasIntegrityWarning: true,
-      detail: 'Corrupted file object found',
-    ),
-    issues: const [
-      LinglongEnvironmentIssue(
-        code: LinglongEnvironmentIssueCode.ostreeRepositoryCorrupted,
-        severity: LinglongEnvironmentIssueSeverity.warning,
-        title: 'OSTree 对象完整性风险',
-        description: '深度校验发现对象损坏，但当前玲珑仓库仍可读取。',
-        repairAction: LinglongEnvironmentRepairAction.ostreeFsckDelete,
-        rawDetail: 'Corrupted file object found',
-      ),
-    ],
+    ostree: const LinglongOstreeCheckResult(isAvailable: true, isOk: true),
+    issues: const [],
     runningAppCount: 0,
     analyzedAt: DateTime.fromMillisecondsSinceEpoch(1),
   );

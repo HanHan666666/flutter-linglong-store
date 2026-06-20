@@ -90,8 +90,8 @@ class LinglongEnvironmentManagementService {
 
   /// 执行 OSTree 仓库修复。
   ///
-  /// 新版 OSTree 在 `--delete` 删除损坏对象后，可能因为 affected commit 被标记为 partial
-  /// 而返回非零码；这类结果代表自动清理步骤已经完成，后续需要重新拉取受影响内容。
+  /// 新版 OSTree 在 `--delete` 删除损坏对象后，可能因为 affected commit 被标记为
+  /// fsck partial 而返回非零码；这类结果不能当成修复成功，需要重新拉取并复验。
   /// 旧版 OSTree 可能不支持 `--all`，此处会降级到仅带 `--delete` 的修复命令。
   Future<LinglongEnvironmentRepairResult> repairOstreeRepository({
     String? logFilePath,
@@ -111,11 +111,39 @@ class LinglongEnvironmentManagementService {
         logFilePath: resolvedLogFilePath,
         overwriteLog: false,
       );
+
+      if (!_isUnsupportedOstreeOption(fallbackResult, '--delete') &&
+          _isFsckDetectedPartialCommitState(fallbackResult)) {
+        final repullResult = await _runOstreePartialRepullCommand(
+          logFilePath: resolvedLogFilePath,
+        );
+        return _buildOstreeRepullRepairResult(
+          fsckResult: fallbackResult,
+          repullResult: repullResult,
+          logFilePath: resolvedLogFilePath,
+          outputResults: [primaryResult, fallbackResult, repullResult],
+          usedLegacyFallback: true,
+        );
+      }
+
       return _buildOstreeRepairResult(
         result: fallbackResult,
         logFilePath: resolvedLogFilePath,
         outputResults: [primaryResult, fallbackResult],
         usedLegacyFallback: true,
+      );
+    }
+
+    if (!_isUnsupportedOstreeOption(primaryResult, '--delete') &&
+        _isFsckDetectedPartialCommitState(primaryResult)) {
+      final repullResult = await _runOstreePartialRepullCommand(
+        logFilePath: resolvedLogFilePath,
+      );
+      return _buildOstreeRepullRepairResult(
+        fsckResult: primaryResult,
+        repullResult: repullResult,
+        logFilePath: resolvedLogFilePath,
+        outputResults: [primaryResult, repullResult],
       );
     }
 
@@ -368,6 +396,100 @@ echo "玲珑数据目录权限已修复。"
 ''';
   }
 
+  /// 构建 OSTree partial commit 重新拉取脚本。
+  ///
+  /// OSTree 普通 partial commit 可能来自 linyaps 的元数据/子路径拉取；只有 marker
+  /// 内容为 `f` 的 commit 才是 fsck 检测损坏后的截断状态。脚本只重拉这类 ref，
+  /// 并在最后重新执行 fsck，让 UI 依据复验结果展示是否真正恢复。
+  String buildOstreePartialRepullScript() {
+    return '''
+#!/usr/bin/env bash
+set -uo pipefail
+
+ROOT=${_shellSingleQuote(_linglongRootPath)}
+REPO="\$ROOT/repo"
+SERVICE_USER=${_shellSingleQuote(_linglongServiceUser)}
+
+if [ ! -d "\$REPO" ]; then
+  echo "OSTree 仓库目录不存在：\$REPO" >&2
+  exit 2
+fi
+
+if ! command -v ostree >/dev/null 2>&1; then
+  echo "ostree 命令不可用，无法重新拉取受影响 ref。" >&2
+  exit 3
+fi
+
+repo_mode="\$(ostree config --repo="\$REPO" get core.mode 2>/dev/null || true)"
+if [ -n "\$repo_mode" ]; then
+  echo "OSTree repo mode: \$repo_mode"
+fi
+
+run_ostree_pull() {
+  remote_name="\$1"
+  remote_ref="\$2"
+  if command -v runuser >/dev/null 2>&1 && id "\$SERVICE_USER" >/dev/null 2>&1; then
+    runuser -u "\$SERVICE_USER" -- env HOME="\$ROOT" \\
+      ostree --repo="\$REPO" pull --disable-static-deltas "\$remote_name" "\$remote_ref" ||
+    runuser -u "\$SERVICE_USER" -- env HOME="\$ROOT" \\
+      ostree --repo="\$REPO" pull "\$remote_name" "\$remote_ref"
+  else
+    ostree --repo="\$REPO" pull --disable-static-deltas "\$remote_name" "\$remote_ref" ||
+    ostree --repo="\$REPO" pull "\$remote_name" "\$remote_ref"
+  fi
+}
+
+refs="\$(ostree refs --repo="\$REPO")" || exit 4
+partial_count=0
+pull_failures=0
+
+while IFS= read -r ref; do
+  [ -n "\$ref" ] || continue
+  rev="\$(ostree rev-parse --repo="\$REPO" "\$ref" 2>/dev/null || true)"
+  [ -n "\$rev" ] || continue
+  marker="\$REPO/state/\${rev}.commitpartial"
+  [ -f "\$marker" ] || continue
+  reason="\$(dd if="\$marker" bs=1 count=1 2>/dev/null || true)"
+  [ "\$reason" = "f" ] || continue
+
+  partial_count=\$((partial_count + 1))
+  if printf '%s' "\$ref" | grep -q ':'; then
+    remote_name="\${ref%%:*}"
+    remote_ref="\${ref#*:}"
+  else
+    remote_name="\$(ostree remote list --repo="\$REPO" | head -n 1)"
+    remote_ref="\$ref"
+  fi
+
+  if [ -z "\$remote_name" ] || [ -z "\$remote_ref" ]; then
+    echo "无法解析受影响 ref 的远端信息：\$ref" >&2
+    pull_failures=\$((pull_failures + 1))
+    continue
+  fi
+
+  echo "RE-PULL \$ref"
+  if ! run_ostree_pull "\$remote_name" "\$remote_ref"; then
+    echo "重新拉取失败：\$ref" >&2
+    pull_failures=\$((pull_failures + 1))
+  fi
+done <<< "\$refs"
+
+echo "发现 \$partial_count 个 fsck 标记的 partial commits。"
+if [ "\$partial_count" -eq 0 ]; then
+  echo "未发现需要重新拉取的 fsck partial ref，直接执行复验。"
+fi
+
+ostree fsck --repo="\$REPO" --quiet
+verify_rc=\$?
+
+if [ "\$pull_failures" -gt 0 ]; then
+  exit 5
+fi
+
+exit "\$verify_rc"
+''';
+  }
+
   Future<String?> _validateStorageMovePreconditions(
     String normalizedTargetPath,
   ) async {
@@ -478,7 +600,8 @@ echo "玲珑数据目录权限已修复。"
           severity: LinglongEnvironmentIssueSeverity.warning,
           title: 'OSTree 对象完整性风险',
           description:
-              '深度校验发现对象存储存在损坏记录，但当前玲珑仓库仍可读取。建议在空闲时执行修复，并重新安装或更新受影响应用/基础环境。',
+              '深度校验发现对象存储存在损坏记录，但当前玲珑仓库仍可读取。'
+              '建议在空闲时执行修复，系统会删除可清理的损坏对象，必要时重新拉取受影响应用或基础环境并复验。',
           repairAction: LinglongEnvironmentRepairAction.ostreeFsckDelete,
           rawDetail: ostree.detail,
         ),
@@ -889,10 +1012,37 @@ echo "玲珑数据目录权限已修复。"
     );
   }
 
+  /// 重新拉取被 fsck 标记为 partial 的受影响 ref，并把输出追加到同一份日志。
+  ///
+  /// 重拉可能下载大量基础环境对象，因此只在 `fsck-detected corruption` 已明确出现后执行，
+  /// 且由最终 fsck 复验结果决定是否算修复成功。
+  Future<ShellCommandResult> _runOstreePartialRepullCommand({
+    required String logFilePath,
+  }) async {
+    final scriptFile = await _writeTemporaryScript(
+      buildOstreePartialRepullScript(),
+      prefix: 'linglong-ostree-repull',
+    );
+
+    try {
+      return await _executor.run(
+        ['pkexec', 'bash', scriptFile.path],
+        timeout: const Duration(hours: 2),
+        environment: _englishLocaleEnv,
+        logOptions: ShellCommandLogOptions(
+          filePath: logFilePath,
+          overwrite: false,
+        ),
+      );
+    } finally {
+      await _deleteFileIfExists(scriptFile);
+    }
+  }
+
   /// 将 OSTree 修复命令结果归类为 UI 可理解的业务状态。
   ///
   /// 这里刻意不只看退出码：新版 OSTree 会在删除损坏对象后返回 partial commit 错误，
-  /// 这种状态需要提示用户重新拉取受影响内容；旧版缺少参数则需要给出可操作的版本兼容信息。
+  /// 这种状态已经由调用方进入重拉复验流程；旧版缺少参数则需要给出可操作的版本兼容信息。
   LinglongEnvironmentRepairResult _buildOstreeRepairResult({
     required ShellCommandResult result,
     required String logFilePath,
@@ -912,28 +1062,60 @@ echo "玲珑数据目录权限已修复。"
       );
     }
 
-    if (_isFsckDetectedPartialCommitState(result)) {
-      final count = _extractPartialCommitCount(result);
-      final countText = count == null ? '部分' : '$count 个';
-      final legacySuffix = usedLegacyFallback ? '（已兼容旧版 OSTree 参数）' : '';
+    final successMessage = usedLegacyFallback
+        ? 'OSTree 仓库完整性修复已执行（已兼容旧版 OSTree）'
+        : 'OSTree 仓库完整性修复已执行';
+    final failureMessage = _hasChecksumCorruption(result)
+        ? 'OSTree 校验发现对象 checksum 不一致，自动删除后仍未完成修复；'
+              '若重新拉取后仍复现，通常需要上游仓库数据或 OSTree/玲珑兼容性修复。'
+        : 'OSTree 仓库完整性修复失败';
+    return LinglongEnvironmentRepairResult(
+      action: action,
+      success: result.success,
+      message: result.success ? successMessage : failureMessage,
+      logFilePath: logFilePath,
+      output: output,
+    );
+  }
+
+  /// 构建 fsck partial 重拉后的最终修复结果。
+  ///
+  /// 重拉脚本自身会执行复验；只要复验仍返回 checksum mismatch 或 corruption，
+  /// 就必须把结果报告为失败，避免把上游数据/仓库模式兼容问题包装成已修复。
+  LinglongEnvironmentRepairResult _buildOstreeRepullRepairResult({
+    required ShellCommandResult fsckResult,
+    required ShellCommandResult repullResult,
+    required String logFilePath,
+    required List<ShellCommandResult> outputResults,
+    bool usedLegacyFallback = false,
+  }) {
+    final count = _extractPartialCommitCount(fsckResult);
+    final countText = count == null ? '部分' : '$count 个';
+    final legacySuffix = usedLegacyFallback ? '（已兼容旧版 OSTree 参数）' : '';
+    final output = _truncateOutput(_combinedPrimaryOutput(outputResults));
+    const action = LinglongEnvironmentRepairAction.ostreeFsckDelete;
+
+    if (repullResult.success) {
       return LinglongEnvironmentRepairResult(
         action: action,
         success: true,
         message:
-            'OSTree 已删除可自动清理的损坏对象，但仍有 $countText partial commits 需要重新拉取。'
-            '请重新安装或更新受影响应用/基础环境后再次执行环境分析$legacySuffix。',
+            'OSTree 已删除损坏对象，并重新拉取 $countText fsck partial commits，'
+            '复验通过$legacySuffix。',
         logFilePath: logFilePath,
         output: output,
       );
     }
 
-    final successMessage = usedLegacyFallback
-        ? 'OSTree 仓库完整性修复已执行（已兼容旧版 OSTree）'
-        : 'OSTree 仓库完整性修复已执行';
+    final compatibilityHint = _hasChecksumCorruption(repullResult)
+        ? '复验仍发现 checksum 不一致，可能是上游仓库数据在当前 bare-user-only 模式下与 OSTree 校验不兼容。'
+        : '请查看日志确认具体 ref 的拉取或复验失败原因。';
     return LinglongEnvironmentRepairResult(
       action: action,
-      success: result.success,
-      message: result.success ? successMessage : 'OSTree 仓库完整性修复失败',
+      success: false,
+      message:
+          'OSTree 已删除可自动清理的损坏对象，并尝试重新拉取 $countText partial commits，'
+          '但重新拉取后复验仍未通过。$compatibilityHint$legacySuffix',
       logFilePath: logFilePath,
       output: output,
     );
@@ -964,8 +1146,17 @@ echo "玲珑数据目录权限已修复。"
     final output = _combinedCommandOutput(result).toLowerCase();
     return output.contains('partial commits from fsck-detected corruption') ||
         (output.contains('partial commits') &&
-            output.contains('fsck-detected corruption')) ||
-        output.contains('partial commits not verified');
+            output.contains('fsck-detected corruption'));
+  }
+
+  /// 判断输出是否包含对象 checksum 损坏。
+  ///
+  /// uuu/loong64 环境实测这类错误在全新 bare-user-only repo 中也能复现，
+  /// 因此文案必须提示上游仓库数据或 OSTree 模式兼容风险，而不是继续建议反复 fsck。
+  bool _hasChecksumCorruption(ShellCommandResult result) {
+    final output = _combinedCommandOutput(result).toLowerCase();
+    return output.contains('corrupted file object') ||
+        (output.contains('checksum expected') && output.contains('actual='));
   }
 
   /// 从 OSTree 输出中提取 partial commit 数量，用于给用户展示具体影响规模。

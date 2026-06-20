@@ -1,7 +1,7 @@
 # 玲珑环境管理、修复与保存位置迁移
 
-> 文档版本：1.3
-> 更新日期：2026-06-19
+> 文档版本：1.4
+> 更新日期：2026-06-20
 > 适用范围：设置页「玲珑环境管理」入口、仓库管理、环境分析与修复、保存位置迁移
 
 ## 背景
@@ -23,6 +23,8 @@
 5. linyaps 1.13.0 源码中仓库运行路径主要通过 `OSTreeRepo::init/loadFromPath/create` 打开仓库、读取 refs/cache/states，并通过 `/var/lib/linglong/layers/<commit>` checkout 目录支撑运行；源码未把 `ostree fsck` 作为启动或运行前置条件。
 6. 远程环境实测 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 可发现 corrupted file object，但 `ll-cli --json repo show`、`ll-cli --json list`、`ll-cli --json ps` 和 `ostree refs --repo=/var/lib/linglong/repo` 仍可正常执行。UI 必须区分“仓库不可读”和“深度对象完整性风险”，不能仅凭 `fsck` 非零码展示笼统的运行异常。
 7. 远程 Loong64 环境实测 `ll-package-manager` 以 `deepin-linglong:deepin-linglong` 运行；当 `/var/lib/linglong/.version`、`states.json`、`repo`、`layers`、`entries`、`merged` 被 root 接管时，会出现 `couldn't open "/var/lib/linglong/.version"`、`ostree_repo_pull_with_options [code 14]: mkdirat: 权限不够`、`failed to create layer dir ... 权限不够` 等错误。环境管理必须把这类问题识别为“玲珑数据目录权限异常”，不能混同为 OSTree 仓库完整性异常。
+8. linyaps 1.13.0 的 `OSTreeRepo::fetchRefMetaData()` 会使用 `OSTREE_REPO_PULL_FLAGS_COMMIT_ONLY` 或 `/info.json` subdir pull，因此普通 `.commitpartial` 或 `partial commits not verified` 不能直接等同于仓库损坏。
+9. OSTree 源码中 `.commitpartial` 内容为 `f` 时表示 `OSTREE_REPO_COMMIT_STATE_FSCK_PARTIAL`，后续 `ostree fsck` 会以 `partial commits from fsck-detected corruption` 返回错误。远程 Loong64 环境和本机干净 `bare-user-only` 仓库对照验证显示，部分 `stable` loong64 ref 重新拉取后仍会出现 `Corrupted file object; checksum expected=... actual=...`，这类结果应提示上游仓库数据或 OSTree/玲珑仓库模式兼容风险，不能继续伪装成已修复。
 
 ## 实现边界
 
@@ -203,7 +205,10 @@ OSTree 版本兼容规则：
 - 优先执行 `pkexec ostree fsck --repo=/var/lib/linglong/repo --all --delete`。
 - 如果输出明确表示当前 OSTree 不支持 `--all`，降级重试 `pkexec ostree fsck --repo=/var/lib/linglong/repo --delete`，并继续写入同一个日志文件。
 - 如果输出明确表示当前 OSTree 不支持 `--delete`，不能退化成只检查命令，也不能提示修复成功；必须告知用户该版本无法自动删除损坏对象，需要升级 ostree 或使用发行版工具手动修复。
-- 新版 OSTree 可能在删除损坏对象后输出 `partial commits from fsck-detected corruption` 并以非零码退出。这类结果表示可自动清理的损坏对象已处理，但仍有受影响 commit 被标记为 partial；UI 应提示用户重新安装或更新受影响应用/基础环境后再次执行环境分析，而不是展示普通“修复失败”。
+- 普通 `partial commits not verified` 可能来自 linyaps 元数据/子路径拉取；只有同时出现 `fsck-detected corruption`，或 `.commitpartial` marker 内容为 `f`，才进入损坏修复后续流程。
+- 新版 OSTree 可能在删除损坏对象后输出 `partial commits from fsck-detected corruption` 并以非零码退出。服务层必须追加执行受控 `pkexec bash` 脚本：扫描 `/var/lib/linglong/repo/state/*.commitpartial`，只选择 marker 内容为 `f` 且能映射到 `ostree refs` 的 ref，使用仓库 ref 中的 remote 重新执行 `ostree pull --disable-static-deltas <remote> <ref>`，然后再次执行 `ostree fsck --repo=/var/lib/linglong/repo --quiet` 复验。
+- 重新拉取必须尽量以 `deepin-linglong` 用户执行，避免 root 拉取后再次制造数据目录权限问题；如果系统缺少 `runuser` 或服务用户不存在，脚本可回退为当前特权上下文执行，但日志必须保留完整命令输出。
+- 复验通过时才能提示修复成功；复验仍出现 `Corrupted file object`、`checksum expected=... actual=...` 或其他 corruption 时，必须提示“重新拉取后复验仍未通过”，并说明可能需要上游仓库数据或 OSTree/玲珑兼容性修复。
 - partial commit 数量优先从 OSTree 输出中提取，例如 `32 partial commits not verified` 展示为“32 个 partial commits”。完整输出仍以日志文件为准。
 
 ## 保存位置迁移

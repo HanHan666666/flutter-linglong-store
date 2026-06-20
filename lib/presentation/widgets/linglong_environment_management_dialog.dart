@@ -142,10 +142,16 @@ class _LinglongEnvironmentManagementDialogState
     );
   }
 
+  /// 二次确认后执行 OSTree 修复与必要的受影响 ref 重拉。
+  ///
+  /// `fsck-detected corruption` 不能仅靠删除坏对象判断成功；服务层会在需要时追加
+  /// full pull 和复验，因此这里的确认文案必须提示可能产生下载与较长耗时。
   Future<void> _confirmAndRepairOstree() async {
     final confirmed = await _showConfirmDialog(
       title: '修复 OSTree 仓库',
-      content: '将以管理员权限执行 OSTree 完整性修复，并删除损坏对象。是否继续？',
+      content:
+          '将以管理员权限执行 OSTree 完整性修复，删除可清理的损坏对象；'
+          '如果检测到 fsck 标记的 partial commits，还会重新拉取受影响应用或基础环境并再次校验。是否继续？',
       confirmText: '执行修复',
     );
     if (!confirmed || !mounted) return;

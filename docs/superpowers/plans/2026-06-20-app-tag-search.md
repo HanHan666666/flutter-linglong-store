@@ -107,7 +107,7 @@ git -C /home/han/code/linglong-store/flutter-linglong-store switch -c codex/app-
 - Create: `sql/migration_20260620_create_app_tag.sql`
 - Create: `sql/migration_20260620_drop_legacy_app_tag_list.sql`
 
-- [ ] **Step 1: 编写建表、回填和校验 SQL**
+- [x] **Step 1: 编写建表、回填和校验 SQL**（已在测试库验证：source=15682，migrated=15682，duplicate=0行，invalid=0）
 
 `migration_20260620_create_app_tag.sql` 使用 MySQL 8 `JSON_TABLE`，内容必须可重复执行：
 
@@ -209,7 +209,7 @@ FROM ll_app_tag
 WHERE app_id = '' OR tag_name = '' OR lan = '';
 ```
 
-- [ ] **Step 2: 编写延后执行的破坏性清理 SQL**
+- [x] **Step 2: 编写延后执行的破坏性清理 SQL**
 
 `migration_20260620_drop_legacy_app_tag_list.sql` 明确写出执行前提和破坏性操作：
 
@@ -218,7 +218,7 @@ WHERE app_id = '' OR tag_name = '' OR lan = '';
 ALTER TABLE ll_app_affiliated_dtls DROP COLUMN app_tag_list;
 ```
 
-- [ ] **Step 3: 在测试库执行迁移并复核**
+- [x] **Step 3: 在测试库执行迁移并复核**（已执行：source_valid_distinct_count=15682，migrated_tag_count=15682，duplicate_count 查询返回 0 行，invalid_tag_count=0）
 
 Run:
 
@@ -234,11 +234,11 @@ Expected:
 脚本退出码为 0；source_valid_distinct_count 等于 migrated_tag_count；duplicate_count 查询返回 0 行；invalid_tag_count 为 0。
 ```
 
-- [ ] **Step 4: 重复执行一次验证幂等性**
+- [x] **Step 4: 重复执行一次验证幂等性**（第二次执行 migrated_tag_count 仍为 15682，无唯一键异常）
 
 再次运行相同命令，确认 `migrated_tag_count` 不增长且无唯一键异常。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**（commit 92eef28: feat: 增加应用标签独立表迁移脚本）
 
 ```bash
 git add sql/migration_20260620_create_app_tag.sql \
@@ -262,7 +262,7 @@ git commit -m "feat: 增加应用标签独立表迁移脚本"
 - Create: `ll-schedule/src/main/java/com/dongpl/service/impl/AppTagSyncServiceImpl.java`
 - Test: `ll-schedule/src/test/java/com/dongpl/service/impl/AppTagSyncServiceImplTest.java`
 
-- [ ] **Step 1: 增加测试依赖并写失败测试**
+- [x] **Step 1: 增加测试依赖并写失败测试**
 
 在 `ll-schedule/pom.xml` 增加 `spring-boot-starter-test`，测试覆盖非空替换、空列表清空、去重和非法 appId：
 
@@ -334,7 +334,7 @@ Expected:
 FAIL，提示 AppTagSyncServiceImpl、AppTagMapper 或 AppTagEntity 不存在。
 ```
 
-- [ ] **Step 3: 创建实体、Mapper 和批量写入 SQL**
+- [x] **Step 3: 创建实体、Mapper 和批量写入 SQL**（含 AppTagEntity / AppTagMapper / AppTagMapper.xml；并为 schedule DBMaster 增 setMapperLocations 以加载 XML）
 
 实体映射保持单一职责：
 
@@ -386,7 +386,7 @@ public interface AppTagMapper extends BaseMapper<AppTagEntity> {
 </mapper>
 ```
 
-- [ ] **Step 4: 实现事务替换服务**
+- [x] **Step 4: 实现事务替换服务**
 
 ```java
 public interface AppTagSyncService {
@@ -453,13 +453,7 @@ public class AppTagSyncServiceImpl implements AppTagSyncService {
 }
 ```
 
-- [ ] **Step 5: 运行测试并确认 GREEN**
-
-```bash
-mvn -pl ll-schedule -Dtest=AppTagSyncServiceImplTest test
-```
-
-Expected: `BUILD SUCCESS`。
+- [x] **Step 5: 运行测试并确认 GREEN**（Tests run: 3, Failures: 0, Errors: 0；BUILD SUCCESS）
 
 - [ ] **Step 6: Commit**
 
@@ -472,6 +466,8 @@ git add ll-schedule/pom.xml ll-schedule/src/main/java/com/dongpl/entity/AppTagEn
   ll-schedule/src/test/java/com/dongpl/service/impl/AppTagSyncServiceImplTest.java
 git commit -m "feat: 增加标签数据事务替换服务"
 ```
+
+> 实测：RED（编译失败，符号缺失）→ GREEN（3 测试通过）→ 已提交。
 
 ---
 
@@ -488,7 +484,7 @@ git commit -m "feat: 增加标签数据事务替换服务"
 - Delete: `ll-schedule/src/main/java/com/dongpl/handler/ListAppTagTypeHandler.java`
 - Test: `ll-schedule/src/test/java/com/dongpl/listener/RetrieveData2AppAffiliatedTableListenerTest.java`
 
-- [ ] **Step 1: 写失败测试锁定空值与遗漏边界**
+- [x] **Step 1: 写失败测试锁定空值与遗漏边界**
 
 将标签同步入口提取为包可见方法 `syncTags(AppDetail)`，测试明确空列表会替换、null 不处理、异常不阻断：
 
@@ -558,7 +554,7 @@ mvn -pl ll-schedule -Dtest=RetrieveData2AppAffiliatedTableListenerTest test
 
 Expected: `FAIL`，提示 `syncTags` 不存在或未调用 `AppTagSyncService`。
 
-- [ ] **Step 3: 接入服务并停止写 JSON 字段**
+- [x] **Step 3: 接入服务并停止写 JSON 字段**（适配：schedule 无 Spring CacheManager，clearSearchCache 改用 RedisTemplate.keys+delete 复用 AppListCacheKeys.SEARCH_APP_LIST_CACHE，与既有 RetrieveData2AppMainTableListener 一致）
 
 在 listener 中注入服务，并只对明确返回的标签字段执行替换：
 
@@ -591,29 +587,13 @@ void clearSearchCache() {
 
 在 `results.forEach` 中调用 `syncTags(appDetail)`；本轮存在任意非 null `appTagList` 时，在全部应用处理完成后只调用一次 `clearSearchCache()`。删除 `updateEntity.setAppTagList(...)` 和新增实体的 `setAppTagList(...)`。响应遗漏 appId 时不会进入循环，因此自然保留旧标签。
 
-- [ ] **Step 4: 删除 schedule 模块旧 JSON 映射与 Tag Redis 分支**
+- [x] **Step 4: 删除 schedule 模块旧 JSON 映射与 Tag Redis 分支**
 
 从 `AppAffiliatedDtls` 删除 `appTagList` 字段和 TypeHandler import；删除 `ListAppTagTypeHandler.java`；从 `AppCacheServiceImpl` 删除 tagsKey 的序列化/反序列化；从 `AppRedisKeys` 删除 `getTagsKey()`。截图缓存保持不变。
 
-- [ ] **Step 5: 运行 schedule 测试与编译**
+- [x] **Step 5: 运行 schedule 测试与编译**（7 测试通过 BUILD SUCCESS；rg 检查 schedule main 无 getTagsKey/ListAppTagTypeHandler/setAppTagList 残留）
 
-```bash
-mvn -pl ll-schedule test
-```
-
-Expected: `BUILD SUCCESS`，且 `rg "getTagsKey|ListAppTagTypeHandler|setAppTagList" ll-schedule/src/main` 只允许命中上游 DTO 的 `AppDetail.appTagList`。
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add ll-schedule/src/main/java/com/dongpl/listener/RetrieveData2AppAffiliatedTableListener.java \
-  ll-schedule/src/main/java/com/dongpl/entity/AppAffiliatedDtls.java \
-  ll-schedule/src/main/java/com/dongpl/service/impl/AppCacheServiceImpl.java \
-  ll-schedule/src/main/java/com/dongpl/utils/AppRedisKeys.java \
-  ll-schedule/src/main/java/com/dongpl/handler/ListAppTagTypeHandler.java \
-  ll-schedule/src/test/java/com/dongpl/listener/RetrieveData2AppAffiliatedTableListenerTest.java
-git commit -m "refactor: 定时任务改用标签独立表"
-```
+- [x] **Step 6: Commit**（commit b503d1f: refactor: 定时任务改用标签独立表）
 
 ---
 
@@ -633,7 +613,7 @@ git commit -m "refactor: 定时任务改用标签独立表"
 - Delete: `ll-server/src/main/java/com/dongpl/handler/ListAppTagTypeHandler.java`
 - Test: `ll-server/src/test/java/com/dongpl/service/impl/AppDetailContractServiceTest.java`
 
-- [ ] **Step 1: 写失败测试证明详情标签来自新 Mapper**
+- [x] **Step 1: 写失败测试证明详情标签来自新 Mapper**
 
 在 `AppDetailContractServiceTest` 增加 `AppTagMapper` mock，并断言批量查询和语言过滤：
 
@@ -680,7 +660,7 @@ mvn -pl ll-server -Dtest=AppDetailContractServiceTest test
 
 Expected: `FAIL`，提示 `AppTagMapper` 或 `AppTagEntity` 不存在。
 
-- [ ] **Step 3: 创建只读实体和批量 Mapper**
+- [x] **Step 3: 创建只读实体和批量 Mapper**
 
 server 模块创建以下只读实体：
 
@@ -731,7 +711,7 @@ XML：
 </mapper>
 ```
 
-- [ ] **Step 4: 将 `buildTagMap` 改为单次批量查询**
+- [x] **Step 4: 将 `buildTagMap` 改为单次批量查询**
 
 在 `AppServiceImpl` 注入 `AppTagMapper`，保留截图原链路，仅替换标签构建：
 
@@ -761,33 +741,13 @@ private AppTag toAppTag(AppTagEntity row) {
 }
 ```
 
-- [ ] **Step 5: 删除 server 模块旧 JSON 映射和 Tag Redis 分支**
+- [x] **Step 5: 删除 server 模块旧 JSON 映射和 Tag Redis 分支**
 
 从 server 模块 `AppAffiliatedDtls` 删除 `appTagList` 字段和 `ListAppTagTypeHandler` import；删除 `ll-server/src/main/java/com/dongpl/handler/ListAppTagTypeHandler.java`；从 `AppCacheServiceImpl.saveAffiliated/getAffiliated/deleteAffiliated` 删除 tagsKey 的序列化、反序列化和删除逻辑；从 `AppRedisKeys` 删除 `getTagsKey()`。截图 JSON 缓存继续保留，数据库旧列暂时保留等待清理 SQL。
 
-- [ ] **Step 6: 运行测试与编译**
+- [x] **Step 6: 运行测试与编译**（AppDetailContractServiceTest 4 测试通过；ll-server -DskipTests compile BUILD SUCCESS；同步给既有 getAppDetail 测试补空标签查询桩避免 NPE）
 
-```bash
-mvn -pl ll-server -Dtest=AppDetailContractServiceTest test
-mvn -pl ll-server -DskipTests compile
-```
-
-Expected: 两条命令均 `BUILD SUCCESS`。
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add ll-server/src/main/java/com/dongpl/entity/AppTagEntity.java \
-  ll-server/src/main/java/com/dongpl/mapper/master/AppTagMapper.java \
-  ll-server/src/main/resources/mapper/master/AppTagMapper.xml \
-  ll-server/src/main/java/com/dongpl/service/impl/AppServiceImpl.java \
-  ll-server/src/main/java/com/dongpl/entity/AppAffiliatedDtls.java \
-  ll-server/src/main/java/com/dongpl/service/impl/AppCacheServiceImpl.java \
-  ll-server/src/main/java/com/dongpl/utils/AppRedisKeys.java \
-  ll-server/src/main/java/com/dongpl/handler/ListAppTagTypeHandler.java \
-  ll-server/src/test/java/com/dongpl/service/impl/AppDetailContractServiceTest.java
-git commit -m "refactor: 详情接口改用标签独立表"
-```
+- [x] **Step 7: Commit**（commit 已提交: refactor: 详情接口改用标签独立表）
 
 ---
 
@@ -805,7 +765,7 @@ git commit -m "refactor: 详情接口改用标签独立表"
 - Test: `ll-server/src/test/java/com/dongpl/service/impl/AppVisitDtlsServiceImplTest.java`
 - Test: `ll-server/src/test/java/com/dongpl/response/ConstantsTest.java`
 
-- [ ] **Step 1: 写失败测试验证参数正规化和缓存隔离**
+- [x] **Step 1: 写失败测试验证参数正规化和缓存隔离**
 
 `AppVisitDtlsServiceImplTest`：
 
@@ -878,7 +838,7 @@ mvn -pl ll-server -Dtest=AppVisitDtlsServiceImplTest,ConstantsTest test
 
 Expected: `FAIL`，提示 `tagName/tagLan` 字段不存在或缓存键相同。
 
-- [ ] **Step 3: 增加请求字段并正规化**
+- [x] **Step 3: 增加请求字段并正规化**
 
 在 `AppMainBO` 和 `AppMainDto` 增加中文文档注释字段：
 
@@ -899,7 +859,7 @@ dto.setTagName(StrUtil.isNotBlank(tagName) ? tagName : null);
 dto.setTagLan(StrUtil.isNotBlank(tagLan) ? tagLan : null);
 ```
 
-- [ ] **Step 4: 为标签搜索增加索引 JOIN**
+- [x] **Step 4: 为标签搜索增加索引 JOIN**
 
 在 `getSearchAppList` 最终查询中加入动态精确 JOIN：
 
@@ -915,7 +875,7 @@ dto.setTagLan(StrUtil.isNotBlank(tagLan) ? tagLan : null);
 
 普通 `dto.name` 的 LIKE 条件保持原样；Flutter 标签模式不发送 `name`，因此不会混入普通关键词结果。
 
-- [ ] **Step 5: 扩展缓存键**
+- [x] **Step 5: 扩展缓存键**（适配：AppMainBO 实际无 filter 字段，缓存键串入 categoryId+name+tagName+tagLan+arch+repoName+lan+sort+order+pageNo+pageSize，不含 filter）
 
 `buildAppMainListKey` 串入现有全部查询维度 `categoryId + name + tagName + tagLan + arch + repoName + lan + sort + order + filter + pageNo + pageSize`，避免标签、排序和过滤请求共用缓存：
 
@@ -925,7 +885,7 @@ return categoryId + ":" + name + ":" + tagName + ":" + tagLan + ":"
         + ":" + filter + ":" + pageNo + ":" + pageSize;
 ```
 
-- [ ] **Step 6: 运行测试和查询计划**
+- [x] **Step 6: 运行测试和查询计划**（AppVisitDtlsServiceImplTest 2 + ConstantsTest 26 全部通过；EXPLAIN 命中 idx_app_tag_lookup，type=ref Using index 无全表扫描）
 
 ```bash
 mvn -pl ll-server -Dtest=AppVisitDtlsServiceImplTest,ConstantsTest test
@@ -943,18 +903,7 @@ WHERE lan = 'zh_CN' AND tag_name = '办公';
 
 Expected: 使用 `idx_app_tag_lookup`，不出现 `ALL` 全表扫描。
 
-- [ ] **Step 7: Commit**
-
-```bash
-git add ll-server/src/main/java/com/dongpl/bo/AppMainBO.java \
-  ll-server/src/main/java/com/dongpl/dto/AppMainDto.java \
-  ll-server/src/main/java/com/dongpl/service/impl/AppVisitDtlsServiceImpl.java \
-  ll-server/src/main/java/com/dongpl/response/Constants.java \
-  ll-server/src/main/resources/mapper/master/AppMainDtlsMapper.xml \
-  ll-server/src/test/java/com/dongpl/service/impl/AppVisitDtlsServiceImplTest.java \
-  ll-server/src/test/java/com/dongpl/response/ConstantsTest.java
-git commit -m "feat: 搜索接口支持标签精确筛选"
-```
+- [x] **Step 7: Commit**（commit 9c4952a: feat: 搜索接口支持标签精确筛选）
 
 ---
 
@@ -966,7 +915,7 @@ git commit -m "feat: 搜索接口支持标签精确筛选"
 
 - Modify: `AGENTS.md`
 
-- [ ] **Step 1: 更新后端约定**
+- [x] **Step 1: 更新后端约定**（已在 linglong-server AGENTS.md 变更记录追加 2026/06/20 约定）
 
 在变更记录追加：
 
@@ -974,28 +923,11 @@ git commit -m "feat: 搜索接口支持标签精确筛选"
 - 2026/06/20：应用标签唯一数据源为 `ll_app_tag`；详情按 `app_id + lan` 批量查询，标签搜索通过 `/visit/getSearchAppList` 的 `tagName + tagLan` 精确匹配。定时同步仅在上游明确返回 `appTagList` 时按应用事务替换：空数组删除旧标签，请求失败、字段缺失或响应遗漏 appId 时保留旧标签。禁止恢复 `app_tag_list` JSON 双写或 Tag Redis JSON 缓存。
 ```
 
-- [ ] **Step 2: 运行后端全量门禁**
+- [x] **Step 2: 运行后端全量门禁**（全量跑通：新增/相关测试全绿——AppTagSyncServiceImplTest 3、RetrieveData2AppAffiliatedTableListenerTest 4、AppDetailContractServiceTest 4、AppVisitDtlsServiceImplTest 2、ConstantsTest 26、RedisConfigTest 10、WebServiceImplCacheTest 9 等。3 个失败类 WebServiceImplIntegrationTest/AppSidebarControllerTest/CacheEvictTest 经在 clean origin/dev 复现确认是环境依赖（Failed to load ApplicationContext 无 DB/Redis 连接）与无关 Web 缓存断言的既有问题，非本次改动引入）
 
-```bash
-mvn clean test -pl ll-server,ll-schedule -am
-```
+- [x] **Step 3: 静态检查旧链路已移除**（rg 结果：唯一命中为 ll-server 响应 DTO `AppServiceImpl` 的 `detailVO.setAppTagList(...)`，符合预期；ListAppTagTypeHandler/getTagsKey/附属实体 setAppTagList 全部移除，上游 DTO `AppDetail.appTagList` 经 getter 读取未命中该模式）
 
-Expected: `BUILD SUCCESS`，两个模块测试均通过。
-
-- [ ] **Step 3: 静态检查旧链路已移除**
-
-```bash
-rg "ListAppTagTypeHandler|getTagsKey|setAppTagList" ll-server/src/main ll-schedule/src/main
-```
-
-Expected: 只允许命中 `ll-schedule` 上游 DTO `AppDetail.appTagList`、同步调用处以及 `ll-server` 响应 DTO 的 `setAppTagList`；不得命中附属实体、TypeHandler 或 Redis key。
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add AGENTS.md
-git commit -m "docs: 同步应用标签独立表约定"
-```
+- [x] **Step 4: Commit**（commit 7a0f5a5: docs: 同步应用标签独立表约定）
 
 ---
 
@@ -1248,7 +1180,7 @@ git commit -m "feat: 增加标签搜索状态与接口参数"
 - Test: `test/widget/presentation/pages/search_list_page_test.dart`
 - Test: `test/widget/presentation/widgets/title_bar_search_test.dart`
 
-- [ ] **Step 1: 写失败测试验证路由恢复和标签请求**
+- [x] **Step 1: 写失败测试验证路由恢复和标签请求**
 
 在 `search_list_page_test.dart` 新增：
 
@@ -1280,15 +1212,9 @@ testWidgets('initial tag triggers exact tag search', (tester) async {
 });
 ```
 
-- [ ] **Step 2: 运行测试并确认 RED**
+- [x] **Step 2: 运行测试并确认 RED**（No named parameter 'initialTag' 编译失败）
 
-```bash
-flutter test test/widget/presentation/pages/search_list_page_test.dart
-```
-
-Expected: `FAIL`，提示 `initialTag` 不存在。
-
-- [ ] **Step 3: 扩展 SearchListPage 和 GoRouter**
+- [x] **Step 3: 扩展 SearchListPage 和 GoRouter**（SearchListPage 增 initialTag、_syncSearchQuery tag 优先、hasCriteria 空状态、displayTerm 结果标题；routes.dart 解析 tag/tagLan 并新增 goToTagSearch）
 
 `SearchListPage` 新增 `AppTag? initialTag`，同步优先级为 tag 高于 q：
 
@@ -1339,28 +1265,11 @@ void goToTagSearch(AppTag tag) {
 }
 ```
 
-- [ ] **Step 4: 将当前 Tag 从 AppShell 传给标题栏**
+- [x] **Step 4: 将当前 Tag 从 AppShell 传给标题栏**（CustomTitleBar/AppShell/_TitleSearchBox 增 currentSearchTag 透传，胶囊渲染留给 Task 9）
 
-`CustomTitleBar` 增加可空 `currentSearchTag` 参数；`AppShell` 只在 `/search_list` 解析 `tag/tagLan` 并传入。此任务先完成参数透传，具体胶囊渲染由 Task 9 完成。
+- [x] **Step 5: 运行路由和页面测试**（search_list_page_test 3 测试 + title_bar_search_test 10 测试全部通过）
 
-- [ ] **Step 5: 运行路由和页面测试**
-
-```bash
-flutter test test/widget/presentation/pages/search_list_page_test.dart \
-  test/widget/presentation/widgets/title_bar_search_test.dart
-```
-
-Expected: `All tests passed.`
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add lib/core/config/routes.dart lib/presentation/pages/search_list/search_list_page.dart \
-  lib/presentation/widgets/app_shell.dart lib/presentation/widgets/title_bar.dart \
-  test/widget/presentation/pages/search_list_page_test.dart \
-  test/widget/presentation/widgets/title_bar_search_test.dart
-git commit -m "feat: 搜索路由支持标签条件"
-```
+- [x] **Step 6: Commit**（commit d07dfcc: feat: 搜索路由支持标签条件）
 
 ---
 
@@ -1376,7 +1285,7 @@ git commit -m "feat: 搜索路由支持标签条件"
 - Generate: `lib/core/i18n/l10n/app_localizations*.dart`
 - Test: `test/widget/presentation/widgets/title_bar_search_test.dart`
 
-- [ ] **Step 1: 写失败 Widget 测试**
+- [x] **Step 1: 写失败 Widget 测试**（4 个标签测试 + _buildRouterApp 改为 ShellRoute）
 
 覆盖路由恢复、不可编辑、删除和候选禁用：
 
@@ -1527,15 +1436,9 @@ Widget _buildRouterApp({String initialLocation = '/'}) {
 }
 ```
 
-- [ ] **Step 2: 运行测试并确认 RED**
+- [x] **Step 2: 运行测试并确认 RED**（3 个标签测试失败：InputChip 未找到 / tag-chip key 未找到；11 个既有测试仍通过）
 
-```bash
-flutter test test/widget/presentation/widgets/title_bar_search_test.dart
-```
-
-Expected: `FAIL`，找不到 `InputChip`。
-
-- [ ] **Step 3: 增加国际化语义文案**
+- [x] **Step 3: 增加国际化语义文案**（zh/en arb 增加 a11ySearchByTag / a11yRemoveSearchTag 及占位符 metadata，l10n 自动生成）
 
 新增：
 
@@ -1546,7 +1449,7 @@ Expected: `FAIL`，找不到 `InputChip`。
 
 英文对应 `Search by tag: {tag}` 和 `Remove search tag: {tag}`，为占位符补齐 ARB metadata。
 
-- [ ] **Step 4: 实现互斥标签模式**
+- [x] **Step 4: 实现互斥标签模式**（适配：Backspace 用 CallbackShortcuts 无法捕获无修饰键，改用 Focus.onKeyEvent 直接拦截 Backspace/Delete；标签清理/聚焦放 postFrame 避免在 build 内修改 provider；Focus 放 Semantics 外层以保证 getSemantics 命中 label）
 
 `_TitleSearchBox` 在 `currentTag != null` 时不构建 `TextField`、不拉候选，仅构建可聚焦胶囊：
 
@@ -1568,22 +1471,9 @@ Semantics(
 
 用 `CallbackShortcuts + Focus(autofocus: true)` 将 Backspace/Delete 映射到同一删除回调。进入标签模式时清空 controller、关闭 overlay 并取消 debounce，避免隐藏候选请求继续执行。
 
-- [ ] **Step 5: 生成 l10n 并运行测试**
+- [x] **Step 5: 生成 l10n 并运行测试**（14 测试全部通过；语义测试改为直接渲染标题栏验证，规避 ShellRoute 下测试框架 getSemantics(byKey) 返回空的已知限制；既有搜索框 32px 高度断言未受影响，标签胶囊独立约束 48px minHeight）
 
-```bash
-flutter gen-l10n
-flutter test test/widget/presentation/widgets/title_bar_search_test.dart
-```
-
-Expected: `All tests passed.`，并更新现有搜索框高度断言以匹配 48px 可交互高度。
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add lib/presentation/widgets/title_bar.dart lib/core/i18n/l10n \
-  test/widget/presentation/widgets/title_bar_search_test.dart
-git commit -m "feat: 标题栏支持标签搜索胶囊"
-```
+- [x] **Step 6: Commit**（commit 749ff25: feat: 标题栏支持标签搜索胶囊）
 
 ---
 
@@ -1597,7 +1487,7 @@ git commit -m "feat: 标题栏支持标签搜索胶囊"
 - Modify: `lib/presentation/pages/app_detail/app_detail_page.dart`
 - Create: `test/widget/presentation/widgets/app_detail_hero_header_test.dart`
 
-- [ ] **Step 1: 写失败测试验证点击、语言和交互尺寸**
+- [x] **Step 1: 写失败测试验证点击、语言和交互尺寸**
 
 ```dart
 testWidgets('detail tag is accessible and emits full tag identity',
@@ -1652,15 +1542,9 @@ Widget _buildHeader({
 }
 ```
 
-- [ ] **Step 2: 运行测试并确认 RED**
+- [x] **Step 2: 运行测试并确认 RED**（编译失败：onTagPressed 不存在 + SemanticsFlag 未导入）
 
-```bash
-flutter test test/widget/presentation/widgets/app_detail_hero_header_test.dart
-```
-
-Expected: `FAIL`，因为头部仍接收 `List<String>` 且标签不可点击。
-
-- [ ] **Step 3: 修改头部组件契约与渲染**
+- [x] **Step 3: 修改头部组件契约与渲染**
 
 将 `tags` 改为 `List<AppTag>`，增加 `ValueChanged<AppTag>? onTagPressed`。每个标签使用 `A11yButton` 和最小 48px 约束，视觉胶囊仍使用现有颜色、圆角与 10px 水平内边距：
 
@@ -1686,7 +1570,7 @@ A11yButton(
 )
 ```
 
-- [ ] **Step 4: 从详情页连接统一路由入口**
+- [x] **Step 4: 从详情页连接统一路由入口**（app_detail_page 增 routes.dart 导入，tags 原样透传 + onTagPressed: context.goToTagSearch）
 
 `AppDetailPage` 原样传入 `appDetail.tags`：
 
@@ -1697,16 +1581,9 @@ onTagPressed: context.goToTagSearch,
 
 不得在页面直接拼接 URL，也不得直接调用搜索 Provider。
 
-- [ ] **Step 5: 运行组件和详情页测试**
+- [x] **Step 5: 运行组件和详情页测试**（hero_header + app_detail_page 共 19 测试全部通过）
 
-```bash
-flutter test test/widget/presentation/widgets/app_detail_hero_header_test.dart \
-  test/widget/presentation/pages/app_detail/app_detail_page_test.dart
-```
-
-Expected: `All tests passed.`
-
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**（commit b2af1f3: feat: 应用详情标签支持搜索联动）
 
 ```bash
 git add lib/presentation/widgets/app_detail_hero_header.dart \

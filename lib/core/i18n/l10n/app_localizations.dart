@@ -2424,6 +2424,18 @@ abstract class AppLocalizations {
   /// **'查看下载管理'**
   String get viewDownloadManager;
 
+  /// No description provided for @a11ySearchByTag.
+  ///
+  /// In zh, this message translates to:
+  /// **'按标签搜索：{tag}'**
+  String a11ySearchByTag(Object tag);
+
+  /// No description provided for @a11yRemoveSearchTag.
+  ///
+  /// In zh, this message translates to:
+  /// **'移除搜索标签：{tag}'**
+  String a11yRemoveSearchTag(Object tag);
+
   /// No description provided for @a11yInstallApp.
   ///
   /// In zh, this message translates to:

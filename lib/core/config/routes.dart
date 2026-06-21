@@ -9,6 +9,7 @@ import '../../presentation/pages/launch/launch_page.dart';
 import '../../presentation/pages/search_list/search_list_page.dart';
 import '../../presentation/pages/setting/setting_page.dart';
 import '../../presentation/pages/update_app/update_app_page.dart';
+import '../../domain/models/app_detail.dart';
 import '../../domain/models/installed_app.dart';
 import '../../application/providers/launch_provider.dart';
 
@@ -106,9 +107,21 @@ List<RouteBase> _buildShellRoutes() {
           name: 'searchList',
           builder: (context, state) {
             final query = state.uri.queryParameters['q']?.trim() ?? '';
+            // 标签搜索条件从 tag/tagLan 恢复，保证前进/后退/重建都能回到标签模式
+            final tagName = state.uri.queryParameters['tag']?.trim();
+            final tagLan = state.uri.queryParameters['tagLan']?.trim();
+            final tag =
+                tagName != null &&
+                    tagName.isNotEmpty &&
+                    tagLan != null &&
+                    tagLan.isNotEmpty
+                ? AppTag(name: tagName, language: tagLan)
+                : null;
             return SearchListPage(
-              key: ValueKey('searchList:$query'),
-              initialQuery: query,
+              key: ValueKey('searchList:$query:$tagName:$tagLan'),
+              // 标签模式不使用文本关键词，避免把标签伪装成普通 q 关键词
+              initialQuery: tag == null ? query : null,
+              initialTag: tag,
             );
           },
         ),
@@ -249,6 +262,17 @@ extension ContextRouterExtension on BuildContext {
     } else {
       go(AppRoutes.searchList);
     }
+  }
+
+  /// 导航到标签搜索页
+  ///
+  /// 标签搜索以 tag + tagLan 作为路由条件，禁止把标签名称作为普通 q 关键词传递，
+  /// 保证后退/前进/重建都能精确恢复标签搜索。
+  void goToTagSearch(AppTag tag) {
+    go(
+      '${AppRoutes.searchList}?tag=${Uri.encodeQueryComponent(tag.name)}'
+      '&tagLan=${Uri.encodeQueryComponent(tag.language)}',
+    );
   }
 
   /// 导航到自定义分类页

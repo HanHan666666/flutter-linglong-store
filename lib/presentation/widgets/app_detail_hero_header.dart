@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/accessibility/a11y_semantics.dart';
 import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
+import '../../domain/models/app_detail.dart';
 import '../../domain/models/installed_app.dart';
 import 'app_detail_secondary_actions.dart';
 import 'app_icon.dart';
@@ -27,6 +29,7 @@ class AppDetailHeroHeader extends StatelessWidget {
     required this.onShare,
     this.description,
     this.tags = const [],
+    this.onTagPressed,
     this.downloadSpeed,
     this.statusMessage,
     this.statusLogCopyText,
@@ -55,8 +58,13 @@ class AppDetailHeroHeader extends StatelessWidget {
   /// 页面层提供的简短描述。
   final String? description;
 
-  /// 页面层归一后的标签名称。
-  final List<String> tags;
+  /// 页面层归一后的标签列表，保留 name + language 以支持标签搜索联动。
+  final List<AppTag> tags;
+
+  /// 标签点击回调，由页面层统一接入标签搜索路由。
+  ///
+  /// 为 null 时标签不可点击（保留展示），保证头部组件在没有搜索联动场景下仍可复用。
+  final ValueChanged<AppTag>? onTagPressed;
 
   /// 安装或更新状态条展示文案。
   final String? statusMessage;
@@ -224,24 +232,39 @@ class AppDetailHeroHeader extends StatelessWidget {
   }
 
   /// 构建应用标签。
+  ///
+  /// 每个标签只在原有紧凑胶囊外增加点击与无障碍语义，不改变详情页既有尺寸和排版。
+  /// 点击时透传完整 name+language 身份，由页面层统一接入标签搜索路由。
   Widget _buildTags(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final canPress = onTagPressed != null;
 
     return Wrap(
       spacing: 8,
       runSpacing: 6,
       children: tags
           .map(
-            (tag) => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: AppRadius.fullRadius,
-              ),
-              child: Text(
-                tag,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onPrimaryContainer,
+            (tag) => A11yButton(
+              semanticsLabel:
+                  l10n?.a11ySearchByTag(tag.name) ?? '按标签搜索：${tag.name}',
+              enabled: canPress,
+              onTap: () => onTagPressed?.call(tag),
+              child: Container(
+                key: ValueKey('app-detail-tag-${tag.name}-${tag.language}'),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: AppRadius.fullRadius,
+                ),
+                child: Text(
+                  tag.name,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onPrimaryContainer,
+                  ),
                 ),
               ),
             ),

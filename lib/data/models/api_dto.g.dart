@@ -151,7 +151,7 @@ Map<String, dynamic> _$AppScreenshotDTOToJson(_AppScreenshotDTO instance) =>
     };
 
 _AppTagDTO _$AppTagDTOFromJson(Map<String, dynamic> json) =>
-    _AppTagDTO(name: json['name'] as String, language: json['lan'] as String?);
+    _AppTagDTO(name: json['name'] as String, language: json['lan'] as String);
 
 Map<String, dynamic> _$AppTagDTOToJson(_AppTagDTO instance) =>
     <String, dynamic>{'name': instance.name, 'lan': instance.language};
@@ -451,6 +451,8 @@ _SearchAppListRequest _$SearchAppListRequestFromJson(
 ) => _SearchAppListRequest(
   keyword: json['name'] as String,
   categoryId: json['categoryId'] as String?,
+  tagName: json['tagName'] as String?,
+  tagLan: json['tagLan'] as String?,
   pageNo: (json['pageNo'] as num?)?.toInt() ?? 1,
   pageSize: (json['pageSize'] as num?)?.toInt() ?? 20,
   repoName: json['repoName'] as String? ?? AppConfig.defaultStoreRepoName,
@@ -465,6 +467,8 @@ Map<String, dynamic> _$SearchAppListRequestToJson(
 ) => <String, dynamic>{
   'name': instance.keyword,
   'categoryId': ?instance.categoryId,
+  'tagName': ?instance.tagName,
+  'tagLan': ?instance.tagLan,
   'pageNo': instance.pageNo,
   'pageSize': instance.pageSize,
   'repoName': instance.repoName,

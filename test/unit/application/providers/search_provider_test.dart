@@ -1,7 +1,40 @@
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:linglong_store/application/providers/api_provider.dart';
 import 'package:linglong_store/application/providers/search_provider.dart';
+import 'package:linglong_store/data/models/api_dto.dart';
+import 'package:linglong_store/domain/models/app_detail.dart';
 import 'package:linglong_store/domain/models/recommend_models.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
+import 'package:mockito/mockito.dart';
+import 'package:retrofit/retrofit.dart';
+import '../../../mocks/mock_classes.mocks.dart';
+
+HttpResponse<AppListResponse> _response({
+  required int page,
+  required int pages,
+}) {
+  return HttpResponse(
+    AppListResponse(
+      code: 200,
+      data: AppListPagedData(
+        records: [
+          AppListItemDTO(
+            appId: 'app.$page',
+            appName: 'App $page',
+            appVersion: '1.0.0',
+          ),
+        ],
+        total: pages,
+        size: 20,
+        current: page,
+        pages: pages,
+      ),
+    ),
+    Response(requestOptions: RequestOptions(path: '/visit/getSearchAppList')),
+  );
+}
 
 void main() {
   setUpAll(() async {
@@ -121,6 +154,34 @@ void main() {
         expect(state.error, equals('Network error'));
         expect(state.isLoading, isFalse);
       });
+    });
+
+    test('tag search and loadMore preserve tagName and tagLan', () async {
+      // 标签搜索：首屏 + loadMore 都必须持续携带 tagName/tagLan，
+      // 且 keyword 为空，禁止把标签伪装成普通关键词
+      final api = MockAppApiService();
+      when(api.getSearchAppList(any)).thenAnswer((invocation) async {
+        final request =
+            invocation.positionalArguments.single as SearchAppListRequest;
+        return _response(page: request.pageNo, pages: 2);
+      });
+      final container = ProviderContainer(
+        overrides: [appApiServiceProvider.overrideWithValue(api)],
+      );
+      addTearDown(container.dispose);
+
+      await container
+          .read(searchProvider.notifier)
+          .searchByTag(const AppTag(name: '办公', language: 'zh_CN'));
+      await container.read(searchProvider.notifier).loadMore();
+
+      final requests = verify(
+        api.getSearchAppList(captureAny),
+      ).captured.cast<SearchAppListRequest>();
+      expect(requests.map((item) => item.pageNo), [1, 2]);
+      expect(requests.every((item) => item.keyword.isEmpty), isTrue);
+      expect(requests.every((item) => item.tagName == '办公'), isTrue);
+      expect(requests.every((item) => item.tagLan == 'zh_CN'), isTrue);
     });
   });
 }

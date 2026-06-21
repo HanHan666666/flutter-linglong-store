@@ -12,6 +12,7 @@ import '../../../domain/models/install_task.dart';
 import '../../../domain/models/install_progress.dart';
 import '../../../domain/models/app_version.dart';
 import '../../../core/logging/app_logger.dart';
+import '../../../core/config/routes.dart';
 import '../../helpers/app_uninstall_flow.dart';
 import '../../widgets/app_detail_comment_section.dart';
 import '../../widgets/app_detail_hero_header.dart';
@@ -269,9 +270,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           : null,
       showInstalledActions: hasInstalledInstance,
       description: appDetail?.description,
-      tags:
-          appDetail?.tags.map((tag) => tag.name).toList(growable: false) ??
-          const [],
+      // 标签原样透传完整 name+language，点击统一进入标签搜索路由，禁止页面拼 URL
+      tags: appDetail?.tags ?? const [],
+      onTagPressed: context.goToTagSearch,
       statusMessage: displayMessage,
       statusLogCopyText: installLogCopyText,
       isStatusFailed: installTask?.isFailed ?? false,

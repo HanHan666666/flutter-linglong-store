@@ -378,6 +378,9 @@ void main() {
                   'appScreenshotList': [
                     {'screenshotKey': 'https://example.com/screenshot.png'},
                   ],
+                  'appTagList': [
+                    {'name': '办公', 'lan': 'zh_CN'},
+                  ],
                 },
               ],
             },
@@ -396,6 +399,9 @@ void main() {
         expect(result.appId, equals('com.example.app'));
         expect(result.name, equals('Test App'));
         expect(result.screenshots.length, equals(1));
+        // 标签必须原样保留 name + language，禁止根据界面文本猜测标签身份
+        expect(result.tags.single.name, '办公');
+        expect(result.tags.single.language, 'zh_CN');
       });
 
       test('should throw exception when app not found', () async {

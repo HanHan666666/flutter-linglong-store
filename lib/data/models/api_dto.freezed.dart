@@ -2420,7 +2420,8 @@ as String?,
 /// @nodoc
 mixin _$AppTagDTO {
 
-@JsonKey(name: 'name') String get name;@JsonKey(name: 'lan') String? get language;
+@JsonKey(name: 'name') String get name;// 后端契约保证详情接口每个标签都带 lan，改为 required 以保留标签语言身份
+@JsonKey(name: 'lan') String get language;
 /// Create a copy of AppTagDTO
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2453,7 +2454,7 @@ abstract mixin class $AppTagDTOCopyWith<$Res>  {
   factory $AppTagDTOCopyWith(AppTagDTO value, $Res Function(AppTagDTO) _then) = _$AppTagDTOCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'name') String name,@JsonKey(name: 'lan') String? language
+@JsonKey(name: 'name') String name,@JsonKey(name: 'lan') String language
 });
 
 
@@ -2470,11 +2471,11 @@ class _$AppTagDTOCopyWithImpl<$Res>
 
 /// Create a copy of AppTagDTO
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? language = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? language = null,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,language: freezed == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
-as String?,
+as String,language: null == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -2556,7 +2557,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'name')  String name, @JsonKey(name: 'lan')  String? language)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'name')  String name, @JsonKey(name: 'lan')  String language)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppTagDTO() when $default != null:
 return $default(_that.name,_that.language);case _:
@@ -2577,7 +2578,7 @@ return $default(_that.name,_that.language);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'name')  String name, @JsonKey(name: 'lan')  String? language)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'name')  String name, @JsonKey(name: 'lan')  String language)  $default,) {final _that = this;
 switch (_that) {
 case _AppTagDTO():
 return $default(_that.name,_that.language);}
@@ -2594,7 +2595,7 @@ return $default(_that.name,_that.language);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'name')  String name, @JsonKey(name: 'lan')  String? language)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'name')  String name, @JsonKey(name: 'lan')  String language)?  $default,) {final _that = this;
 switch (_that) {
 case _AppTagDTO() when $default != null:
 return $default(_that.name,_that.language);case _:
@@ -2609,11 +2610,12 @@ return $default(_that.name,_that.language);case _:
 @JsonSerializable()
 
 class _AppTagDTO implements AppTagDTO {
-  const _AppTagDTO({@JsonKey(name: 'name') required this.name, @JsonKey(name: 'lan') this.language});
+  const _AppTagDTO({@JsonKey(name: 'name') required this.name, @JsonKey(name: 'lan') required this.language});
   factory _AppTagDTO.fromJson(Map<String, dynamic> json) => _$AppTagDTOFromJson(json);
 
 @override@JsonKey(name: 'name') final  String name;
-@override@JsonKey(name: 'lan') final  String? language;
+// 后端契约保证详情接口每个标签都带 lan，改为 required 以保留标签语言身份
+@override@JsonKey(name: 'lan') final  String language;
 
 /// Create a copy of AppTagDTO
 /// with the given fields replaced by the non-null parameter values.
@@ -2648,7 +2650,7 @@ abstract mixin class _$AppTagDTOCopyWith<$Res> implements $AppTagDTOCopyWith<$Re
   factory _$AppTagDTOCopyWith(_AppTagDTO value, $Res Function(_AppTagDTO) _then) = __$AppTagDTOCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'name') String name,@JsonKey(name: 'lan') String? language
+@JsonKey(name: 'name') String name,@JsonKey(name: 'lan') String language
 });
 
 
@@ -2665,11 +2667,11 @@ class __$AppTagDTOCopyWithImpl<$Res>
 
 /// Create a copy of AppTagDTO
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? language = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? language = null,}) {
   return _then(_AppTagDTO(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,language: freezed == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
-as String?,
+as String,language: null == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -6057,7 +6059,9 @@ mixin _$SearchAppListRequest {
 @JsonKey(name: 'name') String get keyword;/// 分类 ID，来自 getDisCategoryList 返回的 categoryId；
 /// null 表示全部应用，与 Rust 旧版语义一致。
 /// includeIfNull: false 确保 null 时不向后端发送该字段。
-@JsonKey(includeIfNull: false) String? get categoryId;@JsonKey(name: 'pageNo') int get pageNo;@JsonKey(name: 'pageSize') int get pageSize;@JsonKey(name: 'repoName') String get repoName; String? get arch; String? get lan; String? get sort; String? get order;
+@JsonKey(includeIfNull: false) String? get categoryId;/// 标签搜索：tagName + tagLan 必须成对提供，普通文本搜索不传这两个字段。
+/// includeIfNull: false 确保普通搜索不会把 null 标签字段发给后端，避免误走标签 JOIN。
+@JsonKey(includeIfNull: false) String? get tagName;@JsonKey(includeIfNull: false) String? get tagLan;@JsonKey(name: 'pageNo') int get pageNo;@JsonKey(name: 'pageSize') int get pageSize;@JsonKey(name: 'repoName') String get repoName; String? get arch; String? get lan; String? get sort; String? get order;
 /// Create a copy of SearchAppListRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -6070,16 +6074,16 @@ $SearchAppListRequestCopyWith<SearchAppListRequest> get copyWith => _$SearchAppL
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchAppListRequest&&(identical(other.keyword, keyword) || other.keyword == keyword)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.pageNo, pageNo) || other.pageNo == pageNo)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize)&&(identical(other.repoName, repoName) || other.repoName == repoName)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.lan, lan) || other.lan == lan)&&(identical(other.sort, sort) || other.sort == sort)&&(identical(other.order, order) || other.order == order));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchAppListRequest&&(identical(other.keyword, keyword) || other.keyword == keyword)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.tagName, tagName) || other.tagName == tagName)&&(identical(other.tagLan, tagLan) || other.tagLan == tagLan)&&(identical(other.pageNo, pageNo) || other.pageNo == pageNo)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize)&&(identical(other.repoName, repoName) || other.repoName == repoName)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.lan, lan) || other.lan == lan)&&(identical(other.sort, sort) || other.sort == sort)&&(identical(other.order, order) || other.order == order));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,keyword,categoryId,pageNo,pageSize,repoName,arch,lan,sort,order);
+int get hashCode => Object.hash(runtimeType,keyword,categoryId,tagName,tagLan,pageNo,pageSize,repoName,arch,lan,sort,order);
 
 @override
 String toString() {
-  return 'SearchAppListRequest(keyword: $keyword, categoryId: $categoryId, pageNo: $pageNo, pageSize: $pageSize, repoName: $repoName, arch: $arch, lan: $lan, sort: $sort, order: $order)';
+  return 'SearchAppListRequest(keyword: $keyword, categoryId: $categoryId, tagName: $tagName, tagLan: $tagLan, pageNo: $pageNo, pageSize: $pageSize, repoName: $repoName, arch: $arch, lan: $lan, sort: $sort, order: $order)';
 }
 
 
@@ -6090,7 +6094,7 @@ abstract mixin class $SearchAppListRequestCopyWith<$Res>  {
   factory $SearchAppListRequestCopyWith(SearchAppListRequest value, $Res Function(SearchAppListRequest) _then) = _$SearchAppListRequestCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'name') String keyword,@JsonKey(includeIfNull: false) String? categoryId,@JsonKey(name: 'pageNo') int pageNo,@JsonKey(name: 'pageSize') int pageSize,@JsonKey(name: 'repoName') String repoName, String? arch, String? lan, String? sort, String? order
+@JsonKey(name: 'name') String keyword,@JsonKey(includeIfNull: false) String? categoryId,@JsonKey(includeIfNull: false) String? tagName,@JsonKey(includeIfNull: false) String? tagLan,@JsonKey(name: 'pageNo') int pageNo,@JsonKey(name: 'pageSize') int pageSize,@JsonKey(name: 'repoName') String repoName, String? arch, String? lan, String? sort, String? order
 });
 
 
@@ -6107,10 +6111,12 @@ class _$SearchAppListRequestCopyWithImpl<$Res>
 
 /// Create a copy of SearchAppListRequest
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? keyword = null,Object? categoryId = freezed,Object? pageNo = null,Object? pageSize = null,Object? repoName = null,Object? arch = freezed,Object? lan = freezed,Object? sort = freezed,Object? order = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? keyword = null,Object? categoryId = freezed,Object? tagName = freezed,Object? tagLan = freezed,Object? pageNo = null,Object? pageSize = null,Object? repoName = null,Object? arch = freezed,Object? lan = freezed,Object? sort = freezed,Object? order = freezed,}) {
   return _then(_self.copyWith(
 keyword: null == keyword ? _self.keyword : keyword // ignore: cast_nullable_to_non_nullable
 as String,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as String?,tagName: freezed == tagName ? _self.tagName : tagName // ignore: cast_nullable_to_non_nullable
+as String?,tagLan: freezed == tagLan ? _self.tagLan : tagLan // ignore: cast_nullable_to_non_nullable
 as String?,pageNo: null == pageNo ? _self.pageNo : pageNo // ignore: cast_nullable_to_non_nullable
 as int,pageSize: null == pageSize ? _self.pageSize : pageSize // ignore: cast_nullable_to_non_nullable
 as int,repoName: null == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
@@ -6200,10 +6206,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'name')  String keyword, @JsonKey(includeIfNull: false)  String? categoryId, @JsonKey(name: 'pageNo')  int pageNo, @JsonKey(name: 'pageSize')  int pageSize, @JsonKey(name: 'repoName')  String repoName,  String? arch,  String? lan,  String? sort,  String? order)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'name')  String keyword, @JsonKey(includeIfNull: false)  String? categoryId, @JsonKey(includeIfNull: false)  String? tagName, @JsonKey(includeIfNull: false)  String? tagLan, @JsonKey(name: 'pageNo')  int pageNo, @JsonKey(name: 'pageSize')  int pageSize, @JsonKey(name: 'repoName')  String repoName,  String? arch,  String? lan,  String? sort,  String? order)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SearchAppListRequest() when $default != null:
-return $default(_that.keyword,_that.categoryId,_that.pageNo,_that.pageSize,_that.repoName,_that.arch,_that.lan,_that.sort,_that.order);case _:
+return $default(_that.keyword,_that.categoryId,_that.tagName,_that.tagLan,_that.pageNo,_that.pageSize,_that.repoName,_that.arch,_that.lan,_that.sort,_that.order);case _:
   return orElse();
 
 }
@@ -6221,10 +6227,10 @@ return $default(_that.keyword,_that.categoryId,_that.pageNo,_that.pageSize,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'name')  String keyword, @JsonKey(includeIfNull: false)  String? categoryId, @JsonKey(name: 'pageNo')  int pageNo, @JsonKey(name: 'pageSize')  int pageSize, @JsonKey(name: 'repoName')  String repoName,  String? arch,  String? lan,  String? sort,  String? order)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'name')  String keyword, @JsonKey(includeIfNull: false)  String? categoryId, @JsonKey(includeIfNull: false)  String? tagName, @JsonKey(includeIfNull: false)  String? tagLan, @JsonKey(name: 'pageNo')  int pageNo, @JsonKey(name: 'pageSize')  int pageSize, @JsonKey(name: 'repoName')  String repoName,  String? arch,  String? lan,  String? sort,  String? order)  $default,) {final _that = this;
 switch (_that) {
 case _SearchAppListRequest():
-return $default(_that.keyword,_that.categoryId,_that.pageNo,_that.pageSize,_that.repoName,_that.arch,_that.lan,_that.sort,_that.order);}
+return $default(_that.keyword,_that.categoryId,_that.tagName,_that.tagLan,_that.pageNo,_that.pageSize,_that.repoName,_that.arch,_that.lan,_that.sort,_that.order);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -6238,10 +6244,10 @@ return $default(_that.keyword,_that.categoryId,_that.pageNo,_that.pageSize,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'name')  String keyword, @JsonKey(includeIfNull: false)  String? categoryId, @JsonKey(name: 'pageNo')  int pageNo, @JsonKey(name: 'pageSize')  int pageSize, @JsonKey(name: 'repoName')  String repoName,  String? arch,  String? lan,  String? sort,  String? order)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'name')  String keyword, @JsonKey(includeIfNull: false)  String? categoryId, @JsonKey(includeIfNull: false)  String? tagName, @JsonKey(includeIfNull: false)  String? tagLan, @JsonKey(name: 'pageNo')  int pageNo, @JsonKey(name: 'pageSize')  int pageSize, @JsonKey(name: 'repoName')  String repoName,  String? arch,  String? lan,  String? sort,  String? order)?  $default,) {final _that = this;
 switch (_that) {
 case _SearchAppListRequest() when $default != null:
-return $default(_that.keyword,_that.categoryId,_that.pageNo,_that.pageSize,_that.repoName,_that.arch,_that.lan,_that.sort,_that.order);case _:
+return $default(_that.keyword,_that.categoryId,_that.tagName,_that.tagLan,_that.pageNo,_that.pageSize,_that.repoName,_that.arch,_that.lan,_that.sort,_that.order);case _:
   return null;
 
 }
@@ -6253,7 +6259,7 @@ return $default(_that.keyword,_that.categoryId,_that.pageNo,_that.pageSize,_that
 @JsonSerializable()
 
 class _SearchAppListRequest implements SearchAppListRequest {
-  const _SearchAppListRequest({@JsonKey(name: 'name') required this.keyword, @JsonKey(includeIfNull: false) this.categoryId, @JsonKey(name: 'pageNo') this.pageNo = 1, @JsonKey(name: 'pageSize') this.pageSize = 20, @JsonKey(name: 'repoName') this.repoName = AppConfig.defaultStoreRepoName, this.arch, this.lan, this.sort, this.order});
+  const _SearchAppListRequest({@JsonKey(name: 'name') required this.keyword, @JsonKey(includeIfNull: false) this.categoryId, @JsonKey(includeIfNull: false) this.tagName, @JsonKey(includeIfNull: false) this.tagLan, @JsonKey(name: 'pageNo') this.pageNo = 1, @JsonKey(name: 'pageSize') this.pageSize = 20, @JsonKey(name: 'repoName') this.repoName = AppConfig.defaultStoreRepoName, this.arch, this.lan, this.sort, this.order});
   factory _SearchAppListRequest.fromJson(Map<String, dynamic> json) => _$SearchAppListRequestFromJson(json);
 
 /// 搜索关键词，后端字段名为 `name`
@@ -6262,6 +6268,10 @@ class _SearchAppListRequest implements SearchAppListRequest {
 /// null 表示全部应用，与 Rust 旧版语义一致。
 /// includeIfNull: false 确保 null 时不向后端发送该字段。
 @override@JsonKey(includeIfNull: false) final  String? categoryId;
+/// 标签搜索：tagName + tagLan 必须成对提供，普通文本搜索不传这两个字段。
+/// includeIfNull: false 确保普通搜索不会把 null 标签字段发给后端，避免误走标签 JOIN。
+@override@JsonKey(includeIfNull: false) final  String? tagName;
+@override@JsonKey(includeIfNull: false) final  String? tagLan;
 @override@JsonKey(name: 'pageNo') final  int pageNo;
 @override@JsonKey(name: 'pageSize') final  int pageSize;
 @override@JsonKey(name: 'repoName') final  String repoName;
@@ -6283,16 +6293,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchAppListRequest&&(identical(other.keyword, keyword) || other.keyword == keyword)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.pageNo, pageNo) || other.pageNo == pageNo)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize)&&(identical(other.repoName, repoName) || other.repoName == repoName)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.lan, lan) || other.lan == lan)&&(identical(other.sort, sort) || other.sort == sort)&&(identical(other.order, order) || other.order == order));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchAppListRequest&&(identical(other.keyword, keyword) || other.keyword == keyword)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.tagName, tagName) || other.tagName == tagName)&&(identical(other.tagLan, tagLan) || other.tagLan == tagLan)&&(identical(other.pageNo, pageNo) || other.pageNo == pageNo)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize)&&(identical(other.repoName, repoName) || other.repoName == repoName)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.lan, lan) || other.lan == lan)&&(identical(other.sort, sort) || other.sort == sort)&&(identical(other.order, order) || other.order == order));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,keyword,categoryId,pageNo,pageSize,repoName,arch,lan,sort,order);
+int get hashCode => Object.hash(runtimeType,keyword,categoryId,tagName,tagLan,pageNo,pageSize,repoName,arch,lan,sort,order);
 
 @override
 String toString() {
-  return 'SearchAppListRequest(keyword: $keyword, categoryId: $categoryId, pageNo: $pageNo, pageSize: $pageSize, repoName: $repoName, arch: $arch, lan: $lan, sort: $sort, order: $order)';
+  return 'SearchAppListRequest(keyword: $keyword, categoryId: $categoryId, tagName: $tagName, tagLan: $tagLan, pageNo: $pageNo, pageSize: $pageSize, repoName: $repoName, arch: $arch, lan: $lan, sort: $sort, order: $order)';
 }
 
 
@@ -6303,7 +6313,7 @@ abstract mixin class _$SearchAppListRequestCopyWith<$Res> implements $SearchAppL
   factory _$SearchAppListRequestCopyWith(_SearchAppListRequest value, $Res Function(_SearchAppListRequest) _then) = __$SearchAppListRequestCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'name') String keyword,@JsonKey(includeIfNull: false) String? categoryId,@JsonKey(name: 'pageNo') int pageNo,@JsonKey(name: 'pageSize') int pageSize,@JsonKey(name: 'repoName') String repoName, String? arch, String? lan, String? sort, String? order
+@JsonKey(name: 'name') String keyword,@JsonKey(includeIfNull: false) String? categoryId,@JsonKey(includeIfNull: false) String? tagName,@JsonKey(includeIfNull: false) String? tagLan,@JsonKey(name: 'pageNo') int pageNo,@JsonKey(name: 'pageSize') int pageSize,@JsonKey(name: 'repoName') String repoName, String? arch, String? lan, String? sort, String? order
 });
 
 
@@ -6320,10 +6330,12 @@ class __$SearchAppListRequestCopyWithImpl<$Res>
 
 /// Create a copy of SearchAppListRequest
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? keyword = null,Object? categoryId = freezed,Object? pageNo = null,Object? pageSize = null,Object? repoName = null,Object? arch = freezed,Object? lan = freezed,Object? sort = freezed,Object? order = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? keyword = null,Object? categoryId = freezed,Object? tagName = freezed,Object? tagLan = freezed,Object? pageNo = null,Object? pageSize = null,Object? repoName = null,Object? arch = freezed,Object? lan = freezed,Object? sort = freezed,Object? order = freezed,}) {
   return _then(_SearchAppListRequest(
 keyword: null == keyword ? _self.keyword : keyword // ignore: cast_nullable_to_non_nullable
 as String,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as String?,tagName: freezed == tagName ? _self.tagName : tagName // ignore: cast_nullable_to_non_nullable
+as String?,tagLan: freezed == tagLan ? _self.tagLan : tagLan // ignore: cast_nullable_to_non_nullable
 as String?,pageNo: null == pageNo ? _self.pageNo : pageNo // ignore: cast_nullable_to_non_nullable
 as int,pageSize: null == pageSize ? _self.pageSize : pageSize // ignore: cast_nullable_to_non_nullable
 as int,repoName: null == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable

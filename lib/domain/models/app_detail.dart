@@ -100,5 +100,11 @@ sealed class AppTag with _$AppTag {
   const factory AppTag({
     /// 标签名称
     required String name,
+
+    /// 标签语言（如 zh_CN、en_US）
+    ///
+    /// 设计原因：标签搜索需精确匹配名称+语言，禁止根据界面文本猜测标签身份；
+    /// 后端契约保证详情接口返回的每个标签都带 lan 字段，故此处设为 required。
+    required String language,
   }) = _AppTag;
 }

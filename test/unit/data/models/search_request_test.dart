@@ -247,4 +247,33 @@ void main() {
       expect(json.containsKey('categoryId'), isFalse);
     });
   });
+
+  group('SearchAppListRequest Tag Identity Contract', () {
+    test('serializes exact tag identity without keyword', () {
+      // 标签搜索只发送 tagName + tagLan，不混入普通关键词 name
+      const request = SearchAppListRequest(
+        keyword: '',
+        tagName: '办公',
+        tagLan: 'zh_CN',
+        pageNo: 1,
+        pageSize: 20,
+      );
+      final json = request.toJson();
+      expect(json['name'], '');
+      expect(json['tagName'], '办公');
+      expect(json['tagLan'], 'zh_CN');
+    });
+
+    test('omits tag fields when null', () {
+      // 普通文本搜索不传 tagName/tagLan，避免后端误走标签 JOIN
+      const request = SearchAppListRequest(
+        keyword: 'wps',
+        pageNo: 1,
+        pageSize: 20,
+      );
+      final json = request.toJson();
+      expect(json.containsKey('tagName'), isFalse);
+      expect(json.containsKey('tagLan'), isFalse);
+    });
+  });
 }

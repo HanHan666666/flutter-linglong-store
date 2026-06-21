@@ -1336,6 +1336,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewDownloadManager => 'View Downloads';
 
   @override
+  String a11ySearchByTag(Object tag) {
+    return 'Search by tag: $tag';
+  }
+
+  @override
+  String a11yRemoveSearchTag(Object tag) {
+    return 'Remove search tag: $tag';
+  }
+
+  @override
   String a11yInstallApp(Object appName) {
     return 'Install $appName';
   }

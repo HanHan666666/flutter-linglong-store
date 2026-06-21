@@ -12,6 +12,7 @@ import '../../core/di/providers.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/platform/window_service.dart';
+import '../../domain/models/app_detail.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_task.dart';
 import '../../presentation/pages/all_apps/all_apps_page.dart';
@@ -228,9 +229,25 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    final currentSearchQuery = widget.currentPath == '/search_list'
+    // 仅在搜索结果页解析搜索条件；其它页面保持空查询与空标签
+    final isSearchList = widget.currentPath == '/search_list';
+    final currentSearchQuery = isSearchList
         ? (widget.currentUri.queryParameters['q'] ?? '')
         : '';
+    // 标签搜索条件：仅在 /search_list 且 tag/tagLan 同时存在时恢复
+    final tagName = isSearchList
+        ? widget.currentUri.queryParameters['tag']
+        : null;
+    final tagLan = isSearchList
+        ? widget.currentUri.queryParameters['tagLan']
+        : null;
+    final currentSearchTag =
+        tagName != null &&
+            tagName.isNotEmpty &&
+            tagLan != null &&
+            tagLan.isNotEmpty
+        ? AppTag(name: tagName, language: tagLan)
+        : null;
     final updateCount = ref.watch(updatableAppsCountProvider);
     return InstallToDownloadFlyoutLayer(
       child: Scaffold(
@@ -243,6 +260,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
               onMaximize: _onMaximize,
               onClose: _onClose,
               currentSearchQuery: currentSearchQuery,
+              currentSearchTag: currentSearchTag,
             ),
             // 主内容区域
             Expanded(

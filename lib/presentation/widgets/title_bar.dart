@@ -194,19 +194,29 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
     ref.listenManual(searchHintAppsProvider, (previous, next) {
       _resetHintRotation(next);
     }, fireImmediately: true);
+
+    if (widget.currentTag != null) {
+      _scheduleEnterTagMode();
+    }
   }
 
   @override
   void didUpdateWidget(covariant _TitleSearchBox oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentQuery == widget.currentQuery ||
-        _controller.text == widget.currentQuery) {
-      return;
+    if (oldWidget.currentTag != widget.currentTag) {
+      if (widget.currentTag != null) {
+        _scheduleEnterTagMode();
+      } else {
+        _scheduleRestoreTextFocus();
+      }
     }
-    _controller.value = TextEditingValue(
-      text: widget.currentQuery,
-      selection: TextSelection.collapsed(offset: widget.currentQuery.length),
-    );
+    if (oldWidget.currentQuery != widget.currentQuery &&
+        _controller.text != widget.currentQuery) {
+      _controller.value = TextEditingValue(
+        text: widget.currentQuery,
+        selection: TextSelection.collapsed(offset: widget.currentQuery.length),
+      );
+    }
   }
 
   @override
@@ -225,6 +235,10 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
   }
 
   void _onTextChanged() {
+    // 标签模式没有文本搜索语义，清空控制器时不得触发普通候选请求。
+    if (widget.currentTag != null) {
+      return;
+    }
     setState(() {
       _selectedIndex = -1;
     });
@@ -590,44 +604,52 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
     widget.onSearch('');
   }
 
+  /// 在进入标签模式后的首个稳定帧中清理普通搜索状态并建立键盘焦点。
+  ///
+  /// 该操作只在模式切换时调度，避免在 [build] 中反复清理 Provider 或请求焦点。
+  void _scheduleEnterTagMode() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || widget.currentTag == null) {
+        return;
+      }
+      if (_controller.text.isNotEmpty) {
+        _controller.clear();
+      }
+      _removeSuggestionsOverlay();
+      _debounceTimer?.cancel();
+      ref.read(titleSearchSuggestionsProvider.notifier).clear();
+      _tagFocusNode.requestFocus();
+    });
+  }
+
+  /// 删除标签并恢复普通搜索模式后，将键盘焦点交还输入框。
+  void _scheduleRestoreTextFocus() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || widget.currentTag != null) {
+        return;
+      }
+      _focusNode.requestFocus();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    // 标签模式：渲染不可拆分、不可编辑的 Tag 胶囊，不构建 TextField/候选浮层。
-    // 进入标签模式时确保控制器为空、候选 overlay 已关闭、防抖已取消，
-    // 避免隐藏的输入框或候选请求继续执行。
-    // 注意：build 内禁止修改 provider，候选清理放到 postFrame 回调。
+    // 两种模式共用同一个搜索框外壳，仅切换内部内容，保证标题栏布局稳定。
     final tag = widget.currentTag;
-    if (tag != null) {
-      // 标签胶囊需要键盘焦点以承接 Backspace/Delete 删除；autofocus 在路由重建后
-      // 可能未及时生效，这里在首帧后显式请求焦点，保证键盘删除可用。
+    if (tag == null) {
+      ref.watch(titleSearchSuggestionsProvider);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) {
           return;
         }
-        if (_controller.text.isNotEmpty) {
-          _controller.clear();
-        }
-        _removeSuggestionsOverlay();
-        _debounceTimer?.cancel();
-        ref.read(titleSearchSuggestionsProvider.notifier).clear();
-        if (!_tagFocusNode.hasFocus) {
-          _tagFocusNode.requestFocus();
-        }
+        _syncSuggestionsOverlay();
       });
-      return _buildTagChip(context, tag, l10n);
     }
 
-    ref.watch(titleSearchSuggestionsProvider);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
-      _syncSuggestionsOverlay();
-    });
-
     return CompositedTransformTarget(
+      key: const Key('title-search-box'),
       link: _suggestionsLayerLink,
       child: Container(
         key: _searchBoxKey,
@@ -637,7 +659,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
           color: context.appColors.surfaceContainerHighest,
           borderRadius: AppRadius.lgRadius,
           border: Border.all(
-            color: _isFocused
+            color: tag == null && _isFocused
                 ? AppColors.primary
                 : context.appColors.borderSecondary,
             width: 1,
@@ -649,89 +671,92 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               GestureDetector(
-                onTap: _submitSearch,
+                onTap: tag == null ? _submitSearch : null,
                 behavior: HitTestBehavior.opaque,
                 child: Icon(
                   Icons.search,
                   size: 16,
-                  color: _isFocused
+                  color: tag == null && _isFocused
                       ? AppColors.primary
                       : context.appColors.textTertiary,
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: KeyboardListener(
-                  focusNode: _keyboardFocusNode,
-                  onKeyEvent: _onKeyEvent,
-                  child: Stack(
-                    children: [
-                      // 底层输入框：承载真实输入与光标，不再使用 InputDecoration.hintText，
-                      // 改由上层 [_AnimatedSearchHint] 负责带过渡动画的 placeholder 展示。
-                      TextField(
-                        controller: _controller,
-                        focusNode: _focusNode,
-                        maxLines: 1,
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          disabledBorder: InputBorder.none,
-                          errorBorder: InputBorder.none,
-                          focusedErrorBorder: InputBorder.none,
-                          filled: false,
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 8,
-                          ),
-                          suffixIconConstraints: const BoxConstraints(
-                            minWidth: 24,
-                            minHeight: 24,
-                          ),
-                          suffixIcon: _controller.text.isNotEmpty
-                              ? IconButton(
-                                  icon: Icon(
-                                    Icons.close,
-                                    size: 16,
-                                    color: context.appColors.textTertiary,
-                                  ),
-                                  onPressed: _clearSearch,
-                                  splashRadius: 14,
-                                  padding: EdgeInsets.zero,
-                                  tooltip: l10n.clearSearch,
-                                )
-                              : null,
-                        ),
-                        style: context.appTextStyles.bodyMedium.copyWith(
-                          color: context.appColors.textPrimary,
-                        ),
-                        textAlignVertical: TextAlignVertical.center,
-                        textInputAction: TextInputAction.search,
-                        onSubmitted: (_) => _submitSearch(),
-                      ),
-                      // 上层动画 placeholder：仅输入为空时展示当前轮播应用名/兜底文案。
-                      // IgnorePointer 保证点击会穿透到下层 TextField，聚焦与候选浮层逻辑不受影响。
-                      // Positioned.fill 让其撑满整个 Stack，使内部文案能垂直居中到搜索框中心，
-                      // 与底层 TextField 的 textAlignVertical.center 对齐。
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          key: const Key('title-search-placeholder'),
-                          child: _AnimatedSearchHint(
-                            // 输入非空时清空展示文案，等价于原 hintText 被输入覆盖的行为。
-                            text: _controller.text.isEmpty
-                                ? (_currentHintApp?.name ??
-                                      l10n.searchPlaceholder)
-                                : '',
-                            // 与原 hintText 的字体/颜色保持完全一致，避免视觉漂移。
-                            style: context.appTextStyles.bodyMedium.copyWith(
-                              color: context.appColors.textTertiary,
+                child: tag != null
+                    ? _buildTagChip(context, tag, l10n)
+                    : KeyboardListener(
+                        focusNode: _keyboardFocusNode,
+                        onKeyEvent: _onKeyEvent,
+                        child: Stack(
+                          children: [
+                            // 底层输入框：承载真实输入与光标，不再使用 InputDecoration.hintText，
+                            // 改由上层 [_AnimatedSearchHint] 负责带过渡动画的 placeholder 展示。
+                            TextField(
+                              controller: _controller,
+                              focusNode: _focusNode,
+                              maxLines: 1,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                focusedErrorBorder: InputBorder.none,
+                                filled: false,
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                suffixIconConstraints: const BoxConstraints(
+                                  minWidth: 24,
+                                  minHeight: 24,
+                                ),
+                                suffixIcon: _controller.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(
+                                          Icons.close,
+                                          size: 16,
+                                          color: context.appColors.textTertiary,
+                                        ),
+                                        onPressed: _clearSearch,
+                                        splashRadius: 14,
+                                        padding: EdgeInsets.zero,
+                                        tooltip: l10n.clearSearch,
+                                      )
+                                    : null,
+                              ),
+                              style: context.appTextStyles.bodyMedium.copyWith(
+                                color: context.appColors.textPrimary,
+                              ),
+                              textAlignVertical: TextAlignVertical.center,
+                              textInputAction: TextInputAction.search,
+                              onSubmitted: (_) => _submitSearch(),
                             ),
-                          ),
+                            // 上层动画 placeholder：仅输入为空时展示当前轮播应用名/兜底文案。
+                            // IgnorePointer 保证点击会穿透到下层 TextField，聚焦与候选浮层逻辑不受影响。
+                            // Positioned.fill 让其撑满整个 Stack，使内部文案能垂直居中到搜索框中心，
+                            // 与底层 TextField 的 textAlignVertical.center 对齐。
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                key: const Key('title-search-placeholder'),
+                                child: _AnimatedSearchHint(
+                                  // 输入非空时清空展示文案，等价于原 hintText 被输入覆盖的行为。
+                                  text: _controller.text.isEmpty
+                                      ? (_currentHintApp?.name ??
+                                            l10n.searchPlaceholder)
+                                      : '',
+                                  // 与原 hintText 的字体/颜色保持完全一致，避免视觉漂移。
+                                  style: context.appTextStyles.bodyMedium
+                                      .copyWith(
+                                        color: context.appColors.textTertiary,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
               ),
             ],
           ),
@@ -743,19 +768,16 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
   /// 构建标签模式下的不可拆分 Tag 胶囊。
   ///
   /// - 不构建 TextField，胶囊不可编辑；
-  /// - 通过关闭按钮或 Backspace/Delete（CallbackShortcuts）删除后回到普通文本搜索；
-  /// - 满足无障碍：最小 48px 交互高度、本地化语义 label；
+  /// - 通过关闭按钮或 Backspace/Delete 删除后回到普通文本搜索；
+  /// - 复用原搜索框的 32px 外壳，使用项目色彩和圆角构建紧凑视觉；
+  /// - 提供本地化标签语义和独立删除按钮语义；
   /// - 进入标签模式后自动聚焦，便于键盘删除。
   Widget _buildTagChip(
     BuildContext context,
     AppTag tag,
     AppLocalizations l10n,
   ) {
-    // Focus 放在 Semantics 外层：Focus 会注入自己的语义作用域，放在内部会让
-    // getSemantics(byKey) 命中的节点 label 变空。外层 Focus + Semantics(key,label,container)
-    // + 内层 ExcludeSemantics 屏蔽 InputChip/Text 默认语义，保证读到的 label 为本地化文案。
-    // 标签模式没有 TextField，Backspace 无法用 CallbackShortcuts 捕获（无修饰键的按键会被
-    // Shortcuts 机制忽略），改用 FocusNode.onKeyEvent 直接拦截 Backspace/Delete 并交给删除回调。
+    // 标签模式没有 TextField，直接通过 FocusNode 拦截 Backspace/Delete。
     return Focus(
       focusNode: _tagFocusNode,
       autofocus: true,
@@ -771,21 +793,59 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
       child: Semantics(
         key: const Key('title-search-tag-chip'),
         label: l10n.a11ySearchByTag(tag.name),
-        button: true,
         container: true,
-        child: ExcludeSemantics(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
-            child: InputChip(
-              label: Text(
-                tag.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              onDeleted: _removeTag,
-              deleteButtonTooltipMessage: l10n.a11yRemoveSearchTag(tag.name),
-              // padded 保证删除按钮热区达到最小交互尺寸
-              materialTapTargetSize: MaterialTapTargetSize.padded,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            height: 24,
+            constraints: const BoxConstraints(maxWidth: 320),
+            padding: const EdgeInsets.only(left: 10),
+            decoration: BoxDecoration(
+              color: context.appColors.primaryLight,
+              borderRadius: AppRadius.fullRadius,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: ExcludeSemantics(
+                    child: Text(
+                      tag.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.appTextStyles.tiny.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Semantics(
+                  button: true,
+                  label: l10n.a11yRemoveSearchTag(tag.name),
+                  child: Tooltip(
+                    message: l10n.a11yRemoveSearchTag(tag.name),
+                    child: InkWell(
+                      key: const Key('title-search-tag-remove'),
+                      onTap: _removeTag,
+                      borderRadius: AppRadius.fullRadius,
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: Center(
+                          child: ExcludeSemantics(
+                            child: Icon(
+                              Icons.close,
+                              size: 14,
+                              color: context.appColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

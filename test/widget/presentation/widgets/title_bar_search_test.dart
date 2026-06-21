@@ -262,7 +262,7 @@ void main() {
   });
 
   group('tag chip', () {
-    testWidgets('tag route renders one non-editable chip and no suggestions', (
+    testWidgets('tag route renders compact chip inside original search box', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -270,8 +270,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 标签模式：渲染单个不可编辑胶囊，不渲染 TextField，不拉候选
-      expect(find.widgetWithText(InputChip, '办公'), findsOneWidget);
+      // 标签模式必须保留原搜索框的尺寸、背景和搜索图标，只替换内部输入区域。
+      final searchBox = find.byKey(const Key('title-search-box'));
+      expect(searchBox, findsOneWidget);
+      expect(tester.getSize(searchBox).height, 32);
+      expect(find.byIcon(Icons.search), findsOneWidget);
+      expect(find.byKey(const Key('title-search-tag-chip')), findsOneWidget);
+      expect(find.byType(InputChip), findsNothing);
       expect(find.byType(TextField), findsNothing);
       expect(find.text('浏览器'), findsNothing);
     });
@@ -284,16 +289,16 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final chip = tester.widget<InputChip>(
-        find.widgetWithText(InputChip, '办公'),
-      );
-      chip.onDeleted!.call();
+      await tester.tap(find.byKey(const Key('title-search-tag-remove')));
       await tester.pumpAndSettle();
 
       // 删除胶囊后回到普通文本搜索模式（空查询），TextField 重新出现
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.widgetWithText(InputChip, '办公'), findsNothing);
+      expect(find.byKey(const Key('title-search-tag-chip')), findsNothing);
       expect(find.text('route:/search_list?q='), findsOneWidget);
+
+      final textField = tester.widget<TextField>(find.byType(TextField));
+      expect(textField.focusNode?.hasFocus, isTrue);
     });
 
     testWidgets('backspace removes focused tag chip', (tester) async {
@@ -306,47 +311,48 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
       await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(InputChip, '办公'), findsNothing);
+      expect(find.byKey(const Key('title-search-tag-chip')), findsNothing);
       expect(find.byType(TextField), findsOneWidget);
     });
 
-    testWidgets('tag chip exposes localized search semantics and 48px target', (
-      tester,
-    ) async {
-      // 直接渲染标题栏（与现有样式测试一致）：
-      // 标签语义是组件自身属性，不依赖路由上下文；ShellRoute 的 navigator 重建会干扰
-      // 测试框架 getSemantics(byKey) 读取，故这里用直接渲染验证语义与尺寸契约。
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            appSearchIndexProvider.overrideWith(() => _EmptyFakeIndex()),
-            searchHintAppsProvider.overrideWithValue(const <SearchHintApp>[]),
-          ],
-          child: MaterialApp(
-            locale: const Locale('zh'),
-            theme: AppTheme.lightTheme,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: CustomTitleBar(
-                isMaximized: false,
-                onMinimize: () {},
-                onMaximize: () {},
-                onClose: () {},
-                currentSearchTag: const AppTag(name: '办公', language: 'zh_CN'),
+    testWidgets(
+      'tag chip exposes localized semantics without stretching shell',
+      (tester) async {
+        // 直接渲染标题栏（与现有样式测试一致）：
+        // 标签语义是组件自身属性，不依赖路由上下文；ShellRoute 的 navigator 重建会干扰
+        // 测试框架 getSemantics(byKey) 读取，故这里用直接渲染验证语义与尺寸契约。
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              appSearchIndexProvider.overrideWith(() => _EmptyFakeIndex()),
+              searchHintAppsProvider.overrideWithValue(const <SearchHintApp>[]),
+            ],
+            child: MaterialApp(
+              locale: const Locale('zh'),
+              theme: AppTheme.lightTheme,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: CustomTitleBar(
+                  isMaximized: false,
+                  onMinimize: () {},
+                  onMaximize: () {},
+                  onClose: () {},
+                  currentSearchTag: const AppTag(name: '办公', language: 'zh_CN'),
+                ),
               ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      final chip = find.byKey(const Key('title-search-tag-chip'));
-      expect(chip, findsOneWidget);
-      // 无障碍：最小 48px 交互高度，label 含“按标签搜索：办公”
-      expect(tester.getSize(chip).height, greaterThanOrEqualTo(48));
-      expect(tester.getSemantics(chip).label, contains('按标签搜索：办公'));
-    });
+        final chip = find.byKey(const Key('title-search-tag-chip'));
+        expect(chip, findsOneWidget);
+        // 胶囊保持在 32px 搜索框内，整体搜索区域提供键盘焦点和本地化语义。
+        expect(tester.getSize(chip).height, lessThanOrEqualTo(32));
+        expect(tester.getSemantics(chip).label, contains('按标签搜索：办公'));
+      },
+    );
   });
 }
 

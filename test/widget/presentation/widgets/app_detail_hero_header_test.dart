@@ -9,32 +9,33 @@ import 'package:linglong_store/presentation/widgets/app_detail_hero_header.dart'
 import 'package:linglong_store/presentation/widgets/install_button.dart';
 
 void main() {
-  testWidgets('detail tag is accessible and emits full tag identity', (
-    tester,
-  ) async {
-    // 标签必须可点击、有最小 48px 交互高度、按钮语义，且点击回调原样透传 name+language，
-    // 禁止只传名称丢失语言身份
-    AppTag? selected;
-    await tester.pumpWidget(
-      _buildHeader(
-        tags: const [AppTag(name: '办公', language: 'zh_CN')],
-        onTagPressed: (tag) => selected = tag,
-      ),
-    );
-    await tester.pumpAndSettle();
+  testWidgets(
+    'detail tag preserves compact appearance and emits full identity',
+    (tester) async {
+      // 标签只增加交互能力，不得改变详情页原有紧凑胶囊的视觉高度；
+      // 点击回调仍需原样透传 name+language，禁止丢失语言身份。
+      AppTag? selected;
+      await tester.pumpWidget(
+        _buildHeader(
+          tags: const [AppTag(name: '办公', language: 'zh_CN')],
+          onTagPressed: (tag) => selected = tag,
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    final tag = find.byKey(const ValueKey('app-detail-tag-办公-zh_CN'));
-    expect(tag, findsOneWidget);
-    expect(tester.getSize(tag).height, greaterThanOrEqualTo(48));
+      final tag = find.byKey(const ValueKey('app-detail-tag-办公-zh_CN'));
+      expect(tag, findsOneWidget);
+      expect(tester.getSize(tag).height, lessThan(48));
 
-    await tester.tap(tag);
-    await tester.pumpAndSettle();
-    expect(selected, const AppTag(name: '办公', language: 'zh_CN'));
+      await tester.tap(tag);
+      await tester.pumpAndSettle();
+      expect(selected, const AppTag(name: '办公', language: 'zh_CN'));
 
-    final semantics = tester.getSemantics(tag);
-    // flagsCollection 取代已废弃的 hasFlag（v3.32.0 后弃用）
-    expect(semantics.flagsCollection.isButton, isTrue);
-  });
+      final semantics = tester.getSemantics(tag);
+      // flagsCollection 取代已废弃的 hasFlag（v3.32.0 后弃用）
+      expect(semantics.flagsCollection.isButton, isTrue);
+    },
+  );
 }
 
 /// 构建详情头部测试宿主，隔离详情页其它依赖。

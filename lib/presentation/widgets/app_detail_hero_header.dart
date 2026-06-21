@@ -233,8 +233,8 @@ class AppDetailHeroHeader extends StatelessWidget {
 
   /// 构建应用标签。
   ///
-  /// 每个标签是一个可点击胶囊：复用现有颜色/圆角/内边距样式，叠加最小 48px 交互高度与
-  /// 本地化语义，点击透传完整 name+language 身份给页面层统一接入标签搜索路由。
+  /// 每个标签只在原有紧凑胶囊外增加点击与无障碍语义，不改变详情页既有尺寸和排版。
+  /// 点击时透传完整 name+language 身份，由页面层统一接入标签搜索路由。
   Widget _buildTags(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
@@ -250,25 +250,20 @@ class AppDetailHeroHeader extends StatelessWidget {
                   l10n?.a11ySearchByTag(tag.name) ?? '按标签搜索：${tag.name}',
               enabled: canPress,
               onTap: () => onTagPressed?.call(tag),
-              child: DecoratedBox(
+              child: Container(
                 key: ValueKey('app-detail-tag-${tag.name}-${tag.language}'),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primaryContainer,
                   borderRadius: AppRadius.fullRadius,
                 ),
-                child: ConstrainedBox(
-                  // 标签点击目标最小 48px 高，满足无障碍交互尺寸
-                  constraints: const BoxConstraints(minHeight: 48),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Center(
-                      child: Text(
-                        tag.name,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onPrimaryContainer,
-                        ),
-                      ),
-                    ),
+                child: Text(
+                  tag.name,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onPrimaryContainer,
                   ),
                 ),
               ),

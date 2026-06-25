@@ -867,7 +867,7 @@
       }
     }
   },
-  "envManagementWarning": "This feature is not yet stable. Do not use it unless necessary; proceed with caution if you encounter issues.",
+  "envManagementWarning": "This feature is still under refinement with limited stability, and is intended for test machines only. Please do not use it in formal workplace environments. If an issue occurs after an operation, do not retry repeatedly—note the symptoms first and seek assistance.",
   "repoManagementHintTitle": "Repository management only",
   "repoManagementHintMessage": "This store can only fetch app data from the official stable repository. Do not remove the stable repository, otherwise app installation will fail."
 }

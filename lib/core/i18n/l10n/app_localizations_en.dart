@@ -1514,7 +1514,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get envManagementWarning =>
-      'This feature is not yet stable. Do not use it unless necessary; proceed with caution if you encounter issues.';
+      'This feature is still under refinement with limited stability, and is intended for test machines only. Please do not use it in formal workplace environments. If an issue occurs after an operation, do not retry repeatedly—note the symptoms first and seek assistance.';
 
   @override
   String get repoManagementHintTitle => 'Repository management only';

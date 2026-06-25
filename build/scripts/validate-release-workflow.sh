@@ -24,6 +24,47 @@ require_no_grep() {
   fi
 }
 
+find_line_after_anchor() {
+  local anchor_pattern="$1"
+  local target_pattern="$2"
+  local file="$3"
+
+  awk -v anchor="$anchor_pattern" -v target="$target_pattern" '
+    index($0, anchor) > 0 {
+      in_scope = 1
+    }
+
+    in_scope && index($0, target) > 0 {
+      print NR
+      exit
+    }
+  ' "$file"
+}
+
+require_line_before_after_anchor() {
+  local anchor_pattern="$1"
+  local before_pattern="$2"
+  local after_pattern="$3"
+  local file="$4"
+  local before_line
+  local after_line
+
+  # release.yml 存在多个下载步骤；UOS 校验必须限定在 update-uos-store job 内，
+  # 否则会误命中 publish-release 阶段的同名 release notes 下载步骤。
+  before_line="$(find_line_after_anchor "$anchor_pattern" "$before_pattern" "$file")"
+  after_line="$(find_line_after_anchor "$anchor_pattern" "$after_pattern" "$file")"
+
+  if [[ -z "$before_line" || -z "$after_line" ]]; then
+    echo "Unable to compare workflow step order after '$anchor_pattern' in $file: '$before_pattern' before '$after_pattern'" >&2
+    exit 1
+  fi
+
+  if (( before_line >= after_line )); then
+    echo "Expected '$before_pattern' to appear before '$after_pattern' after '$anchor_pattern' in $file" >&2
+    exit 1
+  fi
+}
+
 require_grep "workflow_dispatch" .github/workflows/release.yml
 require_grep "contents: write" .github/workflows/release.yml
 require_grep "ubuntu-24.04-arm" .github/workflows/release.yml
@@ -44,6 +85,10 @@ require_grep "Checkout repository for UOS note extraction" .github/workflows/rel
 require_grep "Prepare UOS Store note" .github/workflows/release.yml
 require_grep "extract-release-note-summary.sh" .github/workflows/release.yml
 require_grep 'note: ${{ steps.uos_note.outputs.note }}' .github/workflows/release.yml
+require_line_before_after_anchor "update-uos-store:" "Checkout repository for UOS note extraction" "Download signed Debian packages" .github/workflows/release.yml
+require_line_before_after_anchor "update-uos-store:" "Checkout repository for UOS note extraction" "Download release notes" .github/workflows/release.yml
+require_line_before_after_anchor "update-uos-store:" "Download signed Debian packages" "Collect release Debian packages" .github/workflows/release.yml
+require_line_before_after_anchor "update-uos-store:" "Download release notes" "Prepare UOS Store note" .github/workflows/release.yml
 require_grep 'bash build/scripts/generate-changelog.sh "${{ steps.release-version.outputs.version }}" > release-notes.md' .github/workflows/release.yml
 require_grep "artifacts/*.tar.gz.asc" .github/workflows/release.yml
 require_grep "for tarball in *.tar.gz; do" .github/workflows/release.yml

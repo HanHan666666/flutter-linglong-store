@@ -128,6 +128,7 @@
 - `sign-release` 生成 tarball 签名时同样只能遍历单层 `artifacts/*.tar.gz`；GitHub runner 默认 `globstar` 关闭，`**/*.tar.gz` 在平铺目录下不会命中任何文件，必须在签名步骤里显式校验 `*.tar.gz.asc` 已生成
 - `publish-aur` 的 `Calculate checksums` 必须在缺少 tarball 或 `.tar.gz.asc` 时直接失败并给出明确错误，不能再让空输出拖到 `publish-aur.sh` 才暴露成缺失环境变量
 - `publish-release` 下载 `signed-release-assets` 后必须先通过 `build/scripts/normalize-release-assets.sh` 规整为单层目录，再交给 `softprops/action-gh-release` 上传；不要直接依赖 artifact 下载后的原始目录层级做 glob 匹配，避免 `*.tar.gz.asc` 因路径结构变化漏传
+- `update-uos-store` 需要先 checkout 到 `prepare-release.outputs.source_commit`，再下载 `signed-release-assets` 与 `release-notes`；`actions/checkout` 默认会清空工作目录，禁止把 checkout 放在 artifact 下载之后，否则会删除刚下载的 Debian 包导致 UOS 收包失败
 - `update-uos-store` 继续只允许提交 `amd64 + arm64` 两个 deb；当 release 新增 Loong64 deb 时，必须显式按文件名筛选目标包，禁止再用“仓库里恰好只有两个 deb”这种脆弱假设
 - `publish-aur` 继续只处理 `amd64 + arm64` tarball 与签名校验；禁止把 Loong64 资产误接入 AUR checksum/render/publish 链路
 

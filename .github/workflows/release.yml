@@ -531,18 +531,21 @@ jobs:
           fi
           echo "enabled=true" >> "$GITHUB_OUTPUT"
 
+      # checkout 默认会清空工作目录；UOS 提交前必须先取到提取说明所需脚本，
+      # 再下载 signed-release-assets，避免产物目录被后续 checkout 删除。
+      - name: Checkout repository for UOS note extraction
+        if: ${{ steps.store_credentials.outputs.enabled == 'true' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-release.outputs.source_commit }}
+          fetch-depth: 1
+
       - name: Download signed Debian packages
         if: ${{ steps.store_credentials.outputs.enabled == 'true' }}
         uses: actions/download-artifact@v4
         with:
           name: signed-release-assets
           path: signed-release-assets
-
-      - name: Checkout repository for UOS note extraction
-        if: ${{ steps.store_credentials.outputs.enabled == 'true' }}
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
 
       - name: Download release notes
         if: ${{ steps.store_credentials.outputs.enabled == 'true' }}

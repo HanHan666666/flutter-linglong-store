@@ -3,122 +3,36 @@ import 'dart:convert';
 import '../../domain/models/installed_app.dart';
 import '../../domain/models/running_app.dart';
 
-/// CLI 输出解析器
+/// ll-cli JSON 输出解析器
+///
+/// 本文件只负责把 `ll-cli --json` 的结构化输出转换为领域模型。
+/// 文本表格输出不再作为业务输入，避免不同 linyaps 版本的列宽、表头和本地化文案
+/// 影响列表、搜索、进程和安装状态判断的稳定性。
 class CliOutputParser {
   CliOutputParser._();
 
-  /// 解析已安装应用列表
+  /// 解析已安装应用列表。
   ///
-  /// ll-cli list 输出格式示例：
-  /// ```
-  /// AppID                     Version    Arch    Channel    Size
-  /// com.tencent.wechat        4.0.0      x86_64  stable     256M
-  /// cn.wps.wps-office         11.1.0     x86_64  stable     512M
-  /// ```
+  /// 仅接受 `ll-cli list --json` 返回的顶层数组；解析失败时返回空列表，
+  /// 由调用方根据命令退出码决定是否展示环境异常。
   static List<InstalledApp> parseInstalledApps(String output) {
-    final sanitizedOutput = _stripAnsi(output).trim();
+    final sanitizedOutput = output.trim();
     if (sanitizedOutput.isEmpty) {
       return const [];
     }
 
-    // 优先解析 ll-cli 的 JSON 输出；这是当前仓库对齐旧版 Rust 商店的首选路径。
-    final jsonApps = _parseInstalledAppsFromJson(sanitizedOutput);
-    if (jsonApps != null) {
-      return jsonApps;
-    }
-
-    final List<InstalledApp> apps = [];
-    final lines = sanitizedOutput.split('\n');
-
-    bool headerFound = false;
-    for (final line in lines) {
-      final trimmed = line.trim();
-      if (trimmed.isEmpty) continue;
-
-      // 跳过表头
-      if (!headerFound) {
-        final lowerTrimmed = trimmed.toLowerCase();
-        if (lowerTrimmed.contains('appid') ||
-            (lowerTrimmed.contains('id') && lowerTrimmed.contains('version'))) {
-          headerFound = true;
-        }
-        continue;
-      }
-
-      // 解析行数据
-      // 尝试多种格式
-      final app = _parseInstalledAppLine(trimmed);
-      if (app != null) {
-        apps.add(app);
-      }
-    }
-
-    return apps;
+    return _parseInstalledAppsFromJson(sanitizedOutput);
   }
 
-  /// 解析单行已安装应用数据
-  static InstalledApp? _parseInstalledAppLine(String line) {
-    final normalizedLine = _stripAnsi(line).trim();
-    if (normalizedLine.isEmpty) return null;
-
-    // 当前 ll-cli 的表格输出使用 2 个及以上空格分隔列；
-    // 这样既能兼容名字/描述中包含空格的情况，也能兼容旧表头格式。
-    final parts = normalizedLine
-        .split(RegExp(r'\s{2,}'))
-        .map((part) => part.trim())
-        .where((part) => part.isNotEmpty)
-        .toList();
-    if (parts.length < 2) return null;
-
-    final appId = parts[0];
-    final hasCurrentTableLayout =
-        parts.length >= 5 && !_looksLikeVersion(parts[1]);
-
-    final name = hasCurrentTableLayout
-        ? parts[1]
-        : _extractNameFromAppId(appId);
-    final version = parts.length > (hasCurrentTableLayout ? 2 : 1)
-        ? parts[hasCurrentTableLayout ? 2 : 1]
-        : '';
-    final arch = hasCurrentTableLayout
-        ? ''
-        : (parts.length > 2 ? parts[2] : '');
-    final channel = hasCurrentTableLayout
-        ? (parts.length > 3 ? parts[3] : '')
-        : (parts.length > 3 ? parts[3] : '');
-    final module = hasCurrentTableLayout
-        ? (parts.length > 4 ? parts[4] : '')
-        : null;
-    final description = hasCurrentTableLayout && parts.length > 5
-        ? parts[5]
-        : null;
-    final size = hasCurrentTableLayout
-        ? null
-        : (parts.length > 4 ? parts[4] : '');
-
-    if (appId.isEmpty) return null;
-
-    return InstalledApp(
-      appId: appId,
-      name: name,
-      version: version,
-      arch: arch,
-      channel: channel,
-      size: size,
-      module: module,
-      description: description,
-    );
-  }
-
-  /// 解析 ll-cli list --json 输出。
+  /// 解析 `ll-cli list --json` 输出。
   ///
   /// 字段结构与旧版 Rust 商店保持一致：`arch`/`size` 可能是字符串、数字或数组，
   /// 因此这里做宽松解析，避免因为字段类型变化导致安装列表富化链路中断。
-  static List<InstalledApp>? _parseInstalledAppsFromJson(String output) {
+  static List<InstalledApp> _parseInstalledAppsFromJson(String output) {
     try {
       final decoded = jsonDecode(output);
       if (decoded is! List<dynamic>) {
-        return null;
+        return const [];
       }
 
       return decoded
@@ -127,11 +41,18 @@ class CliOutputParser {
           .whereType<InstalledApp>()
           .toList();
     } catch (_) {
-      return null;
+      return const [];
     }
   }
 
-  static InstalledApp? _mapInstalledAppFromJson(Map<String, dynamic> json) {
+  /// 将单个应用 JSON 对象转换为已安装应用模型。
+  ///
+  /// `repoName` 在 `search --json` 分组对象里可能只体现在父级仓库名上，
+  /// 因此允许调用方传入 `fallbackRepoName` 作为缺省仓库来源。
+  static InstalledApp? _mapInstalledAppFromJson(
+    Map<String, dynamic> json, {
+    String? fallbackRepoName,
+  }) {
     final appId = (json['appId'] ?? json['appid'] ?? json['id'])?.toString();
     final name = json['name']?.toString();
     final version = json['version']?.toString();
@@ -151,10 +72,17 @@ class CliOutputParser {
       module: json['module']?.toString(),
       runtime: json['runtime']?.toString(),
       size: _normalizeValue(json['size']),
-      repoName: json['repoName']?.toString() ?? json['repo_name']?.toString(),
+      repoName:
+          json['repoName']?.toString() ??
+          json['repo_name']?.toString() ??
+          fallbackRepoName,
     );
   }
 
+  /// 归一化架构字段。
+  ///
+  /// linyaps JSON 中 `arch` 可为字符串或数组；领域层当前保存为字符串，
+  /// 因此这里保留所有非空架构并用逗号连接，避免丢失多架构信息。
   static String? _normalizeArch(Object? value) {
     if (value == null) return null;
     if (value is String) return value;
@@ -169,6 +97,10 @@ class CliOutputParser {
     return value.toString();
   }
 
+  /// 归一化 JSON 标量或数组值。
+  ///
+  /// `size` 等字段在不同版本里可能是数字、字符串或数组，统一转换为
+  /// 可展示和可缓存的字符串形式。
   static String? _normalizeValue(Object? value) {
     if (value == null) return null;
     if (value is List) {
@@ -182,235 +114,166 @@ class CliOutputParser {
     return value.toString();
   }
 
-  static String _stripAnsi(String input) {
-    return input.replaceAll(RegExp(r'\x1B\[[0-9;]*m'), '');
-  }
-
-  static bool _looksLikeVersion(String value) {
-    return RegExp(r'^\d+(?:\.\d+)*(?:[-+._][A-Za-z0-9]+)*$').hasMatch(value);
-  }
-
-  /// 从 AppID 提取应用名称
-  static String _extractNameFromAppId(String appId) {
-    // 格式: com.vendor.appname -> appname
-    final parts = appId.split('.');
-    if (parts.length >= 3) {
-      return parts.sublist(2).join('.');
-    }
-    return appId;
-  }
-
-  /// 解析运行中进程列表
+  /// 解析运行中进程列表。
   ///
-  /// ll-cli ps 输出格式示例：
-  /// ```
-  /// App              ContainerID   Pid
-  /// org.deepin.calculator  abcdef123456  12345
-  /// ```
+  /// 仅接受 `ll-cli --json ps` 的结构化输出。不同 linyaps 版本可能返回
+  /// 顶层数组，也可能包在 `apps`/`processes`/`data` 字段中。
   static List<RunningApp> parseRunningApps(String output) {
-    final List<RunningApp> apps = [];
-    final lines = output.split('\n');
-
-    bool headerFound = false;
-    for (final line in lines) {
-      final trimmed = _stripAnsi(line).trim();
-      if (trimmed.isEmpty) continue;
-
-      // 跳过表头
-      if (!headerFound) {
-        final lowerHeader = trimmed.toLowerCase();
-        if (lowerHeader.contains('container') && lowerHeader.contains('pid')) {
-          headerFound = true;
-        }
-        continue;
-      }
-
-      // 解析行数据: APPID CONTAINER_ID PID
-      final match = RegExp(r'^(\S+)\s+(\S+)\s+(\d+)$').firstMatch(trimmed);
-
-      if (match != null) {
-        final appId = match.group(1)!;
-        final containerId = match.group(2)!;
-        final pid = int.tryParse(match.group(3)!) ?? 0;
-
-        if (pid > 0 && appId.isNotEmpty && containerId.isNotEmpty) {
-          apps.add(
-            RunningApp(
-              id: containerId,
-              appId: appId,
-              name: appId,
-              version: '',
-              arch: '',
-              channel: '',
-              source: '',
-              pid: pid,
-              containerId: containerId,
-            ),
-          );
-        }
-      }
+    final trimmed = output.trim();
+    if (trimmed.isEmpty) {
+      return const [];
     }
 
-    return apps;
+    try {
+      final decoded = jsonDecode(trimmed);
+      final entries = switch (decoded) {
+        List<dynamic>() => decoded,
+        Map<String, dynamic>() =>
+          decoded['apps'] ?? decoded['processes'] ?? decoded['data'],
+        _ => null,
+      };
+
+      if (entries is! List<dynamic>) {
+        return const [];
+      }
+
+      return entries
+          .whereType<Map<String, dynamic>>()
+          .map(_mapRunningAppFromJson)
+          .whereType<RunningApp>()
+          .toList();
+    } catch (_) {
+      return const [];
+    }
   }
 
-  /// 解析搜索结果
+  /// 将单个进程 JSON 对象转换为运行中应用模型。
   ///
-  /// ll-cli search 输出格式与 list 类似
+  /// `ll-cli --json ps` 的字段名在现有用例中存在大小写差异，
+  /// 这里只兼容明确的 JSON 字段别名，不再解析任何文本列。
+  static RunningApp? _mapRunningAppFromJson(Map<String, dynamic> json) {
+    final explicitAppId =
+        json['app']?.toString() ??
+        json['appId']?.toString() ??
+        json['appid']?.toString();
+    final packageRef = json['package']?.toString();
+    final explicitContainerId =
+        json['containerId']?.toString() ??
+        json['containerID']?.toString() ??
+        json['container_id']?.toString() ??
+        json['container']?.toString();
+    final id = json['id']?.toString();
+    final appId =
+        explicitAppId ??
+        _extractAppIdFromPackage(packageRef) ??
+        (explicitContainerId != null ? id : null);
+    final containerId =
+        explicitContainerId ??
+        ((explicitAppId != null || packageRef != null) ? id : null);
+    final pid = _parseInt(json['pid']);
+
+    if (appId == null ||
+        appId.isEmpty ||
+        containerId == null ||
+        containerId.isEmpty ||
+        pid == null ||
+        pid <= 0) {
+      return null;
+    }
+
+    return RunningApp(
+      id: containerId,
+      appId: appId,
+      name: appId,
+      version: '',
+      arch: '',
+      channel: '',
+      source: '',
+      pid: pid,
+      containerId: containerId,
+    );
+  }
+
+  /// 从 `ll-cli --json ps` 的 package 引用提取应用 ID。
+  ///
+  /// linyaps 1.12.2 返回形如 `main:com.qq.wemeet/3.26.10.404/x86_64`
+  /// 的 package 字段，其中冒号前是仓库或 channel，斜杠后是版本和架构。
+  static String? _extractAppIdFromPackage(String? packageRef) {
+    if (packageRef == null || packageRef.isEmpty) {
+      return null;
+    }
+    final withoutChannel = packageRef.contains(':')
+        ? packageRef.substring(packageRef.indexOf(':') + 1)
+        : packageRef;
+    final slashIndex = withoutChannel.indexOf('/');
+    final appId = slashIndex >= 0
+        ? withoutChannel.substring(0, slashIndex)
+        : withoutChannel;
+    return appId.isEmpty ? null : appId;
+  }
+
+  /// 解析整数 JSON 字段。
+  ///
+  /// `pid` 可能由测试桩或不同 CLI 版本以数字或字符串形式返回，
+  /// 这里统一转换并拒绝无法解析的值。
+  static int? _parseInt(Object? value) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    return int.tryParse(value?.toString() ?? '');
+  }
+
+  /// 解析搜索结果。
+  ///
+  /// `ll-cli search <appId> --json` 在 linyaps 1.12.2 中返回按仓库名分组的
+  /// JSON 对象，如 `{"stable":[...]}`。解析时将父级仓库名写入 `repoName`，
+  /// 供版本列表继续保持精确身份。
   static List<InstalledApp> parseSearchResults(String output) {
-    return parseInstalledApps(output);
-  }
-
-  /// 解析应用信息
-  ///
-  /// ll-cli query 输出格式：
-  /// ```
-  /// AppID: com.tencent.wechat
-  /// Name: WeChat
-  /// Version: 4.0.0
-  /// ...
-  /// ```
-  static Map<String, String> parseAppInfo(String output) {
-    final info = <String, String>{};
-    final lines = output.split('\n');
-
-    for (final line in lines) {
-      final colonIndex = line.indexOf(':');
-      if (colonIndex > 0) {
-        final key = line.substring(0, colonIndex).trim();
-        final value = line.substring(colonIndex + 1).trim();
-        info[key.toLowerCase()] = value;
-      }
+    final trimmed = output.trim();
+    if (trimmed.isEmpty) {
+      return const [];
     }
 
-    return info;
-  }
-
-  /// 解析安装进度输出
-  ///
-  /// 支持格式：
-  /// - "downloading... 50%"
-  /// - "installing... 80%"
-  /// - "Downloading xx%"
-  /// - "Installing..."
-  /// - "Downloaded xx/yy MB"
-  /// - "complete"
-  /// - "success"
-  static InstallProgressInfo parseInstallProgress(String line) {
-    final info = InstallProgressInfo(rawLine: line);
-    final lowerLine = line.toLowerCase();
-
-    // 检测下载进度
-    if (lowerLine.contains('download')) {
-      info.phase = InstallPhase.downloading;
-
-      // 尝试解析百分比 (CLI 输出 0-100 范围，归一化为 0.0-1.0)
-      final percentMatch = RegExp(r'(\d+(?:\.\d+)?)\s*%').firstMatch(line);
-      if (percentMatch != null) {
-        info.progress = (double.tryParse(percentMatch.group(1)!) ?? 0.0) / 100;
+    try {
+      final decoded = jsonDecode(trimmed);
+      if (decoded is List<dynamic>) {
+        return decoded
+            .whereType<Map<String, dynamic>>()
+            .map(_mapInstalledAppFromJson)
+            .whereType<InstalledApp>()
+            .toList();
       }
 
-      // 尝试解析已下载/总大小
-      final sizeMatch = RegExp(
-        r'(\d+(?:\.\d+)?)\s*/\s*(\d+(?:\.\d+)?)',
-      ).firstMatch(line);
-      if (sizeMatch != null) {
-        final downloaded = double.tryParse(sizeMatch.group(1)!) ?? 0;
-        final total = double.tryParse(sizeMatch.group(2)!) ?? 1;
-        if (total > 0) {
-          // downloaded/total 已经是 0-1 范围
-          info.progress = downloaded / total;
+      if (decoded is Map<String, dynamic>) {
+        final results = <InstalledApp>[];
+        for (final entry in decoded.entries) {
+          final apps = entry.value;
+          if (apps is! List<dynamic>) {
+            continue;
+          }
+          for (final appJson in apps.whereType<Map<String, dynamic>>()) {
+            final app = _mapInstalledAppFromJson(
+              appJson,
+              fallbackRepoName: entry.key,
+            );
+            if (app != null) {
+              results.add(app);
+            }
+          }
         }
+        return results;
       }
-
-      // 尝试解析 "downloading... xx%" 格式
-      final downloadingMatch = RegExp(
-        r'downloading[\.…\s]*(\d+(?:\.\d+)?)\s*%',
-        caseSensitive: false,
-      ).firstMatch(line);
-      if (downloadingMatch != null) {
-        info.progress =
-            (double.tryParse(downloadingMatch.group(1)!) ?? 0.0) / 100;
-      }
+    } catch (_) {
+      return const [];
     }
 
-    // 检测安装阶段
-    if (lowerLine.contains('installing') ||
-        lowerLine.contains('unpacking') ||
-        lowerLine.contains('extracting')) {
-      info.phase = InstallPhase.installing;
-
-      // 尝试解析 "installing... xx%" 格式
-      final installingMatch = RegExp(
-        r'installing[\.…\s]*(\d+(?:\.\d+)?)\s*%',
-        caseSensitive: false,
-      ).firstMatch(line);
-      if (installingMatch != null) {
-        info.progress =
-            (double.tryParse(installingMatch.group(1)!) ?? 0.0) / 100;
-      }
-    }
-
-    // 检测完成
-    if (lowerLine.contains('success') ||
-        lowerLine.contains('completed') ||
-        lowerLine.contains('finished') ||
-        lowerLine.contains('complete') ||
-        lowerLine == 'done' ||
-        lowerLine == 'ok') {
-      info.phase = InstallPhase.completed;
-      info.progress = 1.0;
-    }
-
-    // 检测错误
-    if (lowerLine.contains('error') ||
-        lowerLine.contains('failed') ||
-        lowerLine.contains('failure')) {
-      info.phase = InstallPhase.failed;
-      info.errorMessage = line;
-    }
-
-    return info;
+    return const [];
   }
 
-  /// 检测输出是否表示安装完成
-  static bool isInstallComplete(String output) {
-    final lower = output.toLowerCase();
-    return lower.contains('success') ||
-        lower.contains('completed') ||
-        lower.contains('finished') ||
-        lower.contains('installed');
-  }
-
-  /// 检测输出是否表示安装失败
-  static bool isInstallFailed(String output) {
-    final lower = output.toLowerCase();
-    return lower.contains('error') ||
-        lower.contains('failed') ||
-        lower.contains('unable');
-  }
-
-  /// 从错误输出提取错误码
-  static int? extractErrorCode(String output) {
-    // 尝试匹配错误码格式
-    // 例如: "Error code: 123" 或 "E123" 或 "(123)"
-    final patterns = [
-      RegExp(r'error\s*(?:code)?\s*[:\s]*(\d+)', caseSensitive: false),
-      RegExp(r'E(\d{3,})'),
-      RegExp(r'\((\d{3,})\)'),
-    ];
-
-    for (final pattern in patterns) {
-      final match = pattern.firstMatch(output);
-      if (match != null) {
-        return int.tryParse(match.group(1)!);
-      }
-    }
-
-    return null;
-  }
-
-  /// 解析 ll-cli --json 输出的单行 JSON
+  /// 解析 `ll-cli --json` 安装/更新输出的单行 JSON。
   ///
   /// JSON 格式示例：
   /// - Progress: `{"message":"Downloading files","percentage":38.4}`
@@ -424,12 +287,10 @@ class CliOutputParser {
       return null;
     }
 
-    // 尝试解析为 JSON
     Map<String, dynamic>? json;
     try {
       json = jsonDecode(trimmed) as Map<String, dynamic>?;
     } catch (e) {
-      // 非 JSON 行，返回 null
       return null;
     }
 
@@ -439,16 +300,13 @@ class CliOutputParser {
     final percentage = json['percentage'] as num?;
     final code = json['code'] as int?;
 
-    // 根据字段判断事件类型
     if (code != null) {
-      // Error: 包含 code 字段
       return ParsedJsonEvent(
         eventType: JsonEventType.error,
         message: message,
         code: code,
       );
     } else if (percentage != null) {
-      // Progress: 包含 percentage 字段
       return ParsedJsonEvent(
         eventType: JsonEventType.progress,
         message: message,
@@ -463,18 +321,17 @@ class CliOutputParser {
     }
   }
 
-  /// 综合解析安装进度（支持 JSON 和纯文本两种格式）
+  /// 综合解析安装进度。
   ///
-  /// 优先尝试 JSON 解析，失败则回退到纯文本解析
+  /// 仅使用 JSON 事件驱动状态机；非 JSON 输出作为原始日志保留，但不会再
+  /// 推断下载、安装、完成或失败状态，避免普通日志误触发业务状态迁移。
   static InstallProgressInfo parseInstallProgressEx(String line) {
-    // 首先尝试 JSON 解析
     final jsonEvent = parseJsonLine(line);
     if (jsonEvent != null) {
       return _convertJsonEventToProgressInfo(jsonEvent, line);
     }
 
-    // 回退到纯文本解析
-    return parseInstallProgress(line);
+    return InstallProgressInfo(rawLine: line);
   }
 
   /// 将 JSON 事件转换为进度信息

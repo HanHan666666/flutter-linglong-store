@@ -30,7 +30,7 @@ sealed class RunningApp with _$RunningApp {
 
     required int pid,
 
-    /// 容器 ID，来自 `ll-cli ps`。
+    /// 容器 ID，来自 `ll-cli --json ps`。
     required String containerId,
 
     String? icon,

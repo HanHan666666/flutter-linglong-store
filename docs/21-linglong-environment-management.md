@@ -79,6 +79,14 @@
 - 通过 `pkexec bash <temp-script>` 执行保存位置迁移脚本。
 - 修复与迁移日志写入 XDG logs 目录；UI 只展示截断摘要。
 
+`CliOutputParser` 只解析 `ll-cli --json` 结构化输出：
+
+- 已安装列表统一来自 `ll-cli list --json` 或 `ll-cli list --json --type=all`，只接受顶层 JSON 数组。
+- 运行中进程统一来自 `ll-cli --json ps`，只接受 JSON 数组或 `apps/processes/data` 包裹的 JSON 列表；linyaps 1.12.2 的 `id/package/pid` 形态中，`id` 是容器 ID，`package` 形如 `main:appId/version/arch`，需要从 `package` 提取 `appId`。
+- 版本搜索统一来自 `ll-cli search <appId> --json`，按仓库名分组的 JSON 对象需要把父级仓库名写入 `repoName`。
+- 安装/更新进度只由 `install/upgrade --json` 的 JSON line 驱动状态机；非 JSON 行仅保留为原始日志，不再推断下载、安装、完成或失败状态。
+- 禁止在 `CliOutputParser` 中重新添加文本表格、冒号键值或安装进度纯文本兜底；需要兼容新字段时应先用真实 `ll-cli --json` 输出补充测试。
+
 ### Application
 
 `linglongEnvironmentManagementProvider` 是 UI 唯一状态编排入口：

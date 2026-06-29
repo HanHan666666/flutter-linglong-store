@@ -472,7 +472,7 @@ Seed 数据：构建期预生成 `allapps_default` 的前 3 页。
 
 ### 10.2 数据来源
 
-Rust 命令 `get_running_apps()` → 调用 `ll-cli ps`
+Rust 命令 `get_running_apps()` → Flutter 侧统一调用 `ll-cli --json ps`
 
 ### 10.3 列表项
 

@@ -379,6 +379,74 @@ void main() {
       expect(executor.executeCalls.first, ['--json', 'repo', 'show']);
     });
 
+    test(
+      'getRunningApps uses ll-cli json ps and enriches from list json',
+      () async {
+        final executor = _RecordingCliExecutor()
+          ..executeOutputsByCommand['--json ps'] = const CliOutput(
+            stdout:
+                '[{"app":"org.deepin.calculator","containerId":"abc123","pid":1234}]',
+            stderr: '',
+            exitCode: 0,
+          )
+          ..executeOutputsByCommand['list --json --type=all'] = const CliOutput(
+            stdout:
+                '[{"id":"org.deepin.calculator","name":"deepin-calculator","version":"6.5.34.1","arch":["x86_64"],"channel":"main","runtime":"main:org.deepin.runtime.dtk/25.2.2/x86_64"}]',
+            stderr: '',
+            exitCode: 0,
+          );
+        final repository = LinglongCliRepositoryImpl.withExecutor(
+          InstallMessages.fromLocale(const Locale('zh')),
+          execute: executor.execute,
+          executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+          cancelWithSystemKill: executor.cancelWithSystemKill,
+        );
+
+        final runningApps = await repository.getRunningApps();
+
+        expect(runningApps, hasLength(1));
+        expect(runningApps.single.id, 'abc123');
+        expect(runningApps.single.appId, 'org.deepin.calculator');
+        expect(runningApps.single.name, 'deepin-calculator');
+        expect(runningApps.single.version, '6.5.34.1');
+        expect(runningApps.single.arch, 'x86_64');
+        expect(runningApps.single.channel, 'main');
+        expect(runningApps.single.source, 'main');
+        expect(runningApps.single.pid, 1234);
+        expect(executor.executeCalls, [
+          ['--json', 'ps'],
+          ['list', '--json', '--type=all'],
+        ]);
+      },
+    );
+
+    test('searchVersions uses ll-cli search json output', () async {
+      final executor = _RecordingCliExecutor()
+        ..executeOutputsByCommand['search org.deepin.calculator --json'] =
+            const CliOutput(
+              stdout:
+                  '{"stable":[{"id":"org.deepin.calculator","name":"deepin-calculator","version":"6.5.34.1","arch":["x86_64"],"channel":"main","module":"binary"}]}',
+              stderr: '',
+              exitCode: 0,
+            );
+      final repository = LinglongCliRepositoryImpl.withExecutor(
+        InstallMessages.fromLocale(const Locale('zh')),
+        execute: executor.execute,
+        executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+        cancelWithSystemKill: executor.cancelWithSystemKill,
+      );
+
+      final versions = await repository.searchVersions('org.deepin.calculator');
+
+      expect(versions, hasLength(1));
+      expect(versions.single.appId, 'org.deepin.calculator');
+      expect(versions.single.version, '6.5.34.1');
+      expect(versions.single.repoName, 'stable');
+      expect(executor.executeCalls, [
+        ['search', 'org.deepin.calculator', '--json'],
+      ]);
+    });
+
     test('getRepositoryConfig falls back to ansi colored text output', () async {
       final executor = _RecordingCliExecutor()
         ..executeOutputsByCommand['--json repo show'] = const CliOutput(

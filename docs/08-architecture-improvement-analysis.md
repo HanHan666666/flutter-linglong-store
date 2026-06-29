@@ -206,12 +206,13 @@ Rust 版本的状态机是枚举 + match，Dart 版选择了用类 + 字段来 1
 
 `process_manager.dart` 307 行，提供：
 
-- `getRunningApps()` — 解析 `ll-cli ps` 输出
+- `getRunningApps()` — 解析 `ll-cli --json ps` 输出
 - `killApp()` / `prune()` — 进程管理
 
 但实际的 CLI 操作使用 `LinglongCliRepositoryImpl` → `CliExecutor`，不调用 `ProcessManager`。
 
-`ProcessManager` 有自己独立的 `_parsePsOutput()` 正则解析逻辑，而 `CliOutputParser` 已经做了同样的事。
+`ProcessManager` 有自己独立的 `_parsePsOutput()` 正则解析逻辑；当前有效链路已经收敛到
+`CliOutputParser` 的 JSON 解析，禁止重新引入文本表格正则解析。
 
 ### 应该做的
 

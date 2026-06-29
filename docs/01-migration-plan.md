@@ -144,7 +144,7 @@
 
 | 命令 | 系统调用 | 超时 |
 |------|----------|------|
-| `get_running_linglong_apps` | `ll-cli ps` + `ll-cli list --json --type=all` | 30s×2 |
+| `get_running_linglong_apps` | `ll-cli --json ps` + `ll-cli list --json --type=all` | 30s×2 |
 | `kill_linglong_app` | `ll-cli kill -s 9 {name}` ×5 | 30s×N |
 | `get_installed_linglong_apps` | `ll-cli list --json [--type=all]` | 30s |
 | `uninstall_app` | `ll-cli uninstall {id}/{ver}` | 30s |

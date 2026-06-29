@@ -83,7 +83,7 @@ Phase 0        Phase 1        Phase 2        Phase 3        Phase 4
 
 - [ ] 实现 `CliExecutor`（`dart:io Process` 封装）
 - [ ] 实现 `ll-cli list --json` 解析
-- [ ] 实现 `ll-cli ps` 解析
+- [ ] 实现 `ll-cli --json ps` 解析
 - [ ] 实现 `ll-cli run` / `ll-cli kill`
 - [ ] 实现安装/卸载/更新命令（流式进度解析）
 - [ ] 输入参数校验 & 超时控制（30s 默认）

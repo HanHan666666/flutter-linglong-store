@@ -18,15 +18,17 @@
 统一由 [linglong_cli_repository_impl.dart](/home/han/linglong-store/flutter-linglong-store/lib/data/repositories/linglong_cli_repository_impl.dart) 获取。
 
 ### 1. 运行中进程
-- 命令：`ll-cli ps`
+- 命令：`ll-cli --json ps`
 - 用途：获取运行中的 `appId / containerId / pid`
+- 解析约束：仅解析 JSON 数组或 `apps/processes/data` 包裹的 JSON 列表，禁止回退解析文本表格输出。
+- 字段兼容：linyaps 1.12.2 可能返回 `id/package/pid`，其中 `id` 是容器 ID，`package` 形如 `main:appId/version/arch`，需要从 `package` 提取 `appId` 后再和已安装详情合并。
 
 ### 2. 已安装详情
 - 命令：`ll-cli list --json --type=all`
 - 用途：补齐运行中条目的 `name / version / arch / channel / source / icon`
 
 ### 3. 合并规则
-- 先解析 `ps`
+- 先解析 `--json ps`
 - 再按 `appId` 与安装详情合并
 - 避免对每个进程单独执行外部命令
 
@@ -127,13 +129,14 @@
 
 ## 与 Rust 迁移对齐点
 - 双 Tab 入口位置一致
-- 进程列表数据由 `ps + list --json --type=all` 合并
+- 进程列表数据由 `--json ps + list --json --type=all` 合并
 - 轮询、失败退避、恢复可见补刷新、行级停止 loading 保持一致
 - 右键菜单和更多按钮共用一套动作定义
 
 ## 验证建议
 - 启动一个真实玲珑应用，例如 `org.deepin.calculator`
 - 确认进程 Tab 能显示条目
+- 真实命令验证必须覆盖 `ll-cli --json ps`，确认输出为空数组、`app/containerId/pid` 字段条目，或 `id/package/pid` 字段条目
 - 验证右键菜单复制动作
 - 验证停止进程后列表实时消失
 - 验证切换离开 Tab 后轮询停止，切回来后自动补刷新

@@ -226,8 +226,7 @@ class LinglongCliRepositoryImpl
           );
           return;
         } else if (progressInfo.phase == InstallPhase.failed) {
-          final errorCode =
-              jsonEvent?.code ?? CliOutputParser.extractErrorCode(event.line);
+          final errorCode = jsonEvent?.code;
           final errorDetail = rawMessage.isNotEmpty
               ? rawMessage
               : (progressInfo.errorMessage ?? event.line).trim();
@@ -621,7 +620,7 @@ class LinglongCliRepositoryImpl
   @override
   Future<List<RunningApp>> getRunningApps() async {
     try {
-      final psOutput = await _execute(['ps'], timeout: kQueryTimeout);
+      final psOutput = await _execute(['--json', 'ps'], timeout: kQueryTimeout);
 
       if (!psOutput.success) {
         AppLogger.warning(
@@ -960,7 +959,11 @@ class LinglongCliRepositoryImpl
   @override
   Future<List<InstalledApp>> searchVersions(String appId) async {
     try {
-      final output = await _execute(['search', appId], timeout: kQueryTimeout);
+      final output = await _execute([
+        'search',
+        appId,
+        '--json',
+      ], timeout: kQueryTimeout);
 
       if (!output.success) {
         return [];

@@ -81,7 +81,7 @@
    - appDisplay 名称/描述回退
 3. **CLI Parsers**
    - `ll-cli list --json`
-   - `ll-cli ps`
+   - `ll-cli --json ps`
    - 安装进度 JSON line parser
    - 环境检测输出解析
 4. **Repositories / Services**

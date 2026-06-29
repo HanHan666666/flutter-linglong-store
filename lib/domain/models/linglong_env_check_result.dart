@@ -55,6 +55,25 @@ sealed class LinglongEnvCheckResult with _$LinglongEnvCheckResult {
     /// repo 状态
     @Default(RepoStatus.unknown) RepoStatus repoStatus,
 
+    /// 导致环境检测失败的用户可读命令。
+    ///
+    /// 该字段用于把“命令执行失败”和“业务数据为空”区分开；
+    /// 启动期仓库读取失败时会记录为 `ll-cli --json repo show`，
+    /// UI 可据此向用户说明失败的是仓库读取命令，而不是仓库一定没有配置。
+    String? failedCommand,
+
+    /// 失败命令退出码。
+    ///
+    /// 退出码本身不直接决定 UI 文案，但保留它能帮助日志、测试和后续诊断
+    /// 精确还原底层命令状态，避免只依赖模糊错误文案。
+    int? failedCommandExitCode,
+
+    /// 推荐的环境恢复动作。
+    ///
+    /// 该字段只表达“当前诊断建议用户执行什么动作”，不携带命令文本；
+    /// 具体命令仍由 Application/Service 层受控封装。
+    LinglongEnvRecoveryAction? recoveryAction,
+
     /// 错误消息
     String? errorMessage,
 
@@ -100,6 +119,15 @@ enum RepoStatus {
   unavailable,
 }
 
+/// 玲珑环境检测推荐恢复动作。
+enum LinglongEnvRecoveryAction {
+  /// 重启系统级玲珑包管理器 D-Bus 服务。
+  ///
+  /// `ll-cli --json repo show` 需要通过该服务读取仓库配置；服务未运行时，
+  /// `ll-cli` 本身可能可用，但仓库读取仍会失败。
+  restartPackageManagerService,
+}
+
 /// LinglongEnvCheckResult 扩展方法
 extension LinglongEnvCheckResultX on LinglongEnvCheckResult {
   /// 是否有严重错误（无法继续）
@@ -112,9 +140,17 @@ extension LinglongEnvCheckResultX on LinglongEnvCheckResult {
   String get statusDescription {
     if (isOk && warningMessage != null) return '环境正常（建议升级）';
     if (isOk) return '环境正常';
+    if (recoveryAction ==
+        LinglongEnvRecoveryAction.restartPackageManagerService) {
+      return '仓库配置读取失败';
+    }
     if (llCliVersion == null) return 'll-cli 不可用';
     return '环境异常';
   }
+
+  /// 是否建议用户重启玲珑包管理器服务。
+  bool get shouldSuggestPackageManagerRestart =>
+      recoveryAction == LinglongEnvRecoveryAction.restartPackageManagerService;
 
   /// 是否存在发行版特殊适配。
   ///

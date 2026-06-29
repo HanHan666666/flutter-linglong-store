@@ -351,6 +351,30 @@
   "llCliVersion": "ll-cli 版本",
   "notDetected": "未检测到",
   "errorMessage": "错误信息",
+  "repoShowFailureTitle": "仓库读取命令执行失败",
+  "repoShowFailureCommand": "执行 {command} 读取玲珑仓库配置失败。",
+  "@repoShowFailureCommand": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "repoShowFailureReason": "该命令需要通过系统服务 org.deepin.linglong.PackageManager.service 读取仓库配置；服务未运行时会返回失败。",
+  "repoShowFailureInstalledQuestion": "已经安装好了应用环境？",
+  "repoShowFailureRestartHint": "如果已经安装 ll-cli 和应用环境，可以尝试重启该系统服务后重新检测。",
+  "restartPackageManagerService": "尝试重启 org.deepin.linglong.PackageManager.service",
+  "restartingPackageManagerService": "正在重启 org.deepin.linglong.PackageManager.service...",
+  "packageManagerServiceRestartPassed": "服务已重启，环境检测通过",
+  "packageManagerServiceRestartStillFailed": "服务已重启，但环境仍异常，请查看错误信息",
+  "packageManagerServiceRestartFailed": "服务重启失败: {error}",
+  "@packageManagerServiceRestartFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "installingLinglong": "正在安装...",
   "openInstallLogDirectory": "打开日志目录",
   "cannotOpenDirectory": "无法打开目录: {path}",

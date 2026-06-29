@@ -95,6 +95,45 @@ void main() {
       expect(opener.openedDirectories, ['/tmp/install-logs']);
     },
   );
+
+  testWidgets(
+    'shows package manager restart hint when repo show command fails',
+    (tester) async {
+      final env = _RepoShowFailureLinglongEnv();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [linglongEnvProvider.overrideWith(() => env)],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: Center(child: LinglongEnvDialog())),
+          ),
+        ),
+      );
+
+      expect(find.text('仓库读取命令执行失败'), findsOneWidget);
+      expect(find.text('已经安装好了应用环境？'), findsOneWidget);
+      expect(find.textContaining('ll-cli --json repo show'), findsWidgets);
+      expect(
+        find.text('尝试重启 org.deepin.linglong.PackageManager.service'),
+        findsOneWidget,
+      );
+
+      final restartButton = find.widgetWithText(
+        TextButton,
+        '尝试重启 org.deepin.linglong.PackageManager.service',
+      );
+      await tester.ensureVisible(restartButton);
+      await tester.pumpAndSettle();
+      await tester.tap(restartButton);
+      await tester.pump();
+
+      expect(env.restartPackageManagerServiceCallCount, 1);
+    },
+  );
 }
 
 class _InstallingLinglongEnv extends LinglongEnv {
@@ -142,6 +181,35 @@ class _PlainDistroLinglongEnv extends LinglongEnv {
         checkedAt: 1,
       ),
     );
+  }
+}
+
+class _RepoShowFailureLinglongEnv extends LinglongEnv {
+  int restartPackageManagerServiceCallCount = 0;
+
+  @override
+  LinglongEnvState build() {
+    return const LinglongEnvState(
+      checkState: LinglongEnvCheckState.failed,
+      result: LinglongEnvCheckResult(
+        isOk: false,
+        errorMessage: '无法通过 ll-cli --json repo show 读取玲珑仓库配置',
+        errorDetail:
+            'll-cli --json repo show 执行失败（exitCode=255）：org.deepin.linglong.PackageManager unavailable',
+        repoStatus: RepoStatus.unavailable,
+        failedCommand: 'll-cli --json repo show',
+        failedCommandExitCode: 255,
+        recoveryAction: LinglongEnvRecoveryAction.restartPackageManagerService,
+        checkedAt: 1,
+      ),
+    );
+  }
+
+  @override
+  Future<bool> restartPackageManagerServiceAndRecheck() async {
+    restartPackageManagerServiceCallCount++;
+    state = state.copyWith(serviceRestartMessage: 'pkexec denied');
+    return false;
   }
 }
 

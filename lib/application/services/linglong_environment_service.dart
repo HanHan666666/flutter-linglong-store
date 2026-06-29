@@ -40,6 +40,9 @@ class LinglongEnvironmentService {
     'LC_MESSAGES': 'C.UTF-8',
   };
 
+  static const String _packageManagerServiceName =
+      'org.deepin.linglong.PackageManager.service';
+
   Future<LinglongEnvCheckResult> checkEnvironment() async {
     final checkedAt = _clock();
 
@@ -84,7 +87,11 @@ class LinglongEnvironmentService {
         kernelInfo: kernelInfo,
         detailMsg: detailMsg,
         distribution: distribution,
-        errorMessage: '未检测到玲珑仓库配置，请检查环境',
+        errorMessage: _buildRepoErrorMessage(repoInfo.status),
+        errorDetail: repoInfo.failureDetail,
+        failedCommand: repoInfo.failedCommand,
+        failedCommandExitCode: repoInfo.failedCommandExitCode,
+        recoveryAction: repoInfo.recoveryAction,
         repoStatus: repoInfo.status,
         checkedAt: checkedAt,
       );
@@ -250,23 +257,67 @@ class LinglongEnvironmentService {
             ? parsed.copyWith(status: RepoStatus.notConfigured)
             : parsed.copyWith(status: RepoStatus.ok);
       }
-
-      final textFallback = _parseRepoText(jsonResult.stdout);
-      if (textFallback.repos.isNotEmpty) {
-        return textFallback.copyWith(status: RepoStatus.ok);
-      }
+      return const _RepoInfo(
+        status: RepoStatus.misconfigured,
+        failedCommand: 'll-cli --json repo show',
+        failedCommandExitCode: 0,
+        failureDetail: 'll-cli --json repo show 输出解析失败',
+      );
     }
 
-    final textResult = await _runLlCli(['repo', 'show']);
-    if (textResult != null && textResult.success) {
-      final parsed = _parseRepoText(textResult.stdout);
-      if (parsed.repos.isNotEmpty) {
-        return parsed.copyWith(status: RepoStatus.ok);
-      }
-      return parsed.copyWith(status: RepoStatus.notConfigured);
+    const userFacingCommand = 'll-cli --json repo show';
+    return _RepoInfo(
+      status: RepoStatus.unavailable,
+      failedCommand: userFacingCommand,
+      failedCommandExitCode: jsonResult?.exitCode,
+      failureDetail: _buildCommandFailureDetail(userFacingCommand, jsonResult),
+      recoveryAction: LinglongEnvRecoveryAction.restartPackageManagerService,
+    );
+  }
+
+  String _buildRepoErrorMessage(RepoStatus status) {
+    return switch (status) {
+      RepoStatus.unavailable => '无法通过 ll-cli --json repo show 读取玲珑仓库配置',
+      RepoStatus.misconfigured => '无法解析 ll-cli --json repo show 输出',
+      _ => '未检测到玲珑仓库配置，请检查环境',
+    };
+  }
+
+  /// 重启系统级玲珑包管理器服务。
+  ///
+  /// `ll-cli --json repo show` 读取仓库配置时依赖该 D-Bus 服务；这里集中封装
+  /// `pkexec systemctl restart`，避免展示层散写特权命令，也便于测试替换执行器。
+  Future<ShellCommandResult> restartPackageManagerService() async {
+    try {
+      return await _executor.run([
+        'pkexec',
+        'systemctl',
+        'restart',
+        _packageManagerServiceName,
+      ], timeout: const Duration(minutes: 2));
+    } catch (error) {
+      return ShellCommandResult(
+        stdout: '',
+        stderr: error.toString(),
+        exitCode: -1,
+      );
+    }
+  }
+
+  String? _buildCommandFailureDetail(
+    String command,
+    ShellCommandResult? result,
+  ) {
+    if (result == null) {
+      return '$command 执行失败，未返回命令输出';
     }
 
-    return const _RepoInfo(status: RepoStatus.unavailable);
+    final output = result.primaryMessage.trim();
+    final exitCodeText = 'exitCode=${result.exitCode}';
+    if (output.isEmpty) {
+      return '$command 执行失败（$exitCodeText），未返回错误输出';
+    }
+    return '$command 执行失败（$exitCodeText）：$output';
   }
 
   _RepoInfo? _parseRepoJson(String raw) {
@@ -300,38 +351,6 @@ class LinglongEnvironmentService {
     } catch (_) {
       return null;
     }
-  }
-
-  _RepoInfo _parseRepoText(String raw) {
-    final lines = const LineSplitter()
-        .convert(raw)
-        .map((line) => line.trim())
-        .where((line) => line.isNotEmpty)
-        .toList();
-    if (lines.isEmpty) {
-      return const _RepoInfo(status: RepoStatus.notConfigured);
-    }
-
-    final defaultRepo = lines.first.contains(':')
-        ? lines.first.split(':').skip(1).join(':').trim()
-        : null;
-    final repos = <LinglongRepoInfo>[];
-    for (final line in lines.skip(2)) {
-      final parts = line.split(RegExp(r'\s+'));
-      if (parts.isEmpty) {
-        continue;
-      }
-      repos.add(
-        LinglongRepoInfo(
-          name: parts.isNotEmpty ? parts[0] : '',
-          url: parts.length > 1 ? parts[1] : '',
-          alias: parts.length > 2 ? parts[2] : null,
-          priority: parts.length > 3 ? parts[3] : null,
-        ),
-      );
-    }
-
-    return _RepoInfo(defaultRepo: defaultRepo, repos: repos);
   }
 
   Future<String?> _loadLlCliVersion() async {
@@ -449,21 +468,38 @@ class _RepoInfo {
     this.defaultRepo,
     this.repos = const [],
     this.status = RepoStatus.unknown,
+    this.failedCommand,
+    this.failedCommandExitCode,
+    this.failureDetail,
+    this.recoveryAction,
   });
 
   final String? defaultRepo;
   final List<LinglongRepoInfo> repos;
   final RepoStatus status;
+  final String? failedCommand;
+  final int? failedCommandExitCode;
+  final String? failureDetail;
+  final LinglongEnvRecoveryAction? recoveryAction;
 
   _RepoInfo copyWith({
     String? defaultRepo,
     List<LinglongRepoInfo>? repos,
     RepoStatus? status,
+    String? failedCommand,
+    int? failedCommandExitCode,
+    String? failureDetail,
+    LinglongEnvRecoveryAction? recoveryAction,
   }) {
     return _RepoInfo(
       defaultRepo: defaultRepo ?? this.defaultRepo,
       repos: repos ?? this.repos,
       status: status ?? this.status,
+      failedCommand: failedCommand ?? this.failedCommand,
+      failedCommandExitCode:
+          failedCommandExitCode ?? this.failedCommandExitCode,
+      failureDetail: failureDetail ?? this.failureDetail,
+      recoveryAction: recoveryAction ?? this.recoveryAction,
     );
   }
 }

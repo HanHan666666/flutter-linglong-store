@@ -350,6 +350,30 @@
   "llCliVersion": "ll-cli Version",
   "notDetected": "Not Detected",
   "errorMessage": "Error Message",
+  "repoShowFailureTitle": "Repository read command failed",
+  "repoShowFailureCommand": "Failed to read repository configuration with {command}.",
+  "@repoShowFailureCommand": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "repoShowFailureReason": "This command reads repository configuration through the system service org.deepin.linglong.PackageManager.service. It can fail when the service is not running.",
+  "repoShowFailureInstalledQuestion": "Already installed the app environment?",
+  "repoShowFailureRestartHint": "If ll-cli and the app environment are already installed, try restarting this system service and check again.",
+  "restartPackageManagerService": "Restart org.deepin.linglong.PackageManager.service",
+  "restartingPackageManagerService": "Restarting org.deepin.linglong.PackageManager.service...",
+  "packageManagerServiceRestartPassed": "Service restarted and environment check passed",
+  "packageManagerServiceRestartStillFailed": "Service restarted, but the environment is still abnormal. Check the error details.",
+  "packageManagerServiceRestartFailed": "Service restart failed: {error}",
+  "@packageManagerServiceRestartFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "installingLinglong": "Installing...",
   "openInstallLogDirectory": "Open Log Directory",
   "cannotOpenDirectory": "Cannot open directory: {path}",

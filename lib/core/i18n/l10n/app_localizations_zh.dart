@@ -643,6 +643,44 @@ class AppLocalizationsZh extends AppLocalizations {
   String get errorMessage => '错误信息';
 
   @override
+  String get repoShowFailureTitle => '仓库读取命令执行失败';
+
+  @override
+  String repoShowFailureCommand(String command) {
+    return '执行 $command 读取玲珑仓库配置失败。';
+  }
+
+  @override
+  String get repoShowFailureReason =>
+      '该命令需要通过系统服务 org.deepin.linglong.PackageManager.service 读取仓库配置；服务未运行时会返回失败。';
+
+  @override
+  String get repoShowFailureInstalledQuestion => '已经安装好了应用环境？';
+
+  @override
+  String get repoShowFailureRestartHint =>
+      '如果已经安装 ll-cli 和应用环境，可以尝试重启该系统服务后重新检测。';
+
+  @override
+  String get restartPackageManagerService =>
+      '尝试重启 org.deepin.linglong.PackageManager.service';
+
+  @override
+  String get restartingPackageManagerService =>
+      '正在重启 org.deepin.linglong.PackageManager.service...';
+
+  @override
+  String get packageManagerServiceRestartPassed => '服务已重启，环境检测通过';
+
+  @override
+  String get packageManagerServiceRestartStillFailed => '服务已重启，但环境仍异常，请查看错误信息';
+
+  @override
+  String packageManagerServiceRestartFailed(String error) {
+    return '服务重启失败: $error';
+  }
+
+  @override
   String get installingLinglong => '正在安装...';
 
   @override

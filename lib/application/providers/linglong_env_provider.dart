@@ -39,6 +39,8 @@ class LinglongEnvState {
     this.installProgress = 0.0,
     this.installMessage,
     this.installLogFilePath,
+    this.isRestartingPackageManagerService = false,
+    this.serviceRestartMessage,
     this.wasSkipped = false,
   });
 
@@ -59,6 +61,12 @@ class LinglongEnvState {
 
   /// 安装日志文件路径
   final String? installLogFilePath;
+
+  /// 是否正在重启玲珑包管理器服务
+  final bool isRestartingPackageManagerService;
+
+  /// 包管理器服务重启动作的状态或错误摘要
+  final String? serviceRestartMessage;
 
   /// 是否被用户跳过
   final bool wasSkipped;
@@ -88,10 +96,13 @@ class LinglongEnvState {
     double? installProgress,
     String? installMessage,
     String? installLogFilePath,
+    bool? isRestartingPackageManagerService,
+    String? serviceRestartMessage,
     bool? wasSkipped,
     bool clearResult = false,
     bool clearInstallMessage = false,
     bool clearInstallLogFilePath = false,
+    bool clearServiceRestartMessage = false,
   }) {
     return LinglongEnvState(
       checkState: checkState ?? this.checkState,
@@ -104,6 +115,12 @@ class LinglongEnvState {
       installLogFilePath: clearInstallLogFilePath
           ? null
           : (installLogFilePath ?? this.installLogFilePath),
+      isRestartingPackageManagerService:
+          isRestartingPackageManagerService ??
+          this.isRestartingPackageManagerService,
+      serviceRestartMessage: clearServiceRestartMessage
+          ? null
+          : (serviceRestartMessage ?? this.serviceRestartMessage),
       wasSkipped: wasSkipped ?? this.wasSkipped,
     );
   }
@@ -196,6 +213,55 @@ class LinglongEnv extends _$LinglongEnv {
   /// 重新检测
   Future<LinglongEnvCheckResult> recheck() async {
     return checkEnvironment();
+  }
+
+  /// 重启玲珑包管理器服务并重新检测环境。
+  ///
+  /// 该动作只服务于 `ll-cli --json repo show` 读取仓库配置失败的恢复场景；
+  /// UI 不直接执行 `systemctl`，避免特权命令散落在展示层。
+  Future<bool> restartPackageManagerServiceAndRecheck() async {
+    if (state.isRestartingPackageManagerService) {
+      return false;
+    }
+
+    const serviceName = 'org.deepin.linglong.PackageManager.service';
+    state = state.copyWith(
+      isRestartingPackageManagerService: true,
+      serviceRestartMessage: '正在重启 $serviceName...',
+    );
+
+    try {
+      final restartResult = await ref
+          .read(linglongEnvironmentServiceProvider)
+          .restartPackageManagerService();
+
+      if (!restartResult.success) {
+        final errorMessage = restartResult.primaryMessage.isNotEmpty
+            ? restartResult.primaryMessage
+            : '服务重启失败';
+        state = state.copyWith(
+          isRestartingPackageManagerService: false,
+          serviceRestartMessage: errorMessage,
+        );
+        AppLogger.warning('玲珑包管理器服务重启失败: $errorMessage');
+        return false;
+      }
+
+      state = state.copyWith(serviceRestartMessage: '服务已重启，正在重新检测...');
+      final result = await checkEnvironment();
+      state = state.copyWith(
+        isRestartingPackageManagerService: false,
+        clearServiceRestartMessage: true,
+      );
+      return result.isOk;
+    } catch (e, s) {
+      AppLogger.error('玲珑包管理器服务重启异常', e, s);
+      state = state.copyWith(
+        isRestartingPackageManagerService: false,
+        serviceRestartMessage: e.toString(),
+      );
+      return false;
+    }
   }
 
   /// 跳过环境检测

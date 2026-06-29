@@ -69,7 +69,9 @@ class LinglongEnvDialog extends ConsumerWidget {
       ),
       content: SizedBox(
         width: 420,
-        child: _buildContent(context, ref, envState),
+        child: SingleChildScrollView(
+          child: _buildContent(context, ref, envState),
+        ),
       ),
       actions: envState.isInstalling
           ? null
@@ -131,6 +133,7 @@ class LinglongEnvDialog extends ConsumerWidget {
     }
 
     final distributionGuidance = _resolveDistributionGuidance(context, result);
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -203,7 +206,9 @@ class LinglongEnvDialog extends ConsumerWidget {
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Text(
-                      AppLocalizations.of(context)?.errorMessage ?? '错误信息',
+                      result.shouldSuggestPackageManagerRestart
+                          ? l10n?.repoShowFailureTitle ?? '仓库读取命令执行失败'
+                          : l10n?.errorMessage ?? '错误信息',
                       style: context.appTextStyles.caption.copyWith(
                         color: AppColors.error,
                         fontWeight: context.appFontWeight(FontWeight.w500),
@@ -231,7 +236,146 @@ class LinglongEnvDialog extends ConsumerWidget {
             ),
           ),
         ],
+
+        if (result.shouldSuggestPackageManagerRestart) ...[
+          const SizedBox(height: AppSpacing.md),
+          _buildPackageManagerRestartHint(context, ref, envState, result),
+        ],
       ],
+    );
+  }
+
+  /// 构建包管理器服务重启提示。
+  ///
+  /// 该提示只在 `ll-cli --json repo show` 仓库读取命令失败时展示，
+  /// 展示层不直接执行 `systemctl`，只把用户点击交给 Provider 的受控动作。
+  Widget _buildPackageManagerRestartHint(
+    BuildContext context,
+    WidgetRef ref,
+    LinglongEnvState envState,
+    LinglongEnvCheckResult result,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final command = result.failedCommand ?? 'll-cli --json repo show';
+    final isRestarting = envState.isRestartingPackageManagerService;
+    final restartMessage = envState.serviceRestartMessage;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.info.withValues(alpha: 0.08),
+        borderRadius: AppRadius.smRadius,
+        border: Border.all(color: AppColors.info.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: Icon(Icons.info_outline, color: AppColors.info, size: 18),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n?.repoShowFailureInstalledQuestion ?? '已经安装好了应用环境？',
+                  style: context.appTextStyles.caption.copyWith(
+                    color: context.appColors.textPrimary,
+                    fontWeight: context.appFontWeight(FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  l10n?.repoShowFailureCommand(command) ??
+                      '执行 $command 读取玲珑仓库配置失败。',
+                  style: context.appTextStyles.caption.copyWith(
+                    color: context.appColors.textSecondary,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  l10n?.repoShowFailureReason ??
+                      '该命令需要通过系统服务 org.deepin.linglong.PackageManager.service 读取仓库配置；服务未运行时会返回失败。',
+                  style: context.appTextStyles.caption.copyWith(
+                    color: context.appColors.textSecondary,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  l10n?.repoShowFailureRestartHint ??
+                      '如果已经安装 ll-cli 和应用环境，可以尝试重启该系统服务后重新检测。',
+                  style: context.appTextStyles.caption.copyWith(
+                    color: context.appColors.textSecondary,
+                    height: 1.35,
+                  ),
+                ),
+                if (restartMessage != null) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    restartMessage,
+                    style: context.appTextStyles.tiny.copyWith(
+                      color: context.appColors.textTertiary,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.sm),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: isRestarting
+                        ? null
+                        : () =>
+                              _handleRestartPackageManagerService(context, ref),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.info,
+                      alignment: Alignment.centerLeft,
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 36),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Row(
+                      children: [
+                        if (isRestarting)
+                          const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        else
+                          const Icon(Icons.restart_alt, size: 16),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: Text(
+                            isRestarting
+                                ? l10n?.restartingPackageManagerService ??
+                                      '正在重启 org.deepin.linglong.PackageManager.service...'
+                                : l10n?.restartPackageManagerService ??
+                                      '尝试重启 org.deepin.linglong.PackageManager.service',
+                            softWrap: true,
+                            style: context.appTextStyles.caption.copyWith(
+                              color: isRestarting
+                                  ? context.appColors.textTertiary
+                                  : AppColors.info,
+                              fontWeight: context.appFontWeight(
+                                FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -534,6 +678,49 @@ class LinglongEnvDialog extends ConsumerWidget {
         Navigator.of(context).pop();
       }
     }
+  }
+
+  /// 处理包管理器服务重启。
+  ///
+  /// 用户点击该入口表示已经确认本机安装了玲珑应用环境；
+  /// 具体特权命令由 Provider/Service 受控执行，UI 只负责反馈结果。
+  Future<void> _handleRestartPackageManagerService(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final success = await ref
+        .read(linglongEnvProvider.notifier)
+        .restartPackageManagerServiceAndRecheck();
+
+    if (!context.mounted) {
+      return;
+    }
+
+    final envState = ref.read(linglongEnvProvider);
+    if (success && (envState.result?.isOk ?? false)) {
+      Navigator.of(context).pop();
+      showAppSuccess(
+        context,
+        l10n?.packageManagerServiceRestartPassed ?? '服务已重启，环境检测通过',
+      );
+      return;
+    }
+
+    final restartMessage = envState.serviceRestartMessage;
+    if (restartMessage != null && restartMessage.trim().isNotEmpty) {
+      showAppError(
+        context,
+        l10n?.packageManagerServiceRestartFailed(restartMessage) ??
+            '服务重启失败: $restartMessage',
+      );
+      return;
+    }
+
+    showAppWarning(
+      context,
+      l10n?.packageManagerServiceRestartStillFailed ?? '服务已重启，但环境仍异常，请查看错误信息',
+    );
   }
 
   /// 处理跳过

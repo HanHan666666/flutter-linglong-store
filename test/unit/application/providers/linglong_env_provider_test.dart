@@ -155,23 +155,126 @@ void main() {
         expect(content, contains('install step 2'));
       },
     );
+
+    test(
+      'restartPackageManagerServiceAndRecheck restarts service and refreshes environment',
+      () async {
+        final service = _FakeEnvironmentService.sequence([
+          const LinglongEnvCheckResult(
+            isOk: true,
+            llCliVersion: '1.9.1',
+            repoStatus: RepoStatus.ok,
+            checkedAt: 2,
+          ),
+        ]);
+        final container = ProviderContainer(
+          overrides: [
+            linglongEnvironmentServiceProvider.overrideWithValue(service),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final success = await container
+            .read(linglongEnvProvider.notifier)
+            .restartPackageManagerServiceAndRecheck();
+        final state = container.read(linglongEnvProvider);
+
+        expect(success, isTrue);
+        expect(service.restartPackageManagerServiceCallCount, 1);
+        expect(service.checkEnvironmentCallCount, 1);
+        expect(state.isRestartingPackageManagerService, isFalse);
+        expect(state.serviceRestartMessage, isNull);
+        expect(state.result?.isOk, isTrue);
+      },
+    );
+
+    test(
+      'restartPackageManagerServiceAndRecheck preserves restart error message',
+      () async {
+        final service = _FakeEnvironmentService.sequence(
+          const [
+            LinglongEnvCheckResult(
+              isOk: false,
+              errorMessage: '无法通过 ll-cli --json repo show 读取玲珑仓库配置',
+              repoStatus: RepoStatus.unavailable,
+              checkedAt: 2,
+            ),
+          ],
+          restartResult: const ShellCommandResult(
+            stdout: '',
+            stderr: 'pkexec denied',
+            exitCode: 126,
+          ),
+        );
+        final container = ProviderContainer(
+          overrides: [
+            linglongEnvironmentServiceProvider.overrideWithValue(service),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final success = await container
+            .read(linglongEnvProvider.notifier)
+            .restartPackageManagerServiceAndRecheck();
+        final state = container.read(linglongEnvProvider);
+
+        expect(success, isFalse);
+        expect(service.restartPackageManagerServiceCallCount, 1);
+        expect(service.checkEnvironmentCallCount, 0);
+        expect(state.isRestartingPackageManagerService, isFalse);
+        expect(state.serviceRestartMessage, 'pkexec denied');
+      },
+    );
   });
 }
 
 class _FakeEnvironmentService extends LinglongEnvironmentService {
-  _FakeEnvironmentService(this._result)
-    : super(
-        executor: ShellCommandExecutor(
-          runner: const _FixedShellCommandRunner(
-            ShellCommandResult(stdout: '', stderr: '', exitCode: 0),
-          ),
-        ),
-      );
+  _FakeEnvironmentService(
+    LinglongEnvCheckResult result, {
+    ShellCommandResult restartResult = const ShellCommandResult(
+      stdout: '',
+      stderr: '',
+      exitCode: 0,
+    ),
+  }) : this.sequence([result], restartResult: restartResult);
 
-  final LinglongEnvCheckResult _result;
+  _FakeEnvironmentService.sequence(
+    List<LinglongEnvCheckResult> results, {
+    ShellCommandResult restartResult = const ShellCommandResult(
+      stdout: '',
+      stderr: '',
+      exitCode: 0,
+    ),
+  }) : _results = results,
+       _restartResult = restartResult,
+       assert(results.isNotEmpty),
+       super(
+         executor: ShellCommandExecutor(
+           runner: const _FixedShellCommandRunner(
+             ShellCommandResult(stdout: '', stderr: '', exitCode: 0),
+           ),
+         ),
+       );
+
+  final List<LinglongEnvCheckResult> _results;
+  final ShellCommandResult _restartResult;
+  int checkEnvironmentCallCount = 0;
+  int restartPackageManagerServiceCallCount = 0;
 
   @override
-  Future<LinglongEnvCheckResult> checkEnvironment() async => _result;
+  Future<LinglongEnvCheckResult> checkEnvironment() async {
+    final index = checkEnvironmentCallCount < _results.length
+        ? checkEnvironmentCallCount
+        : _results.length - 1;
+    checkEnvironmentCallCount++;
+    return _results[index];
+  }
+
+  @override
+  Future<ShellCommandResult> restartPackageManagerService() async {
+    restartPackageManagerServiceCallCount++;
+    return _restartResult;
+  }
 }
 
 class _FixedShellCommandRunner implements ShellCommandRunner {

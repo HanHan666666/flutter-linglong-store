@@ -153,6 +153,70 @@ void main() {
     });
 
     test(
+      'returns structured recovery guidance when repo show command fails',
+      () async {
+        final service = LinglongEnvironmentService(
+          executor: ShellCommandExecutor(
+            runner: _FakeShellCommandRunner.fromCommands({
+              'uname -m': const ShellCommandResult(
+                stdout: 'x86_64\n',
+                stderr: '',
+                exitCode: 0,
+              ),
+              'ldd --version': const ShellCommandResult(
+                stdout: 'ldd (GNU libc) 2.36\n',
+                stderr: '',
+                exitCode: 0,
+              ),
+              'uname -a': const ShellCommandResult(
+                stdout: 'Linux test 6.8.0\n',
+                stderr: '',
+                exitCode: 0,
+              ),
+              'bash -c dpkg -l | grep linglong': const ShellCommandResult(
+                stdout: '',
+                stderr: '',
+                exitCode: 1,
+              ),
+              'll-cli --help': const ShellCommandResult(
+                stdout: 'Usage: ll-cli\n',
+                stderr: '',
+                exitCode: 0,
+              ),
+              'll-cli --json repo show': const ShellCommandResult(
+                stdout: '',
+                stderr: 'org.deepin.linglong.PackageManager unavailable',
+                exitCode: 255,
+              ),
+            }),
+          ),
+          osReleaseReader: () async => 'PRETTY_NAME="Deepin 23"\n',
+          environmentReader: (name) => null,
+          clock: () => 789,
+        );
+
+        final result = await service.checkEnvironment();
+
+        expect(result.isOk, isFalse);
+        expect(result.repoStatus, RepoStatus.unavailable);
+        expect(result.statusDescription, '仓库配置读取失败');
+        expect(result.errorMessage, '无法通过 ll-cli --json repo show 读取玲珑仓库配置');
+        expect(result.failedCommand, 'll-cli --json repo show');
+        expect(result.failedCommandExitCode, 255);
+        expect(
+          result.recoveryAction,
+          LinglongEnvRecoveryAction.restartPackageManagerService,
+        );
+        expect(result.errorDetail, contains('ll-cli --json repo show 执行失败'));
+        expect(
+          result.errorDetail,
+          contains('org.deepin.linglong.PackageManager unavailable'),
+        );
+        expect(result.checkedAt, 789);
+      },
+    );
+
+    test(
       'resolves UOS as a structured distribution profile for future adaptations',
       () async {
         final service = LinglongEnvironmentService(

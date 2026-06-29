@@ -672,6 +672,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorMessage => 'Error Message';
 
   @override
+  String get repoShowFailureTitle => 'Repository read command failed';
+
+  @override
+  String repoShowFailureCommand(String command) {
+    return 'Failed to read repository configuration with $command.';
+  }
+
+  @override
+  String get repoShowFailureReason =>
+      'This command reads repository configuration through the system service org.deepin.linglong.PackageManager.service. It can fail when the service is not running.';
+
+  @override
+  String get repoShowFailureInstalledQuestion =>
+      'Already installed the app environment?';
+
+  @override
+  String get repoShowFailureRestartHint =>
+      'If ll-cli and the app environment are already installed, try restarting this system service and check again.';
+
+  @override
+  String get restartPackageManagerService =>
+      'Restart org.deepin.linglong.PackageManager.service';
+
+  @override
+  String get restartingPackageManagerService =>
+      'Restarting org.deepin.linglong.PackageManager.service...';
+
+  @override
+  String get packageManagerServiceRestartPassed =>
+      'Service restarted and environment check passed';
+
+  @override
+  String get packageManagerServiceRestartStillFailed =>
+      'Service restarted, but the environment is still abnormal. Check the error details.';
+
+  @override
+  String packageManagerServiceRestartFailed(String error) {
+    return 'Service restart failed: $error';
+  }
+
+  @override
   String get installingLinglong => 'Installing...';
 
   @override

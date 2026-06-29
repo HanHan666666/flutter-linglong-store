@@ -1268,6 +1268,66 @@ abstract class AppLocalizations {
   /// **'错误信息'**
   String get errorMessage;
 
+  /// No description provided for @repoShowFailureTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库读取命令执行失败'**
+  String get repoShowFailureTitle;
+
+  /// No description provided for @repoShowFailureCommand.
+  ///
+  /// In zh, this message translates to:
+  /// **'执行 {command} 读取玲珑仓库配置失败。'**
+  String repoShowFailureCommand(String command);
+
+  /// No description provided for @repoShowFailureReason.
+  ///
+  /// In zh, this message translates to:
+  /// **'该命令需要通过系统服务 org.deepin.linglong.PackageManager.service 读取仓库配置；服务未运行时会返回失败。'**
+  String get repoShowFailureReason;
+
+  /// No description provided for @repoShowFailureInstalledQuestion.
+  ///
+  /// In zh, this message translates to:
+  /// **'已经安装好了应用环境？'**
+  String get repoShowFailureInstalledQuestion;
+
+  /// No description provided for @repoShowFailureRestartHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'如果已经安装 ll-cli 和应用环境，可以尝试重启该系统服务后重新检测。'**
+  String get repoShowFailureRestartHint;
+
+  /// No description provided for @restartPackageManagerService.
+  ///
+  /// In zh, this message translates to:
+  /// **'尝试重启 org.deepin.linglong.PackageManager.service'**
+  String get restartPackageManagerService;
+
+  /// No description provided for @restartingPackageManagerService.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在重启 org.deepin.linglong.PackageManager.service...'**
+  String get restartingPackageManagerService;
+
+  /// No description provided for @packageManagerServiceRestartPassed.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务已重启，环境检测通过'**
+  String get packageManagerServiceRestartPassed;
+
+  /// No description provided for @packageManagerServiceRestartStillFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务已重启，但环境仍异常，请查看错误信息'**
+  String get packageManagerServiceRestartStillFailed;
+
+  /// No description provided for @packageManagerServiceRestartFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务重启失败: {error}'**
+  String packageManagerServiceRestartFailed(String error);
+
   /// No description provided for @installingLinglong.
   ///
   /// In zh, this message translates to:
@@ -2721,7 +2781,7 @@ abstract class AppLocalizations {
   /// No description provided for @envManagementWarning.
   ///
   /// In zh, this message translates to:
-  /// **'该功能尚不稳定，如无问题请勿使用；遇到问题请谨慎操作。'**
+  /// **'该功能目前仍在完善中，稳定性有限，仅用于测试机。正式办公环境下请勿使用；若操作后出现异常，请勿反复尝试，建议先记录现象再寻求帮助。'**
   String get envManagementWarning;
 
   /// No description provided for @repoManagementHintTitle.

@@ -42,6 +42,8 @@ class LinglongEnvironmentService {
 
   static const String _packageManagerServiceName =
       'org.deepin.linglong.PackageManager.service';
+  static const String _sessionHelperServiceName =
+      'linglong-session-helper.service';
 
   Future<LinglongEnvCheckResult> checkEnvironment() async {
     final checkedAt = _clock();
@@ -285,10 +287,32 @@ class LinglongEnvironmentService {
 
   /// 重启系统级玲珑包管理器服务。
   ///
-  /// `ll-cli --json repo show` 读取仓库配置时依赖该 D-Bus 服务；这里集中封装
-  /// `pkexec systemctl restart`，避免展示层散写特权命令，也便于测试替换执行器。
+  /// `ll-cli --json repo show` 读取仓库配置时依赖系统级 D-Bus 服务；
+  /// 用户级会话辅助服务负责让后续登录会话中的玲珑组件自动就绪。
+  /// 这里集中封装 `systemctl --user` 与 `pkexec systemctl restart`，
+  /// 避免展示层散写特权命令，也便于测试替换执行器。
   Future<ShellCommandResult> restartPackageManagerService() async {
     try {
+      final enableHelperResult = await _executor.run([
+        'systemctl',
+        '--user',
+        'enable',
+        _sessionHelperServiceName,
+      ], timeout: const Duration(minutes: 2));
+      if (!enableHelperResult.success) {
+        return enableHelperResult;
+      }
+
+      final startHelperResult = await _executor.run([
+        'systemctl',
+        '--user',
+        'start',
+        _sessionHelperServiceName,
+      ], timeout: const Duration(minutes: 2));
+      if (!startHelperResult.success) {
+        return startHelperResult;
+      }
+
       return await _executor.run([
         'pkexec',
         'systemctl',

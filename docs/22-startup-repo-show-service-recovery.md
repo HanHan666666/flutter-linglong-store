@@ -25,7 +25,7 @@
 - 不把仓库源重新变成商店业务配置。
 - 不在 Widget 或页面中直接拼接 `systemctl` 命令。
 - 不自动静默重启系统服务；必须由用户点击按钮触发，并通过 `pkexec` 获取授权。
-- 不新增用户级 `linglong-session-helper.service` 的自动 enable/start 行为。本次只处理启动期仓库读取依赖的系统服务 `org.deepin.linglong.PackageManager.service`。
+- 不把用户级 `linglong-session-helper.service` 暴露为独立 UI 操作；它只作为“尝试重启”恢复动作的一部分顺序执行。
 
 ## 行为设计
 
@@ -48,10 +48,12 @@
 用户点击按钮后，Provider 调用环境服务执行：
 
 ```bash
+systemctl --user enable linglong-session-helper.service
+systemctl --user start linglong-session-helper.service
 pkexec systemctl restart org.deepin.linglong.PackageManager.service
 ```
 
-命令成功后立即重新执行环境检测；检测通过则关闭环境检测对话框，检测仍失败则保留错误信息，允许用户继续查看命令输出摘要或执行手动安装。
+三条命令按顺序执行，任一步失败都把该命令输出作为恢复动作错误返回给 UI。全部成功后立即重新执行环境检测；检测通过则关闭环境检测对话框，检测仍失败则保留错误信息，允许用户继续查看命令输出摘要或执行手动安装。
 
 ## 分层契约
 

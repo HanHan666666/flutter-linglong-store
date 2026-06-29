@@ -217,6 +217,44 @@ void main() {
     );
 
     test(
+      'restartPackageManagerService enables helper before restarting service',
+      () async {
+        final runner = _RecordingShellCommandRunner.fromCommands({
+          'systemctl --user enable linglong-session-helper.service':
+              const ShellCommandResult(
+                stdout: 'enabled',
+                stderr: '',
+                exitCode: 0,
+              ),
+          'systemctl --user start linglong-session-helper.service':
+              const ShellCommandResult(
+                stdout: 'started',
+                stderr: '',
+                exitCode: 0,
+              ),
+          'pkexec systemctl restart org.deepin.linglong.PackageManager.service':
+              const ShellCommandResult(
+                stdout: 'restarted',
+                stderr: '',
+                exitCode: 0,
+              ),
+        });
+        final service = LinglongEnvironmentService(
+          executor: ShellCommandExecutor(runner: runner),
+        );
+
+        final result = await service.restartPackageManagerService();
+
+        expect(result.success, isTrue);
+        expect(runner.commands.map((command) => command.join(' ')), [
+          'systemctl --user enable linglong-session-helper.service',
+          'systemctl --user start linglong-session-helper.service',
+          'pkexec systemctl restart org.deepin.linglong.PackageManager.service',
+        ]);
+      },
+    );
+
+    test(
       'resolves UOS as a structured distribution profile for future adaptations',
       () async {
         final service = LinglongEnvironmentService(
@@ -367,6 +405,29 @@ class _FakeShellCommandRunner implements ShellCommandRunner {
     Map<String, String>? environment,
     ShellCommandLogOptions? logOptions,
   }) async {
+    final key = command.join(' ');
+    final result = _results[key];
+    if (result == null) {
+      throw StateError('Unexpected command: $key');
+    }
+    return result;
+  }
+}
+
+class _RecordingShellCommandRunner implements ShellCommandRunner {
+  _RecordingShellCommandRunner.fromCommands(this._results);
+
+  final Map<String, ShellCommandResult> _results;
+  final List<List<String>> commands = [];
+
+  @override
+  Future<ShellCommandResult> run(
+    List<String> command, {
+    Duration timeout = const Duration(minutes: 5),
+    Map<String, String>? environment,
+    ShellCommandLogOptions? logOptions,
+  }) async {
+    commands.add(List<String>.from(command));
     final key = command.join(' ');
     final result = _results[key];
     if (result == null) {

@@ -1,6 +1,6 @@
 # 23 - 安装取消方案：用 SIGTERM 复现 Ctrl+C（替代 pkexec killall）
 
-> 状态：**方案已验证，待编码（2026-06-30 21:01）**。源码研究 + 受控实测 + GUI 实测三重验证全部通过。
+> 状态：**已实现并真机回归通过（2026-06-30 21:30）**。源码研究 + 受控实测 + GUI 实测 + 编码回归四重验证通过。
 > ⚠️ **重要修正**：初版假设"GUI 会话 ll-cli 以当前用户身份运行，SIGTERM 可免授权"——**已被 GUI 实测证伪**。本文档已据实修正为新方案：`pkexec kill -15 <精确PID>`。
 > 创建：2026-06-30
 
@@ -207,6 +207,36 @@ root ll-cli 进程的 PPID 正是商店主进程，证明商店 `Process.start('
 3. **真实结果**：植物大战僵尸**未被安装**（任务失败：操作被取消），无后台偷装完 ✓
 
 **结论：`pkexec kill -15 <精确PID>` 方案在真实 GUI 场景完全成立，可以进入编码。**
+
+### A.3 编码后真机回归：autoDispose 根因与修复（2026-06-30 21:30）
+
+编码后首次真机回归发现 BUG：取消安装时取不到 PID（`_activeProcessPids={}`），pkexec 弹窗不出现。
+
+**根因定位（诊断日志铁证）**：
+- `linglongCliRepositoryProvider` 是 `@riverpod`（非 keepAlive，`isAutoDispose: true`）
+- 安装时 `ref.read` 拿到实例 A，PID 写入实例 A 的 `_activeProcessPids`
+- 但 `await for` 循环持有的是 stream 引用，不维持 provider 的 listener 关系
+- **autoDispose 在没有活跃 listener 时销毁 provider → 实例 A 销毁 → `_activeProcessPids` 随之消失**
+- 取消时 `ref.read` 重新 build → 创建实例 B（空 map）→ PID 缺失 → 取消失败
+
+日志铁证：`记录安装进程 PID: 16102` 成功，但取消时 `_activeProcessPids={}`，且全程无 finally 日志（实例是被整体销毁，不是被 remove）。
+
+**修复（commit d759710）**：进程状态归 `CliExecutor` 静态管理，与 provider 生命周期解耦。
+1. 新增 `CliExecutor.getProcessPid(processId)` 静态方法，从 `_activeProcesses[processId]?.pid` 读取
+2. **关键**：`_activeProcesses` 的清理从 stream-finally 移到 `process.exitCode` 回调——进程引用生命周期绑定到「进程真实退出」，而非「stream subscription 被 cancel」。即使 autoDispose 级联 cancel stream，只要 root ll-cli 进程还在跑，PID 始终可查
+3. `cancelOperation` 改用 `CliExecutor.getProcessPid`，不再依赖 repository 实例字段
+
+**修复后真机回归（com.qq.music）**：
+```
+开始安装: ll-cli install --json com.qq.music
+开始取消安装: com.qq.music
+开始精确 PID 取消: install_com.qq.music (pid=18954)    ← PID 成功取到
+精确 PID 取消完成: (结果: true)                         ← pkexec kill -15 成功
+取消安装成功: com.qq.music
+命令退出: exitCode=255                                  ← ll-cli 被 SIGTERM 终止
+```
+
+**经验教训**：跨方法、跨调用需要持续存在的进程状态，不能放在 autoDispose 的 provider 实例字段里。进程状态应集中到 `CliExecutor` 静态管理，且其清理时机必须绑定进程真实退出（`exitCode`），而非 stream 生命周期。
 
 ## 附录 B：证据索引
 

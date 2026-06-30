@@ -322,8 +322,19 @@ class CliExecutor {
           );
 
       // 等待进程完成
+      //
+      // 关键：进程引用的清理绑定到「进程真实退出」，而不是 stream 的 finally。
+      // 原因：调用方（repository）的 stream subscription 可能被上层 autoDispose
+      // provider 销毁而提前 cancel，此时 stream 的 finally 会执行，但底层
+      // ll-cli（经 pkexec exec 成 root）进程仍在运行。若在 stream finally 里
+      // 清理 _activeProcesses，取消安装时就取不到 PID。把清理挪到 exitCode 回调，
+      // 保证进程真正退出前，PID 始终可查（详见 docs/23-install-cancel-sigterm-plan.md）。
       process.exitCode.then((exitCode) {
         _logCommandExit(commandStr, exitCode, streaming: true);
+        if (processId != null) {
+          _activeProcesses.remove(processId);
+          _cancelSignals.remove(processId);
+        }
         controller.close();
       });
 
@@ -340,13 +351,9 @@ class CliExecutor {
     } catch (e, stack) {
       AppLogger.error('[CLI] 流式命令执行异常: $commandStr', e, stack);
       rethrow;
-    } finally {
-      // 清理活跃进程记录
-      if (processId != null) {
-        _activeProcesses.remove(processId);
-        _cancelSignals.remove(processId);
-      }
     }
+    // 注意：不再在 stream finally 里清理 _activeProcesses。
+    // 进程引用的生命周期由 process.exitCode 回调管理，与进程真实生命周期对齐。
   }
 
   /// 执行 ll-cli 命令，失败时抛出异常
@@ -478,6 +485,21 @@ class CliExecutor {
   /// 检查进程是否正在运行
   static bool isRunning(String processId) {
     return _activeProcesses.containsKey(processId);
+  }
+
+  /// 获取指定进程标识对应的底层 ll-cli 进程 PID。
+  ///
+  /// 用于取消安装时精确发送 SIGTERM。该 PID 是 [Process.start] 返回的 PID，
+  /// 经 ll-cli `execvp(pkexec)` → pkexec `execv(ll-cli)` 全程 PID 连续，
+  /// 仍指向 root 的 ll-cli 进程（详见 [cancelWithSystemKill] 注释）。
+  ///
+  /// 进程引用在 [executeWithProgressAndProcess] 启动时注册，在进程真实退出
+  /// （`exitCode` 回调）时清理。即使上层 provider 销毁导致 stream subscription
+  /// 被 cancel，只要进程还在运行，本方法仍能返回有效 PID。
+  ///
+  /// 返回 null 表示进程已结束或从未注册（取消时应视为取消失败）。
+  static int? getProcessPid(String processId) {
+    return _activeProcesses[processId]?.pid;
   }
 
   /// 获取所有活跃进程ID

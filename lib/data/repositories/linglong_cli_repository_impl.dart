@@ -685,12 +685,16 @@ class LinglongCliRepositoryImpl
 
     AppLogger.info('[LinglongCli] 开始取消$operationLabel: $appId');
 
-    // 从活跃进程表读取该任务的 root ll-cli 进程 PID。
-    // 该 PID 在 onProcessCreated 时记录（line 172），经 ll-cli execvp pkexec →
-    // execv ll-cli 全程 PID 连续，仍指向 root 进程（见 cli_executor.cancelWithSystemKill 注释）。
-    final pid = _activeProcessPids[processId];
+    // 从 CliExecutor 的静态进程表读取该任务的 root ll-cli 进程 PID。
+    //
+    // 关键：必须用 CliExecutor 静态表，而非本实例的 _activeProcessPids。
+    // 因为本 repository 所在的 provider 是 autoDispose，安装期间实例可能被
+    // 销毁重建，导致实例字段丢失 PID。CliExecutor 的 _activeProcesses 是静态
+    // 字段，且其清理绑定在进程真实退出（exitCode 回调）而非 stream 生命周期，
+    // 只要 root ll-cli 进程还在跑，PID 就可查（详见 cli_executor.dart 注释）。
+    final pid = CliExecutor.getProcessPid(processId);
     if (pid == null) {
-      // PID 缺失：进程已结束（finally 已清理）或从未记录，属于竞态。
+      // PID 缺失：进程已真实退出（exitCode 回调已清理）或从未注册。
       // 视为取消失败，由上层 cancelTask 保持任务为 Installing（见 2026-05-31 约定）。
       AppLogger.warning(
         '[LinglongCli] 取消$operationLabel失败：未找到进程 PID（进程可能已结束）: $appId',
@@ -707,7 +711,6 @@ class LinglongCliRepositoryImpl
     if (success) {
       // 只有系统级 kill 确认成功后，安装流才允许切换为 cancelled。
       _setOperationCancelled(appId);
-      _activeProcessPids.remove(processId);
       AppLogger.info('[LinglongCli] 取消$operationLabel成功: $appId');
     } else {
       AppLogger.warning(

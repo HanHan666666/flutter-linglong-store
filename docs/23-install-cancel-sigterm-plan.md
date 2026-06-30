@@ -1,7 +1,7 @@
 # 23 - 安装取消方案：用 SIGTERM 复现 Ctrl+C（替代 pkexec killall）
 
-> 状态：**方案待确认（2026-06-30 修正）**。本文档由源码研究 + 受控实测 + GUI 实测得出。
-> ⚠️ **重要修正**：初版假设"GUI 会话 ll-cli 以当前用户身份运行，SIGTERM 可免授权"——**已被 GUI 实测证伪**。本文档已据实修正为新方案。
+> 状态：**方案已验证，待编码（2026-06-30 21:01）**。源码研究 + 受控实测 + GUI 实测三重验证全部通过。
+> ⚠️ **重要修正**：初版假设"GUI 会话 ll-cli 以当前用户身份运行，SIGTERM 可免授权"——**已被 GUI 实测证伪**。本文档已据实修正为新方案：`pkexec kill -15 <精确PID>`。
 > 创建：2026-06-30
 
 ## 一、背景与问题
@@ -168,7 +168,7 @@ PID 9307  PPID 7860  USER=root  pkexec ll-cli install --json uos-youku-app.linya
 1. ~~先验证疑点一~~（**已完成**：GUI 实测确认 ll-cli 属主 root，见第三节）。
 2. 按 4.3 实现 `pkexec kill -15 <PID>` 精确取消 + SIGKILL 兜底。
 3. 补单元测试：模拟 PID 存在/缺失、kill -15 成功/超时、兜底 SIGKILL 触发等分支。
-4. 真机回归：在商店里实测取消一个正在下载的大应用，对照 daemon journal 确认 `canceled by user`、daemon 未被杀。
+4. ~~真机回归：在商店里实测取消一个正在下载的大应用~~（**已完成**：见附录 A.2，daemon `canceled by user`、daemon 未被杀、任务未装完）。
 5. 可选优化（单独议题）：评估是否新增 polkit 免密规则让 `pkexec kill` 免授权，进一步改善体验（需权衡安全）。
 6. 完成后更新本文档"状态"为已实现，并同步关键约定到 `AGENTS.md` 变更记录。
 
@@ -181,6 +181,32 @@ PID 9307  PPID 7860  USER=root  pkexec ll-cli install --json uos-youku-app.linya
 PID 9307  USER=root  pkexec ll-cli install --json uos-youku-app.linyaps
 ```
 **结论：ll-cli 走 pkexec，属主 root。免授权 SIGTERM 方案不成立，改为 pkexec kill -15 PID 精确取消。**
+
+### A.2 GUI 实测：精确 PID + SIGTERM 协作取消（2026-06-30 20:59-21:01，铁证）
+
+在真实玲珑商店 GUI 点击安装 `com.popcap.plantsvszombies.deepin`（植物大战僵尸），用记录的 PID 发 SIGTERM，完整验证了精确 PID 取消方案：
+
+**进程关系（证明 PID 精确绑定到单次任务）：**
+```
+PID 11118  PPID 7860  USER=root  comm=pkexec
+  args=pkexec ll-cli install --json com.popcap.plantsvszombies.deepin
+PPID 7860 = /opt/linglong-store/linglong_store   ← 商店主进程
+```
+root ll-cli 进程的 PPID 正是商店主进程，证明商店 `Process.start('ll-cli')` 记录的 PID（经 `execvp pkexec → execv ll-cli`，PID 连续）精确绑定到这一次安装任务，不会误杀别的 ll 操作。
+
+**SIGTERM 协作取消（daemon journal）：**
+```
+20:59:56  task 221142171507064771214819416116623516023293 has been canceled by user
+20:59:59  action Install unknown:com.popcap.plantsvszombies.deepin/unknown/unknown failed:
+          ostree_repo_pull_with_options [code 19]: 操作被取消
+```
+
+**三重验证全部通过：**
+1. **PID 精确性**：root 进程 PPID 指向商店，PID 精确到任务 ✓
+2. **SIGTERM 协作取消**：daemon 打印 `canceled by user` + `操作被取消`（`cancelCurrentTask → D-Bus Cancel → g_cancellable_cancel` 链路），daemon 未被强杀 ✓
+3. **真实结果**：植物大战僵尸**未被安装**（任务失败：操作被取消），无后台偷装完 ✓
+
+**结论：`pkexec kill -15 <精确PID>` 方案在真实 GUI 场景完全成立，可以进入编码。**
 
 ## 附录 B：证据索引
 

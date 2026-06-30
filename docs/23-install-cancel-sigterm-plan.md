@@ -238,6 +238,50 @@ root ll-cli 进程的 PPID 正是商店主进程，证明商店 `Process.start('
 
 **经验教训**：跨方法、跨调用需要持续存在的进程状态，不能放在 autoDispose 的 provider 实例字段里。进程状态应集中到 `CliExecutor` 静态管理，且其清理时机必须绑定进程真实退出（`exitCode`），而非 stream 生命周期。
 
+## 附录 C：经验教训（踩坑全过程复盘）
+
+本方案从研究到落地经历了多次"假设被实测推翻"，每一步都验证了"先验证再下结论"的纪律。以下复盘供后续维护者参考，避免重蹈。
+
+### C.1 不要相信未经验证的"项目已有能力"
+
+- **踩坑**：初版方案误称"项目有 `lib/rust/` Rust FFI，可用 zbus 实现 D-Bus Cancel"。实际项目里**根本不存在** `lib/rust`，无任何 `.rs` 文件。
+- **教训**：涉及"复用现有能力"的判断，必须先 `find`/`ls` 实际确认，不能凭印象。`lib/rust` 这个错误直接导致"D-Bus Cancel"方案被高估可行性。
+
+### C.2 信号机制要从源码读，不能靠语义猜测
+
+- **踩坑**：起初以为 Ctrl+C = "杀进程"，后来想当然认为"GUI 会话 ll-cli 是当前用户进程，SIGTERM 可免授权"。
+- **源码真相**：
+  - Ctrl+C（SIGINT）本质是 ll-cli 的 signal handler 调 `QCoreApplication::quit()` → `aboutToQuit` → `cancelCurrentTask()` → **D-Bus Cancel**，daemon 协作中断下载，**不是杀进程**。
+  - `initialize.cpp:122` 的 `catchUnixSignals({SIGTERM, SIGQUIT, SIGINT, SIGHUP})` 证明 **SIGTERM 与 SIGINT 共用同一个 handler**，所以 SIGTERM 等价于 Ctrl+C。
+  - GUI 实测推翻"免授权"假设：ll-cli `ensureAuthorized()` 失败后 `execvp("pkexec")` 替换自身，**属主变 root**。
+- **教训**：信号行为必须从目标程序的源码 signal handler 读起，不能凭信号名猜语义；进程属主、是否提权必须在**真实运行环境实测**，不能从 polkit 规则推导（规则与实际行为之间有条件分支）。
+
+### C.3 SIGTERM vs SIGKILL 必须用对照实测区分
+
+- **铁证**（dingtalk 453MB 首次下载对照）：
+  - SIGTERM → daemon 日志 `canceled by user`，下载停止，未安装。
+  - SIGKILL → daemon **后台继续下载 129 秒（453MB），偷偷装完了**。
+- **教训**：取消类逻辑的正确性不能用"进程退出了"来判断——SIGKILL 也会让 ll-cli 退出，但 daemon 照样在后台把任务做完。必须对照 daemon journal 的 `canceled`/`success` 才能判定取消是否真正生效。
+
+### C.4 autoDispose provider 不能承载跨调用持续状态
+
+这是本次最深的坑，也是最容易复现的架构陷阱：
+
+- **现象**：编码后真机回归，取消安装时取不到 PID（`_activeProcessPids={}`），pkexec 弹窗不出现。
+- **根因**：`linglongCliRepositoryProvider` 是 `@riverpod`（`isAutoDispose: true`）。安装时 `ref.read` 拿实例 A 写入 PID，但 `await for` 循环持有的是 stream 引用、不维持 provider listener；autoDispose 在无活跃 listener 时销毁实例 A，`_activeProcessPids` 随之消失；取消时 `ref.read` 重建实例 B（空 map）。
+- **诊断方法**：在 cancelOperation 打印 `_activeProcessPids` 完整内容、在 finally 打印移除时机、在 await-for 打印退出时机。日志显示"PID 写入成功 + 取消时 map 全空 + 全程无 finally 日志"，三证据交叉锁定"实例被整体销毁"而非"被 remove"。
+- **修复**：进程状态归 `CliExecutor` 静态字段，清理绑定 `process.exitCode`（进程真实退出）而非 stream finally（autoDispose 级联 cancel stream 时会提前清理）。
+- **教训**：
+  1. 跨方法、跨调用需要持续存在的状态（进程 PID、句柄等），**禁止**放在 autoDispose provider 的实例字段里。
+  2. 资源清理时机必须与资源的**真实生命周期**对齐，不能绑定在中间层（stream subscription）的生命周期上——中间层会被上层（provider 销毁）级联影响。
+  3. 多组件时序 bug 必须用诊断日志在**每个边界**取证，不能靠静态阅读代码猜——本例静态分析穷尽了所有 `_activeProcessPids.remove` 调用点都找不到原因，直到日志证明是"实例销毁"而非"字段移除"。
+
+### C.5 授权框无法消除，要诚实标注
+
+- `pkexec.exec` 默认 `allow_active=auth_admin`，每次 `pkexec kill` 都弹一次授权框。
+- 无 polkit 免密规则（已检查 `/usr/share/polkit-1/rules.d/` 和 `/etc/polkit-1/rules.d/`）。
+- 本方案保留授权框（用户确认可接受）。若要消除需新增 polkit 免密规则，属系统级改动，应单独评估安全性。
+
 ## 附录 B：证据索引
 
 - linyaps 源码：`/home/han/code/linyaps`

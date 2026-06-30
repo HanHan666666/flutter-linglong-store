@@ -35,8 +35,8 @@ typedef CliExecuteWithProgressAndProcessFn =
 typedef CliCancelWithSystemKillFn =
     Future<bool> Function(
       String processId, {
+      required int pid,
       bool force,
-      bool killPackageMananger,
     });
 
 /// ll-cli Repository 实现
@@ -685,10 +685,23 @@ class LinglongCliRepositoryImpl
 
     AppLogger.info('[LinglongCli] 开始取消$operationLabel: $appId');
 
+    // 从活跃进程表读取该任务的 root ll-cli 进程 PID。
+    // 该 PID 在 onProcessCreated 时记录（line 172），经 ll-cli execvp pkexec →
+    // execv ll-cli 全程 PID 连续，仍指向 root 进程（见 cli_executor.cancelWithSystemKill 注释）。
+    final pid = _activeProcessPids[processId];
+    if (pid == null) {
+      // PID 缺失：进程已结束（finally 已清理）或从未记录，属于竞态。
+      // 视为取消失败，由上层 cancelTask 保持任务为 Installing（见 2026-05-31 约定）。
+      AppLogger.warning(
+        '[LinglongCli] 取消$operationLabel失败：未找到进程 PID（进程可能已结束）: $appId',
+      );
+      return false;
+    }
+
     final success = await _cancelWithSystemKill(
       processId,
+      pid: pid,
       force: true,
-      killPackageMananger: true,
     );
 
     if (success) {

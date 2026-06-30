@@ -16,7 +16,7 @@ class _RecordingCliExecutor {
   final List<List<String>> progressCalls = [];
   final List<String> cancelProcessIds = [];
   final List<bool> cancelForceValues = [];
-  final List<bool> cancelKillPackageManagerValues = [];
+  final List<int?> cancelPidValues = [];
   final Map<String, CliOutput> executeOutputsByCommand = {};
   final Map<String, List<CliOutput>> executeOutputSequencesByCommand = {};
   CliOutput nextExecuteOutput = const CliOutput(
@@ -63,12 +63,12 @@ class _RecordingCliExecutor {
 
   Future<bool> cancelWithSystemKill(
     String processId, {
-    bool force = true,
-    bool killPackageMananger = true,
+    required int pid,
+    bool force = false,
   }) async {
     cancelProcessIds.add(processId);
     cancelForceValues.add(force);
-    cancelKillPackageManagerValues.add(killPackageMananger);
+    cancelPidValues.add(pid);
     return cancelWithSystemKillResult;
   }
 }
@@ -296,26 +296,32 @@ void main() {
       expect(events.last.errorDetail, equals(detail));
     });
 
-    test('cancelOperation returns false when system kill fails', () async {
-      final executor = _RecordingCliExecutor()
-        ..cancelWithSystemKillResult = false;
-      final repository = LinglongCliRepositoryImpl.withExecutor(
-        InstallMessages.fromLocale(const Locale('zh')),
-        execute: executor.execute,
-        executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
-        cancelWithSystemKill: executor.cancelWithSystemKill,
-      );
+    test(
+      'cancelOperation returns false when process PID is missing '
+      '(process already ended)',
+      () async {
+        // cancelOperation 单独调用时 _activeProcessPids 为空（PID 只在
+        // onProcessCreated 回调里记录）。PID 缺失表示进程已结束或竞态，
+        // 按约定视为取消失败，保持任务为 Installing。
+        final executor = _RecordingCliExecutor()
+          ..cancelWithSystemKillResult = false;
+        final repository = LinglongCliRepositoryImpl.withExecutor(
+          InstallMessages.fromLocale(const Locale('zh')),
+          execute: executor.execute,
+          executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+          cancelWithSystemKill: executor.cancelWithSystemKill,
+        );
 
-      final result = await repository.cancelOperation(
-        'org.example.demo',
-        kind: InstallTaskKind.install,
-      );
+        final result = await repository.cancelOperation(
+          'org.example.demo',
+          kind: InstallTaskKind.install,
+        );
 
-      expect(result, isFalse);
-      expect(executor.cancelProcessIds, ['install_org.example.demo']);
-      expect(executor.cancelForceValues, [true]);
-      expect(executor.cancelKillPackageManagerValues, [true]);
-    });
+        expect(result, isFalse);
+        // PID 缺失时不应调用 cancelWithSystemKill（无法发信号）。
+        expect(executor.cancelProcessIds, isEmpty);
+      },
+    );
 
     test('uninstallApp falls back to stdout when stderr is empty', () async {
       final executor = _RecordingCliExecutor()

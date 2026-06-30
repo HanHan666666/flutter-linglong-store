@@ -402,76 +402,77 @@ class CliExecutor {
     }
   }
 
-  /// 取消正在执行的进程（增强版，参考 Rust 版本实现）
+  /// 取消正在执行的安装进程（精确 PID + SIGTERM 协作取消）
   ///
-  /// 1. 使用 pkexec killall 终止 ll-cli 和 ll-package-manager 进程
-  /// 2. 系统级终止成功后，再通过内部机制清理 Dart 进程
+  /// 设计原理（详见 docs/23-install-cancel-sigterm-plan.md）：
+  /// 商店通过 [Process.start('ll-cli')] 启动安装，ll-cli 内部 `ensureAuthorized()`
+  /// 失败后会用 `execvp("pkexec", ["ll-cli", ...])` 替换自身进程映像（PID 不变，
+  /// 属主变 root）。因此 [processId] 对应的 [pid] 精确绑定到这一次安装任务，
+  /// 经过 `ll-cli → pkexec → root ll-cli` 全程 PID 连续，[pid] 就是 root 进程的 PID。
   ///
-  /// 这样可以确保安装相关的所有进程都被正确终止。
+  /// 向该 root 进程发 SIGTERM（与命令行 Ctrl+C 走同一个 signal handler，
+  /// 见 linyaps `initialize.cpp:122` 的 `catchUnixSignals({SIGTERM, SIGQUIT,
+  /// SIGINT, SIGHUP})`），触发 `aboutToQuit → cancelCurrentTask → D-Bus Cancel`，
+  /// daemon 收到 Cancel 后 `g_cancellable_cancel()` 中断 OSTree 下载，任务以
+  /// `canceled` 结束（daemon journal 会打印 `has been canceled by user`）。
+  /// **不杀 ll-package-manager daemon**：daemon 由协作取消优雅停止，避免被
+  /// 强杀后 systemd 重启带来的状态脏污。
   ///
-  /// [processId] 进程标识
-  /// [force] 是否强制终止（SIGKILL）
-  /// [killPackageMananger] 是否同时终止 ll-package-manager（默认 true）
+  /// 相比旧的 `pkexec killall -15 ll-cli ll-package-manager`（全局杀所有同名
+  /// 进程 + 杀常驻 daemon），本实现精确到单次任务的 PID，消除误杀风险。
+  ///
+  /// [processId] 进程标识（用于清理 Dart 侧 [_activeProcesses] 引用）
+  /// [pid] 目标 root ll-cli 进程的 PID，必须由调用方从 `_activeProcessPids`
+  ///   读取（该 PID 在 `onProcessCreated` 时记录，execvp/pkexec 后仍指向 root 进程）
+  /// [force] 内部 Dart 侧 [Process] 引用收尾是否用 SIGKILL（不参与成功判定）
   ///
   /// 返回：
-  /// - `true` - 系统级 killall 执行成功，目标安装进程已确认终止或不存在
-  /// - `false` - pkexec 授权取消、权限失败，或系统级终止失败
+  /// - `true` - `pkexec kill -15 <pid>` 成功发送信号，协作取消已触发
+  /// - `false` - pkexec 授权被取消、发信号失败，或目标进程已退出
   static Future<bool> cancelWithSystemKill(
     String processId, {
+    required int pid,
     bool force = false,
-    bool killPackageMananger = true,
   }) async {
-    AppLogger.info('[CLI] 开始系统级取消: $processId');
+    AppLogger.info('[CLI] 开始精确 PID 取消: $processId (pid=$pid)');
 
-    // 必须先确认 pkexec/killall 成功，再清理 Dart 侧进程引用。
-    // 否则用户取消授权时会误把“请求取消”当成“取消成功”。
-    bool internalCancelled = false;
-
-    // 使用 pkexec killall 终止 ll-cli 和 ll-package-manager
-    // 参考 Rust 版本: pkexec killall -15 ll-cli ll-package-manager
-    bool systemKillSuccess = false;
+    // 用 pkexec 提权向 root 的 ll-cli 进程发 SIGTERM（信号 15）。
+    // pkexec.exec 是独立的 polkit action（auth_admin），会弹一次授权框，
+    // 这无法避免（除非新增 polkit 免密规则，需单独评估安全性）。
+    bool signalSent = false;
     try {
-      final args = <String>['killall', '-15']; // SIGTERM 优雅终止
-      args.add('ll-cli');
-      if (killPackageMananger) {
-        args.add('ll-package-manager');
-      }
+      AppLogger.info('[CLI] 执行: pkexec kill -15 $pid');
+      final result = await Process.run('pkexec', ['kill', '-15', '$pid']);
 
-      AppLogger.info('[CLI] 执行系统级进程终止: pkexec ${args.join(' ')}');
-
-      final result = await Process.run('pkexec', args);
-
-      // killall 返回 0 表示成功找到并终止进程
-      // 返回 1 表示没有找到匹配的进程（进程可能已结束）
-      // 我们认为这两种情况都是"成功"的，因为目标（终止进程）已达成
-      if (result.exitCode == 0 || result.exitCode == 1) {
-        systemKillSuccess = true;
-        AppLogger.info('[CLI] 系统级进程终止完成: exitCode=${result.exitCode}');
+      // kill 退出码 0 表示成功发送信号。
+      if (result.exitCode == 0) {
+        signalSent = true;
+        AppLogger.info('[CLI] SIGTERM 已发送: pid=$pid');
       } else {
-        // 其他错误码（如权限问题）
+        // 非 0 退出码：进程不存在（可能已结束）、权限不足或用户取消授权。
         AppLogger.warning(
-          '[CLI] 系统级进程终止返回错误: exitCode=${result.exitCode}, '
+          '[CLI] pkexec kill 失败: exitCode=${result.exitCode}, '
           'stdout=${result.stdout}, stderr=${result.stderr}',
         );
       }
     } on ProcessException catch (e) {
-      // pkexec 不存在或执行失败
-      AppLogger.warning('[CLI] pkexec killall 执行失败: $e');
+      // pkexec 不存在或执行失败。
+      AppLogger.warning('[CLI] pkexec kill 执行失败: $e');
     } catch (e, stack) {
-      AppLogger.error('[CLI] 系统级进程终止异常', e, stack);
+      AppLogger.error('[CLI] pkexec kill 异常', e, stack);
     }
 
-    if (systemKillSuccess) {
+    // 信号发送成功后，清理 Dart 侧 Process 引用（仅资源收尾，不参与成功判定）。
+    bool internalCancelled = false;
+    if (signalSent) {
       internalCancelled = cancel(processId, force: force);
     }
 
-    // 安装取消依赖系统级 killall 的结果；内部 kill 只做本进程资源收尾。
-    final success = systemKillSuccess;
     AppLogger.info(
-      '[CLI] 系统级取消完成: $processId (内部: $internalCancelled, 系统: $systemKillSuccess, 结果: $success)',
+      '[CLI] 精确 PID 取消完成: $processId (内部收尾: $internalCancelled, 结果: $signalSent)',
     );
 
-    return success;
+    return signalSent;
   }
 
   /// 检查进程是否正在运行

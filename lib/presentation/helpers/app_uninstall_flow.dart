@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../application/services/app_uninstall_service.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
+import '../../../core/utils/app_notification_helpers.dart';
 import '../../../domain/models/installed_app.dart';
 import '../../../domain/models/uninstall_result.dart';
 import '../widgets/confirm_dialog.dart';
@@ -63,7 +65,33 @@ class AppUninstallFlow {
     // 3. 执行卸载
     final result = await service.executeUninstall(app);
 
-    // 4. 处理结果
-    return result is UninstallResultSuccess;
+    // 4. 处理结果：成功返回 true；取消/拦截返回 false 且不提示；
+    //    kill 失败或卸载异常时向前端通知中心推送错误信息。
+    if (result is UninstallResultSuccess) {
+      return true;
+    }
+
+    if (result is UninstallResultKillFailed && context.mounted) {
+      final l10n = AppLocalizations.of(context);
+      showAppError(
+        context,
+        l10n?.uninstallFailedWithError(l10n.appRunningMessage) ??
+            '卸载失败: 无法关闭运行中的应用',
+      );
+      return false;
+    }
+
+    if (result is UninstallResultError && context.mounted) {
+      final l10n = AppLocalizations.of(context);
+      showAppError(
+        context,
+        l10n?.uninstallFailedWithError(result.message) ??
+            '卸载失败: ${result.message}',
+      );
+      return false;
+    }
+
+    // 取消或拦截场景不弹错误提示
+    return false;
   }
 }

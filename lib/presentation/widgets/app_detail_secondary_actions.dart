@@ -1,58 +1,34 @@
 import 'package:flutter/material.dart';
 
 import '../../core/i18n/l10n/app_localizations.dart';
+import 'expandable_icon_button.dart';
 
 /// 详情页主操作右侧的次级操作区。
 ///
 /// 只在当前应用存在本地安装实例时展示，避免未安装态暴露无效入口。
+/// 默认以圆形图标按钮排列，悬浮时单个按钮向右展开显示文字，
+/// 在保持操作可达性的同时降低头部视觉噪音。
 class AppDetailSecondaryActions extends StatelessWidget {
+  /// 创建详情页次级操作区。
   const AppDetailSecondaryActions({
     required this.isVisible,
     required this.onCreateShortcut,
     required this.onUninstall,
+    required this.onShare,
     super.key,
   });
 
+  /// 是否展示次级操作区。
   final bool isVisible;
+
+  /// 创建桌面快捷方式回调。
   final VoidCallback onCreateShortcut;
+
+  /// 卸载回调。
   final VoidCallback onUninstall;
 
-  ButtonStyle _buildDestructiveActionStyle(Color errorColor) {
-    return OutlinedButton.styleFrom(
-      foregroundColor: errorColor,
-      side: BorderSide(color: errorColor),
-    ).copyWith(
-      side: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.disabled)) {
-          return BorderSide(color: errorColor.withValues(alpha: 0.40));
-        }
-        if (states.contains(WidgetState.hovered) ||
-            states.contains(WidgetState.focused)) {
-          return BorderSide(color: errorColor.withValues(alpha: 0.88));
-        }
-        return BorderSide(color: errorColor);
-      }),
-      backgroundColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.pressed)) {
-          return errorColor.withValues(alpha: 0.12);
-        }
-        if (states.contains(WidgetState.hovered) ||
-            states.contains(WidgetState.focused)) {
-          return errorColor.withValues(alpha: 0.08);
-        }
-        return Colors.transparent;
-      }),
-      overlayColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.pressed)) {
-          return errorColor.withValues(alpha: 0.14);
-        }
-        if (states.contains(WidgetState.hovered)) {
-          return errorColor.withValues(alpha: 0.10);
-        }
-        return null;
-      }),
-    );
-  }
+  /// 分享回调。
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -60,53 +36,32 @@ class AppDetailSecondaryActions extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final errorColor = theme.colorScheme.error;
-
-    // 详情页头部次级操作需要与主操作形成统一热区，满足桌面端键鼠与无障碍触达。
-    const buttonHeight = 48.0;
-    const iconSize = 18.0;
+    final theme = Theme.of(context);
 
     // 次级动作保持紧凑横向排布，由外层决定何时整体换行。
+    // 默认只显示图标，悬浮时单个按钮向右展开显示文字。
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Tooltip(
-          message: l10n.createDesktopShortcut,
-          child: Semantics(
-            button: true,
-            label: l10n.createDesktopShortcut,
-            child: SizedBox(
-              height: buttonHeight,
-              child: OutlinedButton.icon(
-                onPressed: onCreateShortcut,
-                icon: const ExcludeSemantics(
-                  child: Icon(Icons.shortcut_outlined, size: iconSize),
-                ),
-                label: Text(l10n.createDesktopShortcut),
-              ),
-            ),
-          ),
+        ExpandableIconButton(
+          icon: Icons.shortcut_outlined,
+          label: l10n.createDesktopShortcut,
+          onTap: onCreateShortcut,
         ),
-        const SizedBox(width: 12),
-        Tooltip(
-          message: l10n.uninstall,
-          child: Semantics(
-            button: true,
-            label: l10n.uninstall,
-            child: SizedBox(
-              height: buttonHeight,
-              child: OutlinedButton.icon(
-                onPressed: onUninstall,
-                icon: const ExcludeSemantics(
-                  child: Icon(Icons.delete_outline_rounded, size: iconSize),
-                ),
-                label: Text(l10n.uninstall),
-                style: _buildDestructiveActionStyle(errorColor),
-              ),
-            ),
-          ),
+        const SizedBox(width: 8),
+        ExpandableIconButton(
+          icon: Icons.delete_outline_rounded,
+          label: l10n.uninstall,
+          onTap: onUninstall,
+          iconColor: theme.colorScheme.error,
+          foregroundColor: theme.colorScheme.error,
+        ),
+        const SizedBox(width: 8),
+        ExpandableIconButton(
+          icon: Icons.share_outlined,
+          label: l10n.shareLink,
+          onTap: onShare,
         ),
       ],
     );

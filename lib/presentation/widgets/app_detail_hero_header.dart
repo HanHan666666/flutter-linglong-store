@@ -316,39 +316,13 @@ class AppDetailHeroHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Wrap(
-          alignment: alignEnd ? WrapAlignment.end : WrapAlignment.start,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            AppDetailSecondaryActions(
-              isVisible: showInstalledActions,
-              onCreateShortcut: onCreateShortcut,
-              onUninstall: onUninstall,
-            ),
-            _buildShareButton(context),
-          ],
+        AppDetailSecondaryActions(
+          isVisible: showInstalledActions,
+          onCreateShortcut: onCreateShortcut,
+          onUninstall: onUninstall,
+          onShare: onShare,
         ),
       ],
-    );
-  }
-
-  /// 构建分享入口。
-  Widget _buildShareButton(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
-    return Semantics(
-      button: true,
-      label: l10n.shareLink,
-      child: IconButton(
-        onPressed: onShare,
-        tooltip: l10n.shareLink,
-        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-        icon: const ExcludeSemantics(
-          child: Icon(Icons.share_outlined, size: 20),
-        ),
-      ),
     );
   }
 

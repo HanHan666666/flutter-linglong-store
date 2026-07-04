@@ -64,7 +64,7 @@ void main() {
         const width = 720.0;
         const crossAxisCount = 2;
         const itemWidth =
-            (width - (crossAxisCount - 1) * AppSpacing.sm) / crossAxisCount;
+            (width - (crossAxisCount - 1) * AppSpacing.md) / crossAxisCount;
 
         final ratio = ResponsiveAppGrid.calculateChildAspectRatio(
           width,

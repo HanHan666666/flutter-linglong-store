@@ -217,7 +217,7 @@ void main() {
     expect(border, isNotNull);
     expect(border!.top.color, AppColors.borderSecondary);
     expect(border.top.width, 1);
-    expect(boxDecoration.color, AppColors.surfaceContainerHighest);
+    expect(boxDecoration.color, AppColors.surfaceContainerLow);
     expect(searchSize.height, 32);
   });
 
@@ -257,7 +257,7 @@ void main() {
     final border = boxDecoration.border as Border?;
 
     expect(border, isNotNull);
-    expect(border!.top.color, AppColors.primary);
+    expect(border!.top.color, AppColors.primary.withValues(alpha: 0.56));
     expect(border.top.width, 1);
   });
 

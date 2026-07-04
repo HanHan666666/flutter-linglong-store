@@ -203,22 +203,7 @@ class _MenuItemTile extends StatelessWidget {
                     ? MainAxisAlignment.center
                     : MainAxisAlignment.start,
                 children: [
-                  // 选中指示器（左侧 3px 竖条）
-                  if (!isCollapsed) ...[
-                    AnimatedContainer(
-                      duration: AppAnimation.fast,
-                      width: isSelected ? 3 : 0,
-                      height: isSelected ? 16 : 0,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    SizedBox(
-                      width: isSelected ? AppSpacing.sm : AppSpacing.sm + 3,
-                    ),
-                  ],
-                  // 图标
+                  // 选中状态由整行 soft pill 承担，避免左侧蓝条造成过重切割。
                   Icon(
                     isSelected ? item.selectedIcon : item.icon,
                     size: 20,
@@ -419,21 +404,7 @@ class _DynamicMenuItemTile extends StatelessWidget {
                   ? MainAxisAlignment.center
                   : MainAxisAlignment.start,
               children: [
-                // 选中指示器（左侧 3px 竖条）
-                if (!isCollapsed) ...[
-                  AnimatedContainer(
-                    duration: AppAnimation.fast,
-                    width: isSelected ? 3 : 0,
-                    height: isSelected ? 16 : 0,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  SizedBox(
-                    width: isSelected ? AppSpacing.sm : AppSpacing.sm + 3,
-                  ),
-                ],
+                // 动态菜单与静态菜单共用 soft pill 激活态，减少视觉漂移。
                 Icon(
                   isSelected ? presentation.selectedIcon : presentation.icon,
                   size: 20,

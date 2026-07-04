@@ -55,11 +55,16 @@ class _SidebarInteractionSurfaceState
   @override
   Widget build(BuildContext context) {
     final palette = context.appColors;
-    final selectedBg = widget.selectedColor ?? palette.primaryLight;
-    final hoverBg = widget.hoverColor ?? palette.surfaceContainerLow;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedBg =
+        widget.selectedColor ??
+        AppColors.primary.withValues(alpha: isDark ? 0.22 : 0.08);
+    final hoverBg =
+        widget.hoverColor ??
+        palette.surfaceContainerHighest.withValues(alpha: isDark ? 0.46 : 0.72);
     // 默认态使用目标色的透明版本，避免 Colors.transparent（透明黑）
     // 在动画插值时产生深色闪烁
-    final defaultBg = palette.surfaceContainerLow.withAlpha(0);
+    final defaultBg = hoverBg.withValues(alpha: 0);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -74,7 +79,7 @@ class _SidebarInteractionSurfaceState
             color: widget.isSelected
                 ? selectedBg
                 : (_isHovered ? hoverBg : defaultBg),
-            borderRadius: widget.borderRadius ?? AppRadius.xsRadius,
+            borderRadius: widget.borderRadius ?? AppRadius.smRadius,
           ),
           child: widget.child,
         ),

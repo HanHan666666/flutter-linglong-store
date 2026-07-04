@@ -656,11 +656,13 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
         constraints: const BoxConstraints(maxWidth: 534),
         height: 32,
         decoration: BoxDecoration(
-          color: context.appColors.surfaceContainerHighest,
+          color: _isFocused
+              ? context.appColors.surface
+              : context.appColors.surfaceContainerLow,
           borderRadius: AppRadius.lgRadius,
           border: Border.all(
             color: tag == null && _isFocused
-                ? AppColors.primary
+                ? AppColors.primary.withValues(alpha: 0.56)
                 : context.appColors.borderSecondary,
             width: 1,
           ),
@@ -1047,7 +1049,7 @@ class _WindowButtonState extends State<_WindowButton> {
               color: _isHovered
                   ? (widget.isClose
                         ? AppColors.error
-                        : context.appColors.surfaceContainerLow)
+                        : context.appColors.surfaceContainerHighest)
                   : Colors.transparent,
               child: ExcludeSemantics(
                 child: Icon(

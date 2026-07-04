@@ -131,6 +131,52 @@ void main() {
       ]);
     });
 
+    test(
+      'executeUninstall omits version from CLI call when includeVersion is false',
+      () async {
+        final events = <String>[];
+
+        final service = AppUninstallService(
+          readRunningApps: () => const [],
+          killRunningApp: (_) async => true,
+          uninstallApp: (appId, version) async {
+            events.add('uninstall:$appId@$version');
+            return 'ok';
+          },
+          removeInstalledApp: (appId, version) {
+            events.add('remove:$appId@$version');
+          },
+          syncAfterUninstall: () async {
+            events.add('sync');
+          },
+          reportUninstall: (appId, version, {appName}) async {
+            events.add('report:$appId@$version:$appName');
+          },
+        );
+
+        const app = InstalledApp(
+          appId: 'org.example.demo',
+          name: 'Demo',
+          version: '1.0.0',
+        );
+
+        final result = await service.executeUninstall(
+          app,
+          includeVersion: false,
+        );
+
+        expect(result, isA<UninstallResultSuccess>());
+        // CLI 调用不携带版本号（version 为 null）；但本地移除/上报仍使用
+        // app.version，因为调用方已负责传入解析出的真实已安装实例。
+        expect(events, [
+          'uninstall:org.example.demo@null',
+          'remove:org.example.demo@1.0.0',
+          'sync',
+          'report:org.example.demo@1.0.0:Demo',
+        ]);
+      },
+    );
+
     test('executeUninstall kills running instances first', () async {
       final events = <String>[];
 

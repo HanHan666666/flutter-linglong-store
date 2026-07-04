@@ -213,7 +213,7 @@ class _ControllableLinglongCliRepository implements LinglongCliRepository {
   Future<List<InstalledApp>> searchVersions(String appId) async => const [];
 
   @override
-  Future<String> uninstallApp(String appId, String version) async => '';
+  Future<String> uninstallApp(String appId, String? version) async => '';
 
   @override
   Stream<InstallProgress> updateApp(String appId) async* {}

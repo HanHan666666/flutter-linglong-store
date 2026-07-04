@@ -8,8 +8,10 @@ import '../../domain/models/uninstall_result.dart';
 
 typedef RunningAppsReader = List<RunningApp> Function();
 typedef RunningAppKiller = Future<bool> Function(RunningApp app);
+
+/// [version] 为 `null` 或空字符串时，仅按 appId 执行卸载命令，不拼接版本号。
 typedef AppUninstallExecutor =
-    Future<String> Function(String appId, String version);
+    Future<String> Function(String appId, String? version);
 typedef InstalledAppRemover = void Function(String appId, String version);
 typedef AppCollectionSyncer = Future<void> Function();
 typedef UninstallReporter =
@@ -75,8 +77,20 @@ class AppUninstallService {
   /// 调用方必须已经通过弹窗确认用户意图，且处理好活跃任务拦截。
   /// 此方法只负责：kill 运行实例 -> 执行卸载 -> 刷新 -> 上报。
   ///
+  /// [includeVersion] 控制 ll-cli 卸载命令是否携带精确版本号：
+  /// - `true`（默认）：按 `app.version` 精确卸载，用于应用详情页历史版本
+  ///   列表等已知精确安装实例的场景。
+  /// - `false`：卸载命令只使用 `appId`，用于应用详情页头部“整体卸载”场景——
+  ///   该场景下不能假定 `app.version` 一定是实际已安装的版本（详情页可能
+  ///   仍显示服务端“最新版本”），带上错误版本号会导致 ll-cli 找不到目标。
+  ///   本地已安装列表移除、卸载统计上报仍使用 `app.version`，因为调用方
+  ///   已负责传入解析出的真实已安装实例。
+  ///
   /// 返回 [UninstallResult] 描述最终结果。
-  Future<UninstallResult> executeUninstall(InstalledApp app) async {
+  Future<UninstallResult> executeUninstall(
+    InstalledApp app, {
+    bool includeVersion = true,
+  }) async {
     // 1. 检查运行中实例
     final runningInstances = getRunningInstances(app.appId);
 
@@ -93,7 +107,7 @@ class AppUninstallService {
 
     // 3. 执行卸载
     try {
-      await _uninstallApp(app.appId, app.version);
+      await _uninstallApp(app.appId, includeVersion ? app.version : null);
 
       // 4. 卸载成功后先做精确乐观移除，再走统一同步链路兜底校准。
       _removeInstalledApp(app.appId, app.version);

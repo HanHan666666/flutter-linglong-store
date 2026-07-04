@@ -151,11 +151,16 @@ class AppUninstallService {
   ///
   /// [context] BuildContext，用于显示弹窗和 SnackBar
   /// [app] 要卸载的应用信息
+  /// [includeVersion] 卸载命令是否携带精确版本号（详见 2.2.4）
   ///
   /// 返回：
   /// - `true` - 卸载成功
   /// - `false` - 用户取消或卸载失败
-  Future<bool> uninstall(BuildContext context, InstalledApp app);
+  Future<bool> uninstall(
+    BuildContext context,
+    InstalledApp app, {
+    bool includeVersion = true,
+  });
 }
 ```
 
@@ -198,6 +203,22 @@ if (!output.success) {
   );
 }
 ```
+
+#### 2.2.4 头部整体卸载 vs 历史版本精确卸载（2026-07-04）
+
+应用详情页存在两个卸载入口，二者对“是否携带版本号”的要求不同，**不能混用**：
+
+| 入口 | 版本来源 | ll-cli 命令 | `includeVersion` |
+|------|----------|-------------|-------------------|
+| 页面头部/标题栏“卸载”按钮（整体卸载） | 无需版本，由 `installedAppsProvider` 解析真实已安装实例仅用于本地移除/上报 | `ll-cli uninstall <appId>` | `false` |
+| 历史版本列表逐行“卸载” | 按行 `version` 精确解析已安装实例 | `ll-cli uninstall <appId>/<version>` | `true`（默认） |
+
+根因：`detailState.app`（页面头部数据来源）来自 `/app/getAppDetail` 详情接口，反映的是服务端“当前展示版本”（通常是最新版本），**不代表本机实际已安装的版本**。历史修复前，头部卸载直接拿 `detailState.app.version` 拼接 `appId/version`，当本机安装的是旧版本、或详情接口版本与本地不一致时，会拼出一个实际不存在的版本号传给 ll-cli。
+
+修复方案：
+- `LinglongCliRepository.uninstallApp(appId, version)` 的 `version` 参数改为可空 `String?`；为空时只传 `appId`。
+- `AppUninstallService.executeUninstall()` / `AppUninstallFlow.run()` 新增 `includeVersion` 参数，控制 CLI 调用是否携带版本号；`removeInstalledApp`/`reportUninstall` 等本地状态收尾仍使用调用方传入 `app.version`，因此调用方必须先用 `installedAppsProvider` 解析出真实已安装实例再传入。
+- `app_detail_page.dart` 新增 `_resolvePrimaryInstalledInstance()`，头部卸载改为：先按 `appId` 从真实已安装列表解析实例（多实例时复用与历史版本卸载相同的 arch/channel/module 打分规则），再以 `includeVersion: false` 执行卸载；历史版本列表卸载保持原有按版本精确解析逻辑不变。
 
 ---
 
@@ -365,3 +386,4 @@ AppUninstallService 捕获异常  ← 修复点
 | 日期 | 内容 |
 |------|------|
 | 2026-03-23 | 初始文档，记录卸载功能设计和 Bug 修复 |
+| 2026-07-04 | 修复应用详情页头部“整体卸载”误将服务端最新版本号拼进 ll-cli 卸载命令的问题：`uninstallApp` 的 `version` 参数改为可空，`AppUninstallService.executeUninstall`/`AppUninstallFlow.run` 新增 `includeVersion` 参数；头部卸载改为先从 `installedAppsProvider` 解析真实已安装实例、再以不带版本号的命令卸载，历史版本列表继续按版本精确卸载 |

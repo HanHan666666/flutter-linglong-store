@@ -42,7 +42,15 @@ abstract class LinglongCliRepository {
   Future<bool> cancelOperation(String appId, {required InstallTaskKind kind});
 
   /// 卸载应用
-  Future<String> uninstallApp(String appId, String version);
+  ///
+  /// [version] 为可选精确版本号：
+  /// - 传入具体版本时，卸载命令按 `appId/version` 精确匹配指定版本
+  ///   （用于应用详情页历史版本列表的按版本卸载场景）。
+  /// - 传 `null` 或空字符串时，卸载命令只使用 `appId`，由 ll-cli
+  ///   自身解析目标（用于应用详情页头部“整体卸载”场景，此处不应
+  ///   依赖详情接口返回的“最新版本号”，因为该版本号不一定对应
+  ///   实际已安装实例）。
+  Future<String> uninstallApp(String appId, String? version);
 
   /// 运行应用
   Future<void> runApp(String appId);

@@ -279,7 +279,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       onPrimaryPressed: () => _handleInstallAction(app, buttonState),
       onCancel: () => _handleCancelInstall(app),
       onCreateShortcut: () => _createShortcut(app),
-      onUninstall: () => _showUninstallDialog(app),
+      onUninstall: () => _showHeaderUninstallDialog(app),
       onShare: () => _shareApp(context, app),
     );
   }
@@ -917,8 +917,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         // 安装中，不做操作
         break;
       case InstallButtonState.uninstall:
-        // 卸载应用
-        _showUninstallDialog(app);
+        // 卸载应用（主按钮当前不会进入该状态，保留分支仅为穷举安全）
+        _showHeaderUninstallDialog(app);
         break;
     }
   }
@@ -1379,6 +1379,77 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     }
   }
 
+  /// 显示头部“整体卸载”确认对话框（应用标题栏/主按钮入口）。
+  ///
+  /// 与历史版本列表的按版本卸载不同，头部卸载不需要也不应该携带版本号：
+  /// `detailState.app`（即入参 [app]）来自 `/app/getAppDetail` 详情接口，
+  /// 反映的是服务端“当前展示版本”（往往是最新版本），并不一定等于本机
+  /// 实际已安装的版本；如果直接拿它去拼 `appId/version` 卸载，version
+  /// 不存在时会导致 ll-cli 卸载失败或误卸载。
+  ///
+  /// 因此这里先从 [installedAppsProvider]（真实已安装列表）按 appId 解析
+  /// 出实际已安装实例，仅用于本地状态移除/统计上报的版本号来源；卸载命令
+  /// 本身通过 `includeVersion: false` 只传 appId，交由 ll-cli 自行解析。
+  Future<void> _showHeaderUninstallDialog(InstalledApp app) async {
+    final target = _resolvePrimaryInstalledInstance(app);
+    if (target == null) {
+      if (!mounted) return;
+      showAppError(
+        context,
+        AppLocalizations.of(context)?.versionInstallTargetMissing ??
+            '未找到对应已安装版本，请刷新后重试',
+      );
+      return;
+    }
+
+    await _showUninstallDialog(target, includeVersion: false);
+  }
+
+  /// 从真实已安装列表中解析当前应用的“主已安装实例”。
+  ///
+  /// 用于头部整体卸载场景：当同一 appId 只有一个已安装实例时直接返回；
+  /// 存在多实例（多 arch/channel/module）时，复用与历史版本卸载相同的
+  /// 打分规则，优先选择与详情页当前上下文（[app] 的 arch/channel/module）
+  /// 最接近的实例。
+  InstalledApp? _resolvePrimaryInstalledInstance(InstalledApp app) {
+    final matches = ref
+        .read(installedAppsProvider)
+        .apps
+        .where((installed) => installed.appId == app.appId)
+        .toList();
+
+    if (matches.isEmpty) {
+      AppLogger.warning('[AppDetail] 头部卸载失败：未找到已安装实例 ${app.appId}');
+      return null;
+    }
+
+    if (matches.length == 1) {
+      return matches.first;
+    }
+
+    matches.sort((left, right) {
+      final leftScore = _scoreInstalledVersionTarget(
+        left,
+        preferredArch: app.arch,
+        preferredChannel: app.channel,
+        preferredModule: app.module,
+      );
+      final rightScore = _scoreInstalledVersionTarget(
+        right,
+        preferredArch: app.arch,
+        preferredChannel: app.channel,
+        preferredModule: app.module,
+      );
+      return rightScore.compareTo(leftScore);
+    });
+
+    AppLogger.warning(
+      '[AppDetail] 头部卸载命中多个安装实例，已选择上下文最优实例: '
+      '${app.appId} (${matches.length} candidates)',
+    );
+    return matches.first;
+  }
+
   /// 显示卸载确认对话框
   ///
   /// 使用统一的卸载流程处理所有逻辑：
@@ -1386,16 +1457,29 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   /// - 确认弹窗
   /// - kill 进程
   /// - 执行卸载
-  Future<void> _showUninstallDialog(InstalledApp app) async {
+  ///
+  /// [includeVersion] 透传给 [AppUninstallFlow.run]：历史版本列表按版本
+  /// 精确卸载时保持默认 `true`；头部整体卸载通过
+  /// [_showHeaderUninstallDialog] 传 `false`，避免拼接不存在的版本号。
+  Future<void> _showUninstallDialog(
+    InstalledApp app, {
+    bool includeVersion = true,
+  }) async {
     final currentContext = context;
     final service = ref.read(appUninstallServiceProvider);
-    final success = await AppUninstallFlow.run(currentContext, app, service);
+    final success = await AppUninstallFlow.run(
+      currentContext,
+      app,
+      service,
+      includeVersion: includeVersion,
+    );
     if (!currentContext.mounted) return;
 
     if (success) {
       showAppSuccess(currentContext, '${app.name} 已卸载');
     }
   }
+
 
   /// 在主窗口内以灯箱形式预览截图
   Future<void> _showScreenshotPreview(

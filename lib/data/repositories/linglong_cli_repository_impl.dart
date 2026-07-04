@@ -727,14 +727,20 @@ class LinglongCliRepositoryImpl
   }
 
   @override
-  Future<String> uninstallApp(String appId, String version) async {
-    try {
-      AppLogger.info('[LinglongCli] 卸载应用: $appId@$version');
+  Future<String> uninstallApp(String appId, String? version) async {
+    // version 为空时只传 appId，交由 ll-cli 自行解析目标（应用详情页头部
+    // “整体卸载”场景）；version 非空时按 appId/version 精确卸载指定版本
+    // （应用详情页历史版本列表场景）。ll-cli uninstall 会把 APP 解析为
+    // FuzzyReference，两种形式均受支持。
+    final hasVersion = version != null && version.isNotEmpty;
+    final target = hasVersion ? '$appId/$version' : appId;
 
-      // ll-cli uninstall 只接受 APP 参数，不接受 version 参数
+    try {
+      AppLogger.info('[LinglongCli] 卸载应用: $target');
+
       final output = await _execute([
         'uninstall',
-        '$appId/$version',
+        target,
       ], timeout: const Duration(minutes: 5));
 
       if (output.success) {

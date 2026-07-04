@@ -19,12 +19,20 @@ import '../widgets/uninstall_blocked_dialog.dart';
 class AppUninstallFlow {
   /// 执行完整卸载流程
   ///
+  /// [includeVersion] 透传给 [AppUninstallService.executeUninstall]，
+  /// 控制 ll-cli 卸载命令是否精确携带 `app.version`：
+  /// - 应用详情页头部“整体卸载”入口必须传 `false`，避免误用详情接口
+  ///   返回的“最新版本号”卸载一个实际并未安装的版本。
+  /// - 历史版本列表按版本精确卸载、我的应用列表按真实安装实例卸载时，
+  ///   保持默认 `true`。
+  ///
   /// 返回 `true` 表示卸载成功，`false` 表示取消或失败。
   static Future<bool> run(
     BuildContext context,
     InstalledApp app,
-    AppUninstallService service,
-  ) async {
+    AppUninstallService service, {
+    bool includeVersion = true,
+  }) async {
     if (!context.mounted) return false;
 
     // 1. 检查活跃任务拦截
@@ -63,7 +71,10 @@ class AppUninstallFlow {
     if (confirmed != true || !context.mounted) return false;
 
     // 3. 执行卸载
-    final result = await service.executeUninstall(app);
+    final result = await service.executeUninstall(
+      app,
+      includeVersion: includeVersion,
+    );
 
     // 4. 处理结果：成功返回 true；取消/拦截返回 false 且不提示；
     //    kill 失败或卸载异常时向前端通知中心推送错误信息。

@@ -714,6 +714,58 @@ void main() {
     });
 
     testWidgets(
+      'header uninstall resolves real installed instance and omits version',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1280, 900));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        final uninstallService = _RecordingUninstallService();
+
+        // _detailState() 固定返回 version '2.0.0'（模拟详情接口展示的“最新版
+        // 本”），而本机实际只安装了 '1.0.0'。回归验证头部整体卸载必须按真实
+        // 已安装实例卸载，且不应把 detail 接口的版本号拼进卸载命令。
+        await tester.pumpWidget(
+          _buildTestApp(
+            appId: 'org.example.demo',
+            uninstallService: uninstallService,
+            detailState: _detailState(versions: const []),
+            installedApps: const [
+              InstalledApp(
+                appId: 'org.example.demo',
+                name: 'Demo',
+                version: '1.0.0',
+                arch: 'x86_64',
+                channel: 'main',
+                module: 'main',
+              ),
+            ],
+          ),
+        );
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byTooltip('卸 载'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AlertDialog), findsOneWidget);
+
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(FilledButton),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(uninstallService.executedApps, hasLength(1));
+        // 必须命中本机真实已安装的 1.0.0，而不是详情接口返回的 2.0.0。
+        expect(uninstallService.executedApps.single.version, '1.0.0');
+        // 头部整体卸载不应携带版本号，交由 ll-cli 自行解析目标。
+        expect(uninstallService.executedIncludeVersion.single, isFalse);
+      },
+    );
+
+    testWidgets(
       'header installing state renders independent copyable status bar',
       (tester) async {
         await tester.binding.setSurfaceSize(const Size(760, 900));
@@ -1184,10 +1236,15 @@ class _RecordingUninstallService extends AppUninstallService {
       );
 
   final List<InstalledApp> executedApps = <InstalledApp>[];
+  final List<bool> executedIncludeVersion = <bool>[];
 
   @override
-  Future<UninstallResult> executeUninstall(InstalledApp app) async {
+  Future<UninstallResult> executeUninstall(
+    InstalledApp app, {
+    bool includeVersion = true,
+  }) async {
     executedApps.add(app);
+    executedIncludeVersion.add(includeVersion);
     return UninstallResultSuccess();
   }
 }

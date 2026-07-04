@@ -356,6 +356,34 @@ void main() {
       ]);
     });
 
+    test(
+      'uninstallApp omits version segment when version is null or empty',
+      () async {
+        // 应用详情页头部“整体卸载”入口不应携带版本号：ll-cli uninstall 只
+        // 传 appId，交由其自行解析目标，避免拼接一个实际未安装的版本号。
+        final executor = _RecordingCliExecutor()
+          ..nextExecuteOutput = const CliOutput(
+            stdout: '',
+            stderr: '',
+            exitCode: 0,
+          );
+        final repository = LinglongCliRepositoryImpl.withExecutor(
+          InstallMessages.fromLocale(const Locale('zh')),
+          execute: executor.execute,
+          executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+          cancelWithSystemKill: executor.cancelWithSystemKill,
+        );
+
+        await repository.uninstallApp('com.browser.softedge.stable', null);
+        await repository.uninstallApp('com.browser.softedge.stable', '');
+
+        expect(executor.executeCalls, [
+          ['uninstall', 'com.browser.softedge.stable'],
+          ['uninstall', 'com.browser.softedge.stable'],
+        ]);
+      },
+    );
+
     test('getRepositoryConfig parses json repo show output', () async {
       final executor = _RecordingCliExecutor()
         ..executeOutputsByCommand['--json repo show'] = const CliOutput(

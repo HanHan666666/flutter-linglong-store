@@ -212,7 +212,10 @@ class _NoopAppUninstallService extends AppUninstallService {
       );
 
   @override
-  Future<UninstallResult> executeUninstall(InstalledApp app) async {
+  Future<UninstallResult> executeUninstall(
+    InstalledApp app, {
+    bool includeVersion = true,
+  }) async {
     return UninstallResultSuccess();
   }
 }

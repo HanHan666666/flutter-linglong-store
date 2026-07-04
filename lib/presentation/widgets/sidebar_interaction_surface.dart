@@ -48,8 +48,7 @@ class SidebarInteractionSurface extends StatefulWidget {
       _SidebarInteractionSurfaceState();
 }
 
-class _SidebarInteractionSurfaceState
-    extends State<SidebarInteractionSurface> {
+class _SidebarInteractionSurfaceState extends State<SidebarInteractionSurface> {
   bool _isHovered = false;
 
   @override

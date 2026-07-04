@@ -430,7 +430,7 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
                       downloadSpeed:
                           buttonState == InstallButtonState.installing
                           ? (widget.installTask?.cliSpeed ??
-                            ref.watch(networkSpeedProvider).formatted)
+                                ref.watch(networkSpeedProvider).formatted)
                           : null,
                       onPressed: widget.isUpdateDisabled
                           ? () {}

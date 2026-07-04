@@ -149,7 +149,10 @@ void main() {
         ),
       );
 
-      expect(iconWidget.color, Theme.of(tester.element(uninstallButton)).colorScheme.error);
+      expect(
+        iconWidget.color,
+        Theme.of(tester.element(uninstallButton)).colorScheme.error,
+      );
     });
   });
 }

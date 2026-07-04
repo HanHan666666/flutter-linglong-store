@@ -85,7 +85,7 @@ Modify:
 ### Task 2: Rework Shell Content Plane
 
 - Modify `app_shell.dart`.
-- Add a unified window body/background and right-side content work area with subtle border and 12-16px radius.
+- Add a unified window body/background and right-side content work area with subtle border and 12-16px radius, while leaving the outer window corners to the platform window manager.
 - Use `_isMaximized` to avoid awkward outer gaps in maximized state.
 - Keep `_PrimaryIndexedStack`, secondary route overlay, KeepAlive visibility, and install queue listener behavior unchanged.
 - Commit with `refactor: 统一应用壳层内容工作区`.
@@ -120,7 +120,7 @@ Modify:
   - `flutter test test/unit/core/accessibility/a11y_semantics_test.dart`
 - If there are existing widget tests for shell/sidebar/app card/title bar, run those specific files.
 - Launch with `flutter run -d linux` if the local environment supports it, then inspect:
-  - normal window shell radius and content border,
+  - normal window straight outer corners and content border,
   - maximized window spacing,
   - recommend/all apps/ranking/search/my apps/update pages,
   - scrolling to the bottom of long lists,

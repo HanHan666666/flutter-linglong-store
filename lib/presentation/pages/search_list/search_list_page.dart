@@ -109,7 +109,10 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
   Widget build(BuildContext context) {
     final state = ref.watch(searchProvider);
 
-    return Scaffold(body: _buildBody(state));
+    return Scaffold(
+      backgroundColor: context.appColors.surface,
+      body: _buildBody(state),
+    );
   }
 
   Widget _buildBody(SearchState state) {

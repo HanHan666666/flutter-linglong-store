@@ -210,7 +210,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
               : null,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
-          fillColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+          fillColor: context.appColors.surfaceContainerLow,
         ),
       ),
     );

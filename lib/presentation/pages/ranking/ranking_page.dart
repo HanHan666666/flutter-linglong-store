@@ -104,8 +104,13 @@ class _RankingPageState extends ConsumerState<RankingPage>
     final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
-        color: palette.background,
-        border: Border(bottom: BorderSide(color: palette.divider, width: 1)),
+        color: palette.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: palette.borderSecondary.withValues(alpha: 0.72),
+            width: 1,
+          ),
+        ),
       ),
       child: TabBar(
         controller: _tabController,

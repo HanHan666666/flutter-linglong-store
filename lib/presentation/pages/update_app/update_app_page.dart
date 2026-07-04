@@ -125,10 +125,10 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+        color: context.appColors.surface,
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
+            color: context.appColors.borderSecondary,
             width: 1,
           ),
         ),
@@ -334,6 +334,11 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final itemRadius = AppRadius.mdRadius;
+    final itemBorderColor = _isHovered
+        ? AppColors.primary.withValues(alpha: isDark ? 0.34 : 0.18)
+        : context.appColors.cardBorder;
 
     // 确定按钮状态：仅处理活跃任务，其余均显示"更新"
     final buttonState = _getButtonState();
@@ -347,27 +352,25 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
         elevation: 0,
         color: Colors.transparent,
         clipBehavior: Clip.none,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
+        shape: RoundedRectangleBorder(borderRadius: itemRadius),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: widget.onTap,
-            borderRadius: AppRadius.smRadius,
+            borderRadius: itemRadius,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               decoration: BoxDecoration(
-                color: context.appColors.surface,
-                borderRadius: AppRadius.smRadius,
-                border: Border.all(
-                  color: theme.colorScheme.outlineVariant.withValues(
-                    alpha: 0.35,
-                  ),
-                ),
+                color: context.appColors.cardBackground,
+                borderRadius: itemRadius,
+                border: Border.all(color: itemBorderColor),
                 boxShadow: _isHovered
                     ? [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 8,
+                          color: Colors.black.withValues(
+                            alpha: isDark ? 0.18 : 0.05,
+                          ),
+                          blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
                       ]

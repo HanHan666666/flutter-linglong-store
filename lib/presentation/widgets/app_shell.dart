@@ -249,49 +249,74 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
         ? AppTag(name: tagName, language: tagLan)
         : null;
     final updateCount = ref.watch(updatableAppsCountProvider);
+    final windowRadius = _isMaximized
+        ? BorderRadius.zero
+        : BorderRadius.circular(AppRadius.lg);
+    final contentPadding = _isMaximized
+        ? EdgeInsets.zero
+        : const EdgeInsets.only(right: AppSpacing.sm, bottom: AppSpacing.sm);
+    final contentRadius = _isMaximized
+        ? const BorderRadius.only(topLeft: Radius.circular(AppRadius.lg))
+        : AppRadius.lgRadius;
+
     return InstallToDownloadFlyoutLayer(
-      child: Scaffold(
-        body: Column(
-          children: [
-            // 自定义标题栏
-            CustomTitleBar(
-              isMaximized: _isMaximized,
-              onMinimize: _onMinimize,
-              onMaximize: _onMaximize,
-              onClose: _onClose,
-              currentSearchQuery: currentSearchQuery,
-              currentSearchTag: currentSearchTag,
-            ),
-            // 主内容区域
-            Expanded(
-              child: Row(
-                children: [
-                  // 左侧导航栏
-                  Sidebar(
-                    currentPath: widget.currentPath,
-                    updateCount: updateCount,
-                  ),
-                  // 右侧内容区域，背景跟随主题
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: context.appColors.surfaceContainerLow,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(AppRadius.sm),
+      child: ClipRRect(
+        borderRadius: windowRadius,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: context.appColors.background,
+            borderRadius: windowRadius,
+          ),
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Column(
+              children: [
+                // 自定义标题栏
+                CustomTitleBar(
+                  isMaximized: _isMaximized,
+                  onMinimize: _onMinimize,
+                  onMaximize: _onMaximize,
+                  onClose: _onClose,
+                  currentSearchQuery: currentSearchQuery,
+                  currentSearchTag: currentSearchTag,
+                ),
+                // 主内容区域
+                Expanded(
+                  child: Row(
+                    children: [
+                      // 左侧导航栏
+                      Sidebar(
+                        currentPath: widget.currentPath,
+                        updateCount: updateCount,
+                      ),
+                      // 右侧工作区使用轻边框和圆角承载页面，避免旧灰底在底部形成硬切割。
+                      Expanded(
+                        child: Padding(
+                          padding: contentPadding,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: context.appColors.surface,
+                              borderRadius: contentRadius,
+                              border: Border.all(
+                                color: context.appColors.borderSecondary,
+                              ),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: contentRadius,
+                              child: ColoredBox(
+                                color: context.appColors.surface,
+                                child: _buildContentArea(),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(AppRadius.sm),
-                        ),
-                        child: _buildContentArea(),
-                      ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

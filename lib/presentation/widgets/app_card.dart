@@ -100,6 +100,11 @@ class _AppCardState extends State<AppCard> {
     }
 
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardRadius = AppRadius.mdRadius;
+    final cardBorderColor = _isHovered
+        ? AppColors.primary.withValues(alpha: isDark ? 0.34 : 0.18)
+        : context.appColors.cardBorder;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -115,17 +120,20 @@ class _AppCardState extends State<AppCard> {
           color: Colors.transparent,
           child: InkWell(
             onTap: widget.onTap,
-            borderRadius: AppRadius.smRadius,
+            borderRadius: cardRadius,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               decoration: BoxDecoration(
-                color: context.appColors.surface,
-                borderRadius: AppRadius.smRadius,
+                color: context.appColors.cardBackground,
+                borderRadius: cardRadius,
+                border: Border.all(color: cardBorderColor),
                 boxShadow: _isHovered
                     ? [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 8,
+                          color: Colors.black.withValues(
+                            alpha: isDark ? 0.18 : 0.05,
+                          ),
+                          blurRadius: 10,
                           offset: const Offset(0, 2),
                         ),
                       ]
@@ -469,7 +477,10 @@ class _RankBadge extends StatelessWidget {
       1 => (const Color(0xFFFFD700), Colors.white),
       2 => (const Color(0xFFC0C0C0), Colors.white),
       3 => (const Color(0xFFCD7F32), Colors.white),
-      _ => (context.appColors.cardBackground, context.appColors.textTertiary),
+      _ => (
+        context.appColors.surfaceContainerHighest,
+        context.appColors.textTertiary,
+      ),
     };
 
     return Container(

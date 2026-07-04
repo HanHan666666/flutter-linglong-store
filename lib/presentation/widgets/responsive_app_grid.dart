@@ -43,8 +43,8 @@ class ResponsiveAppGrid<T> extends ConsumerWidget {
   const ResponsiveAppGrid({
     required this.items,
     required this.itemBuilder,
-    this.mainAxisSpacing = AppSpacing.sm,
-    this.crossAxisSpacing = AppSpacing.sm,
+    this.mainAxisSpacing = AppSpacing.md,
+    this.crossAxisSpacing = AppSpacing.md,
     this.childAspectRatio,
     this.emptyTitle,
     this.emptyDescription,
@@ -57,10 +57,10 @@ class ResponsiveAppGrid<T> extends ConsumerWidget {
   /// 单个物品的构建回调。
   final ResponsiveGridItemBuilder<T> itemBuilder;
 
-  /// 主轴线间距，默认 [AppSpacing.sm]。
+  /// 主轴线间距，默认 [AppSpacing.md]。
   final double mainAxisSpacing;
 
-  /// 交叉轴间距，默认 [AppSpacing.sm]。
+  /// 交叉轴间距，默认 [AppSpacing.md]。
   final double crossAxisSpacing;
 
   /// 自定义物品宽高比。
@@ -95,10 +95,11 @@ class ResponsiveAppGrid<T> extends ConsumerWidget {
     double width,
     int crossAxisCount, {
     double? childAspectRatio,
+    double crossAxisSpacing = AppSpacing.md,
   }) {
     if (childAspectRatio != null) return childAspectRatio;
     final itemWidth =
-        (width - (crossAxisCount - 1) * AppSpacing.sm) / crossAxisCount;
+        (width - (crossAxisCount - 1) * crossAxisSpacing) / crossAxisCount;
     return itemWidth / kAppCardHeight;
   }
 
@@ -132,6 +133,7 @@ class ResponsiveAppGrid<T> extends ConsumerWidget {
           constraints.crossAxisExtent,
           crossAxisCount,
           childAspectRatio: childAspectRatio,
+          crossAxisSpacing: crossAxisSpacing,
         );
 
         return SliverGrid(

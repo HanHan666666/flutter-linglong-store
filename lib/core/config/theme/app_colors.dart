@@ -23,20 +23,29 @@ class AppColors {
   /// 页面背景色 - #FFFFFF
   static const Color background = Color(0xFFFFFFFF);
 
-  /// 卡片背景色 - #F6F6F6
-  static const Color cardBackground = Color(0xFFF6F6F6);
+  /// 卡片背景色 - #FFFFFF
+  ///
+  /// 轻量壳层风格下，卡片不再依赖灰色底块区分层级，
+  /// 而是通过浅边框和 hover 反馈建立可读边界。
+  static const Color cardBackground = Color(0xFFFFFFFF);
 
-  /// 卡片边框色 - #F6F6F6
-  static const Color cardBorder = Color(0xFFF6F6F6);
+  /// 卡片边框色 - #ECEFF3
+  ///
+  /// 用于替代旧版灰底沟槽，保证白色卡片在白色工作区内仍可辨识。
+  static const Color cardBorder = Color(0xFFECEFF3);
 
-  /// 布局背景色 (Ant Design color-bg-layout)
-  static const Color surfaceContainerLow = Color(0xFFF5F5F5);
+  /// 轻量填充色 (Ant Design color-bg-layout)
+  ///
+  /// 仅用于 hover、弱分组和输入底，不再作为主内容区的大面积灰底。
+  static const Color surfaceContainerLow = Color(0xFFF8F9FB);
 
   /// 主内容区背景 (Ant Design color-bg-container)
   static const Color surface = Color(0xFFFFFFFF);
 
-  /// 搜索框 focus 背景 (Ant Design color-bg-elevated)
-  static const Color surfaceContainerHighest = Color(0xFFF0F0F0);
+  /// 高亮表面色 (Ant Design color-bg-elevated)
+  ///
+  /// 用于搜索框、代码块等需要轻微抬高的表面。
+  static const Color surfaceContainerHighest = Color(0xFFF3F5F7);
 
   // ==================== 文字色 ====================
 
@@ -93,13 +102,13 @@ class AppColors {
   // ==================== 分隔线/边框 ====================
 
   /// 分隔线颜色
-  static const Color divider = Color(0xFFE5E5E5);
+  static const Color divider = Color(0xFFECEFF3);
 
   /// 边框颜色
-  static const Color border = Color(0xFFD9D9D9);
+  static const Color border = Color(0xFFD9DEE7);
 
   /// 次级边框颜色
-  static const Color borderSecondary = Color(0xFFE5E5E5);
+  static const Color borderSecondary = Color(0xFFECEFF3);
 
   // ==================== 阴影色 ====================
 
@@ -158,10 +167,10 @@ class AppColorPalette {
   static const AppColorPalette light = AppColorPalette._(
     background: Color(0xFFFFFFFF),
     surface: Color(0xFFFFFFFF),
-    cardBackground: Color(0xFFF6F6F6),
-    cardBorder: Color(0xFFF6F6F6),
-    surfaceContainerLow: Color(0xFFF5F5F5),
-    surfaceContainerHighest: Color(0xFFF0F0F0),
+    cardBackground: Color(0xFFFFFFFF),
+    cardBorder: Color(0xFFECEFF3),
+    surfaceContainerLow: Color(0xFFF8F9FB),
+    surfaceContainerHighest: Color(0xFFF3F5F7),
     primaryLight: Color(0xFFE6F0FF),
     textPrimary: Color(0xFF1A1A1A),
     textSecondary: Color(0xFF666666),
@@ -170,9 +179,9 @@ class AppColorPalette {
     openButtonBackground: Color(0xFFFFFFFF),
     openButtonBorder: Color(0xFFD8D8D8),
     openButtonText: Color(0xFF2C2C2C),
-    divider: Color(0xFFE5E5E5),
-    border: Color(0xFFD9D9D9),
-    borderSecondary: Color(0xFFE5E5E5),
+    divider: Color(0xFFECEFF3),
+    border: Color(0xFFD9DEE7),
+    borderSecondary: Color(0xFFECEFF3),
     skeletonBackground: Color(0xFFEEEEEE),
     skeletonHighlight: Color(0xFFF5F5F5),
   );

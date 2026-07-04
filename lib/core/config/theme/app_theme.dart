@@ -39,6 +39,51 @@ class AppTheme {
     return typography.withFontFamilyFallback(_linuxFontFamilyFallback);
   }
 
+  /// 构建浅色 ColorScheme。
+  ///
+  /// ColorScheme 的 surfaceContainer 系列会被部分页面直接读取，
+  /// 这里必须和 AppColorPalette.light 同步，避免旧灰底绕过项目令牌回流。
+  static ColorScheme _buildLightColorScheme() {
+    return ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      primary: AppColors.primary,
+      surface: AppColors.surface,
+      error: AppColors.error,
+      onSurface: AppColors.textPrimary,
+    ).copyWith(
+      surfaceContainerLowest: AppColors.background,
+      surfaceContainerLow: AppColors.surfaceContainerLow,
+      surfaceContainer: AppColors.surfaceContainerLow,
+      surfaceContainerHigh: AppColors.surfaceContainerHighest,
+      surfaceContainerHighest: AppColors.surfaceContainerHighest,
+      outlineVariant: AppColors.borderSecondary,
+      primaryContainer: AppColors.primaryLight,
+    );
+  }
+
+  /// 构建深色 ColorScheme。
+  ///
+  /// 深色主题本阶段只做令牌同步，不改变既有暗色层级，避免浅色改造
+  /// 连带破坏深色模式的可读对比。
+  static ColorScheme _buildDarkColorScheme(AppColorPalette palette) {
+    return ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      primary: AppColors.primary,
+      surface: palette.surface,
+      error: AppColors.error,
+      onSurface: palette.textPrimary,
+      brightness: Brightness.dark,
+    ).copyWith(
+      surfaceContainerLowest: palette.background,
+      surfaceContainerLow: palette.surfaceContainerLow,
+      surfaceContainer: palette.surfaceContainerLow,
+      surfaceContainerHigh: palette.surfaceContainerHighest,
+      surfaceContainerHighest: palette.surfaceContainerHighest,
+      outlineVariant: palette.borderSecondary,
+      primaryContainer: palette.primaryLight,
+    );
+  }
+
   /// 浅色主题
   static ThemeData get lightTheme => buildLightTheme();
 
@@ -58,13 +103,7 @@ class AppTheme {
       useMaterial3: true,
       // 全局禁用页面路由转场动画
       pageTransitionsTheme: _noTransitionTheme,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        primary: AppColors.primary,
-        surface: AppColors.surface,
-        error: AppColors.error,
-        onSurface: AppColors.textPrimary,
-      ),
+      colorScheme: _buildLightColorScheme(),
       scaffoldBackgroundColor: AppColors.background,
       // 注意: 移除 fontFamily 配置，使用 Flutter 默认字体
       // Flutter 不支持 CSS 风格的逗号分隔字体列表
@@ -125,7 +164,7 @@ class AppTheme {
       // 输入框主题
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: AppColors.surfaceContainerHighest,
         border: OutlineInputBorder(
           borderRadius: AppRadius.lgRadius,
           borderSide: const BorderSide(color: AppColors.borderSecondary),
@@ -228,7 +267,7 @@ class AppTheme {
 
       // Chip 主题
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.cardBackground,
+        backgroundColor: AppColors.surfaceContainerLow,
         selectedColor: AppColors.primaryLight,
         labelStyle: typography.caption,
         side: const BorderSide(color: AppColors.border),
@@ -272,14 +311,7 @@ class AppTheme {
       useMaterial3: true,
       // 全局禁用页面路由转场动画
       pageTransitionsTheme: _noTransitionTheme,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        primary: AppColors.primary,
-        surface: palette.surface,
-        error: AppColors.error,
-        onSurface: palette.textPrimary,
-        brightness: Brightness.dark,
-      ),
+      colorScheme: _buildDarkColorScheme(palette),
       scaffoldBackgroundColor: palette.background,
       textTheme: typography.textTheme,
       extensions: <ThemeExtension<dynamic>>[typography],
@@ -328,7 +360,7 @@ class AppTheme {
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: palette.surface,
+        fillColor: palette.surfaceContainerHighest,
         border: OutlineInputBorder(
           borderRadius: AppRadius.lgRadius,
           borderSide: BorderSide(color: palette.borderSecondary),

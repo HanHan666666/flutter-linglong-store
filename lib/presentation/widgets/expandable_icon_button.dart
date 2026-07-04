@@ -70,11 +70,11 @@ class _ExpandableIconButtonState extends State<ExpandableIconButton> {
               curve: Curves.easeInOut,
               height: 40,
               padding: _isExpanded
-                  ? const EdgeInsets.only(right: 12)
+                  ? const EdgeInsets.symmetric(horizontal: 12)
                   : EdgeInsets.zero,
               decoration: BoxDecoration(
                 color: _isExpanded
-                    ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
+                    ? theme.colorScheme.surfaceContainerHighest
                     : theme.colorScheme.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(

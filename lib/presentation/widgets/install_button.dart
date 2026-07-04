@@ -197,6 +197,9 @@ class _InstallButtonState extends State<InstallButton> {
             icon: ExcludeSemantics(child: Icon(icon, size: _getIconSize())),
             label: Text(label),
             style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.openButtonText,
+              backgroundColor: AppColors.openButtonBackground,
+              side: const BorderSide(color: AppColors.openButtonBorder),
               padding: EdgeInsets.symmetric(
                 horizontal: _getHorizontalPadding(),
               ),

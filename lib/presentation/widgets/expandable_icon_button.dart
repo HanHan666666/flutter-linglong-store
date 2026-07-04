@@ -65,27 +65,26 @@ class _ExpandableIconButtonState extends State<ExpandableIconButton> {
             onShowHoverHighlight: (value) {
               setState(() => _isExpanded = value);
             },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              height: 40,
-              padding: _isExpanded
-                  ? const EdgeInsets.symmetric(horizontal: 12)
-                  : EdgeInsets.zero,
-              decoration: BoxDecoration(
-                color: _isExpanded
-                    ? theme.colorScheme.surfaceContainerHighest
-                    : theme.colorScheme.surfaceContainerLowest,
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
+              child: InkWell(
+                onTap: widget.onTap,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: theme.colorScheme.outlineVariant,
-                ),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: widget.onTap,
-                  borderRadius: BorderRadius.circular(20),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  height: 40,
+                  padding: _isExpanded
+                      ? const EdgeInsets.symmetric(horizontal: 12)
+                      : EdgeInsets.zero,
+                  decoration: BoxDecoration(
+                    color: _isExpanded
+                        ? theme.colorScheme.surfaceContainerHighest
+                        : theme.colorScheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: theme.colorScheme.outlineVariant),
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -110,7 +109,9 @@ class _ExpandableIconButtonState extends State<ExpandableIconButton> {
                           child: _isExpanded
                               ? Text(
                                   label,
-                                  key: const ValueKey('expandable-icon-button-label'),
+                                  key: const ValueKey(
+                                    'expandable-icon-button-label',
+                                  ),
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     color: effectiveForegroundColor,
                                     fontWeight: FontWeight.w500,

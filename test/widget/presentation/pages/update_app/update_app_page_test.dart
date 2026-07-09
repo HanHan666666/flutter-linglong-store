@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/application/providers/app_operation_queue_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
+import 'package:linglong_store/application/providers/installed_apps_provider.dart';
 import 'package:linglong_store/application/providers/network_speed_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
 import 'package:linglong_store/core/config/theme.dart';
@@ -55,6 +56,7 @@ void main() {
           ProviderScope(
             overrides: [
               installQueueProvider.overrideWith(() => installQueue),
+              installedAppsProvider.overrideWith(() => TestInstalledApps()),
               updateAppsProvider.overrideWith(() => updateApps),
               networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
               appOperationQueueControllerProvider.overrideWith(
@@ -129,6 +131,7 @@ void main() {
           ProviderScope(
             overrides: [
               installQueueProvider.overrideWith(() => installQueue),
+              installedAppsProvider.overrideWith(() => TestInstalledApps()),
               updateAppsProvider.overrideWith(() => updateApps),
               networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
               appOperationQueueControllerProvider.overrideWith(
@@ -181,6 +184,7 @@ void main() {
           ProviderScope(
             overrides: [
               installQueueProvider.overrideWith(() => installQueue),
+              installedAppsProvider.overrideWith(() => TestInstalledApps()),
               updateAppsProvider.overrideWith(() => updateApps),
               networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
               appOperationQueueControllerProvider.overrideWith(
@@ -263,6 +267,7 @@ void main() {
         ProviderScope(
           overrides: [
             installQueueProvider.overrideWith(() => installQueue),
+            installedAppsProvider.overrideWith(() => TestInstalledApps()),
             updateAppsProvider.overrideWith(() => updateApps),
             networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
             appOperationQueueControllerProvider.overrideWith(
@@ -310,6 +315,7 @@ void main() {
         ProviderScope(
           overrides: [
             installQueueProvider.overrideWith(() => installQueue),
+            installedAppsProvider.overrideWith(() => TestInstalledApps()),
             updateAppsProvider.overrideWith(() => updateApps),
             networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
             appOperationQueueControllerProvider.overrideWith(
@@ -349,6 +355,7 @@ void main() {
         ProviderScope(
           overrides: [
             installQueueProvider.overrideWith(() => installQueue),
+            installedAppsProvider.overrideWith(() => TestInstalledApps()),
             updateAppsProvider.overrideWith(() => updateApps),
             networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
             appOperationQueueControllerProvider.overrideWith(
@@ -385,6 +392,7 @@ void main() {
         ProviderScope(
           overrides: [
             installQueueProvider.overrideWith(() => installQueue),
+            installedAppsProvider.overrideWith(() => TestInstalledApps()),
             updateAppsProvider.overrideWith(() => updateApps),
             networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
             appOperationQueueControllerProvider.overrideWith(
@@ -411,6 +419,47 @@ void main() {
 
       expect(updateApps.checkUpdatesCalls, beforeTapCalls + 1);
     });
+
+    testWidgets(
+      'manual check refreshes installed apps before recomputing updates',
+      (tester) async {
+        final events = <String>[];
+        final installQueue = TestInstallQueue(
+          initialState: const InstallQueueState(),
+        );
+        final installedApps = TestInstalledApps(events: events);
+        final updateApps = TestUpdateApps(events: events);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              installQueueProvider.overrideWith(() => installQueue),
+              installedAppsProvider.overrideWith(() => installedApps),
+              updateAppsProvider.overrideWith(() => updateApps),
+              networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+              appOperationQueueControllerProvider.overrideWith(
+                (ref) => RecordingAppOperationQueueController(ref),
+              ),
+            ],
+            child: const MaterialApp(
+              locale: Locale('zh'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(body: UpdateAppPage()),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+        events.clear();
+
+        await tester.tap(find.widgetWithText(OutlinedButton, '检查更新'));
+        await tester.pump();
+
+        expect(events, ['installed:refresh', 'updates:check']);
+      },
+    );
 
     testWidgets('shows "等待安装" for pending apps in queue, not progress bar', (
       tester,
@@ -465,6 +514,7 @@ void main() {
         ProviderScope(
           overrides: [
             installQueueProvider.overrideWith(() => installQueue),
+            installedAppsProvider.overrideWith(() => TestInstalledApps()),
             updateAppsProvider.overrideWith(() => updateApps),
             networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
             appOperationQueueControllerProvider.overrideWith(
@@ -681,6 +731,7 @@ Widget _buildFlyoutHost({
   return ProviderScope(
     overrides: [
       installQueueProvider.overrideWith(() => installQueue),
+      installedAppsProvider.overrideWith(() => TestInstalledApps()),
       updateAppsProvider.overrideWith(() => updateApps),
       networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
       appOperationQueueControllerProvider.overrideWith(
@@ -726,12 +777,38 @@ class TestInstallQueue extends InstallQueue {
   InstallQueueState build() => initialState;
 }
 
+class TestInstalledApps extends InstalledApps {
+  TestInstalledApps({this.events});
+
+  final List<String>? events;
+
+  @override
+  InstalledAppsState build() {
+    return const InstalledAppsState(
+      apps: [
+        InstalledApp(appId: 'org.example.demo', name: 'Demo', version: '1.0.0'),
+      ],
+    );
+  }
+
+  @override
+  Future<void> refresh() async {
+    events?.add('installed:refresh');
+    state = build();
+  }
+}
+
 class TestUpdateApps extends UpdateApps {
-  TestUpdateApps({UpdateAppsState? initialState, List<UpdatableApp>? apps})
-    : initialState =
-          initialState ?? UpdateAppsState(apps: apps ?? const <UpdatableApp>[]);
+  TestUpdateApps({
+    UpdateAppsState? initialState,
+    List<UpdatableApp>? apps,
+    this.events,
+  }) : initialState =
+           initialState ??
+           UpdateAppsState(apps: apps ?? const <UpdatableApp>[]);
 
   final UpdateAppsState initialState;
+  final List<String>? events;
   int checkUpdatesCalls = 0;
   int refreshCalls = 0;
 
@@ -741,6 +818,7 @@ class TestUpdateApps extends UpdateApps {
   @override
   Future<void> checkUpdates() async {
     checkUpdatesCalls += 1;
+    events?.add('updates:check');
   }
 
   @override

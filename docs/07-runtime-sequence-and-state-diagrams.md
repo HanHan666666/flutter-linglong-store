@@ -550,21 +550,31 @@ sequenceDiagram
     Sidebar->>Sidebar: render red dot
 ```
 
-### 9.1 安装/卸载后的联动
+### 9.1 应用集合变更与更新页刷新联动
 
 ```mermaid
 sequenceDiagram
-    participant Action as Install/Uninstall Controller
+    participant Action as Install/Uninstall/UpdatePage
+    participant Sync as AppCollectionSyncService
     participant Installed as InstalledAppsProvider
     participant Updates as UpdatesProvider
     participant Menu as Sidebar/MenuBadgeProvider
     participant Cache as AppListCacheService
 
-    Action->>Installed: refresh()
-    Action->>Updates: checkUpdates(force=true)
+    Action->>Sync: syncAfterSuccessfulOperation()
+    Sync->>Installed: refresh()
+    Installed-->>Sync: latest ll-cli list --json snapshot
+    Sync->>Updates: checkUpdates()
+    Updates-->>Sync: recomputed update list
     Action->>Cache: invalidate related cache
     Updates-->>Menu: update count
 ```
+
+2026-07-09 约定：更新页的初始化、手动「检查更新」、失败重试和下拉刷新都必须走
+`AppCollectionSyncService.syncAfterSuccessfulOperation()`。`ll-cli list --json`
+是本机已安装版本的事实来源，必须先刷新 `installedAppsProvider`，再调用
+`updateAppsProvider.checkUpdates()`；禁止在更新页直接调用 `checkUpdates()`，
+否则应用更新完成后可能继续用内存中的旧版本计算可更新列表。
 
 ---
 

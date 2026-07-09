@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../application/providers/app_collection_sync_provider.dart';
 import '../../../application/providers/app_operation_queue_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
@@ -31,14 +34,17 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
   void initState() {
     super.initState();
     // 页面加载时检查更新
-    Future.microtask(() {
-      ref.read(updateAppsProvider.notifier).checkUpdates();
-    });
+    unawaited(Future.microtask(_syncUpdates));
   }
 
-  /// 手动检查更新
-  void _checkUpdates() {
-    ref.read(updateAppsProvider.notifier).checkUpdates();
+  /// 同步已安装快照后重新检查更新。
+  ///
+  /// 更新页属于用户主动核对本机状态的入口，必须先刷新 `ll-cli list --json`
+  /// 对应的已安装应用快照，再计算远端可更新列表，避免更新完成后继续使用旧版本。
+  Future<void> _syncUpdates() {
+    return ref
+        .read(appCollectionSyncServiceProvider)
+        .syncAfterSuccessfulOperation();
   }
 
   /// 全部更新
@@ -149,7 +155,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               OutlinedButton.icon(
-                onPressed: isChecking ? null : _checkUpdates,
+                onPressed: isChecking ? null : () => unawaited(_syncUpdates()),
                 icon: const Icon(Icons.refresh, size: 18),
                 label: Text(
                   isChecking
@@ -223,7 +229,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
           description: state.error,
           retryText: l10n?.retry ?? '重试',
           onRetry: () {
-            ref.read(updateAppsProvider.notifier).checkUpdates();
+            unawaited(_syncUpdates());
           },
         ),
       );
@@ -245,7 +251,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
     return _buildRefreshOverlay(
       isRefreshing: state.isLoading,
       child: RefreshIndicator(
-        onRefresh: () => ref.read(updateAppsProvider.notifier).refresh(),
+        onRefresh: _syncUpdates,
         child: ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           itemCount: state.apps.length,

@@ -1033,5 +1033,14 @@
     }
   },
   "repairInvalidSignature": "修复脚本签名无效，已阻止执行。",
-  "openRepairLog": "打开日志目录"
+  "openRepairLog": "打开日志目录",
+  "copyRepairOutput": "复制当前输出",
+  "repairElapsedTime": "已运行 {elapsed}",
+  "@repairElapsedTime": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -66,13 +66,13 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    expect(find.text('stdout visible'), findsOneWidget);
-    expect(find.text('stderr visible'), findsOneWidget);
+    expect(find.text('[stdout] stdout visible'), findsOneWidget);
+    expect(find.text('[stderr] stderr visible'), findsOneWidget);
     expect(find.text('修复完成，请重新尝试安装。'), findsOneWidget);
     expect(
       tester
           .widget<SelectableText>(
-            find.widgetWithText(SelectableText, 'stderr visible'),
+            find.widgetWithText(SelectableText, '[stderr] stderr visible'),
           )
           .style
           ?.color,

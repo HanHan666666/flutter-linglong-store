@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path;
 
 import '../../application/services/guided_repair_service.dart';
@@ -13,8 +16,8 @@ import '../../core/platform/shell_command_executor.dart';
 
 /// 一键修复执行与实时 STDIO 对话框。
 ///
-/// 输出按固定间隔批量刷新，并只在界面保留最近行，避免高频脚本输出造成逐行重建和
-/// 无限内存增长；完整 stdout/stderr 始终由执行器持续写入 XDG 日志。
+/// 输出按固定间隔批量刷新，并只在界面保留最近 512 KiB，避免高频脚本输出造成
+/// 逐行重建和无限内存增长；完整 stdout/stderr 始终由执行器持续写入 XDG 日志。
 class GuidedRepairExecutionDialog extends ConsumerStatefulWidget {
   /// 创建执行对话框。
   const GuidedRepairExecutionDialog({
@@ -41,11 +44,11 @@ class GuidedRepairExecutionDialog extends ConsumerStatefulWidget {
 /// 执行对话框状态。
 class _GuidedRepairExecutionDialogState
     extends ConsumerState<GuidedRepairExecutionDialog> {
-  /// UI 最多保留的实时输出行数。
-  static const int _maxVisibleLines = 2000;
+  /// UI 最多保留的实时输出 UTF-8 字节数。
+  static const int _maxVisibleOutputBytes = 512 * 1024;
 
   /// UI 输出刷新间隔。
-  static const Duration _flushInterval = Duration(milliseconds: 80);
+  static const Duration _flushInterval = Duration(milliseconds: 100);
 
   /// 已渲染输出。
   final List<ShellOutputLine> _visibleLines = <ShellOutputLine>[];
@@ -59,8 +62,23 @@ class _GuidedRepairExecutionDialogState
   /// 输出批量刷新定时器。
   Timer? _flushTimer;
 
+  /// 已运行时间刷新定时器。
+  Timer? _elapsedTimer;
+
   /// 已从界面移除但仍保存在日志中的行数。
   int _droppedLineCount = 0;
+
+  /// 当前可见输出占用的 UTF-8 字节数。
+  int _visibleOutputBytes = 0;
+
+  /// 用户是否仍停留在输出底部。
+  bool _autoScrollEnabled = true;
+
+  /// 修复开始时间。
+  late final DateTime _startedAt;
+
+  /// 当前已运行时间。
+  Duration _elapsed = Duration.zero;
 
   /// 最终执行结果。
   GuidedRepairResult? _result;
@@ -74,13 +92,20 @@ class _GuidedRepairExecutionDialogState
   @override
   void initState() {
     super.initState();
+    _startedAt = DateTime.now();
     _flushTimer = Timer.periodic(_flushInterval, (_) => _flushOutput());
+    _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted && _isRunning) {
+        setState(() => _elapsed = DateTime.now().difference(_startedAt));
+      }
+    });
     unawaited(_execute());
   }
 
   @override
   void dispose() {
     _flushTimer?.cancel();
+    _elapsedTimer?.cancel();
     _scrollController.dispose();
     super.dispose();
   }
@@ -127,19 +152,57 @@ class _GuidedRepairExecutionDialogState
     }
     setState(() {
       _visibleLines.addAll(_pendingLines);
+      _visibleOutputBytes += _pendingLines.fold<int>(
+        0,
+        (total, output) => total + _outputByteLength(output),
+      );
       _pendingLines.clear();
-      final overflow = _visibleLines.length - _maxVisibleLines;
-      if (overflow > 0) {
-        _visibleLines.removeRange(0, overflow);
-        _droppedLineCount += overflow;
+
+      var removeCount = 0;
+      while (_visibleOutputBytes > _maxVisibleOutputBytes &&
+          removeCount < _visibleLines.length) {
+        _visibleOutputBytes -= _outputByteLength(_visibleLines[removeCount]);
+        removeCount += 1;
+      }
+      if (removeCount > 0) {
+        _visibleLines.removeRange(0, removeCount);
+        _droppedLineCount += removeCount;
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollController.hasClients) {
+      if (!mounted || !_autoScrollEnabled || !_scrollController.hasClients) {
         return;
       }
       _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     });
+  }
+
+  /// 计算一行带通道前缀后的 UTF-8 占用。
+  int _outputByteLength(ShellOutputLine output) {
+    return utf8.encode(_formatOutputLine(output)).length + 1;
+  }
+
+  /// 为实时输出添加稳定通道前缀。
+  String _formatOutputLine(ShellOutputLine output) {
+    final channel = output.channel == ShellOutputChannel.stdout
+        ? 'stdout'
+        : 'stderr';
+    return '[$channel] ${output.line}';
+  }
+
+  /// 根据用户滚动位置控制是否继续自动跟随最新输出。
+  bool _handleOutputScroll(ScrollNotification notification) {
+    if (notification is UserScrollNotification &&
+        notification.direction != ScrollDirection.idle) {
+      _autoScrollEnabled = notification.metrics.extentAfter < 24;
+    }
+    return false;
+  }
+
+  /// 复制当前界面保留的带通道输出。
+  Future<void> _copyVisibleOutput() async {
+    final text = _visibleLines.map(_formatOutputLine).join('\n');
+    await Clipboard.setData(ClipboardData(text: text));
   }
 
   /// 打开当前日志所在目录。
@@ -201,6 +264,14 @@ class _GuidedRepairExecutionDialogState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
+                      if (_visibleLines.isNotEmpty)
+                        TextButton.icon(
+                          onPressed: _copyVisibleOutput,
+                          icon: const ExcludeSemantics(
+                            child: Icon(Icons.copy_outlined, size: 18),
+                          ),
+                          label: Text(l10n?.copyRepairOutput ?? '复制当前输出'),
+                        ),
                       if (_result != null)
                         TextButton.icon(
                           onPressed: _openLogDirectory,
@@ -267,26 +338,52 @@ class _GuidedRepairExecutionDialogState
 
     return Semantics(
       liveRegion: true,
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_isRunning)
-            SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2, color: color),
-            )
-          else
-            ExcludeSemantics(child: Icon(icon, size: 20, color: color)),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              message,
-              style: context.appTextStyles.bodyMedium.copyWith(color: color),
+          Row(
+            children: [
+              if (_isRunning)
+                SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: color,
+                  ),
+                )
+              else
+                ExcludeSemantics(child: Icon(icon, size: 20, color: color)),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  message,
+                  style: context.appTextStyles.bodyMedium.copyWith(
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            l10n?.repairElapsedTime(_formatElapsed(_elapsed)) ??
+                '已运行 ${_formatElapsed(_elapsed)}',
+            style: context.appTextStyles.caption.copyWith(
+              color: appColors.textSecondary,
             ),
           ),
         ],
       ),
     );
+  }
+
+  /// 将运行时间格式化为桌面端易扫描的 HH:MM:SS。
+  String _formatElapsed(Duration elapsed) {
+    final hours = elapsed.inHours.toString().padLeft(2, '0');
+    final minutes = (elapsed.inMinutes % 60).toString().padLeft(2, '0');
+    final seconds = (elapsed.inSeconds % 60).toString().padLeft(2, '0');
+    return '$hours:$minutes:$seconds';
   }
 
   /// 构建高性能实时输出列表。
@@ -309,35 +406,39 @@ class _GuidedRepairExecutionDialogState
                 ),
               ),
             )
-          : ListView.builder(
-              key: const Key('guidedRepairOutputList'),
-              controller: _scrollController,
-              padding: const EdgeInsets.all(AppSpacing.md),
-              itemCount: _visibleLines.length + (_droppedLineCount > 0 ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (_droppedLineCount > 0 && index == 0) {
-                  return Text(
-                    l10n?.repairOutputTruncated(_droppedLineCount) ??
-                        '界面已省略较早的 $_droppedLineCount 行，完整内容请查看日志。',
+          : NotificationListener<ScrollNotification>(
+              onNotification: _handleOutputScroll,
+              child: ListView.builder(
+                key: const Key('guidedRepairOutputList'),
+                controller: _scrollController,
+                padding: const EdgeInsets.all(AppSpacing.md),
+                itemCount:
+                    _visibleLines.length + (_droppedLineCount > 0 ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (_droppedLineCount > 0 && index == 0) {
+                    return Text(
+                      l10n?.repairOutputTruncated(_droppedLineCount) ??
+                          '界面已省略较早的 $_droppedLineCount 行，完整内容请查看日志。',
+                      style: context.appTextStyles.caption.copyWith(
+                        color: appColors.warning,
+                        fontFamily: 'monospace',
+                      ),
+                    );
+                  }
+                  final lineIndex = index - (_droppedLineCount > 0 ? 1 : 0);
+                  final output = _visibleLines[lineIndex];
+                  return SelectableText(
+                    _formatOutputLine(output),
                     style: context.appTextStyles.caption.copyWith(
-                      color: appColors.warning,
+                      color: output.channel == ShellOutputChannel.stderr
+                          ? AppColors.error
+                          : appColors.textPrimary,
                       fontFamily: 'monospace',
+                      height: 1.35,
                     ),
                   );
-                }
-                final lineIndex = index - (_droppedLineCount > 0 ? 1 : 0);
-                final output = _visibleLines[lineIndex];
-                return SelectableText(
-                  output.line,
-                  style: context.appTextStyles.caption.copyWith(
-                    color: output.channel == ShellOutputChannel.stderr
-                        ? AppColors.error
-                        : appColors.textPrimary,
-                    fontFamily: 'monospace',
-                    height: 1.35,
-                  ),
-                );
-              },
+                },
+              ),
             ),
     );
   }

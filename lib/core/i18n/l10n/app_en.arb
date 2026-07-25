@@ -1032,5 +1032,14 @@
     }
   },
   "repairInvalidSignature": "The repair script signature is invalid. Execution was blocked.",
-  "openRepairLog": "Open log folder"
+  "openRepairLog": "Open log folder",
+  "copyRepairOutput": "Copy current output",
+  "repairElapsedTime": "Elapsed {elapsed}",
+  "@repairElapsedTime": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      }
+    }
+  }
 }

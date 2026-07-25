@@ -1663,4 +1663,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get openRepairLog => '打开日志目录';
+
+  @override
+  String get copyRepairOutput => '复制当前输出';
+
+  @override
+  String repairElapsedTime(String elapsed) {
+    return '已运行 $elapsed';
+  }
 }

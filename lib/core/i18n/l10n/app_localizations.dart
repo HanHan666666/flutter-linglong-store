@@ -3047,6 +3047,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'打开日志目录'**
   String get openRepairLog;
+
+  /// No description provided for @copyRepairOutput.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制当前输出'**
+  String get copyRepairOutput;
+
+  /// No description provided for @repairElapsedTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'已运行 {elapsed}'**
+  String repairElapsedTime(String elapsed);
 }
 
 class _AppLocalizationsDelegate

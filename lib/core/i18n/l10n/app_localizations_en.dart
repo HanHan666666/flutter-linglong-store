@@ -1726,4 +1726,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openRepairLog => 'Open log folder';
+
+  @override
+  String get copyRepairOutput => 'Copy current output';
+
+  @override
+  String repairElapsedTime(String elapsed) {
+    return 'Elapsed $elapsed';
+  }
 }

@@ -11,6 +11,7 @@ import '../../core/i18n/l10n/app_localizations.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_task.dart';
 import 'app_icon.dart';
+import 'error_solution_help_button.dart';
 
 /// 下载管理弹窗
 ///
@@ -630,12 +631,26 @@ class _TaskCardState extends State<_TaskCard> {
       return const SizedBox.shrink();
     }
 
+    final diagnosticMessage = widget.task.diagnosticMessage;
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.xs),
-      child: Text(
-        widget.task.errorMessage!,
-        style: context.appTextStyles.caption.copyWith(color: AppColors.error),
-        softWrap: true,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              widget.task.errorMessage!,
+              style: context.appTextStyles.caption.copyWith(
+                color: AppColors.error,
+              ),
+              softWrap: true,
+            ),
+          ),
+          if (diagnosticMessage != null && diagnosticMessage.isNotEmpty) ...[
+            const SizedBox(width: AppSpacing.xs),
+            ErrorSolutionHelpButton(message: diagnosticMessage),
+          ],
+        ],
       ),
     );
   }

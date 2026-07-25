@@ -1645,4 +1645,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get repoManagementHintMessage =>
       'This store can only fetch app data from the official stable repository. Do not remove the stable repository, otherwise app installation will fail.';
+
+  @override
+  String get errorSolutionHelpTooltip => 'View solution';
+
+  @override
+  String get a11yErrorSolutionHelp =>
+      'Find a solution for this installation error';
+
+  @override
+  String get errorSolutionNoSolution => 'No solution is available';
+
+  @override
+  String get errorSolutionQueryFailed => 'Query failed. Please try again';
+
+  @override
+  String get errorSolutionRetry => 'Try again';
+
+  @override
+  String get errorSolutionCommunityPost => 'Post in community';
+
+  @override
+  String get errorSolutionRepair => 'Repair now';
+
+  @override
+  String get errorSolutionClose => 'Close solution';
 }

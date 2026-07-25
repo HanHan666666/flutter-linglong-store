@@ -1588,4 +1588,28 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get repoManagementHintMessage =>
       '本商店仅能获取官方 stable 仓库的应用数据，请勿删除 stable 仓库，否则将导致无法安装应用。';
+
+  @override
+  String get errorSolutionHelpTooltip => '查看解决方案';
+
+  @override
+  String get a11yErrorSolutionHelp => '查询该安装错误的解决方案';
+
+  @override
+  String get errorSolutionNoSolution => '暂无解决方案';
+
+  @override
+  String get errorSolutionQueryFailed => '查询失败，请重试';
+
+  @override
+  String get errorSolutionRetry => '重新查询';
+
+  @override
+  String get errorSolutionCommunityPost => '社区发帖';
+
+  @override
+  String get errorSolutionRepair => '一键修复';
+
+  @override
+  String get errorSolutionClose => '关闭解决方案';
 }

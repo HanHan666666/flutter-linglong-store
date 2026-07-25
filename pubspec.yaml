@@ -57,6 +57,8 @@ dependencies:
     git:
       url: https://github.com/HanHan666666/app_data_migrations.git
       ref: v0.2.0
+  cryptography: ^2.9.0
+  flutter_markdown_plus: ^1.0.12
 
   # 系统托盘 (暂时禁用 - system_tray 不支持 Dart 3.x)
   # system_tray: ^2.0.3

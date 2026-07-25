@@ -2909,6 +2909,54 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'本商店仅能获取官方 stable 仓库的应用数据，请勿删除 stable 仓库，否则将导致无法安装应用。'**
   String get repoManagementHintMessage;
+
+  /// No description provided for @errorSolutionHelpTooltip.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看解决方案'**
+  String get errorSolutionHelpTooltip;
+
+  /// No description provided for @a11yErrorSolutionHelp.
+  ///
+  /// In zh, this message translates to:
+  /// **'查询该安装错误的解决方案'**
+  String get a11yErrorSolutionHelp;
+
+  /// No description provided for @errorSolutionNoSolution.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无解决方案'**
+  String get errorSolutionNoSolution;
+
+  /// No description provided for @errorSolutionQueryFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'查询失败，请重试'**
+  String get errorSolutionQueryFailed;
+
+  /// No description provided for @errorSolutionRetry.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新查询'**
+  String get errorSolutionRetry;
+
+  /// No description provided for @errorSolutionCommunityPost.
+  ///
+  /// In zh, this message translates to:
+  /// **'社区发帖'**
+  String get errorSolutionCommunityPost;
+
+  /// No description provided for @errorSolutionRepair.
+  ///
+  /// In zh, this message translates to:
+  /// **'一键修复'**
+  String get errorSolutionRepair;
+
+  /// No description provided for @errorSolutionClose.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭解决方案'**
+  String get errorSolutionClose;
 }
 
 class _AppLocalizationsDelegate

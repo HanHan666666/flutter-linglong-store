@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
+import 'package:linglong_store/data/models/error_solution_dto.dart';
 import 'package:retrofit/retrofit.dart';
 
 part 'app_api_service.g.dart';
@@ -77,6 +78,13 @@ abstract class AppApiService {
   /// GET /app/findShellString
   @GET('/app/findShellString')
   Future<HttpResponse<StringResponse>> findShellString();
+
+  /// 使用 ll-cli 原始 message 查询唯一安装错误解决方案
+  /// POST /app/error-solution/find
+  @POST('/app/error-solution/find')
+  Future<HttpResponse<ErrorSolutionResponse>> findErrorSolution(
+    @Body() ErrorSolutionFindRequest request,
+  );
 
   // ============== 轮播图/推荐接口 ==============
 

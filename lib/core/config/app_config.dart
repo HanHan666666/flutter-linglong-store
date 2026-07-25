@@ -41,4 +41,10 @@ class AppConfig {
     'INSTALL_DOC_URL',
     defaultValue: 'https://linyaps.org.cn/guide/start/install.html',
   );
+
+  /// 玲珑社区发帖入口。
+  ///
+  /// 无匹配解决方案时与设置页共用该地址，避免多个页面维护不同的社区入口。
+  static const String communityForumUrl =
+      'https://bbs.deepin.org.cn/module/detail/230';
 }

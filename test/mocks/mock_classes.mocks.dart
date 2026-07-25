@@ -11,6 +11,7 @@ import 'package:linglong_store/core/storage/preferences_service.dart' as _i16;
 import 'package:linglong_store/data/datasources/remote/app_api_service.dart'
     as _i18;
 import 'package:linglong_store/data/models/api_dto.dart' as _i19;
+import 'package:linglong_store/data/models/error_solution_dto.dart' as _i20;
 import 'package:linglong_store/domain/models/app_comment.dart' as _i8;
 import 'package:linglong_store/domain/models/app_detail.dart' as _i6;
 import 'package:linglong_store/domain/models/app_version.dart' as _i9;
@@ -595,6 +596,22 @@ class MockAppApiService extends _i1.Mock implements _i18.AppApiService {
                 ),
           )
           as _i4.Future<_i2.HttpResponse<_i19.StringResponse>>);
+
+  @override
+  _i4.Future<_i2.HttpResponse<_i20.ErrorSolutionResponse>> findErrorSolution(
+    _i20.ErrorSolutionFindRequest? request,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#findErrorSolution, [request]),
+            returnValue:
+                _i4.Future<_i2.HttpResponse<_i20.ErrorSolutionResponse>>.value(
+                  _FakeHttpResponse_0<_i20.ErrorSolutionResponse>(
+                    this,
+                    Invocation.method(#findErrorSolution, [request]),
+                  ),
+                ),
+          )
+          as _i4.Future<_i2.HttpResponse<_i20.ErrorSolutionResponse>>);
 
   @override
   _i4.Future<_i2.HttpResponse<_i19.AppListArrayResponse>>

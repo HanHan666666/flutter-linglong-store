@@ -226,6 +226,37 @@ class _AppApiService implements AppApiService {
   }
 
   @override
+  Future<HttpResponse<ErrorSolutionResponse>> findErrorSolution(
+    ErrorSolutionFindRequest request,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(request.toJson());
+    final _options = _setStreamType<HttpResponse<ErrorSolutionResponse>>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/app/error-solution/find',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ErrorSolutionResponse _value;
+    try {
+      _value = ErrorSolutionResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    final httpResponse = HttpResponse(_value, _result);
+    return httpResponse;
+  }
+
+  @override
   Future<HttpResponse<AppListArrayResponse>> getWelcomeCarouselList(
     AppWelcomeSearchRequest request,
   ) async {

@@ -38,6 +38,27 @@ class ShellCommandResult {
   }
 }
 
+/// Shell 输出来源。
+enum ShellOutputChannel {
+  /// 标准输出。
+  stdout,
+
+  /// 标准错误。
+  stderr,
+}
+
+/// Shell 进程实时输出的单行事件。
+class ShellOutputLine {
+  /// 创建实时输出事件。
+  const ShellOutputLine({required this.channel, required this.line});
+
+  /// 当前行来自 stdout 还是 stderr。
+  final ShellOutputChannel channel;
+
+  /// 去除换行分隔符后的原始文本。
+  final String line;
+}
+
 /// 非 `ll-cli` 命令的底层执行器接口，便于测试替换。
 abstract interface class ShellCommandRunner {
   Future<ShellCommandResult> run(
@@ -48,7 +69,25 @@ abstract interface class ShellCommandRunner {
   });
 }
 
-class ProcessShellCommandRunner implements ShellCommandRunner {
+/// 支持实时输出的底层执行器扩展接口。
+///
+/// 该接口与 [ShellCommandRunner] 分离，避免既有测试替身和只关心最终结果的调用方
+/// 被迫实现流式能力；[ShellCommandExecutor] 会为不支持该接口的替身提供兼容回退。
+abstract interface class StreamingShellCommandRunner {
+  /// 执行命令并实时回调 stdout/stderr 的每一行。
+  Future<ShellCommandResult> runStreaming(
+    List<String> command, {
+    required void Function(ShellOutputLine output) onOutput,
+    Duration timeout = const Duration(minutes: 5),
+    Map<String, String>? environment,
+    ShellCommandLogOptions? logOptions,
+  });
+}
+
+/// 基于系统进程的 Shell 命令执行器。
+class ProcessShellCommandRunner
+    implements ShellCommandRunner, StreamingShellCommandRunner {
+  /// 创建无状态进程执行器。
   const ProcessShellCommandRunner();
 
   @override
@@ -57,6 +96,39 @@ class ProcessShellCommandRunner implements ShellCommandRunner {
     Duration timeout = const Duration(minutes: 5),
     Map<String, String>? environment,
     ShellCommandLogOptions? logOptions,
+  }) {
+    return _runProcess(
+      command,
+      timeout: timeout,
+      environment: environment,
+      logOptions: logOptions,
+    );
+  }
+
+  @override
+  Future<ShellCommandResult> runStreaming(
+    List<String> command, {
+    required void Function(ShellOutputLine output) onOutput,
+    Duration timeout = const Duration(minutes: 5),
+    Map<String, String>? environment,
+    ShellCommandLogOptions? logOptions,
+  }) {
+    return _runProcess(
+      command,
+      timeout: timeout,
+      environment: environment,
+      logOptions: logOptions,
+      onOutput: onOutput,
+    );
+  }
+
+  /// 统一实现普通执行与流式执行，确保超时、日志和清理行为完全一致。
+  Future<ShellCommandResult> _runProcess(
+    List<String> command, {
+    required Duration timeout,
+    Map<String, String>? environment,
+    ShellCommandLogOptions? logOptions,
+    void Function(ShellOutputLine output)? onOutput,
   }) async {
     if (command.isEmpty) {
       throw ArgumentError.value(command, 'command', 'Command cannot be empty');
@@ -68,7 +140,7 @@ class ProcessShellCommandRunner implements ShellCommandRunner {
 
     AppLogger.info('[Shell] 启动命令: $commandLine');
 
-    if (logOptions == null) {
+    if (logOptions == null && onOutput == null) {
       final result = await Process.run(
         executable,
         arguments,
@@ -83,7 +155,9 @@ class ProcessShellCommandRunner implements ShellCommandRunner {
       );
     }
 
-    final logWriter = await _openLogWriter(logOptions, commandLine);
+    final logWriter = logOptions == null
+        ? null
+        : await _openLogWriter(logOptions, commandLine);
     Process? process;
     try {
       process = await Process.start(
@@ -102,6 +176,8 @@ class ProcessShellCommandRunner implements ShellCommandRunner {
         logPrefix: '[Shell stdout]',
         logger: AppLogger.info,
         logWriter: logWriter,
+        channel: ShellOutputChannel.stdout,
+        onOutput: onOutput,
       );
       final stderrFuture = _captureStream(
         stream: process.stderr,
@@ -110,6 +186,8 @@ class ProcessShellCommandRunner implements ShellCommandRunner {
         logPrefix: '[Shell stderr]',
         logger: AppLogger.warning,
         logWriter: logWriter,
+        channel: ShellOutputChannel.stderr,
+        onOutput: onOutput,
       );
 
       int exitCode;
@@ -118,7 +196,7 @@ class ProcessShellCommandRunner implements ShellCommandRunner {
       } on TimeoutException {
         process.kill();
         await Future.wait([stdoutFuture, stderrFuture]);
-        await logWriter.writeLine(
+        await logWriter?.writeLine(
           '[Shell] 命令超时: $commandLine (timeout=${timeout.inSeconds}s)',
         );
         rethrow;
@@ -127,7 +205,7 @@ class ProcessShellCommandRunner implements ShellCommandRunner {
       await Future.wait([stdoutFuture, stderrFuture]);
 
       _logExit(commandLine, exitCode);
-      await logWriter.writeLine(
+      await logWriter?.writeLine(
         '[Shell] 命令退出: $commandLine (exitCode=$exitCode)',
       );
 
@@ -138,10 +216,10 @@ class ProcessShellCommandRunner implements ShellCommandRunner {
       );
     } catch (error, stackTrace) {
       AppLogger.error('[Shell] 命令执行失败: $commandLine', error, stackTrace);
-      await logWriter.writeLine('[Shell] 命令执行失败: $commandLine | $error');
+      await logWriter?.writeLine('[Shell] 命令执行失败: $commandLine | $error');
       rethrow;
     } finally {
-      await logWriter.close();
+      await logWriter?.close();
     }
   }
 
@@ -166,13 +244,16 @@ class ProcessShellCommandRunner implements ShellCommandRunner {
       StackTrace? stackTrace,
     ])
     logger,
-    required _ShellCommandLogWriter logWriter,
+    required _ShellCommandLogWriter? logWriter,
+    required ShellOutputChannel channel,
+    required void Function(ShellOutputLine output)? onOutput,
   }) async {
     await for (final line
         in stream.transform(utf8.decoder).transform(const LineSplitter())) {
       buffer.writeln(line);
       logger('$logPrefix $commandLine | $line');
-      await logWriter.writeLine('$logPrefix $commandLine | $line');
+      onOutput?.call(ShellOutputLine(channel: channel, line: line));
+      await logWriter?.writeLine('$logPrefix $commandLine | $line');
     }
   }
 
@@ -236,5 +317,42 @@ class ShellCommandExecutor {
       environment: environment,
       logOptions: logOptions,
     );
+  }
+
+  /// 执行命令并逐行返回 stdout/stderr。
+  ///
+  /// 生产执行器会真实流式回调；仅实现旧接口的测试替身会在命令结束后按行回放，
+  /// 使业务服务可测试且不破坏已有替身。
+  Future<ShellCommandResult> runStreaming(
+    List<String> command, {
+    required void Function(ShellOutputLine output) onOutput,
+    Duration timeout = const Duration(minutes: 5),
+    Map<String, String>? environment,
+    ShellCommandLogOptions? logOptions,
+  }) async {
+    final runner = _runner;
+    if (runner is StreamingShellCommandRunner) {
+      return (runner as StreamingShellCommandRunner).runStreaming(
+        command,
+        onOutput: onOutput,
+        timeout: timeout,
+        environment: environment,
+        logOptions: logOptions,
+      );
+    }
+
+    final result = await runner.run(
+      command,
+      timeout: timeout,
+      environment: environment,
+      logOptions: logOptions,
+    );
+    for (final line in const LineSplitter().convert(result.stdout)) {
+      onOutput(ShellOutputLine(channel: ShellOutputChannel.stdout, line: line));
+    }
+    for (final line in const LineSplitter().convert(result.stderr)) {
+      onOutput(ShellOutputLine(channel: ShellOutputChannel.stderr, line: line));
+    }
+    return result;
   }
 }

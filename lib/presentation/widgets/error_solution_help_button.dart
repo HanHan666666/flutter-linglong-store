@@ -9,6 +9,7 @@ import '../../core/di/providers.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/utils/app_notification_helpers.dart';
 import '../../domain/models/error_solution.dart';
+import '../helpers/guided_repair_flow.dart';
 import 'error_solution_dialog.dart';
 
 /// 安装失败信息旁的错误解决方案入口。
@@ -77,9 +78,13 @@ class _ErrorSolutionHelpButtonState
       await showErrorSolutionDialog(
         context,
         solution: solution,
-        onRepairRequested:
-            solution.hasRepairScript && widget.onRepairRequested != null
-            ? () => widget.onRepairRequested!(context, solution)
+        onRepairRequested: solution.hasRepairScript
+            ? () {
+                final customHandler = widget.onRepairRequested;
+                return customHandler != null
+                    ? customHandler(context, solution)
+                    : showGuidedRepairFlow(context, ref, solution);
+              }
             : null,
       );
     } catch (_) {

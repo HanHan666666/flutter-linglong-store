@@ -95,6 +95,43 @@ void main() {
       expect(content, contains('hello from stdout'));
       expect(content, contains('oops from stderr'));
     });
+
+    test('streams stdout and stderr while keeping the final result', () async {
+      final executor = ShellCommandExecutor();
+      final outputs = <ShellOutputLine>[];
+
+      final result = await executor.runStreaming([
+        'bash',
+        '-lc',
+        'printf "live stdout\\n"; printf "live stderr\\n" >&2',
+      ], onOutput: outputs.add);
+
+      expect(result.success, isTrue);
+      expect(
+        outputs,
+        contains(
+          isA<ShellOutputLine>()
+              .having(
+                (item) => item.channel,
+                'channel',
+                ShellOutputChannel.stdout,
+              )
+              .having((item) => item.line, 'line', 'live stdout'),
+        ),
+      );
+      expect(
+        outputs,
+        contains(
+          isA<ShellOutputLine>()
+              .having(
+                (item) => item.channel,
+                'channel',
+                ShellOutputChannel.stderr,
+              )
+              .having((item) => item.line, 'line', 'live stderr'),
+        ),
+      );
+    });
   });
 }
 

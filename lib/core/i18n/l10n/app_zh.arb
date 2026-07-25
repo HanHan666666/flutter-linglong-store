@@ -997,5 +997,41 @@
   "errorSolutionRetry": "重新查询",
   "errorSolutionCommunityPost": "社区发帖",
   "errorSolutionRepair": "一键修复",
-  "errorSolutionClose": "关闭解决方案"
+  "errorSolutionClose": "关闭解决方案",
+  "scriptReviewTitle": "审计一键修复脚本",
+  "scriptReviewWarning": "下面是即将以管理员权限执行的完整脚本。请确认内容可信且符合预期后再继续。",
+  "scriptReviewSemanticLabel": "即将执行的完整修复脚本",
+  "executeRepairScript": "确认并执行",
+  "repairExecutionTitle": "一键修复",
+  "repairExecuting": "正在执行修复脚本…",
+  "repairOutputTitle": "实时输出",
+  "repairOutputEmpty": "等待脚本输出…",
+  "repairOutputTruncated": "界面已省略较早的 {count} 行，完整内容请查看日志。",
+  "@repairOutputTruncated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repairCompleteRetry": "修复完成，请重新尝试安装。",
+  "repairFailedWithExitCode": "修复脚本执行失败（退出码 {exitCode}）。",
+  "@repairFailedWithExitCode": {
+    "placeholders": {
+      "exitCode": {
+        "type": "int"
+      }
+    }
+  },
+  "repairTimedOut": "修复脚本执行超过 30 分钟，已停止等待。请查看日志确认系统状态。",
+  "repairExecutionError": "修复脚本无法执行：{message}",
+  "@repairExecutionError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "repairInvalidSignature": "修复脚本签名无效，已阻止执行。",
+  "openRepairLog": "打开日志目录"
 }

@@ -1670,4 +1670,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorSolutionClose => 'Close solution';
+
+  @override
+  String get scriptReviewTitle => 'Review repair script';
+
+  @override
+  String get scriptReviewWarning =>
+      'Below is the complete script that will run with administrator privileges. Continue only after confirming that its content is trusted and expected.';
+
+  @override
+  String get scriptReviewSemanticLabel =>
+      'Complete repair script to be executed';
+
+  @override
+  String get executeRepairScript => 'Confirm and run';
+
+  @override
+  String get repairExecutionTitle => 'Repair';
+
+  @override
+  String get repairExecuting => 'Running the repair script…';
+
+  @override
+  String get repairOutputTitle => 'Live output';
+
+  @override
+  String get repairOutputEmpty => 'Waiting for script output…';
+
+  @override
+  String repairOutputTruncated(int count) {
+    return '$count earlier lines are hidden. Open the log for the complete output.';
+  }
+
+  @override
+  String get repairCompleteRetry =>
+      'Repair completed. Please try the installation again.';
+
+  @override
+  String repairFailedWithExitCode(int exitCode) {
+    return 'The repair script failed with exit code $exitCode.';
+  }
+
+  @override
+  String get repairTimedOut =>
+      'The repair script exceeded 30 minutes. Check the log to confirm the system state.';
+
+  @override
+  String repairExecutionError(String message) {
+    return 'The repair script could not run: $message';
+  }
+
+  @override
+  String get repairInvalidSignature =>
+      'The repair script signature is invalid. Execution was blocked.';
+
+  @override
+  String get openRepairLog => 'Open log folder';
 }

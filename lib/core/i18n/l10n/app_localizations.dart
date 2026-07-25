@@ -2957,6 +2957,96 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'关闭解决方案'**
   String get errorSolutionClose;
+
+  /// No description provided for @scriptReviewTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'审计一键修复脚本'**
+  String get scriptReviewTitle;
+
+  /// No description provided for @scriptReviewWarning.
+  ///
+  /// In zh, this message translates to:
+  /// **'下面是即将以管理员权限执行的完整脚本。请确认内容可信且符合预期后再继续。'**
+  String get scriptReviewWarning;
+
+  /// No description provided for @scriptReviewSemanticLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'即将执行的完整修复脚本'**
+  String get scriptReviewSemanticLabel;
+
+  /// No description provided for @executeRepairScript.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认并执行'**
+  String get executeRepairScript;
+
+  /// No description provided for @repairExecutionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'一键修复'**
+  String get repairExecutionTitle;
+
+  /// No description provided for @repairExecuting.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在执行修复脚本…'**
+  String get repairExecuting;
+
+  /// No description provided for @repairOutputTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'实时输出'**
+  String get repairOutputTitle;
+
+  /// No description provided for @repairOutputEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待脚本输出…'**
+  String get repairOutputEmpty;
+
+  /// No description provided for @repairOutputTruncated.
+  ///
+  /// In zh, this message translates to:
+  /// **'界面已省略较早的 {count} 行，完整内容请查看日志。'**
+  String repairOutputTruncated(int count);
+
+  /// No description provided for @repairCompleteRetry.
+  ///
+  /// In zh, this message translates to:
+  /// **'修复完成，请重新尝试安装。'**
+  String get repairCompleteRetry;
+
+  /// No description provided for @repairFailedWithExitCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'修复脚本执行失败（退出码 {exitCode}）。'**
+  String repairFailedWithExitCode(int exitCode);
+
+  /// No description provided for @repairTimedOut.
+  ///
+  /// In zh, this message translates to:
+  /// **'修复脚本执行超过 30 分钟，已停止等待。请查看日志确认系统状态。'**
+  String get repairTimedOut;
+
+  /// No description provided for @repairExecutionError.
+  ///
+  /// In zh, this message translates to:
+  /// **'修复脚本无法执行：{message}'**
+  String repairExecutionError(String message);
+
+  /// No description provided for @repairInvalidSignature.
+  ///
+  /// In zh, this message translates to:
+  /// **'修复脚本签名无效，已阻止执行。'**
+  String get repairInvalidSignature;
+
+  /// No description provided for @openRepairLog.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开日志目录'**
+  String get openRepairLog;
 }
 
 class _AppLocalizationsDelegate

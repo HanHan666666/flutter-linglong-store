@@ -996,5 +996,41 @@
   "errorSolutionRetry": "Try again",
   "errorSolutionCommunityPost": "Post in community",
   "errorSolutionRepair": "Repair now",
-  "errorSolutionClose": "Close solution"
+  "errorSolutionClose": "Close solution",
+  "scriptReviewTitle": "Review repair script",
+  "scriptReviewWarning": "Below is the complete script that will run with administrator privileges. Continue only after confirming that its content is trusted and expected.",
+  "scriptReviewSemanticLabel": "Complete repair script to be executed",
+  "executeRepairScript": "Confirm and run",
+  "repairExecutionTitle": "Repair",
+  "repairExecuting": "Running the repair script…",
+  "repairOutputTitle": "Live output",
+  "repairOutputEmpty": "Waiting for script output…",
+  "repairOutputTruncated": "{count} earlier lines are hidden. Open the log for the complete output.",
+  "@repairOutputTruncated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repairCompleteRetry": "Repair completed. Please try the installation again.",
+  "repairFailedWithExitCode": "The repair script failed with exit code {exitCode}.",
+  "@repairFailedWithExitCode": {
+    "placeholders": {
+      "exitCode": {
+        "type": "int"
+      }
+    }
+  },
+  "repairTimedOut": "The repair script exceeded 30 minutes. Check the log to confirm the system state.",
+  "repairExecutionError": "The repair script could not run: {message}",
+  "@repairExecutionError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "repairInvalidSignature": "The repair script signature is invalid. Execution was blocked.",
+  "openRepairLog": "Open log folder"
 }

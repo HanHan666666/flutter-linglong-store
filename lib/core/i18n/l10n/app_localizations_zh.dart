@@ -1612,4 +1612,55 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get errorSolutionClose => '关闭解决方案';
+
+  @override
+  String get scriptReviewTitle => '审计一键修复脚本';
+
+  @override
+  String get scriptReviewWarning => '下面是即将以管理员权限执行的完整脚本。请确认内容可信且符合预期后再继续。';
+
+  @override
+  String get scriptReviewSemanticLabel => '即将执行的完整修复脚本';
+
+  @override
+  String get executeRepairScript => '确认并执行';
+
+  @override
+  String get repairExecutionTitle => '一键修复';
+
+  @override
+  String get repairExecuting => '正在执行修复脚本…';
+
+  @override
+  String get repairOutputTitle => '实时输出';
+
+  @override
+  String get repairOutputEmpty => '等待脚本输出…';
+
+  @override
+  String repairOutputTruncated(int count) {
+    return '界面已省略较早的 $count 行，完整内容请查看日志。';
+  }
+
+  @override
+  String get repairCompleteRetry => '修复完成，请重新尝试安装。';
+
+  @override
+  String repairFailedWithExitCode(int exitCode) {
+    return '修复脚本执行失败（退出码 $exitCode）。';
+  }
+
+  @override
+  String get repairTimedOut => '修复脚本执行超过 30 分钟，已停止等待。请查看日志确认系统状态。';
+
+  @override
+  String repairExecutionError(String message) {
+    return '修复脚本无法执行：$message';
+  }
+
+  @override
+  String get repairInvalidSignature => '修复脚本签名无效，已阻止执行。';
+
+  @override
+  String get openRepairLog => '打开日志目录';
 }

@@ -1,557 +1,954 @@
-# 错误诊断 + 引导式修复模块 设计方案
+# 安装失败诊断与引导修复设计方案
 
-> 文档版本：1.0
 > 更新日期：2026-07-25
-> 适用范围：下载中心安装失败错误的「诊断 → 推荐解决方案 → 一键修复（带脚本审计）」能力，作为独立的、数据驱动的、与业务解耦的通用模块。
+> 涉及仓库：`flutter-linglong-store`、`linglong-server`、`linglong-admin`
+> 文档状态：设计已确认，等待拆分实施计划
 
-## 一、需求与定位
+## 一、背景
 
-下载中心安装失败时，错误红字（`download_manager_dialog.dart:628` 的 `_buildErrorText`）旁加一个 **⚠️ 帮助按钮**，点击弹窗显示「推荐解决方案 + 社区来源链接」；若可自动修复则提供 **「一键修复」**——执行前先让用户**审计即将执行的 Shell 脚本全文**，确认后 `pkexec` 执行、记日志、反馈结果。
+下载中心执行安装或更新时，`ll-cli --json` 可能返回：
 
-定位为**通用诊断框架**（数据驱动），`RequestInteraction`（OBS 换源）作为第一条规则；以后新增错误只需加规则，不动业务代码。
+```json
+{"code":-1,"message":"Failed to connect signal: RequestInteraction"}
+```
 
-### 设计目标
+当前客户端只能展示错误文本，用户不知道错误原因，也不知道应该如何修复。把问题匹配规则和修复脚本写死在 Flutter 客户端，会导致每次新增、调整或下线解决方案都必须发布新客户端。
 
-- **解耦**：模块自成一体，业务侧只有最小侵入点。
-- **数据驱动**：加新错误 = 在规则注册表加一条规则，零业务代码改动。
-- **可维护**：复用项目已有的执行器、日志、展示组件，不重复造轮子。
-- **安全**：所有特权操作必须经用户审计确认，不静默执行。
-- **i18n 全覆盖**：所有 UI 文案走 l10n（比参照的 docs/21 模块做得更好）。
+本功能把解决方案放到后端维护：
 
-## 二、关键事实（已调研确认）
+1. 下载中心在失败信息旁始终展示帮助按钮。
+2. 用户主动点击帮助按钮时，Flutter 才把 `ll-cli` 的原始 `message` 和当前语言发送给后端。
+3. 后端用 `message` 匹配一条已启用的解决方案。
+4. 客户端使用 Markdown 展示后端返回的可读说明。
+5. 解决方案包含修复脚本时，用户可以先审计脚本全文，再通过 `pkexec` 执行。
+6. 执行期间实时展示 STDOUT 和 STDERR，并把完整输出写入本地日志。
+7. 没有匹配方案时，不打开方案弹窗；在感叹号上方显示可交互的小型浮窗，引导用户前往玲珑社区发帖。
 
-| 项 | 结论 |
+该能力的核心目标是让解决方案可以在后端上线、下线和更新，同时保证 root 脚本只能在用户明确审计、确认后执行。
+
+## 二、已确认的产品决策
+
+以下内容是本需求的固定约束，实施时不得重新扩展为其他规则系统：
+
+| 项目 | 决策 |
 |---|---|
-| 红框真身 | `_buildErrorText`（`download_manager_dialog.dart:628`），`Padding>Text` 红字（非真红框，靠文字颜色 `AppColors.error` 实现），两张卡片（当前任务+历史记录）都走它 |
-| 错误数据来源 | `InstallTask.errorMessage/errorCode/errorDetail`（`install_task.dart`），Data 层把 ll-cli JSON 的 `code/message` 原样透传 |
-| 最佳模板 | `LinglongEnvironmentManagementService` —— 已把"脚本生成(纯函数) → 写临时文件 → `pkexec bash` 执行+日志 → 截断输出 → finally 清理"跑通 3 遍 |
-| 可复用执行器 | `ShellCommandExecutor`（注入式，带流式日志、超时、可测）+ `shellCommandExecutorProvider` |
-| 可复用展示组件 | `CopyableCommandBlock`（等宽+复制）、`SelectableText`、`ConfirmDialog`、`showAppSuccess/Error`、`LocalPathOpener` |
-| 日志/XDG | `AppXdgPaths.resolveLogsDirectoryPath()`，application-id = `com.dongpl.linglong-store.v2` |
-| **缺口** | 项目目前**没有任何"展示脚本全文供审计"的 UI**，需新建（`ScriptReviewDialog`） |
-| i18n | `lib/core/i18n/l10n/app_zh.arb`（中文模板先行）+ `app_en.arb`，`flutter gen-l10n` |
-| 代码生成 | Freezed + Riverpod，`dart run build_runner build --delete-conflicting-outputs` |
-| 测试 SDK | `/home/hao/Flutter/flutter-stable/bin/flutter test`（非默认 PATH） |
-| 分层依赖方向 | Presentation → Application → Domain ← Data ← Platform |
+| 查询时机 | 只有用户点击失败信息旁的感叹号帮助按钮时才请求后端 |
+| 无方案交互 | 不打开方案弹窗；在感叹号上方显示“暂无解决方案”小型浮窗和“社区发帖”按钮 |
+| 客户端缓存 | 不缓存、不持久化解决方案；每次点击重新请求 |
+| 匹配输入 | 只使用 `ll-cli` JSON 中的原始 `message` |
+| 请求大小 | `message` 按 UTF-8 文本接收，最大 8 KiB |
+| 匹配方式 | 区分大小写的 `contains` 子串匹配 |
+| 错误码 | 不参与匹配，也不上传 |
+| 规则版本 | 不设计 |
+| 匹配优先级 | 不设计 |
+| 多条命中 | 返回配置错误，不选择其中任何一条 |
+| 方案正文 | 后端返回一段完整 Markdown |
+| Markdown 图片 | 支持 HTTP/HTTPS 远程图片 |
+| 多语言 | 复用后端现有 `i18n` 表；请求语言不存在时只回退中文 `zh` |
+| 修复脚本 | 可以为空；为空时只展示人工解决方案 |
+| 脚本超时 | Flutter 固定控制为 30 分钟，数据库不保存超时 |
+| 成功标准 | 修复脚本进程退出码等于 `0` |
+| 成功行为 | 提示“修复完成，请重新尝试安装”，不自动重试安装 |
+| 脚本审计 | 执行前必须展示即将执行的脚本全文 |
+| 执行输出 | 实时展示 STDOUT/STDERR，完整输出同时写入日志 |
+| 签名算法 | 只支持 Ed25519 |
+| 私钥 | 不进入任何代码仓库；实施阶段单独生成并交由负责人保存 |
+| 公钥 | 可以进入代码和后端配置；它是信任根但不是秘密 |
+| 审计字段 | 不保存审计人、审计时间或审计记录 |
 
-### 错误数据流（ll-cli JSON → UI）
+## 三、范围
 
+### 3.1 本次范围
+
+- 后端解决方案表、实体、匹配服务和接口。
+- 后端现有 `i18n` 表的复用与中文回退能力。
+- 管理后台的解决方案增删改查、启用和停用。
+- 通用 Ed25519 内容签名约定。
+- 不联网的离线静态签名页面。
+- Flutter 感叹号帮助按钮、按需查询、无方案小型浮窗和 Markdown 方案弹窗。
+- Flutter 脚本签名复验、脚本全文审计、`pkexec` 执行。
+- Flutter 实时 STDOUT/STDERR 展示、完整日志和结果反馈。
+- `RequestInteraction` 的第一条后端解决方案数据。
+
+### 3.2 本次不处理
+
+- 不修改现有 `/app/findShellString` 玲珑环境安装脚本读取流程。
+- 不处理现有公开写接口 `/app/updateShellString`；该安全问题已经记录，后续单独修复。
+- 不把玲珑环境安装脚本接入本次签名和审计流程。
+- 不生成或提交正式私钥；私钥在实施阶段单独生成和交付。
+- 不做本地诊断规则、本地修复脚本或离线解决方案。
+- 不自动重试失败的安装或更新任务。
+- 不做规则版本、发布版本、灰度、优先级、客户端适配和解决方案缓存。
+- 不提供多种签名算法、`keyId` 或自动密钥轮换。
+- 不允许管理后台或数据库动态修改客户端信任的公钥。
+
+## 四、现状依据
+
+### 4.1 Flutter 错误来源
+
+`ll-cli` 的失败 JSON 经过以下链路进入下载中心：
+
+```text
+ll-cli --json 输出
+  ↓
+CliOutputParser / LinglongCliRepositoryImpl
+  ↓
+InstallProgress.rawMessage / errorDetail
+  ↓
+InstallTask.errorDetail
+  ↓
+DownloadManagerDialog._buildErrorText()
 ```
-ll-cli install --json  (stdout 流出 JSON line)
-  {"code":-1,"message":"Failed to connect signal: RequestInteraction"}
-    ↓ Data: linglong_cli_repository_impl.dart  (_buildFailureMessage 行 109-126, InstallProgress 行 229-248)
-  InstallProgress { error, errorCode, errorDetail, status: failed }
-    ↓ Application: install_queue_provider.dart  (_handleProgress 行 521-577, _markFailed 行 678-740)
-  InstallTask { errorMessage, errorCode, errorDetail }
-    ↓ Presentation: download_manager_dialog.dart  (_buildErrorText 行 628)
-  红字 Text
+
+`InstallTask.errorMessage` 可能被转换为更易读的展示文案，或附加发行版提示；`InstallTask.errorDetail` 保存失败 JSON 中解析出的原始 `message`。因此诊断请求必须读取 `errorDetail`，不能把已经本地化或增强后的 `errorMessage` 当成匹配输入。
+
+如果旧任务没有 `errorDetail`，可以使用 `displayRawMessage` 取得原始消息；两者都不存在时不发请求，直接提示无法取得诊断信息。
+
+### 4.2 可复用的 Flutter 能力
+
+- `ShellCommandExecutor` 已负责进程启动、超时、STDOUT/STDERR 捕获和日志写入。
+- `AppXdgPaths.resolveLogsDirectoryPath()` 已统一日志目录。
+- `LocalPathOpener` 已支持打开日志所在目录。
+- `CopyableCommandBlock`、`SelectableText`、通知组件可以复用。
+- `A11yFocusScope` 和无障碍按钮组件可以用于新弹窗。
+
+当前 `ShellCommandExecutor` 只在进程退出后返回聚合结果。为了实时展示输出，应在同一个执行器上增加流式事件能力，不能另外实现一套 `Process.start`。
+
+### 4.3 后端多语言现状
+
+后端已有 `i18n` 表和 `I18nService`：
+
+```text
+code  同一段内容的翻译键
+lang  语言，例如 zh、en
+value 对应语言的内容
 ```
 
-`RequestInteraction` 字符串在项目代码中**没有字面量命中**，它是 ll-cli 运行时输出，以 JSON `message` 字段流出。`code=-1` 在 `install_messages.dart` 的 `getErrorMessageFromCode` 映射为 `installErrorGeneric`。
+解决方案业务表只保存标题和 Markdown 的 `i18n code`。真正的多语言内容继续保存在 `i18n` 表，不为每种语言增加业务表字段。
 
-## 三、模块结构（照抄 docs/21 分层契约，独立目录解耦）
+### 4.4 现有公开脚本接口
 
+当前后端还有：
+
+```http
+GET  /app/findShellString
+POST /app/updateShellString
 ```
-docs/24-error-diagnostics-and-guided-repair.md               ← 本文档
 
+它们维护的是 `ll_base_config.config_key = run_shell` 对应的玲珑环境安装脚本，与本需求不是同一业务。由于 `/app/**` 被公开放行，写接口目前也可以匿名调用。该问题必须后续独立处理，不能让新解决方案管理复用这个公开写入口。
+
+## 五、总体架构
+
+```mermaid
+flowchart LR
+    A["ll-cli 安装失败"] --> B["下载中心显示错误和帮助按钮"]
+    B -->|"用户点击"| C["Flutter POST 原始 message + lang"]
+    C --> D["后端区分大小写 contains 匹配"]
+    D -->|"0 条"| E["感叹号上方显示小型浮窗<br/>暂无解决方案 + 社区发帖"]
+    D -->|"> 1 条"| F["后端返回配置错误"]
+    D -->|"1 条"| G["解析 i18n，缺失时回退 zh"]
+    G --> H["返回 title + Markdown"]
+    H --> I["Flutter Markdown 弹窗"]
+    I -->|"无脚本"| J["仅人工处理"]
+    I -->|"有有效签名脚本"| K["脚本全文审计"]
+    K -->|"用户确认"| L["Flutter 再验 Ed25519"]
+    L --> M["临时文件 + pkexec bash"]
+    M --> N["实时 STDOUT/STDERR + 完整日志"]
+    N -->|"exitCode = 0"| O["提示修复完成，请重新尝试安装"]
+```
+
+依赖方向保持现有项目约定：
+
+```text
+Flutter Presentation → Application → Domain ← Data ← Platform
+```
+
+UI 只负责显示状态和发送用户动作；网络解析、签名验证、脚本执行和日志处理分别收口到对应层。
+
+## 六、后端数据设计
+
+### 6.1 解决方案表
+
+建议表名：
+
+```text
+ll_error_solution
+```
+
+字段保持最小化：
+
+| 字段 | 类型 | 空值 | 说明 |
+|---|---|---:|---|
+| `id` | `BIGINT` | 否 | 自增主键，仅作为数据库关联标识 |
+| `match_message` | `TEXT` | 否 | 用于匹配原始 `message` 的区分大小写子串 |
+| `title_i18n_code` | `VARCHAR(100)` | 否 | 标题在 `i18n` 表中的 code |
+| `markdown_i18n_code` | `VARCHAR(100)` | 否 | Markdown 正文在 `i18n` 表中的 code |
+| `repair_script` | `LONGTEXT` | 是 | 一键修复脚本全文；为空表示仅人工方案 |
+| `repair_script_signature` | `TEXT` | 是 | Ed25519 签名的 Base64 文本 |
+| `enabled` | `TINYINT(1)` | 否 | 是否参与匹配 |
+
+不增加以下字段：
+
+- error code；
+- 规则版本；
+- 优先级；
+- 是否忽略大小写；
+- 匹配类型；
+- 超时时间；
+- 签名算法；
+- key ID；
+- 审计人和审计时间；
+- 创建时间和更新时间。
+
+`id` 是普通数据库主键，不承担“稳定规则标识”或客户端协议语义。生成翻译 code 时使用：
+
+```text
+guided_repair_title_<id>
+guided_repair_markdown_<id>
+```
+
+### 6.2 i18n 内容容量
+
+Markdown 正文可能包含长文、代码块和远程图片链接，因此 `i18n.value` 必须能保存完整正文。数据库迁移统一把 `i18n.value` 扩展为 `LONGTEXT`，现有短文本内容不受影响。
+
+新增或更新解决方案时，管理接口在一个事务内完成：
+
+1. 保存 `ll_error_solution`。
+2. 生成或复用该记录的两个 i18n code。
+3. 更新标题翻译。
+4. 更新 Markdown 翻译。
+
+删除解决方案时，同一事务删除业务记录及其两个 code 对应的全部翻译，避免孤立数据。
+
+### 6.3 多语言解析
+
+在 `I18nService` 增加通用解析方法：
+
+```java
+String resolveValue(String code, String lang)
+```
+
+解析顺序固定为：
+
+1. 查找请求的 `lang`。
+2. 请求语言不存在或值为空时查找 `zh`。
+3. 中文也不存在时返回空字符串。
+
+不得随机返回数据库中的第一种语言。
+
+Flutter 只上传 `Locale.languageCode`，例如 `zh`、`en`。后端不在解决方案表中保存语言，也不为中文和英文建立独立业务字段。
+
+## 七、后端匹配与接口
+
+### 7.1 公共查询接口
+
+建议接口：
+
+```http
+POST /app/error-solution/find
+Content-Type: application/json
+Cache-Control: no-store
+```
+
+请求：
+
+```json
+{
+  "message": "Failed to connect signal: RequestInteraction",
+  "lang": "zh"
+}
+```
+
+约束：
+
+- `message` 必填且去除空白后不能为空。
+- `message` 的 UTF-8 编码结果最大 8192 字节；不能只按 Java 字符数量校验。
+- `lang` 为空时按 `zh` 处理。
+- 不接收 `errorCode`、客户端版本、发行版、架构等其他匹配字段。
+
+单条命中响应：
+
+```json
+{
+  "code": 200,
+  "message": "执行成功",
+  "data": {
+    "title": "安装服务交互失败",
+    "markdown": "# 解决方法\n\n完整 Markdown……",
+    "repairScript": "#!/usr/bin/env bash\nset -euo pipefail\n...",
+    "repairScriptSignature": "BASE64_ED25519_SIGNATURE"
+  }
+}
+```
+
+人工方案响应中：
+
+```json
+{
+  "repairScript": null,
+  "repairScriptSignature": null
+}
+```
+
+零条命中返回成功且 `data = null`。客户端据此在感叹号上方展示“暂无解决方案”小型浮窗和“社区发帖”按钮，不打开方案弹窗。
+
+多条命中返回业务失败，例如：
+
+```text
+解决方案配置错误：当前错误同时命中多条规则
+```
+
+不得按数据库顺序、主键或其他隐式规则选择其中一条。
+
+### 7.2 匹配实现
+
+服务加载全部 `enabled = 1` 的记录，在 Java 中执行：
+
+```java
+message.contains(solution.getMatchMessage())
+```
+
+这样匹配行为明确区分大小写，不依赖 MySQL 排序规则，也不需要增加“是否忽略大小写”字段。
+
+匹配数量处理：
+
+```text
+0 条 → 返回 null
+1 条 → 返回该方案
+多条 → 抛出配置异常
+```
+
+方案查询不使用 Redis、本地缓存、HTTP ETag 或客户端缓存。每次点击都重新读取后端当前状态。
+
+### 7.3 返回脚本前的验证
+
+公共查询返回一条方案时：
+
+- `repair_script` 为空：正常返回人工方案。
+- 脚本非空且签名有效：返回脚本和签名。
+- 脚本非空但签名缺失或无效：仍返回标题和 Markdown，但不返回脚本与签名。
+
+因此错误的签名配置不会影响用户阅读人工解决方案，也不会让客户端出现可执行按钮。
+
+### 7.4 管理接口
+
+所有写操作必须位于需要登录认证的 `/admin/**`，不得放在公开的 `/app/**`：
+
+```http
+GET  /admin/error-solution/page
+GET  /admin/error-solution/detail/{id}
+POST /admin/error-solution/save
+POST /admin/error-solution/update
+POST /admin/error-solution/delete
+POST /admin/error-solution/set-enabled
+```
+
+管理请求同时携带业务字段和多语言列表，由解决方案 Service 统一编排并开启事务。控制器不得直接分别调用业务表和 i18n 表完成半套更新。
+
+启用规则：
+
+- `match_message`、中文标题和中文 Markdown 必填。
+- 人工方案可以在没有脚本和签名时启用。
+- 有修复脚本的方案必须携带能够验证该脚本的签名才能启用。
+- 修改脚本后，如果提交的签名不能验证新脚本，则清空旧签名并强制停用。
+- 只修改匹配文本或多语言内容不使脚本签名失效，因为签名只覆盖脚本。
+
+## 八、通用 Ed25519 签名
+
+### 8.1 通用命名
+
+签名能力不使用 `error-solution` 命名，因为后续玲珑环境安装脚本等模块也会复用。
+
+建议通用名称：
+
+```text
+Trusted Content Signature
+ContentSignatureVerifier
+trusted-content-signature
+offline-content-signer
+```
+
+业务模块通过 `purpose + content + signature` 调用通用验证器。
+
+### 8.2 签名原文
+
+签名只覆盖即将执行的 Shell 脚本，不覆盖标题、Markdown、匹配文本或数据库 ID。
+
+签名输入固定为以下 UTF-8 字节：
+
+```text
+LINGLONG_STORE_SIGNED_CONTENT_V1
+purpose=privileged-shell-script
+
+<repair_script 的原始 UTF-8 字节>
+```
+
+其中前两行和空行属于签名协议，不保存到脚本字段，也不展示给用户。`purpose` 用于隔离不同用途，避免一个模块的签名内容被另一个模块误用。
+
+脚本文本必须保持：
+
+- UTF-8；
+- 无 BOM；
+- 不自动 `trim()`；
+- 不转换 LF/CRLF；
+- 不自动补删末尾换行；
+- 签名后不再做任何字符规范化。
+
+用户在审计弹窗看到的字符串、Flutter 写入临时文件的字符串、后端参与验签的字符串必须完全相同。
+
+### 8.3 密钥和签名格式
+
+只支持：
+
+```text
+算法：Ed25519
+私钥输入：PKCS#8 PEM
+公钥配置：Base64 编码的 32 字节 Ed25519 原始公钥
+签名存储：Base64 编码的 64 字节 Ed25519 签名
+```
+
+不支持 RSA、ECDSA、OpenPGP、SSH 私钥、算法自动探测和多算法回退。
+
+### 8.4 公钥信任
+
+后端配置保存公钥文本，不要求公钥文件路径：
+
+```yaml
+trusted-content-signature:
+  ed25519-public-key-base64: "BASE64_PUBLIC_KEY"
+```
+
+Flutter 内置同一把公钥。控制关系为：
+
+- 后端部署和代码维护者控制后端公钥配置。
+- Flutter 发布维护者控制客户端内置公钥。
+- 即使后端公钥被替换，攻击者签出的脚本仍无法通过已发布客户端的本地验签。
+
+公钥不是秘密，可以提交到代码库；但不得从解决方案表、普通管理接口或公共接口动态下发并直接信任。
+
+本期不设计 `keyId` 和密钥轮换。未来更换公钥需要同时更新后端配置和 Flutter 客户端，作为单独发布任务处理。
+
+### 8.5 私钥管理
+
+私钥不进入 `flutter-linglong-store`、`linglong-server`、`linglong-admin` 或其他 Git 仓库。
+
+实施阶段由开发工具生成一把正式 Ed25519 私钥，并明确告诉负责人生成位置。负责人完成备份和转移后，开发环境只保留负责人明确允许保留的副本。
+
+建议负责人保存到：
+
+- 加密密码管理器；
+- 加密离线介质；
+- 权限为 `0600` 的受控本地文件。
+
+取得代码权限不等于取得签名权限。
+
+## 九、离线静态签名页面
+
+在 `linglong-admin` 仓库新增：
+
+```text
+tools/offline-content-signer/index.html
+```
+
+该页面是独立工具，不打包到线上管理后台，也不请求后端。
+
+页面流程：
+
+1. 用户选择本地 PKCS#8 Ed25519 私钥。
+2. 用户选择从管理后台导出的原始 `.sh` 文件。
+3. 页面完整显示脚本内容和字节长度，供再次确认。
+4. 页面按通用签名协议构造签名输入。
+5. 使用浏览器 Web Crypto 的 Ed25519 签名。
+6. 输出 Base64 签名，可复制或下载为 `.sig`。
+7. 用户回到管理后台粘贴或上传签名。
+
+安全边界：
+
+- 页面只支持 Ed25519。
+- 私钥和脚本只存在于浏览器当前页面内存。
+- 不写入 LocalStorage、IndexedDB、Cookie 或日志。
+- 不上传私钥、脚本或签名。
+- 不引用 CDN、统计脚本、字体或远程资源。
+- CSP 设置 `connect-src 'none'`。
+- 页面刷新或关闭后清空内存状态。
+- 浏览器不支持 Web Crypto Ed25519 时直接提示不支持，不回退到其他算法。
+
+管理后台的“导出待签名脚本”必须按 UTF-8 原始字节下载，不能在导出时格式化脚本。签名上传后由后端立即验证，不能仅依赖离线页面显示“签名成功”。
+
+## 十、管理后台
+
+管理后台新增“错误解决方案”页面，包含：
+
+- 列表：匹配文本、中文标题、是否有脚本、签名是否有效、启用状态。
+- 新建和编辑：匹配文本、多语言标题、多语言 Markdown、修复脚本、签名。
+- Markdown 编辑区提供预览，但保存内容仍是原始 Markdown。
+- 脚本编辑区使用等宽字体并支持导出原始 `.sh`。
+- 签名区支持粘贴 Base64 或选择 `.sig` 文件。
+- 启用、停用和删除需要明确确认。
+
+管理后台不读取私钥，也不实现在线签名。典型发布流程为：
+
+```text
+后台编辑并保存为停用
+  → 导出脚本
+  → 在隔离环境打开离线签名页
+  → 选择私钥和脚本
+  → 得到 Base64 签名
+  → 回后台上传签名
+  → 后端验签成功
+  → 启用解决方案
+```
+
+修改脚本后，页面必须立即把旧签名状态显示为无效，并要求重新签名。修改 Markdown、标题或匹配文本不要求重新签名。
+
+## 十一、Flutter 查询与展示
+
+### 11.1 帮助入口
+
+`DownloadManagerDialog._buildErrorText()` 调整为：
+
+```text
+完整错误文本 + 可聚焦的感叹号帮助按钮
+```
+
+约束：
+
+- 当前失败任务和历史失败任务使用同一入口。
+- 感叹号按钮紧跟在红色错误文字右侧，当前任务和历史任务保持一致。
+- 帮助按钮始终显示，不在客户端预判是否存在方案。
+- Tooltip、Semantics 和按钮文案全部走 Flutter l10n。
+- 错误文本继续完整显示并支持现有复制语义。
+
+### 11.2 点击后的状态
+
+每次点击都创建一次独立请求状态：
+
+```text
+loading
+solution
+notFound
+configurationError
+networkError
+```
+
+- `loading`：显示加载状态。
+- `solution`：渲染标题和 Markdown。
+- `notFound`：不打开方案弹窗，在触发请求的感叹号上方显示可交互小型浮窗。
+- `configurationError`：展示后端多条命中等配置错误，不执行任何脚本。
+- `networkError`：提示加载失败并提供重试；不能把网络失败误认为没有方案。
+
+关闭方案弹窗或提示浮窗后丢弃响应。再次点击感叹号必须重新请求后端。
+
+#### 无解决方案小型浮窗
+
+标准 Flutter `Tooltip` 只适合文字提示，不能承载可聚焦的链接按钮。本功能使用锚定在感叹号上方的轻量 Popover 模拟 Tooltip 的视觉效果：
+
+```text
+暂无解决方案
+[社区发帖]
+```
+
+交互要求：
+
+- 浮窗锚定在本次点击的感叹号上方，不能漂移到下载管理弹窗之外。
+- “社区发帖”是可点击、可键盘聚焦的链接按钮，使用系统默认浏览器打开社区地址。
+- 点击浮窗之外、再次点击感叹号或按 Escape 时关闭浮窗。
+- 浮窗打开后把焦点移动到浮窗范围，关闭后把焦点还给原感叹号按钮。
+- 浮窗本身使用 `A11yFocusScope`，文字和按钮都使用 l10n 与 Semantics。
+- 不使用只能展示纯文字的标准 `Tooltip` 假装承载交互。
+
+查询失败时复用同一个小型浮窗显示“查询失败，请重试”和“重试”按钮；它与 `notFound` 状态严格区分。
+
+社区入口复用现有玲珑社区地址：
+
+```text
+https://bbs.deepin.org.cn/module/detail/230
+```
+
+实施时应把设置页现有硬编码地址提取为公共外链常量，避免多个页面各自维护。
+
+### 11.3 Markdown
+
+Flutter 增加 Markdown 渲染依赖，解决方案使用一段完整 Markdown 渲染，至少覆盖：
+
+- 标题；
+- 段落；
+- 有序和无序列表；
+- 引用；
+- 粗体、斜体；
+- 行内代码和代码块；
+- 表格；
+- 分隔线；
+- 普通链接；
+- HTTP/HTTPS 远程图片。
+
+链接通过系统默认浏览器打开。图片仅允许网络 `http` 和 `https`，拒绝 `file:`、本地绝对路径和其他自定义协议。Markdown 中的 HTML 或脚本不执行。
+
+解决方案 JSON 不在 `build()` 中解析，Markdown 的解析和布局只发生在方案弹窗内，不影响下载中心列表的正常滚动。
+
+## 十二、脚本审计与执行
+
+### 12.1 一键修复按钮
+
+只有同时满足以下条件才显示“一键修复”：
+
+- 后端返回非空 `repairScript`；
+- 后端返回非空 `repairScriptSignature`；
+- Flutter 使用内置公钥验签成功。
+
+客户端验签失败时：
+
+- 继续允许阅读 Markdown；
+- 隐藏或禁用一键修复；
+- 明确提示脚本签名无效；
+- 不写临时文件，不调用 `pkexec`。
+
+### 12.2 审计弹窗
+
+用户点击“一键修复”后先进入 `ScriptReviewDialog`：
+
+- 展示脚本全文，不折叠、不省略。
+- 使用等宽字体和 `SelectableText`。
+- 提供复制脚本按钮。
+- 明确提示脚本将申请管理员权限。
+- 提供“取消”和“确认并执行”。
+- 弹窗使用 `A11yFocusScope`，支持键盘焦点和 Escape 取消。
+
+用户确认后，执行服务再次对弹窗中同一个脚本字符串验签。两次验签分别保护“是否显示执行入口”和“最终执行内容”。
+
+### 12.3 执行方式
+
+执行步骤固定为：
+
+1. 为本次执行创建 XDG 日志文件。
+2. 把已经验签和审计的脚本原样写入权限受限的临时文件。
+3. 调用统一的 `ShellCommandExecutor`：
+
+   ```text
+   pkexec bash <temporary-script-path>
+   ```
+
+4. Flutter 设置 30 分钟超时。
+5. 实时接收 STDOUT 和 STDERR。
+6. 进程退出后按退出码判断结果。
+7. `finally` 删除临时脚本。
+
+不得在写入前后调用 `trim()` 或重新拼接脚本。日志文件可以保留，临时脚本必须删除。
+
+### 12.4 成功与失败
+
+唯一成功条件：
+
+```text
+exitCode == 0
+```
+
+成功时显示：
+
+```text
+修复完成，请重新尝试安装。
+```
+
+客户端不自动重试原任务，也不自动重新加入安装队列。
+
+以下情况均为失败：
+
+- 用户取消 `pkexec` 授权；
+- 进程无法启动；
+- 退出码非 0；
+- 执行超过 30 分钟；
+- 执行前最终验签失败；
+- 临时脚本或日志文件创建失败。
+
+失败弹窗展示可读错误、实时输出和日志入口，不根据输出文本猜测成功。
+
+## 十三、实时 STDOUT/STDERR
+
+### 13.1 执行器扩展
+
+在现有 `ShellCommandExecutor` 上增加流式事件，不创建第二个 Shell 执行器：
+
+```dart
+enum ShellOutputChannel { stdout, stderr }
+
+class ShellOutputEvent {
+  final ShellOutputChannel channel;
+  final String line;
+}
+```
+
+`ShellCommandRunner.run()` 增加可选输出回调或事件接收器。底层读取每个流时同时完成：
+
+1. 追加最终结果缓冲区。
+2. 写入完整日志。
+3. 发出带通道信息的 UI 事件。
+
+原有未传回调的调用保持现有行为，从而让环境管理等调用方无需同步改造。
+
+### 13.2 执行输出弹窗
+
+执行弹窗按事件到达客户端的顺序合并展示：
+
+```text
+[stdout] 正在刷新软件源……
+[stderr] warning: ...
+[stdout] 安装完成
+```
+
+不使用两个 Tab，因为分开显示会丢失用户排查问题时最有价值的时间关系。
+
+弹窗提供：
+
+- 当前执行状态；
+- 已运行时间；
+- 实时终端式输出；
+- 自动滚动；
+- 用户手动向上滚动后暂停自动滚动；
+- “复制当前输出”；
+- “打开日志目录”；
+- 结束后的退出码和结果。
+
+执行期间不提供会造成“界面已取消但 root 脚本仍在运行”误解的普通取消按钮。30 分钟超时由执行器统一处理。
+
+### 13.3 性能和内存
+
+脚本可能持续输出大量内容。为了保证 UI 响应：
+
+- 完整 STDOUT/STDERR 始终逐行写入日志，不截断日志。
+- UI 只保留最近 512 KiB 的滚动输出。
+- 超过上限时从最早的完整行开始淘汰，并显示“较早输出请查看完整日志”。
+- 流式事件在 Application 层按最多每 100 ms 一批提交状态，避免每一行触发一次组件树重建。
+- 输出列表使用 builder 或单个受控文本区域，不在 `build()` 中反复拼接全部历史内容。
+- 关闭结果弹窗后释放输出缓冲区和滚动控制器。
+
+## 十四、Flutter 模块边界
+
+建议文件职责如下，实施计划可以在不改变边界的前提下按项目实际命名调整：
+
+```text
 lib/domain/models/
-  error_diagnosis.dart                                        ← 纯模型：Signature/Solution/Rule/Result/RepairResult
+  error_solution.dart
+  trusted_content_signature.dart
+  guided_repair_execution.dart
 
-lib/core/error_diagnostics/                                   ← 模块独立目录（解耦核心）
-  diagnosis_rule.dart                                         ← DiagnosisRule 抽象
-  diagnosis_rule_registry.dart                                ← 规则注册表（数据驱动核心）
-  rules/
-    request_interaction_rule.dart                             ← 第一条规则：RequestInteraction → OBS 换源
+lib/data/datasources/remote/
+  app_api_service.dart
+
+lib/data/repositories/
+  error_solution_repository_impl.dart
+
+lib/domain/repositories/
+  error_solution_repository.dart
+
+lib/core/security/
+  content_signature_verifier.dart
 
 lib/core/platform/
-  shell_script_runner.dart                                    ← 【小重构】从环境管理 Service 提取脚本执行三件套(public)，新老共用
+  shell_command_executor.dart
 
 lib/application/services/
-  error_diagnostics_service.dart                              ← diagnose() + buildScript() + runRepair()，注入 ShellCommandExecutor
+  guided_repair_service.dart
 
 lib/application/providers/
-  error_diagnostics_provider.dart                             ← @riverpod Notifier，UI 唯一状态入口
+  error_solution_provider.dart
+  guided_repair_provider.dart
 
 lib/presentation/widgets/
-  error_help_button.dart                                      ← ⚠️ 按钮（插到红字旁）
-  solution_dialog.dart                                        ← 解决方案弹窗（描述 + 社区链接 + 一键修复入口）
-  script_review_dialog.dart                                   ← 【新能力】脚本审计弹窗（填补项目缺口）
-
-lib/core/i18n/l10n/app_zh.arb / app_en.arb                    ← 文案 key（i18n 全覆盖）
-
-下载中心改动（唯一业务侵入点，最小）：
-  lib/presentation/widgets/download_manager_dialog.dart:628   ← _buildErrorText 外层 Padding → Row([Expanded(Text), ErrorHelpButton(task)])
+  error_help_popover.dart
+  error_solution_dialog.dart
+  script_review_dialog.dart
+  guided_repair_execution_dialog.dart
+  download_manager_dialog.dart
 ```
 
-## 四、核心数据模型（`domain/models/error_diagnosis.dart`，Freezed）
+职责边界：
 
-```dart
-/// 错误特征：用来判断一个 InstallTask 是否命中规则
-@freezed
-class ErrorSignature with _$ErrorSignature {
-  const factory ErrorSignature({
-    int? errorCode,                  // 如 -1
-    String? messageContains,         // 子串匹配
-    String? errorDetailContains,     // 如 'RequestInteraction'
-  }) = _ErrorSignature;
+- Repository：请求后端并映射领域模型，不缓存。
+- 签名验证器：只负责通用 `purpose + content + signature` 验证。
+- GuidedRepairService：验签、临时文件、日志和执行编排。
+- Provider：持有单次查询或单次执行状态。
+- Dialog：只渲染状态和触发 Provider 方法。
+- DownloadManagerDialog：只增加帮助入口，不包含网络或 Shell 逻辑。
 
-  /// 各条件为 AND：设置了几个就都得满足
-  bool matches(InstallTask task) {
-    if (errorCode != null && task.errorCode != errorCode) return false;
-    if (messageContains != null &&
-        !(task.errorMessage?.toLowerCase().contains(messageContains!.toLowerCase()) ?? false)) {
-      return false;
-    }
-    if (errorDetailContains != null &&
-        !(task.errorDetail?.toLowerCase().contains(errorDetailContains!.toLowerCase()) ?? false)) {
-      return false;
-    }
-    return true;
-  }
-}
+## 十五、后端与管理端模块边界
 
-/// 修复方式：script=可一键修复，manualOnly=只展示方案
-enum RepairKind { script, manualOnly }
+### 15.1 linglong-server
 
-@freezed
-class DiagnosisSolution with _$DiagnosisSolution {
-  const factory DiagnosisSolution({
-    required String title,
-    required String description,      // 多行纯文本/markdown，描述怎么修
-    String? referenceUrl,             // 社区链接（如 bbs.deepin.org.cn/post/289061）
-    @Default(RepairKind.manualOnly) RepairKind kind,
-    String? scriptKey,                // 指向 registry 的脚本生成器（kind==script 时）
-  }) = _DiagnosisSolution;
-}
+```text
+sql/
+  migration_<date>_create_error_solution.sql
 
-/// 诊断规则（数据驱动，加新错误就加一条）
-@freezed
-class DiagnosisRule with _$DiagnosisRule {
-  const factory DiagnosisRule({
-    required String id,               // 'request-interaction-obs-source'
-    required ErrorSignature signature,
-    required DiagnosisSolution solution,
-    @Default(0) int priority,         // 数字大的优先（多规则同时命中时）
-  }) = _DiagnosisRule;
-}
-
-/// 一次匹配的输出
-@freezed
-class DiagnosisResult with _$DiagnosisResult {
-  const DiagnosisResult._();
-  const factory DiagnosisResult({
-    required String ruleId,
-    required DiagnosisSolution solution,
-  }) = _DiagnosisResult;
-
-  bool get isRepairable => solution.kind == RepairKind.script;
-}
-
-/// 修复执行结果（参照 LinglongEnvironmentRepairResult）
-@freezed
-class GuidedRepairResult with _$GuidedRepairResult {
-  const factory GuidedRepairResult({
-    required bool success,
-    required String message,
-    String? logFilePath,              // XDG logs 目录
-    String? output,                   // 截断 ≤4000
-  }) = _GuidedRepairResult;
-}
+ll-server/src/main/java/com/dongpl/
+  entity/ErrorSolution.java
+  bo/ErrorSolutionFindBO.java
+  bo/ErrorSolutionSaveBO.java
+  vo/ErrorSolutionVO.java
+  mapper/master/ErrorSolutionMapper.java
+  service/ErrorSolutionService.java
+  service/impl/ErrorSolutionServiceImpl.java
+  controller/app/ErrorSolutionController.java
+  controller/admin/ErrorSolutionAdminController.java
+  security/ContentSignatureVerifier.java
+  config/TrustedContentSignatureProperties.java
 ```
 
-## 五、规则注册表（`core/error_diagnostics/diagnosis_rule_registry.dart`）—— 解耦核心
+`ErrorSolutionService` 统一负责匹配、多语言解析、事务保存、签名校验和启用约束。Controller 不复制这些规则。
 
-```dart
-/// 诊断规则注册表：数据驱动，加新错误就加一条规则。
-/// 不依赖任何业务 Provider，只依赖 InstallTask 纯模型。
-class DiagnosisRuleRegistry {
-  DiagnosisRuleRegistry()
-      : _rules = [
-          RequestInteractionRule.rule,
-          // ← 以后加新错误在这里加一行
-        ];
+### 15.2 linglong-admin
 
-  final List<DiagnosisRule> _rules;
-  final Map<String, String Function()> _scriptBuilders = {
-    RequestInteractionRule.scriptKey: RequestInteractionRule.buildUbuntu2404Script,
-    // ← 可一键修复的规则，把脚本生成器注册进来
-  };
-
-  /// 遍历规则（按 priority 降序），返回首个命中的结果；都不命中返回 null
-  DiagnosisResult? diagnose(InstallTask task) {
-    final sorted = [..._rules]..sort((a, b) => b.priority.compareTo(a.priority));
-    for (final rule in sorted) {
-      if (rule.signature.matches(task)) {
-        return DiagnosisResult(ruleId: rule.id, solution: rule.solution);
-      }
-    }
-    return null;
-  }
-
-  /// 取脚本全文供审计（纯函数，无副作用）
-  String buildScript(String key) {
-    final builder = _scriptBuilders[key];
-    if (builder == null) {
-      throw StateError('未注册的脚本 key: $key');
-    }
-    return builder();
-  }
-}
+```text
+src/api/errorSolution.ts
+src/views/errorSolution/index.vue
+src/router/index.ts
+src/views/index.vue
+src/types/constants.ts
+tools/offline-content-signer/index.html
 ```
 
-### 第一条规则（`rules/request_interaction_rule.dart`）
+管理页面只调用 `/admin/error-solution/**`，不得调用公开 `/app/**` 写入数据。
 
-- `signature`: `errorCode == -1 && errorDetailContains == 'RequestInteraction'`
-- `solution.title`: 「玲珑运行时不匹配，需换装社区 OBS 源版本」
-- `solution.description`: 引用 `docs/cross-distro-linglong-install-from-obs-source.md` 浓缩的根因 + 解决步骤
-- `solution.referenceUrl`: `https://bbs.deepin.org.cn/zh/post/289061`
-- `solution.kind`: `RepairKind.script`
-- `solution.scriptKey`: `'obs-source-ubuntu-2404'`
+## 十六、异常语义
 
-对应脚本生成器产出 Ubuntu 24.04 的 OBS 换源脚本：加源 → 导入 GPG key → `apt install linglong-bin linglong-box`。
-
-**脚本内部首行自检发行版**（`/etc/os-release`），不匹配则友好退出——尊重"程序不做发行版守卫、发行版适配由脚本自己处理"的决策。这是脚本设计最佳实践，写进文档约定。
-
-## 六、共享 helper 小重构（`core/platform/shell_script_runner.dart`）
-
-把 `LinglongEnvironmentManagementService` 的 5 个私有方法提成 public 共享类，新老模块共用，避免复制：
-
-| 方法 | 来源（环境管理 Service 行号） | 作用 |
+| 场景 | 后端行为 | Flutter 行为 |
 |---|---|---|
-| `writeTemporaryScript(String, {prefix})` → `Future<File>` | 904-916 | 写 `Directory.systemTemp/<prefix>-<ts>.sh` |
-| `deleteFileIfExists(File)` → `Future<void>` | 918-926 | finally 清理 |
-| `createLogFilePath(String prefix)` → `Future<String>` | 1132-1148 | 走 `AppXdgPaths`，`<prefix>-yyyyMMdd-HHmmss.log` |
-| `truncateOutput(String, {maxLength=4000})` → `String` | 1177 | 超长追加截断提示 |
-| `shellSingleQuote(String)` → `String` | 1184 | 防注入单引号转义 |
+| message 为空或超过 8 KiB | 参数错误 | 显示无法诊断 |
+| 无方案 | 成功，`data=null` | 感叹号上方显示“暂无解决方案”和“社区发帖”小型浮窗 |
+| 单条人工方案 | 返回标题和 Markdown | 只展示方案 |
+| 单条有效脚本方案 | 返回 Markdown、脚本和签名 | 验签后显示一键修复 |
+| 多条命中 | 配置错误 | 显示错误，不执行 |
+| 请求失败 | HTTP/网络错误 | 显示加载失败和重试 |
+| 请求语言缺失 | 回退 `zh` | 正常展示中文 |
+| Markdown 中文也缺失 | 配置错误或空内容失败 | 不展示空方案 |
+| 后端脚本验签失败 | 不返回脚本 | 仍展示人工说明 |
+| Flutter 脚本验签失败 | 无 | 禁止执行 |
+| pkexec 被取消 | 无 | 显示授权已取消 |
+| 退出码非 0 | 无 | 显示修复失败及退出码 |
+| 30 分钟超时 | 无 | 显示超时，保留日志 |
+| 退出码为 0 | 无 | 提示用户主动重试安装 |
 
-环境管理 Service 改为依赖这个 helper（行为不变，仅提取），其现有测试照常通过。
+## 十七、测试要求
 
-## 七、Service（`application/services/error_diagnostics_service.dart`）
+### 17.1 后端
 
-注入 `ShellCommandExecutor` + `DiagnosisRuleRegistry` + `ShellScriptRunner` + `Clock`。
+- `message` 为空和 UTF-8 编码结果超过 8192 字节时拒绝。
+- 匹配区分大小写。
+- 0 条、1 条和多条命中的行为。
+- 禁用方案不参与匹配。
+- 请求语言存在时返回对应翻译。
+- 请求语言缺失时只回退 `zh`。
+- 中文也缺失时不返回空白方案。
+- 人工方案无需签名即可启用。
+- 脚本方案没有签名、签名错误时不能启用。
+- 修改脚本使旧签名失效并强制停用。
+- 有效 Ed25519 签名可以启用并通过公共接口返回。
+- 删除方案同时删除关联 i18n 内容。
+- 管理写接口匿名访问返回未认证。
+- 公共查询接口允许匿名只读访问。
 
-```dart
-class ErrorDiagnosticsService {
-  ErrorDiagnosticsService({
-    required ShellCommandExecutor executor,
-    required DiagnosisRuleRegistry registry,
-    required ShellScriptRunner scriptRunner,
-    required DateTime Function() clock,
-  });
+### 17.2 离线签名页
 
-  /// 诊断一个失败任务，返回匹配的解决方案；都不命中返回 null
-  DiagnosisResult? diagnose(InstallTask task) => _registry.diagnose(task);
+- PKCS#8 Ed25519 私钥可以导入。
+- 非 Ed25519 或无效私钥被拒绝。
+- 签名结果可被后端和 Flutter 的同一测试向量验证。
+- CRLF、末尾换行和任意一个字符变化都会导致验签失败。
+- 页面不产生网络请求。
+- 页面不使用浏览器持久化存储。
 
-  /// 取脚本全文（纯委托，供 UI 审计）
-  String buildRepairScript(String scriptKey) => _registry.buildScript(scriptKey);
+### 17.3 Flutter 单元测试
 
-  /// 执行一键修复
-  /// 复用环境管理模块的脚本执行范式：生成 → 写临时文件 → pkexec bash 执行+日志 → 截断 → finally 清理
-  Future<GuidedRepairResult> runRepair(String scriptKey, {String? logFilePath}) async {
-    final script = _registry.buildScript(scriptKey);
-    final resolvedLogFilePath = logFilePath ?? await _scriptRunner.createLogFilePath('error-repair');
-    File? scriptFile;
-    try {
-      scriptFile = await _scriptRunner.writeTemporaryScript(script, prefix: 'error-repair');
-      final result = await _executor.run(
-        ['pkexec', 'bash', scriptFile.path],
-        timeout: const Duration(minutes: 10),
-        environment: _englishLocaleEnv,  // 固定 LC_ALL=C.UTF-8，避免中文 locale 干扰
-        logOptions: ShellCommandLogOptions(filePath: resolvedLogFilePath, overwrite: true),
-      );
-      return GuidedRepairResult(
-        success: result.success,
-        message: result.success ? '修复完成' : result.primaryMessage,
-        logFilePath: resolvedLogFilePath,
-        output: _scriptRunner.truncateOutput('${result.stdout}\n${result.stderr}'),
-      );
-    } catch (e) {
-      return GuidedRepairResult(success: false, message: '修复执行失败：$e', logFilePath: resolvedLogFilePath);
-    } finally {
-      if (scriptFile != null) await _scriptRunner.deleteFileIfExists(scriptFile);
-    }
-  }
+- 请求只包含原始 `message` 和 `lang`。
+- 每次调用 Repository 都发起真实请求，不读写缓存。
+- 后端 `null` 映射为无方案。
+- 脚本签名有效、无效、Base64 非法的处理。
+- 签名输入字节与后端测试向量一致。
+- 执行前和最终执行时验证的是同一脚本文本。
+- 退出码 0、非 0、授权取消、启动异常和超时。
+- 临时文件在成功和异常路径都删除。
+- STDOUT/STDERR 事件保留通道并写入完整日志。
+- UI 输出滚动缓冲区超过 512 KiB 时淘汰旧行。
+- 高频事件批量提交，不逐行刷新 Provider。
 
-  static const _englishLocaleEnv = {'LC_ALL': 'C.UTF-8', 'LANG': 'C.UTF-8'};
-}
+### 17.4 Flutter Widget 测试
+
+- 任意失败任务都显示无障碍帮助按钮。
+- 点击后显示加载状态并触发一次请求。
+- 关闭再打开会再次请求。
+- Markdown 标题、列表、代码块、链接、表格和远程图片正确构建。
+- 无方案不打开方案弹窗，而是在感叹号上方展示小型浮窗和社区发帖按钮。
+- 无方案浮窗支持点击外部、再次点击感叹号和 Escape 关闭，并正确恢复焦点。
+- 网络错误在同一位置展示“查询失败”和重试按钮，而不是误报无方案。
+- 人工方案不显示一键修复。
+- 有效脚本方案显示一键修复。
+- 审计弹窗显示完整脚本且支持复制。
+- 未确认审计不会执行 `pkexec`。
+- 执行弹窗实时显示 stdout 和 stderr。
+- 用户向上滚动后不被自动拉回底部。
+- 成功文案要求用户主动重试安装。
+- 所有按钮具备 Semantics、Tooltip、键盘焦点和最小交互尺寸。
+
+### 17.5 管理后台
+
+- 新建、编辑、删除、启用和停用。
+- 多语言标题与 Markdown 的读取和保存。
+- 导出脚本字节与编辑器内容完全一致。
+- 修改脚本后旧签名立即显示为无效。
+- 没有有效签名时不能启用脚本方案。
+- 人工方案可以直接启用。
+
+## 十八、第一条解决方案
+
+首条数据只匹配：
+
+```text
+RequestInteraction
 ```
 
-Provider 注入（`application/providers/error_diagnostics_provider.dart`）：
+当原始 message 包含该字符串时返回解决方案。中文 Markdown 应说明问题原因、人工操作步骤、参考链接和一键修复将执行的内容。
 
-```dart
-final errorDiagnosticsServiceProvider = Provider<ErrorDiagnosticsService>((ref) {
-  return ErrorDiagnosticsService(
-    executor: ref.watch(shellCommandExecutorProvider),
-    registry: DiagnosisRuleRegistry(),
-    scriptRunner: ShellScriptRunner(),
-    clock: DateTime.now,
-  );
-});
+修复脚本由维护者准备并经过以下流程发布：
+
+```text
+管理后台保存停用方案
+  → 导出脚本
+  → 离线 Ed25519 签名
+  → 上传签名
+  → 后端验签
+  → 启用
 ```
 
-## 八、Provider 状态编排（`application/providers/error_diagnostics_provider.dart`，@riverpod）
+具体脚本正文不写死在 Flutter 代码或本文档中，后续新增或更新脚本只需修改后端数据并重新签名。
 
-```dart
-enum ErrorDiagnosticsStatus {
-  idle, diagnosing, diagnosed, noMatch,
-  scriptPrepared, repairing, repaired, failed,
-}
+## 十九、实施顺序
 
-@freezed
-class ErrorDiagnosticsState with _$ErrorDiagnosticsState {
-  const factory ErrorDiagnosticsState({
-    @Default(ErrorDiagnosticsStatus.idle) ErrorDiagnosticsStatus status,
-    DiagnosisResult? result,        // 命中的解决方案
-    String? pendingScript,          // 待审计的脚本全文
-    GuidedRepairResult? repairResult,
-    String? errorMessage,
-  }) = _ErrorDiagnosticsState;
-}
+建议按可独立验证的功能点拆分提交：
 
-@riverpod
-class ErrorDiagnostics extends _$ErrorDiagnostics {
-  ErrorDiagnosticsService get _service => ref.read(errorDiagnosticsServiceProvider);
+1. 后端数据库、i18n 解析和只读匹配接口。
+2. 后端通用 Ed25519 验证和管理接口。
+3. 管理后台解决方案页面。
+4. 离线 Ed25519 静态签名页面。
+5. Flutter 数据模型、Repository 和本地验签。
+6. Flutter 帮助入口和 Markdown 方案弹窗。
+7. Flutter 脚本审计和执行服务。
+8. ShellCommandExecutor 流式输出与执行弹窗。
+9. 第一条 `RequestInteraction` 方案数据和跨端验收。
 
-  @override
-  ErrorDiagnosticsState build() => const ErrorDiagnosticsState();
+每个功能点独立使用 Conventional Commit；实施前另写逐文件、逐测试的实施计划。
 
-  Future<void> diagnose(InstallTask task) async { /* ... */ }
+## 二十、验收标准
 
-  /// 取 result.solution.scriptKey → service.buildRepairScript → state.pendingScript
-  Future<void> prepareScript() async { /* ... */ }
-
-  /// service.runRepair → state.repairResult；修复后可触发下载中心相关刷新
-  Future<void> confirmAndRun() async { /* ... */ }
-}
-```
-
-## 九、UI 组件与交互流程
-
-### 9.1 插入点（唯一业务改动）
-
-`download_manager_dialog.dart:628` 的 `_buildErrorText`：
-
-```dart
-// 改造前：
-Widget _buildErrorText(BuildContext context) {
-  if (!widget.task.isFailed || widget.task.errorMessage == null) {
-    return const SizedBox.shrink();
-  }
-  return Padding(
-    padding: const EdgeInsets.only(top: AppSpacing.xs),
-    child: Text(widget.task.errorMessage!, style: ....copyWith(color: AppColors.error), softWrap: true),
-  );
-}
-
-// 改造后：
-Widget _buildErrorText(BuildContext context) {
-  if (!widget.task.isFailed || widget.task.errorMessage == null) {
-    return const SizedBox.shrink();
-  }
-  return Padding(
-    padding: const EdgeInsets.only(top: AppSpacing.xs),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Text(widget.task.errorMessage!, style: ....copyWith(color: AppColors.error), softWrap: true),
-        ),
-        ErrorHelpButton(task: widget.task),   // ← 新增；按钮内部先 diagnose，命中才显示
-      ],
-    ),
-  );
-}
-```
-
-### 9.2 ErrorHelpButton（`presentation/widgets/error_help_button.dart`）
-
-`ConsumerWidget`，`IconButton(icon: Icons.help_outline, iconSize: 18, visualDensity: compact)`，复用现有 `_buildIconActionButton`（行 887-903）的样式语言。
-
-行为：
-
-1. `build` 时 `ref.read(provider.notifier).diagnose(task)`（或在点击时惰性触发）
-2. 命中 → `showDialog(SolutionDialog(result: result))`
-3. 未命中 → 不显示按钮（构建期判断，避免空点击）
-
-### 9.3 SolutionDialog（`presentation/widgets/solution_dialog.dart`）
-
-布局：
-
-- `title`: `solution.title`
-- `content`: `Column` → `SelectableText(solution.description)` 多行 + `InkWell`（`solution.referenceUrl`，点击调系统浏览器）
-- `actions`:
-  - `TextButton(关闭)`
-  - `FilledButton(一键修复)` —— **仅 `result.isRepairable` 时显示**，点击 → `ref.read(provider.notifier).prepareScript()` → `showDialog(ScriptReviewDialog(script: state.pendingScript))`
-
-### 9.4 ScriptReviewDialog（`presentation/widgets/script_review_dialog.dart`，新能力）
-
-**填补项目缺口**：项目目前没有任何"展示脚本全文供审计"的 UI。
-
-```dart
-class ScriptReviewDialog extends ConsumerWidget {
-  const ScriptReviewDialog({required this.script, required this.ruleId, super.key});
-  final String script;
-  final String ruleId;
-
-  static Future<bool> show(BuildContext context, {required String script, required String ruleId}) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (_) => ScriptReviewDialog(script: script, ruleId: ruleId),
-    );
-    return result == true;
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return AlertDialog(
-      title: Text(l10n.errorDiagnosticsScriptReviewTitle),
-      content: SizedBox(
-        width: 600, height: 400,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.errorDiagnosticsScriptReviewRiskWarning),   // 风险说明
-            const SizedBox(height: 12),
-            Expanded(
-              child: SingleChildScrollView(
-                child: CopyableCommandBlock(command: script, semanticLabel: l10n.errorDiagnosticsScriptA11y),
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
-        FilledButton(
-          style: ConfirmButtonStyle.warning,  // 复用现有按钮样式
-          onPressed: () => Navigator.pop(context, true),
-          child: Text(l10n.errorDiagnosticsConfirmRun),
-        ),
-      ],
-    );
-  }
-}
-```
-
-### 9.5 完整交互流程
-
-```
-红字旁 ⚠️ 按钮
-   → diagnose(task)
-       → 命中 → SolutionDialog(方案描述 + 社区链接)
-                  → 点「一键修复」
-                      → prepareScript() → state.pendingScript
-                          → ScriptReviewDialog(脚本全文 + 风险说明)
-                              → 点「确认执行」
-                                  → confirmAndRun() → pkexec bash 执行 + 记日志
-                                      → 结果：成功/失败 + 截断输出 + 「打开日志目录」按钮
-       → 不命中 → 不显示按钮（或在按钮上提示"暂无推荐方案"）
-```
-
-修复结果展示：复用 `showAppSuccess` / `showAppError`（`core/utils/app_notification_helpers.dart`）+ 「打开日志目录」按钮（`LocalPathOpener.openDirectory(path.dirname(logFilePath))`）。
-
-## 十、解耦体现（满足"可维护性好"的要求）
-
-1. **数据驱动**：加新错误 = 在 registry 加一条 `DiagnosisRule` + scriptBuilder，零业务代码改动。
-2. **模块自治**：`lib/core/error_diagnostics/` 自成一体，不依赖下载中心/安装队列的业务逻辑（只依赖 `InstallTask` 这个纯模型）。
-3. **单一侵入点**：业务侧只改 `_buildErrorText` 一行结构，加一个按钮。
-4. **复用不重复造轮子**：`ShellCommandExecutor` / `AppXdgPaths` / `CopyableCommandBlock` / `LocalPathOpener` 全复用；提取共享 helper 让新老模块共用脚本执行范式。
-5. **i18n 全覆盖**：所有 UI 文案走 l10n（比参照的 docs/21 模块做得更好，符合 CLAUDE.md 无障碍要求）。
-
-## 十一、参考依据
-
-1. 远程 Deepin 25 主机项目实读：`download_manager_dialog.dart:628`（红字）、`install_queue_provider.dart:521-740`（错误数据流）、`linglong_environment_management_service.dart:161-191/329-491/904-926/1132-1148/1177-1184`（脚本执行范式）、`shell_command_executor.dart`（执行器）、`copyable_command_block.dart`（脚本展示）、`app_xdg_paths.dart:169`（日志目录）、`install_messages.dart:38-78`（错误码映射）。
-2. `docs/21-linglong-environment-management.md`：模块分层契约与脚本执行范式参照。
-3. `docs/cross-distro-linglong-install-from-obs-source.md`：`RequestInteraction` 错误的根因与 OBS 换源解决方案。
-4. 社区来源：[玲珑商店无法下载](https://bbs.deepin.org.cn/post/300089) / [玲珑 1.12.2 各发行版更新](https://bbs.deepin.org.cn/zh/post/289061)。
-
-## 十二、实现边界（不做什么）
-
-- 不动 `install_queue_provider` 状态机、不改 `InstallTask` 模型（解决方案是 UI 层从现有字段派生）。
-- 不在 UI/Provider 里拼 shell 命令（全部收敛到 Service）。
-- **不做发行版守卫**（尊重决策，发行版适配由脚本内部 `/etc/os-release` 检测处理；这是脚本设计最佳实践）。
-- 不静默执行任何特权操作（脚本审计确认是硬流程）。
-- 不修改 `CliExecutor`（ll-cli 专用，与本模块无关）。
-- `RequestInteraction` 字符串不硬编码进业务代码（仅出现在规则定义里）。
-
-## 十三、测试（三层，照抄 docs/21 模式）
-
-| 层 | 文件 | 测什么 |
-|---|---|---|
-| domain | `test/unit/core/error_diagnostics/diagnosis_rule_registry_test.dart` | signature 匹配（命中/不命中/多字段 AND）、规则优先级（priority 降序） |
-| service | `test/unit/application/services/error_diagnostics_service_test.dart` | `_FakeShellCommandRunner.fromCommands({...})` 断言 `['pkexec','bash',...]` 命令、脚本内容 `contains('apt install linglong-bin')`、日志路径落在 XDG logs、截断逻辑 |
-| provider | `test/unit/application/providers/error_diagnostics_provider_test.dart` | 状态流转（idle→diagnosing→diagnosed/noMatch→scriptPrepared→repairing→repaired/failed）、override service |
-| widget | `test/widget/presentation/widgets/{error_help_button,solution_dialog,script_review_dialog}_test.dart` | 按钮命中/未命中的显隐、弹窗渲染、referenceUrl 点击、审计确认交互、确认执行回调 |
-| 回归 | `test/widget/presentation/widgets/download_manager_dialog_test.dart` | 改造后红字仍正常显示、帮助按钮存在且命中失败任务时可点开弹窗 |
-
-### Service 单测惯用法（照抄）
-
-```dart
-class _FakeShellCommandRunner implements ShellCommandRunner {
-  _FakeShellCommandRunner.fromCommands(this._results, {this._dynamicResult});
-  final Map<String, ShellCommandResult> _results;     // key = command.join(' ')
-  final List<List<String>> commands = [];             // 记录所有调用，便于断言
-  final List<ShellCommandLogOptions?> logOptions = [];
-  Future<ShellCommandResult> run(List<String> command, {...}) async {
-    commands.add(List<String>.from(command));
-    final key = command.join(' ');
-    final result = _results[key] ?? _dynamicResult?.call(command);
-    if (result == null) throw StateError('Unexpected command: $key');
-    return result;
-  }
-}
-```
-
-断言样例：
-
-```dart
-expect(runner.commands.single.take(2).toList(), ['pkexec', 'bash']);
-expect(runner.commands.single.last, startsWith('/tmp/error-repair-'));
-// 读取临时脚本文件内容，校验脚本正确
-final scriptContent = await File(runner.commands.single.last).readAsString();
-expect(scriptContent, contains('apt install linglong-bin linglong-box'));
-expect(scriptContent, contains('/etc/os-release'));  // 脚本自带发行版检测
-```
-
-运行：`/home/hao/Flutter/flutter-stable/bin/flutter test <file>`
-
-## 十四、落地步骤（Conventional Commits，每步一提交）
-
-1. `docs: 新增错误诊断+引导式修复模块设计文档` —— 本文档落地
-2. `refactor: 提取 ShellScriptRunner 共享 helper` —— `lib/core/platform/shell_script_runner.dart`，环境管理 Service 改用它（行为不变）+ 跑回归测试
-3. `feat(domain): 错误诊断领域模型` —— `lib/domain/models/error_diagnosis.dart` + `build_runner`
-4. `feat(core): 错误诊断规则注册表与首条规则` —— `lib/core/error_diagnostics/` + `rules/request_interaction_rule.dart`
-5. `feat(app): 错误诊断 Service` —— `lib/application/services/error_diagnostics_service.dart`
-6. `feat(app): 错误诊断 Provider` —— `lib/application/providers/error_diagnostics_provider.dart`
-7. `feat(ui): 脚本审计对话框` —— `lib/presentation/widgets/script_review_dialog.dart`（先做，它是缺口）
-8. `feat(ui): 解决方案弹窗与帮助按钮` —— `solution_dialog.dart` + `error_help_button.dart`
-9. `feat(ui): 下载中心接入帮助按钮` —— 改 `download_manager_dialog.dart:628`（最小侵入接入）
-10. `feat(i18n): 错误诊断模块文案` —— zh/en arb + `flutter gen-l10n`
-11. `test: 错误诊断模块三层测试` —— domain/service/provider/widget + 全量 `flutter analyze`
-
-## 十五、i18n 文案 key 清单（`app_zh.arb` 中文模板先行）
-
-| key | 中文文案 |
-|---|---|
-| `errorDiagnosticsButtonTooltip` | 查看推荐解决方案 |
-| `errorDiagnosticsButtonA11y` | 查看此错误的推荐解决方案 |
-| `errorDiagnosticsNoSolution` | 暂无推荐解决方案 |
-| `errorDiagnosticsSolutionTitle` | 推荐解决方案 |
-| `errorDiagnosticsReferenceLabel` | 查看方案来源 |
-| `errorDiagnosticsRepairButton` | 一键修复 |
-| `errorDiagnosticsRepairButtonA11y` | 使用推荐脚本一键修复此问题 |
-| `errorDiagnosticsScriptReviewTitle` | 即将执行的修复脚本 |
-| `errorDiagnosticsScriptReviewRiskWarning` | 以下脚本将以管理员权限执行，请仔细阅读确认后再继续。 |
-| `errorDiagnosticsScriptA11y` | 修复脚本内容 |
-| `errorDiagnosticsConfirmRun` | 确认执行 |
-| `errorDiagnosticsRunning` | 正在执行修复… |
-| `errorDiagnosticsRepairSuccess` | 修复完成 |
-| `errorDiagnosticsRepairFailed` | 修复失败 |
-| `errorDiagnosticsOpenLog` | 打开日志目录 |
-
-### RequestInteraction 规则专属文案
-
-| key | 中文文案 |
-|---|---|
-| `errorDiagnosticsRequestInteractionTitle` | 玲珑运行时不匹配，需换装社区 OBS 源版本 |
-| `errorDiagnosticsRequestInteractionDescription` | 当前系统自带的玲珑运行时在非 Deepin/UOS 发行版上不稳定，导致安装交互信号无法连接。推荐换装社区维护的玲珑 1.12.2 稳定版（来自 OBS 社区源）。一键修复将自动添加 Ubuntu 24.04 的 OBS 软件源、导入 GPG 签名并安装 linglong-bin 与 linglong-box。详见方案来源中的安装教程。 |
+- 安装失败的红色错误文字右侧始终有感叹号帮助按钮。
+- 只有点击按钮时才请求后端。
+- 同一错误每次点击都读取后端最新方案。
+- 后端只根据原始 `message` 做区分大小写子串匹配。
+- 0 条命中不打开方案弹窗，而是在感叹号上方显示“暂无解决方案”和“社区发帖”小型浮窗；多条命中明确报错。
+- Markdown 可读，支持远程图片和外部链接。
+- 缺少当前语言时稳定回退中文。
+- 人工方案不出现一键修复。
+- root 脚本未经有效 Ed25519 签名时无法启用、返回和执行。
+- 用户执行前能够审计脚本全文。
+- 私钥从不上传后端，也不进入代码仓库。
+- 执行期间能够实时看到 STDOUT 和 STDERR。
+- 完整输出保存在 XDG 日志，UI 大量输出时仍保持响应。
+- 30 分钟超时由 Flutter 控制。
+- 退出码 0 时只提示修复完成并让用户主动重试安装。
+- 不存在规则版本、优先级、error code 匹配、前端缓存和自动重试。

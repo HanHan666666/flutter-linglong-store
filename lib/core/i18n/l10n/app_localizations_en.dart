@@ -812,6 +812,88 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String ignoredUpdatesCount(int count) {
+    return 'Ignored ($count)';
+  }
+
+  @override
+  String get ignoredUpdatesTitle => 'Ignored Updates';
+
+  @override
+  String get ignoredUpdatesEmptyTitle => 'No ignored apps';
+
+  @override
+  String get ignoredUpdatesEmptyDescription =>
+      'Use an updatable app\'s More menu to keep its future updates hidden.';
+
+  @override
+  String get ignoreAppUpdates => 'Ignore updates for this app';
+
+  @override
+  String get restoreUpdateNotifications => 'Restore update alerts';
+
+  @override
+  String ignoredVersion(String version) {
+    return 'Version when ignored: $version';
+  }
+
+  @override
+  String ignoreUpdateSuccess(String appName) {
+    return 'Future updates for $appName are ignored. Restore them from Ignored.';
+  }
+
+  @override
+  String ignoreUpdateActiveTask(String appName) {
+    return '$appName is already in the update queue and cannot be ignored yet.';
+  }
+
+  @override
+  String get ignoreUpdateFailed =>
+      'Failed to save the ignored update setting. Try again.';
+
+  @override
+  String get ignoreUpdateInvalidApp =>
+      'This app cannot be ignored because its identifier is invalid.';
+
+  @override
+  String restoreUpdateSuccess(String appName) {
+    return 'Update alerts restored for $appName.';
+  }
+
+  @override
+  String get restoreUpdateFailed =>
+      'Failed to restore update alerts. Try again.';
+
+  @override
+  String get restoreUpdateRefreshFailed =>
+      'Update alerts were restored, but the update check failed. Try again later.';
+
+  @override
+  String a11yManageIgnoredUpdates(int count) {
+    return 'Manage ignored updates, $count apps';
+  }
+
+  @override
+  String a11yIgnoreAppUpdates(String appName) {
+    return 'Ignore future updates for $appName';
+  }
+
+  @override
+  String a11yUpdateAppMoreActions(String appName) {
+    return 'More update actions for $appName';
+  }
+
+  @override
+  String a11yRestoreAppUpdates(String appName) {
+    return 'Restore update alerts for $appName';
+  }
+
+  @override
+  String a11yIgnoredUpdateItem(String appName, String appId, String version) {
+    return '$appName, app ID $appId, version when ignored $version';
+  }
+
+  @override
   String get updating => 'Updating...';
 
   @override

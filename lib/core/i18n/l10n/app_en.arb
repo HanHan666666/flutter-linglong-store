@@ -438,6 +438,101 @@
       }
     }
   },
+  "ignoredUpdatesCount": "Ignored ({count})",
+  "@ignoredUpdatesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ignoredUpdatesTitle": "Ignored Updates",
+  "ignoredUpdatesEmptyTitle": "No ignored apps",
+  "ignoredUpdatesEmptyDescription": "Use an updatable app's More menu to keep its future updates hidden.",
+  "ignoreAppUpdates": "Ignore updates for this app",
+  "restoreUpdateNotifications": "Restore update alerts",
+  "ignoredVersion": "Version when ignored: {version}",
+  "@ignoredVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateSuccess": "Future updates for {appName} are ignored. Restore them from Ignored.",
+  "@ignoreUpdateSuccess": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateActiveTask": "{appName} is already in the update queue and cannot be ignored yet.",
+  "@ignoreUpdateActiveTask": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateFailed": "Failed to save the ignored update setting. Try again.",
+  "ignoreUpdateInvalidApp": "This app cannot be ignored because its identifier is invalid.",
+  "restoreUpdateSuccess": "Update alerts restored for {appName}.",
+  "@restoreUpdateSuccess": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreUpdateFailed": "Failed to restore update alerts. Try again.",
+  "restoreUpdateRefreshFailed": "Update alerts were restored, but the update check failed. Try again later.",
+  "a11yManageIgnoredUpdates": "Manage ignored updates, {count} apps",
+  "@a11yManageIgnoredUpdates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "a11yIgnoreAppUpdates": "Ignore future updates for {appName}",
+  "@a11yIgnoreAppUpdates": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yUpdateAppMoreActions": "More update actions for {appName}",
+  "@a11yUpdateAppMoreActions": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yRestoreAppUpdates": "Restore update alerts for {appName}",
+  "@a11yRestoreAppUpdates": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yIgnoredUpdateItem": "{appName}, app ID {appId}, version when ignored {version}",
+  "@a11yIgnoredUpdateItem": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "appId": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updating": "Updating...",
   "updateAll": "Update All",
   "updateCheckFailed": "Update check failed",

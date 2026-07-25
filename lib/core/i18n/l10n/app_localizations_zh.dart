@@ -778,6 +778,83 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String ignoredUpdatesCount(int count) {
+    return '已忽略（$count）';
+  }
+
+  @override
+  String get ignoredUpdatesTitle => '已忽略的更新';
+
+  @override
+  String get ignoredUpdatesEmptyTitle => '暂无已忽略的应用';
+
+  @override
+  String get ignoredUpdatesEmptyDescription => '从可更新应用的更多菜单中，可以持续忽略不想升级的应用。';
+
+  @override
+  String get ignoreAppUpdates => '忽略此应用更新';
+
+  @override
+  String get restoreUpdateNotifications => '恢复更新提醒';
+
+  @override
+  String ignoredVersion(String version) {
+    return '忽略时版本：$version';
+  }
+
+  @override
+  String ignoreUpdateSuccess(String appName) {
+    return '已忽略 $appName 的后续更新，可在“已忽略”中恢复';
+  }
+
+  @override
+  String ignoreUpdateActiveTask(String appName) {
+    return '$appName 已在更新队列中，暂时不能忽略';
+  }
+
+  @override
+  String get ignoreUpdateFailed => '保存忽略更新设置失败，请重试';
+
+  @override
+  String get ignoreUpdateInvalidApp => '无法忽略此应用：应用标识无效';
+
+  @override
+  String restoreUpdateSuccess(String appName) {
+    return '已恢复 $appName 的更新提醒';
+  }
+
+  @override
+  String get restoreUpdateFailed => '恢复更新提醒失败，请重试';
+
+  @override
+  String get restoreUpdateRefreshFailed => '已恢复更新提醒，但检查更新失败，可稍后重试';
+
+  @override
+  String a11yManageIgnoredUpdates(int count) {
+    return '管理已忽略的更新，共 $count 个应用';
+  }
+
+  @override
+  String a11yIgnoreAppUpdates(String appName) {
+    return '忽略 $appName 的后续更新';
+  }
+
+  @override
+  String a11yUpdateAppMoreActions(String appName) {
+    return '$appName 的更多更新操作';
+  }
+
+  @override
+  String a11yRestoreAppUpdates(String appName) {
+    return '恢复 $appName 的更新提醒';
+  }
+
+  @override
+  String a11yIgnoredUpdateItem(String appName, String appId, String version) {
+    return '$appName，应用 ID $appId，忽略时版本 $version';
+  }
+
+  @override
   String get updating => '正在更新...';
 
   @override

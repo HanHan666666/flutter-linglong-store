@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,13 +9,16 @@ import 'package:retrofit/retrofit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:linglong_store/application/providers/api_provider.dart';
+import 'package:linglong_store/application/providers/ignored_updates_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/installed_apps_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
 import 'package:linglong_store/core/di/repository_provider.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
+import 'package:linglong_store/core/storage/ignored_update_storage.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
 import 'package:linglong_store/data/repositories/app_repository_impl.dart';
+import 'package:linglong_store/domain/models/ignored_update.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
 
 import '../../../mocks/mock_classes.mocks.dart';
@@ -42,7 +48,10 @@ void main() {
       expect(updatableApp.name, equals('Test App'));
       expect(updatableApp.currentVersion, equals('1.0.0'));
       expect(updatableApp.latestVersion, equals('2.0.0'));
-      expect(updatableApp.latestVersionDescription, equals('Bug fixes and improvements'));
+      expect(
+        updatableApp.latestVersionDescription,
+        equals('Bug fixes and improvements'),
+      );
       expect(updatableApp.latestVersionSize, equals('20 MB'));
       expect(updatableApp.icon, equals('https://example.com/icon.png'));
     });
@@ -107,10 +116,7 @@ void main() {
     test('should copy with new values', () {
       const state = UpdateAppsState();
 
-      final newState = state.copyWith(
-        isLoading: true,
-        hasLoadedOnce: true,
-      );
+      final newState = state.copyWith(isLoading: true, hasLoadedOnce: true);
 
       expect(newState.isLoading, isTrue);
       expect(newState.hasLoadedOnce, isTrue);
@@ -119,27 +125,18 @@ void main() {
     });
 
     test('should clear error when clearError is true', () {
-      const state = UpdateAppsState(
-        error: 'Test error',
-      );
+      const state = UpdateAppsState(error: 'Test error');
 
-      final newState = state.copyWith(
-        isLoading: true,
-        clearError: true,
-      );
+      final newState = state.copyWith(isLoading: true, clearError: true);
 
       expect(newState.isLoading, isTrue);
       expect(newState.error, isNull);
     });
 
     test('should preserve error when not clearing', () {
-      const state = UpdateAppsState(
-        error: 'Test error',
-      );
+      const state = UpdateAppsState(error: 'Test error');
 
-      final newState = state.copyWith(
-        isLoading: true,
-      );
+      final newState = state.copyWith(isLoading: true);
 
       expect(newState.isLoading, isTrue);
       expect(newState.error, equals('Test error'));
@@ -188,75 +185,70 @@ void main() {
   });
 
   group('UpdateApps provider lifecycle', () {
-    test(
-      'keeps startup update results after listeners are removed',
-      () async {
-        SharedPreferences.setMockInitialValues({});
-        final prefs = await SharedPreferences.getInstance();
-        final mockApiService = MockAppApiService();
-        const installedApp = InstalledApp(
-          appId: 'com.example.app',
-          name: 'Test App',
-          version: '1.0.0',
-          arch: 'x86_64',
-        );
+    test('keeps startup update results after listeners are removed', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final mockApiService = MockAppApiService();
+      const installedApp = InstalledApp(
+        appId: 'com.example.app',
+        name: 'Test App',
+        version: '1.0.0',
+        arch: 'x86_64',
+      );
 
-        when(mockApiService.appCheckUpdate(any)).thenAnswer(
-          (_) async => HttpResponse(
-            const AppDetailListResponse(
-              code: 200,
-              data: [
-                AppDetailDTO(
-                  appId: 'com.example.app',
-                  appName: 'Test App',
-                  appVersion: '2.0.0',
-                ),
-              ],
-            ),
-            Response(
-              requestOptions: RequestOptions(path: '/app/appCheckUpdate'),
-            ),
+      when(mockApiService.appCheckUpdate(any)).thenAnswer(
+        (_) async => HttpResponse(
+          const AppDetailListResponse(
+            code: 200,
+            data: [
+              AppDetailDTO(
+                appId: 'com.example.app',
+                appName: 'Test App',
+                appVersion: '2.0.0',
+              ),
+            ],
           ),
-        );
+          Response(requestOptions: RequestOptions(path: '/app/appCheckUpdate')),
+        ),
+      );
 
-        final container = ProviderContainer(
-          overrides: [
-            sharedPreferencesProvider.overrideWithValue(prefs),
-            appApiServiceProvider.overrideWithValue(mockApiService),
-            appRepositoryProvider.overrideWithValue(
-              AppRepositoryImpl.withService(mockApiService),
-            ),
-            installedAppsProvider.overrideWithValue(
-              const InstalledAppsState(apps: [installedApp]),
-            ),
-          ],
-        );
-        addTearDown(container.dispose);
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          appApiServiceProvider.overrideWithValue(mockApiService),
+          appRepositoryProvider.overrideWithValue(
+            AppRepositoryImpl.withService(mockApiService),
+          ),
+          installedAppsProvider.overrideWithValue(
+            const InstalledAppsState(apps: [installedApp]),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
 
-        final subscription = container.listen<UpdateAppsState>(
-          updateAppsProvider,
-          (_, __) {},
-          fireImmediately: true,
-        );
+      final subscription = container.listen<UpdateAppsState>(
+        updateAppsProvider,
+        (_, __) {},
+        fireImmediately: true,
+      );
 
-        await container.read(updateAppsProvider.notifier).checkUpdates();
+      await container.read(updateAppsProvider.notifier).checkUpdates();
 
-        expect(container.read(updateAppsProvider).count, 1);
-        expect(
-          container.read(updateAppsProvider).apps.single.latestVersion,
-          '2.0.0',
-        );
+      expect(container.read(updateAppsProvider).count, 1);
+      expect(
+        container.read(updateAppsProvider).apps.single.latestVersion,
+        '2.0.0',
+      );
 
-        subscription.close();
-        await Future<void>.delayed(Duration.zero);
+      subscription.close();
+      await Future<void>.delayed(Duration.zero);
 
-        final retainedState = container.read(updateAppsProvider);
+      final retainedState = container.read(updateAppsProvider);
 
-        expect(retainedState.count, 1);
-        expect(retainedState.apps.single.latestVersion, '2.0.0');
-        verify(mockApiService.appCheckUpdate(any)).called(1);
-      },
-    );
+      expect(retainedState.count, 1);
+      expect(retainedState.apps.single.latestVersion, '2.0.0');
+      verify(mockApiService.appCheckUpdate(any)).called(1);
+    });
 
     test(
       'deduplicates installed apps by appId and keeps only the highest local version',
@@ -314,9 +306,9 @@ void main() {
 
         await container.read(updateAppsProvider.notifier).checkUpdates();
 
-        final captured = verify(
-          mockApiService.appCheckUpdate(captureAny),
-        ).captured.single as List<AppCheckVersionBO>;
+        final captured =
+            verify(mockApiService.appCheckUpdate(captureAny)).captured.single
+                as List<AppCheckVersionBO>;
 
         expect(captured, hasLength(1));
         expect(captured.single.appId, 'org.example.demo');
@@ -392,29 +384,214 @@ void main() {
         );
         addTearDown(container.dispose);
 
-        final firstCheck =
-            container.read(updateAppsProvider.notifier).checkUpdates();
+        final firstCheck = container
+            .read(updateAppsProvider.notifier)
+            .checkUpdates();
 
         await Future<void>.delayed(const Duration(milliseconds: 5));
-        installedApps.setApps(
-          const [
-            InstalledApp(
-              appId: 'org.example.demo',
-              name: 'Demo',
-              version: '2.0.0',
-              arch: 'x86_64',
-            ),
-          ],
-        );
+        installedApps.setApps(const [
+          InstalledApp(
+            appId: 'org.example.demo',
+            name: 'Demo',
+            version: '2.0.0',
+            arch: 'x86_64',
+          ),
+        ]);
 
-        final secondCheck =
-            container.read(updateAppsProvider.notifier).checkUpdates();
+        final secondCheck = container
+            .read(updateAppsProvider.notifier)
+            .checkUpdates();
 
         await Future.wait([firstCheck, secondCheck]);
 
         expect(container.read(updateAppsProvider).apps, isEmpty);
       },
     );
+  });
+
+  group('UpdateApps ignored update filtering', () {
+    test(
+      'excludes ignored app ids before sending the remote request',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          SharedPreferencesIgnoredUpdateStorage.storageKey: jsonEncode([
+            {
+              'appId': 'org.example.ignored',
+              'appName': 'Ignored',
+              'ignoredVersion': '1.0.0',
+              'ignoredAt': 100,
+            },
+          ]),
+        });
+        final prefs = await SharedPreferences.getInstance();
+        final mockApiService = MockAppApiService();
+        when(mockApiService.appCheckUpdate(any)).thenAnswer(
+          (_) async => HttpResponse(
+            const AppDetailListResponse(
+              code: 200,
+              data: [
+                AppDetailDTO(
+                  appId: 'org.example.visible',
+                  appName: 'Visible',
+                  appVersion: '2.0.0',
+                ),
+              ],
+            ),
+            Response(
+              requestOptions: RequestOptions(path: '/app/appCheckUpdate'),
+            ),
+          ),
+        );
+        final container = ProviderContainer(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            appApiServiceProvider.overrideWithValue(mockApiService),
+            appRepositoryProvider.overrideWithValue(
+              AppRepositoryImpl.withService(mockApiService),
+            ),
+            installedAppsProvider.overrideWithValue(
+              const InstalledAppsState(
+                apps: [
+                  InstalledApp(
+                    appId: 'org.example.ignored',
+                    name: 'Ignored',
+                    version: '1.0.0',
+                    arch: 'x86_64',
+                  ),
+                  InstalledApp(
+                    appId: 'org.example.visible',
+                    name: 'Visible',
+                    version: '1.0.0',
+                    arch: 'x86_64',
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await container.read(updateAppsProvider.notifier).checkUpdates();
+
+        final captured =
+            verify(mockApiService.appCheckUpdate(captureAny)).captured.single
+                as List<AppCheckVersionBO>;
+        expect(captured.map((item) => item.appId), ['org.example.visible']);
+        expect(
+          container.read(updateAppsProvider).apps.single.appId,
+          'org.example.visible',
+        );
+      },
+    );
+
+    test('does not call the remote API when every app is ignored', () async {
+      SharedPreferences.setMockInitialValues({
+        SharedPreferencesIgnoredUpdateStorage.storageKey: jsonEncode([
+          {
+            'appId': 'org.example.ignored',
+            'appName': 'Ignored',
+            'ignoredVersion': '1.0.0',
+            'ignoredAt': 100,
+          },
+        ]),
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final mockApiService = MockAppApiService();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          appApiServiceProvider.overrideWithValue(mockApiService),
+          appRepositoryProvider.overrideWithValue(
+            AppRepositoryImpl.withService(mockApiService),
+          ),
+          installedAppsProvider.overrideWithValue(
+            const InstalledAppsState(
+              apps: [
+                InstalledApp(
+                  appId: 'org.example.ignored',
+                  name: 'Ignored',
+                  version: '1.0.0',
+                  arch: 'x86_64',
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(updateAppsProvider.notifier).checkUpdates();
+
+      expect(container.read(updateAppsProvider).apps, isEmpty);
+      verifyNever(mockApiService.appCheckUpdate(any));
+    });
+
+    test('filters an app ignored while its request is in flight', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final mockApiService = MockAppApiService();
+      final responseCompleter =
+          Completer<HttpResponse<AppDetailListResponse>>();
+      when(
+        mockApiService.appCheckUpdate(any),
+      ).thenAnswer((_) => responseCompleter.future);
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          appApiServiceProvider.overrideWithValue(mockApiService),
+          appRepositoryProvider.overrideWithValue(
+            AppRepositoryImpl.withService(mockApiService),
+          ),
+          installedAppsProvider.overrideWithValue(
+            const InstalledAppsState(
+              apps: [
+                InstalledApp(
+                  appId: 'org.example.demo',
+                  name: 'Demo',
+                  version: '1.0.0',
+                  arch: 'x86_64',
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final checking = container
+          .read(updateAppsProvider.notifier)
+          .checkUpdates();
+      await Future<void>.delayed(Duration.zero);
+      await container
+          .read(ignoredUpdatesProvider.notifier)
+          .ignore(
+            const IgnoredUpdate(
+              appId: 'org.example.demo',
+              appName: 'Demo',
+              ignoredVersion: '1.0.0',
+              ignoredAt: 100,
+            ),
+          );
+      responseCompleter.complete(
+        HttpResponse(
+          const AppDetailListResponse(
+            code: 200,
+            data: [
+              AppDetailDTO(
+                appId: 'org.example.demo',
+                appName: 'Demo',
+                appVersion: '2.0.0',
+              ),
+            ],
+          ),
+          Response(requestOptions: RequestOptions(path: '/app/appCheckUpdate')),
+        ),
+      );
+
+      await checking;
+
+      expect(container.read(updateAppsProvider).apps, isEmpty);
+    });
   });
 }
 

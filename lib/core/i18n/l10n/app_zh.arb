@@ -439,6 +439,101 @@
       }
     }
   },
+  "ignoredUpdatesCount": "已忽略（{count}）",
+  "@ignoredUpdatesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ignoredUpdatesTitle": "已忽略的更新",
+  "ignoredUpdatesEmptyTitle": "暂无已忽略的应用",
+  "ignoredUpdatesEmptyDescription": "从可更新应用的更多菜单中，可以持续忽略不想升级的应用。",
+  "ignoreAppUpdates": "忽略此应用更新",
+  "restoreUpdateNotifications": "恢复更新提醒",
+  "ignoredVersion": "忽略时版本：{version}",
+  "@ignoredVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateSuccess": "已忽略 {appName} 的后续更新，可在“已忽略”中恢复",
+  "@ignoreUpdateSuccess": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateActiveTask": "{appName} 已在更新队列中，暂时不能忽略",
+  "@ignoreUpdateActiveTask": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateFailed": "保存忽略更新设置失败，请重试",
+  "ignoreUpdateInvalidApp": "无法忽略此应用：应用标识无效",
+  "restoreUpdateSuccess": "已恢复 {appName} 的更新提醒",
+  "@restoreUpdateSuccess": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreUpdateFailed": "恢复更新提醒失败，请重试",
+  "restoreUpdateRefreshFailed": "已恢复更新提醒，但检查更新失败，可稍后重试",
+  "a11yManageIgnoredUpdates": "管理已忽略的更新，共 {count} 个应用",
+  "@a11yManageIgnoredUpdates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "a11yIgnoreAppUpdates": "忽略 {appName} 的后续更新",
+  "@a11yIgnoreAppUpdates": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yUpdateAppMoreActions": "{appName} 的更多更新操作",
+  "@a11yUpdateAppMoreActions": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yRestoreAppUpdates": "恢复 {appName} 的更新提醒",
+  "@a11yRestoreAppUpdates": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yIgnoredUpdateItem": "{appName}，应用 ID {appId}，忽略时版本 {version}",
+  "@a11yIgnoredUpdateItem": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "appId": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updating": "正在更新...",
   "updateAll": "全部更新",
   "updateCheckFailed": "检查更新失败",

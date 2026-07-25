@@ -4,6 +4,7 @@ import '../../core/logging/app_logger.dart';
 import '../../core/network/api_exceptions.dart';
 import '../../core/di/repository_provider.dart';
 import '../../domain/models/installed_app.dart';
+import 'ignored_updates_provider.dart';
 import 'installed_apps_provider.dart';
 
 part 'update_apps_provider.g.dart';
@@ -118,9 +119,20 @@ class UpdateApps extends _$UpdateApps {
       }
 
       final latestInstalledApps = _retainLatestInstalledApps(installedApps);
+      final ignoredAppIds = ref.read(ignoredUpdatesProvider).appIds;
+      final checkableApps = latestInstalledApps
+          .where((app) => !ignoredAppIds.contains(app.appId))
+          .toList();
 
-      // 从远程 API 获取最新版本信息
-      final updatableApps = await _checkUpdatesFromRemote(latestInstalledApps);
+      // 请求前排除持续忽略的应用，避免产生无效的网络负载和版本比较。
+      final remoteUpdatableApps = await _checkUpdatesFromRemote(checkableApps);
+
+      // 网络请求期间用户仍可能新增忽略记录，因此落状态前必须再次读取最新集合，
+      // 防止旧请求把刚被忽略的应用重新放回更新列表。
+      final latestIgnoredAppIds = ref.read(ignoredUpdatesProvider).appIds;
+      final updatableApps = remoteUpdatableApps
+          .where((app) => !latestIgnoredAppIds.contains(app.appId))
+          .toList();
 
       // 只允许最新一次检查落状态，避免旧请求覆盖新结果。
       if (requestId != _latestRequestId) {

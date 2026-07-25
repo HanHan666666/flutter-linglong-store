@@ -1502,6 +1502,120 @@ abstract class AppLocalizations {
   /// **'共 {count} 个应用可更新'**
   String updateCount(int count);
 
+  /// No description provided for @ignoredUpdatesCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'已忽略（{count}）'**
+  String ignoredUpdatesCount(int count);
+
+  /// No description provided for @ignoredUpdatesTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'已忽略的更新'**
+  String get ignoredUpdatesTitle;
+
+  /// No description provided for @ignoredUpdatesEmptyTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无已忽略的应用'**
+  String get ignoredUpdatesEmptyTitle;
+
+  /// No description provided for @ignoredUpdatesEmptyDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'从可更新应用的更多菜单中，可以持续忽略不想升级的应用。'**
+  String get ignoredUpdatesEmptyDescription;
+
+  /// No description provided for @ignoreAppUpdates.
+  ///
+  /// In zh, this message translates to:
+  /// **'忽略此应用更新'**
+  String get ignoreAppUpdates;
+
+  /// No description provided for @restoreUpdateNotifications.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复更新提醒'**
+  String get restoreUpdateNotifications;
+
+  /// No description provided for @ignoredVersion.
+  ///
+  /// In zh, this message translates to:
+  /// **'忽略时版本：{version}'**
+  String ignoredVersion(String version);
+
+  /// No description provided for @ignoreUpdateSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'已忽略 {appName} 的后续更新，可在“已忽略”中恢复'**
+  String ignoreUpdateSuccess(String appName);
+
+  /// No description provided for @ignoreUpdateActiveTask.
+  ///
+  /// In zh, this message translates to:
+  /// **'{appName} 已在更新队列中，暂时不能忽略'**
+  String ignoreUpdateActiveTask(String appName);
+
+  /// No description provided for @ignoreUpdateFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存忽略更新设置失败，请重试'**
+  String get ignoreUpdateFailed;
+
+  /// No description provided for @ignoreUpdateInvalidApp.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法忽略此应用：应用标识无效'**
+  String get ignoreUpdateInvalidApp;
+
+  /// No description provided for @restoreUpdateSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'已恢复 {appName} 的更新提醒'**
+  String restoreUpdateSuccess(String appName);
+
+  /// No description provided for @restoreUpdateFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复更新提醒失败，请重试'**
+  String get restoreUpdateFailed;
+
+  /// No description provided for @restoreUpdateRefreshFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'已恢复更新提醒，但检查更新失败，可稍后重试'**
+  String get restoreUpdateRefreshFailed;
+
+  /// No description provided for @a11yManageIgnoredUpdates.
+  ///
+  /// In zh, this message translates to:
+  /// **'管理已忽略的更新，共 {count} 个应用'**
+  String a11yManageIgnoredUpdates(int count);
+
+  /// No description provided for @a11yIgnoreAppUpdates.
+  ///
+  /// In zh, this message translates to:
+  /// **'忽略 {appName} 的后续更新'**
+  String a11yIgnoreAppUpdates(String appName);
+
+  /// No description provided for @a11yUpdateAppMoreActions.
+  ///
+  /// In zh, this message translates to:
+  /// **'{appName} 的更多更新操作'**
+  String a11yUpdateAppMoreActions(String appName);
+
+  /// No description provided for @a11yRestoreAppUpdates.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复 {appName} 的更新提醒'**
+  String a11yRestoreAppUpdates(String appName);
+
+  /// No description provided for @a11yIgnoredUpdateItem.
+  ///
+  /// In zh, this message translates to:
+  /// **'{appName}，应用 ID {appId}，忽略时版本 {version}'**
+  String a11yIgnoredUpdateItem(String appName, String appId, String version);
+
   /// No description provided for @updating.
   ///
   /// In zh, this message translates to:

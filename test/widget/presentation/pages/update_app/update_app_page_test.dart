@@ -1,15 +1,19 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/application/providers/app_operation_queue_provider.dart';
+import 'package:linglong_store/application/providers/ignored_updates_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/installed_apps_provider.dart';
 import 'package:linglong_store/application/providers/network_speed_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
 import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
+import 'package:linglong_store/core/storage/ignored_update_storage.dart';
+import 'package:linglong_store/domain/models/ignored_update.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
@@ -202,6 +206,13 @@ void main() {
 
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 100));
+
+        final semanticsHandle = tester.ensureSemantics();
+        try {
+          expect(find.bySemanticsLabel('Demo 的更多更新操作'), findsOneWidget);
+        } finally {
+          semanticsHandle.dispose();
+        }
 
         expect(find.text('1.0.0 → 1.1.0'), findsOneWidget);
         expect(find.byType(Card), findsOneWidget);
@@ -540,6 +551,176 @@ void main() {
       expect(find.textContaining('MB/s'), findsNothing);
     });
 
+    testWidgets(
+      'shows subtle ignored entry and opens the empty manager dialog',
+      (tester) async {
+        final storage = _MemoryIgnoredUpdateStorage();
+        await tester.pumpWidget(
+          _buildIgnoredUpdateFeatureHost(
+            storage: storage,
+            installQueue: TestInstallQueue(
+              initialState: const InstallQueueState(),
+            ),
+            updateApps: TestUpdateApps(),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        final entryFinder = find.byKey(const ValueKey('ignored-updates-entry'));
+        expect(entryFinder, findsOneWidget);
+        expect(find.text('已忽略（0）'), findsOneWidget);
+        expect(tester.getSize(entryFinder).height, greaterThanOrEqualTo(48));
+        expect(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics &&
+                widget.properties.label == '管理已忽略的更新，共 0 个应用' &&
+                widget.properties.button == true,
+          ),
+          findsOneWidget,
+        );
+
+        final entry = tester.widget<TextButton>(entryFinder);
+        expect(entry.child, isA<Text>());
+        expect(
+          find.descendant(of: entryFinder, matching: find.byType(Icon)),
+          findsNothing,
+        );
+
+        await tester.tap(entryFinder);
+        await tester.pumpAndSettle();
+
+        expect(find.text('已忽略的更新'), findsOneWidget);
+        expect(find.text('暂无已忽略的应用'), findsOneWidget);
+
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+        await tester.pumpAndSettle();
+        expect(find.text('已忽略的更新'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'ignores from the row menu and restores from the manager dialog',
+      (tester) async {
+        final storage = _MemoryIgnoredUpdateStorage();
+        final updateApps = TestUpdateApps(
+          apps: const [
+            UpdatableApp(
+              installedApp: InstalledApp(
+                appId: 'org.example.demo',
+                name: 'Demo',
+                version: '1.0.0',
+              ),
+              latestVersion: '2.0.0',
+            ),
+          ],
+        );
+        await tester.pumpWidget(
+          _buildIgnoredUpdateFeatureHost(
+            storage: storage,
+            installQueue: TestInstallQueue(
+              initialState: const InstallQueueState(),
+            ),
+            updateApps: updateApps,
+          ),
+        );
+
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        await tester.tap(
+          find.byKey(const ValueKey('update-app-more-org.example.demo')),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('忽略此应用更新'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('1.0.0 → 2.0.0'), findsNothing);
+        expect(find.text('已忽略（1）'), findsOneWidget);
+        expect(find.text('全部更新'), findsNothing);
+        expect(find.text('已忽略 Demo 的后续更新，可在“已忽略”中恢复'), findsOneWidget);
+
+        await tester.tap(find.byKey(const ValueKey('ignored-updates-entry')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Demo'), findsOneWidget);
+        expect(find.text('org.example.demo'), findsOneWidget);
+        expect(find.text('忽略时版本：1.0.0'), findsOneWidget);
+        final restoreButton = find.widgetWithText(TextButton, '恢复更新提醒');
+        expect(tester.getSize(restoreButton).height, greaterThanOrEqualTo(48));
+        expect(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics &&
+                widget.properties.label == '恢复 Demo 的更新提醒' &&
+                widget.properties.button == true,
+          ),
+          findsOneWidget,
+        );
+
+        await tester.tap(restoreButton);
+        await tester.pumpAndSettle();
+
+        expect(find.text('暂无已忽略的应用'), findsOneWidget);
+        expect(storage.load(), isEmpty);
+      },
+    );
+
+    testWidgets('disables ignore menu item while the app update is active', (
+      tester,
+    ) async {
+      final storage = _MemoryIgnoredUpdateStorage();
+      await tester.pumpWidget(
+        _buildIgnoredUpdateFeatureHost(
+          storage: storage,
+          installQueue: TestInstallQueue(
+            initialState: const InstallQueueState(
+              currentTask: InstallTask(
+                id: 'task-active',
+                appId: 'org.example.demo',
+                appName: 'Demo',
+                kind: InstallTaskKind.update,
+                status: InstallStatus.installing,
+                createdAt: 1,
+              ),
+              isProcessing: true,
+            ),
+          ),
+          updateApps: TestUpdateApps(
+            apps: const [
+              UpdatableApp(
+                installedApp: InstalledApp(
+                  appId: 'org.example.demo',
+                  name: 'Demo',
+                  version: '1.0.0',
+                ),
+                latestVersion: '2.0.0',
+              ),
+            ],
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(
+        find.byKey(const ValueKey('update-app-more-org.example.demo')),
+      );
+      // 当前行持续显示安装进度动画，不能用 pumpAndSettle 等待“完全静止”；
+      // 只推进菜单展开动画所需时间即可检查禁用状态。
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final disabledItem = tester.widget<PopupMenuItem<dynamic>>(
+        find.byWidgetPredicate(
+          (widget) => widget is PopupMenuItem<dynamic> && !widget.enabled,
+        ),
+      );
+      expect(disabledItem.enabled, isFalse);
+      expect(storage.load(), isEmpty);
+    });
+
     testWidgets('launches flyout after single update is enqueued', (
       tester,
     ) async {
@@ -720,6 +901,31 @@ void main() {
   });
 }
 
+Widget _buildIgnoredUpdateFeatureHost({
+  required IgnoredUpdateStorage storage,
+  required InstallQueue installQueue,
+  required UpdateApps updateApps,
+}) {
+  return ProviderScope(
+    overrides: [
+      ignoredUpdateStorageProvider.overrideWithValue(storage),
+      installQueueProvider.overrideWith(() => installQueue),
+      installedAppsProvider.overrideWith(() => TestInstalledApps()),
+      updateAppsProvider.overrideWith(() => updateApps),
+      networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+      appOperationQueueControllerProvider.overrideWith(
+        (ref) => RecordingAppOperationQueueController(ref),
+      ),
+    ],
+    child: const MaterialApp(
+      locale: Locale('zh'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(body: UpdateAppPage()),
+    ),
+  );
+}
+
 Widget _buildFlyoutHost({
   required InstallQueue installQueue,
   required UpdateApps updateApps,
@@ -855,5 +1061,25 @@ class RecordingAppOperationQueueController extends AppOperationQueueController {
   ) {
     batchCalls.add(List<EnqueueAppOperationParams>.from(paramsList));
     return List<String>.from(batchReturnValue);
+  }
+}
+
+/// 为 Widget 测试提供可观察、无外部依赖的忽略更新存储。
+class _MemoryIgnoredUpdateStorage implements IgnoredUpdateStorage {
+  /// 使用给定快照初始化内存存储。
+  _MemoryIgnoredUpdateStorage({
+    List<IgnoredUpdate> initialRecords = const <IgnoredUpdate>[],
+  }) : _records = List<IgnoredUpdate>.from(initialRecords);
+
+  /// 当前持久化快照，刻意复制以模拟真实存储的值语义。
+  List<IgnoredUpdate> _records;
+
+  @override
+  List<IgnoredUpdate> load() => List<IgnoredUpdate>.from(_records);
+
+  @override
+  Future<bool> save(List<IgnoredUpdate> records) async {
+    _records = List<IgnoredUpdate>.from(records);
+    return true;
   }
 }

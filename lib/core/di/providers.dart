@@ -61,6 +61,14 @@ export '../../application/providers/update_apps_provider.dart'
         UpdateAppsState,
         UpdatableApp;
 
+// 持续忽略更新
+export '../../application/providers/ignored_updates_provider.dart'
+    show
+        ignoredUpdatesProvider,
+        ignoredUpdatesCountProvider,
+        IgnoredUpdates,
+        IgnoredUpdatesState;
+
 // ==================== 设置 Provider ====================
 
 // 设置页面

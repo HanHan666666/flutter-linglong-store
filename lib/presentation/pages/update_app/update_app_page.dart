@@ -5,19 +5,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../application/providers/app_collection_sync_provider.dart';
 import '../../../application/providers/app_operation_queue_provider.dart';
+import '../../../application/providers/ignored_updates_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
 import '../../../application/providers/update_apps_provider.dart';
+import '../../../application/services/ignored_update_service.dart';
 // 更新页位于 presentation/pages/update_app，下列跨层依赖必须回退到 lib 根目录，
 // 否则 clean checkout / CI 构建时会错误解析到 lib/presentation/** 虚假路径。
 import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
+import '../../../core/utils/app_notification_helpers.dart';
 import '../../../domain/models/install_progress.dart';
 import '../../../domain/models/install_queue_state.dart';
 import '../../../domain/models/install_task.dart';
 import '../../widgets/app_icon.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/ignored_updates_dialog.dart';
 import '../../widgets/install_to_download_flyout.dart';
 import '../../widgets/install_button.dart';
 
@@ -102,15 +106,47 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
     await ref.read(installQueueProvider.notifier).cancelTask(appId);
   }
 
+  /// 持续忽略指定应用的后续更新。
+  ///
+  /// 页面只负责反馈结果，持久化、任务校验和更新状态移除统一由服务层完成。
+  Future<void> _ignoreAppUpdates(UpdatableApp app) async {
+    final result = await ref.read(ignoredUpdateServiceProvider).ignore(app);
+    if (!mounted) {
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    switch (result) {
+      case IgnoreUpdateResult.success:
+        showAppNotification(context, l10n.ignoreUpdateSuccess(app.name));
+        break;
+      case IgnoreUpdateResult.invalidApp:
+        showAppError(context, l10n.ignoreUpdateInvalidApp);
+        break;
+      case IgnoreUpdateResult.activeTask:
+        showAppWarning(context, l10n.ignoreUpdateActiveTask(app.name));
+        break;
+      case IgnoreUpdateResult.persistenceFailed:
+        showAppError(context, l10n.ignoreUpdateFailed);
+        break;
+    }
+  }
+
+  /// 打开低强调度入口对应的已忽略更新管理弹窗。
+  void _showIgnoredUpdates() {
+    unawaited(showIgnoredUpdatesDialog(context));
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(updateAppsProvider);
     final installState = ref.watch(installQueueProvider);
+    final ignoredUpdatesCount = ref.watch(ignoredUpdatesCountProvider);
 
     return Column(
       children: [
         // 头部区域：更新按钮
-        _buildHeader(context, state, installState),
+        _buildHeader(context, state, installState, ignoredUpdatesCount),
 
         // 内容区域
         Expanded(child: _buildContent(context, state, installState)),
@@ -123,10 +159,12 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
     BuildContext context,
     UpdateAppsState state,
     InstallQueueState installState,
+    int ignoredUpdatesCount,
   ) {
     final isUpdating = installState.hasActiveTasks();
     final isChecking = state.isLoading;
     final l10n = AppLocalizations.of(context);
+    final ignoredUpdatesL10n = AppLocalizations.of(context)!;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -154,6 +192,29 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              Semantics(
+                button: true,
+                label: ignoredUpdatesL10n.a11yManageIgnoredUpdates(
+                  ignoredUpdatesCount,
+                ),
+                onTap: _showIgnoredUpdates,
+                excludeSemantics: true,
+                child: TextButton(
+                  key: const ValueKey('ignored-updates-entry'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(
+                      context,
+                    ).colorScheme.onSurfaceVariant,
+                    minimumSize: const Size(0, 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                  ),
+                  onPressed: _showIgnoredUpdates,
+                  child: Text(
+                    ignoredUpdatesL10n.ignoredUpdatesCount(ignoredUpdatesCount),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
               OutlinedButton.icon(
                 onPressed: isChecking ? null : () => unawaited(_syncUpdates()),
                 icon: const Icon(Icons.refresh, size: 18),
@@ -272,6 +333,8 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
               onCancel: installTask != null
                   ? () => _cancelAppInstall(app.appId)
                   : null,
+              canIgnore: !installState.isAppInQueue(app.appId),
+              onIgnore: () => _ignoreAppUpdates(app),
             );
           },
         ),
@@ -310,6 +373,12 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
   }
 }
 
+/// 更新列表行级更多菜单动作。
+enum _UpdateAppMenuAction {
+  /// 持续忽略当前应用的后续更新。
+  ignoreUpdates,
+}
+
 /// 可更新应用列表项
 class _UpdatableAppItem extends ConsumerStatefulWidget {
   const _UpdatableAppItem({
@@ -320,6 +389,8 @@ class _UpdatableAppItem extends ConsumerStatefulWidget {
     required this.onTap,
     required this.onUpdate,
     required this.onCancel,
+    required this.canIgnore,
+    required this.onIgnore,
   });
 
   final UpdatableApp app;
@@ -328,6 +399,12 @@ class _UpdatableAppItem extends ConsumerStatefulWidget {
   final VoidCallback onTap;
   final String Function() onUpdate;
   final VoidCallback? onCancel;
+
+  /// 当前应用是否允许执行忽略；活跃更新任务期间必须为 false。
+  final bool canIgnore;
+
+  /// 触发统一忽略更新服务的回调。
+  final Future<void> Function() onIgnore;
 
   @override
   ConsumerState<_UpdatableAppItem> createState() => _UpdatableAppItemState();
@@ -444,12 +521,60 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
                       onCancel: widget.onCancel,
                       size: ButtonSize.small,
                     ),
+                    const SizedBox(width: AppSpacing.xs),
+                    _buildOverflowMenu(context),
                   ],
                 ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// 构建行级低强调度更多菜单。
+  ///
+  /// 菜单按钮保持可发现；当前应用有活跃任务时只禁用忽略菜单项，
+  /// 让用户仍能理解该能力存在但此刻不可用。
+  Widget _buildOverflowMenu(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Semantics(
+      button: true,
+      label: l10n.a11yUpdateAppMoreActions(widget.app.name),
+      excludeSemantics: true,
+      child: PopupMenuButton<_UpdateAppMenuAction>(
+        key: ValueKey('update-app-more-${widget.app.appId}'),
+        tooltip: l10n.moreActions,
+        icon: const ExcludeSemantics(child: Icon(Icons.more_vert)),
+        onSelected: (action) {
+          switch (action) {
+            case _UpdateAppMenuAction.ignoreUpdates:
+              unawaited(widget.onIgnore());
+              break;
+          }
+        },
+        itemBuilder: (context) => [
+          PopupMenuItem<_UpdateAppMenuAction>(
+            value: _UpdateAppMenuAction.ignoreUpdates,
+            enabled: widget.canIgnore,
+            child: Semantics(
+              button: true,
+              enabled: widget.canIgnore,
+              label: l10n.a11yIgnoreAppUpdates(widget.app.name),
+              excludeSemantics: true,
+              child: Row(
+                children: [
+                  const ExcludeSemantics(
+                    child: Icon(Icons.notifications_off_outlined, size: 18),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Flexible(child: Text(l10n.ignoreAppUpdates)),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

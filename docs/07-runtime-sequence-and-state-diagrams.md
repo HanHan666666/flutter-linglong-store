@@ -537,6 +537,7 @@ sequenceDiagram
     autonumber
     participant Launch as LaunchController
     participant Installed as InstalledAppsProvider
+    participant Ignored as IgnoredUpdatesProvider
     participant Updates as UpdatesProvider
     participant HTTP as AppRepository
     participant Sidebar as Sidebar
@@ -544,8 +545,13 @@ sequenceDiagram
     Launch->>Installed: fetchInstalledApps()
     Installed-->>Launch: installedApps
     Launch->>Updates: checkUpdates(installedApps)
-    Updates->>HTTP: appCheckUpdate(appIds)
+    Updates->>Ignored: read ignored appIds
+    Ignored-->>Updates: ignored appId set
+    Updates->>HTTP: appCheckUpdate(non-ignored appIds)
     HTTP-->>Updates: update list
+    Updates->>Ignored: read latest ignored appIds again
+    Ignored-->>Updates: latest ignored appId set
+    Updates->>Updates: filter response before state commit
     Updates-->>Sidebar: badge count changed
     Sidebar->>Sidebar: render red dot
 ```
@@ -575,6 +581,40 @@ sequenceDiagram
 是本机已安装版本的事实来源，必须先刷新 `installedAppsProvider`，再调用
 `updateAppsProvider.checkUpdates()`；禁止在更新页直接调用 `checkUpdates()`，
 否则应用更新完成后可能继续用内存中的旧版本计算可更新列表。
+
+### 9.2 持续忽略与恢复更新
+
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant Page as UpdateAppPage
+    participant Ignore as IgnoredUpdateService
+    participant Storage as IgnoredUpdateStorage
+    participant Updates as UpdatesProvider
+    participant Sync as AppCollectionSyncService
+
+    User->>Page: 更多菜单 / 忽略此应用更新
+    Page->>Ignore: ignore(updatableApp)
+    Ignore->>Ignore: 校验同 appId 无活跃安装任务
+    Ignore->>Storage: 保存 appId 与展示快照
+    Storage-->>Ignore: 持久化成功
+    Ignore->>Updates: removeByAppId(appId)
+    Updates-->>Page: 当前列表立即移除
+
+    User->>Page: 已忽略弹窗 / 恢复更新提醒
+    Page->>Ignore: restore(appId)
+    Ignore->>Storage: 删除忽略记录
+    Storage-->>Ignore: 持久化成功
+    Ignore->>Sync: syncAfterSuccessfulOperation()
+    Sync->>Updates: 刷新已安装应用后重新检查更新
+    Updates-->>Page: 按最新检查结果展示
+```
+
+2026-07-25 约定：持续忽略状态是独立于安装状态的用户偏好，唯一身份为
+`appId`，不得因版本、架构、仓库、模块变化或卸载重装而自动解除。页面只能通过
+`IgnoredUpdateService` 执行忽略和恢复；禁止在 Widget 中直接写本地存储或复制
+过滤逻辑。`UpdatesProvider` 必须在请求前过滤一次，并在远程响应提交到状态前
+读取最新忽略集合再次过滤，以覆盖网络请求期间用户刚刚忽略应用的竞态。
 
 ---
 

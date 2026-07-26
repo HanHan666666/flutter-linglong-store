@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/accessibility/a11y_focus_traversal.dart';
 import '../../core/accessibility/a11y_semantics.dart';
 import '../../core/config/app_config.dart';
 import '../../core/config/theme.dart';
@@ -45,8 +47,31 @@ class _ErrorSolutionHelpButtonState
   /// 锚定浮窗显示控制器。
   final OverlayPortalController _popoverController = OverlayPortalController();
 
+  /// 帮助按钮焦点，用于浮窗关闭后恢复键盘操作位置。
+  final FocusNode _triggerFocusNode = FocusNode(
+    debugLabel: 'ErrorSolutionHelpTrigger',
+  );
+
+  /// 浮窗关闭入口焦点。
+  final FocusNode _closeFocusNode = FocusNode(
+    debugLabel: 'ErrorSolutionPopoverClose',
+  );
+
+  /// 浮窗查询重试入口焦点。
+  final FocusNode _retryFocusNode = FocusNode(
+    debugLabel: 'ErrorSolutionPopoverRetry',
+  );
+
+  /// 浮窗社区发帖入口焦点。
+  final FocusNode _communityFocusNode = FocusNode(
+    debugLabel: 'ErrorSolutionPopoverCommunity',
+  );
+
   /// 查询进行中标记，用于防止重复请求。
   bool _isLoading = false;
+
+  /// 查询代次；message 更新后旧响应必须丢弃，不能展示到新的任务卡片。
+  int _requestGeneration = 0;
 
   /// 当前浮窗反馈类型。
   _HelpPopoverKind _popoverKind = _HelpPopoverKind.noSolution;
@@ -56,17 +81,19 @@ class _ErrorSolutionHelpButtonState
     if (_isLoading) {
       return;
     }
-    _hidePopover();
+    _hidePopover(restoreFocus: false);
     setState(() => _isLoading = true);
+    final requestGeneration = ++_requestGeneration;
+    final requestMessage = widget.message;
 
     try {
       final solution = await ref
           .read(errorSolutionLookupServiceProvider)
           .find(
-            message: widget.message,
+            message: requestMessage,
             language: Localizations.localeOf(context).languageCode,
           );
-      if (!mounted) {
+      if (!mounted || !_isCurrentRequest(requestGeneration, requestMessage)) {
         return;
       }
 
@@ -88,27 +115,76 @@ class _ErrorSolutionHelpButtonState
             : null,
       );
     } catch (_) {
-      if (mounted) {
+      if (_isCurrentRequest(requestGeneration, requestMessage)) {
         _showPopover(_HelpPopoverKind.queryFailed);
       }
     } finally {
-      if (mounted) {
+      if (_isCurrentRequest(requestGeneration, requestMessage)) {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  /// 判断异步结果是否仍属于当前按钮和当前错误消息。
+  bool _isCurrentRequest(int generation, String message) {
+    return mounted &&
+        generation == _requestGeneration &&
+        message == widget.message;
   }
 
   /// 显示指定类型的锚定反馈浮窗。
   void _showPopover(_HelpPopoverKind kind) {
     setState(() => _popoverKind = kind);
     _popoverController.show();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _popoverController.isShowing) {
+        _closeFocusNode.requestFocus();
+      }
+    });
   }
 
   /// 隐藏锚定反馈浮窗。
-  void _hidePopover() {
+  void _hidePopover({bool restoreFocus = true}) {
     if (_popoverController.isShowing) {
       _popoverController.hide();
     }
+    if (restoreFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _triggerFocusNode.requestFocus();
+        }
+      });
+    }
+  }
+
+  /// 在浮窗内处理 Escape 和循环 Tab，防止焦点泄漏到背景任务列表。
+  KeyEventResult _handlePopoverKey(FocusNode _, KeyEvent event) {
+    if (event is! KeyDownEvent) {
+      return KeyEventResult.ignored;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.escape) {
+      _hidePopover();
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey != LogicalKeyboardKey.tab) {
+      return KeyEventResult.ignored;
+    }
+
+    final focusNodes = <FocusNode>[
+      _closeFocusNode,
+      if (_popoverKind == _HelpPopoverKind.queryFailed) _retryFocusNode,
+      _communityFocusNode,
+    ];
+    final currentIndex = focusNodes.indexWhere((node) => node.hasFocus);
+    final step = HardwareKeyboard.instance.isShiftPressed ? -1 : 1;
+    final candidateIndex = currentIndex < 0
+        ? (step > 0 ? 0 : focusNodes.length - 1)
+        : (currentIndex + step) % focusNodes.length;
+    final nextIndex = candidateIndex < 0
+        ? focusNodes.length - 1
+        : candidateIndex;
+    focusNodes[nextIndex].requestFocus();
+    return KeyEventResult.handled;
   }
 
   /// 打开统一社区发帖入口。
@@ -119,6 +195,26 @@ class _ErrorSolutionHelpButtonState
     if (!opened && mounted) {
       showLinkOpenError(context, AppConfig.communityForumUrl);
     }
+  }
+
+  @override
+  void didUpdateWidget(covariant ErrorSolutionHelpButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message != widget.message) {
+      _requestGeneration += 1;
+      _isLoading = false;
+      _hidePopover(restoreFocus: false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _requestGeneration += 1;
+    _triggerFocusNode.dispose();
+    _closeFocusNode.dispose();
+    _retryFocusNode.dispose();
+    _communityFocusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -147,6 +243,10 @@ class _ErrorSolutionHelpButtonState
                 onClose: _hidePopover,
                 onRetry: _handleTap,
                 onCommunityPost: _openCommunity,
+                onKeyEvent: _handlePopoverKey,
+                closeFocusNode: _closeFocusNode,
+                retryFocusNode: _retryFocusNode,
+                communityFocusNode: _communityFocusNode,
               ),
             ),
           ],
@@ -157,6 +257,7 @@ class _ErrorSolutionHelpButtonState
           tooltip: l10n?.errorSolutionHelpTooltip ?? '查看解决方案',
           enabled: !_isLoading,
           iconSize: 18,
+          focusNode: _triggerFocusNode,
           onTap: _handleTap,
           icon: _isLoading
               ? const CircularProgressIndicator(strokeWidth: 2)
@@ -188,6 +289,10 @@ class _HelpPopover extends StatelessWidget {
     required this.onClose,
     required this.onRetry,
     required this.onCommunityPost,
+    required this.onKeyEvent,
+    required this.closeFocusNode,
+    required this.retryFocusNode,
+    required this.communityFocusNode,
   });
 
   /// 当前反馈类型。
@@ -202,6 +307,18 @@ class _HelpPopover extends StatelessWidget {
   /// 打开社区入口回调。
   final VoidCallback onCommunityPost;
 
+  /// Escape 和循环 Tab 处理器。
+  final FocusOnKeyEventCallback onKeyEvent;
+
+  /// 关闭按钮焦点。
+  final FocusNode closeFocusNode;
+
+  /// 重试按钮焦点。
+  final FocusNode retryFocusNode;
+
+  /// 社区按钮焦点。
+  final FocusNode communityFocusNode;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -211,85 +328,93 @@ class _HelpPopover extends StatelessWidget {
     return Material(
       key: const Key('errorSolutionHelpPopover'),
       color: Colors.transparent,
-      child: Semantics(
-        liveRegion: true,
-        child: Container(
-          width: 250,
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: appColors.surface,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: appColors.borderSecondary),
-            boxShadow: AppShadows.modal,
-          ),
-          child: FocusScope(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ExcludeSemantics(
-                      child: Icon(
-                        isNoSolution
-                            ? Icons.info_outline
-                            : Icons.refresh_rounded,
-                        size: 18,
-                        color: isNoSolution
-                            ? appColors.textSecondary
-                            : appColors.warning,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        isNoSolution
-                            ? l10n?.errorSolutionNoSolution ?? '暂无解决方案'
-                            : l10n?.errorSolutionQueryFailed ?? '查询失败，请重试',
-                        style: context.appTextStyles.bodyMedium.copyWith(
-                          color: appColors.textPrimary,
+      child: Focus(
+        onKeyEvent: onKeyEvent,
+        skipTraversal: true,
+        child: A11yFocusScope(
+          debugLabel: 'ErrorSolutionHelpPopover',
+          child: Semantics(
+            liveRegion: true,
+            child: Container(
+              width: 250,
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: appColors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(color: appColors.borderSecondary),
+                boxShadow: AppShadows.modal,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ExcludeSemantics(
+                        child: Icon(
+                          isNoSolution
+                              ? Icons.info_outline
+                              : Icons.refresh_rounded,
+                          size: 18,
+                          color: isNoSolution
+                              ? appColors.textSecondary
+                              : appColors.warning,
                         ),
                       ),
-                    ),
-                    SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        tooltip: l10n?.close ?? '关闭',
-                        onPressed: onClose,
-                        icon: const ExcludeSemantics(
-                          child: Icon(Icons.close, size: 16),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          isNoSolution
+                              ? l10n?.errorSolutionNoSolution ?? '暂无解决方案'
+                              : l10n?.errorSolutionQueryFailed ?? '查询失败，请重试',
+                          style: context.appTextStyles.bodyMedium.copyWith(
+                            color: appColors.textPrimary,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.xs,
-                  children: [
-                    if (!isNoSolution)
+                      SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: IconButton(
+                          focusNode: closeFocusNode,
+                          padding: EdgeInsets.zero,
+                          tooltip: l10n?.close ?? '关闭',
+                          onPressed: onClose,
+                          icon: const ExcludeSemantics(
+                            child: Icon(Icons.close, size: 16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.xs,
+                    children: [
+                      if (!isNoSolution)
+                        TextButton.icon(
+                          focusNode: retryFocusNode,
+                          onPressed: onRetry,
+                          icon: const ExcludeSemantics(
+                            child: Icon(Icons.refresh, size: 16),
+                          ),
+                          label: Text(l10n?.errorSolutionRetry ?? '重新查询'),
+                        ),
                       TextButton.icon(
-                        onPressed: onRetry,
+                        key: const Key('errorSolutionCommunityPostButton'),
+                        focusNode: communityFocusNode,
+                        onPressed: onCommunityPost,
                         icon: const ExcludeSemantics(
-                          child: Icon(Icons.refresh, size: 16),
+                          child: Icon(Icons.forum_outlined, size: 16),
                         ),
-                        label: Text(l10n?.errorSolutionRetry ?? '重新查询'),
+                        label: Text(l10n?.errorSolutionCommunityPost ?? '社区发帖'),
                       ),
-                    TextButton.icon(
-                      key: const Key('errorSolutionCommunityPostButton'),
-                      onPressed: onCommunityPost,
-                      icon: const ExcludeSemantics(
-                        child: Icon(Icons.forum_outlined, size: 16),
-                      ),
-                      label: Text(l10n?.errorSolutionCommunityPost ?? '社区发帖'),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

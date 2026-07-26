@@ -79,6 +79,8 @@ class ErrorSolutionDialog extends StatelessWidget {
                         ),
                       ),
                   onTapLink: (_, href, _) => _openLink(context, href),
+                  imageBuilder: (uri, title, alt) =>
+                      _buildMarkdownImage(context, uri, alt),
                 ),
               ),
               Divider(height: 1, color: appColors.divider),
@@ -119,6 +121,54 @@ class ErrorSolutionDialog extends StatelessWidget {
     );
   }
 
+  /// 构建 Markdown 远程图片。
+  ///
+  /// 只允许 HTTP/HTTPS，拒绝 file、resource 和 data URI，避免后端内容读取本地
+  /// 资源或把大段内联数据直接交给图片解码器。解码宽度按对话框上限约束，降低
+  /// 高分辨率远程图对桌面端内存和 UI 响应的影响。
+  Widget _buildMarkdownImage(BuildContext context, Uri uri, String? alt) {
+    final l10n = AppLocalizations.of(context);
+    if (uri.scheme != 'http' && uri.scheme != 'https') {
+      return _MarkdownImageFallback(
+        icon: Icons.block_outlined,
+        label: l10n?.errorSolutionImageBlocked ?? '已阻止非网络图片',
+      );
+    }
+
+    final semanticLabel = alt?.trim().isNotEmpty == true
+        ? alt!.trim()
+        : l10n?.errorSolutionRemoteImage ?? '解决方案远程图片';
+    final cacheWidth = (720 * MediaQuery.devicePixelRatioOf(context)).round();
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 360),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        child: Image.network(
+          uri.toString(),
+          fit: BoxFit.contain,
+          cacheWidth: cacheWidth,
+          semanticLabel: semanticLabel,
+          loadingBuilder: (context, child, progress) {
+            if (progress == null) {
+              return child;
+            }
+            return Semantics(
+              label: l10n?.loading ?? '加载中',
+              child: const SizedBox(
+                height: 96,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            );
+          },
+          errorBuilder: (_, _, _) => _MarkdownImageFallback(
+            icon: Icons.broken_image_outlined,
+            label: l10n?.errorSolutionImageLoadFailed ?? '远程图片加载失败',
+          ),
+        ),
+      ),
+    );
+  }
+
   /// 在系统默认程序中打开 Markdown 链接。
   ///
   /// 只允许 http/https，避免后端 Markdown 借助自定义 scheme 触发本地应用行为。
@@ -132,6 +182,51 @@ class ErrorSolutionDialog extends StatelessWidget {
     if (!opened && context.mounted) {
       showLinkOpenError(context, href ?? '');
     }
+  }
+}
+
+/// Markdown 图片无法安全展示时的可读占位。
+class _MarkdownImageFallback extends StatelessWidget {
+  /// 创建本地化图片占位。
+  const _MarkdownImageFallback({required this.icon, required this.label});
+
+  /// 状态图标。
+  final IconData icon;
+
+  /// 用户可见及屏幕阅读器文案。
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final appColors = context.appColors;
+    return Semantics(
+      label: label,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: appColors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          border: Border.all(color: appColors.borderSecondary),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ExcludeSemantics(
+              child: Icon(icon, size: 18, color: appColors.textSecondary),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Flexible(
+              child: Text(
+                label,
+                style: context.appTextStyles.caption.copyWith(
+                  color: appColors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -44,5 +44,27 @@ void main() {
         expect(task.displayMessage, rawMessage);
       },
     );
+
+    test('keeps the current ll-cli diagnostic message byte-for-byte', () {
+      const exactMessage =
+          '  {"message":"Failed to connect signal: RequestInteraction"}\n';
+      final task = buildTask(
+        0.42,
+      ).copyWith(errorDetail: exactMessage, rawMessage: 'legacy fallback');
+
+      expect(task.diagnosticMessage, exactMessage);
+    });
+
+    test('only parses legacy raw payload when errorDetail is absent', () {
+      final task = buildTask(0.42).copyWith(
+        rawMessage:
+            '{"code":-1,"message":"Failed to connect signal: RequestInteraction"}',
+      );
+
+      expect(
+        task.diagnosticMessage,
+        'Failed to connect signal: RequestInteraction',
+      );
+    });
   });
 }

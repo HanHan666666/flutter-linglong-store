@@ -271,6 +271,7 @@ class DownloadManagerDialog extends ConsumerWidget {
     final downloadSpeed = cliSpeed ?? ref.watch(networkSpeedProvider).formatted;
 
     return _TaskCard(
+      key: ValueKey(task.id),
       task: task,
       featured: true,
       showProgress: true,
@@ -288,6 +289,7 @@ class DownloadManagerDialog extends ConsumerWidget {
     InstallTask task,
   ) {
     return _TaskCard(
+      key: ValueKey(task.id),
       task: task,
       compact: true,
       onCancel: () {
@@ -303,6 +305,7 @@ class DownloadManagerDialog extends ConsumerWidget {
     InstallTask task,
   ) {
     return _TaskCard(
+      key: ValueKey(task.id),
       task: task,
       compact: true,
       onOpen: task.status == InstallStatus.success
@@ -370,6 +373,7 @@ class DownloadManagerDialog extends ConsumerWidget {
 /// 任务卡片组件
 class _TaskCard extends StatefulWidget {
   const _TaskCard({
+    super.key,
     required this.task,
     this.showProgress = false,
     this.featured = false,

@@ -33,11 +33,7 @@ typedef CliExecuteWithProgressAndProcessFn =
     });
 
 typedef CliCancelWithSystemKillFn =
-    Future<bool> Function(
-      String processId, {
-      required int pid,
-      bool force,
-    });
+    Future<bool> Function(String processId, {required int pid, bool force});
 
 /// ll-cli Repository 实现
 class LinglongCliRepositoryImpl
@@ -227,9 +223,14 @@ class LinglongCliRepositoryImpl
           return;
         } else if (progressInfo.phase == InstallPhase.failed) {
           final errorCode = jsonEvent?.code;
-          final errorDetail = rawMessage.isNotEmpty
-              ? rawMessage
-              : (progressInfo.errorMessage ?? event.line).trim();
+          // 诊断匹配必须优先保留 JSON message 的逐字内容；rawMessage 还承担
+          // 进度展示职责，会经过历史 trim 兼容，不能作为新诊断协议的首选值。
+          final exactErrorMessage = jsonEvent?.message;
+          final errorDetail =
+              exactErrorMessage ??
+              (rawMessage.isNotEmpty
+                  ? rawMessage
+                  : (progressInfo.errorMessage ?? event.line).trim());
           final errorMessage = _buildFailureMessage(
             operationLabel: operationLabel,
             errorDetail: errorDetail,

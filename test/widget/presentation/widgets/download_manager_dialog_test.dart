@@ -204,6 +204,8 @@ void main() {
       );
       expect(find.byKey(const Key('downloadManagerTaskList')), findsOneWidget);
       expect(find.byKey(const Key('downloadManagerStatusBar')), findsOneWidget);
+      expect(find.byKey(const ValueKey('task-1')), findsOneWidget);
+      expect(find.byKey(const ValueKey('task-2')), findsOneWidget);
       expect(find.text('当前任务'), findsOneWidget);
 
       final dialogSize = tester.getSize(find.byType(Dialog));

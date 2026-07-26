@@ -26,8 +26,6 @@ class GuidedRepairResult {
   const GuidedRepairResult({
     required this.status,
     required this.logFilePath,
-    required this.stdout,
-    required this.stderr,
     this.exitCode,
   });
 
@@ -37,17 +35,32 @@ class GuidedRepairResult {
   /// 完整执行日志路径。
   final String logFilePath;
 
-  /// 执行期间累计的标准输出。
-  final String stdout;
-
-  /// 执行期间累计的标准错误。
-  final String stderr;
-
   /// 进程退出码；超时时没有可靠退出码。
   final int? exitCode;
 
   /// 是否按脚本退出码 0 判定修复完成。
   bool get success => status == GuidedRepairStatus.success;
+}
+
+/// 修复脚本无法启动或执行器异常。
+///
+/// 日志路径随异常返回，使 UI 在进程启动失败、授权程序缺失等场景下仍能帮助用户
+/// 定位问题，而不需要重新猜测 XDG 路径。
+class GuidedRepairExecutionException implements Exception {
+  /// 创建包含原始原因和日志位置的执行异常。
+  const GuidedRepairExecutionException({
+    required this.cause,
+    required this.logFilePath,
+  });
+
+  /// 原始执行错误。
+  final Object cause;
+
+  /// 本次执行已经创建的日志文件。
+  final String logFilePath;
+
+  @override
+  String toString() => cause.toString();
 }
 
 /// 受信内容签名无效异常。
@@ -127,21 +140,11 @@ class GuidedRepairService {
     final temporaryDirectory = await Directory(
       _temporaryDirectoryPath,
     ).createTemp('linglong-guided-repair-');
-    final scriptFile = File(path.join(temporaryDirectory.path, 'repair.sh'));
-    await scriptFile.writeAsString(script, flush: true);
-
-    final stdoutBuffer = StringBuffer();
-    final stderrBuffer = StringBuffer();
-    void captureOutput(ShellOutputLine output) {
-      if (output.channel == ShellOutputChannel.stdout) {
-        stdoutBuffer.writeln(output.line);
-      } else {
-        stderrBuffer.writeln(output.line);
-      }
-      onOutput(output);
-    }
 
     try {
+      final scriptFile = File(path.join(temporaryDirectory.path, 'repair.sh'));
+      await scriptFile.writeAsString(script, flush: true);
+
       final result = await _executor.runStreaming(
         [
           'pkexec',
@@ -161,7 +164,7 @@ class GuidedRepairService {
           filePath: logFilePath,
           overwrite: true,
         ),
-        onOutput: captureOutput,
+        onOutput: onOutput,
       );
       return GuidedRepairResult(
         status: result.exitCode == _timeoutExitCode
@@ -170,16 +173,17 @@ class GuidedRepairService {
             ? GuidedRepairStatus.success
             : GuidedRepairStatus.failed,
         logFilePath: logFilePath,
-        stdout: result.stdout,
-        stderr: result.stderr,
         exitCode: result.exitCode,
       );
     } on TimeoutException {
       return GuidedRepairResult(
         status: GuidedRepairStatus.timedOut,
         logFilePath: logFilePath,
-        stdout: stdoutBuffer.toString(),
-        stderr: stderrBuffer.toString(),
+      );
+    } catch (error, stackTrace) {
+      Error.throwWithStackTrace(
+        GuidedRepairExecutionException(cause: error, logFilePath: logFilePath),
+        stackTrace,
       );
     } finally {
       await _deleteTemporaryDirectory(temporaryDirectory);

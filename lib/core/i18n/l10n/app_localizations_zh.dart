@@ -1614,6 +1614,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get errorSolutionClose => '关闭解决方案';
 
   @override
+  String get errorSolutionRemoteImage => '解决方案远程图片';
+
+  @override
+  String get errorSolutionImageBlocked => '已阻止非网络图片';
+
+  @override
+  String get errorSolutionImageLoadFailed => '远程图片加载失败';
+
+  @override
   String get scriptReviewTitle => '审计一键修复脚本';
 
   @override

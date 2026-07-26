@@ -89,6 +89,16 @@ class _GuidedRepairExecutionDialogState
   /// 脚本是否仍在执行。
   bool _isRunning = true;
 
+  /// 成功结果或执行异常中携带的日志路径。
+  String? get _logFilePath {
+    final resultPath = _result?.logFilePath;
+    if (resultPath != null) {
+      return resultPath;
+    }
+    final error = _error;
+    return error is GuidedRepairExecutionException ? error.logFilePath : null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -121,6 +131,7 @@ class _GuidedRepairExecutionDialogState
       if (!mounted) {
         return;
       }
+      _stopRefreshTimers();
       _flushOutput();
       setState(() {
         _result = result;
@@ -130,12 +141,22 @@ class _GuidedRepairExecutionDialogState
       if (!mounted) {
         return;
       }
+      _stopRefreshTimers();
       _flushOutput();
       setState(() {
         _error = error;
         _isRunning = false;
       });
     }
+  }
+
+  /// 执行结束后立即停止周期刷新，避免已完成的弹窗继续占用调度资源。
+  void _stopRefreshTimers() {
+    _flushTimer?.cancel();
+    _flushTimer = null;
+    _elapsedTimer?.cancel();
+    _elapsedTimer = null;
+    _elapsed = DateTime.now().difference(_startedAt);
   }
 
   /// 将实时输出放入待刷新队列。
@@ -207,7 +228,7 @@ class _GuidedRepairExecutionDialogState
 
   /// 打开当前日志所在目录。
   Future<void> _openLogDirectory() async {
-    final logFilePath = _result?.logFilePath;
+    final logFilePath = _logFilePath;
     if (logFilePath == null) {
       return;
     }
@@ -272,7 +293,7 @@ class _GuidedRepairExecutionDialogState
                           ),
                           label: Text(l10n?.copyRepairOutput ?? '复制当前输出'),
                         ),
-                      if (_result != null)
+                      if (_logFilePath != null)
                         TextButton.icon(
                           onPressed: _openLogDirectory,
                           icon: const ExcludeSemantics(
@@ -336,12 +357,12 @@ class _GuidedRepairExecutionDialogState
       }
     }
 
-    return Semantics(
-      liveRegion: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Semantics(
+          liveRegion: true,
+          child: Row(
             children: [
               if (_isRunning)
                 SizedBox(
@@ -365,16 +386,16 @@ class _GuidedRepairExecutionDialogState
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            l10n?.repairElapsedTime(_formatElapsed(_elapsed)) ??
-                '已运行 ${_formatElapsed(_elapsed)}',
-            style: context.appTextStyles.caption.copyWith(
-              color: appColors.textSecondary,
-            ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          l10n?.repairElapsedTime(_formatElapsed(_elapsed)) ??
+              '已运行 ${_formatElapsed(_elapsed)}',
+          style: context.appTextStyles.caption.copyWith(
+            color: appColors.textSecondary,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

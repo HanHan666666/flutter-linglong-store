@@ -11,6 +11,13 @@ void main() {
       '/a35krb5rpB2DFhvrJh7fZ0VGW9/toDoz+lFM/ABDSC1+Qf5sXBJGLaqO8Nk/9Bsu3pJfMs9dY6Hlk471PNkCA==';
   const script = '#!/usr/bin/env bash\necho ok\n';
 
+  test('生产公钥与发布信任根保持一致', () {
+    expect(
+      Ed25519TrustedContentSignatureVerifier.productionPublicKeyBase64,
+      'iUvAAZQEo+so/TvBKqKq95LxGTYqEHTzLeHReR9bPv4=',
+    );
+  });
+
   test('固定跨端向量验签通过', () async {
     final verifier = Ed25519TrustedContentSignatureVerifier.withPublicKeyBase64(
       publicKeyBase64,

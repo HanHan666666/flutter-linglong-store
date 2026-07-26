@@ -39,9 +39,9 @@ void main() {
   });
 
   testWidgets('执行对话框实时区分 STDOUT 与 STDERR 并反馈成功', (tester) async {
-    final tempRoot = await Directory.systemTemp.createTemp(
-      'guided-repair-widget-test-',
-    );
+    final tempRoot = (await tester.runAsync(
+      () => Directory.systemTemp.createTemp('guided-repair-widget-test-'),
+    ))!;
     addTearDown(() async {
       if (await tempRoot.exists()) {
         await tempRoot.delete(recursive: true);
@@ -64,7 +64,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+    await _pumpUntilFound(tester, find.text('修复完成，请重新尝试安装。'));
 
     expect(find.text('[stdout] stdout visible'), findsOneWidget);
     expect(find.text('[stderr] stderr visible'), findsOneWidget);
@@ -79,6 +79,53 @@ void main() {
       isNotNull,
     );
   });
+
+  testWidgets('执行器启动异常时仍提供日志目录入口', (tester) async {
+    final tempRoot = (await tester.runAsync(
+      () => Directory.systemTemp.createTemp('guided-repair-error-widget-test-'),
+    ))!;
+    addTearDown(() async {
+      if (await tempRoot.exists()) {
+        await tempRoot.delete(recursive: true);
+      }
+    });
+    final service = GuidedRepairService(
+      executor: ShellCommandExecutor(runner: _FailingStreamingRunner()),
+      signatureVerifier: const _AlwaysValidVerifier(),
+      temporaryDirectoryPath: tempRoot.path,
+      logDirectoryPath: tempRoot.path,
+    );
+
+    await tester.pumpWidget(
+      _LocalizedTestApp(
+        child: GuidedRepairExecutionDialog(
+          service: service,
+          script: 'echo unavailable\n',
+          signature: 'valid',
+        ),
+      ),
+    );
+    await tester.pump();
+    await _pumpUntilFound(tester, find.text('打开日志目录'));
+
+    expect(find.textContaining('修复脚本无法执行'), findsOneWidget);
+    expect(find.text('打开日志目录'), findsOneWidget);
+  });
+}
+
+/// 在真实文件 IO 与 Widget 虚拟时钟之间有界等待目标出现。
+///
+/// 修复服务会异步创建日志和临时脚本，测试不能用固定延迟猜测机器速度；循环每次
+/// 只让出少量真实事件循环时间，并在两秒后明确失败。
+Future<void> _pumpUntilFound(WidgetTester tester, Finder finder) async {
+  final deadline = DateTime.now().add(const Duration(seconds: 2));
+  while (finder.evaluate().isEmpty && DateTime.now().isBefore(deadline)) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 10)),
+    );
+    await tester.pump();
+  }
+  expect(finder, findsOneWidget);
 }
 
 /// 提供项目本地化和主题环境的测试应用。
@@ -155,5 +202,30 @@ class _WidgetStreamingRunner
       stderr: 'stderr visible\n',
       exitCode: 0,
     );
+  }
+}
+
+/// 模拟 pkexec 无法启动的流式执行器。
+class _FailingStreamingRunner
+    implements ShellCommandRunner, StreamingShellCommandRunner {
+  @override
+  Future<ShellCommandResult> run(
+    List<String> command, {
+    Duration timeout = const Duration(minutes: 5),
+    Map<String, String>? environment,
+    ShellCommandLogOptions? logOptions,
+  }) {
+    throw UnsupportedError('该测试只允许流式执行');
+  }
+
+  @override
+  Future<ShellCommandResult> runStreaming(
+    List<String> command, {
+    required void Function(ShellOutputLine output) onOutput,
+    Duration timeout = const Duration(minutes: 5),
+    Map<String, String>? environment,
+    ShellCommandLogOptions? logOptions,
+  }) {
+    throw const ProcessException('pkexec', <String>[], 'not found');
   }
 }

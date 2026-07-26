@@ -2958,6 +2958,24 @@ abstract class AppLocalizations {
   /// **'关闭解决方案'**
   String get errorSolutionClose;
 
+  /// No description provided for @errorSolutionRemoteImage.
+  ///
+  /// In zh, this message translates to:
+  /// **'解决方案远程图片'**
+  String get errorSolutionRemoteImage;
+
+  /// No description provided for @errorSolutionImageBlocked.
+  ///
+  /// In zh, this message translates to:
+  /// **'已阻止非网络图片'**
+  String get errorSolutionImageBlocked;
+
+  /// No description provided for @errorSolutionImageLoadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'远程图片加载失败'**
+  String get errorSolutionImageLoadFailed;
+
   /// No description provided for @scriptReviewTitle.
   ///
   /// In zh, this message translates to:

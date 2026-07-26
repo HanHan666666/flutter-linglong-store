@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
@@ -132,6 +133,47 @@ void main() {
         ),
       );
     });
+
+    test(
+      'streaming result keeps a bounded tail while callbacks receive all lines',
+      () async {
+        final tempDir = await Directory.systemTemp.createTemp(
+          'shell-command-bounded-output-test-',
+        );
+        addTearDown(() async {
+          if (await tempDir.exists()) {
+            await tempDir.delete(recursive: true);
+          }
+        });
+        final executor = ShellCommandExecutor();
+        var receivedLines = 0;
+
+        final result = await executor.runStreaming(
+          [
+            'bash',
+            '-lc',
+            r'for i in $(seq 1 2000); do '
+                r'printf "%04d-abcdefghijklmnopqrstuvwxyz0123456789\n" "$i"; '
+                'done',
+          ],
+          logOptions: ShellCommandLogOptions(
+            filePath: '${tempDir.path}/full-output.log',
+            overwrite: true,
+          ),
+          onOutput: (_) => receivedLines += 1,
+        );
+
+        expect(result.success, isTrue);
+        expect(receivedLines, 2000);
+        expect(utf8.encode(result.stdout).length, lessThanOrEqualTo(64 * 1024));
+        expect(result.stdout, isNot(contains('0001-')));
+        expect(result.stdout, contains('2000-'));
+        expect(
+          await File('${tempDir.path}/full-output.log').readAsString(),
+          contains('0001-'),
+        );
+      },
+    );
   });
 }
 

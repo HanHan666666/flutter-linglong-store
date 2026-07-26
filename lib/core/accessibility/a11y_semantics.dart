@@ -37,10 +37,7 @@ class A11yButton extends StatelessWidget {
       label: semanticsLabel,
       value: semanticsValue,
       enabled: enabled,
-      child: InkWell(
-        onTap: enabled ? onTap : null,
-        child: child,
-      ),
+      child: InkWell(onTap: enabled ? onTap : null, child: child),
     );
   }
 }
@@ -70,6 +67,7 @@ class A11yIconButton extends StatelessWidget {
     this.tooltip,
     this.enabled = true,
     this.iconSize = 20,
+    this.focusNode,
   });
 
   final Widget icon;
@@ -78,6 +76,9 @@ class A11yIconButton extends StatelessWidget {
   final String? tooltip;
   final bool enabled;
   final double iconSize;
+
+  /// 可选焦点节点，供弹窗和浮层在打开、关闭时精确恢复键盘焦点。
+  final FocusNode? focusNode;
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +93,7 @@ class A11yIconButton extends StatelessWidget {
       label: semanticsLabel,
       enabled: enabled,
       child: InkWell(
+        focusNode: focusNode,
         onTap: enabled ? onTap : null,
         child: SizedBox(
           width: 48,
@@ -148,10 +150,7 @@ class A11yListItem extends StatelessWidget {
         value: semanticsValue,
         enabled: enabled,
         child: onTap != null
-            ? InkWell(
-                onTap: enabled ? onTap : null,
-                child: child,
-              )
+            ? InkWell(onTap: enabled ? onTap : null, child: child)
             : child,
       ),
     );
@@ -194,10 +193,7 @@ class A11yTab extends StatelessWidget {
       label: label,
       child: InkWell(
         onTap: onTap,
-        child: SizedBox(
-          height: 48,
-          child: Center(child: child),
-        ),
+        child: SizedBox(height: 48, child: Center(child: child)),
       ),
     );
   }
@@ -237,12 +233,7 @@ class A11yCard extends StatelessWidget {
     return Semantics(
       label: semanticsLabel,
       hint: semanticsHint,
-      child: onTap != null
-          ? InkWell(
-              onTap: onTap,
-              child: child,
-            )
-          : child,
+      child: onTap != null ? InkWell(onTap: onTap, child: child) : child,
     );
   }
 }

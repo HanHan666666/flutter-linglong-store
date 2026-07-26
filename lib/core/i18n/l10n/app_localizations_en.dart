@@ -1672,6 +1672,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorSolutionClose => 'Close solution';
 
   @override
+  String get errorSolutionRemoteImage => 'Remote solution image';
+
+  @override
+  String get errorSolutionImageBlocked => 'A non-network image was blocked';
+
+  @override
+  String get errorSolutionImageLoadFailed =>
+      'The remote image could not be loaded';
+
+  @override
   String get scriptReviewTitle => 'Review repair script';
 
   @override

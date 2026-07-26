@@ -296,32 +296,51 @@ void main() {
       expect(events.last.errorDetail, equals(detail));
     });
 
-    test(
-      'cancelOperation returns false when process PID is missing '
-      '(process already ended)',
-      () async {
-        // cancelOperation 单独调用时 _activeProcessPids 为空（PID 只在
-        // onProcessCreated 回调里记录）。PID 缺失表示进程已结束或竞态，
-        // 按约定视为取消失败，保持任务为 Installing。
-        final executor = _RecordingCliExecutor()
-          ..cancelWithSystemKillResult = false;
-        final repository = LinglongCliRepositoryImpl.withExecutor(
-          InstallMessages.fromLocale(const Locale('zh')),
-          execute: executor.execute,
-          executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
-          cancelWithSystemKill: executor.cancelWithSystemKill,
-        );
+    test('preserves ll-cli json message bytes for diagnostic lookup', () async {
+      const detail = '  RequestInteraction  ';
+      final executor = _RecordingCliExecutor()
+        ..progressEvents = const [
+          ProgressEvent(
+            line: '{"code":-1,"message":"$detail"}',
+            type: ProgressEventType.stdout,
+          ),
+        ];
+      final repository = LinglongCliRepositoryImpl.withExecutor(
+        InstallMessages.fromLocale(const Locale('zh')),
+        execute: executor.execute,
+        executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+        cancelWithSystemKill: executor.cancelWithSystemKill,
+      );
 
-        final result = await repository.cancelOperation(
-          'org.example.demo',
-          kind: InstallTaskKind.install,
-        );
+      final events = await repository.installApp('org.example.demo').toList();
 
-        expect(result, isFalse);
-        // PID 缺失时不应调用 cancelWithSystemKill（无法发信号）。
-        expect(executor.cancelProcessIds, isEmpty);
-      },
-    );
+      expect(events.last.status, InstallStatus.failed);
+      expect(events.last.errorDetail, equals(detail));
+    });
+
+    test('cancelOperation returns false when process PID is missing '
+        '(process already ended)', () async {
+      // cancelOperation 单独调用时 _activeProcessPids 为空（PID 只在
+      // onProcessCreated 回调里记录）。PID 缺失表示进程已结束或竞态，
+      // 按约定视为取消失败，保持任务为 Installing。
+      final executor = _RecordingCliExecutor()
+        ..cancelWithSystemKillResult = false;
+      final repository = LinglongCliRepositoryImpl.withExecutor(
+        InstallMessages.fromLocale(const Locale('zh')),
+        execute: executor.execute,
+        executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+        cancelWithSystemKill: executor.cancelWithSystemKill,
+      );
+
+      final result = await repository.cancelOperation(
+        'org.example.demo',
+        kind: InstallTaskKind.install,
+      );
+
+      expect(result, isFalse);
+      // PID 缺失时不应调用 cancelWithSystemKill（无法发信号）。
+      expect(executor.cancelProcessIds, isEmpty);
+    });
 
     test('uninstallApp falls back to stdout when stderr is empty', () async {
       final executor = _RecordingCliExecutor()

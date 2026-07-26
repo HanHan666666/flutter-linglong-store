@@ -156,13 +156,16 @@ extension InstallTaskX on InstallTask {
 
   /// 提供给后端错误解决方案匹配的 ll-cli 原始 message。
   ///
-  /// 新任务优先使用解析器保存的 [errorDetail]，旧任务再回退到 rawMessage 和
-  /// errorMessage。这里只提取 JSON 的 message 字段，不做裁剪、大小写转换或
-  /// 本地规则匹配，保证前后端使用同一段错误文本。
-  String? get diagnosticMessage =>
-      _extractMessageText(errorDetail) ??
-      displayRawMessage ??
-      _extractMessageText(errorMessage);
+  /// 新任务的 [errorDetail] 已是解析器逐字保留的 ll-cli message，因此禁止
+  /// trim、JSON 重解析或其他本地适配。只有旧任务缺少 errorDetail 时，才使用
+  /// 历史兼容提取逻辑读取 rawMessage/errorMessage。
+  String? get diagnosticMessage {
+    final exactMessage = errorDetail;
+    if (exactMessage != null && exactMessage.isNotEmpty) {
+      return exactMessage;
+    }
+    return displayRawMessage ?? _extractMessageText(errorMessage);
+  }
 
   /// 待处理文案。
   String get waitingMessage => isUpdateTask ? '等待更新...' : '等待安装...';

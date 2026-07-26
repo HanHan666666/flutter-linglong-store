@@ -89,7 +89,7 @@ void main() {
     expect(await temporaryRoot.list().toList(), isEmpty);
   });
 
-  test('执行器超时时返回 timedOut 并保留已收到的 STDIO', () async {
+  test('执行器超时时返回 timedOut，实时输出仍由回调交付', () async {
     final runner = _RecordingStreamingRunner(shouldTimeOut: true);
     final service = GuidedRepairService(
       executor: ShellCommandExecutor(runner: runner),
@@ -98,16 +98,49 @@ void main() {
       logDirectoryPath: logRoot.path,
     );
 
+    final outputs = <ShellOutputLine>[];
     final result = await service.execute(
       script: 'echo slow\n',
       signature: 'valid',
-      onOutput: (_) {},
+      onOutput: outputs.add,
     );
 
     expect(result.status, GuidedRepairStatus.timedOut);
     expect(result.exitCode, isNull);
-    expect(result.stdout, contains('stdout line'));
-    expect(result.stderr, contains('stderr line'));
+    expect(
+      outputs.map((item) => item.line),
+      containsAllInOrder(['stdout line', 'stderr line']),
+    );
+    expect(await temporaryRoot.list().toList(), isEmpty);
+  });
+
+  test('执行器异常携带日志路径并清理临时脚本', () async {
+    final runner = _RecordingStreamingRunner(
+      executionError: const ProcessException('pkexec', [], 'not found'),
+    );
+    final service = GuidedRepairService(
+      executor: ShellCommandExecutor(runner: runner),
+      signatureVerifier: const _FixedSignatureVerifier(true),
+      temporaryDirectoryPath: temporaryRoot.path,
+      logDirectoryPath: logRoot.path,
+    );
+
+    final future = service.execute(
+      script: 'echo unavailable\n',
+      signature: 'valid',
+      onOutput: (_) {},
+    );
+
+    await expectLater(
+      future,
+      throwsA(
+        isA<GuidedRepairExecutionException>().having(
+          (error) => error.logFilePath,
+          'logFilePath',
+          contains(logRoot.path),
+        ),
+      ),
+    );
     expect(await temporaryRoot.list().toList(), isEmpty);
   });
 }
@@ -134,10 +167,13 @@ class _FixedSignatureVerifier implements TrustedContentSignatureVerifier {
 class _RecordingStreamingRunner
     implements ShellCommandRunner, StreamingShellCommandRunner {
   /// 创建可选超时行为的执行器。
-  _RecordingStreamingRunner({this.shouldTimeOut = false});
+  _RecordingStreamingRunner({this.shouldTimeOut = false, this.executionError});
 
   /// 是否在输出后抛出超时。
   final bool shouldTimeOut;
+
+  /// 可选固定执行异常。
+  final Object? executionError;
 
   /// 调用次数。
   int callCount = 0;
@@ -187,6 +223,9 @@ class _RecordingStreamingRunner
     );
     if (shouldTimeOut) {
       throw TimeoutException('timeout');
+    }
+    if (executionError != null) {
+      throw executionError!;
     }
     return const ShellCommandResult(
       stdout: 'stdout line\n',

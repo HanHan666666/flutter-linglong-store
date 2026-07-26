@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/core/di/repository_provider.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
@@ -64,6 +67,63 @@ void main() {
     expect(find.text('查询失败，请重试'), findsOneWidget);
     expect(find.text('重新查询'), findsOneWidget);
   });
+
+  testWidgets('浮窗打开后接收焦点，Escape 关闭并恢复帮助按钮焦点', (tester) async {
+    final repository = _FakeErrorSolutionRepository(result: null);
+    await tester.pumpWidget(_TestApp(repository: repository));
+
+    await tester.tap(find.byKey(const Key('errorSolutionHelpButton')));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.binding.focusManager.primaryFocus?.debugLabel,
+      'ErrorSolutionPopoverClose',
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    expect(
+      tester.binding.focusManager.primaryFocus?.debugLabel,
+      'ErrorSolutionPopoverCommunity',
+    );
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pump();
+
+    expect(find.byKey(const Key('errorSolutionHelpPopover')), findsNothing);
+    expect(
+      tester.binding.focusManager.primaryFocus?.debugLabel,
+      'ErrorSolutionHelpTrigger',
+    );
+  });
+
+  testWidgets('message 更新后丢弃旧查询结果', (tester) async {
+    final repository = _DeferredErrorSolutionRepository();
+    final message = ValueNotifier<String>('first-error');
+    addTearDown(message.dispose);
+    await tester.pumpWidget(
+      _MutableMessageTestApp(repository: repository, message: message),
+    );
+
+    await tester.tap(find.byKey(const Key('errorSolutionHelpButton')));
+    await tester.pump();
+    message.value = 'second-error';
+    await tester.pump();
+    repository.complete(
+      'first-error',
+      const ErrorSolution(title: '旧任务方案', markdown: '# 不应展示'),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('旧任务方案'), findsNothing);
+    expect(find.byKey(const Key('errorSolutionHelpPopover')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('errorSolutionHelpButton')));
+    await tester.pump();
+    expect(repository.messages, ['first-error', 'second-error']);
+    repository.complete('second-error', null);
+    await tester.pumpAndSettle();
+  });
 }
 
 /// 为 Widget 测试提供本地化和仓储覆盖。
@@ -87,6 +147,43 @@ class _TestApp extends StatelessWidget {
         home: Scaffold(
           body: Center(
             child: ErrorSolutionHelpButton(message: 'RequestInteraction'),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 在同一个 Widget State 上切换 message，覆盖列表复用时的异步竞态。
+class _MutableMessageTestApp extends StatelessWidget {
+  /// 创建可更新 message 的测试应用。
+  const _MutableMessageTestApp({
+    required this.repository,
+    required this.message,
+  });
+
+  /// 延迟返回结果的仓储。
+  final ErrorSolutionRepository repository;
+
+  /// 当前错误 message。
+  final ValueNotifier<String> message;
+
+  @override
+  Widget build(BuildContext context) {
+    return ProviderScope(
+      overrides: [
+        errorSolutionRepositoryProvider.overrideWithValue(repository),
+      ],
+      child: MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Center(
+            child: ValueListenableBuilder<String>(
+              valueListenable: message,
+              builder: (_, value, _) => ErrorSolutionHelpButton(message: value),
+            ),
           ),
         ),
       ),
@@ -122,5 +219,29 @@ class _FakeErrorSolutionRepository implements ErrorSolutionRepository {
       throw error!;
     }
     return result;
+  }
+}
+
+/// 由测试精确控制每个 message 完成时机的仓储。
+class _DeferredErrorSolutionRepository implements ErrorSolutionRepository {
+  /// 各 message 对应的延迟结果。
+  final Map<String, Completer<ErrorSolution?>> _completers =
+      <String, Completer<ErrorSolution?>>{};
+
+  /// 已收到的 message 顺序。
+  final List<String> messages = <String>[];
+
+  @override
+  Future<ErrorSolution?> find({
+    required String message,
+    required String language,
+  }) {
+    messages.add(message);
+    return (_completers[message] ??= Completer<ErrorSolution?>()).future;
+  }
+
+  /// 完成指定 message 的查询。
+  void complete(String message, ErrorSolution? solution) {
+    (_completers[message] ??= Completer<ErrorSolution?>()).complete(solution);
   }
 }

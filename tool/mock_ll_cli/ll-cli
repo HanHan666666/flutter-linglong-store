@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# RequestInteraction 安装失败测试替身。
+#
+# 该脚本只拦截 ll-cli install，其他命令原样转发给真实 ll-cli，避免影响
+# 商店启动时的环境检测、已安装列表、运行进程和搜索功能。
+
+set -euo pipefail
+
+readonly real_ll_cli="${LINGLONG_MOCK_REAL_LL_CLI:-/usr/bin/ll-cli}"
+
+if [[ "${1:-}" == "install" ]]; then
+  printf '%s\n' \
+    '{"code":-1,"message":"Failed to connect signal: RequestInteraction"}'
+  exit 255
+fi
+
+if [[ ! -x "$real_ll_cli" ]]; then
+  printf 'mock ll-cli: 真实 ll-cli 不可执行：%s\n' "$real_ll_cli" >&2
+  exit 127
+fi
+
+exec "$real_ll_cli" "$@"

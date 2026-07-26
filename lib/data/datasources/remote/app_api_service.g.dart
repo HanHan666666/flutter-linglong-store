@@ -227,11 +227,13 @@ class _AppApiService implements AppApiService {
 
   @override
   Future<HttpResponse<ErrorSolutionResponse>> findErrorSolution(
+    String visitorId,
     ErrorSolutionFindRequest request,
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
+    final _headers = <String, dynamic>{r'X-Visitor-Id': visitorId};
+    _headers.removeWhere((k, v) => v == null);
     final _data = <String, dynamic>{};
     _data.addAll(request.toJson());
     final _options = _setStreamType<HttpResponse<ErrorSolutionResponse>>(

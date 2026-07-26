@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
-import 'dart:math';
 
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/core/network/api_client.dart';
 import 'package:linglong_store/core/storage/preferences_service.dart';
+import 'package:linglong_store/core/storage/visitor_identity_service.dart';
 import 'package:linglong_store/data/datasources/remote/app_api_service.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
 
@@ -15,39 +15,22 @@ import '../../domain/repositories/analytics_repository.dart';
 /// - 不抛出异常，失败只记录日志
 /// - 上报内容不含任何个人隐私信息
 class AnalyticsRepositoryImpl implements AnalyticsRepository {
-  static const _kVisitorIdKey = 'analytics_visitor_id';
   static const _kClientIpKey = 'analytics_client_ip';
   static const _kClientIpUrl = 'https://api64.ipify.org?format=json';
 
   AnalyticsRepositoryImpl({
     AppApiService? apiService,
     Future<String?> Function()? clientIpResolver,
+    VisitorIdentityService? visitorIdentityService,
   }) : _apiService = apiService ?? AppApiService(ApiClient.instance),
-       _clientIpResolver = clientIpResolver ?? _defaultClientIpResolver;
+       _clientIpResolver = clientIpResolver ?? _defaultClientIpResolver,
+       _visitorIdentityService =
+           visitorIdentityService ?? const VisitorIdentityService();
 
   final AppApiService _apiService;
   final Future<String?> Function() _clientIpResolver;
+  final VisitorIdentityService _visitorIdentityService;
   String? _cachedClientIp;
-
-  // ----------------------------------------------------------------
-  // Visitor ID — 首次生成后持久化，之后复用
-  // ----------------------------------------------------------------
-
-  /// 获取或生成匿名访问者 ID
-  String _getOrCreateVisitorId() {
-    final existing = PreferencesService.getString(_kVisitorIdKey);
-    if (existing != null && existing.isNotEmpty) {
-      return existing;
-    }
-    // 使用时间戳 + 随机数生成唯一 ID（不含任何敏感信息）
-    final rand = Random.secure();
-    final bytes = List<int>.generate(8, (_) => rand.nextInt(256));
-    final hex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-    final visitorId = '${DateTime.now().millisecondsSinceEpoch}-$hex';
-    // 持久化（忽略写入失败，下次会重新生成）
-    PreferencesService.setString(_kVisitorIdKey, visitorId).ignore();
-    return visitorId;
-  }
 
   /// 获取或解析客户端公网 IP。
   ///
@@ -100,7 +83,7 @@ class AnalyticsRepositoryImpl implements AnalyticsRepository {
   @override
   Future<void> initializeSession() async {
     try {
-      _getOrCreateVisitorId();
+      _visitorIdentityService.getOrCreateVisitorId();
       await _getOrCreateClientIp();
       AppLogger.info('[analytics] Session initialized');
     } catch (e) {
@@ -119,7 +102,7 @@ class AnalyticsRepositoryImpl implements AnalyticsRepository {
     String? appVersion,
   }) async {
     try {
-      final visitorId = _getOrCreateVisitorId();
+      final visitorId = _visitorIdentityService.getOrCreateVisitorId();
       final clientIp = await _getOrCreateClientIp();
       final request = SaveVisitRecordRequest(
         visitorId: visitorId,
@@ -147,7 +130,7 @@ class AnalyticsRepositoryImpl implements AnalyticsRepository {
     String? appName,
   }) async {
     try {
-      final visitorId = _getOrCreateVisitorId();
+      final visitorId = _visitorIdentityService.getOrCreateVisitorId();
       final clientIp = await _getOrCreateClientIp();
       final request = SaveInstalledRecordRequest(
         visitorId: visitorId,
@@ -170,7 +153,7 @@ class AnalyticsRepositoryImpl implements AnalyticsRepository {
     String? appName,
   }) async {
     try {
-      final visitorId = _getOrCreateVisitorId();
+      final visitorId = _visitorIdentityService.getOrCreateVisitorId();
       final clientIp = await _getOrCreateClientIp();
       final request = SaveInstalledRecordRequest(
         visitorId: visitorId,

@@ -599,15 +599,16 @@ class MockAppApiService extends _i1.Mock implements _i18.AppApiService {
 
   @override
   _i4.Future<_i2.HttpResponse<_i20.ErrorSolutionResponse>> findErrorSolution(
+    String? visitorId,
     _i20.ErrorSolutionFindRequest? request,
   ) =>
       (super.noSuchMethod(
-            Invocation.method(#findErrorSolution, [request]),
+            Invocation.method(#findErrorSolution, [visitorId, request]),
             returnValue:
                 _i4.Future<_i2.HttpResponse<_i20.ErrorSolutionResponse>>.value(
                   _FakeHttpResponse_0<_i20.ErrorSolutionResponse>(
                     this,
-                    Invocation.method(#findErrorSolution, [request]),
+                    Invocation.method(#findErrorSolution, [visitorId, request]),
                   ),
                 ),
           )

@@ -1,10 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
+import 'package:linglong_store/core/storage/preferences_service.dart';
+import 'package:linglong_store/core/storage/visitor_identity_service.dart';
 import 'package:linglong_store/data/models/error_solution_dto.dart';
 import 'package:linglong_store/data/repositories/error_solution_repository_impl.dart';
 import 'package:mockito/mockito.dart';
 import 'package:retrofit/retrofit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../mocks/mock_classes.mocks.dart';
 
@@ -16,15 +19,22 @@ void main() {
   late MockAppApiService apiService;
   late ErrorSolutionRepositoryImpl repository;
 
-  setUpAll(AppLogger.init);
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues({});
+    if (!PreferencesService.isInitialized) {
+      await PreferencesService.init();
+    }
+    await AppLogger.init();
+  });
 
-  setUp(() {
+  setUp(() async {
     apiService = MockAppApiService();
+    await PreferencesService.clear();
     repository = ErrorSolutionRepositoryImpl.withService(apiService);
   });
 
-  test('未命中时返回 null 且透传原始 message 和语言', () async {
-    when(apiService.findErrorSolution(any)).thenAnswer(
+  test('未命中时返回 null 且透传稳定 visitorId、原始 message 和语言', () async {
+    when(apiService.findErrorSolution(any, any)).thenAnswer(
       (_) async =>
           _response(const ErrorSolutionResponse(code: 200, data: null)),
     );
@@ -35,15 +45,22 @@ void main() {
     );
 
     expect(result, isNull);
-    final request =
-        verify(apiService.findErrorSolution(captureAny)).captured.single
-            as ErrorSolutionFindRequest;
+    final captured = verify(
+      apiService.findErrorSolution(captureAny, captureAny),
+    ).captured;
+    final visitorId = captured[0] as String;
+    final request = captured[1] as ErrorSolutionFindRequest;
+    expect(visitorId, isNotEmpty);
+    expect(
+      PreferencesService.getString(VisitorIdentityService.storageKey),
+      visitorId,
+    );
     expect(request.message, 'RequestInteraction');
     expect(request.language, 'zh');
   });
 
   test('每次查询都访问后端并映射 Markdown 与脚本', () async {
-    when(apiService.findErrorSolution(any)).thenAnswer(
+    when(apiService.findErrorSolution(any, any)).thenAnswer(
       (_) async => _response(
         const ErrorSolutionResponse(
           code: 200,
@@ -64,11 +81,15 @@ void main() {
     expect(first?.markdown, contains('请检查软件源'));
     expect(first?.hasRepairScript, isTrue);
     expect(second?.title, first?.title);
-    verify(apiService.findErrorSolution(any)).called(2);
+    final visitorIds = verify(
+      apiService.findErrorSolution(captureAny, any),
+    ).captured.cast<String>();
+    expect(visitorIds, hasLength(2));
+    expect(visitorIds[0], visitorIds[1]);
   });
 
   test('业务状态码异常时抛错而不是伪装成未命中', () async {
-    when(apiService.findErrorSolution(any)).thenAnswer(
+    when(apiService.findErrorSolution(any, any)).thenAnswer(
       (_) async =>
           _response(const ErrorSolutionResponse(code: 500, message: '命中多条规则')),
     );

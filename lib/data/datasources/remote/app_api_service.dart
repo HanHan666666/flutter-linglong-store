@@ -83,6 +83,9 @@ abstract class AppApiService {
   /// POST /app/error-solution/find
   @POST('/app/error-solution/find')
   Future<HttpResponse<ErrorSolutionResponse>> findErrorSolution(
+    // X-Visitor-Id 只用于统计有多少客户端遇到同类错误，方便后台根据人数
+    // 调整错误处理优先级；不用于认证，也不会作为全局请求头追踪用户。
+    @Header('X-Visitor-Id') String visitorId,
     @Body() ErrorSolutionFindRequest request,
   );
 

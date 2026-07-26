@@ -35,6 +35,7 @@
 | 查询时机 | 只有用户点击失败信息旁的感叹号帮助按钮时才请求后端 |
 | 无方案交互 | 不打开方案弹窗；在感叹号上方显示“暂无解决方案”小型浮窗和“社区发帖”按钮 |
 | 客户端缓存 | 不缓存、不持久化解决方案；每次点击重新请求 |
+| 查询统计 | 只在本接口通过 `X-Visitor-Id` 携带匿名标识，用于去重计数和安排问题处理优先级 |
 | 匹配输入 | 只使用 `ll-cli` JSON 中的原始 `message` |
 | 请求大小 | `message` 按 UTF-8 文本接收，最大 8 KiB |
 | 匹配方式 | 区分大小写的 `contains` 子串匹配 |
@@ -248,6 +249,7 @@ Flutter 只上传 `Locale.languageCode`，例如 `zh`、`en`。后端不在解�
 POST /app/error-solution/find
 Content-Type: application/json
 Cache-Control: no-store
+X-Visitor-Id: 1753500000000-a1b2c3d4e5f67890
 ```
 
 请求：
@@ -265,6 +267,12 @@ Cache-Control: no-store
 - `message` 的 UTF-8 编码结果最大 8192 字节；不能只按 Java 字符数量校验。
 - `lang` 为空时按 `zh` 处理。
 - 不接收 `errorCode`、客户端版本、发行版、架构等其他匹配字段。
+
+`X-Visitor-Id` 是可选请求头，只用于统计有多少匿名客户端遇到同类错误，帮助后台
+调整错误处理优先级。客户端复用既有 `analytics_visitor_id`，不读取账号、硬件序列号或
+设备指纹；该 Header 只在 Retrofit 的 `findErrorSolution` 方法上声明，禁止放入 JSON
+Body 或 Dio 全局拦截器。后端仅使用 visitorId 的 SHA-256 做 24 小时 Redis 去重，不把
+原值写入数据库或日志；统计失败不得改变本接口响应。
 
 单条命中响应：
 
@@ -755,6 +763,9 @@ lib/data/repositories/
 lib/domain/repositories/
   error_solution_repository.dart
 
+lib/core/storage/
+  visitor_identity_service.dart
+
 lib/core/security/
   trusted_content_signature.dart
 
@@ -885,6 +896,8 @@ tools/offline-content-signer/README.md
 ### 17.3 Flutter 单元测试
 
 - 请求只包含原始 `message` 和 `lang`。
+- 错误解决方案请求单独携带稳定的 `X-Visitor-Id`，其他接口不全局携带。
+- 已存在 `analytics_visitor_id` 时必须原样复用，首次生成后后续请求保持稳定。
 - 每次调用 Repository 都发起真实请求，不读写缓存。
 - 后端 `null` 映射为无方案。
 - 脚本签名有效、无效、Base64 非法的处理。
@@ -970,6 +983,7 @@ sql/data_20260725_seed_request_interaction_solution.sql
 7. Flutter 脚本审计和执行服务。
 8. ShellCommandExecutor 流式输出与执行弹窗。
 9. 第一条 `RequestInteraction` 方案数据和跨端验收。
+10. 查询接口匿名时间窗口去重统计与后台未匹配记录。
 
 逐文件实施计划保存在 `docs/plans/2026-07-25-error-diagnostics-and-guided-repair.md`。数据库发布顺序和重复执行检查保存在后端 `sql/error-solutions/README.md`。
 
@@ -978,6 +992,8 @@ sql/data_20260725_seed_request_interaction_solution.sql
 - 安装失败的红色错误文字右侧始终有感叹号帮助按钮。
 - 只有点击按钮时才请求后端。
 - 同一错误每次点击都读取后端最新方案。
+- `X-Visitor-Id` 只由错误解决方案查询接口携带，不进入 Body 或全局请求头。
+- 查询统计用于判断问题影响程度和处理优先级，失败时不影响方案查询结果。
 - 后端只根据原始 `message` 做区分大小写子串匹配。
 - 0 条命中不打开方案弹窗，而是在感叹号上方显示“暂无解决方案”和“社区发帖”小型浮窗；多条命中明确报错。
 - Markdown 可读，支持远程图片和外部链接。

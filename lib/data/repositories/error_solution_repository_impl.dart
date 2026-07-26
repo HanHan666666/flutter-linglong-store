@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/logging/app_logger.dart';
 import '../../core/network/api_client.dart';
+import '../../core/storage/visitor_identity_service.dart';
 import '../../domain/models/error_solution.dart';
 import '../../domain/repositories/error_solution_repository.dart';
 import '../datasources/remote/app_api_service.dart';
@@ -14,14 +15,20 @@ import '../models/error_solution_dto.dart';
 class ErrorSolutionRepositoryImpl implements ErrorSolutionRepository {
   /// 使用应用级 API 客户端创建生产仓储。
   ErrorSolutionRepositoryImpl()
-    : _apiService = AppApiService(ApiClient.instance);
+    : _apiService = AppApiService(ApiClient.instance),
+      _visitorIdentityService = const VisitorIdentityService();
 
   /// 注入 API 服务创建可测试仓储。
   @visibleForTesting
-  ErrorSolutionRepositoryImpl.withService(this._apiService);
+  ErrorSolutionRepositoryImpl.withService(
+    this._apiService, {
+    VisitorIdentityService? visitorIdentityService,
+  }) : _visitorIdentityService =
+           visitorIdentityService ?? const VisitorIdentityService();
 
   /// 后端 HTTP 服务。
   final AppApiService _apiService;
+  final VisitorIdentityService _visitorIdentityService;
 
   @override
   Future<ErrorSolution?> find({
@@ -30,6 +37,7 @@ class ErrorSolutionRepositoryImpl implements ErrorSolutionRepository {
   }) async {
     try {
       final response = await _apiService.findErrorSolution(
+        _visitorIdentityService.getOrCreateVisitorId(),
         ErrorSolutionFindRequest(message: message, language: language),
       );
       final body = response.data;

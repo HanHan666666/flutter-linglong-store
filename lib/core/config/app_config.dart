@@ -5,7 +5,7 @@ class AppConfig {
   /// API 基础地址
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://storeapi.linyaps.org.cn',
+    defaultValue: 'http://192.168.11.147:8687',
   );
 
   /// 应用名称

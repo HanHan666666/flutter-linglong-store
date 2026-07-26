@@ -1682,11 +1682,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The remote image could not be loaded';
 
   @override
-  String get scriptReviewTitle => 'Review repair script';
-
-  @override
-  String get scriptReviewWarning =>
-      'Below is the complete script that will run with administrator privileges. Continue only after confirming that its content is trusted and expected.';
+  String get scriptReviewTitle => 'Script content preview';
 
   @override
   String get scriptReviewSemanticLabel =>

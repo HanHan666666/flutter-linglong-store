@@ -1623,10 +1623,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get errorSolutionImageLoadFailed => '远程图片加载失败';
 
   @override
-  String get scriptReviewTitle => '审计一键修复脚本';
-
-  @override
-  String get scriptReviewWarning => '下面是即将以管理员权限执行的完整脚本。请确认内容可信且符合预期后再继续。';
+  String get scriptReviewTitle => '脚本内容预览';
 
   @override
   String get scriptReviewSemanticLabel => '即将执行的完整修复脚本';

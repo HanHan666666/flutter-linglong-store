@@ -2979,14 +2979,8 @@ abstract class AppLocalizations {
   /// No description provided for @scriptReviewTitle.
   ///
   /// In zh, this message translates to:
-  /// **'审计一键修复脚本'**
+  /// **'脚本内容预览'**
   String get scriptReviewTitle;
-
-  /// No description provided for @scriptReviewWarning.
-  ///
-  /// In zh, this message translates to:
-  /// **'下面是即将以管理员权限执行的完整脚本。请确认内容可信且符合预期后再继续。'**
-  String get scriptReviewWarning;
 
   /// No description provided for @scriptReviewSemanticLabel.
   ///

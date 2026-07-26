@@ -5,12 +5,12 @@ import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import 'copyable_command_block.dart';
 
-/// 特权脚本全文审计对话框。
+/// 特权脚本内容预览对话框。
 ///
 /// 对话框展示的 [script] 会原样传给执行服务；UI 不做 trim、换行转换或重新拼接，
 /// 保证用户看到、签名验证和最终落盘的是同一份文本。
 class ScriptReviewDialog extends StatelessWidget {
-  /// 创建脚本审计对话框。
+  /// 创建脚本内容预览对话框。
   const ScriptReviewDialog({super.key, required this.script});
 
   /// 即将执行的精确脚本文本。
@@ -40,44 +40,10 @@ class ScriptReviewDialog extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n?.scriptReviewTitle ?? '审计一键修复脚本',
+                  l10n?.scriptReviewTitle ?? '脚本内容预览',
                   style: context.appTextStyles.title3.copyWith(
                     color: appColors.textPrimary,
                     fontWeight: context.appFontWeight(FontWeight.w600),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: appColors.warning.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    border: Border.all(
-                      color: appColors.warning.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ExcludeSemantics(
-                        child: Icon(
-                          Icons.warning_amber_rounded,
-                          color: appColors.warning,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          l10n?.scriptReviewWarning ??
-                              '下面是即将以管理员权限执行的完整脚本。请确认内容可信且符合预期后再继续。',
-                          style: context.appTextStyles.bodyMedium.copyWith(
-                            color: appColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -118,7 +84,7 @@ class ScriptReviewDialog extends StatelessWidget {
   }
 }
 
-/// 打开脚本全文审计对话框。
+/// 打开脚本内容预览对话框。
 Future<bool> showScriptReviewDialog(
   BuildContext context, {
   required String script,

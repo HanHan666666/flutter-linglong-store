@@ -12,7 +12,7 @@ import 'package:linglong_store/presentation/widgets/script_review_dialog.dart';
 
 /// 脚本审计与实时输出 Widget 测试。
 void main() {
-  testWidgets('脚本审计展示精确全文并在确认后返回 true', (tester) async {
+  testWidgets('脚本内容预览展示精确全文并在确认后返回 true', (tester) async {
     const script = '#!/usr/bin/env bash\necho 审计\n';
     bool? confirmed;
     await tester.pumpWidget(
@@ -32,7 +32,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(script), findsOneWidget);
-    expect(find.text('审计一键修复脚本'), findsOneWidget);
+    expect(find.text('脚本内容预览'), findsOneWidget);
+    expect(find.byIcon(Icons.warning_amber_rounded), findsNothing);
     await tester.tap(find.byKey(const Key('executeRepairScriptButton')));
     await tester.pumpAndSettle();
     expect(confirmed, isTrue);

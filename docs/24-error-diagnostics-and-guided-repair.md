@@ -1,8 +1,8 @@
 # 安装失败诊断与引导修复设计方案
 
-> 更新日期：2026-07-25
+> 更新日期：2026-07-26
 > 涉及仓库：`flutter-linglong-store`、`linglong-server`、`linglong-admin`
-> 文档状态：设计已确认，等待拆分实施计划
+> 文档状态：已实施并通过三端定向验证
 
 ## 一、背景
 
@@ -52,7 +52,7 @@
 | 脚本审计 | 执行前必须展示即将执行的脚本全文 |
 | 执行输出 | 实时展示 STDOUT/STDERR，完整输出同时写入日志 |
 | 签名算法 | 只支持 Ed25519 |
-| 私钥 | 不进入任何代码仓库；实施阶段单独生成并交由负责人保存 |
+| 私钥 | 不进入任何代码仓库；已生成到代码库外的受限目录，由负责人转移保存 |
 | 公钥 | 可以进入代码和后端配置；它是信任根但不是秘密 |
 | 审计字段 | 不保存审计人、审计时间或审计记录 |
 
@@ -75,7 +75,7 @@
 - 不修改现有 `/app/findShellString` 玲珑环境安装脚本读取流程。
 - 不处理现有公开写接口 `/app/updateShellString`；该安全问题已经记录，后续单独修复。
 - 不把玲珑环境安装脚本接入本次签名和审计流程。
-- 不生成或提交正式私钥；私钥在实施阶段单独生成和交付。
+- 不提交、上传或由服务端保存正式私钥。
 - 不做本地诊断规则、本地修复脚本或离线解决方案。
 - 不自动重试失败的安装或更新任务。
 - 不做规则版本、发布版本、灰度、优先级、客户端适配和解决方案缓存。
@@ -112,7 +112,7 @@ DownloadManagerDialog._buildErrorText()
 - `CopyableCommandBlock`、`SelectableText`、通知组件可以复用。
 - `A11yFocusScope` 和无障碍按钮组件可以用于新弹窗。
 
-当前 `ShellCommandExecutor` 只在进程退出后返回聚合结果。为了实时展示输出，应在同一个执行器上增加流式事件能力，不能另外实现一套 `Process.start`。
+`ShellCommandExecutor` 已在原有接口旁增加兼容的流式能力；不支持流式的既有测试替身继续走最终结果回放，生产执行器仍保持唯一的 `Process.start` 实现。
 
 ### 4.3 后端多语言现状
 
@@ -169,7 +169,7 @@ UI 只负责显示状态和发送用户动作；网络解析、签名验证、�
 
 ### 6.1 解决方案表
 
-建议表名：
+表名：
 
 ```text
 ll_error_solution
@@ -184,7 +184,7 @@ ll_error_solution
 | `title_i18n_code` | `VARCHAR(100)` | 否 | 标题在 `i18n` 表中的 code |
 | `markdown_i18n_code` | `VARCHAR(100)` | 否 | Markdown 正文在 `i18n` 表中的 code |
 | `repair_script` | `LONGTEXT` | 是 | 一键修复脚本全文；为空表示仅人工方案 |
-| `repair_script_signature` | `TEXT` | 是 | Ed25519 签名的 Base64 文本 |
+| `repair_script_signature` | `VARCHAR(128)` | 是 | Ed25519 签名的 Base64 文本 |
 | `enabled` | `TINYINT(1)` | 否 | 是否参与匹配 |
 
 不增加以下字段：
@@ -242,7 +242,7 @@ Flutter 只上传 `Locale.languageCode`，例如 `zh`、`en`。后端不在解�
 
 ### 7.1 公共查询接口
 
-建议接口：
+公共接口：
 
 ```http
 POST /app/error-solution/find
@@ -335,15 +335,17 @@ message.contains(solution.getMatchMessage())
 所有写操作必须位于需要登录认证的 `/admin/**`，不得放在公开的 `/app/**`：
 
 ```http
-GET  /admin/error-solution/page
+POST /admin/error-solution/page
 GET  /admin/error-solution/detail/{id}
 POST /admin/error-solution/save
 POST /admin/error-solution/update
-POST /admin/error-solution/delete
+DELETE /admin/error-solution/delete/{id}
 POST /admin/error-solution/set-enabled
 ```
 
 管理请求同时携带业务字段和多语言列表，由解决方案 Service 统一编排并开启事务。控制器不得直接分别调用业务表和 i18n 表完成半套更新。
+
+所有管理方法额外要求 `ROLE_admin`。Spring 方法级鉴权已显式启用，登录时从启用的 `sys_role` 装配权限；仅有默认角色的公开注册用户即使取得登录 Token，也不能调用这些接口。
 
 启用规则：
 
@@ -388,7 +390,7 @@ purpose=privileged-shell-script
 脚本文本必须保持：
 
 - UTF-8；
-- 无 BOM；
+- BOM 若存在则作为正文原始字节保留；
 - 不自动 `trim()`；
 - 不转换 LF/CRLF；
 - 不自动补删末尾换行；
@@ -432,7 +434,14 @@ Flutter 内置同一把公钥。控制关系为：
 
 私钥不进入 `flutter-linglong-store`、`linglong-server`、`linglong-admin` 或其他 Git 仓库。
 
-实施阶段由开发工具生成一把正式 Ed25519 私钥，并明确告诉负责人生成位置。负责人完成备份和转移后，开发环境只保留负责人明确允许保留的副本。
+正式 Ed25519 密钥已经生成在所有代码库之外：
+
+```text
+私钥：/home/han/.config/linglong-store/content-signing/ed25519-private.pem
+公钥：/home/han/.config/linglong-store/content-signing/ed25519-public.pem
+```
+
+私钥权限为 `0600`。负责人应把私钥转移到受控保存位置，并自行决定是否删除开发机副本。
 
 建议负责人保存到：
 
@@ -447,15 +456,19 @@ Flutter 内置同一把公钥。控制关系为：
 在 `linglong-admin` 仓库新增：
 
 ```text
-tools/offline-content-signer/index.html
+tools/offline-content-signer/
+  index.html
+  signer-core.js
 ```
 
-该页面是独立工具，不打包到线上管理后台，也不请求后端。
+该页面是独立工具，不进入 Vite 管理后台产物，也不请求后端。运行
+`npm run build:offline-signer` 后会生成独立的
+`dist-offline-content-signer/` 目录，复制整个目录到隔离设备即可使用。
 
 页面流程：
 
 1. 用户选择本地 PKCS#8 Ed25519 私钥。
-2. 用户选择从管理后台导出的原始 `.sh` 文件。
+2. 用户选择从管理后台导出的原始 `.sh` 文件，页面通过 `arrayBuffer()` 读取原始字节。
 3. 页面完整显示脚本内容和字节长度，供再次确认。
 4. 页面按通用签名协议构造签名输入。
 5. 使用浏览器 Web Crypto 的 Ed25519 签名。
@@ -470,6 +483,8 @@ tools/offline-content-signer/index.html
 - 不上传私钥、脚本或签名。
 - 不引用 CDN、统计脚本、字体或远程资源。
 - CSP 设置 `connect-src 'none'`。
+- 严格按 UTF-8 解码审计文本，解码后无法逐字节往返的文件直接拒绝签名。
+- BOM、CRLF 和末尾换行均按文件原始字节进入签名信封。
 - 页面刷新或关闭后清空内存状态。
 - 浏览器不支持 Web Crypto Ed25519 时直接提示不支持，不回退到其他算法。
 
@@ -482,6 +497,7 @@ tools/offline-content-signer/index.html
 - 列表：匹配文本、中文标题、是否有脚本、签名是否有效、启用状态。
 - 新建和编辑：匹配文本、多语言标题、多语言 Markdown、修复脚本、签名。
 - Markdown 编辑区提供预览，但保存内容仍是原始 Markdown。
+- Markdown 预览延迟 150 ms 刷新，并使用显式标签/属性白名单；只允许 HTTP/HTTPS 链接和图片，不允许样式、表单、SVG、iframe 或事件属性。
 - 脚本编辑区使用等宽字体并支持导出原始 `.sh`。
 - 签名区支持粘贴 Base64 或选择 `.sig` 文件。
 - 启用、停用和删除需要明确确认。
@@ -625,10 +641,10 @@ Flutter 增加 Markdown 渲染依赖，解决方案使用一段完整 Markdown �
 3. 调用统一的 `ShellCommandExecutor`：
 
    ```text
-   pkexec bash <temporary-script-path>
+   pkexec timeout --signal=TERM --kill-after=10s 1800s bash <temporary-script-path>
    ```
 
-4. Flutter 设置 30 分钟超时。
+4. Flutter 固定构造 30 分钟的特权侧 `timeout`，并用 30 分 30 秒本地看门狗保证异常管道也能收尾。
 5. 实时接收 STDOUT 和 STDERR。
 6. 进程退出后按退出码判断结果。
 7. `finally` 删除临时脚本。
@@ -679,7 +695,7 @@ class ShellOutputEvent {
 
 `ShellCommandRunner.run()` 增加可选输出回调或事件接收器。底层读取每个流时同时完成：
 
-1. 追加最终结果缓冲区。
+1. 追加有界的最终结果尾部缓冲区。
 2. 写入完整日志。
 3. 发出带通道信息的 UI 事件。
 
@@ -715,24 +731,23 @@ class ShellOutputEvent {
 脚本可能持续输出大量内容。为了保证 UI 响应：
 
 - 完整 STDOUT/STDERR 始终逐行写入日志，不截断日志。
+- 执行器最终结果每个通道只保留最近 64 KiB，错误摘要不会因高输出无限占用内存。
 - UI 只保留最近 512 KiB 的滚动输出。
 - 超过上限时从最早的完整行开始淘汰，并显示“较早输出请查看完整日志”。
-- 流式事件在 Application 层按最多每 100 ms 一批提交状态，避免每一行触发一次组件树重建。
+- 流式事件在展示组件按最多每 100 ms 一批提交状态，避免每一行触发一次组件树重建。
 - 输出列表使用 builder 或单个受控文本区域，不在 `build()` 中反复拼接全部历史内容。
 - 关闭结果弹窗后释放输出缓冲区和滚动控制器。
 
 ## 十四、Flutter 模块边界
 
-建议文件职责如下，实施计划可以在不改变边界的前提下按项目实际命名调整：
+实际文件职责如下：
 
 ```text
 lib/domain/models/
   error_solution.dart
-  trusted_content_signature.dart
-  guided_repair_execution.dart
 
-lib/data/datasources/remote/
-  app_api_service.dart
+lib/data/models/
+  error_solution_dto.dart
 
 lib/data/repositories/
   error_solution_repository_impl.dart
@@ -741,12 +756,13 @@ lib/domain/repositories/
   error_solution_repository.dart
 
 lib/core/security/
-  content_signature_verifier.dart
+  trusted_content_signature.dart
 
 lib/core/platform/
   shell_command_executor.dart
 
 lib/application/services/
+  error_solution_lookup_service.dart
   guided_repair_service.dart
 
 lib/application/providers/
@@ -754,7 +770,7 @@ lib/application/providers/
   guided_repair_provider.dart
 
 lib/presentation/widgets/
-  error_help_popover.dart
+  error_solution_help_button.dart
   error_solution_dialog.dart
   script_review_dialog.dart
   guided_repair_execution_dialog.dart
@@ -782,17 +798,24 @@ ll-server/src/main/java/com/dongpl/
   entity/ErrorSolution.java
   bo/ErrorSolutionFindBO.java
   bo/ErrorSolutionSaveBO.java
+  bo/ErrorSolutionTranslationBO.java
   vo/ErrorSolutionVO.java
+  vo/ErrorSolutionAdminVO.java
   mapper/master/ErrorSolutionMapper.java
+  service/ErrorSolutionInputPolicy.java
+  service/ErrorSolutionScriptPolicy.java
   service/ErrorSolutionService.java
+  service/ErrorSolutionAdminService.java
   service/impl/ErrorSolutionServiceImpl.java
+  service/impl/ErrorSolutionAdminServiceImpl.java
   controller/app/ErrorSolutionController.java
   controller/admin/ErrorSolutionAdminController.java
   security/ContentSignatureVerifier.java
+  security/Ed25519ContentSignatureVerifier.java
   config/TrustedContentSignatureProperties.java
 ```
 
-`ErrorSolutionService` 统一负责匹配、多语言解析、事务保存、签名校验和启用约束。Controller 不复制这些规则。
+`ErrorSolutionService` 负责公共匹配与本地化；`ErrorSolutionAdminService` 负责事务保存和启停；`ErrorSolutionScriptPolicy` 负责脚本验签；`ErrorSolutionInputPolicy` 统一公共端与管理端的字节和语言边界。Controller 不复制这些规则。
 
 ### 15.2 linglong-admin
 
@@ -803,6 +826,10 @@ src/router/index.ts
 src/views/index.vue
 src/types/constants.ts
 tools/offline-content-signer/index.html
+tools/offline-content-signer/signer-core.js
+tools/offline-content-signer/signer-core.test.mjs
+tools/offline-content-signer/build.mjs
+tools/offline-content-signer/README.md
 ```
 
 管理页面只调用 `/admin/error-solution/**`，不得调用公开 `/app/**` 写入数据。
@@ -851,6 +878,7 @@ tools/offline-content-signer/index.html
 - 非 Ed25519 或无效私钥被拒绝。
 - 签名结果可被后端和 Flutter 的同一测试向量验证。
 - CRLF、末尾换行和任意一个字符变化都会导致验签失败。
+- UTF-8 BOM 作为原始字节保留；非法 UTF-8 被拒绝。
 - 页面不产生网络请求。
 - 页面不使用浏览器持久化存储。
 
@@ -918,9 +946,20 @@ RequestInteraction
 
 具体脚本正文不写死在 Flutter 代码或本文档中，后续新增或更新脚本只需修改后端数据并重新签名。
 
-## 十九、实施顺序
+首条方案的可读源和发布物位于后端：
 
-建议按可独立验证的功能点拆分提交：
+```text
+sql/error-solutions/request-interaction/
+sql/error-solutions/generate-request-interaction-seed.mjs
+sql/data_20260725_seed_request_interaction_solution.sql
+```
+
+脚本覆盖 Ubuntu 22.04、24.04、25.04 与 Debian 12、13、Testing、Unstable，其他系统只展示人工说明。OBS Release.key 必须匹配指纹
+`E40B8357064537F34EDAF6A5C803D0494B23B790`；指纹不符立即终止。写入 APT 配置后若刷新或安装失败，脚本恢复执行前的 keyring 和 source list。
+
+## 十九、实施记录
+
+功能按以下独立提交完成：
 
 1. 后端数据库、i18n 解析和只读匹配接口。
 2. 后端通用 Ed25519 验证和管理接口。
@@ -932,7 +971,7 @@ RequestInteraction
 8. ShellCommandExecutor 流式输出与执行弹窗。
 9. 第一条 `RequestInteraction` 方案数据和跨端验收。
 
-每个功能点独立使用 Conventional Commit；实施前另写逐文件、逐测试的实施计划。
+逐文件实施计划保存在 `docs/plans/2026-07-25-error-diagnostics-and-guided-repair.md`。数据库发布顺序和重复执行检查保存在后端 `sql/error-solutions/README.md`。
 
 ## 二十、验收标准
 

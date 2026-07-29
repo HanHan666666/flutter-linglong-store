@@ -117,7 +117,16 @@ fi
 
 desktop_filename="$(basename "${rendered_desktop_files[0]}")"
 
+mapfile -t rendered_compat_desktop_files < <(find "$metadata_dir/compat" -maxdepth 1 -type f -name '*.desktop' | sort)
+if [[ "${#rendered_compat_desktop_files[@]}" -ne 1 ]]; then
+  echo "Expected exactly one rendered compatibility desktop file in $metadata_dir/compat, found ${#rendered_compat_desktop_files[@]}" >&2
+  exit 1
+fi
+compat_desktop_filename="$(basename "${rendered_compat_desktop_files[0]}")"
+
 cp "$metadata_dir/$desktop_filename" "$payload_dir/usr/share/applications/$desktop_filename"
+cp "$metadata_dir/compat/$compat_desktop_filename" \
+  "$payload_dir/usr/share/applications/$compat_desktop_filename"
 cp "$metadata_dir/appimage/linglong-store.appdata.xml" "$payload_dir/usr/share/metainfo/linglong-store.appdata.xml"
 cp "$metadata_dir/rpm/linglong-store.spec" "$rpmbuild_root/SPECS/linglong-store.spec"
 

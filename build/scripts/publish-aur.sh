@@ -173,7 +173,8 @@ update_aur_repo() {
   (
     local work_dir
     local metadata_dir=""
-    local desktop_filename
+    local desktop_filename="com.dongpl.linglong-store.v2.desktop"
+    local compat_desktop_filename
     local changelog_filename
     local rendered_pkgname
     local rendered_pkgver
@@ -224,13 +225,18 @@ update_aur_repo() {
       exit 1
     fi
 
-    mapfile -t rendered_desktop_files < <(find "$metadata_dir/aur" -maxdepth 1 -type f -name '*.desktop' | sort)
-    if [[ "${#rendered_desktop_files[@]}" -ne 1 ]]; then
-      echo "Expected exactly one rendered AUR desktop file in $metadata_dir/aur, found ${#rendered_desktop_files[@]}" >&2
+    case "$channel" in
+      stable)
+        compat_desktop_filename="linglong-store.desktop"
+        ;;
+      nightly)
+        compat_desktop_filename="linglong-store-nightly.desktop"
+        ;;
+    esac
+    if [[ ! -f "$metadata_dir/aur/$desktop_filename" || ! -f "$metadata_dir/aur/$compat_desktop_filename" ]]; then
+      echo "Rendered AUR metadata is missing the canonical or compatibility desktop file." >&2
       exit 1
     fi
-
-    desktop_filename="$(basename "${rendered_desktop_files[0]}")"
 
     mapfile -t rendered_changelog_files < <(find "$metadata_dir/aur" -maxdepth 1 -type f -name '*.changelog' | sort)
     if [[ "${#rendered_changelog_files[@]}" -ne 1 ]]; then
@@ -240,7 +246,10 @@ update_aur_repo() {
 
     changelog_filename="$(basename "${rendered_changelog_files[0]}")"
 
-    find . -maxdepth 1 -type f -name '*.desktop' ! -name "$desktop_filename" -delete
+    find . -maxdepth 1 -type f -name '*.desktop' \
+      ! -name "$desktop_filename" \
+      ! -name "$compat_desktop_filename" \
+      -delete
     find . -maxdepth 1 -type f -name '*.changelog' ! -name "$changelog_filename" -delete
 
     # Copy rendered AUR files.
@@ -248,6 +257,7 @@ update_aur_repo() {
     cp "$metadata_dir/aur/$changelog_filename" "$changelog_filename"
     cp "$metadata_dir/aur/LICENSE" LICENSE
     cp "$metadata_dir/aur/$desktop_filename" "$desktop_filename"
+    cp "$metadata_dir/aur/$compat_desktop_filename" "$compat_desktop_filename"
     cp "$metadata_dir/aur/linglong-store.metainfo.xml" linglong-store.metainfo.xml
     cp "$metadata_dir/aur/linglong-store.svg" linglong-store.svg
 

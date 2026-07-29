@@ -59,17 +59,24 @@ verify_nightly_packaged_metadata() {
 
     dpkg-deb -x "$deb_artifact_path" "$inspect_root/deb"
 
+    assert_artifact_exists "$inspect_root/deb/usr/share/applications/com.dongpl.linglong-store.v2.desktop"
     assert_artifact_exists "$inspect_root/deb/usr/share/applications/linglong-store-nightly.desktop"
     assert_artifact_exists "$inspect_root/deb/usr/share/metainfo/linglong-store.appdata.xml"
     assert_file_contains '^Name=.*Nightly$' \
-      "$inspect_root/deb/usr/share/applications/linglong-store-nightly.desktop"
+      "$inspect_root/deb/usr/share/applications/com.dongpl.linglong-store.v2.desktop"
     assert_file_contains '^Comment=.*Nightly$' \
+      "$inspect_root/deb/usr/share/applications/com.dongpl.linglong-store.v2.desktop"
+    assert_file_contains '^X-GNOME-UsesNotifications=true$' \
+      "$inspect_root/deb/usr/share/applications/com.dongpl.linglong-store.v2.desktop"
+    assert_file_contains '^NoDisplay=true$' \
+      "$inspect_root/deb/usr/share/applications/linglong-store-nightly.desktop"
+    assert_file_contains '^MimeType=x-scheme-handler/og;$' \
       "$inspect_root/deb/usr/share/applications/linglong-store-nightly.desktop"
     assert_file_contains '<name>.*Nightly</name>' \
       "$inspect_root/deb/usr/share/metainfo/linglong-store.appdata.xml"
     assert_file_contains '<summary>.*Nightly</summary>' \
       "$inspect_root/deb/usr/share/metainfo/linglong-store.appdata.xml"
-    assert_file_contains '<launchable type="desktop-id">linglong-store-nightly.desktop</launchable>' \
+    assert_file_contains '<launchable type="desktop-id">com.dongpl.linglong-store.v2.desktop</launchable>' \
       "$inspect_root/deb/usr/share/metainfo/linglong-store.appdata.xml"
   )
 }

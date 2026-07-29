@@ -108,10 +108,19 @@ fi
 
 desktop_filename="$(basename "${rendered_desktop_files[0]}")"
 
+mapfile -t rendered_compat_desktop_files < <(find "$metadata_dir/compat" -maxdepth 1 -type f -name '*.desktop' | sort)
+if [[ "${#rendered_compat_desktop_files[@]}" -ne 1 ]]; then
+  echo "Expected exactly one rendered compatibility desktop file in $metadata_dir/compat, found ${#rendered_compat_desktop_files[@]}" >&2
+  exit 1
+fi
+compat_desktop_filename="$(basename "${rendered_compat_desktop_files[0]}")"
+
 rsvg-convert -w 256 -h 256 "$ROOT_DIR/assets/icons/logo.svg" -o "$appdir/linglong-store.png"
 cp "$appdir/linglong-store.png" "$appdir/usr/share/icons/hicolor/256x256/apps/linglong-store.png"
 cp "$metadata_dir/$desktop_filename" "$appdir/$desktop_filename"
 cp "$metadata_dir/$desktop_filename" "$appdir/usr/share/applications/$desktop_filename"
+cp "$metadata_dir/compat/$compat_desktop_filename" \
+  "$appdir/usr/share/applications/$compat_desktop_filename"
 cp "$metadata_dir/appimage/AppRun" "$appdir/AppRun"
 cp "$metadata_dir/appimage/linglong-store.appdata.xml" "$appdir/usr/share/metainfo/linglong-store.appdata.xml"
 chmod +x "$appdir/AppRun"

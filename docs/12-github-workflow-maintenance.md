@@ -327,10 +327,12 @@ nightly 在 GitHub prerelease 发布成功后，必须继续执行 AUR 发布，
 - `linglong-store-nightly-bin` 必须同时发布 `x86_64` / `aarch64`
 - `linglong-store-nightly-bin` 必须声明 `conflicts=('linglong-store' 'linglong-store-bin')`，因为它复用稳定版安装路径，既要拦住稳定包名，也要拦住共享虚拟包名
 - nightly AUR `pkgver` 必须把 `<base_version>-nightly.<YYYYMMDD>+<short_sha>` 归一成 `<base_version>_nightly.<YYYYMMDD>.<short_sha>`
-- nightly 桌面与 metainfo 命名必须显式带 nightly 变体：
-  - desktop 文件：`linglong-store-nightly.desktop`
-  - AppStream launchable：`linglong-store-nightly.desktop`
-  - 用户可见名称必须带 `Nightly`
+- stable 与 nightly 的主 desktop ID 必须固定为
+  `com.dongpl.linglong-store.v2.desktop`，并与 `G_APPLICATION_ID`、AppStream
+  launchable 保持一致，保证系统通知身份稳定。
+- nightly 仍需安装 `linglong-store-nightly.desktop`，但它只能作为
+  `NoDisplay=true` 的 `x-scheme-handler/og` 兼容别名；用户可见名称必须带
+  `Nightly`。
 - `nightly.yml` 当前发布顺序固定为：生成并签名 nightly 资产 → 发布 GitHub prerelease → 发布 nightly AUR；不要把 AUR 发布提前到 prerelease 之前
 - nightly AUR 的 checksum/render/validate/publish 必须同时消费 `amd64` / `arm64` tarball 与 `.asc`，禁止再把 arm64 当成 stable-only 逻辑
 - `publish-aur.sh` 在宿主机没有 `makepkg` 时，必须通过临时 Arch 容器生成 `.SRCINFO`，不要假定 Ubuntu runner 自带 Arch 打包工具

@@ -100,12 +100,13 @@ package_name="linglong-store"
 display_name="玲珑应用商店社区版"
 summary_text="Linglong Store Community Edition"
 description_text="Desktop store for browsing and installing Linglong applications."
-desktop_filename="linglong-store.desktop"
+app_id="com.dongpl.linglong-store.v2"
+desktop_filename="${app_id}.desktop"
+compat_desktop_filename="linglong-store.desktop"
 launchable_desktop_id="$desktop_filename"
 executable_name="linglong-store"
 icon_name="linglong-store"
 wm_class="com.dongpl.linglong-store.v2"
-app_id="com.dongpl.linglong-store.v2"
 project_url="https://github.com/HanHan666666/flutter-linglong-store"
 maintainer="Linglong Store Community <community@linglong.dev>"
 maintainer_name="HanHan666666"
@@ -163,8 +164,7 @@ case "$channel" in
     # Nightly only changes the visible metadata; layout and executable stay stable.
     display_name="玲珑应用商店社区版 Nightly"
     summary_text="Linglong Store Community Edition Nightly"
-    desktop_filename="linglong-store-nightly.desktop"
-    launchable_desktop_id="$desktop_filename"
+    compat_desktop_filename="linglong-store-nightly.desktop"
     aur_pkgname="linglong-store-nightly-bin"
     # Nightly reuses the stable install paths, so both the concrete stable
     # package name and the shared virtual package must be treated as conflicts.
@@ -211,6 +211,7 @@ render_file() {
   content="${content//@EXECUTABLE_NAME@/$executable_name}"
   content="${content//@ICON_NAME@/$icon_name}"
   content="${content//@DESKTOP_FILENAME@/$desktop_filename}"
+  content="${content//@COMPAT_DESKTOP_FILENAME@/$compat_desktop_filename}"
   content="${content//@WM_CLASS@/$wm_class}"
   content="${content//@LAUNCHABLE_DESKTOP_ID@/$launchable_desktop_id}"
   content="${content//@VERSION@/$release_version}"
@@ -231,6 +232,10 @@ mkdir -p "$output_dir/deb" "$output_dir/rpm" "$output_dir/appimage" "$output_dir
 render_file \
   "$ROOT_DIR/build/packaging/linux/linglong-store.desktop.in" \
   "$output_dir/$desktop_filename"
+
+render_file \
+  "$ROOT_DIR/build/packaging/linux/linglong-store-compat.desktop.in" \
+  "$output_dir/compat/$compat_desktop_filename"
 
 render_file \
   "$ROOT_DIR/build/packaging/linux/deb/control.in" \
@@ -260,12 +265,14 @@ render_aur_template() {
   local sha_sig_amd64="${9:-}"
   local sha_sig_arm64="${10:-}"
   local key_id="${11:-}"
+  local sha_compat_desktop="${12:-}"
 
   mkdir -p "$(dirname "$output_path")"
   local content
   content="$(<"$input_path")"
   content="${content//@PACKAGE_NAME@/$package_name}"
   content="${content//@DESKTOP_FILENAME@/$desktop_filename}"
+  content="${content//@COMPAT_DESKTOP_FILENAME@/$compat_desktop_filename}"
   # Expand optional architecture blocks before substituting the values they
   # reference, otherwise nested placeholders leak into the rendered PKGBUILD.
   content="${content//@AUR_SOURCE_AARCH64_BLOCK@/$aur_source_aarch64_block}"
@@ -277,6 +284,7 @@ render_aur_template() {
   content="${content//@RELEASE_URL_BASE@/$release_url_base}"
   content="${content//@SHA256_LICENSE@/$sha_license}"
   content="${content//@SHA256_DESKTOP@/$sha_desktop}"
+  content="${content//@SHA256_COMPAT_DESKTOP@/$sha_compat_desktop}"
   content="${content//@SHA256_METAINFO@/$sha_metainfo}"
   content="${content//@SHA256_ICON@/$sha_icon}"
   content="${content//@SHA256_AMD64@/$sha_amd64}"
@@ -302,11 +310,14 @@ if [[ "$should_render_aur" == "true" ]]; then
   # rely on optional extras bundled into the binary release archive.
   cp "$ROOT_DIR/LICENSE" "$output_dir/aur/LICENSE"
   cp "$output_dir/$desktop_filename" "$output_dir/aur/$desktop_filename"
+  cp "$output_dir/compat/$compat_desktop_filename" \
+    "$output_dir/aur/$compat_desktop_filename"
   cp "$output_dir/appimage/linglong-store.appdata.xml" "$output_dir/aur/linglong-store.metainfo.xml"
   cp "$ROOT_DIR/assets/icons/logo.svg" "$output_dir/aur/linglong-store.svg"
 
   sha256_license="$(sha256sum "$output_dir/aur/LICENSE" | awk '{print $1}')"
   sha256_desktop="$(sha256sum "$output_dir/aur/$desktop_filename" | awk '{print $1}')"
+  sha256_compat_desktop="$(sha256sum "$output_dir/aur/$compat_desktop_filename" | awk '{print $1}')"
   sha256_metainfo="$(sha256sum "$output_dir/aur/linglong-store.metainfo.xml" | awk '{print $1}')"
   sha256_icon="$(sha256sum "$output_dir/aur/linglong-store.svg" | awk '{print $1}')"
 
@@ -321,7 +332,8 @@ if [[ "$should_render_aur" == "true" ]]; then
     "$sha256_icon" \
     "$sha256_sig_amd64" \
     "$sha256_sig_arm64" \
-    "$gpg_key_id"
+    "$gpg_key_id" \
+    "$sha256_compat_desktop"
 
   render_aur_template \
     "$ROOT_DIR/build/packaging/linux/aur/linglong-store-bin.changelog.in" \
@@ -334,5 +346,6 @@ if [[ "$should_render_aur" == "true" ]]; then
     "$sha256_icon" \
     "$sha256_sig_amd64" \
     "$sha256_sig_arm64" \
-    "$gpg_key_id"
+    "$gpg_key_id" \
+    "$sha256_compat_desktop"
 fi

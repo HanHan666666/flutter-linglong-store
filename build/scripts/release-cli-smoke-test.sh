@@ -313,12 +313,16 @@ bash build/scripts/render-packaging-templates.sh \
 
 desktop_count="$(find "$RENDER_OUTPUT_DIR" -maxdepth 1 -type f -name '*.desktop' | awk 'END { print NR }')"
 test "$desktop_count" = "1"
-test -f "$RENDER_OUTPUT_DIR/linglong-store.desktop"
-grep -q '^Name=玲珑应用商店社区版$' "$RENDER_OUTPUT_DIR/linglong-store.desktop"
-grep -q '^Comment=Linglong Store Community Edition$' "$RENDER_OUTPUT_DIR/linglong-store.desktop"
+test -f "$RENDER_OUTPUT_DIR/com.dongpl.linglong-store.v2.desktop"
+grep -q '^Name=玲珑应用商店社区版$' "$RENDER_OUTPUT_DIR/com.dongpl.linglong-store.v2.desktop"
+grep -q '^Comment=Linglong Store Community Edition$' "$RENDER_OUTPUT_DIR/com.dongpl.linglong-store.v2.desktop"
+grep -q '^X-GNOME-UsesNotifications=true$' "$RENDER_OUTPUT_DIR/com.dongpl.linglong-store.v2.desktop"
+test -f "$RENDER_OUTPUT_DIR/compat/linglong-store.desktop"
+grep -q '^NoDisplay=true$' "$RENDER_OUTPUT_DIR/compat/linglong-store.desktop"
+grep -q '^MimeType=x-scheme-handler/og;$' "$RENDER_OUTPUT_DIR/compat/linglong-store.desktop"
 grep -q '<name>玲珑应用商店社区版</name>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 grep -q '<summary>Linglong Store Community Edition</summary>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
-grep -q '<launchable type="desktop-id">linglong-store.desktop</launchable>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
+grep -q '<launchable type="desktop-id">com.dongpl.linglong-store.v2.desktop</launchable>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 
 mkdir -p \
   "$RELEASE_ASSET_DOWNLOAD_FIXTURE_DIR/release-assets-amd64" \

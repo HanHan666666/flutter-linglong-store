@@ -151,12 +151,14 @@ prepare_offline_build_workspace() {
   local source_dir="$1"
   local build_dir="$2"
   local desktop_filename="$3"
-  local changelog_filename="$4"
+  local compat_desktop_filename="$4"
+  local changelog_filename="$5"
 
   mkdir -p "$build_dir"
   cp "$source_dir/PKGBUILD" "$build_dir/PKGBUILD"
   cp "$source_dir/LICENSE" "$build_dir/LICENSE"
   cp "$source_dir/$desktop_filename" "$build_dir/$desktop_filename"
+  cp "$source_dir/$compat_desktop_filename" "$build_dir/$compat_desktop_filename"
   cp "$source_dir/linglong-store.metainfo.xml" "$build_dir/linglong-store.metainfo.xml"
   cp "$source_dir/linglong-store.svg" "$build_dir/linglong-store.svg"
 
@@ -217,7 +219,8 @@ run_inner_validation() {
   local pkg_path
   local pkginfo
   local pkg_contents
-  local desktop_filename
+  local desktop_filename="com.dongpl.linglong-store.v2.desktop"
+  local compat_desktop_filename
   local changelog_filename
   local expected_conflicts=()
   local expected_pkginfo_pkgver
@@ -266,14 +269,14 @@ run_inner_validation() {
 
   case "$channel" in
     stable)
-      desktop_filename="linglong-store.desktop"
+      compat_desktop_filename="linglong-store.desktop"
       changelog_filename="linglong-store-bin.changelog"
       expected_conflicts=("linglong-store")
       expected_arch_line_primary="arch = x86_64"
       expected_arch_line_secondary="arch = aarch64"
       ;;
     nightly)
-      desktop_filename="linglong-store-nightly.desktop"
+      compat_desktop_filename="linglong-store-nightly.desktop"
       changelog_filename="${package_name}.changelog"
       expected_conflicts=("linglong-store" "linglong-store-bin")
       expected_arch_line_primary="arch = x86_64"
@@ -298,7 +301,12 @@ run_inner_validation() {
     build_dir="$(prepare_online_build_workspace "$metadata_dir/aur")"
     makepkg_cmd=$'if ! makepkg --verifysource --nodeps >/dev/null; then\n  echo "Online source verification failed against rendered PKGBUILD sources." >&2\n  exit 1\nfi\nmakepkg -f --nodeps --noconfirm >/dev/null'
   else
-    prepare_offline_build_workspace "$metadata_dir/aur" "$build_dir" "$desktop_filename" "$changelog_filename"
+    prepare_offline_build_workspace \
+      "$metadata_dir/aur" \
+      "$build_dir" \
+      "$desktop_filename" \
+      "$compat_desktop_filename" \
+      "$changelog_filename"
     makepkg_cmd="makepkg -f --nodeps --noconfirm --skipinteg >/dev/null"
   fi
   chown -R builder:builder "$metadata_dir"
@@ -368,6 +376,8 @@ EOF
     "AUR metadata did not render the expected changelog filename."
   assert_file_contains "$metadata_dir/aur/.SRCINFO" "source = ${desktop_filename}" \
     "AUR metadata did not render the expected desktop filename."
+  assert_file_contains "$metadata_dir/aur/.SRCINFO" "source = ${compat_desktop_filename}" \
+    "AUR metadata did not render the expected compatibility desktop filename."
   assert_file_contains "$metadata_dir/aur/.SRCINFO" "provides = linglong-store" \
     "AUR metadata did not render the expected provides entry."
   assert_file_contains "$metadata_dir/aur/.SRCINFO" "$expected_arch_line_primary" \
@@ -396,6 +406,8 @@ EOF
     "Built AUR package did not keep the expected provides entry."
   assert_output_contains "$pkg_contents" "usr/share/applications/${desktop_filename}" \
     "Built AUR package did not install the expected desktop file."
+  assert_output_contains "$pkg_contents" "usr/share/applications/${compat_desktop_filename}" \
+    "Built AUR package did not install the expected compatibility desktop file."
   assert_output_contains "$pkg_contents" "opt/linglong-store/linglong_store" \
     "Built AUR package did not install the expected application payload."
 

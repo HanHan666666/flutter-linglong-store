@@ -148,7 +148,7 @@
     }
   },
   "updateBatchResultSeparator": "，",
-  "updateBatchSucceededCount": "成功 {count}",
+  "updateBatchSucceededCount": "成功 {count} 个",
   "@updateBatchSucceededCount": {
     "placeholders": {
       "count": {
@@ -156,7 +156,7 @@
       }
     }
   },
-  "updateBatchFailedCount": "失败 {count}",
+  "updateBatchFailedCount": "失败 {count} 个",
   "@updateBatchFailedCount": {
     "placeholders": {
       "count": {
@@ -164,7 +164,7 @@
       }
     }
   },
-  "updateBatchCancelledCount": "取消 {count}",
+  "updateBatchCancelledCount": "取消 {count} 个",
   "@updateBatchCancelledCount": {
     "placeholders": {
       "count": {
@@ -172,7 +172,7 @@
       }
     }
   },
-  "updateBatchInterruptedCount": "中断 {count}",
+  "updateBatchInterruptedCount": "中断 {count} 个",
   "@updateBatchInterruptedCount": {
     "placeholders": {
       "count": {

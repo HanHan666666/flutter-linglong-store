@@ -331,22 +331,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String updateBatchSucceededCount(int count) {
-    return '成功 $count';
+    return '成功 $count 个';
   }
 
   @override
   String updateBatchFailedCount(int count) {
-    return '失败 $count';
+    return '失败 $count 个';
   }
 
   @override
   String updateBatchCancelledCount(int count) {
-    return '取消 $count';
+    return '取消 $count 个';
   }
 
   @override
   String updateBatchInterruptedCount(int count) {
-    return '中断 $count';
+    return '中断 $count 个';
   }
 
   @override

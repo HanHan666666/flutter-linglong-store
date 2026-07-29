@@ -719,25 +719,25 @@ abstract class AppLocalizations {
   /// No description provided for @updateBatchSucceededCount.
   ///
   /// In zh, this message translates to:
-  /// **'成功 {count}'**
+  /// **'成功 {count} 个'**
   String updateBatchSucceededCount(int count);
 
   /// No description provided for @updateBatchFailedCount.
   ///
   /// In zh, this message translates to:
-  /// **'失败 {count}'**
+  /// **'失败 {count} 个'**
   String updateBatchFailedCount(int count);
 
   /// No description provided for @updateBatchCancelledCount.
   ///
   /// In zh, this message translates to:
-  /// **'取消 {count}'**
+  /// **'取消 {count} 个'**
   String updateBatchCancelledCount(int count);
 
   /// No description provided for @updateBatchInterruptedCount.
   ///
   /// In zh, this message translates to:
-  /// **'中断 {count}'**
+  /// **'中断 {count} 个'**
   String updateBatchInterruptedCount(int count);
 
   /// No description provided for @updateBatchAppNameSeparator.

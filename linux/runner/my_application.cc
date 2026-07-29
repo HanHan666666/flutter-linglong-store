@@ -9,12 +9,14 @@
 #endif
 
 #include "flutter/generated_plugin_registrant.h"
+#include "system_notification_channel.h"
 
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
   FlMethodChannel* native_theme_channel;
   FlMethodChannel* linux_renderer_channel;
+  FlMethodChannel* system_notification_channel;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
@@ -435,6 +437,8 @@ static void my_application_activate(GApplication* application) {
   gtk_widget_realize(GTK_WIDGET(view));
   setup_native_theme_channel(self, view);
   setup_linux_renderer_channel(self, view);
+  self->system_notification_channel =
+      system_notification_channel_new(view, application);
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
 
@@ -486,6 +490,7 @@ static void my_application_dispose(GObject* object) {
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
   g_clear_object(&self->native_theme_channel);
   g_clear_object(&self->linux_renderer_channel);
+  g_clear_object(&self->system_notification_channel);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }
 

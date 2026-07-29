@@ -42,16 +42,19 @@ class UpdateBatchNotificationPolicy {
       _ => l10n.updateBatchFinishedTitle,
     };
 
-    final resultSummary = l10n.updateBatchResultSummary(
-      successCount,
-      failedCount,
-      cancelledCount,
-      interruptedCount,
-    );
     final updatedApps = _formatUpdatedApps(summary.successfulTargets, l10n);
-    final body = updatedApps == null
-        ? resultSummary
-        : '$resultSummary\n$updatedApps';
+    final body = successCount == summary.totalCount && updatedApps != null
+        ? updatedApps
+        : [
+            _formatResultSummary(
+              successCount: successCount,
+              failedCount: failedCount,
+              cancelledCount: cancelledCount,
+              interruptedCount: interruptedCount,
+              l10n: l10n,
+            ),
+            if (updatedApps != null) updatedApps,
+          ].join('\n');
 
     return SystemNotificationMessage(
       id: 'update-batch-${batch.id}',
@@ -87,6 +90,26 @@ class UpdateBatchNotificationPolicy {
       return l10n.updateBatchUpdatedAppsOverflow(visibleNames, remainingCount);
     }
     return l10n.updateBatchUpdatedApps(visibleNames);
+  }
+
+  /// 只展示非零结果分类，降低部分失败通知的阅读噪声。
+  String _formatResultSummary({
+    required int successCount,
+    required int failedCount,
+    required int cancelledCount,
+    required int interruptedCount,
+    required AppLocalizations l10n,
+  }) {
+    final segments = <String>[
+      if (successCount > 0) l10n.updateBatchSucceededCount(successCount),
+      if (failedCount > 0) l10n.updateBatchFailedCount(failedCount),
+      if (cancelledCount > 0) l10n.updateBatchCancelledCount(cancelledCount),
+      if (interruptedCount > 0)
+        l10n.updateBatchInterruptedCount(interruptedCount),
+    ];
+    return l10n.updateBatchResultSummary(
+      segments.join(l10n.updateBatchResultSeparator),
+    );
   }
 
   /// 按 Unicode code point 裁剪，避免在 UTF-16 surrogate pair 中间截断。

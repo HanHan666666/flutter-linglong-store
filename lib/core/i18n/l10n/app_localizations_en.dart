@@ -330,13 +330,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateBatchNoSuccessTitle => 'Application updates incomplete';
 
   @override
-  String updateBatchResultSummary(
-    int successCount,
-    int failedCount,
-    int cancelledCount,
-    int interruptedCount,
-  ) {
-    return 'Result: $successCount succeeded, $failedCount failed, $cancelledCount cancelled, $interruptedCount interrupted';
+  String updateBatchResultSummary(String summary) {
+    return 'Result: $summary';
+  }
+
+  @override
+  String get updateBatchResultSeparator => ', ';
+
+  @override
+  String updateBatchSucceededCount(int count) {
+    return '$count succeeded';
+  }
+
+  @override
+  String updateBatchFailedCount(int count) {
+    return '$count failed';
+  }
+
+  @override
+  String updateBatchCancelledCount(int count) {
+    return '$count cancelled';
+  }
+
+  @override
+  String updateBatchInterruptedCount(int count) {
+    return '$count interrupted';
   }
 
   @override

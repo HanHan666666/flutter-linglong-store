@@ -139,19 +139,43 @@
   },
   "updateBatchFinishedTitle": "Batch update finished",
   "updateBatchNoSuccessTitle": "Application updates incomplete",
-  "updateBatchResultSummary": "Result: {successCount} succeeded, {failedCount} failed, {cancelledCount} cancelled, {interruptedCount} interrupted",
+  "updateBatchResultSummary": "Result: {summary}",
   "@updateBatchResultSummary": {
     "placeholders": {
-      "successCount": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchResultSeparator": ", ",
+  "updateBatchSucceededCount": "{count} succeeded",
+  "@updateBatchSucceededCount": {
+    "placeholders": {
+      "count": {
         "type": "int"
-      },
-      "failedCount": {
+      }
+    }
+  },
+  "updateBatchFailedCount": "{count} failed",
+  "@updateBatchFailedCount": {
+    "placeholders": {
+      "count": {
         "type": "int"
-      },
-      "cancelledCount": {
+      }
+    }
+  },
+  "updateBatchCancelledCount": "{count} cancelled",
+  "@updateBatchCancelledCount": {
+    "placeholders": {
+      "count": {
         "type": "int"
-      },
-      "interruptedCount": {
+      }
+    }
+  },
+  "updateBatchInterruptedCount": "{count} interrupted",
+  "@updateBatchInterruptedCount": {
+    "placeholders": {
+      "count": {
         "type": "int"
       }
     }

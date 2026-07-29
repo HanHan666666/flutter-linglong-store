@@ -322,13 +322,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get updateBatchNoSuccessTitle => '应用更新未完成';
 
   @override
-  String updateBatchResultSummary(
-    int successCount,
-    int failedCount,
-    int cancelledCount,
-    int interruptedCount,
-  ) {
-    return '结果：成功 $successCount，失败 $failedCount，取消 $cancelledCount，中断 $interruptedCount';
+  String updateBatchResultSummary(String summary) {
+    return '结果：$summary';
+  }
+
+  @override
+  String get updateBatchResultSeparator => '，';
+
+  @override
+  String updateBatchSucceededCount(int count) {
+    return '成功 $count';
+  }
+
+  @override
+  String updateBatchFailedCount(int count) {
+    return '失败 $count';
+  }
+
+  @override
+  String updateBatchCancelledCount(int count) {
+    return '取消 $count';
+  }
+
+  @override
+  String updateBatchInterruptedCount(int count) {
+    return '中断 $count';
   }
 
   @override

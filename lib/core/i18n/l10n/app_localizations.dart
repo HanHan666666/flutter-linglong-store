@@ -707,13 +707,38 @@ abstract class AppLocalizations {
   /// No description provided for @updateBatchResultSummary.
   ///
   /// In zh, this message translates to:
-  /// **'结果：成功 {successCount}，失败 {failedCount}，取消 {cancelledCount}，中断 {interruptedCount}'**
-  String updateBatchResultSummary(
-    int successCount,
-    int failedCount,
-    int cancelledCount,
-    int interruptedCount,
-  );
+  /// **'结果：{summary}'**
+  String updateBatchResultSummary(String summary);
+
+  /// No description provided for @updateBatchResultSeparator.
+  ///
+  /// In zh, this message translates to:
+  /// **'，'**
+  String get updateBatchResultSeparator;
+
+  /// No description provided for @updateBatchSucceededCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'成功 {count}'**
+  String updateBatchSucceededCount(int count);
+
+  /// No description provided for @updateBatchFailedCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'失败 {count}'**
+  String updateBatchFailedCount(int count);
+
+  /// No description provided for @updateBatchCancelledCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消 {count}'**
+  String updateBatchCancelledCount(int count);
+
+  /// No description provided for @updateBatchInterruptedCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'中断 {count}'**
+  String updateBatchInterruptedCount(int count);
 
   /// No description provided for @updateBatchAppNameSeparator.
   ///

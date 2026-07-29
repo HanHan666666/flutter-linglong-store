@@ -139,19 +139,43 @@
   },
   "updateBatchFinishedTitle": "批量更新已结束",
   "updateBatchNoSuccessTitle": "应用更新未完成",
-  "updateBatchResultSummary": "结果：成功 {successCount}，失败 {failedCount}，取消 {cancelledCount}，中断 {interruptedCount}",
+  "updateBatchResultSummary": "结果：{summary}",
   "@updateBatchResultSummary": {
     "placeholders": {
-      "successCount": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchResultSeparator": "，",
+  "updateBatchSucceededCount": "成功 {count}",
+  "@updateBatchSucceededCount": {
+    "placeholders": {
+      "count": {
         "type": "int"
-      },
-      "failedCount": {
+      }
+    }
+  },
+  "updateBatchFailedCount": "失败 {count}",
+  "@updateBatchFailedCount": {
+    "placeholders": {
+      "count": {
         "type": "int"
-      },
-      "cancelledCount": {
+      }
+    }
+  },
+  "updateBatchCancelledCount": "取消 {count}",
+  "@updateBatchCancelledCount": {
+    "placeholders": {
+      "count": {
         "type": "int"
-      },
-      "interruptedCount": {
+      }
+    }
+  },
+  "updateBatchInterruptedCount": "中断 {count}",
+  "@updateBatchInterruptedCount": {
+    "placeholders": {
+      "count": {
         "type": "int"
       }
     }

@@ -32,6 +32,7 @@ create_fixture() {
   local data_home="$root/data"
   local config_home="$root/config"
   local cache_home="$root/cache"
+  local state_home="$root/state"
   local runtime_home="$root/runtime"
   local documents_home="$root/documents"
   local temp_home="$root/tmp"
@@ -45,6 +46,7 @@ create_fixture() {
     "$legacy_data/history" \
     "$config_home/com.dongpl.linglong-store.v2/startup" \
     "$cache_home/com.dongpl.linglong-store.v2" \
+    "$state_home/com.dongpl.linglong-store.v2/operations" \
     "$runtime_home/com.dongpl.linglong-store.v2" \
     "$documents_home" \
     "$temp_home/libCachedImageData" \
@@ -61,6 +63,8 @@ create_fixture() {
     > "$config_home/com.dongpl.linglong-store.v2/startup/renderer_preferences.ini"
   printf 'cache\n' > "$cache_home/com.dongpl.linglong-store.v2/cache.hive"
   printf 'lock\n' > "$cache_home/com.dongpl.linglong-store.v2/cache.lock"
+  printf '{"schemaVersion":2}\n' \
+    > "$state_home/com.dongpl.linglong-store.v2/operations/queue-v2.json"
   printf 'lock\n' > "$runtime_home/com.dongpl.linglong-store.v2/linglong-store.lock"
   printf 'socket\n' > "$runtime_home/com.dongpl.linglong-store.v2/linglong-store.sock"
   printf 'legacy cache\n' > "$documents_home/cache.hive"
@@ -98,6 +102,7 @@ run_target() {
     XDG_DATA_HOME="$root/data" \
     XDG_CONFIG_HOME="$root/config" \
     XDG_CACHE_HOME="$root/cache" \
+    XDG_STATE_HOME="$root/state" \
     XDG_RUNTIME_DIR="$root/runtime" \
     XDG_DOCUMENTS_DIR="$root/documents" \
     TMPDIR="$root/tmp" \
@@ -133,6 +138,7 @@ test_dry_run() {
   assert_exists "$root/data/com.dongpl.linglong-store.v2"
   assert_exists "$root/config/com.dongpl.linglong-store.v2"
   assert_exists "$root/cache/com.dongpl.linglong-store.v2"
+  assert_exists "$root/state/com.dongpl.linglong-store.v2"
   assert_exists "$root/runtime/com.dongpl.linglong-store.v2"
   assert_exists "$root/tmp/libCachedImageData/owned.bin"
 }
@@ -148,6 +154,7 @@ test_apply() {
   assert_missing "$root/data/org.linglong-store.LinyapsManager"
   assert_missing "$root/config/com.dongpl.linglong-store.v2"
   assert_missing "$root/cache/com.dongpl.linglong-store.v2"
+  assert_missing "$root/state/com.dongpl.linglong-store.v2"
   assert_missing "$root/runtime/com.dongpl.linglong-store.v2"
   assert_missing "$root/documents/cache.hive"
   assert_missing "$root/documents/cache.lock"
@@ -178,6 +185,7 @@ test_keep_preferences() {
   assert_missing "$root/data/org.linglong-store.LinyapsManager/history"
   assert_missing "$root/config/com.dongpl.linglong-store.v2"
   assert_missing "$root/cache/com.dongpl.linglong-store.v2"
+  assert_missing "$root/state/com.dongpl.linglong-store.v2"
   assert_missing "$root/runtime/com.dongpl.linglong-store.v2"
 }
 
@@ -192,17 +200,20 @@ test_running_guard() {
 
   assert_exists "$root/data/com.dongpl.linglong-store.v2"
   assert_exists "$root/cache/com.dongpl.linglong-store.v2"
+  assert_exists "$root/state/com.dongpl.linglong-store.v2"
 }
 
 # 验证 HOME 缺失时不会把历史 Documents 路径错误解析为系统根目录。
 test_missing_home_does_not_target_root_documents() {
   local root="$TEST_ROOT/missing-home"
-  mkdir -p "$root/data" "$root/config" "$root/cache" "$root/runtime" "$root/tmp"
+  mkdir -p \
+    "$root/data" "$root/config" "$root/cache" "$root/state" "$root/runtime" "$root/tmp"
 
   env -u HOME -u XDG_DOCUMENTS_DIR \
     XDG_DATA_HOME="$root/data" \
     XDG_CONFIG_HOME="$root/config" \
     XDG_CACHE_HOME="$root/cache" \
+    XDG_STATE_HOME="$root/state" \
     XDG_RUNTIME_DIR="$root/runtime" \
     TMPDIR="$root/tmp" \
     PATH="$FAKE_BIN:$PATH" \
@@ -218,13 +229,15 @@ test_missing_home_does_not_target_root_documents() {
 # 验证任一清理根目录指向 / 时立即拒绝，避免固定文件名落到系统根目录。
 test_root_directory_is_rejected() {
   local root="$TEST_ROOT/root-directory"
-  mkdir -p "$root/data" "$root/config" "$root/cache" "$root/runtime" "$root/tmp"
+  mkdir -p \
+    "$root/data" "$root/config" "$root/cache" "$root/state" "$root/runtime" "$root/tmp"
 
   if env \
     HOME="$root/home" \
     XDG_DATA_HOME="$root/data" \
     XDG_CONFIG_HOME="$root/config" \
     XDG_CACHE_HOME="$root/cache" \
+    XDG_STATE_HOME="$root/state" \
     XDG_RUNTIME_DIR="$root/runtime" \
     XDG_DOCUMENTS_DIR=/ \
     TMPDIR="$root/tmp" \

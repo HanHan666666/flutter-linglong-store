@@ -1,20 +1,17 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../../application/providers/app_collection_sync_provider.dart';
+import '../../application/providers/install_queue_provider.dart'
+    show hasActiveInstallTasksProvider;
+import '../../application/providers/update_apps_provider.dart'
+    show updatableAppsCountProvider;
 import '../../core/config/shell_branch_visibility.dart';
 import '../../core/config/shell_primary_route.dart';
 import '../../core/config/theme.dart';
-import '../../core/di/providers.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
-import '../../core/logging/app_logger.dart';
 import '../../core/platform/window_service.dart';
 import '../../domain/models/app_detail.dart';
-import '../../domain/models/install_progress.dart';
-import '../../domain/models/install_task.dart';
 import '../../presentation/pages/all_apps/all_apps_page.dart';
 import '../../presentation/pages/my_apps/my_apps_page.dart';
 import '../../presentation/pages/ranking/ranking_page.dart';
@@ -65,41 +62,11 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     ShellPrimaryRoute.recommend,
   };
 
-  ProviderSubscription<InstallQueueState>? _installQueueSubscription;
-
   @override
   void initState() {
     super.initState();
     windowManager.addListener(this);
     _checkMaximized();
-    _installQueueSubscription = ref.listenManual<InstallQueueState>(
-      installQueueProvider,
-      (previous, next) {
-        if (previous?.currentTask != null && next.currentTask == null) {
-          final completedTask = next.history.firstOrNull;
-          if (completedTask?.status == InstallStatus.success) {
-            // 乐观移除：立即从待更新列表中移除已完成的应用，
-            // 不等异步刷新，避免 UI 显示过时条目。
-            ref
-                .read(updateAppsProvider.notifier)
-                .removeApp(completedTask!.appId);
-
-            unawaited(
-              ref
-                  .read(appCollectionSyncServiceProvider)
-                  .syncAfterSuccessfulOperation(),
-            );
-
-            // 如果开启了『安装后自动打开』，且是安装任务（不是更新），自动启动应用
-            final prefs = ref.read(globalAppProvider).userPreferences;
-            if (prefs.autoRunAfterInstall &&
-                completedTask.kind == InstallTaskKind.install) {
-              _tryRunApp(completedTask.appId);
-            }
-          }
-        }
-      },
-    );
   }
 
   @override
@@ -136,7 +103,6 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
 
   @override
   void dispose() {
-    _installQueueSubscription?.close();
     windowManager.removeListener(this);
     super.dispose();
   }
@@ -164,15 +130,6 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
       setState(() {
         _isMaximized = isMaximized;
       });
-    }
-  }
-
-  /// 安装成功后自动启动应用（autoRunAfterInstall=true 时触发）
-  Future<void> _tryRunApp(String appId) async {
-    try {
-      await ref.read(linglongCliRepositoryProvider).runApp(appId);
-    } catch (e) {
-      AppLogger.warning('自动启动应用失败: $appId, 错误: $e');
     }
   }
 

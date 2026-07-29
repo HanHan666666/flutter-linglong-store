@@ -305,6 +305,46 @@ class AppLocalizationsZh extends AppLocalizations {
   String get startupCheckUpdateDesc => '每次启动时检测是否有新版本可用';
 
   @override
+  String get systemNotifications => '系统通知';
+
+  @override
+  String get systemNotificationsDescription => '一键更新完成后，在桌面通知中显示更新结果';
+
+  @override
+  String updateBatchAllSucceededTitle(int count) {
+    return '$count 个应用已更新';
+  }
+
+  @override
+  String get updateBatchFinishedTitle => '批量更新已结束';
+
+  @override
+  String get updateBatchNoSuccessTitle => '应用更新未完成';
+
+  @override
+  String updateBatchResultSummary(
+    int successCount,
+    int failedCount,
+    int cancelledCount,
+    int interruptedCount,
+  ) {
+    return '结果：成功 $successCount，失败 $failedCount，取消 $cancelledCount，中断 $interruptedCount';
+  }
+
+  @override
+  String get updateBatchAppNameSeparator => '、';
+
+  @override
+  String updateBatchUpdatedApps(String names) {
+    return '已更新：$names';
+  }
+
+  @override
+  String updateBatchUpdatedAppsOverflow(String names, int remainingCount) {
+    return '已更新：$names 等 $remainingCount 个应用';
+  }
+
+  @override
   String get softwareRendering => '软件渲染';
 
   @override

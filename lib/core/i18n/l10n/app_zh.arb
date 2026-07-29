@@ -127,6 +127,55 @@
   "cacheSize": "缓存大小",
   "startupCheckUpdate": "启动时检查商店版本更新",
   "startupCheckUpdateDesc": "每次启动时检测是否有新版本可用",
+  "systemNotifications": "系统通知",
+  "systemNotificationsDescription": "一键更新完成后，在桌面通知中显示更新结果",
+  "updateBatchAllSucceededTitle": "{count} 个应用已更新",
+  "@updateBatchAllSucceededTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchFinishedTitle": "批量更新已结束",
+  "updateBatchNoSuccessTitle": "应用更新未完成",
+  "updateBatchResultSummary": "结果：成功 {successCount}，失败 {failedCount}，取消 {cancelledCount}，中断 {interruptedCount}",
+  "@updateBatchResultSummary": {
+    "placeholders": {
+      "successCount": {
+        "type": "int"
+      },
+      "failedCount": {
+        "type": "int"
+      },
+      "cancelledCount": {
+        "type": "int"
+      },
+      "interruptedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchAppNameSeparator": "、",
+  "updateBatchUpdatedApps": "已更新：{names}",
+  "@updateBatchUpdatedApps": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchUpdatedAppsOverflow": "已更新：{names} 等 {remainingCount} 个应用",
+  "@updateBatchUpdatedAppsOverflow": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "remainingCount": {
+        "type": "int"
+      }
+    }
+  },
   "softwareRendering": "软件渲染",
   "softwareRenderingEnabled": "软件渲染",
   "hardwareRenderingEnabled": "硬件渲染",

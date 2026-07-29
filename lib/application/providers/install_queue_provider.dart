@@ -10,8 +10,7 @@ import '../../core/storage/app_xdg_paths.dart';
 import '../../data/repositories/file_app_operation_journal_repository.dart';
 import '../../core/i18n/install_messages.dart';
 import '../../core/logging/app_logger.dart';
-import '../../core/di/providers.dart'
-    show analyticsRepositoryProvider, currentLocaleProvider;
+import '../../core/di/providers.dart' show currentLocaleProvider;
 import 'linglong_env_provider.dart';
 import '../../domain/models/app_operation_batch.dart';
 import '../../domain/models/app_operation_target_snapshot.dart';
@@ -709,15 +708,6 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
     _commitTerminalTask(completedTask);
     AppLogger.info('Task completed successfully: $appId');
 
-    // 上报安装/更新统计记录（fire-and-forget）
-    ref
-        .read(analyticsRepositoryProvider)
-        .reportInstall(
-          completedTask.appId,
-          completedTask.version ?? 'unknown',
-          appName: completedTask.appName,
-        );
-
     // 处理下一个任务
     Future.delayed(const Duration(milliseconds: 100), () => startProcessing());
   }
@@ -1072,6 +1062,66 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       );
     }
     AppLogger.info('Queue cleared');
+  }
+
+  /// 记录生命周期协调器对某条 Outbox 事件的消费尝试。
+  ///
+  /// 尝试次数和领域状态写入同一 Journal，应用在副作用执行期间退出后可以
+  /// 继续消费；通知使用稳定 ID，重复提交时由系统尽量替换旧通知。
+  void markEffectAttempt(String effectId) {
+    final effectIndex = state.outbox.indexWhere(
+      (effect) => effect.id == effectId,
+    );
+    if (effectIndex < 0) {
+      return;
+    }
+
+    final outbox = [...state.outbox];
+    final effect = outbox[effectIndex];
+    outbox[effectIndex] = effect.copyWith(
+      attemptCount: effect.attemptCount + 1,
+      lastAttemptAt: _nowTimestamp(),
+    );
+    _commitState(state.copyWith(outbox: outbox));
+  }
+
+  /// 原子确认 Outbox 事件，并可同时写入批次通知结果。
+  ///
+  /// 通知状态只允许随对应批次完成事件确认，避免事件已删除但状态仍为 pending
+  /// 的不一致快照。未知事件按幂等确认处理，不修改当前状态。
+  void acknowledgeEffect(
+    String effectId, {
+    AppOperationNotificationState? notificationState,
+  }) {
+    final effect = state.outbox
+        .where((item) => item.id == effectId)
+        .firstOrNull;
+    if (effect == null) {
+      return;
+    }
+
+    var batches = state.batches;
+    if (notificationState != null) {
+      if (effect.type != AppOperationEffectType.updateBatchCompleted) {
+        throw StateError('只有批次完成事件可以写入通知状态');
+      }
+      final batchIndex = batches.indexWhere(
+        (batch) => batch.id == effect.aggregateId,
+      );
+      if (batchIndex >= 0) {
+        batches = [...batches];
+        batches[batchIndex] = batches[batchIndex].copyWith(
+          notificationState: notificationState,
+        );
+      }
+    }
+
+    _commitState(
+      state.copyWith(
+        batches: batches,
+        outbox: state.outbox.where((item) => item.id != effectId).toList(),
+      ),
+    );
   }
 
   // -----------------------------------------------------------------------

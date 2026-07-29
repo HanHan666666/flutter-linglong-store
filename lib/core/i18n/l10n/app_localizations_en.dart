@@ -312,6 +312,47 @@ class AppLocalizationsEn extends AppLocalizations {
       'Check if a new version is available on each startup';
 
   @override
+  String get systemNotifications => 'System notifications';
+
+  @override
+  String get systemNotificationsDescription =>
+      'Show the update result in a desktop notification after Update All finishes';
+
+  @override
+  String updateBatchAllSucceededTitle(int count) {
+    return '$count applications updated';
+  }
+
+  @override
+  String get updateBatchFinishedTitle => 'Batch update finished';
+
+  @override
+  String get updateBatchNoSuccessTitle => 'Application updates incomplete';
+
+  @override
+  String updateBatchResultSummary(
+    int successCount,
+    int failedCount,
+    int cancelledCount,
+    int interruptedCount,
+  ) {
+    return 'Result: $successCount succeeded, $failedCount failed, $cancelledCount cancelled, $interruptedCount interrupted';
+  }
+
+  @override
+  String get updateBatchAppNameSeparator => ', ';
+
+  @override
+  String updateBatchUpdatedApps(String names) {
+    return 'Updated: $names';
+  }
+
+  @override
+  String updateBatchUpdatedAppsOverflow(String names, int remainingCount) {
+    return 'Updated: $names, and $remainingCount more';
+  }
+
+  @override
   String get softwareRendering => 'Software rendering';
 
   @override

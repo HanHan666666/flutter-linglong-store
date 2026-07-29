@@ -153,6 +153,7 @@ Future<void> _waitForOutboxToDrain(ProviderContainer container) async {
 
 /// 记录平台网关实际接收的消息。
 class _RecordingNotificationGateway implements SystemNotificationGateway {
+  /// 已经提交到伪平台边界的消息。
   final List<SystemNotificationMessage> messages = [];
 
   @override
@@ -168,8 +169,10 @@ class _RecordingNotificationGateway implements SystemNotificationGateway {
 
 /// 提供固定用户偏好的全局状态。
 class _TestGlobalApp extends GlobalApp {
+  /// 使用固定状态创建测试 Notifier。
   _TestGlobalApp(this.initialState);
 
+  /// 测试需要的初始全局状态。
   final GlobalAppState initialState;
 
   @override

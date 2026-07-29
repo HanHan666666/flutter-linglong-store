@@ -1,7 +1,5 @@
 #include "system_notification_channel.h"
 
-#include <string>
-
 namespace {
 
 constexpr char kChannelName[] =
@@ -59,11 +57,13 @@ FlMethodResponse* submit_notification(GApplication* application,
                                       FlValue* arguments) {
   const gchar* id = read_required_string(arguments, "id");
   const gchar* title = read_required_string(arguments, "title");
+  const gchar* priority = read_required_string(arguments, "priority");
   const gchar* body = nullptr;
   const gchar* category = nullptr;
   const gchar* icon_name = nullptr;
 
   if (id == nullptr || title == nullptr ||
+      g_strcmp0(priority, "normal") != 0 ||
       !read_optional_string(arguments, "body", &body) ||
       !read_optional_string(arguments, "category", &category) ||
       !read_optional_string(arguments, "iconName", &icon_name)) {
@@ -88,6 +88,9 @@ FlMethodResponse* submit_notification(GApplication* application,
   if (category != nullptr && *category != '\0') {
     g_notification_set_category(notification, category);
   }
+#else
+  // 旧 GLib 没有 category API，但其余通知能力仍可正常使用。
+  (void)category;
 #endif
 
   g_application_send_notification(application, id, notification);

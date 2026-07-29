@@ -222,7 +222,12 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
           // 商店选项
           _buildSectionTitle(context, l10n.storeOptions),
-          _buildStoreOptionsSection(context, state, rendererRuntime),
+          _buildStoreOptionsSection(
+            context,
+            state,
+            globalState.userPreferences,
+            rendererRuntime,
+          ),
 
           const SizedBox(height: 24),
 
@@ -594,10 +599,11 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
   /// 构建商店选项部分
   ///
-  /// 包含两个行为开关和一个清理废弃基础服务的操作按钮。
+  /// 收口渲染方式、启动检查、系统通知和本地环境维护等商店级行为。
   Widget _buildStoreOptionsSection(
     BuildContext context,
     SettingState state,
+    UserPreferences userPreferences,
     AsyncValue<LinuxRendererRuntimeState> rendererRuntime,
   ) {
     final l10n = AppLocalizations.of(context)!;
@@ -632,6 +638,21 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               ref
                   .read(settingProvider.notifier)
                   .setCheckVersionOnStartup(value);
+            },
+          ),
+          _buildDivider(context),
+          // 该偏好只控制商店主动发出的完成通知；桌面环境仍保留最终展示权。
+          SwitchListTile(
+            secondary: const ExcludeSemantics(
+              child: Icon(Icons.notifications_outlined),
+            ),
+            title: Text(l10n.systemNotifications),
+            subtitle: Text(l10n.systemNotificationsDescription),
+            value: userPreferences.enableNotifications,
+            onChanged: (value) {
+              ref
+                  .read(globalAppProvider.notifier)
+                  .setEnableNotifications(value);
             },
           ),
           _buildDivider(context),

@@ -1,6 +1,6 @@
 # 一键更新批次与跨桌面系统通知设计
 
-> 状态：已确认，待实施  
+> 状态：已实施
 > 日期：2026-07-29  
 > 适用范围：Linux 桌面版玲珑应用商店社区版  
 > 相关规范：
@@ -36,7 +36,7 @@
 6. 应用重启后能够恢复任务、批次和待投递事件，并避免把中断更新误判为成功。
 7. 把安装/更新完成后的全局副作用从 Widget 中移到 Application 层。
 8. 本地持久状态遵循 XDG Base Directory Specification。
-9. 所有新增业务规则均可通过无桌面环境的单元测试验证，平台边界另行覆盖通道和真实桌面测试。
+9. 对批次恢复、Outbox 幂等和通知偏好等高风险业务边界提供自动验证；平台边界通过 runner 编译和真实桌面验收。
 
 ## 3. 非目标
 
@@ -139,7 +139,10 @@ install
 update
 ```
 
-替代 `InstallTaskKind`。安装和更新继续共用串行执行器，但命令选择、目标元数据和完成后的副作用必须显式区分。
+领域语义统一称为 `AppOperationKind`。当前代码为兼容既有 Provider、Freezed
+序列化和下载中心 API，持久化类型名继续使用 `InstallTaskKind`；它已经同时
+表达 install/update，禁止再把该名称理解为“只支持安装”。只有在单独执行完整
+API 迁移时才做机械重命名，避免本功能同时维护两套任务模型。
 
 ### 6.2 AppOperationStatus
 
@@ -154,6 +157,8 @@ interrupted
 ```
 
 `interrupted` 表示应用或进程异常退出后无法证明任务成功。它是终态，但不得归类为普通 ll-cli 执行失败。
+
+代码中的兼容类型名为 `InstallStatus`，其业务语义与本节完全一致。
 
 ### 6.3 AppOperationTargetSnapshot
 
@@ -193,6 +198,10 @@ createdAt/startedAt/finishedAt
 ```
 
 `batchId` 可空。单个安装、单个更新和人工重试默认没有批次；一键更新任务必须携带同一个 batchId。
+
+代码中的持久化类型名暂时保留为 `InstallTask`。本功能直接扩展该唯一模型，
+没有新建平行 `AppOperationTask` 数据结构，避免队列、下载中心和恢复流程之间
+出现双向转换与状态漂移。
 
 ### 6.5 AppOperationBatch
 
@@ -249,7 +258,6 @@ finishedAt
 id
 type
 aggregateId
-payload
 createdAt
 attemptCount
 lastAttemptAt?
@@ -380,7 +388,7 @@ $XDG_STATE_HOME/com.dongpl.linglong-store.v2/operations/queue-v2.json
 
 ### 9.3 迁移
 
-通过现有 `app_data_migrations` 增加版本化迁移：
+由 `InstallQueue` 在首次读取新 Journal 时执行一次惰性迁移：
 
 1. 读取旧 SharedPreferences 的 current task 和 queue。
 2. 把旧任务转换为 `AppOperationTask`。
@@ -556,7 +564,7 @@ Nightly 与 stable 包当前互相冲突并复用同一运行时 ID，因此主 
 
 ```text
 系统通知
-一键更新任务结束后通知更新结果
+一键更新完成后，在桌面通知中显示更新结果
 ```
 
 应用开关关闭时不调用平台 API。系统层面的勿扰模式、应用通知权限和显示策略继续由桌面环境控制。
@@ -568,8 +576,8 @@ Nightly 与 stable 包当前互相冲突并复用同一运行时 ID，因此主 
 全部成功：
 
 ```text
-标题：已更新 3 个应用
-正文：应用 A、应用 B、应用 C
+标题：3 个应用已更新
+正文：已更新：应用 A、应用 B、应用 C
 ```
 
 部分成功：
@@ -648,79 +656,24 @@ Nightly 与 stable 包当前互相冲突并复用同一运行时 ID，因此主 
 
 ## 17. 测试策略
 
-### 17.1 Domain 单元测试
+测试服务于实际故障风险，不以新增文件数或覆盖率为目标。本功能保留以下关键自动验证：
 
-- 批次只跟踪自己的 taskId。
-- 所有任务终态时只产生一次完成事件。
-- unrelated task 不影响批次。
-- success/failed/cancelled/interrupted 统计正确。
-- 空批次不会创建。
-- 名称顺序稳定。
-- 长列表格式化和 Unicode 截断安全。
-- 全成功、部分成功、全失败文案模型正确。
+1. 批次只跟踪自己的任务，并且只生成一次完成事件。
+2. XDG State 路径、Journal round-trip、串行原子写入和损坏副本保留。
+3. 重启后必须按完整实例和目标版本核验，无法证明成功时标记 `interrupted`。
+4. 生命周期协调器只投递一次批次通知；关闭通知偏好时消费事件但不调用平台网关。
+5. desktop ID、旧 og handler、Deb/RPM/AppImage/AUR 渲染结果和清理脚本保持一致。
+6. Linux runner 必须实际通过 CMake 编译，防止 MethodChannel 或 GLib API 接入错误。
 
-### 17.2 Application 单元测试
+纯 getter、框架生成代码、简单设置控件和 GIO 本身已经保证的行为不追加陪跑单测。平台是否真正显示通知仍需真实图形会话验收，不能由 mock 宣称成功。
 
-- `UpdateAllController` 过滤已有活跃任务。
-- 入队时保留 installedVersion、expectedVersion 和本机身份。
-- 生命周期协调器消费 task success effect 后执行同步。
-- 更新成功不触发自动运行。
-- install 成功且偏好开启时才自动运行。
-- 通知开关关闭时不调用 gateway。
-- gateway 失败不改变批次和任务结果。
-- 重复启动协调器不会并发消费同一个 effect。
-
-### 17.3 持久化与迁移测试
-
-- `$XDG_STATE_HOME` 和 HOME 回退路径。
-- 相对 XDG 路径视为无效。
-- 快照 round-trip。
-- 临时文件和原子替换。
-- 损坏 JSON 保留诊断副本并安全回退。
-- 旧 SharedPreferences 队列迁移。
-- 迁移失败不删除旧 key。
-- `clear-local-data` smoke test 覆盖 state 目录。
-
-### 17.4 恢复测试
-
-- 更新目标版本已安装时恢复成功。
-- 只有 appId 相同但版本未变化时标记中断。
-- 多 arch/module 实例精确匹配。
-- 无 expectedVersion 的旧 update 任务不得成功。
-- 实际版本异常时标记中断并保留诊断信息。
-
-### 17.5 平台通道测试
-
-Dart：
-
-- 正确 method 名和 payload。
-- MissingPlugin、PlatformException、超时映射。
-- 非 Linux 返回 unsupported。
-
-C++：
-
-- 参数校验。
-- 空 title 拒绝。
-- 可选 body/icon/category 处理。
-- 方法不存在返回 not implemented。
-- runner 编译门禁。
-
-若 Linux runner 现有工程不适合立即引入 GoogleTest，必须至少把参数解析和通知构建拆成独立函数，并通过 CMake 编译、Dart 通道测试和真实会话集成测试覆盖；不得把不可测试逻辑继续堆入 channel callback。
-
-### 17.6 Widget 测试
-
-- 设置页显示系统通知开关。
-- 开关读取并写入现有用户偏好。
-- 中英文文案完整。
-- 交互满足现有 Semantics 和最小交互尺寸规范。
-
-### 17.7 打包与真实桌面验证
+### 17.1 自动验证
 
 自动验证：
 
 ```text
 flutter analyze
-flutter test
+/home/han/flutter/bin/flutter test <本功能关键测试>
 flutter build linux --release
 build/scripts/release-cli-smoke-test.sh
 build/scripts/nightly-cli-smoke-test.sh
@@ -765,26 +718,24 @@ fix: 统一系统通知桌面身份
 ### 阶段三：操作领域与持久化
 
 ```text
-refactor: 统一应用操作任务模型
-feat: 增加应用操作批次与持久化
-fix: 精确恢复中断的更新任务
+refactor: 建立可恢复的一键更新批次
 ```
 
 ### 阶段四：生命周期副作用
 
 ```text
-refactor: 抽离应用操作生命周期协调器
+feat: 完成一键更新结果通知编排
 ```
 
 ### 阶段五：系统通知
 
 ```text
-feat: 接入 Linux 跨桌面系统通知
-feat: 增加一键更新完成通知
-feat: 增加系统通知偏好设置
+feat: 建立跨桌面系统通知通道
+feat: 增加系统通知设置入口
+fix: 精简批次通知结果文案
 ```
 
-每个功能点必须先补失败测试，再实现，再完成针对性验证和 Conventional Commit。禁止把文档、领域重构、平台通道和设置 UI 混成一个不可审查的大提交。
+每个功能点完成针对性验证后使用 Conventional Commit 独立提交。测试优先覆盖状态恢复、幂等消费和平台编译等真实故障边界，不为形式覆盖增加低价值用例。
 
 ## 19. 验收标准
 
@@ -798,8 +749,8 @@ feat: 增加系统通知偏好设置
 8. 业务代码不调用 `notify-send`、桌面私有 API 或发行版判断。
 9. 操作状态写入 `$XDG_STATE_HOME`，旧队列可安全迁移。
 10. canonical desktop ID 与 GApplication ID 一致，旧 og handler 有过渡兼容。
-11. 新增模型、控制器、持久化、恢复、通知策略、平台通道和设置 UI 都有对应测试。
-12. 静态分析、全量测试、Linux release 构建和打包元数据验证通过。
+11. 状态恢复、Outbox 幂等、通知偏好和 runner 编译等关键风险有对应验证。
+12. 静态分析、关键测试、Linux 构建和打包元数据验证通过。
 
 ## 20. 后续演进边界
 

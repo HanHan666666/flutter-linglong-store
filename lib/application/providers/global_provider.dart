@@ -312,6 +312,9 @@ class GlobalApp extends Notifier<GlobalAppState> {
   /// 设置英文
   Future<void> setEnglish() => setLocale(const Locale('en'));
 
+  /// 设置西班牙语
+  Future<void> setSpanish() => setLocale(const Locale('es'));
+
   // ==================== 主题设置 ====================
 
   /// 设置主题模式

@@ -277,6 +277,13 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             label: 'English',
             isSelected: state.locale.languageCode == 'en',
           ),
+          _buildDivider(context),
+          _buildLanguageTile(
+            context,
+            locale: const Locale('es'),
+            label: 'Español',
+            isSelected: state.locale.languageCode == 'es',
+          ),
         ],
       ),
     );

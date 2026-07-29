@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'app_operation_target_snapshot.dart';
 import 'install_progress.dart';
 
 part 'install_task.freezed.dart';
@@ -37,6 +38,15 @@ sealed class InstallTask with _$InstallTask {
 
     /// 队列任务类型
     @Default(InstallTaskKind.install) InstallTaskKind kind,
+
+    /// 所属批次 ID；单任务和人工重试不属于批次。
+    String? batchId,
+
+    /// 入队时冻结的完整目标身份。
+    ///
+    /// 旧版持久化任务可能为空，恢复时必须按中断处理，禁止仅凭 appId
+    /// 乐观判断更新已经成功。
+    AppOperationTargetSnapshot? target,
 
     /// 目标版本
     String? version,
@@ -99,7 +109,8 @@ extension InstallTaskX on InstallTask {
   bool get isCompleted =>
       status == InstallStatus.success ||
       status == InstallStatus.failed ||
-      status == InstallStatus.cancelled;
+      status == InstallStatus.cancelled ||
+      status == InstallStatus.interrupted;
 
   /// 是否失败
   bool get isFailed => status == InstallStatus.failed;

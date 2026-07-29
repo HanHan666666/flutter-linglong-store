@@ -769,7 +769,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           return InstallButtonState.notInstalled;
         case InstallStatus.failed:
         case InstallStatus.cancelled:
-          // 任务失败或取消后，检查是否已安装
+        case InstallStatus.interrupted:
+          // 任务失败、取消或中断后，重新依据本机事实决定可用操作。
           break;
       }
     }
@@ -1212,6 +1213,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       InstallStatus.success => l10n.open,
       InstallStatus.failed => l10n.install,
       InstallStatus.cancelled => l10n.install,
+      InstallStatus.interrupted => l10n.install,
     };
   }
 
@@ -1479,7 +1481,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       showAppSuccess(currentContext, '${app.name} 已卸载');
     }
   }
-
 
   /// 在主窗口内以灯箱形式预览截图
   Future<void> _showScreenshotPreview(

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/models/app_operation_target_snapshot.dart';
 import '../../domain/models/install_task.dart';
 import 'install_queue_provider.dart';
 
@@ -17,6 +18,7 @@ class EnqueueAppOperationParams {
     required this.appName,
     this.icon,
     this.version,
+    this.target,
     this.force = false,
   });
 
@@ -24,8 +26,12 @@ class EnqueueAppOperationParams {
   final String appId;
   final String appName;
   final String? icon;
+
   /// 仅 install + 显式版本指定时有效；update 时必须为 null。
   final String? version;
+
+  /// 用于精确恢复和批次通知的入队时目标快照。
+  final AppOperationTargetSnapshot? target;
   final bool force;
 }
 
@@ -43,12 +49,15 @@ class AppOperationQueueController {
       params.kind == InstallTaskKind.update ? params.version == null : true,
       '更新任务禁止携带 version 参数',
     );
-    return _ref.read(installQueueProvider.notifier).enqueueOperation(
+    return _ref
+        .read(installQueueProvider.notifier)
+        .enqueueOperation(
           kind: params.kind,
           appId: params.appId,
           appName: params.appName,
           icon: params.icon,
           version: params.version,
+          target: params.target,
           force: params.force,
         );
   }
@@ -57,26 +66,21 @@ class AppOperationQueueController {
   List<String> enqueueBatchOperations(
     List<EnqueueAppOperationParams> paramsList,
   ) {
-    final queueParams = paramsList
-        .map(
-          (params) {
-            assert(
-              params.kind == InstallTaskKind.update
-                  ? params.version == null
-                  : true,
-              '批量更新任务禁止携带 version 参数',
-            );
-            return EnqueueTaskParams(
-              kind: params.kind,
-              appId: params.appId,
-              appName: params.appName,
-              icon: params.icon,
-              version: params.version,
-              force: params.force,
-            );
-          },
-        )
-        .toList();
+    final queueParams = paramsList.map((params) {
+      assert(
+        params.kind == InstallTaskKind.update ? params.version == null : true,
+        '批量更新任务禁止携带 version 参数',
+      );
+      return EnqueueTaskParams(
+        kind: params.kind,
+        appId: params.appId,
+        appName: params.appName,
+        icon: params.icon,
+        version: params.version,
+        target: params.target,
+        force: params.force,
+      );
+    }).toList();
     return _ref
         .read(installQueueProvider.notifier)
         .enqueueBatchOperations(queueParams);

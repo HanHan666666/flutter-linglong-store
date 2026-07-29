@@ -486,12 +486,11 @@ class LaunchSequence extends _$LaunchSequence {
     try {
       final installQueue = ref.read(installQueueProvider.notifier);
 
-      // 获取已安装应用 ID 列表
+      // 恢复必须使用完整本机实例和版本，更新任务不能只凭 appId 判断成功。
       final installedApps = ref.read(installedAppsProvider).apps;
-      final installedIds = installedApps.map((app) => app.appId).toList();
 
       // 检查崩溃恢复
-      await installQueue.checkRecovery(installedIds);
+      await installQueue.checkRecovery(installedApps);
 
       // 获取待处理任务数量
       final pendingCount = ref.read(installQueueProvider).queue.length;

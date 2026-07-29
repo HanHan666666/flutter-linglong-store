@@ -1,20 +1,27 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/storage/app_xdg_paths.dart';
+import '../../data/repositories/file_app_operation_journal_repository.dart';
 import '../../core/i18n/install_messages.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/di/providers.dart'
     show analyticsRepositoryProvider, currentLocaleProvider;
 import 'linglong_env_provider.dart';
+import '../../domain/models/app_operation_batch.dart';
+import '../../domain/models/app_operation_target_snapshot.dart';
 import '../../domain/models/linux_distribution.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_queue_state.dart';
 import '../../domain/models/install_state_machine.dart';
 import '../../domain/models/install_task.dart';
+import '../../domain/models/installed_app.dart';
+import '../../domain/repositories/app_operation_journal_repository.dart';
 import '../../domain/repositories/linglong_cli_repository.dart';
 import '../../data/repositories/linglong_cli_repository_impl.dart';
 
@@ -57,6 +64,18 @@ LinglongCliRepository linglongCliRepository(Ref ref) {
   return LinglongCliRepositoryImpl(messages);
 }
 
+/// 应用操作 Journal Provider。
+///
+/// 生产环境固定使用 XDG State 目录；测试可覆盖为内存实现，避免触碰用户状态。
+@Riverpod(keepAlive: true)
+AppOperationJournalRepository appOperationJournalRepository(Ref ref) {
+  final journalPath = AppXdgPaths.resolveOperationJournalFilePath();
+  if (journalPath == null) {
+    throw StateError('无法解析 XDG 应用操作 Journal 路径');
+  }
+  return FileAppOperationJournalRepository(File(journalPath));
+}
+
 // ---------------------------------------------------------------------------
 // 持久化 Mixin
 // ---------------------------------------------------------------------------
@@ -68,10 +87,7 @@ mixin _InstallQueuePersistence {
   /// Riverpod ref，由混入类提供。
   Ref get ref;
 
-  SharedPreferences? _prefs;
-
-  SharedPreferences? get prefs => _prefs;
-  set prefs(SharedPreferences? value) => _prefs = value;
+  AppOperationJournalRepository? _journal;
 
   /// 读取 SharedPreferences（安全兜底，失败返回 null）
   SharedPreferences? _readSharedPreferences() {
@@ -82,16 +98,25 @@ mixin _InstallQueuePersistence {
     }
   }
 
-  /// 从 SharedPreferences 恢复队列状态（同步）。
+  /// 从 XDG State Journal 恢复队列状态（同步）。
   ///
-  /// 在 Provider build 阶段直接调用，避免异步读取导致首帧状态不一致。
+  /// Journal 尚不存在时只执行一次旧 SharedPreferences 迁移；新快照成功
+  /// 落盘后才删除旧 key，避免迁移中断造成活跃任务丢失。
   InstallQueueState restorePersistedState() {
-    final prefs = _prefs ?? _readSharedPreferences();
+    try {
+      _journal = ref.read(appOperationJournalRepositoryProvider);
+      final snapshot = _journal!.load();
+      if (snapshot != null) {
+        return InstallQueueState.fromJournalSnapshot(snapshot);
+      }
+    } catch (error, stackTrace) {
+      AppLogger.error('应用操作 Journal 恢复失败', error, stackTrace);
+    }
+
+    final prefs = _readSharedPreferences();
     if (prefs == null) {
       return const InstallQueueState();
     }
-
-    _prefs = prefs;
 
     try {
       InstallTask? currentTask;
@@ -111,60 +136,50 @@ mixin _InstallQueuePersistence {
 
       if (currentTask != null || queue.isNotEmpty) {
         AppLogger.info(
-          'Restored install queue state: current=${currentTask?.appId}, pending=${queue.length}',
+          'Migrating legacy install queue: current=${currentTask?.appId}, pending=${queue.length}',
         );
       }
 
-      return InstallQueueState(currentTask: currentTask, queue: queue);
+      final restoredState = InstallQueueState(
+        currentTask: currentTask,
+        queue: queue,
+      );
+      final journal = _journal;
+      if (journal != null && (currentTask != null || queue.isNotEmpty)) {
+        unawaited(
+          journal
+              .save(restoredState.toJournalSnapshot())
+              .then((_) async {
+                await prefs.remove(_kCurrentTaskKey);
+                await prefs.remove(_kQueueKey);
+              })
+              .catchError((Object error, StackTrace stackTrace) {
+                AppLogger.error(
+                  '旧安装队列迁移到 XDG State Journal 失败',
+                  error,
+                  stackTrace,
+                );
+              }),
+        );
+      }
+      return restoredState;
     } catch (e, s) {
       AppLogger.error('Failed to restore persisted install queue state', e, s);
-      unawaited(prefs.remove(_kCurrentTaskKey));
-      unawaited(prefs.remove(_kQueueKey));
       return const InstallQueueState();
     }
   }
 
-  /// 持久化待处理队列到 SharedPreferences。
-  Future<void> persistQueue(List<InstallTask> queue) async {
-    final prefs = _prefs ?? _readSharedPreferences();
-    if (prefs == null) return;
-
-    _prefs = prefs;
-
+  /// 异步保存完整状态；写入失败只记录诊断，不回滚正在执行的内存状态。
+  Future<void> persistState(InstallQueueState nextState) async {
+    final journal = _journal;
+    if (journal == null) {
+      return;
+    }
     try {
-      await prefs.setString(
-        _kQueueKey,
-        jsonEncode(queue.map((t) => t.toJson()).toList()),
-      );
-      AppLogger.debug('Queue persisted: ${queue.length} tasks');
-    } catch (e, s) {
-      AppLogger.error('Failed to persist queue', e, s);
+      await journal.save(nextState.toJournalSnapshot());
+    } catch (error, stackTrace) {
+      AppLogger.error('应用操作状态持久化失败', error, stackTrace);
     }
-  }
-
-  /// 持久化当前任务到 SharedPreferences。
-  void persistCurrentTask(InstallTask? task) {
-    final prefs = _prefs ?? _readSharedPreferences();
-    if (prefs == null) return;
-
-    _prefs = prefs;
-
-    if (task != null) {
-      try {
-        prefs.setString(_kCurrentTaskKey, jsonEncode(task.toJson()));
-      } catch (e, s) {
-        AppLogger.error('Failed to persist current task', e, s);
-      }
-    }
-  }
-
-  /// 清除持久化的当前任务。
-  void clearPersistedCurrentTask() {
-    final prefs = _prefs ?? _readSharedPreferences();
-    if (prefs == null) return;
-
-    _prefs = prefs;
-    prefs.remove(_kCurrentTaskKey);
   }
 }
 
@@ -200,6 +215,12 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
   /// 用户取消标志（区分"用户取消"和"真正失败"）
   /// 参考 Rust 版本 InstallSlot.is_cancelled
   bool _isUserCancelled = false;
+
+  /// 原子更新内存状态并排队保存同一个完整 Journal 快照。
+  void _commitState(InstallQueueState nextState) {
+    state = nextState;
+    unawaited(persistState(nextState));
+  }
 
   String _appendOutputLine(String currentOutput, String? outputLine) {
     final line = outputLine?.trimRight();
@@ -312,6 +333,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
     required String appName,
     String? icon,
     String? version,
+    AppOperationTargetSnapshot? target,
     bool force = false,
   }) {
     // 检查是否已在队列中
@@ -322,6 +344,14 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
 
     // 升级任务必须不带版本号，否则后续命令构造会出错。
     final effectiveVersion = kind == InstallTaskKind.update ? null : version;
+    final effectiveTarget =
+        target ??
+        AppOperationTargetSnapshot(
+          appId: appId,
+          displayName: appName,
+          icon: icon,
+          requestedInstallVersion: effectiveVersion,
+        );
 
     final kindTask = InstallTask(
       id: _generateTaskId(),
@@ -329,6 +359,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       appName: appName,
       icon: icon,
       kind: kind,
+      target: effectiveTarget,
       version: effectiveVersion,
       force: force,
       status: InstallStatus.pending,
@@ -345,6 +376,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       appName: kindTask.appName,
       icon: kindTask.icon,
       kind: kindTask.kind,
+      target: kindTask.target,
       version: kindTask.version,
       force: kindTask.force,
       status: kindTask.status,
@@ -352,8 +384,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       message: messages.waitingFor(operation),
     );
 
-    state = state.copyWith(queue: [...state.queue, task]);
-    unawaited(persistQueue(state.queue));
+    _commitState(state.copyWith(queue: [...state.queue, task]));
 
     AppLogger.info('Enqueued task: ${task.id} for app: $appId');
 
@@ -367,12 +398,23 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
 
   /// 批量入队安装/更新任务。
   List<String> enqueueBatchOperations(List<EnqueueTaskParams> tasksParams) {
+    if (tasksParams.any((params) => params.kind != InstallTaskKind.update)) {
+      AppLogger.warning('Rejected non-update task in update-all batch');
+      return const <String>[];
+    }
+
+    final batchId = _generateBatchId();
     final taskIds = <String>[];
     final newTasks = <InstallTask>[];
+    final targets = <AppOperationTargetSnapshot>[];
     final messages = ref.read(installMessagesProvider);
+    final reservedAppIds = <String>{
+      if (state.currentTask case final task?) task.appId,
+      ...state.queue.map((task) => task.appId),
+    };
 
     for (final params in tasksParams) {
-      if (state.isAppInQueue(params.appId)) {
+      if (!reservedAppIds.add(params.appId)) {
         continue;
       }
 
@@ -380,13 +422,23 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       final batchVersion = params.kind == InstallTaskKind.update
           ? null
           : params.version;
+      final target =
+          params.target ??
+          AppOperationTargetSnapshot(
+            appId: params.appId,
+            displayName: params.appName,
+            icon: params.icon,
+            requestedInstallVersion: batchVersion,
+          );
 
       final task = InstallTask(
         id: _generateTaskId(),
+        batchId: batchId,
         appId: params.appId,
         appName: params.appName,
         icon: params.icon,
         kind: params.kind,
+        target: target,
         version: batchVersion,
         force: params.force,
         status: InstallStatus.pending,
@@ -394,6 +446,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       );
 
       taskIds.add(task.id);
+      targets.add(target);
       final operation = params.kind == InstallTaskKind.update
           ? messages.updateLabel
           : messages.installLabel;
@@ -401,9 +454,21 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
     }
 
     if (newTasks.isNotEmpty) {
-      state = state.copyWith(queue: [...state.queue, ...newTasks]);
-      unawaited(persistQueue(state.queue));
-      AppLogger.info('Enqueued ${newTasks.length} tasks in batch');
+      final batch = AppOperationBatch(
+        id: batchId,
+        taskIds: taskIds,
+        targets: targets,
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+      );
+      _commitState(
+        state.copyWith(
+          queue: [...state.queue, ...newTasks],
+          batches: [...state.batches, batch],
+        ),
+      );
+      AppLogger.info(
+        'Enqueued ${newTasks.length} tasks in update batch $batchId',
+      );
 
       if (!state.isProcessing && state.currentTask == null) {
         Future.microtask(() => startProcessing());
@@ -466,14 +531,13 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       startedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
-    state = state.copyWith(
-      isProcessing: true,
-      queue: remainingQueue,
-      currentTask: installingTask,
+    _commitState(
+      state.copyWith(
+        isProcessing: true,
+        queue: remainingQueue,
+        currentTask: installingTask,
+      ),
     );
-
-    persistCurrentTask(installingTask);
-    unawaited(persistQueue(remainingQueue));
 
     // 启动状态机和超时检查
     _stateMachine = InstallStateMachine();
@@ -559,8 +623,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
           errorDetail: progress.errorDetail ?? progress.rawMessage,
         );
 
-    state = state.copyWith(currentTask: updatedTask);
-    persistCurrentTask(updatedTask);
+    _commitState(state.copyWith(currentTask: updatedTask));
 
     // 检查是否完成
     if (progress.status == InstallStatus.success) {
@@ -600,13 +663,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       finishedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
-    state = state.copyWith(
-      clearCurrentTask: true,
-      isProcessing: false,
-      history: [cancelledTask, ...state.history].take(_maxHistorySize).toList(),
-    );
-
-    clearPersistedCurrentTask();
+    _commitTerminalTask(cancelledTask);
     AppLogger.info('[InstallQueue] 任务已从流中标记取消: ${currentTask.appId}');
 
     // 处理下一个任务
@@ -649,13 +706,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       finishedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
-    state = state.copyWith(
-      clearCurrentTask: true,
-      isProcessing: false,
-      history: [completedTask, ...state.history].take(_maxHistorySize).toList(),
-    );
-
-    clearPersistedCurrentTask();
+    _commitTerminalTask(completedTask);
     AppLogger.info('Task completed successfully: $appId');
 
     // 上报安装/更新统计记录（fire-and-forget）
@@ -723,13 +774,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       finishedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
-    state = state.copyWith(
-      clearCurrentTask: true,
-      isProcessing: false,
-      history: [failedTask, ...state.history].take(_maxHistorySize).toList(),
-    );
-
-    clearPersistedCurrentTask();
+    _commitTerminalTask(failedTask);
 
     if (wasCancelled) {
       AppLogger.info('Task cancelled by user: $appId');
@@ -739,6 +784,117 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
 
     // 继续处理下一个任务（失败不阻塞队列）
     Future.delayed(const Duration(milliseconds: 100), () => startProcessing());
+  }
+
+  /// 提交任务终态，并在同一个状态快照中派生任务和批次 Outbox 事件。
+  ///
+  /// 该入口保证重复终态消息不会重复创建 effect；批次完成判断只检查自己的
+  /// taskIds，不受之后入队的其他操作影响。
+  void _commitTerminalTask(
+    InstallTask terminalTask, {
+    bool clearCurrentTask = true,
+  }) {
+    final nextHistory = <InstallTask>[
+      terminalTask,
+      ...state.history.where((task) => task.id != terminalTask.id),
+    ];
+    var nextState = state.copyWith(
+      clearCurrentTask: clearCurrentTask,
+      isProcessing: clearCurrentTask ? false : state.isProcessing,
+      history: _retainBoundedHistory(nextHistory),
+    );
+
+    if (terminalTask.status == InstallStatus.success) {
+      final effectId = 'task-succeeded-${terminalTask.id}';
+      if (!nextState.outbox.any((effect) => effect.id == effectId)) {
+        nextState = nextState.copyWith(
+          outbox: [
+            ...nextState.outbox,
+            AppOperationEffect(
+              id: effectId,
+              type: AppOperationEffectType.taskSucceeded,
+              aggregateId: terminalTask.id,
+              createdAt: terminalTask.finishedAt ?? _nowTimestamp(),
+            ),
+          ],
+        );
+      }
+    }
+
+    final batchId = terminalTask.batchId;
+    if (batchId != null) {
+      nextState = _completeBatchIfReady(nextState, batchId);
+    }
+
+    _commitState(nextState);
+  }
+
+  /// 当指定批次全部进入终态时，仅创建一次完成事件。
+  InstallQueueState _completeBatchIfReady(
+    InstallQueueState candidate,
+    String batchId,
+  ) {
+    final batchIndex = candidate.batches.indexWhere(
+      (batch) => batch.id == batchId,
+    );
+    if (batchIndex < 0) {
+      AppLogger.warning('Task references missing update batch: $batchId');
+      return candidate;
+    }
+
+    final batch = candidate.batches[batchIndex];
+    if (batch.status == AppOperationBatchStatus.completed) {
+      return candidate;
+    }
+
+    final tasksById = <String, InstallTask>{
+      for (final task in candidate.allTasks) task.id: task,
+    };
+    final isCompleted = batch.taskIds.every(
+      (taskId) => tasksById[taskId]?.isCompleted == true,
+    );
+    if (!isCompleted) {
+      return candidate;
+    }
+
+    final completedBatch = batch.copyWith(
+      status: AppOperationBatchStatus.completed,
+      finishedAt: _nowTimestamp(),
+      notificationState: AppOperationNotificationState.pending,
+    );
+    final batches = [...candidate.batches];
+    batches[batchIndex] = completedBatch;
+
+    final effectId = 'update-batch-completed-$batchId';
+    final outbox = candidate.outbox.any((effect) => effect.id == effectId)
+        ? candidate.outbox
+        : [
+            ...candidate.outbox,
+            AppOperationEffect(
+              id: effectId,
+              type: AppOperationEffectType.updateBatchCompleted,
+              aggregateId: batchId,
+              createdAt: completedBatch.finishedAt!,
+            ),
+          ];
+
+    return candidate.copyWith(batches: batches, outbox: outbox);
+  }
+
+  /// 限制普通历史规模，同时保留仍被批次摘要引用的任务。
+  List<InstallTask> _retainBoundedHistory(List<InstallTask> history) {
+    final batchTaskIds = state.batches.expand((batch) => batch.taskIds).toSet();
+    final retained = <InstallTask>[];
+    var ordinaryCount = 0;
+    for (final task in history) {
+      if (batchTaskIds.contains(task.id)) {
+        retained.add(task);
+      } else if (ordinaryCount < _maxHistorySize) {
+        retained.add(task);
+        ordinaryCount += 1;
+      }
+    }
+    return retained;
   }
 
   String _decorateFailureMessageForCurrentPlatform({
@@ -829,16 +985,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
             finishedAt: DateTime.now().millisecondsSinceEpoch,
           );
 
-      state = state.copyWith(
-        clearCurrentTask: true,
-        isProcessing: false,
-        history: [
-          cancelledTask,
-          ...state.history,
-        ].take(_maxHistorySize).toList(),
-      );
-
-      clearPersistedCurrentTask();
+      _commitTerminalTask(cancelledTask);
       AppLogger.info('[InstallQueue] 任务已取消: $appId');
 
       // 处理下一个任务
@@ -855,16 +1002,36 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
 
   /// 从等待队列中移除指定任务，不影响同应用的其他 item 或历史记录。
   void removeQueuedTask(String taskId) {
-    state = state.copyWith(
-      queue: state.queue.where((task) => task.id != taskId).toList(),
+    final queuedTask = state.queue
+        .where((task) => task.id == taskId)
+        .firstOrNull;
+    if (queuedTask == null) {
+      return;
+    }
+    _commitState(
+      state.copyWith(
+        queue: state.queue.where((task) => task.id != taskId).toList(),
+      ),
     );
-    unawaited(persistQueue(state.queue));
+    if (queuedTask.batchId != null) {
+      final messages = ref.read(installMessagesProvider);
+      _commitTerminalTask(
+        queuedTask.copyWith(
+          status: InstallStatus.cancelled,
+          message: messages.cancelled(messages.updateLabel),
+          finishedAt: _nowTimestamp(),
+        ),
+        clearCurrentTask: false,
+      );
+    }
   }
 
   /// 从历史记录中移除指定任务，不影响同应用的其他历史 item。
   void removeHistoryTask(String taskId) {
-    state = state.copyWith(
-      history: state.history.where((task) => task.id != taskId).toList(),
+    _commitState(
+      state.copyWith(
+        history: state.history.where((task) => task.id != taskId).toList(),
+      ),
     );
   }
 
@@ -884,13 +1051,26 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
 
   /// 清空历史记录
   void clearHistory() {
-    state = state.copyWith(history: []);
+    _commitState(state.copyWith(history: []));
   }
 
   /// 清空队列
   void clearQueue() {
-    state = state.copyWith(queue: []);
-    unawaited(persistQueue(state.queue));
+    final batchTasks = state.queue
+        .where((task) => task.batchId != null)
+        .toList();
+    _commitState(state.copyWith(queue: []));
+    final messages = ref.read(installMessagesProvider);
+    for (final task in batchTasks) {
+      _commitTerminalTask(
+        task.copyWith(
+          status: InstallStatus.cancelled,
+          message: messages.cancelled(messages.updateLabel),
+          finishedAt: _nowTimestamp(),
+        ),
+        clearCurrentTask: false,
+      );
+    }
     AppLogger.info('Queue cleared');
   }
 
@@ -901,7 +1081,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
   /// 崩溃恢复检查
   ///
   /// 在应用启动时调用，检查是否有未完成的任务
-  Future<void> checkRecovery(List<String> installedAppIds) async {
+  Future<void> checkRecovery(List<InstalledApp> installedApps) async {
     final persistedTask = state.currentTask;
     if (persistedTask == null) {
       AppLogger.info('No persisted task to recover');
@@ -910,14 +1090,19 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
 
     AppLogger.info('Recovering task for app: ${persistedTask.appId}');
 
-    // 当前恢复链路只拿到 appId 集合，因此仍按 appId 粗略判断。
-    // 后续若启动阶段改为传入 appId + version，可继续向多版本精确恢复收敛。
-    final isInstalled = installedAppIds.contains(persistedTask.appId);
+    final installedTarget = _resolveInstalledTarget(
+      persistedTask,
+      installedApps,
+    );
+    final canProveSuccess = _canProveRecoveredSuccess(
+      persistedTask,
+      installedTarget,
+    );
 
-    if (isInstalled) {
-      // 应用已安装，标记为成功
+    if (canProveSuccess) {
       AppLogger.info(
-        'App ${persistedTask.appId} is installed, marking as success',
+        'Recovered ${persistedTask.appId} at verified target version '
+        '${installedTarget?.version}',
       );
 
       final messages = ref.read(installMessagesProvider);
@@ -932,32 +1117,75 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
         finishedAt: DateTime.now().millisecondsSinceEpoch,
       );
 
-      state = state.copyWith(
-        clearCurrentTask: true,
-        history: [successTask, ...state.history].take(_maxHistorySize).toList(),
-      );
+      _commitTerminalTask(successTask);
     } else {
-      // 应用未安装，标记为失败
-      AppLogger.info(
-        'App ${persistedTask.appId} is not installed, marking as failed',
+      AppLogger.warning(
+        'Unable to prove recovered task success: app=${persistedTask.appId}, '
+        'old=${persistedTask.target?.installedVersion}, '
+        'expected=${persistedTask.target?.expectedVersion}, '
+        'actual=${installedTarget?.version}',
       );
 
       final messages = ref.read(installMessagesProvider);
 
-      final failedTask = persistedTask.copyWith(
-        status: InstallStatus.failed,
+      final interruptedTask = persistedTask.copyWith(
+        status: InstallStatus.interrupted,
         message: messages.taskCrashInterrupted,
         errorMessage: messages.taskCrashRetryHint,
         finishedAt: DateTime.now().millisecondsSinceEpoch,
       );
 
-      state = state.copyWith(
-        clearCurrentTask: true,
-        history: [failedTask, ...state.history].take(_maxHistorySize).toList(),
-      );
+      _commitTerminalTask(interruptedTask);
+    }
+  }
+
+  /// 按任务快照精确定位本机实例；无法唯一确定时返回 null。
+  InstalledApp? _resolveInstalledTarget(
+    InstallTask task,
+    List<InstalledApp> installedApps,
+  ) {
+    final target = task.target;
+    final candidates = installedApps.where((app) {
+      if (app.appId != task.appId) {
+        return false;
+      }
+      if (target == null) {
+        return true;
+      }
+      return _matchesOptionalIdentity(target.arch, app.arch) &&
+          _matchesOptionalIdentity(target.channel, app.channel) &&
+          _matchesOptionalIdentity(target.module, app.module) &&
+          _matchesOptionalIdentity(target.repoName, app.repoName);
+    }).toList();
+    return candidates.length == 1 ? candidates.single : null;
+  }
+
+  /// 判断恢复后的本机事实是否足以证明原任务成功。
+  bool _canProveRecoveredSuccess(
+    InstallTask task,
+    InstalledApp? installedTarget,
+  ) {
+    if (installedTarget == null) {
+      return false;
     }
 
-    clearPersistedCurrentTask();
+    final target = task.target;
+    if (task.isUpdateTask) {
+      final expectedVersion = target?.expectedVersion;
+      return expectedVersion != null &&
+          expectedVersion.isNotEmpty &&
+          installedTarget.version == expectedVersion;
+    }
+
+    final requestedVersion = target?.requestedInstallVersion ?? task.version;
+    return requestedVersion == null ||
+        requestedVersion.isEmpty ||
+        installedTarget.version == requestedVersion;
+  }
+
+  /// 目标快照未指定某个身份字段时允许匹配，指定后必须完全一致。
+  bool _matchesOptionalIdentity(String? expected, String? actual) {
+    return expected == null || expected.isEmpty || expected == actual;
   }
 
   /// 重试失败的任务。
@@ -991,8 +1219,10 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       return;
     }
 
-    state = state.copyWith(
-      history: state.history.where((task) => task.id != taskId).toList(),
+    _commitState(
+      state.copyWith(
+        history: state.history.where((task) => task.id != taskId).toList(),
+      ),
     );
 
     enqueueOperation(
@@ -1001,6 +1231,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
       appName: failedTask.appName,
       icon: failedTask.icon,
       version: failedTask.version,
+      target: failedTask.target,
       force: failedTask.force,
     );
   }
@@ -1013,6 +1244,14 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
   String _generateTaskId() {
     return '${DateTime.now().millisecondsSinceEpoch}-${_uuid.v4().substring(0, 8)}';
   }
+
+  /// 生成稳定批次 ID。
+  String _generateBatchId() {
+    return '${_nowTimestamp()}-${_uuid.v4()}';
+  }
+
+  /// 获取当前毫秒时间戳，统一批次与事件落盘口径。
+  int _nowTimestamp() => DateTime.now().millisecondsSinceEpoch;
 }
 
 // ---------------------------------------------------------------------------
@@ -1027,6 +1266,7 @@ class EnqueueTaskParams {
     required this.appName,
     this.icon,
     this.version,
+    this.target,
     this.force = false,
   });
 
@@ -1035,6 +1275,7 @@ class EnqueueTaskParams {
   final String appName;
   final String? icon;
   final String? version;
+  final AppOperationTargetSnapshot? target;
   final bool force;
 }
 

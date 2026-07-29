@@ -4,12 +4,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:linglong_store/application/providers/app_operation_queue_provider.dart';
 import 'package:linglong_store/core/di/providers.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
+import 'package:linglong_store/domain/models/app_operation_batch.dart';
+import 'package:linglong_store/domain/models/app_operation_target_snapshot.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/domain/models/running_app.dart';
 import 'package:linglong_store/domain/repositories/analytics_repository.dart';
 import 'package:linglong_store/domain/repositories/linglong_cli_repository.dart';
+
+import '../../../helpers/memory_app_operation_journal_repository.dart';
 
 class _FakeLinglongCliRepository implements LinglongCliRepository {
   int installCallCount = 0;
@@ -133,6 +137,9 @@ Future<ProviderContainer> _createTestContainer(
   return ProviderContainer(
     overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
+      appOperationJournalRepositoryProvider.overrideWithValue(
+        MemoryAppOperationJournalRepository(),
+      ),
       analyticsRepositoryProvider.overrideWithValue(
         const _FakeAnalyticsRepository(),
       ),
@@ -161,6 +168,16 @@ void main() {
                 kind: InstallTaskKind.update,
                 appId: 'com.example.update',
                 appName: 'Update App',
+                target: AppOperationTargetSnapshot(
+                  appId: 'com.example.update',
+                  displayName: 'Update App',
+                  arch: 'x86_64',
+                  channel: 'main',
+                  module: 'binary',
+                  repoName: 'stable',
+                  installedVersion: '1.0.0',
+                  expectedVersion: '2.0.0',
+                ),
               ),
             ]);
 
@@ -171,6 +188,18 @@ void main() {
         expect(fakeRepo.installCallCount, 0);
         expect(state.history.first.kind, InstallTaskKind.update);
         expect(state.history.first.message, '更新完成');
+        expect(state.history.first.target?.installedVersion, '1.0.0');
+        expect(state.history.first.target?.expectedVersion, '2.0.0');
+        expect(state.batches, hasLength(1));
+        expect(state.batches.single.status, AppOperationBatchStatus.completed);
+        expect(
+          state.batches.single.notificationState,
+          AppOperationNotificationState.pending,
+        );
+        expect(state.outbox.map((effect) => effect.type), [
+          AppOperationEffectType.taskSucceeded,
+          AppOperationEffectType.updateBatchCompleted,
+        ]);
       },
     );
 

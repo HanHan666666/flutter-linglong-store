@@ -8,6 +8,7 @@ import '../../../application/providers/app_operation_queue_provider.dart';
 import '../../../application/providers/ignored_updates_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
+import '../../../application/providers/update_all_controller.dart';
 import '../../../application/providers/update_apps_provider.dart';
 import '../../../application/services/ignored_update_service.dart';
 // 更新页位于 presentation/pages/update_app，下列跨层依赖必须回退到 lib 根目录，
@@ -53,29 +54,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
 
   /// 全部更新
   void _updateAll() {
-    final installState = ref.read(installQueueProvider);
-    final apps = ref
-        .read(updateAppsProvider)
-        .apps
-        .where((app) => !installState.isAppInQueue(app.appId))
-        .toList();
-    if (apps.isEmpty) {
-      return;
-    }
-
-    final operations = apps
-        .map(
-          (app) => EnqueueAppOperationParams(
-            kind: InstallTaskKind.update,
-            appId: app.appId,
-            appName: app.name,
-            icon: app.icon,
-          ),
-        )
-        .toList();
-    final taskIds = ref
-        .read(appOperationQueueControllerProvider)
-        .enqueueBatchOperations(operations);
+    final taskIds = ref.read(updateAllControllerProvider).enqueue();
     if (taskIds.isNotEmpty) {
       InstallToDownloadFlyoutLayer.maybeOf(context)?.pulseDownloadCenter();
     }
@@ -97,6 +76,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
             appId: app.appId,
             appName: app.name,
             icon: app.icon,
+            target: createUpdateTargetSnapshot(app),
           ),
         );
   }

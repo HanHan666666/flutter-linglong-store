@@ -232,7 +232,10 @@ void main() {
       // 验证所有必需的本地化键存在
       // 这里我们验证生成的文件存在
       expect(AppLocalizations.localizationsDelegates.length, greaterThan(0));
-      expect(AppLocalizations.supportedLocales.length, equals(2));
+      expect(
+        AppLocalizations.supportedLocales,
+        containsAll(const [Locale('zh'), Locale('en'), Locale('es')]),
+      );
     });
   });
 }

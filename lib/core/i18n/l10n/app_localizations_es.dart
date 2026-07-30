@@ -312,6 +312,66 @@ class AppLocalizationsEs extends AppLocalizations {
       'Verificar si hay nuevas versiones disponibles cada vez que se inicia';
 
   @override
+  String get systemNotifications => 'Notificaciones del sistema';
+
+  @override
+  String get systemNotificationsDescription =>
+      'Mostrar el resultado en una notificación de escritorio cuando finalice Actualizar Todo';
+
+  @override
+  String updateBatchAllSucceededTitle(int count) {
+    return '$count aplicaciones actualizadas';
+  }
+
+  @override
+  String get updateBatchFinishedTitle => 'Actualización por lotes finalizada';
+
+  @override
+  String get updateBatchNoSuccessTitle =>
+      'No se completaron las actualizaciones';
+
+  @override
+  String updateBatchResultSummary(String summary) {
+    return 'Resultado: $summary';
+  }
+
+  @override
+  String get updateBatchResultSeparator => ', ';
+
+  @override
+  String updateBatchSucceededCount(int count) {
+    return '$count correctas';
+  }
+
+  @override
+  String updateBatchFailedCount(int count) {
+    return '$count fallidas';
+  }
+
+  @override
+  String updateBatchCancelledCount(int count) {
+    return '$count canceladas';
+  }
+
+  @override
+  String updateBatchInterruptedCount(int count) {
+    return '$count interrumpidas';
+  }
+
+  @override
+  String get updateBatchAppNameSeparator => ', ';
+
+  @override
+  String updateBatchUpdatedApps(String names) {
+    return 'Actualizadas: $names';
+  }
+
+  @override
+  String updateBatchUpdatedAppsOverflow(String names, int remainingCount) {
+    return 'Actualizadas: $names y $remainingCount más';
+  }
+
+  @override
   String get softwareRendering => 'Renderizado por Software';
 
   @override

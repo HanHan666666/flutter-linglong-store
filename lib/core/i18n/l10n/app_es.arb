@@ -127,6 +127,79 @@
   "cacheSize": "Tamaño de Caché",
   "startupCheckUpdate": "Buscar actualizaciones al iniciar",
   "startupCheckUpdateDesc": "Verificar si hay nuevas versiones disponibles cada vez que se inicia",
+  "systemNotifications": "Notificaciones del sistema",
+  "systemNotificationsDescription": "Mostrar el resultado en una notificación de escritorio cuando finalice Actualizar Todo",
+  "updateBatchAllSucceededTitle": "{count} aplicaciones actualizadas",
+  "@updateBatchAllSucceededTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchFinishedTitle": "Actualización por lotes finalizada",
+  "updateBatchNoSuccessTitle": "No se completaron las actualizaciones",
+  "updateBatchResultSummary": "Resultado: {summary}",
+  "@updateBatchResultSummary": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchResultSeparator": ", ",
+  "updateBatchSucceededCount": "{count} correctas",
+  "@updateBatchSucceededCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchFailedCount": "{count} fallidas",
+  "@updateBatchFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchCancelledCount": "{count} canceladas",
+  "@updateBatchCancelledCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchInterruptedCount": "{count} interrumpidas",
+  "@updateBatchInterruptedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchAppNameSeparator": ", ",
+  "updateBatchUpdatedApps": "Actualizadas: {names}",
+  "@updateBatchUpdatedApps": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchUpdatedAppsOverflow": "Actualizadas: {names} y {remainingCount} más",
+  "@updateBatchUpdatedAppsOverflow": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "remainingCount": {
+        "type": "int"
+      }
+    }
+  },
   "softwareRendering": "Renderizado por Software",
   "softwareRenderingEnabled": "Renderizado por Software",
   "hardwareRenderingEnabled": "Renderizado por Hardware",

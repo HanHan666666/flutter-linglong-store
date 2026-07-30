@@ -108,19 +108,28 @@ LocalSidebarMenuConfig? lookupLocalSidebarMenuConfig(String menuCode) {
   return null;
 }
 
+/// 将界面语言归一到生成器声明的受支持语言，未知语言保持中文回退。
 Locale normalizeSidebarMenuLocale(Locale locale) {
-  if (locale.languageCode.toLowerCase().startsWith('en')) {
-    return const Locale('en');
+  final languageCode = locale.languageCode.toLowerCase();
+  for (final supportedLocale in AppLocalizations.supportedLocales) {
+    if (supportedLocale.languageCode == languageCode) {
+      return supportedLocale;
+    }
   }
   return const Locale('zh');
 }
 
+/// 将持久化语言值解析成侧边栏可安全使用的受支持语言。
 Locale resolveSidebarMenuLocale(String? localeName) {
   final normalized = localeName?.trim().replaceAll('-', '_').toLowerCase();
-  if (normalized != null && normalized.startsWith('en')) {
-    return const Locale('en');
+  if (normalized == null || normalized.isEmpty) {
+    return const Locale('zh');
   }
-  return const Locale('zh');
+  final languageCode = normalized.split('_').first;
+  if (languageCode.isEmpty) {
+    return const Locale('zh');
+  }
+  return normalizeSidebarMenuLocale(Locale(languageCode));
 }
 
 SidebarMenuPresentation buildSidebarMenuPresentation({

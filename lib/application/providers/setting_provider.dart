@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/di/providers.dart'
     show linglongCliRepositoryProvider, sharedPreferencesProvider;
+import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/platform/linux_renderer_service.dart';
 import 'installed_apps_provider.dart';
@@ -266,8 +267,12 @@ String formatBytes(int bytes) {
   }
 }
 
-/// 支持的语言列表
-const List<Locale> supportedLocales = [Locale('zh'), Locale('en')];
+/// 支持的语言列表，复用生成结果以避免新增语言时出现重复配置漂移。
+const List<Locale> supportedLocales = AppLocalizations.supportedLocales;
 
 /// 语言名称映射
-const Map<String, String> languageNames = {'zh': '中文', 'en': 'English'};
+const Map<String, String> languageNames = {
+  'zh': '中文',
+  'en': 'English',
+  'es': 'Español',
+};

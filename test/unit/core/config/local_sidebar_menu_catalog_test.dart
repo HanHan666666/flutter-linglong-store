@@ -4,12 +4,13 @@ import 'package:linglong_store/core/config/local_sidebar_menu_catalog.dart';
 
 void main() {
   group('local sidebar menu catalog', () {
-    test('known menu code resolves localized labels for zh and en', () {
+    test('known menu code resolves every supported localized label', () {
       final office = lookupLocalSidebarMenuConfig('office');
 
       expect(office, isNotNull);
       expect(office!.resolveLabel(const Locale('zh')), '办 公');
       expect(office.resolveLabel(const Locale('en')), 'Office');
+      expect(office.resolveLabel(const Locale('es')), 'Oficina');
     });
 
     test('unknown menu code falls back to backend name and generic icons', () {

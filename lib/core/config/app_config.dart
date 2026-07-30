@@ -2,10 +2,13 @@
 class AppConfig {
   AppConfig._();
 
-  /// API 基础地址
+  /// 商店 API 基础地址。
+  ///
+  /// 正式域名作为可分发构建和真实 API 测试的安全默认值；本地联调必须通过
+  /// `--dart-define=API_BASE_URL=...` 显式覆盖，禁止提交私有网络地址。
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://192.168.11.147:8687',
+    defaultValue: 'https://storeapi.linyaps.org.cn',
   );
 
   /// 应用名称

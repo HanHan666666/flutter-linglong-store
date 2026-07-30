@@ -4,18 +4,14 @@
 ///   1. 序列化层——DTO 的 toJson 正确携带 lan 字段（无需网络，flutter test 可跑）
 ///   2. 真实网络层——调真实后端接口，返回 code=200 且 records 非空
 ///
-/// 重要：网络测试必须用 dart test 跑（避免 TestWidgetsFlutterBinding 拦截 HTTP）：
-///   dart test test/unit/data/i18n_api_integration_test.dart -p vm
-///   dart test test/unit/data/i18n_api_integration_test.dart -p vm --tags network
+/// 重要：本文件依赖 flutter_test，必须使用 Flutter runner：
+///   flutter test test/unit/data/i18n_api_integration_test.dart
 ///
 /// 序列化测试（无需网络）：
 ///   flutter test test/unit/data/i18n_api_integration_test.dart --name "I18n DTO"
 ///
 /// 如果 CI 环境无法访问后端，可通过环境变量跳过网络测试：
-///   SKIP_NETWORK_TESTS=true dart test test/unit/data/i18n_api_integration_test.dart -p vm
-///
-/// 注意：flutter test 会使用 TestWidgetsFlutterBinding，导致所有 HTTP 返回 400。
-///       真实 API 测试必须使用 dart test -p vm 运行。
+///   SKIP_NETWORK_TESTS=true flutter test test/unit/data/i18n_api_integration_test.dart
 library;
 // @dart=2.19
 // ignore_for_file: avoid_print

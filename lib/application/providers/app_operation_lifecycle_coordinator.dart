@@ -83,13 +83,19 @@ class AppOperationLifecycleCoordinator {
     _isDraining = true;
     try {
       while (true) {
+        final queueNotifier = _ref.read(installQueueProvider.notifier);
+        // Outbox 事件、上一次确认结果和等待期间产生的更新必须先成为 durable
+        // state，再决定是否执行下一个不可逆副作用。
+        await queueNotifier.waitForPendingPersistence();
         final queueState = _ref.read(installQueueProvider);
         if (queueState.outbox.isEmpty) {
           break;
         }
 
         final effect = queueState.outbox.first;
-        _ref.read(installQueueProvider.notifier).markEffectAttempt(effect.id);
+        queueNotifier.markEffectAttempt(effect.id);
+        // 尝试次数与事件本身属于同一 Journal 协议；记录成功后才允许对外执行。
+        await queueNotifier.waitForPendingPersistence();
 
         switch (effect.type) {
           case AppOperationEffectType.taskSucceeded:

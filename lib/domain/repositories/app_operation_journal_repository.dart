@@ -11,5 +11,8 @@ abstract interface class AppOperationJournalRepository {
   AppOperationJournalSnapshot? load();
 
   /// 串行、原子地保存完整快照。
+  ///
+  /// Future 完成表示该快照或一个更新快照已经持久化；实现可以合并尚未开始的
+  /// 中间快照，但不得让调用方在等价或更新状态落盘前越过持久化屏障。
   Future<void> save(AppOperationJournalSnapshot snapshot);
 }

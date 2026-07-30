@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,12 +7,14 @@ import 'package:linglong_store/application/providers/app_operation_queue_provide
 import 'package:linglong_store/core/di/providers.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/domain/models/app_operation_batch.dart';
+import 'package:linglong_store/domain/models/app_operation_journal_snapshot.dart';
 import 'package:linglong_store/domain/models/app_operation_target_snapshot.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/domain/models/running_app.dart';
 import 'package:linglong_store/domain/repositories/analytics_repository.dart';
+import 'package:linglong_store/domain/repositories/app_operation_journal_repository.dart';
 import 'package:linglong_store/domain/repositories/linglong_cli_repository.dart';
 
 import '../../../helpers/memory_app_operation_journal_repository.dart';
@@ -128,8 +132,9 @@ class _FakeAnalyticsRepository implements AnalyticsRepository {
 }
 
 Future<ProviderContainer> _createTestContainer(
-  _FakeLinglongCliRepository fakeRepo,
-) async {
+  _FakeLinglongCliRepository fakeRepo, {
+  AppOperationJournalRepository? journal,
+}) async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
 
@@ -138,7 +143,7 @@ Future<ProviderContainer> _createTestContainer(
     overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
       appOperationJournalRepositoryProvider.overrideWithValue(
-        MemoryAppOperationJournalRepository(),
+        journal ?? MemoryAppOperationJournalRepository(),
       ),
       analyticsRepositoryProvider.overrideWithValue(
         const _FakeAnalyticsRepository(),
@@ -154,6 +159,30 @@ void main() {
   });
 
   group('AppOperationQueueController', () {
+    test('does not start ll-cli before the queued task is durable', () async {
+      final fakeRepo = _FakeLinglongCliRepository();
+      final journal = _BlockingJournalRepository();
+      final container = await _createTestContainer(fakeRepo, journal: journal);
+      addTearDown(container.dispose);
+
+      container
+          .read(appOperationQueueControllerProvider)
+          .enqueueAppOperation(
+            const EnqueueAppOperationParams(
+              kind: InstallTaskKind.install,
+              appId: 'com.example.durable',
+              appName: 'Durable App',
+            ),
+          );
+
+      await journal.firstSaveStarted.future;
+      expect(fakeRepo.installCallCount, 0);
+
+      journal.releaseFirstSave.complete();
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(fakeRepo.installCallCount, 1);
+    });
+
     test(
       'routes update operations to updateApp and records update task kind',
       () async {
@@ -304,4 +333,32 @@ void main() {
       expect(historyTask.commandOutput, contains('Install complete'));
     });
   });
+}
+
+/// 首次保存可控的 Journal，用于验证 ll-cli 不会领先于队列事实落盘。
+class _BlockingJournalRepository implements AppOperationJournalRepository {
+  /// 第一次队列快照已经进入实际保存。
+  final Completer<void> firstSaveStarted = Completer<void>();
+
+  /// 允许第一次保存完成。
+  final Completer<void> releaseFirstSave = Completer<void>();
+
+  /// 当前已持久化快照。
+  AppOperationJournalSnapshot? snapshot;
+
+  /// 只阻塞第一次保存，后续 currentTask 和终态写入正常完成。
+  bool _hasBlockedFirstSave = false;
+
+  @override
+  AppOperationJournalSnapshot? load() => snapshot;
+
+  @override
+  Future<void> save(AppOperationJournalSnapshot snapshot) async {
+    if (!_hasBlockedFirstSave) {
+      _hasBlockedFirstSave = true;
+      firstSaveStarted.complete();
+      await releaseFirstSave.future;
+    }
+    this.snapshot = snapshot;
+  }
 }

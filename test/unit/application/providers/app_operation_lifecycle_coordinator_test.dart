@@ -4,6 +4,8 @@
 /// Flutter Widget 展示不在此重复测试。
 library;
 
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/application/providers/app_operation_lifecycle_coordinator.dart';
@@ -19,6 +21,7 @@ import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/system_notification.dart';
 import 'package:linglong_store/domain/repositories/system_notification_gateway.dart';
+import 'package:linglong_store/domain/repositories/app_operation_journal_repository.dart';
 
 import '../../../helpers/memory_app_operation_journal_repository.dart';
 
@@ -72,57 +75,87 @@ void main() {
       AppOperationNotificationState.suppressed,
     );
   });
+
+  test('Outbox 尝试记录落盘前不会调用系统网关', () async {
+    final gateway = _RecordingNotificationGateway();
+    final journal = _BlockingJournalRepository(_completedBatchSnapshot);
+    final container = _createContainer(
+      enableNotifications: true,
+      gateway: gateway,
+      journal: journal,
+    );
+    addTearDown(container.dispose);
+
+    container.read(appOperationLifecycleCoordinatorProvider);
+    await journal.firstSaveStarted.future;
+
+    expect(gateway.messages, isEmpty);
+
+    journal.releaseFirstSave.complete();
+    await _waitForOutboxToDrain(container);
+    expect(gateway.messages, hasLength(1));
+  });
 }
+
+/// 已完成批次及其待消费事件的恢复快照。
+const _completedBatchSnapshot = AppOperationJournalSnapshot(
+  history: [
+    InstallTask(
+      id: 'task-1',
+      batchId: 'batch-1',
+      kind: InstallTaskKind.update,
+      appId: 'com.example.demo',
+      appName: '示例应用',
+      version: '2.0.0',
+      target: AppOperationTargetSnapshot(
+        appId: 'com.example.demo',
+        displayName: '示例应用',
+        installedVersion: '1.0.0',
+        expectedVersion: '2.0.0',
+      ),
+      status: InstallStatus.success,
+      createdAt: 1,
+      finishedAt: 2,
+    ),
+  ],
+  batches: [
+    AppOperationBatch(
+      id: 'batch-1',
+      taskIds: ['task-1'],
+      targets: [
+        AppOperationTargetSnapshot(
+          appId: 'com.example.demo',
+          displayName: '示例应用',
+          installedVersion: '1.0.0',
+          expectedVersion: '2.0.0',
+        ),
+      ],
+      createdAt: 1,
+      finishedAt: 2,
+      status: AppOperationBatchStatus.completed,
+      notificationState: AppOperationNotificationState.pending,
+    ),
+  ],
+  outbox: [
+    AppOperationEffect(
+      id: 'update-batch-completed-batch-1',
+      type: AppOperationEffectType.updateBatchCompleted,
+      aggregateId: 'batch-1',
+      createdAt: 2,
+    ),
+  ],
+);
 
 /// 创建包含一个已完成批次和一条待消费事件的隔离容器。
 ProviderContainer _createContainer({
   required bool enableNotifications,
   required SystemNotificationGateway gateway,
+  AppOperationJournalRepository? journal,
 }) {
-  const target = AppOperationTargetSnapshot(
-    appId: 'com.example.demo',
-    displayName: '示例应用',
-    installedVersion: '1.0.0',
-    expectedVersion: '2.0.0',
-  );
-  const task = InstallTask(
-    id: 'task-1',
-    batchId: 'batch-1',
-    kind: InstallTaskKind.update,
-    appId: 'com.example.demo',
-    appName: '示例应用',
-    version: '2.0.0',
-    target: target,
-    status: InstallStatus.success,
-    createdAt: 1,
-    finishedAt: 2,
-  );
-  const batch = AppOperationBatch(
-    id: 'batch-1',
-    taskIds: ['task-1'],
-    targets: [target],
-    createdAt: 1,
-    finishedAt: 2,
-    status: AppOperationBatchStatus.completed,
-    notificationState: AppOperationNotificationState.pending,
-  );
-  const snapshot = AppOperationJournalSnapshot(
-    history: [task],
-    batches: [batch],
-    outbox: [
-      AppOperationEffect(
-        id: 'update-batch-completed-batch-1',
-        type: AppOperationEffectType.updateBatchCompleted,
-        aggregateId: 'batch-1',
-        createdAt: 2,
-      ),
-    ],
-  );
-
   return ProviderContainer(
     overrides: [
       appOperationJournalRepositoryProvider.overrideWithValue(
-        MemoryAppOperationJournalRepository(snapshot),
+        journal ?? MemoryAppOperationJournalRepository(_completedBatchSnapshot),
       ),
       globalAppProvider.overrideWith(
         () => _TestGlobalApp(
@@ -138,6 +171,37 @@ ProviderContainer _createContainer({
       systemNotificationGatewayProvider.overrideWithValue(gateway),
     ],
   );
+}
+
+/// 首次保存可控的 Journal，用于确认外部副作用不会越过持久化屏障。
+class _BlockingJournalRepository implements AppOperationJournalRepository {
+  /// 使用已经持久化的恢复快照创建仓库。
+  _BlockingJournalRepository(this.snapshot);
+
+  /// 启动恢复时读取的快照。
+  AppOperationJournalSnapshot snapshot;
+
+  /// 第一次 mark-attempt 保存已经开始。
+  final Completer<void> firstSaveStarted = Completer<void>();
+
+  /// 允许第一次保存真正完成。
+  final Completer<void> releaseFirstSave = Completer<void>();
+
+  /// 只阻塞第一次运行期保存。
+  bool _hasBlockedFirstSave = false;
+
+  @override
+  AppOperationJournalSnapshot load() => snapshot;
+
+  @override
+  Future<void> save(AppOperationJournalSnapshot snapshot) async {
+    if (!_hasBlockedFirstSave) {
+      _hasBlockedFirstSave = true;
+      firstSaveStarted.complete();
+      await releaseFirstSave.future;
+    }
+    this.snapshot = snapshot;
+  }
 }
 
 /// 等待协调器确认当前快照中的唯一事件。

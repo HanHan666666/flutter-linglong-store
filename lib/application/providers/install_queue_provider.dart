@@ -12,6 +12,7 @@ import '../../core/i18n/install_messages.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/di/providers.dart' show currentLocaleProvider;
 import 'linglong_env_provider.dart';
+import '../services/app_operation_persistence_barrier.dart';
 import '../../domain/models/app_operation_batch.dart';
 import '../../domain/models/app_operation_target_snapshot.dart';
 import '../../domain/models/linux_distribution.dart';
@@ -88,6 +89,9 @@ mixin _InstallQueuePersistence {
 
   AppOperationJournalRepository? _journal;
 
+  /// 旧存储迁移产生的首次保存，队列启动前也必须纳入持久化屏障。
+  Future<void>? restorationPersistence;
+
   /// 读取 SharedPreferences（安全兜底，失败返回 null）
   SharedPreferences? _readSharedPreferences() {
     try {
@@ -145,20 +149,19 @@ mixin _InstallQueuePersistence {
       );
       final journal = _journal;
       if (journal != null && (currentTask != null || queue.isNotEmpty)) {
+        restorationPersistence = journal
+            .save(restoredState.toJournalSnapshot())
+            .then((_) async {
+              await prefs.remove(_kCurrentTaskKey);
+              await prefs.remove(_kQueueKey);
+            });
         unawaited(
-          journal
-              .save(restoredState.toJournalSnapshot())
-              .then((_) async {
-                await prefs.remove(_kCurrentTaskKey);
-                await prefs.remove(_kQueueKey);
-              })
-              .catchError((Object error, StackTrace stackTrace) {
-                AppLogger.error(
-                  '旧安装队列迁移到 XDG State Journal 失败',
-                  error,
-                  stackTrace,
-                );
-              }),
+          restorationPersistence!.catchError((
+            Object error,
+            StackTrace stackTrace,
+          ) {
+            AppLogger.error('旧安装队列迁移到 XDG State Journal 失败', error, stackTrace);
+          }),
         );
       }
       return restoredState;
@@ -172,12 +175,13 @@ mixin _InstallQueuePersistence {
   Future<void> persistState(InstallQueueState nextState) async {
     final journal = _journal;
     if (journal == null) {
-      return;
+      throw StateError('应用操作 Journal 尚未初始化');
     }
     try {
       await journal.save(nextState.toJournalSnapshot());
     } catch (error, stackTrace) {
       AppLogger.error('应用操作状态持久化失败', error, stackTrace);
+      rethrow;
     }
   }
 }
@@ -200,7 +204,12 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
   InstallQueueState build() {
     // 在 build 阶段直接同步恢复本地状态，避免未初始化 _prefs 时触发异步读取，
     // 同时规避 Provider 在首帧构建期间被再次写入导致的生命周期告警。
-    return restorePersistedState();
+    final restoredState = restorePersistedState();
+    final initialPersistence = restorationPersistence;
+    if (initialPersistence != null) {
+      _persistenceBarrier.track(initialPersistence);
+    }
+    return restoredState;
   }
 
   final _uuid = const Uuid();
@@ -215,10 +224,26 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
   /// 参考 Rust 版本 InstallSlot.is_cancelled
   bool _isUserCancelled = false;
 
+  /// 把高响应的内存发布与必须先落盘的外部动作连接起来。
+  final AppOperationPersistenceBarrier _persistenceBarrier =
+      AppOperationPersistenceBarrier();
+
   /// 原子更新内存状态并排队保存同一个完整 Journal 快照。
-  void _commitState(InstallQueueState nextState) {
+  Future<void> _commitState(InstallQueueState nextState) {
     state = nextState;
-    unawaited(persistState(nextState));
+    final persistence = persistState(nextState);
+    _persistenceBarrier.track(persistence);
+    // 普通进度更新不阻塞 UI；错误由 persistState 记录，关键动作还会通过屏障感知。
+    unawaited(persistence.catchError((Object _, StackTrace __) {}));
+    return persistence;
+  }
+
+  /// 等待调用期间出现的所有最新快照完成持久化。
+  ///
+  /// 生命周期协调器通过该入口保证 Outbox 先落盘再消费；队列执行器也用它保证
+  /// 待执行任务和 currentTask 状态先落盘再启动 ll-cli。
+  Future<void> waitForPendingPersistence() {
+    return _persistenceBarrier.waitForLatest();
   }
 
   String _appendOutputLine(String currentOutput, String? outputLine) {
@@ -492,6 +517,15 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
 
   /// 处理队列
   Future<void> processQueue() async {
+    try {
+      // 入队和终态更新通常由微任务触发下一轮处理；先等待最新快照，确保即将
+      // 执行的任务或上一任务的终态已经成为可恢复事实。
+      await waitForPendingPersistence();
+    } catch (error, stackTrace) {
+      AppLogger.error('队列状态尚未持久化，暂停启动下一任务', error, stackTrace);
+      return;
+    }
+
     // 如果已经在处理中，或者有当前任务，直接返回
     if (state.isProcessing || state.currentTask != null) {
       AppLogger.info('Already processing or has current task, skipping');
@@ -512,6 +546,7 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
   ///
   /// 从队列中取出任务并执行，更新进度状态
   Future<void> processInstallTask(InstallTask task) async {
+    final previousState = state;
     final remainingQueue = state.queue.where((t) => t.id != task.id).toList();
 
     // 重置取消标志（确保每次安装都是干净的状态）
@@ -537,6 +572,25 @@ class InstallQueue extends _$InstallQueue with _InstallQueuePersistence {
         currentTask: installingTask,
       ),
     );
+
+    try {
+      await waitForPendingPersistence();
+    } catch (error, stackTrace) {
+      AppLogger.error(
+        '当前任务状态无法持久化，未启动 ll-cli: ${task.appId}',
+        error,
+        stackTrace,
+      );
+      // processQueue 已确认 previousState 是最近一次 durable 状态；只有当前任务
+      // 未被其他操作替换时才回滚内存，避免覆盖等待期间发生的更新。
+      if (state.currentTask?.id == task.id) {
+        state = previousState;
+      }
+      return;
+    }
+    if (!ref.mounted || state.currentTask?.id != task.id) {
+      return;
+    }
 
     // 启动状态机和超时检查
     _stateMachine = InstallStateMachine();

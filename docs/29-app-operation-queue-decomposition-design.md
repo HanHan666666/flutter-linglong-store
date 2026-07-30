@@ -73,8 +73,10 @@ Riverpod Notifier 保留为唯一状态所有者和用例编排入口。每个�
 - 首次迁移成功落盘后删除旧 key；
 - 保存完整 `InstallQueueState` 快照。
 
-它不持有 Riverpod `Ref`，不发布 UI 状态，也不决定何时越过持久化屏障。正式依赖
-仍由组合根 Provider 提供，Notifier 只负责创建这个 Application 服务。
+它不持有 Riverpod `Ref`，不发布 UI 状态，也不决定何时越过持久化屏障。旧
+SharedPreferences 读取通过 `LegacyAppOperationStateRepository` 端口隔离，JSON
+和历史 key 只存在于 Data 适配器；正式依赖仍由组合根 Provider 提供，Notifier
+只负责创建这个 Application 服务。
 
 ### 5.2 `AppOperationTaskExecutor`
 
@@ -151,6 +153,7 @@ Presentation / LifecycleCoordinator
           │       └──────────── AppOperationQueueReducer
           │                          └── AppOperationBatchReducer
           ├── AppOperationStateStore ── AppOperationJournalRepository
+          │                    └─────── LegacyAppOperationStateRepository
           └── AppOperationTaskExecutor ─ LinglongCliRepository
 ```
 

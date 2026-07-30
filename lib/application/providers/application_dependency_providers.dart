@@ -13,6 +13,7 @@ import '../../domain/repositories/app_repository.dart';
 import '../../domain/repositories/error_solution_repository.dart';
 import '../../domain/repositories/linglong_cli_repository.dart';
 import '../../domain/repositories/linglong_repository_management_repository.dart';
+import '../../domain/repositories/legacy_app_operation_state_repository.dart';
 import '../../domain/repositories/system_notification_gateway.dart';
 
 /// 应用启动阶段初始化的用户偏好存储端口。
@@ -54,6 +55,12 @@ final linglongRepositoryManagementRepositoryProvider =
 final appOperationJournalRepositoryProvider =
     Provider<AppOperationJournalRepository>((ref) {
       return _missingDependency('appOperationJournalRepositoryProvider');
+    });
+
+/// 旧版 SharedPreferences 操作队列迁移端口。
+final legacyAppOperationStateRepositoryProvider =
+    Provider<LegacyAppOperationStateRepository>((ref) {
+      return _missingDependency('legacyAppOperationStateRepositoryProvider');
     });
 
 /// 桌面系统通知投递端口。

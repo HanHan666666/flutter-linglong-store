@@ -18,6 +18,7 @@ import '../data/repositories/app_repository_impl.dart';
 import '../data/repositories/error_solution_repository_impl.dart';
 import '../data/repositories/file_app_operation_journal_repository.dart';
 import '../data/repositories/linglong_cli_repository_impl.dart';
+import '../data/repositories/shared_preferences_legacy_app_operation_state_repository.dart';
 import '../platform/notifications/linux_system_notification_gateway.dart';
 
 /// 创建正式应用根 ProviderScope 使用的完整依赖覆盖。
@@ -49,6 +50,10 @@ List<Override> createProductionDependencyOverrides({
       }
       return FileAppOperationJournalRepository(File(journalPath));
     }),
+    legacyAppOperationStateRepositoryProvider.overrideWith(
+      (ref) =>
+          SharedPreferencesLegacyAppOperationStateRepository(sharedPreferences),
+    ),
     systemNotificationGatewayProvider.overrideWith(
       (ref) => const LinuxSystemNotificationGateway(),
     ),

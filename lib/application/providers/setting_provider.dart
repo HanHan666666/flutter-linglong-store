@@ -6,11 +6,11 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../core/di/providers.dart'
-    show linglongCliRepositoryProvider, sharedPreferencesProvider;
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/platform/linux_renderer_service.dart';
+import 'application_dependency_providers.dart'
+    show linglongCliRepositoryProvider, sharedPreferencesProvider;
 import 'installed_apps_provider.dart';
 import 'linux_renderer_provider.dart';
 

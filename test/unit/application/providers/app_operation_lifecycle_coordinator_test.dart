@@ -8,6 +8,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:linglong_store/application/providers/application_dependency_providers.dart';
 import 'package:linglong_store/application/providers/app_operation_lifecycle_coordinator.dart';
 import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';

@@ -1,12 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/logging/app_logger.dart';
-import '../../data/repositories/linglong_cli_repository_impl.dart';
 import '../../domain/models/install_queue_state.dart';
 import '../../domain/models/linglong_environment_management.dart';
 import '../../domain/models/linglong_repository_config.dart';
-import '../../domain/repositories/linglong_repository_management_repository.dart';
 import '../services/linglong_environment_management_service.dart';
+import 'application_dependency_providers.dart';
 import 'install_queue_provider.dart';
 import 'linglong_env_provider.dart';
 
@@ -64,12 +63,6 @@ class LinglongEnvironmentManagementState {
     );
   }
 }
-
-final linglongRepositoryManagementRepositoryProvider =
-    Provider<LinglongRepositoryManagementRepository>((ref) {
-      final messages = ref.watch(installMessagesProvider);
-      return LinglongCliRepositoryImpl(messages);
-    });
 
 final linglongEnvironmentManagementServiceProvider =
     Provider<LinglongEnvironmentManagementService>((ref) {

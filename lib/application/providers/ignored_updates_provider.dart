@@ -11,7 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/storage/ignored_update_storage.dart';
 import '../../domain/models/ignored_update.dart';
-import 'install_queue_provider.dart' show sharedPreferencesProvider;
+import 'application_dependency_providers.dart' show sharedPreferencesProvider;
 
 /// 忽略更新本地存储 Provider。
 ///

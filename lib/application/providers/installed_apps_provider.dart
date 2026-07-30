@@ -2,7 +2,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/network/api_exceptions.dart';
 import '../../domain/models/installed_app.dart';
-import '../../core/di/providers.dart';
+import 'application_dependency_providers.dart';
+import 'setting_provider.dart';
 
 part 'installed_apps_provider.g.dart';
 

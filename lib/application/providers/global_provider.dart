@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/config/theme.dart';
 import 'all_apps_provider.dart';
-import 'install_queue_provider.dart';
+import 'application_dependency_providers.dart';
 import 'ranking_provider.dart';
 import 'recommend_provider.dart';
 import 'search_provider.dart';

@@ -8,12 +8,11 @@ import 'package:mockito/mockito.dart';
 import 'package:retrofit/retrofit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:linglong_store/application/providers/application_dependency_providers.dart';
 import 'package:linglong_store/application/providers/api_provider.dart';
 import 'package:linglong_store/application/providers/ignored_updates_provider.dart';
-import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/installed_apps_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
-import 'package:linglong_store/core/di/repository_provider.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/core/storage/ignored_update_storage.dart';
 import 'package:linglong_store/data/models/api_dto.dart';

@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../application/providers/application_dependency_providers.dart'
+    show linglongCliRepositoryProvider;
+import '../../application/providers/install_queue_provider.dart';
 import '../../application/providers/network_speed_provider.dart';
 import '../../core/config/theme.dart';
-import '../../core/di/providers.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../domain/models/install_progress.dart';
+import '../../domain/models/install_queue_state.dart';
 import '../../domain/models/install_task.dart';
 import 'app_icon.dart';
 import 'error_solution_help_button.dart';

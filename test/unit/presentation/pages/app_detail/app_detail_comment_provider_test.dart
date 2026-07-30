@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:linglong_store/application/providers/application_dependency_providers.dart';
 import 'package:linglong_store/application/providers/app_detail_provider.dart';
-import 'package:linglong_store/core/di/providers.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
 import 'package:linglong_store/data/repositories/app_repository_impl.dart';

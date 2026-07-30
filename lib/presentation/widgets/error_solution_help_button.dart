@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../application/providers/error_solution_provider.dart';
 import '../../core/accessibility/a11y_focus_traversal.dart';
 import '../../core/accessibility/a11y_semantics.dart';
 import '../../core/config/app_config.dart';
 import '../../core/config/theme.dart';
-import '../../core/di/providers.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/utils/app_notification_helpers.dart';
 import '../../domain/models/error_solution.dart';

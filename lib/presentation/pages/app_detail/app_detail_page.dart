@@ -4,12 +4,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../application/providers/app_detail_provider.dart';
+import '../../../application/providers/application_dependency_providers.dart'
+    show linglongCliRepositoryProvider;
 import '../../../application/providers/app_uninstall_provider.dart';
+import '../../../application/providers/global_provider.dart';
 import '../../../application/providers/installed_apps_provider.dart';
+import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
+import '../../../application/providers/update_apps_provider.dart';
 import '../../../domain/models/installed_app.dart';
 import '../../../domain/models/install_task.dart';
 import '../../../domain/models/install_progress.dart';
+import '../../../domain/models/install_queue_state.dart';
 import '../../../domain/models/app_version.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/config/routes.dart';
@@ -20,7 +26,6 @@ import '../../widgets/app_detail_info_section.dart';
 import '../../widgets/install_to_download_flyout.dart';
 import '../../widgets/install_button.dart';
 import '../../widgets/confirm_dialog.dart';
-import '../../../core/di/providers.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/utils/format_utils.dart';
 import '../../../core/utils/app_notification_helpers.dart';

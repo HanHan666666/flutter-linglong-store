@@ -4,9 +4,10 @@ import '../../../domain/models/installed_app.dart';
 import '../../../domain/models/app_detail.dart' as dm;
 import '../../../domain/models/app_comment.dart' as dm;
 import '../../../domain/models/app_version.dart' as dm;
-import '../../../data/repositories/app_repository_impl.dart';
 import '../../../core/logging/app_logger.dart';
-import '../../../core/di/providers.dart';
+import '../mappers/app_detail_mapper.dart';
+import 'application_dependency_providers.dart';
+import 'global_provider.dart';
 
 part 'app_detail_provider.g.dart';
 
@@ -117,7 +118,9 @@ class AppDetail extends _$AppDetail {
       final detailArch =
           initialApp?.arch ?? state.appDetail?.arch ?? state.app?.arch;
       final detailRepoName =
-          initialApp?.repoName ?? state.appDetail?.repoName ?? state.app?.repoName;
+          initialApp?.repoName ??
+          state.appDetail?.repoName ??
+          state.app?.repoName;
       final detailModule =
           initialApp?.module ?? state.appDetail?.module ?? state.app?.module;
 
@@ -130,8 +133,11 @@ class AppDetail extends _$AppDetail {
       );
 
       // 将详情转换为 InstalledApp 模型
-      final repo = ref.read(appRepositoryProvider) as AppRepositoryImpl;
-      final app = repo.mapDetailToInstalledAppFromDomain(appDetail);
+      final app = mapAppDetailToInstalledApp(
+        appDetail,
+        fallbackArch:
+            detailArch ?? ref.read(globalAppProvider).arch ?? 'x86_64',
+      );
 
       // 更新状态，包含截图列表
       state = state.copyWith(

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/di/repository_provider.dart';
 import '../services/error_solution_lookup_service.dart';
+import 'application_dependency_providers.dart';
 
 /// 安装错误解决方案查询服务 Provider。
 ///

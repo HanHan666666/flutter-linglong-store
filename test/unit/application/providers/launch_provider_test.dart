@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:linglong_store/application/providers/application_dependency_providers.dart';
 import 'package:linglong_store/application/providers/app_search_index_provider.dart';
 import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
@@ -8,7 +9,6 @@ import 'package:linglong_store/application/providers/installed_apps_provider.dar
 import 'package:linglong_store/application/providers/launch_provider.dart';
 import 'package:linglong_store/application/providers/linglong_env_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
-import 'package:linglong_store/core/di/repository_provider.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:linglong_store/core/di/repository_provider.dart';
+import 'package:linglong_store/application/providers/application_dependency_providers.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/domain/models/error_solution.dart';
 import 'package:linglong_store/domain/repositories/error_solution_repository.dart';

@@ -6,8 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'bootstrap/production_dependency_overrides.dart';
 import 'application/providers/og_install_controller.dart';
-import 'application/providers/install_queue_provider.dart';
 import 'core/logging/app_logger.dart';
 import 'core/migrations/file_migration_lock.dart';
 import 'core/migrations/migrations.dart';
@@ -80,8 +80,10 @@ void main(List<String> arguments) async {
   runApp(
     ProviderScope(
       overrides: [
-        // 注入 SharedPreferences 实例
-        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+        // Repository、Journal、通知网关及 SharedPreferences 只在根组合一次。
+        ...createProductionDependencyOverrides(
+          sharedPreferences: sharedPreferences,
+        ),
         // 注入冷启动阶段收到的旧 og 协议链接，App 层会等启动流程完成后入队。
         initialOgProtocolUrlsProvider.overrideWithValue(initialOgProtocolUrls),
       ],

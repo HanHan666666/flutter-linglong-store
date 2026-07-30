@@ -1,18 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../core/storage/app_xdg_paths.dart';
-import '../../data/repositories/file_app_operation_journal_repository.dart';
 import '../../core/i18n/install_messages.dart';
 import '../../core/logging/app_logger.dart';
-import '../../core/di/providers.dart' show currentLocaleProvider;
-import 'linglong_env_provider.dart';
-import '../services/app_operation_persistence_barrier.dart';
 import '../../domain/models/app_operation_batch.dart';
 import '../../domain/models/app_operation_target_snapshot.dart';
 import '../../domain/models/linux_distribution.dart';
@@ -22,8 +16,10 @@ import '../../domain/models/install_state_machine.dart';
 import '../../domain/models/install_task.dart';
 import '../../domain/models/installed_app.dart';
 import '../../domain/repositories/app_operation_journal_repository.dart';
-import '../../domain/repositories/linglong_cli_repository.dart';
-import '../../data/repositories/linglong_cli_repository_impl.dart';
+import '../services/app_operation_persistence_barrier.dart';
+import 'application_dependency_providers.dart';
+import 'global_provider.dart' show currentLocaleProvider;
+import 'linglong_env_provider.dart';
 
 part 'install_queue_provider.g.dart';
 
@@ -44,36 +40,11 @@ const int _maxHistorySize = 50;
 // 基础 Provider
 // ---------------------------------------------------------------------------
 
-/// SharedPreferences Provider
-@Riverpod(keepAlive: true)
-SharedPreferences sharedPreferences(Ref ref) {
-  throw UnimplementedError('SharedPreferences not initialized');
-}
-
 /// InstallMessages Provider - 根据当前 locale 获取国际化消息
 @riverpod
 InstallMessages installMessages(Ref ref) {
   final locale = ref.watch(currentLocaleProvider);
   return InstallMessages.fromLocale(locale);
-}
-
-/// Linglong CLI Repository Provider
-@riverpod
-LinglongCliRepository linglongCliRepository(Ref ref) {
-  final messages = ref.watch(installMessagesProvider);
-  return LinglongCliRepositoryImpl(messages);
-}
-
-/// 应用操作 Journal Provider。
-///
-/// 生产环境固定使用 XDG State 目录；测试可覆盖为内存实现，避免触碰用户状态。
-@Riverpod(keepAlive: true)
-AppOperationJournalRepository appOperationJournalRepository(Ref ref) {
-  final journalPath = AppXdgPaths.resolveOperationJournalFilePath();
-  if (journalPath == null) {
-    throw StateError('无法解析 XDG 应用操作 Journal 路径');
-  }
-  return FileAppOperationJournalRepository(File(journalPath));
 }
 
 // ---------------------------------------------------------------------------
@@ -194,8 +165,8 @@ mixin _InstallQueuePersistence {
 ///
 /// 核心功能：
 /// 1. 严格串行安装：一次只处理一个安装任务
-/// 2. 持久化存储：应用崩溃后可恢复队列
-/// 3. 状态持久：保存到 SharedPreferences
+/// 2. XDG Journal：应用崩溃后可恢复完整操作状态
+/// 3. 持久化屏障：外部动作不得领先于可恢复事实
 /// 4. 错误恢复：重试机制
 /// 5. 取消状态管理：区分"用户取消"和"真正失败"
 @Riverpod(keepAlive: true)

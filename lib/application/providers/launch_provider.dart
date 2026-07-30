@@ -3,13 +3,16 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/config/app_config.dart';
-import '../../core/di/providers.dart';
 import '../../core/logging/app_logger.dart';
 import '../../domain/models/linglong_env_check_result.dart';
+import 'application_dependency_providers.dart';
 import 'app_operation_lifecycle_coordinator.dart';
 import 'app_search_index_provider.dart';
+import 'global_provider.dart';
 import 'installed_apps_provider.dart';
+import 'install_queue_provider.dart';
 import 'linglong_env_provider.dart';
+import 'update_apps_provider.dart';
 
 part 'launch_provider.g.dart';
 

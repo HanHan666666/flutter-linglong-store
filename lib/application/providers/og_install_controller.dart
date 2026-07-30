@@ -3,11 +3,11 @@ import 'dart:collection';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/di/repository_provider.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/protocol/og_protocol_request.dart';
 import '../../domain/models/app_detail.dart';
 import '../../domain/models/install_task.dart';
+import 'application_dependency_providers.dart';
 import 'app_operation_queue_provider.dart';
 import 'launch_provider.dart';
 import 'linglong_env_provider.dart';

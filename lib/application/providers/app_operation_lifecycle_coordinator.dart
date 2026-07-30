@@ -8,8 +8,6 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/di/providers.dart'
-    show analyticsRepositoryProvider, currentLocaleProvider;
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/logging/app_logger.dart';
 import '../../domain/models/app_operation_batch.dart';
@@ -17,20 +15,12 @@ import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_queue_state.dart';
 import '../../domain/models/install_task.dart';
 import '../../domain/models/system_notification.dart';
-import '../../domain/repositories/system_notification_gateway.dart';
-import '../../platform/notifications/linux_system_notification_gateway.dart';
 import '../services/update_batch_notification_policy.dart';
+import 'application_dependency_providers.dart';
 import 'app_collection_sync_provider.dart';
 import 'global_provider.dart';
 import 'install_queue_provider.dart';
 import 'update_apps_provider.dart';
-
-/// 系统通知平台边界 Provider，测试和未来沙箱实现可以整体替换。
-final systemNotificationGatewayProvider = Provider<SystemNotificationGateway>((
-  ref,
-) {
-  return const LinuxSystemNotificationGateway();
-});
 
 /// 一键更新通知内容策略 Provider。
 final updateBatchNotificationPolicyProvider =

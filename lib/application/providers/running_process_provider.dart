@@ -3,12 +3,11 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../core/di/repository_provider.dart';
 import '../../core/network/api_exceptions.dart';
 import '../../domain/models/installed_app.dart';
 import '../../domain/models/running_app.dart';
 import '../../domain/repositories/app_repository.dart';
-import 'install_queue_provider.dart';
+import 'application_dependency_providers.dart';
 
 part 'running_process_provider.g.dart';
 

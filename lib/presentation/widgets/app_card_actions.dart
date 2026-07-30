@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../application/providers/application_dependency_providers.dart'
+    show linglongCliRepositoryProvider;
 import '../../application/providers/app_operation_queue_provider.dart';
-import '../../application/providers/install_queue_provider.dart';
 import '../../core/utils/app_notification_helpers.dart';
 import '../../domain/models/install_task.dart';
 import 'install_to_download_flyout.dart';

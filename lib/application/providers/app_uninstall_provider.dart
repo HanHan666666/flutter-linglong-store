@@ -1,9 +1,10 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../core/di/providers.dart';
 import '../../domain/models/install_task.dart';
 import 'app_collection_sync_provider.dart';
+import 'application_dependency_providers.dart';
 import 'installed_apps_provider.dart';
+import 'install_queue_provider.dart';
 import 'running_process_provider.dart';
 import '../services/app_uninstall_service.dart';
 

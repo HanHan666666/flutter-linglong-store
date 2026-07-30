@@ -357,26 +357,6 @@ class AppRepositoryImpl implements AppRepository {
     );
   }
 
-  /// 将领域模型 AppDetail 转换为 InstalledApp 模型
-  ///
-  /// 便捷重载，避免在页面层需要再持有 DTO 引用。
-  InstalledApp mapDetailToInstalledAppFromDomain(AppDetail detail) {
-    return InstalledApp(
-      appId: detail.appId,
-      name: detail.name,
-      version: detail.version,
-      arch: detail.arch ?? _currentArch,
-      channel: detail.channel ?? 'stable',
-      description: detail.description,
-      icon: detail.icon,
-      kind: detail.kind,
-      module: detail.module,
-      runtime: detail.runtime,
-      size: detail.packageSize,
-      repoName: detail.repoName,
-    );
-  }
-
   @override
   Future<List<InstalledApp>> enrichInstalledAppsWithDetails(
     List<InstalledApp> apps,

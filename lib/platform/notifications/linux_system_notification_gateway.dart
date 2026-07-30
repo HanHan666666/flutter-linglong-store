@@ -9,6 +9,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 
+import '../../core/config/generated/application_identity.g.dart';
 import '../../domain/models/system_notification.dart';
 import '../../domain/repositories/system_notification_gateway.dart';
 
@@ -16,14 +17,12 @@ import '../../domain/repositories/system_notification_gateway.dart';
 class LinuxSystemNotificationGateway implements SystemNotificationGateway {
   /// 使用固定平台通道创建网关。
   const LinuxSystemNotificationGateway({
-    MethodChannel channel = const MethodChannel(_channelName),
+    MethodChannel channel = const MethodChannel(
+      ApplicationIdentity.systemNotificationChannel,
+    ),
     bool Function() isLinux = _isLinuxHost,
   }) : _channel = channel,
        _isLinux = isLinux;
-
-  /// MethodChannel 名称必须与 Linux runner 完全一致。
-  static const String _channelName =
-      'com.dongpl.linglong-store.v2/system_notification';
 
   /// runner 支持的提交方法。
   static const String _submitMethod = 'submit';

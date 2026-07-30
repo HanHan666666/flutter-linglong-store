@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:path/path.dart' as path;
 
+import '../config/generated/application_identity.g.dart';
+
 /// 应用 XDG 标准路径解析 helper。
 ///
 /// 严格遵循 [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir/latest/)：
@@ -23,7 +25,9 @@ class AppXdgPaths {
   static const String legacyApplicationId = 'org.linglong-store.LinyapsManager';
 
   /// 当前统一的 application-id，同时也是数据目录名。
-  static const String applicationId = 'com.dongpl.linglong-store.v2';
+  ///
+  /// 保留该入口用于兼容既有路径调用方，身份值只能由仓库级生成配置提供。
+  static const String applicationId = ApplicationIdentity.applicationId;
 
   // === 子目录与文件名 ===
 

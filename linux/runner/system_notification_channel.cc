@@ -2,8 +2,8 @@
 
 namespace {
 
-constexpr char kChannelName[] =
-    "com.dongpl.linglong-store.v2/system_notification";
+// 通知通道必须与 Dart 生成常量使用同一 application ID，后缀只表达通道职责。
+constexpr char kChannelName[] = APPLICATION_ID "/system_notification";
 constexpr char kSubmitMethod[] = "submit";
 constexpr char kSubmittedResult[] = "submitted";
 

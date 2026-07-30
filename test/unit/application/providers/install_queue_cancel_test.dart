@@ -13,6 +13,8 @@ import 'package:linglong_store/domain/repositories/analytics_repository.dart';
 import 'package:linglong_store/domain/repositories/linglong_cli_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../helpers/memory_app_operation_journal_repository.dart';
+
 void main() {
   setUpAll(() async {
     await AppLogger.init();
@@ -114,6 +116,9 @@ Future<ProviderContainer> _createTestContainer(
   return ProviderContainer(
     overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
+      appOperationJournalRepositoryProvider.overrideWithValue(
+        MemoryAppOperationJournalRepository(),
+      ),
       analyticsRepositoryProvider.overrideWithValue(
         const _FakeAnalyticsRepository(),
       ),

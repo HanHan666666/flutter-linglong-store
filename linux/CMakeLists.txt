@@ -5,8 +5,11 @@ project(linglong_store LANGUAGES CXX)
 # The name of the executable created for the application.
 set(BINARY_NAME "linglong_store")
 
-# The unique GTK application identifier for this application.
-set(APPLICATION_ID "com.dongpl.linglong-store.v2")
+# 应用身份由仓库级声明生成，禁止在 CMake 中维护第二份 application ID。
+include("${CMAKE_CURRENT_SOURCE_DIR}/generated/application_identity.cmake")
+if(NOT DEFINED APPLICATION_ID OR APPLICATION_ID STREQUAL "")
+  message(FATAL_ERROR "Generated application identity is missing APPLICATION_ID")
+endif()
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.

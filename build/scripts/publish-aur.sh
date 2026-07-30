@@ -2,6 +2,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+. "$ROOT_DIR/build/scripts/lib/application-identity.sh"
+
+load_application_identity "$ROOT_DIR/config/application_identity.conf"
 
 release_version=""
 channel="stable"
@@ -173,11 +176,17 @@ update_aur_repo() {
   (
     local work_dir
     local metadata_dir=""
-    local desktop_filename
+    local desktop_filename="$CANONICAL_DESKTOP_ID"
+    local compat_desktop_filename
     local changelog_filename
     local rendered_pkgname
     local rendered_pkgver
     local repo_name
+    local existing_desktop_file
+    local existing_desktop_filename
+    local keep_desktop_file
+    local -a compat_desktop_filenames=()
+    local -a existing_desktop_files=()
     work_dir="$(mktemp -d)"
     trap 'cd /; rm -rf "$work_dir" "$metadata_dir"; rm -f ~/.ssh/aur_key' EXIT
 
@@ -224,13 +233,19 @@ update_aur_repo() {
       exit 1
     fi
 
-    mapfile -t rendered_desktop_files < <(find "$metadata_dir/aur" -maxdepth 1 -type f -name '*.desktop' | sort)
-    if [[ "${#rendered_desktop_files[@]}" -ne 1 ]]; then
-      echo "Expected exactly one rendered AUR desktop file in $metadata_dir/aur, found ${#rendered_desktop_files[@]}" >&2
+    mapfile -t compat_desktop_filenames < <(
+      application_identity_compat_desktop_ids "$channel"
+    )
+    if [[ ! -f "$metadata_dir/aur/$desktop_filename" ]]; then
+      echo "Rendered AUR metadata is missing the canonical desktop file." >&2
       exit 1
     fi
-
-    desktop_filename="$(basename "${rendered_desktop_files[0]}")"
+    for compat_desktop_filename in "${compat_desktop_filenames[@]}"; do
+      if [[ ! -f "$metadata_dir/aur/$compat_desktop_filename" ]]; then
+        echo "Rendered AUR metadata is missing compatibility desktop file $compat_desktop_filename." >&2
+        exit 1
+      fi
+    done
 
     mapfile -t rendered_changelog_files < <(find "$metadata_dir/aur" -maxdepth 1 -type f -name '*.changelog' | sort)
     if [[ "${#rendered_changelog_files[@]}" -ne 1 ]]; then
@@ -240,7 +255,27 @@ update_aur_repo() {
 
     changelog_filename="$(basename "${rendered_changelog_files[0]}")"
 
-    find . -maxdepth 1 -type f -name '*.desktop' ! -name "$desktop_filename" -delete
+    # AUR 仓库只保留本渠道当前身份集合；逐文件比对可正确处理多个兼容别名。
+    mapfile -t existing_desktop_files < <(
+      find . -maxdepth 1 -type f -name '*.desktop' | sort
+    )
+    for existing_desktop_file in "${existing_desktop_files[@]}"; do
+      existing_desktop_filename="$(basename "$existing_desktop_file")"
+      keep_desktop_file="false"
+      if [[ "$existing_desktop_filename" == "$desktop_filename" ]]; then
+        keep_desktop_file="true"
+      else
+        for compat_desktop_filename in "${compat_desktop_filenames[@]}"; do
+          if [[ "$existing_desktop_filename" == "$compat_desktop_filename" ]]; then
+            keep_desktop_file="true"
+            break
+          fi
+        done
+      fi
+      if [[ "$keep_desktop_file" == "false" ]]; then
+        rm -f -- "$existing_desktop_file"
+      fi
+    done
     find . -maxdepth 1 -type f -name '*.changelog' ! -name "$changelog_filename" -delete
 
     # Copy rendered AUR files.
@@ -248,6 +283,9 @@ update_aur_repo() {
     cp "$metadata_dir/aur/$changelog_filename" "$changelog_filename"
     cp "$metadata_dir/aur/LICENSE" LICENSE
     cp "$metadata_dir/aur/$desktop_filename" "$desktop_filename"
+    for compat_desktop_filename in "${compat_desktop_filenames[@]}"; do
+      cp "$metadata_dir/aur/$compat_desktop_filename" "$compat_desktop_filename"
+    done
     cp "$metadata_dir/aur/linglong-store.metainfo.xml" linglong-store.metainfo.xml
     cp "$metadata_dir/aur/linglong-store.svg" linglong-store.svg
 

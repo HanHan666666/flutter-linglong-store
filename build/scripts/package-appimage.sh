@@ -108,10 +108,18 @@ fi
 
 desktop_filename="$(basename "${rendered_desktop_files[0]}")"
 
+mapfile -t rendered_compat_desktop_files < <(find "$metadata_dir/compat" -maxdepth 1 -type f -name '*.desktop' | sort)
+if [[ "${#rendered_compat_desktop_files[@]}" -eq 0 ]]; then
+  echo "Expected at least one rendered compatibility desktop file in $metadata_dir/compat" >&2
+  exit 1
+fi
+
 rsvg-convert -w 256 -h 256 "$ROOT_DIR/assets/icons/logo.svg" -o "$appdir/linglong-store.png"
 cp "$appdir/linglong-store.png" "$appdir/usr/share/icons/hicolor/256x256/apps/linglong-store.png"
 cp "$metadata_dir/$desktop_filename" "$appdir/$desktop_filename"
 cp "$metadata_dir/$desktop_filename" "$appdir/usr/share/applications/$desktop_filename"
+# AppDir 中完整保留当前渠道的协议兼容入口，主入口仍只有 canonical 文件。
+cp -a "$metadata_dir/compat/." "$appdir/usr/share/applications/"
 cp "$metadata_dir/appimage/AppRun" "$appdir/AppRun"
 cp "$metadata_dir/appimage/linglong-store.appdata.xml" "$appdir/usr/share/metainfo/linglong-store.appdata.xml"
 chmod +x "$appdir/AppRun"

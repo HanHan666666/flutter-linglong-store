@@ -676,6 +676,90 @@ abstract class AppLocalizations {
   /// **'每次启动时检测是否有新版本可用'**
   String get startupCheckUpdateDesc;
 
+  /// No description provided for @systemNotifications.
+  ///
+  /// In zh, this message translates to:
+  /// **'系统通知'**
+  String get systemNotifications;
+
+  /// No description provided for @systemNotificationsDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'一键更新完成后，在桌面通知中显示更新结果'**
+  String get systemNotificationsDescription;
+
+  /// No description provided for @updateBatchAllSucceededTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个应用已更新'**
+  String updateBatchAllSucceededTitle(int count);
+
+  /// No description provided for @updateBatchFinishedTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'批量更新已结束'**
+  String get updateBatchFinishedTitle;
+
+  /// No description provided for @updateBatchNoSuccessTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用更新未完成'**
+  String get updateBatchNoSuccessTitle;
+
+  /// No description provided for @updateBatchResultSummary.
+  ///
+  /// In zh, this message translates to:
+  /// **'结果：{summary}'**
+  String updateBatchResultSummary(String summary);
+
+  /// No description provided for @updateBatchResultSeparator.
+  ///
+  /// In zh, this message translates to:
+  /// **'，'**
+  String get updateBatchResultSeparator;
+
+  /// No description provided for @updateBatchSucceededCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'成功 {count} 个'**
+  String updateBatchSucceededCount(int count);
+
+  /// No description provided for @updateBatchFailedCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'失败 {count} 个'**
+  String updateBatchFailedCount(int count);
+
+  /// No description provided for @updateBatchCancelledCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消 {count} 个'**
+  String updateBatchCancelledCount(int count);
+
+  /// No description provided for @updateBatchInterruptedCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'中断 {count} 个'**
+  String updateBatchInterruptedCount(int count);
+
+  /// No description provided for @updateBatchAppNameSeparator.
+  ///
+  /// In zh, this message translates to:
+  /// **'、'**
+  String get updateBatchAppNameSeparator;
+
+  /// No description provided for @updateBatchUpdatedApps.
+  ///
+  /// In zh, this message translates to:
+  /// **'已更新：{names}'**
+  String updateBatchUpdatedApps(String names);
+
+  /// No description provided for @updateBatchUpdatedAppsOverflow.
+  ///
+  /// In zh, this message translates to:
+  /// **'已更新：{names} 等 {remainingCount} 个应用'**
+  String updateBatchUpdatedAppsOverflow(String names, int remainingCount);
+
   /// No description provided for @softwareRendering.
   ///
   /// In zh, this message translates to:

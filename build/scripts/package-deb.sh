@@ -101,8 +101,16 @@ fi
 
 desktop_filename="$(basename "${rendered_desktop_files[0]}")"
 
+mapfile -t rendered_compat_desktop_files < <(find "$metadata_dir/compat" -maxdepth 1 -type f -name '*.desktop' | sort)
+if [[ "${#rendered_compat_desktop_files[@]}" -eq 0 ]]; then
+  echo "Expected at least one rendered compatibility desktop file in $metadata_dir/compat" >&2
+  exit 1
+fi
+
 cp "$metadata_dir/deb/control" "$payload_dir/DEBIAN/control"
 cp "$metadata_dir/$desktop_filename" "$payload_dir/usr/share/applications/$desktop_filename"
+# 渲染目录只包含当前渠道的已校验兼容入口，必须完整安装而不是假设只有一个。
+cp -a "$metadata_dir/compat/." "$payload_dir/usr/share/applications/"
 cp "$metadata_dir/appimage/linglong-store.appdata.xml" "$payload_dir/usr/share/metainfo/linglong-store.appdata.xml"
 
 rm -f "$artifact_path"

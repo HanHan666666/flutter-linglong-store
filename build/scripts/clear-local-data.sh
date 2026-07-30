@@ -9,15 +9,19 @@
 #   1. 默认 dry-run，只有 --apply 才执行删除。
 #   2. 应用运行时拒绝清理，避免破坏活跃的日志、Hive 和单实例通信。
 #   3. 图片缓存目录使用 flutter_cache_manager 通用 key，只按本应用元数据精确删除文件。
-#   4. 所有目标均由固定 application-id 和 XDG 根目录组合，不接受任意删除路径。
+#   4. 所有目标均由严格校验的统一 application-id 和 XDG 根目录组合，不接受任意删除路径。
 
 set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+. "$ROOT_DIR/build/scripts/lib/application-identity.sh"
+
+load_application_identity "$ROOT_DIR/config/application_identity.conf"
 
 # ============================================================
 # 应用身份与文件名
 # ============================================================
 
-APPLICATION_ID="com.dongpl.linglong-store.v2"
 LEGACY_APPLICATION_ID="org.linglong-store.LinyapsManager"
 BINARY_NAME="linglong_store"
 PREFERENCES_FILE_NAME="shared_preferences.json"
@@ -85,6 +89,14 @@ else
   fail_configuration 'XDG_CACHE_HOME 和 HOME 均未设置'
 fi
 
+if [[ -n "${XDG_STATE_HOME:-}" ]]; then
+  STATE_HOME="$XDG_STATE_HOME"
+elif [[ -n "${HOME:-}" ]]; then
+  STATE_HOME="$HOME/.local/state"
+else
+  fail_configuration 'XDG_STATE_HOME 和 HOME 均未设置'
+fi
+
 TEMP_HOME="${TMPDIR:-/tmp}"
 
 if [[ -n "${XDG_DOCUMENTS_DIR:-}" ]]; then
@@ -103,6 +115,7 @@ fi
 validate_absolute_path DATA_HOME "$DATA_HOME"
 validate_absolute_path CONFIG_HOME "$CONFIG_HOME"
 validate_absolute_path CACHE_HOME "$CACHE_HOME"
+validate_absolute_path STATE_HOME "$STATE_HOME"
 validate_absolute_path TEMP_HOME "$TEMP_HOME"
 if [[ -n "$DOCUMENTS_HOME" ]]; then
   validate_absolute_path DOCUMENTS_HOME "$DOCUMENTS_HOME"
@@ -116,6 +129,7 @@ BINARY_DATA_DIR="$DATA_HOME/$BINARY_NAME"
 LEGACY_DATA_DIR="$DATA_HOME/$LEGACY_APPLICATION_ID"
 CURRENT_CONFIG_DIR="$CONFIG_HOME/$APPLICATION_ID"
 CURRENT_CACHE_DIR="$CACHE_HOME/$APPLICATION_ID"
+CURRENT_STATE_DIR="$STATE_HOME/$APPLICATION_ID"
 CURRENT_RUNTIME_DIR="${XDG_RUNTIME_DIR:+$XDG_RUNTIME_DIR/$APPLICATION_ID}"
 IMAGE_CACHE_DIR="$TEMP_HOME/$IMAGE_CACHE_DIRECTORY_NAME"
 FALLBACK_CACHE_DIR="$TEMP_HOME/linglong-store-cache"
@@ -233,6 +247,7 @@ print_help() {
   - $CURRENT_DATA_DIR
   - $CURRENT_CONFIG_DIR
   - $CURRENT_CACHE_DIR
+  - $CURRENT_STATE_DIR
   - ${CURRENT_RUNTIME_DIR:-<XDG_RUNTIME_DIR 未设置，使用临时回退文件>}
   - $BINARY_DATA_DIR
   - $LEGACY_DATA_DIR
@@ -361,7 +376,7 @@ else
 fi
 printf '%s\n\n' '============================================================'
 
-printf '%s\n' '[1/6] 检查应用是否在运行 ...'
+printf '%s\n' '[1/7] 检查应用是否在运行 ...'
 if check_app_running; then
   printf '  [拒绝] 检测到应用正在运行，请先完全退出应用再清理。\n' >&2
   printf '         排查: pgrep -x %s\n' "$BINARY_NAME" >&2
@@ -369,12 +384,12 @@ if check_app_running; then
 fi
 printf '%s\n\n' '  应用未运行，继续'
 
-printf '%s\n' '[2/6] 清理本应用图片缓存 ...'
+printf '%s\n' '[2/7] 清理本应用图片缓存 ...'
 collect_image_cache_files
 process_image_cache_files
 printf '\n'
 
-printf '%s\n' '[3/6] 清理当前 XDG 配置、缓存和运行时目录 ...'
+printf '%s\n' '[3/7] 清理当前 XDG 配置、缓存和运行时目录 ...'
 process_path "$CURRENT_CONFIG_DIR" "应用配置（含渲染器偏好）"
 process_path "$CURRENT_CACHE_DIR" "Hive 缓存（含 cache.hive/cache.lock）"
 if [[ -n "$CURRENT_RUNTIME_DIR" ]]; then
@@ -384,7 +399,11 @@ else
 fi
 printf '\n'
 
-printf '%s\n' '[4/6] 清理历史 Hive 和应用专属临时回退 ...'
+printf '%s\n' '[4/7] 清理当前 XDG 跨重启状态 ...'
+process_path "$CURRENT_STATE_DIR" "应用操作队列、批次、Outbox 和历史状态"
+printf '\n'
+
+printf '%s\n' '[5/7] 清理历史 Hive 和应用专属临时回退 ...'
 if [[ -n "$LEGACY_HIVE_FILE" ]]; then
   process_path "$LEGACY_HIVE_FILE" "历史 Documents Hive 缓存"
   process_path "$LEGACY_HIVE_LOCK_FILE" "历史 Documents Hive 锁文件"
@@ -397,13 +416,13 @@ process_path "$FALLBACK_LOCK_FILE" "单实例临时回退锁文件"
 process_path "$FALLBACK_SOCKET_FILE" "单实例临时回退 socket 文件"
 printf '\n'
 
-printf '%s\n' '[5/6] 清理当前和历史应用数据目录 ...'
+printf '%s\n' '[6/7] 清理当前和历史应用数据目录 ...'
 process_app_data_directory "$CURRENT_DATA_DIR" "当前 application-id 数据目录"
 process_app_data_directory "$BINARY_DATA_DIR" "历史可执行文件名数据目录"
 process_app_data_directory "$LEGACY_DATA_DIR" "旧 application-id 数据目录"
 printf '\n'
 
-printf '%s\n' '[6/6] 清理异常退出残留的临时脚本 ...'
+printf '%s\n' '[7/7] 清理异常退出残留的临时脚本 ...'
 process_owned_temporary_scripts
 printf '\n'
 

@@ -20,5 +20,34 @@ void main() {
         reason: 'Custom URL schemes are registered through x-scheme-handler.',
       );
     });
+
+    test('declares notification capability on the canonical desktop entry', () {
+      final desktopTemplate = File(
+        'build/packaging/linux/linglong-store.desktop.in',
+      ).readAsStringSync();
+
+      expect(desktopTemplate, contains('X-GNOME-UsesNotifications=true'));
+      expect(desktopTemplate, isNot(contains('NoDisplay=true')));
+    });
+
+    test(
+      'keeps the old desktop id as a hidden og protocol compatibility entry',
+      () {
+        final compatibilityTemplate = File(
+          'build/packaging/linux/linglong-store-compat.desktop.in',
+        ).readAsStringSync();
+
+        expect(compatibilityTemplate, contains('NoDisplay=true'));
+        expect(compatibilityTemplate, contains('Exec=@EXECUTABLE_NAME@ %u'));
+        expect(
+          compatibilityTemplate,
+          contains('MimeType=x-scheme-handler/og;'),
+        );
+        expect(
+          compatibilityTemplate,
+          isNot(contains('X-GNOME-UsesNotifications=true')),
+        );
+      },
+    );
   });
 }

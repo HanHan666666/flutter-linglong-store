@@ -127,6 +127,79 @@
   "cacheSize": "Cache Size",
   "startupCheckUpdate": "Check for store updates at launch",
   "startupCheckUpdateDesc": "Check if a new version is available on each startup",
+  "systemNotifications": "System notifications",
+  "systemNotificationsDescription": "Show the update result in a desktop notification after Update All finishes",
+  "updateBatchAllSucceededTitle": "{count} applications updated",
+  "@updateBatchAllSucceededTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchFinishedTitle": "Batch update finished",
+  "updateBatchNoSuccessTitle": "Application updates incomplete",
+  "updateBatchResultSummary": "Result: {summary}",
+  "@updateBatchResultSummary": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchResultSeparator": ", ",
+  "updateBatchSucceededCount": "{count} succeeded",
+  "@updateBatchSucceededCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchFailedCount": "{count} failed",
+  "@updateBatchFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchCancelledCount": "{count} cancelled",
+  "@updateBatchCancelledCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchInterruptedCount": "{count} interrupted",
+  "@updateBatchInterruptedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchAppNameSeparator": ", ",
+  "updateBatchUpdatedApps": "Updated: {names}",
+  "@updateBatchUpdatedApps": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchUpdatedAppsOverflow": "Updated: {names}, and {remainingCount} more",
+  "@updateBatchUpdatedAppsOverflow": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "remainingCount": {
+        "type": "int"
+      }
+    }
+  },
   "softwareRendering": "Software rendering",
   "softwareRenderingEnabled": "Software rendering",
   "hardwareRenderingEnabled": "Hardware rendering",

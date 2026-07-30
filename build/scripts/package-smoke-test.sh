@@ -2,6 +2,10 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+. "$ROOT_DIR/build/scripts/lib/application-identity.sh"
+
+load_application_identity "$ROOT_DIR/config/application_identity.conf"
+
 RELEASE_VERSION="${RELEASE_VERSION:-3.0.7}"
 TARGET_ARCH="${TARGET_ARCH:-amd64}"
 PACKAGE_CHANNEL="${PACKAGE_CHANNEL:-stable}"
@@ -48,6 +52,10 @@ verify_nightly_packaged_metadata() {
   local deb_artifact_path="$1"
   (
     local inspect_root
+    local canonical_desktop_path
+    local compat_desktop_id
+    local compat_desktop_path
+    local -a nightly_compat_desktop_ids=()
 
     if ! command -v dpkg-deb >/dev/null 2>&1; then
       echo "dpkg-deb is required to inspect nightly package metadata." >&2
@@ -59,17 +67,31 @@ verify_nightly_packaged_metadata() {
 
     dpkg-deb -x "$deb_artifact_path" "$inspect_root/deb"
 
-    assert_artifact_exists "$inspect_root/deb/usr/share/applications/linglong-store-nightly.desktop"
+    canonical_desktop_path="$inspect_root/deb/usr/share/applications/$CANONICAL_DESKTOP_ID"
+    mapfile -t nightly_compat_desktop_ids < <(
+      application_identity_compat_desktop_ids nightly
+    )
+
+    assert_artifact_exists "$canonical_desktop_path"
     assert_artifact_exists "$inspect_root/deb/usr/share/metainfo/linglong-store.appdata.xml"
     assert_file_contains '^Name=.*Nightly$' \
-      "$inspect_root/deb/usr/share/applications/linglong-store-nightly.desktop"
+      "$canonical_desktop_path"
     assert_file_contains '^Comment=.*Nightly$' \
-      "$inspect_root/deb/usr/share/applications/linglong-store-nightly.desktop"
+      "$canonical_desktop_path"
+    assert_file_contains '^X-GNOME-UsesNotifications=true$' \
+      "$canonical_desktop_path"
+    for compat_desktop_id in "${nightly_compat_desktop_ids[@]}"; do
+      compat_desktop_path="$inspect_root/deb/usr/share/applications/$compat_desktop_id"
+      assert_artifact_exists "$compat_desktop_path"
+      assert_file_contains '^NoDisplay=true$' "$compat_desktop_path"
+      assert_file_contains '^MimeType=x-scheme-handler/og;$' \
+        "$compat_desktop_path"
+    done
     assert_file_contains '<name>.*Nightly</name>' \
       "$inspect_root/deb/usr/share/metainfo/linglong-store.appdata.xml"
     assert_file_contains '<summary>.*Nightly</summary>' \
       "$inspect_root/deb/usr/share/metainfo/linglong-store.appdata.xml"
-    assert_file_contains '<launchable type="desktop-id">linglong-store-nightly.desktop</launchable>' \
+    assert_file_contains "<launchable type=\"desktop-id\">$CANONICAL_DESKTOP_ID</launchable>" \
       "$inspect_root/deb/usr/share/metainfo/linglong-store.appdata.xml"
   )
 }

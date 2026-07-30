@@ -26,9 +26,7 @@ class ApplicationCardStateIndex {
   final Map<String, InstallTask> activeTasksByAppId;
 
   /// 解析单个应用卡片需要展示的状态。
-  ResolvedApplicationCardState resolve({
-    required String appId,
-  }) {
+  ResolvedApplicationCardState resolve({required String appId}) {
     if (appId.isEmpty) {
       return const ResolvedApplicationCardState(
         buttonState: InstallButtonState.notInstalled,
@@ -43,18 +41,18 @@ class ApplicationCardStateIndex {
     final activeButtonState = switch (activeTask?.status) {
       InstallStatus.pending => InstallButtonState.pending,
       InstallStatus.downloading ||
-          InstallStatus.installing => InstallButtonState.installing,
+      InstallStatus.installing => InstallButtonState.installing,
       _ => null,
     };
 
     return ResolvedApplicationCardState(
       buttonState:
           activeButtonState ??
-              (!isInstalled
-                  ? InstallButtonState.notInstalled
-                  : (hasUpdate
-                        ? InstallButtonState.update
-                        : InstallButtonState.open)),
+          (!isInstalled
+              ? InstallButtonState.notInstalled
+              : (hasUpdate
+                    ? InstallButtonState.update
+                    : InstallButtonState.open)),
       isInstalled: isInstalled,
       hasUpdate: hasUpdate,
       isInstalling: isInstalling,
@@ -112,6 +110,7 @@ final applicationCardStateIndexProvider = Provider<ApplicationCardStateIndex>((
       case InstallStatus.success:
       case InstallStatus.failed:
       case InstallStatus.cancelled:
+      case InstallStatus.interrupted:
         break;
     }
   }

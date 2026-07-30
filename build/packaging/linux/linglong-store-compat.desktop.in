@@ -1,0 +1,17 @@
+# 旧 desktop ID 的隐藏兼容入口。
+#
+# 该文件只用于保留用户现有的 x-scheme-handler/og 默认应用关联，
+# 不参与菜单展示、AppStream 主入口或系统通知身份识别。
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=@DISPLAY_NAME@
+Name[zh_CN]=@DISPLAY_NAME@
+Comment=@SUMMARY@
+Comment[zh_CN]=@DISPLAY_NAME@
+Exec=@EXECUTABLE_NAME@ %u
+Icon=@ICON_NAME@
+StartupWMClass=@WM_CLASS@
+Terminal=false
+NoDisplay=true
+MimeType=x-scheme-handler/og;

@@ -748,7 +748,7 @@ class _TestInstallQueue extends InstallQueue {
   InstallQueueState build() => const InstallQueueState();
 
   @override
-  Future<void> checkRecovery(List<String> installedAppIds) async {}
+  Future<void> checkRecovery(List<InstalledApp> installedApps) async {}
 }
 
 class _NoopAnalyticsRepository implements AnalyticsRepository {

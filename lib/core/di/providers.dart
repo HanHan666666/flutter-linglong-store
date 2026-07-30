@@ -12,7 +12,7 @@ export '../../domain/models/install_queue_state.dart' show InstallQueueState;
 
 // SharedPreferences - 需要在 main.dart 中初始化
 export '../../application/providers/install_queue_provider.dart'
-    show sharedPreferencesProvider;
+    show sharedPreferencesProvider, appOperationJournalRepositoryProvider;
 
 // ==================== Repository Provider ====================
 

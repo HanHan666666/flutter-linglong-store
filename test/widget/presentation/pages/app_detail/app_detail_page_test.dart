@@ -13,6 +13,7 @@ import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/domain/models/app_detail.dart' as dm;
+import 'package:linglong_store/domain/models/app_operation_target_snapshot.dart';
 import 'package:linglong_store/domain/models/app_version.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
@@ -1212,6 +1213,7 @@ class _RecordingInstallQueue extends InstallQueue {
     required String appName,
     String? icon,
     String? version,
+    AppOperationTargetSnapshot? target,
     bool force = false,
   }) {
     lastKind = kind;

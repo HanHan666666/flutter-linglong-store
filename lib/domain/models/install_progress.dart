@@ -17,6 +17,7 @@ enum InstallStatus {
   success,
   failed,
   cancelled,
+  interrupted,
 }
 
 /// 安装进度事件

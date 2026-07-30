@@ -14,3 +14,4 @@ Terminal=false
 Categories=System;PackageManager;
 MimeType=x-scheme-handler/og;
 Keywords=linglong;store;app;package;
+X-GNOME-UsesNotifications=true

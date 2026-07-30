@@ -6,6 +6,7 @@ import '../../core/config/app_config.dart';
 import '../../core/di/providers.dart';
 import '../../core/logging/app_logger.dart';
 import '../../domain/models/linglong_env_check_result.dart';
+import 'app_operation_lifecycle_coordinator.dart';
 import 'app_search_index_provider.dart';
 import 'installed_apps_provider.dart';
 import 'linglong_env_provider.dart';
@@ -486,12 +487,11 @@ class LaunchSequence extends _$LaunchSequence {
     try {
       final installQueue = ref.read(installQueueProvider.notifier);
 
-      // 获取已安装应用 ID 列表
+      // 恢复必须使用完整本机实例和版本，更新任务不能只凭 appId 判断成功。
       final installedApps = ref.read(installedAppsProvider).apps;
-      final installedIds = installedApps.map((app) => app.appId).toList();
 
       // 检查崩溃恢复
-      await installQueue.checkRecovery(installedIds);
+      await installQueue.checkRecovery(installedApps);
 
       // 获取待处理任务数量
       final pendingCount = ref.read(installQueueProvider).queue.length;
@@ -526,6 +526,10 @@ class LaunchSequence extends _$LaunchSequence {
     );
 
     AppLogger.info('Launch sequence completed');
+
+    // 本地任务、批次和 Outbox 恢复完成后再启动全局副作用协调器，
+    // 避免系统通知或列表刷新抢在启动事实核验之前执行。
+    ref.read(appOperationLifecycleCoordinatorProvider);
 
     // 异步上报启动访问记录（fire-and-forget，失败不影响应用）
     _reportStartupVisit();

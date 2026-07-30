@@ -735,6 +735,7 @@ class _TaskCardState extends State<_TaskCard> {
       InstallStatus.success => ('已完成', appColors.success),
       InstallStatus.failed => ('失败', appColors.error),
       InstallStatus.cancelled => ('已取消', appColors.warning),
+      InstallStatus.interrupted => ('已中断', appColors.warning),
     };
     final resolvedLabel = widget.featured ? '当前任务' : label;
     final resolvedColor = widget.featured ? appColors.primary : color;
@@ -779,6 +780,7 @@ class _TaskCardState extends State<_TaskCard> {
           InstallStatus.success => widget.task.successMessage,
           InstallStatus.failed => '安装失败',
           InstallStatus.cancelled => widget.task.cancelledMessage,
+          InstallStatus.interrupted => '任务已中断',
         },
     ];
     return parts.join(' · ');

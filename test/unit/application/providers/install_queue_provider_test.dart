@@ -3,9 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
+import 'package:linglong_store/domain/models/app_operation_batch.dart';
+import 'package:linglong_store/domain/models/app_operation_target_snapshot.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
+import 'package:linglong_store/domain/models/installed_app.dart';
 
 void main() {
   setUpAll(() async {
@@ -335,6 +338,105 @@ void main() {
         expect(state.queue.single.version, isNull);
       },
     );
+  });
+
+  group('InstallQueue precise recovery', () {
+    test('更新目标版本已安装时恢复为成功', () async {
+      const target = AppOperationTargetSnapshot(
+        appId: 'org.example.demo',
+        displayName: 'Demo',
+        arch: 'x86_64',
+        channel: 'main',
+        module: 'binary',
+        installedVersion: '1.0.0',
+        expectedVersion: '2.0.0',
+      );
+      final container = ProviderContainer(
+        overrides: [
+          installQueueProvider.overrideWith(
+            () => TestInstallQueue(
+              initialState: InstallQueueState(
+                currentTask: InstallTask(
+                  id: 'task-1',
+                  appId: target.appId,
+                  appName: target.displayName,
+                  kind: InstallTaskKind.update,
+                  target: target,
+                  status: InstallStatus.installing,
+                  createdAt: 100,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(installQueueProvider.notifier).checkRecovery(const [
+        InstalledApp(
+          appId: 'org.example.demo',
+          name: 'Demo',
+          version: '2.0.0',
+          arch: 'x86_64',
+          channel: 'main',
+          module: 'binary',
+        ),
+      ]);
+
+      expect(
+        container.read(installQueueProvider).history.single.status,
+        InstallStatus.success,
+      );
+    });
+
+    test('更新版本无法证明成功时恢复为中断并结束原批次', () async {
+      const target = AppOperationTargetSnapshot(
+        appId: 'org.example.demo',
+        displayName: 'Demo',
+        installedVersion: '1.0.0',
+        expectedVersion: '2.0.0',
+      );
+      const batch = AppOperationBatch(
+        id: 'batch-1',
+        taskIds: ['task-1'],
+        targets: [target],
+        createdAt: 100,
+      );
+      final container = ProviderContainer(
+        overrides: [
+          installQueueProvider.overrideWith(
+            () => TestInstallQueue(
+              initialState: InstallQueueState(
+                currentTask: InstallTask(
+                  id: 'task-1',
+                  batchId: 'batch-1',
+                  appId: target.appId,
+                  appName: target.displayName,
+                  kind: InstallTaskKind.update,
+                  target: target,
+                  status: InstallStatus.installing,
+                  createdAt: 100,
+                ),
+                batches: const [batch],
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(installQueueProvider.notifier).checkRecovery(const [
+        InstalledApp(appId: 'org.example.demo', name: 'Demo', version: '1.0.0'),
+      ]);
+
+      final state = container.read(installQueueProvider);
+      expect(state.history.single.status, InstallStatus.interrupted);
+      expect(state.batches.single.status, AppOperationBatchStatus.completed);
+      expect(
+        state.outbox.single.type,
+        AppOperationEffectType.updateBatchCompleted,
+      );
+    });
   });
 }
 

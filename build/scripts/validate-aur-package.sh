@@ -2,6 +2,10 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+. "$ROOT_DIR/build/scripts/lib/application-identity.sh"
+
+load_application_identity "$ROOT_DIR/config/application_identity.conf"
+
 PROJECT_URL="https://github.com/HanHan666666/flutter-linglong-store"
 
 release_version=""
@@ -151,14 +155,18 @@ prepare_offline_build_workspace() {
   local source_dir="$1"
   local build_dir="$2"
   local desktop_filename="$3"
-  local compat_desktop_filename="$4"
-  local changelog_filename="$5"
+  local changelog_filename="$4"
+  shift 4
+  local compat_desktop_filename
 
   mkdir -p "$build_dir"
   cp "$source_dir/PKGBUILD" "$build_dir/PKGBUILD"
   cp "$source_dir/LICENSE" "$build_dir/LICENSE"
   cp "$source_dir/$desktop_filename" "$build_dir/$desktop_filename"
-  cp "$source_dir/$compat_desktop_filename" "$build_dir/$compat_desktop_filename"
+  for compat_desktop_filename in "$@"; do
+    cp "$source_dir/$compat_desktop_filename" \
+      "$build_dir/$compat_desktop_filename"
+  done
   cp "$source_dir/linglong-store.metainfo.xml" "$build_dir/linglong-store.metainfo.xml"
   cp "$source_dir/linglong-store.svg" "$build_dir/linglong-store.svg"
 
@@ -219,9 +227,10 @@ run_inner_validation() {
   local pkg_path
   local pkginfo
   local pkg_contents
-  local desktop_filename="com.dongpl.linglong-store.v2.desktop"
+  local desktop_filename="$CANONICAL_DESKTOP_ID"
   local compat_desktop_filename
   local changelog_filename
+  local -a compat_desktop_filenames=()
   local expected_conflicts=()
   local expected_pkginfo_pkgver
   local expected_arch_line_primary
@@ -269,20 +278,21 @@ run_inner_validation() {
 
   case "$channel" in
     stable)
-      compat_desktop_filename="linglong-store.desktop"
       changelog_filename="linglong-store-bin.changelog"
       expected_conflicts=("linglong-store")
       expected_arch_line_primary="arch = x86_64"
       expected_arch_line_secondary="arch = aarch64"
       ;;
     nightly)
-      compat_desktop_filename="linglong-store-nightly.desktop"
       changelog_filename="${package_name}.changelog"
       expected_conflicts=("linglong-store" "linglong-store-bin")
       expected_arch_line_primary="arch = x86_64"
       expected_arch_line_secondary="arch = aarch64"
       ;;
   esac
+  mapfile -t compat_desktop_filenames < <(
+    application_identity_compat_desktop_ids "$channel"
+  )
   expected_pkginfo_pkgver="${aur_version}-1"
 
   bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
@@ -305,8 +315,8 @@ run_inner_validation() {
       "$metadata_dir/aur" \
       "$build_dir" \
       "$desktop_filename" \
-      "$compat_desktop_filename" \
-      "$changelog_filename"
+      "$changelog_filename" \
+      "${compat_desktop_filenames[@]}"
     makepkg_cmd="makepkg -f --nodeps --noconfirm --skipinteg >/dev/null"
   fi
   chown -R builder:builder "$metadata_dir"
@@ -376,8 +386,10 @@ EOF
     "AUR metadata did not render the expected changelog filename."
   assert_file_contains "$metadata_dir/aur/.SRCINFO" "source = ${desktop_filename}" \
     "AUR metadata did not render the expected desktop filename."
-  assert_file_contains "$metadata_dir/aur/.SRCINFO" "source = ${compat_desktop_filename}" \
-    "AUR metadata did not render the expected compatibility desktop filename."
+  for compat_desktop_filename in "${compat_desktop_filenames[@]}"; do
+    assert_file_contains "$metadata_dir/aur/.SRCINFO" "source = ${compat_desktop_filename}" \
+      "AUR metadata did not render compatibility desktop filename ${compat_desktop_filename}."
+  done
   assert_file_contains "$metadata_dir/aur/.SRCINFO" "provides = linglong-store" \
     "AUR metadata did not render the expected provides entry."
   assert_file_contains "$metadata_dir/aur/.SRCINFO" "$expected_arch_line_primary" \
@@ -406,8 +418,10 @@ EOF
     "Built AUR package did not keep the expected provides entry."
   assert_output_contains "$pkg_contents" "usr/share/applications/${desktop_filename}" \
     "Built AUR package did not install the expected desktop file."
-  assert_output_contains "$pkg_contents" "usr/share/applications/${compat_desktop_filename}" \
-    "Built AUR package did not install the expected compatibility desktop file."
+  for compat_desktop_filename in "${compat_desktop_filenames[@]}"; do
+    assert_output_contains "$pkg_contents" "usr/share/applications/${compat_desktop_filename}" \
+      "Built AUR package did not install compatibility desktop file ${compat_desktop_filename}."
+  done
   assert_output_contains "$pkg_contents" "opt/linglong-store/linglong_store" \
     "Built AUR package did not install the expected application payload."
 

@@ -30,7 +30,7 @@ validpgpkeys=('@GPG_KEY_ID@')
 source=(
   'LICENSE'
   '@DESKTOP_FILENAME@'
-  '@COMPAT_DESKTOP_FILENAME@'
+@AUR_COMPAT_DESKTOP_SOURCES@
   'linglong-store.metainfo.xml'
   'linglong-store.svg'
 )
@@ -43,7 +43,7 @@ source_x86_64=(
 sha256sums=(
   '@SHA256_LICENSE@'
   '@SHA256_DESKTOP@'
-  '@SHA256_COMPAT_DESKTOP@'
+@AUR_COMPAT_DESKTOP_SHA256SUMS@
   '@SHA256_METAINFO@'
   '@SHA256_ICON@'
 )
@@ -70,12 +70,12 @@ LAUNCHER
   # Install desktop metadata from tracked AUR sources so package metadata
   # does not depend on optional files inside the release tarball.
   install -Dm644 "${srcdir}/@DESKTOP_FILENAME@" "${pkgdir}/usr/share/applications/@DESKTOP_FILENAME@"
-  install -Dm644 "${srcdir}/@COMPAT_DESKTOP_FILENAME@" "${pkgdir}/usr/share/applications/@COMPAT_DESKTOP_FILENAME@"
+@AUR_COMPAT_DESKTOP_INSTALL_COMMANDS@
 
   # Validate desktop file if tool available
   if command -v desktop-file-validate &>/dev/null; then
     desktop-file-validate "${pkgdir}/usr/share/applications/@DESKTOP_FILENAME@" || true
-    desktop-file-validate "${pkgdir}/usr/share/applications/@COMPAT_DESKTOP_FILENAME@" || true
+@AUR_COMPAT_DESKTOP_VALIDATE_COMMANDS@
   fi
 
   # Install icon

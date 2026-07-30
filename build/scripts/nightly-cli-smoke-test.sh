@@ -2,6 +2,10 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+. "$ROOT_DIR/build/scripts/lib/application-identity.sh"
+
+load_application_identity "$ROOT_DIR/config/application_identity.conf"
+
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/linglong-nightly-smoke.XXXXXX")"
 FAKE_SOURCE_DIR="$TMP_ROOT/source"
 RENDER_OUTPUT_DIR="$TMP_ROOT/render"
@@ -139,16 +143,24 @@ grep -q 'linglong-store-'"$nightly_label"'-linux-arm64.tar.gz::https://github.co
 
 desktop_count="$(find "$RENDER_OUTPUT_DIR" -maxdepth 1 -type f -name '*.desktop' | awk 'END { print NR }')"
 test "$desktop_count" = "1"
-test -f "$RENDER_OUTPUT_DIR/com.dongpl.linglong-store.v2.desktop"
-grep -q '^Name=.*Nightly' "$RENDER_OUTPUT_DIR/com.dongpl.linglong-store.v2.desktop"
-grep -q '^Comment=.*Nightly' "$RENDER_OUTPUT_DIR/com.dongpl.linglong-store.v2.desktop"
-grep -q '^X-GNOME-UsesNotifications=true$' "$RENDER_OUTPUT_DIR/com.dongpl.linglong-store.v2.desktop"
-test -f "$RENDER_OUTPUT_DIR/compat/linglong-store-nightly.desktop"
-grep -q '^NoDisplay=true$' "$RENDER_OUTPUT_DIR/compat/linglong-store-nightly.desktop"
-grep -q '^MimeType=x-scheme-handler/og;$' "$RENDER_OUTPUT_DIR/compat/linglong-store-nightly.desktop"
+canonical_desktop_path="$RENDER_OUTPUT_DIR/$CANONICAL_DESKTOP_ID"
+test -f "$canonical_desktop_path"
+grep -q '^Name=.*Nightly' "$canonical_desktop_path"
+grep -q '^Comment=.*Nightly' "$canonical_desktop_path"
+grep -q '^X-GNOME-UsesNotifications=true$' "$canonical_desktop_path"
+mapfile -t nightly_compat_desktop_ids < <(
+  application_identity_compat_desktop_ids nightly
+)
+for compat_desktop_id in "${nightly_compat_desktop_ids[@]}"; do
+  compat_desktop_path="$RENDER_OUTPUT_DIR/compat/$compat_desktop_id"
+  test -f "$compat_desktop_path"
+  grep -q '^NoDisplay=true$' "$compat_desktop_path"
+  grep -q '^MimeType=x-scheme-handler/og;$' "$compat_desktop_path"
+done
 grep -q '<name>.*Nightly</name>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 grep -q '<summary>.*Nightly</summary>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
-grep -q '<launchable type="desktop-id">com.dongpl.linglong-store.v2.desktop</launchable>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
+grep -Fq "<launchable type=\"desktop-id\">$CANONICAL_DESKTOP_ID</launchable>" \
+  "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 
 bash "$ROOT_DIR/build/scripts/prepare-nightly-assets.sh" \
   --base-version "$base_version" \

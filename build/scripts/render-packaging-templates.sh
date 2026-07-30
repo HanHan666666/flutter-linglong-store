@@ -3,6 +3,9 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 . "$ROOT_DIR/build/scripts/linux-arch-utils.sh"
+. "$ROOT_DIR/build/scripts/lib/application-identity.sh"
+
+load_application_identity "$ROOT_DIR/config/application_identity.conf"
 
 if [[ "${1:-}" != "--inner" && -z "${LINGLONG_RELEASE_CONTAINER:-}" ]]; then
   exec "$ROOT_DIR/build/scripts/run-in-release-container.sh" "$ROOT_DIR/build/scripts/render-packaging-templates.sh" "$@"
@@ -100,13 +103,12 @@ package_name="linglong-store"
 display_name="玲珑应用商店社区版"
 summary_text="Linglong Store Community Edition"
 description_text="Desktop store for browsing and installing Linglong applications."
-app_id="com.dongpl.linglong-store.v2"
-desktop_filename="${app_id}.desktop"
-compat_desktop_filename="linglong-store.desktop"
+app_id="$APPLICATION_ID"
+desktop_filename="$CANONICAL_DESKTOP_ID"
 launchable_desktop_id="$desktop_filename"
 executable_name="linglong-store"
 icon_name="linglong-store"
-wm_class="com.dongpl.linglong-store.v2"
+wm_class="$WM_CLASS"
 project_url="https://github.com/HanHan666666/flutter-linglong-store"
 maintainer="Linglong Store Community <community@linglong.dev>"
 maintainer_name="HanHan666666"
@@ -164,7 +166,6 @@ case "$channel" in
     # Nightly only changes the visible metadata; layout and executable stay stable.
     display_name="玲珑应用商店社区版 Nightly"
     summary_text="Linglong Store Community Edition Nightly"
-    compat_desktop_filename="linglong-store-nightly.desktop"
     aur_pkgname="linglong-store-nightly-bin"
     # Nightly reuses the stable install paths, so both the concrete stable
     # package name and the shared virtual package must be treated as conflicts.
@@ -197,6 +198,21 @@ case "$channel" in
     ;;
 esac
 
+# 兼容入口由身份配置按渠道提供；渲染器和下游打包均按列表处理。
+mapfile -t compat_desktop_filenames < <(
+  application_identity_compat_desktop_ids "$channel"
+)
+if [[ "${#compat_desktop_filenames[@]}" -eq 0 ]]; then
+  echo "No compatibility desktop IDs configured for channel: $channel" >&2
+  exit 78
+fi
+
+compat_desktop_file_entries=""
+for compat_desktop_filename in "${compat_desktop_filenames[@]}"; do
+  compat_desktop_file_entries+="/usr/share/applications/${compat_desktop_filename}"$'\n'
+done
+compat_desktop_file_entries="${compat_desktop_file_entries%$'\n'}"
+
 render_file() {
   local input_path="$1"
   local output_path="$2"
@@ -211,7 +227,7 @@ render_file() {
   content="${content//@EXECUTABLE_NAME@/$executable_name}"
   content="${content//@ICON_NAME@/$icon_name}"
   content="${content//@DESKTOP_FILENAME@/$desktop_filename}"
-  content="${content//@COMPAT_DESKTOP_FILENAME@/$compat_desktop_filename}"
+  content="${content//@COMPAT_DESKTOP_FILE_ENTRIES@/$compat_desktop_file_entries}"
   content="${content//@WM_CLASS@/$wm_class}"
   content="${content//@LAUNCHABLE_DESKTOP_ID@/$launchable_desktop_id}"
   content="${content//@VERSION@/$release_version}"
@@ -233,9 +249,11 @@ render_file \
   "$ROOT_DIR/build/packaging/linux/linglong-store.desktop.in" \
   "$output_dir/$desktop_filename"
 
-render_file \
-  "$ROOT_DIR/build/packaging/linux/linglong-store-compat.desktop.in" \
-  "$output_dir/compat/$compat_desktop_filename"
+for compat_desktop_filename in "${compat_desktop_filenames[@]}"; do
+  render_file \
+    "$ROOT_DIR/build/packaging/linux/linglong-store-compat.desktop.in" \
+    "$output_dir/compat/$compat_desktop_filename"
+done
 
 render_file \
   "$ROOT_DIR/build/packaging/linux/deb/control.in" \
@@ -265,14 +283,16 @@ render_aur_template() {
   local sha_sig_amd64="${9:-}"
   local sha_sig_arm64="${10:-}"
   local key_id="${11:-}"
-  local sha_compat_desktop="${12:-}"
 
   mkdir -p "$(dirname "$output_path")"
   local content
   content="$(<"$input_path")"
   content="${content//@PACKAGE_NAME@/$package_name}"
   content="${content//@DESKTOP_FILENAME@/$desktop_filename}"
-  content="${content//@COMPAT_DESKTOP_FILENAME@/$compat_desktop_filename}"
+  content="${content//@AUR_COMPAT_DESKTOP_SOURCES@/$aur_compat_desktop_sources}"
+  content="${content//@AUR_COMPAT_DESKTOP_SHA256SUMS@/$aur_compat_desktop_sha256sums}"
+  content="${content//@AUR_COMPAT_DESKTOP_INSTALL_COMMANDS@/$aur_compat_desktop_install_commands}"
+  content="${content//@AUR_COMPAT_DESKTOP_VALIDATE_COMMANDS@/$aur_compat_desktop_validate_commands}"
   # Expand optional architecture blocks before substituting the values they
   # reference, otherwise nested placeholders leak into the rendered PKGBUILD.
   content="${content//@AUR_SOURCE_AARCH64_BLOCK@/$aur_source_aarch64_block}"
@@ -284,7 +304,6 @@ render_aur_template() {
   content="${content//@RELEASE_URL_BASE@/$release_url_base}"
   content="${content//@SHA256_LICENSE@/$sha_license}"
   content="${content//@SHA256_DESKTOP@/$sha_desktop}"
-  content="${content//@SHA256_COMPAT_DESKTOP@/$sha_compat_desktop}"
   content="${content//@SHA256_METAINFO@/$sha_metainfo}"
   content="${content//@SHA256_ICON@/$sha_icon}"
   content="${content//@SHA256_AMD64@/$sha_amd64}"
@@ -310,16 +329,35 @@ if [[ "$should_render_aur" == "true" ]]; then
   # rely on optional extras bundled into the binary release archive.
   cp "$ROOT_DIR/LICENSE" "$output_dir/aur/LICENSE"
   cp "$output_dir/$desktop_filename" "$output_dir/aur/$desktop_filename"
-  cp "$output_dir/compat/$compat_desktop_filename" \
-    "$output_dir/aur/$compat_desktop_filename"
   cp "$output_dir/appimage/linglong-store.appdata.xml" "$output_dir/aur/linglong-store.metainfo.xml"
   cp "$ROOT_DIR/assets/icons/logo.svg" "$output_dir/aur/linglong-store.svg"
 
   sha256_license="$(sha256sum "$output_dir/aur/LICENSE" | awk '{print $1}')"
   sha256_desktop="$(sha256sum "$output_dir/aur/$desktop_filename" | awk '{print $1}')"
-  sha256_compat_desktop="$(sha256sum "$output_dir/aur/$compat_desktop_filename" | awk '{print $1}')"
   sha256_metainfo="$(sha256sum "$output_dir/aur/linglong-store.metainfo.xml" | awk '{print $1}')"
   sha256_icon="$(sha256sum "$output_dir/aur/linglong-store.svg" | awk '{print $1}')"
+
+  # AUR 的 source/checksum/install/validate 块必须由同一别名列表生成，
+  # 否则增加历史 desktop ID 时极易只更新其中一处。
+  aur_compat_desktop_sources=""
+  aur_compat_desktop_sha256sums=""
+  aur_compat_desktop_install_commands=""
+  aur_compat_desktop_validate_commands=""
+  for compat_desktop_filename in "${compat_desktop_filenames[@]}"; do
+    cp "$output_dir/compat/$compat_desktop_filename" \
+      "$output_dir/aur/$compat_desktop_filename"
+    sha256_compat_desktop="$(
+      sha256sum "$output_dir/aur/$compat_desktop_filename" | awk '{print $1}'
+    )"
+    aur_compat_desktop_sources+="  '${compat_desktop_filename}'"$'\n'
+    aur_compat_desktop_sha256sums+="  '${sha256_compat_desktop}'"$'\n'
+    aur_compat_desktop_install_commands+="  install -Dm644 \"\${srcdir}/${compat_desktop_filename}\" \"\${pkgdir}/usr/share/applications/${compat_desktop_filename}\""$'\n'
+    aur_compat_desktop_validate_commands+="    desktop-file-validate \"\${pkgdir}/usr/share/applications/${compat_desktop_filename}\" || true"$'\n'
+  done
+  aur_compat_desktop_sources="${aur_compat_desktop_sources%$'\n'}"
+  aur_compat_desktop_sha256sums="${aur_compat_desktop_sha256sums%$'\n'}"
+  aur_compat_desktop_install_commands="${aur_compat_desktop_install_commands%$'\n'}"
+  aur_compat_desktop_validate_commands="${aur_compat_desktop_validate_commands%$'\n'}"
 
   render_aur_template \
     "$ROOT_DIR/build/packaging/linux/aur/PKGBUILD.in" \
@@ -332,8 +370,7 @@ if [[ "$should_render_aur" == "true" ]]; then
     "$sha256_icon" \
     "$sha256_sig_amd64" \
     "$sha256_sig_arm64" \
-    "$gpg_key_id" \
-    "$sha256_compat_desktop"
+    "$gpg_key_id"
 
   render_aur_template \
     "$ROOT_DIR/build/packaging/linux/aur/linglong-store-bin.changelog.in" \
@@ -346,6 +383,5 @@ if [[ "$should_render_aur" == "true" ]]; then
     "$sha256_icon" \
     "$sha256_sig_amd64" \
     "$sha256_sig_arm64" \
-    "$gpg_key_id" \
-    "$sha256_compat_desktop"
+    "$gpg_key_id"
 fi

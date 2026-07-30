@@ -8,6 +8,10 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+. "$ROOT_DIR/build/scripts/lib/application-identity.sh"
+
+load_application_identity "$ROOT_DIR/config/application_identity.conf"
+
 TARGET_SCRIPT="$ROOT_DIR/build/scripts/clear-local-data.sh"
 TEST_ROOT="$(mktemp -d)"
 FAKE_BIN="$TEST_ROOT/bin"
@@ -36,7 +40,11 @@ create_fixture() {
   local runtime_home="$root/runtime"
   local documents_home="$root/documents"
   local temp_home="$root/tmp"
-  local current_data="$data_home/com.dongpl.linglong-store.v2"
+  local current_data="$data_home/$APPLICATION_ID"
+  local current_config="$config_home/$APPLICATION_ID"
+  local current_cache="$cache_home/$APPLICATION_ID"
+  local current_state="$state_home/$APPLICATION_ID"
+  local current_runtime="$runtime_home/$APPLICATION_ID"
   local binary_data="$data_home/linglong_store"
   local legacy_data="$data_home/org.linglong-store.LinyapsManager"
 
@@ -44,10 +52,10 @@ create_fixture() {
     "$current_data/logs" \
     "$binary_data/history" \
     "$legacy_data/history" \
-    "$config_home/com.dongpl.linglong-store.v2/startup" \
-    "$cache_home/com.dongpl.linglong-store.v2" \
-    "$state_home/com.dongpl.linglong-store.v2/operations" \
-    "$runtime_home/com.dongpl.linglong-store.v2" \
+    "$current_config/startup" \
+    "$current_cache" \
+    "$current_state/operations" \
+    "$current_runtime" \
     "$documents_home" \
     "$temp_home/libCachedImageData" \
     "$temp_home/linglong-store/logs" \
@@ -60,13 +68,13 @@ create_fixture() {
   printf 'legacy\n' > "$binary_data/history/state"
   printf 'legacy\n' > "$legacy_data/history/state"
   printf '[renderer]\npreferred_mode=software\n' \
-    > "$config_home/com.dongpl.linglong-store.v2/startup/renderer_preferences.ini"
-  printf 'cache\n' > "$cache_home/com.dongpl.linglong-store.v2/cache.hive"
-  printf 'lock\n' > "$cache_home/com.dongpl.linglong-store.v2/cache.lock"
+    > "$current_config/startup/renderer_preferences.ini"
+  printf 'cache\n' > "$current_cache/cache.hive"
+  printf 'lock\n' > "$current_cache/cache.lock"
   printf '{"schemaVersion":2}\n' \
-    > "$state_home/com.dongpl.linglong-store.v2/operations/queue-v2.json"
-  printf 'lock\n' > "$runtime_home/com.dongpl.linglong-store.v2/linglong-store.lock"
-  printf 'socket\n' > "$runtime_home/com.dongpl.linglong-store.v2/linglong-store.sock"
+    > "$current_state/operations/queue-v2.json"
+  printf 'lock\n' > "$current_runtime/linglong-store.lock"
+  printf 'socket\n' > "$current_runtime/linglong-store.sock"
   printf 'legacy cache\n' > "$documents_home/cache.hive"
   printf 'legacy lock\n' > "$documents_home/cache.lock"
   printf 'fallback\n' > "$temp_home/linglong-store/logs/fallback.log"
@@ -135,11 +143,11 @@ test_dry_run() {
   root="$(create_fixture dry-run)"
   run_target "$root" > "$root/output.log"
 
-  assert_exists "$root/data/com.dongpl.linglong-store.v2"
-  assert_exists "$root/config/com.dongpl.linglong-store.v2"
-  assert_exists "$root/cache/com.dongpl.linglong-store.v2"
-  assert_exists "$root/state/com.dongpl.linglong-store.v2"
-  assert_exists "$root/runtime/com.dongpl.linglong-store.v2"
+  assert_exists "$root/data/$APPLICATION_ID"
+  assert_exists "$root/config/$APPLICATION_ID"
+  assert_exists "$root/cache/$APPLICATION_ID"
+  assert_exists "$root/state/$APPLICATION_ID"
+  assert_exists "$root/runtime/$APPLICATION_ID"
   assert_exists "$root/tmp/libCachedImageData/owned.bin"
 }
 
@@ -149,13 +157,13 @@ test_apply() {
   root="$(create_fixture apply)"
   run_target "$root" --apply > "$root/output.log"
 
-  assert_missing "$root/data/com.dongpl.linglong-store.v2"
+  assert_missing "$root/data/$APPLICATION_ID"
   assert_missing "$root/data/linglong_store"
   assert_missing "$root/data/org.linglong-store.LinyapsManager"
-  assert_missing "$root/config/com.dongpl.linglong-store.v2"
-  assert_missing "$root/cache/com.dongpl.linglong-store.v2"
-  assert_missing "$root/state/com.dongpl.linglong-store.v2"
-  assert_missing "$root/runtime/com.dongpl.linglong-store.v2"
+  assert_missing "$root/config/$APPLICATION_ID"
+  assert_missing "$root/cache/$APPLICATION_ID"
+  assert_missing "$root/state/$APPLICATION_ID"
+  assert_missing "$root/runtime/$APPLICATION_ID"
   assert_missing "$root/documents/cache.hive"
   assert_missing "$root/documents/cache.lock"
   assert_missing "$root/tmp/libCachedImageData/owned.bin"
@@ -176,17 +184,17 @@ test_keep_preferences() {
   root="$(create_fixture keep-preferences)"
   run_target "$root" --apply --keep-preferences > "$root/output.log"
 
-  assert_exists "$root/data/com.dongpl.linglong-store.v2/shared_preferences.json"
+  assert_exists "$root/data/$APPLICATION_ID/shared_preferences.json"
   assert_exists "$root/data/linglong_store/shared_preferences.json"
   assert_exists "$root/data/org.linglong-store.LinyapsManager/shared_preferences.json"
-  assert_missing "$root/data/com.dongpl.linglong-store.v2/logs"
-  assert_missing "$root/data/com.dongpl.linglong-store.v2/broken-link"
+  assert_missing "$root/data/$APPLICATION_ID/logs"
+  assert_missing "$root/data/$APPLICATION_ID/broken-link"
   assert_missing "$root/data/linglong_store/history"
   assert_missing "$root/data/org.linglong-store.LinyapsManager/history"
-  assert_missing "$root/config/com.dongpl.linglong-store.v2"
-  assert_missing "$root/cache/com.dongpl.linglong-store.v2"
-  assert_missing "$root/state/com.dongpl.linglong-store.v2"
-  assert_missing "$root/runtime/com.dongpl.linglong-store.v2"
+  assert_missing "$root/config/$APPLICATION_ID"
+  assert_missing "$root/cache/$APPLICATION_ID"
+  assert_missing "$root/state/$APPLICATION_ID"
+  assert_missing "$root/runtime/$APPLICATION_ID"
 }
 
 # 验证运行中保护在任何删除动作前终止脚本。
@@ -198,9 +206,9 @@ test_running_guard() {
     exit 1
   fi
 
-  assert_exists "$root/data/com.dongpl.linglong-store.v2"
-  assert_exists "$root/cache/com.dongpl.linglong-store.v2"
-  assert_exists "$root/state/com.dongpl.linglong-store.v2"
+  assert_exists "$root/data/$APPLICATION_ID"
+  assert_exists "$root/cache/$APPLICATION_ID"
+  assert_exists "$root/state/$APPLICATION_ID"
 }
 
 # 验证 HOME 缺失时不会把历史 Documents 路径错误解析为系统根目录。

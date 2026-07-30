@@ -9,15 +9,19 @@
 #   1. 默认 dry-run，只有 --apply 才执行删除。
 #   2. 应用运行时拒绝清理，避免破坏活跃的日志、Hive 和单实例通信。
 #   3. 图片缓存目录使用 flutter_cache_manager 通用 key，只按本应用元数据精确删除文件。
-#   4. 所有目标均由固定 application-id 和 XDG 根目录组合，不接受任意删除路径。
+#   4. 所有目标均由严格校验的统一 application-id 和 XDG 根目录组合，不接受任意删除路径。
 
 set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+. "$ROOT_DIR/build/scripts/lib/application-identity.sh"
+
+load_application_identity "$ROOT_DIR/config/application_identity.conf"
 
 # ============================================================
 # 应用身份与文件名
 # ============================================================
 
-APPLICATION_ID="com.dongpl.linglong-store.v2"
 LEGACY_APPLICATION_ID="org.linglong-store.LinyapsManager"
 BINARY_NAME="linglong_store"
 PREFERENCES_FILE_NAME="shared_preferences.json"

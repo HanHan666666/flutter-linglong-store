@@ -7,9 +7,9 @@ import '../../storage/app_xdg_paths.dart';
 
 /// V001：把历史 application-id 数据目录迁移到当前 application-id 目录。
 ///
-/// 背景：项目从 `org.linglong-store.LinyapsManager` 改名为
-/// `com.dongpl.linglong-store.v2`，需要把旧目录里的 SharedPreferences /
-/// Hive / 日志等用户数据搬到新目录，避免用户升级后数据丢失。
+/// 背景：项目从 `org.linglong-store.LinyapsManager` 改用统一身份配置中的当前
+/// application-id，需要把旧目录里的 SharedPreferences / Hive / 日志等用户
+/// 数据搬到 [AppXdgPaths] 解析的新目录，避免用户升级后数据丢失。
 ///
 /// 幂等性保证（参考 [doc/03-迁移脚本编写指南.md] 的硬性要求）：
 /// - 旧目录不存在 → 直接返回（已迁移过 / 全新安装 / 旧版本从未启动过）

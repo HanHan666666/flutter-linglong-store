@@ -16,7 +16,7 @@ class FileMigrationLock implements MigrationLock {
   });
 
   /// 锁文件路径。建议放在应用数据目录下，
-  /// 例如 `~/.local/share/com.dongpl.linglong-store.v2/.migration.lock`。
+  /// 例如 `$XDG_DATA_HOME/<application-id>/.migration.lock`。
   final File lockFile;
 
   /// 等锁超时时间。

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
+import 'package:linglong_store/application/providers/menu_badge_provider.dart';
 import 'package:linglong_store/application/providers/sidebar_config_provider.dart';
 import 'package:linglong_store/core/config/local_sidebar_menu_catalog.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
@@ -25,6 +26,7 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
+              menuInstallingBadgeCountProvider.overrideWith((ref) => 0),
               sidebarConfigProvider.overrideWith(
                 (ref) async => const [
                   SidebarMenuDTO(menuCode: 'office', menuName: '办公'),
@@ -90,6 +92,7 @@ void main() {
         ProviderScope(
           overrides: [
             sidebarConfigProvider.overrideWith((ref) async => const []),
+            menuInstallingBadgeCountProvider.overrideWith((ref) => 0),
           ],
           child: const MaterialApp(
             locale: Locale('en'),
@@ -180,6 +183,7 @@ void main() {
         ProviderScope(
           overrides: [
             sidebarConfigProvider.overrideWith((ref) async => const []),
+            menuInstallingBadgeCountProvider.overrideWith((ref) => 0),
           ],
           child: const MaterialApp(
             locale: Locale('zh'),

@@ -350,7 +350,16 @@ Widget _buildTestApp(
   ThemeMode themeMode = ThemeMode.light,
 }) {
   return ProviderScope(
-    overrides: [recommendProvider.overrideWithValue(state)],
+    overrides: [
+      recommendProvider.overrideWithValue(state),
+      applicationCardStateIndexProvider.overrideWithValue(
+        const ApplicationCardStateIndex(
+          installedVersionByAppId: {},
+          updateAppIds: {},
+          activeTasksByAppId: {},
+        ),
+      ),
+    ],
     child: MaterialApp(
       locale: const Locale('zh'),
       theme: AppTheme.lightTheme,

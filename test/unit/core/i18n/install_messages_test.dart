@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/core/i18n/install_messages.dart';
+import 'package:linglong_store/domain/models/app_operation_failure.dart';
+import 'package:linglong_store/domain/models/install_progress.dart';
+import 'package:linglong_store/domain/models/install_task.dart';
 
 void main() {
   group('InstallMessages', () {
@@ -37,6 +40,27 @@ void main() {
         messages.getStatusFromMessage(longMessage),
         isNot(endsWith('...')),
       );
+    });
+
+    test('formats one structured task with the current locale', () {
+      const task = InstallTask(
+        id: 'task-1',
+        appId: 'org.example.demo',
+        appName: 'Demo',
+        status: InstallStatus.failed,
+        failure: AppOperationFailure(kind: AppOperationFailureKind.timeout),
+        createdAt: 1,
+      );
+
+      final zhMessage = InstallMessages.fromLocale(
+        const Locale('zh'),
+      ).errorMessageForTask(task);
+      final enMessage = InstallMessages.fromLocale(
+        const Locale('en'),
+      ).errorMessageForTask(task);
+
+      expect(zhMessage, '安装超时');
+      expect(enMessage, 'Install timeout');
     });
   });
 }

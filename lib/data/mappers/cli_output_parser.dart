@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../domain/models/app_operation_failure.dart';
 import '../../domain/models/installed_app.dart';
 import '../../domain/models/running_app.dart';
 
@@ -345,9 +346,9 @@ class CliOutputParser {
       case JsonEventType.progress:
         // 进度事件 (CLI 输出 percentage 0-100，归一化为 0.0-1.0)
         info.progress = (event.percentage ?? 0.0) / 100;
-        if (InstallErrorCode.isDownloading(event.message)) {
+        if (InstallMessageClassifier.isDownloading(event.message)) {
           info.phase = InstallPhase.downloading;
-        } else if (InstallErrorCode.isInstalling(event.message)) {
+        } else if (InstallMessageClassifier.isInstalling(event.message)) {
           info.phase = InstallPhase.installing;
         } else if (event.percentage != null && event.percentage! >= 100) {
           info.phase = InstallPhase.completed;
@@ -365,9 +366,6 @@ class CliOutputParser {
       case JsonEventType.error:
         // 错误事件
         info.phase = InstallPhase.failed;
-        info.errorMessage = InstallErrorCode.getStatusFromCode(
-          event.code ?? -1,
-        );
         break;
 
       case JsonEventType.message:
@@ -382,15 +380,15 @@ class CliOutputParser {
             lowerMsg.contains('failed') ||
             lowerMsg.contains('failure')) {
           info.phase = InstallPhase.failed;
-          info.errorMessage = event.message;
-        } else if (InstallErrorCode.isDownloading(event.message)) {
+        } else if (InstallMessageClassifier.isDownloading(event.message)) {
           info.phase = InstallPhase.downloading;
-        } else if (InstallErrorCode.isInstalling(event.message)) {
+        } else if (InstallMessageClassifier.isInstalling(event.message)) {
           info.phase = InstallPhase.installing;
         }
         break;
     }
 
+    info.messageCode = InstallMessageClassifier.classify(event.message);
     return info;
   }
 }
@@ -438,7 +436,7 @@ class InstallProgressInfo {
     required this.rawLine,
     this.phase = InstallPhase.pending,
     this.progress = 0.0,
-    this.errorMessage,
+    this.messageCode,
   });
 
   /// 原始输出行
@@ -450,103 +448,39 @@ class InstallProgressInfo {
   /// 进度百分比 (0-100)
   double progress;
 
-  /// 错误信息
-  String? errorMessage;
+  /// 可在 Presentation 按当前语言格式化的稳定阶段代码。
+  AppOperationMessageCode? messageCode;
 }
 
-/// 安装错误码映射
+/// 把 ll-cli 协议消息归类为稳定阶段代码。
 ///
-/// 错误码来源：linglong::utils::error::ErrorCode
-class InstallErrorCode {
-  InstallErrorCode._();
+/// 这里只识别 linyaps 协议语义，不产生任何用户可见文案。
+class InstallMessageClassifier {
+  InstallMessageClassifier._();
 
-  /// 根据错误码获取用户友好的错误消息
-  static String getStatusFromCode(int code) {
-    switch (code) {
-      // 基础错误
-      case -1:
-        return '安装失败';
-      case -2:
-        return '安装失败: 进度超时';
-
-      // 用户操作
-      case 1:
-        return '安装已取消';
-
-      // 1000 系列：基础错误
-      case 1000:
-        return '安装失败: 未知错误';
-      case 1001:
-        return '安装失败: 远程仓库找不到应用';
-      case 1002:
-        return '安装失败: 本地找不到应用';
-
-      // 2000 系列：安装相关错误
-      case 2001:
-        return '安装失败';
-      case 2002:
-        return '安装失败: 远程无该应用';
-      case 2003:
-        return '安装失败: 已安装同版本';
-      case 2004:
-        return '安装失败: 需要降级安装';
-      case 2005:
-        return '安装失败: 安装模块时不允许指定版本';
-      case 2006:
-        return '安装失败: 安装模块需先安装应用';
-      case 2007:
-        return '安装失败: 模块已存在';
-      case 2008:
-        return '安装失败: 架构不匹配';
-      case 2009:
-        return '安装失败: 远程无该模块';
-      case 2010:
-        return '安装失败: 缺少 erofs 解压命令';
-      case 2011:
-        return '安装失败: 不支持的文件格式';
-
-      // 3000 系列：网络错误
-      case 3001:
-        return '安装失败: 网络错误';
-
-      // 4000 系列：参数错误
-      case 4001:
-        return '安装失败: 无效引用';
-      case 4002:
-        return '安装失败: 未知架构';
-
-      // 未知错误码
-      default:
-        return '安装失败: 错误码 $code';
-    }
-  }
-
-  /// 根据消息内容生成用户友好的状态描述
-  static String getStatusFromMessage(String message) {
+  /// 根据原始消息识别稳定阶段；未知内容保持为空并由 UI 回退原文。
+  static AppOperationMessageCode? classify(String message) {
     final lower = message.toLowerCase();
 
     if (lower.contains('beginning to install')) {
-      return '开始安装';
+      return AppOperationMessageCode.starting;
     } else if (lower.contains('installing application')) {
-      return '正在安装应用';
+      return AppOperationMessageCode.installingApplication;
     } else if (lower.contains('installing runtime')) {
-      return '正在安装运行时';
+      return AppOperationMessageCode.installingRuntime;
     } else if (lower.contains('installing base')) {
-      return '正在安装基础包';
+      return AppOperationMessageCode.installingBase;
     } else if (lower.contains('downloading metadata')) {
-      return '正在下载元数据';
+      return AppOperationMessageCode.downloadingMetadata;
     } else if (lower.contains('downloading files') ||
         lower.contains('downloading')) {
-      return '正在下载文件';
+      return AppOperationMessageCode.downloadingFiles;
     } else if (lower.contains('processing after install')) {
-      return '安装后处理';
+      return AppOperationMessageCode.postProcessing;
     } else if (lower.contains('success') || lower.contains('completed')) {
-      return '安装完成';
-    } else if (message.isNotEmpty) {
-      // 保留完整文案给 Tooltip、复制和无障碍语义使用；视觉截断只允许在 UI 层处理。
-      return message;
+      return AppOperationMessageCode.completed;
     }
-    return '正在处理';
+    return null;
   }
 
   /// 根据进度消息判断是否处于下载阶段

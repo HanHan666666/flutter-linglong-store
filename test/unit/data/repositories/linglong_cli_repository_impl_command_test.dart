@@ -8,6 +8,7 @@ import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/core/network/api_exceptions.dart';
 import 'package:linglong_store/core/platform/cli_executor.dart';
 import 'package:linglong_store/data/repositories/linglong_cli_repository_impl.dart';
+import 'package:linglong_store/domain/models/app_operation_failure.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 
@@ -175,7 +176,10 @@ void main() {
             .toList();
 
         expect(events.last.status, InstallStatus.failed);
-        expect(events.last.error, contains('无法确认安装结果'));
+        expect(
+          events.last.failure?.kind,
+          AppOperationFailureKind.resultUnconfirmed,
+        );
         expect(
           executor.executeCalls.any(
             (args) =>
@@ -220,7 +224,10 @@ void main() {
         final events = await repository.updateApp('org.example.demo').toList();
 
         expect(events.last.status, InstallStatus.failed);
-        expect(events.last.error, contains('无法确认更新结果'));
+        expect(
+          events.last.failure?.kind,
+          AppOperationFailureKind.resultUnconfirmed,
+        );
       },
     );
 
@@ -265,10 +272,9 @@ void main() {
         final events = await repository.installApp('org.example.demo').toList();
 
         expect(events.last.status, InstallStatus.failed);
-        expect(events.last.error, contains('安装失败'));
-        expect(events.last.error, contains('Could not resolve hostname'));
-        expect(events.last.error, isNot(contains('通用错误')));
-        expect(events.last.errorDetail, equals(detail));
+        expect(events.last.failure?.kind, AppOperationFailureKind.cli);
+        expect(events.last.failure?.cliCode, -1);
+        expect(events.last.failure?.diagnostic, detail);
       },
     );
 
@@ -291,9 +297,9 @@ void main() {
       final events = await repository.installApp('org.example.demo').toList();
 
       expect(events.last.status, InstallStatus.failed);
-      expect(events.last.error, contains('网络错误'));
-      expect(events.last.error, contains('mirror unavailable'));
-      expect(events.last.errorDetail, equals(detail));
+      expect(events.last.failure?.kind, AppOperationFailureKind.cli);
+      expect(events.last.failure?.cliCode, 3001);
+      expect(events.last.failure?.diagnostic, detail);
     });
 
     test('preserves ll-cli json message bytes for diagnostic lookup', () async {
@@ -315,7 +321,7 @@ void main() {
       final events = await repository.installApp('org.example.demo').toList();
 
       expect(events.last.status, InstallStatus.failed);
-      expect(events.last.errorDetail, equals(detail));
+      expect(events.last.failure?.diagnostic, equals(detail));
     });
 
     test('cancelOperation returns false when process PID is missing '

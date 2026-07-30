@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:linglong_store/data/mappers/cli_output_parser.dart';
+import 'package:linglong_store/domain/models/app_operation_failure.dart';
 
 void main() {
   group('CliOutputParser', () {
@@ -183,7 +184,7 @@ com.example.app2          2.0.0
       expect(info.rawLine, 'test');
       expect(info.phase, InstallPhase.pending);
       expect(info.progress, 0.0);
-      expect(info.errorMessage, isNull);
+      expect(info.messageCode, isNull);
     });
 
     test('allows phase mutation', () {
@@ -195,13 +196,13 @@ com.example.app2          2.0.0
       expect(info.progress, 50.0);
     });
 
-    test('stores error message', () {
-      final info = InstallProgressInfo(rawLine: 'error line');
-      info.phase = InstallPhase.failed;
-      info.errorMessage = 'Something went wrong';
+    test('stores stable message code', () {
+      final info = InstallProgressInfo(
+        rawLine: 'Downloading files',
+        messageCode: AppOperationMessageCode.downloadingFiles,
+      );
 
-      expect(info.phase, InstallPhase.failed);
-      expect(info.errorMessage, 'Something went wrong');
+      expect(info.messageCode, AppOperationMessageCode.downloadingFiles);
     });
   });
 
@@ -304,7 +305,7 @@ com.example.app2          2.0.0
       );
 
       expect(info.phase, InstallPhase.failed);
-      expect(info.errorMessage, contains('网络错误'));
+      expect(info.messageCode, isNull);
     });
 
     test('keeps non-json progress lines pending', () {
@@ -312,7 +313,7 @@ com.example.app2          2.0.0
 
       expect(info.phase, InstallPhase.pending);
       expect(info.progress, 0.0);
-      expect(info.errorMessage, isNull);
+      expect(info.messageCode, isNull);
     });
 
     test('handles JSON success message', () {
@@ -332,16 +333,19 @@ com.example.app2          2.0.0
     });
   });
 
-  group('getStatusFromMessage', () {
-    test('keeps long unknown messages complete', () {
+  group('InstallMessageClassifier', () {
+    test('leaves long unknown messages unclassified for raw fallback', () {
       const longMessage =
           'Resolving dependency org.deepin.runtime.webengine version 25.2.1 '
           'from repo stable with additional package metadata';
 
-      expect(InstallErrorCode.getStatusFromMessage(longMessage), longMessage);
+      expect(InstallMessageClassifier.classify(longMessage), isNull);
+    });
+
+    test('classifies protocol status without creating localized text', () {
       expect(
-        InstallErrorCode.getStatusFromMessage(longMessage),
-        isNot(endsWith('...')),
+        InstallMessageClassifier.classify('Downloading files'),
+        AppOperationMessageCode.downloadingFiles,
       );
     });
   });

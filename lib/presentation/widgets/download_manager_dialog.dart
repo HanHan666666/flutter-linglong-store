@@ -7,12 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../application/providers/application_dependency_providers.dart'
     show linglongCliRepositoryProvider;
 import '../../application/providers/install_queue_provider.dart';
+import '../../application/providers/linglong_env_provider.dart';
 import '../../application/providers/network_speed_provider.dart';
 import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_queue_state.dart';
 import '../../domain/models/install_task.dart';
+import '../../domain/models/linux_distribution.dart';
 import 'app_icon.dart';
 import 'error_solution_help_button.dart';
 
@@ -272,10 +274,13 @@ class DownloadManagerDialog extends ConsumerWidget {
     // 优先使用 CLI 返回的精确下载速度，回退到系统级网速
     final cliSpeed = task.cliSpeed;
     final downloadSpeed = cliSpeed ?? ref.watch(networkSpeedProvider).formatted;
+    final presentation = _resolveTaskPresentation(ref, task);
 
     return _TaskCard(
       key: ValueKey(task.id),
       task: task,
+      statusMessage: presentation.statusMessage,
+      errorMessage: presentation.errorMessage,
       featured: true,
       showProgress: true,
       downloadSpeed: downloadSpeed,
@@ -291,9 +296,12 @@ class DownloadManagerDialog extends ConsumerWidget {
     WidgetRef ref,
     InstallTask task,
   ) {
+    final presentation = _resolveTaskPresentation(ref, task);
     return _TaskCard(
       key: ValueKey(task.id),
       task: task,
+      statusMessage: presentation.statusMessage,
+      errorMessage: presentation.errorMessage,
       compact: true,
       onCancel: () {
         ref.read(installQueueProvider.notifier).removeQueuedTask(task.id);
@@ -307,9 +315,12 @@ class DownloadManagerDialog extends ConsumerWidget {
     WidgetRef ref,
     InstallTask task,
   ) {
+    final presentation = _resolveTaskPresentation(ref, task);
     return _TaskCard(
       key: ValueKey(task.id),
       task: task,
+      statusMessage: presentation.statusMessage,
+      errorMessage: presentation.errorMessage,
       compact: true,
       onOpen: task.status == InstallStatus.success
           ? () async {
@@ -324,6 +335,28 @@ class DownloadManagerDialog extends ConsumerWidget {
       onRemove: () {
         ref.read(installQueueProvider.notifier).removeHistoryTask(task.id);
       },
+    );
+  }
+
+  /// 在父级统一把结构化任务格式化为轻量展示属性。
+  ///
+  /// 卡片本身不订阅 locale 或环境 Provider，避免历史列表中的每一项都持有全局
+  /// 依赖；语言或发行版画像变化时由对话框一次性重建。
+  ({String statusMessage, String? errorMessage}) _resolveTaskPresentation(
+    WidgetRef ref,
+    InstallTask task,
+  ) {
+    final messages = ref.watch(installMessagesProvider);
+    final distribution = ref.watch(
+      linglongEnvProvider.select(
+        (state) => state.result?.distribution ?? LinuxDistribution.unknown,
+      ),
+    );
+    return (
+      statusMessage: messages.messageForTask(task, distribution: distribution),
+      errorMessage: task.isFailed
+          ? messages.errorMessageForTask(task, distribution: distribution)
+          : null,
     );
   }
 
@@ -378,6 +411,8 @@ class _TaskCard extends StatefulWidget {
   const _TaskCard({
     super.key,
     required this.task,
+    required this.statusMessage,
+    this.errorMessage,
     this.showProgress = false,
     this.featured = false,
     this.compact = false,
@@ -389,6 +424,12 @@ class _TaskCard extends StatefulWidget {
   });
 
   final InstallTask task;
+
+  /// 已按当前 locale 格式化的状态文案。
+  final String statusMessage;
+
+  /// 已按当前 locale 格式化的失败摘要。
+  final String? errorMessage;
   final bool showProgress;
   final bool featured;
   final bool compact;
@@ -634,7 +675,8 @@ class _TaskCardState extends State<_TaskCard> {
 
   /// 构建失败信息，失败原因必须完整展示，不能为了行高裁剪。
   Widget _buildErrorText(BuildContext context) {
-    if (!widget.task.isFailed || widget.task.errorMessage == null) {
+    final errorMessage = widget.errorMessage;
+    if (!widget.task.isFailed || errorMessage == null || errorMessage.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -646,7 +688,7 @@ class _TaskCardState extends State<_TaskCard> {
         children: [
           Expanded(
             child: Text(
-              widget.task.errorMessage!,
+              errorMessage,
               style: context.appTextStyles.caption.copyWith(
                 color: AppColors.error,
               ),
@@ -673,7 +715,7 @@ class _TaskCardState extends State<_TaskCard> {
   /// 构建进度条
   Widget _buildProgressBar(BuildContext context) {
     final appColors = context.appColors;
-    final message = widget.task.displayMessage?.trim();
+    final message = widget.statusMessage.trim();
     final speed = widget.downloadSpeed?.trim();
 
     return Column(
@@ -683,12 +725,10 @@ class _TaskCardState extends State<_TaskCard> {
           children: [
             Expanded(
               child: Tooltip(
-                message: message != null && message.isNotEmpty
-                    ? message
-                    : '处理中',
+                message: message.isNotEmpty ? message : '处理中',
                 constraints: const BoxConstraints(maxWidth: 500),
                 child: Text(
-                  message != null && message.isNotEmpty ? message : '处理中',
+                  message.isNotEmpty ? message : '处理中',
                   style: context.appTextStyles.caption.copyWith(
                     color: appColors.textSecondary,
                   ),
@@ -761,30 +801,19 @@ class _TaskCardState extends State<_TaskCard> {
 
   /// 构建任务副标题；当前任务的阶段文案由进度区承载，避免同一卡片内重复展示。
   String _buildSubtitle({bool includeProgressMessage = true}) {
+    final errorMessage = widget.errorMessage;
     if (widget.task.isFailed &&
-        widget.task.errorMessage != null &&
-        widget.task.errorMessage!.isNotEmpty) {
-      return widget.task.errorMessage!;
+        errorMessage != null &&
+        errorMessage.isNotEmpty) {
+      return errorMessage;
     }
-    final displayMessage = widget.task.displayMessage?.trim();
+    final displayMessage = widget.statusMessage.trim();
     final parts = <String>[
       if (widget.task.version != null && widget.task.version!.isNotEmpty)
         widget.task.version!,
-      if (includeProgressMessage &&
-          displayMessage != null &&
-          displayMessage.isNotEmpty)
-        displayMessage,
-      if (includeProgressMessage &&
-          (displayMessage == null || displayMessage.isEmpty))
-        switch (widget.task.status) {
-          InstallStatus.pending => widget.task.waitingMessage,
-          InstallStatus.downloading => '正在下载资源',
-          InstallStatus.installing => '正在安装',
-          InstallStatus.success => widget.task.successMessage,
-          InstallStatus.failed => '安装失败',
-          InstallStatus.cancelled => widget.task.cancelledMessage,
-          InstallStatus.interrupted => '任务已中断',
-        },
+      if (includeProgressMessage && displayMessage.isNotEmpty) displayMessage,
+      if (includeProgressMessage && displayMessage.isEmpty)
+        widget.statusMessage,
     ];
     return parts.join(' · ');
   }

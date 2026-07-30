@@ -10,12 +10,14 @@ import '../../../application/providers/app_uninstall_provider.dart';
 import '../../../application/providers/global_provider.dart';
 import '../../../application/providers/installed_apps_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
+import '../../../application/providers/linglong_env_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
 import '../../../application/providers/update_apps_provider.dart';
 import '../../../domain/models/installed_app.dart';
 import '../../../domain/models/install_task.dart';
 import '../../../domain/models/install_progress.dart';
 import '../../../domain/models/install_queue_state.dart';
+import '../../../domain/models/linux_distribution.dart';
 import '../../../domain/models/app_version.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/config/routes.dart';
@@ -262,7 +264,16 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       hasUpdate: hasUpdate,
     );
     final progress = installTask?.progress ?? 0.0;
-    final displayMessage = installTask?.displayMessage;
+    final distribution = ref.watch(
+      linglongEnvProvider.select(
+        (state) => state.result?.distribution ?? LinuxDistribution.unknown,
+      ),
+    );
+    final displayMessage = installTask == null
+        ? null
+        : ref
+              .watch(installMessagesProvider)
+              .messageForTask(installTask, distribution: distribution);
     final installLogCopyText = _resolveInstallLogCopyText(installTask);
 
     return AppDetailHeroHeader(

@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/i18n/install_messages.dart';
 import '../../core/logging/app_logger.dart';
 import '../../domain/models/app_operation_batch.dart';
+import '../../domain/models/app_operation_failure.dart';
 import '../../domain/models/app_operation_target_snapshot.dart';
 import '../../domain/models/linux_distribution.dart';
 import '../../domain/models/install_progress.dart';
@@ -21,7 +22,6 @@ import '../services/app_operation_state_store.dart';
 import '../services/app_operation_task_executor.dart';
 import 'application_dependency_providers.dart';
 import 'global_provider.dart' show currentLocaleProvider;
-import 'linglong_env_provider.dart';
 
 part 'install_queue_provider.g.dart';
 
@@ -259,7 +259,7 @@ class InstallQueue extends _$InstallQueue {
           requestedInstallVersion: effectiveVersion,
         );
 
-    final kindTask = InstallTask(
+    final task = InstallTask(
       id: _generateTaskId(),
       appId: appId,
       appName: appName,
@@ -270,24 +270,6 @@ class InstallQueue extends _$InstallQueue {
       force: force,
       status: InstallStatus.pending,
       createdAt: DateTime.now().millisecondsSinceEpoch,
-    );
-    // 使用国际化消息
-    final messages = ref.read(installMessagesProvider);
-    final operation = kind == InstallTaskKind.update
-        ? messages.updateLabel
-        : messages.installLabel;
-    final task = InstallTask(
-      id: kindTask.id,
-      appId: kindTask.appId,
-      appName: kindTask.appName,
-      icon: kindTask.icon,
-      kind: kindTask.kind,
-      target: kindTask.target,
-      version: kindTask.version,
-      force: kindTask.force,
-      status: kindTask.status,
-      createdAt: kindTask.createdAt,
-      message: messages.waitingFor(operation),
     );
 
     _commitState(state.copyWith(queue: [...state.queue, task]));
@@ -313,7 +295,6 @@ class InstallQueue extends _$InstallQueue {
     final taskIds = <String>[];
     final newTasks = <InstallTask>[];
     final targets = <AppOperationTargetSnapshot>[];
-    final messages = ref.read(installMessagesProvider);
     final reservedAppIds = <String>{
       if (state.currentTask case final task?) task.appId,
       ...state.queue.map((task) => task.appId),
@@ -353,10 +334,7 @@ class InstallQueue extends _$InstallQueue {
 
       taskIds.add(task.id);
       targets.add(target);
-      final operation = params.kind == InstallTaskKind.update
-          ? messages.updateLabel
-          : messages.installLabel;
-      newTasks.add(task.copyWith(message: messages.waitingFor(operation)));
+      newTasks.add(task);
     }
 
     if (newTasks.isNotEmpty) {
@@ -433,16 +411,10 @@ class InstallQueue extends _$InstallQueue {
     // 重置取消标志（确保每次安装都是干净的状态）
     _resetCancelFlag();
 
-    // 使用国际化消息
-    final messages = ref.read(installMessagesProvider);
-    final operation = task.isUpdateTask
-        ? messages.updateLabel
-        : messages.installLabel;
-
     // 更新状态为安装中
     final installingTask = task.copyWith(
       status: InstallStatus.installing,
-      message: messages.preparing(operation, task.appId),
+      messageCode: AppOperationMessageCode.preparing,
       startedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
@@ -498,25 +470,42 @@ class InstallQueue extends _$InstallQueue {
         _handleProgress(event.taskId, event.progress);
       case AppOperationTimeoutEvent():
         AppLogger.warning('Install timeout for ${state.currentTask?.appId}');
-        _markFailed(event.taskId, '安装超时：长时间未收到进度更新', errorCode: -2);
+        _markFailed(
+          event.taskId,
+          _buildFailure(
+            taskId: event.taskId,
+            kind: AppOperationFailureKind.timeout,
+            diagnostic: 'No install progress received before timeout',
+          ),
+        );
       case AppOperationStreamFailedEvent():
         AppLogger.error(
           'Install request failed for ${state.currentTask?.appId}',
           event.error,
           event.stackTrace,
         );
-        _markFailed(event.taskId, event.error.toString());
+        _markFailed(
+          event.taskId,
+          _buildFailure(
+            taskId: event.taskId,
+            kind: AppOperationFailureKind.execution,
+            diagnostic: event.error.toString(),
+          ),
+        );
       case AppOperationStreamEndedEvent():
         final currentTask = state.currentTask;
         if (currentTask == null || currentTask.id != event.taskId) {
           return;
         }
-        final messages = ref.read(installMessagesProvider);
-        final operation = currentTask.isUpdateTask
-            ? messages.updateLabel
-            : messages.installLabel;
         // 无终态结束无法证明成功，历史版本安装尤其不能乐观完成。
-        _markFailed(event.taskId, messages.confirmFailed(operation));
+        _markFailed(
+          event.taskId,
+          _buildFailure(
+            taskId: event.taskId,
+            kind: AppOperationFailureKind.streamEndedWithoutTerminal,
+            diagnostic: 'Operation stream ended without terminal event',
+          ),
+        );
     }
   }
 
@@ -542,11 +531,20 @@ class InstallQueue extends _$InstallQueue {
     if (progress.status == InstallStatus.success) {
       _markSuccess(taskId);
     } else if (progress.status == InstallStatus.failed) {
+      final failure =
+          progress.failure ??
+          _buildFailure(
+            taskId: taskId,
+            kind: progress.errorCode == null
+                ? AppOperationFailureKind.execution
+                : AppOperationFailureKind.cli,
+            cliCode: progress.errorCode,
+            diagnostic:
+                progress.errorDetail ?? progress.rawMessage ?? progress.error,
+          );
       _markFailed(
         taskId,
-        progress.error ?? '安装失败',
-        errorCode: progress.errorCode,
-        errorDetail: progress.errorDetail ?? progress.rawMessage,
+        _withFailureGuidance(taskId: taskId, failure: failure),
       );
     } else if (progress.status == InstallStatus.cancelled) {
       // 取消状态：停止超时检查，更新历史记录
@@ -561,15 +559,8 @@ class InstallQueue extends _$InstallQueue {
 
     _disposeActiveExecutor(taskId: taskId);
 
-    // 使用国际化消息
-    final messages = ref.read(installMessagesProvider);
-    final operation = currentTask.isUpdateTask
-        ? messages.updateLabel
-        : messages.installLabel;
-
     final cancelledTask = currentTask.copyWith(
       status: InstallStatus.cancelled,
-      message: messages.cancelled(operation),
       finishedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
@@ -599,16 +590,10 @@ class InstallQueue extends _$InstallQueue {
 
     _disposeActiveExecutor(taskId: taskId);
 
-    // 使用国际化消息
-    final messages = ref.read(installMessagesProvider);
-    final operation = currentTask.isUpdateTask
-        ? messages.updateLabel
-        : messages.installLabel;
-
     final completedTask = currentTask.copyWith(
       status: InstallStatus.success,
       progress: 100,
-      message: messages.completed(operation),
+      messageCode: AppOperationMessageCode.completed,
       finishedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
@@ -622,12 +607,7 @@ class InstallQueue extends _$InstallQueue {
   ///
   /// 将当前任务标记为失败，记录错误信息，继续处理下一个任务
   /// 会自动检测是否为用户取消，并设置正确的状态
-  void _markFailed(
-    String taskId,
-    String error, {
-    int? errorCode,
-    String? errorDetail,
-  }) {
+  void _markFailed(String taskId, AppOperationFailure failure) {
     final currentTask = state.currentTask;
     if (currentTask == null || currentTask.id != taskId) {
       AppLogger.warning(
@@ -643,27 +623,10 @@ class InstallQueue extends _$InstallQueue {
     // 检查是否为用户取消（参考 Rust 版本 InstallSlot.is_cancelled）
     final wasCancelled = isUserCancelled();
 
-    // 使用国际化消息
-    final messages = ref.read(installMessagesProvider);
-    final operation = currentTask.isUpdateTask
-        ? messages.updateLabel
-        : messages.installLabel;
-    final cancelledMsg = messages.cancelled(operation);
-    final resolvedError = wasCancelled
-        ? cancelledMsg
-        : _decorateFailureMessageForCurrentPlatform(
-            task: currentTask,
-            message: error,
-            messages: messages,
-          );
-
     // 根据取消状态决定任务状态
     final failedTask = currentTask.copyWith(
       status: wasCancelled ? InstallStatus.cancelled : InstallStatus.failed,
-      errorMessage: resolvedError,
-      errorCode: wasCancelled ? null : errorCode,
-      errorDetail: wasCancelled ? null : errorDetail,
-      message: resolvedError,
+      failure: wasCancelled ? null : failure,
       finishedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
@@ -672,7 +635,10 @@ class InstallQueue extends _$InstallQueue {
     if (wasCancelled) {
       AppLogger.info('Task cancelled by user: $appId');
     } else {
-      AppLogger.error('Task failed: $appId, error: $error, code: $errorCode');
+      AppLogger.error(
+        'Task failed: $appId, kind=${failure.kind.name}, '
+        'code=${failure.cliCode}, diagnostic=${failure.diagnostic}',
+      );
     }
 
     _scheduleNextTask();
@@ -701,32 +667,37 @@ class InstallQueue extends _$InstallQueue {
     );
   }
 
-  String _decorateFailureMessageForCurrentPlatform({
-    required InstallTask task,
-    required String message,
-    required InstallMessages messages,
+  AppOperationFailure _buildFailure({
+    required String taskId,
+    required AppOperationFailureKind kind,
+    int? cliCode,
+    String? diagnostic,
   }) {
-    final trimmedMessage = message.trim();
-    if (trimmedMessage.isEmpty) {
-      return trimmedMessage;
-    }
-
-    // 失败文案的发行版增强统一收口在队列层，原因是多个页面都消费同一份失败状态：
-    // - 下载管理
-    // - 详情页
-    // - 其他依赖安装历史/当前任务的展示面
-    // 这样可以避免页面层各自再拼一遍提示，导致规则漂移或重复追加。
-    final distribution =
-        ref.read(linglongEnvProvider).result?.distribution ??
-        LinuxDistribution.unknown;
-    final scenario = task.isUpdateTask
+    final task = state.currentTask;
+    final scenario = task != null && task.id == taskId && task.isUpdateTask
         ? LinuxDistributionGuidanceScenario.appUpdateFailure
         : LinuxDistributionGuidanceScenario.appInstallFailure;
+    return AppOperationFailure(
+      kind: kind,
+      cliCode: cliCode,
+      diagnostic: diagnostic,
+      guidanceScenario: scenario,
+    );
+  }
 
-    return messages.appendDistributionGuidance(
-      distribution: distribution,
-      scenario: scenario,
-      message: trimmedMessage,
+  /// 为旧测试替身或过渡期调用方补齐失败提示场景。
+  AppOperationFailure _withFailureGuidance({
+    required String taskId,
+    required AppOperationFailure failure,
+  }) {
+    if (failure.guidanceScenario != null) {
+      return failure;
+    }
+    return failure.copyWith(
+      guidanceScenario: _buildFailure(
+        taskId: taskId,
+        kind: failure.kind,
+      ).guidanceScenario,
     );
   }
 
@@ -778,17 +749,12 @@ class InstallQueue extends _$InstallQueue {
         return true;
       }
 
-      final messages = ref.read(installMessagesProvider);
-      final operation = activeTask!.isUpdateTask
-          ? messages.updateLabel
-          : messages.installLabel;
-      final cancelledMessage = messages.cancelled(operation);
+      const cancellationLog = 'Operation cancelled by user';
 
       final cancelledTask = _queueReducer
-          .appendCommandOutput(activeTask, cancelledMessage)
+          .appendCommandOutput(activeTask!, cancellationLog)
           .copyWith(
             status: InstallStatus.cancelled,
-            message: cancelledMessage,
             finishedAt: DateTime.now().millisecondsSinceEpoch,
           );
 
@@ -813,11 +779,9 @@ class InstallQueue extends _$InstallQueue {
     }
     _commitState(_queueReducer.removeQueuedTask(state, taskId));
     if (queuedTask.batchId != null) {
-      final messages = ref.read(installMessagesProvider);
       _commitTerminalTask(
         queuedTask.copyWith(
           status: InstallStatus.cancelled,
-          message: messages.cancelled(messages.updateLabel),
           finishedAt: _nowTimestamp(),
         ),
         clearCurrentTask: false,
@@ -855,12 +819,10 @@ class InstallQueue extends _$InstallQueue {
         .where((task) => task.batchId != null)
         .toList();
     _commitState(_queueReducer.clearQueue(state));
-    final messages = ref.read(installMessagesProvider);
     for (final task in batchTasks) {
       _commitTerminalTask(
         task.copyWith(
           status: InstallStatus.cancelled,
-          message: messages.cancelled(messages.updateLabel),
           finishedAt: _nowTimestamp(),
         ),
         clearCurrentTask: false,
@@ -926,15 +888,10 @@ class InstallQueue extends _$InstallQueue {
         '${recovery.installedTarget?.version}',
       );
 
-      final messages = ref.read(installMessagesProvider);
-      final operation = persistedTask.isUpdateTask
-          ? messages.updateLabel
-          : messages.installLabel;
-
       final successTask = persistedTask.copyWith(
         status: InstallStatus.success,
         progress: 100,
-        message: messages.completed(operation),
+        messageCode: AppOperationMessageCode.completed,
         finishedAt: DateTime.now().millisecondsSinceEpoch,
       );
 
@@ -947,12 +904,15 @@ class InstallQueue extends _$InstallQueue {
         'actual=${recovery.installedTarget?.version}',
       );
 
-      final messages = ref.read(installMessagesProvider);
-
       final interruptedTask = persistedTask.copyWith(
         status: InstallStatus.interrupted,
-        message: messages.taskCrashInterrupted,
-        errorMessage: messages.taskCrashRetryHint,
+        failure: AppOperationFailure(
+          kind: AppOperationFailureKind.interrupted,
+          diagnostic: 'Operation interrupted before recovery verification',
+          guidanceScenario: persistedTask.isUpdateTask
+              ? LinuxDistributionGuidanceScenario.appUpdateFailure
+              : LinuxDistributionGuidanceScenario.appInstallFailure,
+        ),
         finishedAt: DateTime.now().millisecondsSinceEpoch,
       );
 

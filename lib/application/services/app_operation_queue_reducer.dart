@@ -46,10 +46,12 @@ class AppOperationQueueReducer {
           status: progress.status,
           progress: progress.progress,
           message: progress.message,
+          messageCode: progress.messageCode,
           rawMessage: progress.rawMessage,
           errorMessage: progress.error,
           errorCode: progress.errorCode,
           errorDetail: progress.errorDetail ?? progress.rawMessage,
+          failure: progress.failure,
         );
     return state.copyWith(currentTask: updatedTask);
   }

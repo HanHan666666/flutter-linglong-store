@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'app_operation_failure.dart';
 import 'app_operation_target_snapshot.dart';
 import 'install_progress.dart';
 
@@ -60,8 +61,11 @@ sealed class InstallTask with _$InstallTask {
     /// 安装进度（`0.0..1.0` 比例值，由 [progressValue] 归一化后供 UI 消费）。
     @Default(0.0) double progress,
 
-    /// 状态消息
+    /// 旧快照中的状态文案；新任务不得写入本地化字符串。
     String? message,
+
+    /// 可在当前语言下重新格式化的稳定阶段代码。
+    AppOperationMessageCode? messageCode,
 
     /// 安装链路中保留的原始 message 文本，用于诊断。
     String? rawMessage,
@@ -69,7 +73,7 @@ sealed class InstallTask with _$InstallTask {
     /// 当前任务累计的 ll-cli 命令与原始输出，随下载中心 item 生命周期保存。
     @Default('') String commandOutput,
 
-    /// 错误消息
+    /// 旧快照中的错误文案；新任务不得写入本地化字符串。
     String? errorMessage,
 
     /// 错误代码
@@ -77,6 +81,9 @@ sealed class InstallTask with _$InstallTask {
 
     /// 错误详情
     String? errorDetail,
+
+    /// 与 locale 无关的结构化失败事实。
+    AppOperationFailure? failure,
 
     /// 任务创建时间戳
     required int createdAt,
@@ -171,24 +178,16 @@ extension InstallTaskX on InstallTask {
   /// trim、JSON 重解析或其他本地适配。只有旧任务缺少 errorDetail 时，才使用
   /// 历史兼容提取逻辑读取 rawMessage/errorMessage。
   String? get diagnosticMessage {
+    final structuredDiagnostic = failure?.diagnostic;
+    if (structuredDiagnostic != null && structuredDiagnostic.isNotEmpty) {
+      return structuredDiagnostic;
+    }
     final exactMessage = errorDetail;
     if (exactMessage != null && exactMessage.isNotEmpty) {
       return exactMessage;
     }
     return displayRawMessage ?? _extractMessageText(errorMessage);
   }
-
-  /// 待处理文案。
-  String get waitingMessage => isUpdateTask ? '等待更新...' : '等待安装...';
-
-  /// 开始执行文案。
-  String get preparingMessage => isUpdateTask ? '准备更新...' : '准备安装...';
-
-  /// 成功完成文案。
-  String get successMessage => isUpdateTask ? '更新完成' : '安装完成';
-
-  /// 用户取消文案。
-  String get cancelledMessage => isUpdateTask ? '更新已取消' : '安装已取消';
 
   /// 是否需要提示“安装较慢，可能在处理依赖”。
   bool shouldShowSlowInstallHint(

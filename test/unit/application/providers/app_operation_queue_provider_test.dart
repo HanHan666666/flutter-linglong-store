@@ -8,6 +8,7 @@ import 'package:linglong_store/application/providers/app_operation_queue_provide
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/domain/models/app_operation_batch.dart';
+import 'package:linglong_store/domain/models/app_operation_failure.dart';
 import 'package:linglong_store/domain/models/app_operation_journal_snapshot.dart';
 import 'package:linglong_store/domain/models/app_operation_target_snapshot.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
@@ -28,7 +29,7 @@ class _FakeLinglongCliRepository implements LinglongCliRepository {
       appId: 'ignored',
       status: InstallStatus.success,
       progress: 1.0,
-      message: '安装完成',
+      messageCode: AppOperationMessageCode.completed,
     ),
   ];
   List<InstallProgress> updateEvents = const [
@@ -36,7 +37,7 @@ class _FakeLinglongCliRepository implements LinglongCliRepository {
       appId: 'ignored',
       status: InstallStatus.success,
       progress: 1.0,
-      message: '更新完成',
+      messageCode: AppOperationMessageCode.completed,
     ),
   ];
 
@@ -217,7 +218,10 @@ void main() {
         expect(fakeRepo.updateCallCount, 1);
         expect(fakeRepo.installCallCount, 0);
         expect(state.history.first.kind, InstallTaskKind.update);
-        expect(state.history.first.message, '更新完成');
+        expect(
+          state.history.first.messageCode,
+          AppOperationMessageCode.completed,
+        );
         expect(state.history.first.target?.installedVersion, '1.0.0');
         expect(state.history.first.target?.expectedVersion, '2.0.0');
         expect(state.batches, hasLength(1));
@@ -257,7 +261,10 @@ void main() {
         expect(fakeRepo.installCallCount, 1);
         expect(fakeRepo.updateCallCount, 0);
         expect(state.history.first.kind, InstallTaskKind.install);
-        expect(state.history.first.message, '安装完成');
+        expect(
+          state.history.first.messageCode,
+          AppOperationMessageCode.completed,
+        );
       },
     );
 
@@ -269,7 +276,7 @@ void main() {
             InstallProgress(
               appId: 'ignored',
               status: InstallStatus.pending,
-              message: '准备安装',
+              messageCode: AppOperationMessageCode.preparing,
             ),
           ];
         final container = await _createTestContainer(fakeRepo);
@@ -292,7 +299,10 @@ void main() {
         expect(fakeRepo.installCallCount, 1);
         expect(state.currentTask, isNull);
         expect(state.history.first.status, InstallStatus.failed);
-        expect(state.history.first.errorMessage, contains('无法确认安装结果'));
+        expect(
+          state.history.first.failure?.kind,
+          AppOperationFailureKind.streamEndedWithoutTerminal,
+        );
       },
     );
 
@@ -303,14 +313,14 @@ void main() {
             appId: 'ignored',
             status: InstallStatus.downloading,
             progress: 0.5,
-            message: '正在下载',
+            messageCode: AppOperationMessageCode.downloadingFiles,
             outputLine: '{"message":"Downloading files","percentage":50}',
           ),
           InstallProgress(
             appId: 'ignored',
             status: InstallStatus.success,
             progress: 100,
-            message: '安装完成',
+            messageCode: AppOperationMessageCode.completed,
             outputLine: '{"message":"Install complete","percentage":100}',
           ),
         ];

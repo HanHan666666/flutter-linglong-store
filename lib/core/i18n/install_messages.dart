@@ -2,6 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../../domain/models/app_operation_failure.dart';
+import '../../domain/models/install_progress.dart';
+import '../../domain/models/install_task.dart';
 import '../../domain/models/linux_distribution.dart';
 import 'l10n/app_localizations.dart';
 
@@ -158,6 +161,119 @@ class InstallMessages {
 
   /// 操作失败
   String failed(String operation) => _l10n.operationFailed(operation);
+
+  /// 按当前语言格式化一个持久化任务的状态文案。
+  ///
+  /// 结构化字段优先；旧字符串字段只用于兼容升级前的 Journal。该方法必须在
+  /// Presentation 构建时调用，禁止把返回值重新写回任务状态。
+  String messageForTask(
+    InstallTask task, {
+    LinuxDistribution distribution = LinuxDistribution.unknown,
+  }) {
+    if (task.status == InstallStatus.failed) {
+      return errorMessageForTask(task, distribution: distribution);
+    }
+
+    final operation = _operationForTask(task);
+    return switch (task.status) {
+      InstallStatus.pending => waitingFor(operation),
+      InstallStatus.downloading || InstallStatus.installing =>
+        (task.messageCode == AppOperationMessageCode.preparing
+                ? preparing(operation, task.appId)
+                : _messageForCode(task.messageCode)) ??
+            task.displayMessage ??
+            _l10n.installStatusProcessing,
+      InstallStatus.success => completed(operation),
+      InstallStatus.cancelled => cancelled(operation),
+      InstallStatus.interrupted => taskCrashInterrupted,
+      InstallStatus.failed => failed(operation),
+    };
+  }
+
+  /// 按当前语言格式化任务失败摘要，同时保留原始诊断的排障价值。
+  ///
+  /// [AppOperationFailure.diagnostic] 不会被修改；只有最终显示文本会按既有规则
+  /// 追加诊断和发行版提示。
+  String errorMessageForTask(
+    InstallTask task, {
+    LinuxDistribution distribution = LinuxDistribution.unknown,
+  }) {
+    final failure = task.failure;
+    if (failure == null) {
+      final legacyMessage =
+          task.errorMessage ??
+          task.displayMessage ??
+          failed(_operationForTask(task));
+      return appendDistributionGuidance(
+        distribution: distribution,
+        scenario: task.isUpdateTask
+            ? LinuxDistributionGuidanceScenario.appUpdateFailure
+            : LinuxDistributionGuidanceScenario.appInstallFailure,
+        message: legacyMessage,
+      );
+    }
+
+    final operation = _operationForTask(task);
+    final summary = switch (failure.kind) {
+      AppOperationFailureKind.cli =>
+        failure.cliCode == null
+            ? failed(operation)
+            : getErrorMessageFromCode(failure.cliCode!),
+      AppOperationFailureKind.timeout => timeout(operation),
+      AppOperationFailureKind.resultUnconfirmed ||
+      AppOperationFailureKind.streamEndedWithoutTerminal => confirmFailed(
+        operation,
+      ),
+      AppOperationFailureKind.execution => failed(operation),
+      AppOperationFailureKind.interrupted => taskCrashRetryHint,
+    };
+    final detail = failure.diagnostic?.trim();
+    final message =
+        detail == null ||
+            detail.isEmpty ||
+            detail == summary ||
+            summary.contains(detail)
+        ? summary
+        : '$summary: $detail';
+    final scenario =
+        failure.guidanceScenario ??
+        (task.isUpdateTask
+            ? LinuxDistributionGuidanceScenario.appUpdateFailure
+            : LinuxDistributionGuidanceScenario.appInstallFailure);
+    return appendDistributionGuidance(
+      distribution: distribution,
+      scenario: scenario,
+      message: message,
+    );
+  }
+
+  /// 把稳定阶段代码映射到当前 locale。
+  String? _messageForCode(AppOperationMessageCode? code) {
+    return switch (code) {
+      AppOperationMessageCode.preparing => null,
+      AppOperationMessageCode.starting => _l10n.installStatusStarting,
+      AppOperationMessageCode.installingApplication =>
+        _l10n.installStatusInstallingApp,
+      AppOperationMessageCode.installingRuntime =>
+        _l10n.installStatusInstallingRuntime,
+      AppOperationMessageCode.installingBase =>
+        _l10n.installStatusInstallingBase,
+      AppOperationMessageCode.downloadingMetadata =>
+        _l10n.installStatusDownloadingMeta,
+      AppOperationMessageCode.downloadingFiles =>
+        _l10n.installStatusDownloadingFiles,
+      AppOperationMessageCode.postProcessing =>
+        _l10n.installStatusPostProcessing,
+      AppOperationMessageCode.processing => _l10n.installStatusProcessing,
+      AppOperationMessageCode.completed => _l10n.installStatusCompleted,
+      null => null,
+    };
+  }
+
+  /// 获取任务类型对应的当前语言操作名。
+  String _operationForTask(InstallTask task) {
+    return task.isUpdateTask ? updateLabel : installLabel;
+  }
 
   // ==================== 其他消息 ====================
 

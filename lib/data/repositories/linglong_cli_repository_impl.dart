@@ -4,11 +4,13 @@ import 'dart:io';
 
 import '../../core/i18n/install_messages.dart';
 import '../../core/network/api_exceptions.dart';
+import '../../domain/models/app_operation_failure.dart';
 import '../../domain/models/linglong_env_check_result.dart';
 import '../../domain/models/installed_app.dart';
 import '../../domain/models/running_app.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_task.dart';
+import '../../domain/models/linux_distribution.dart';
 import '../../domain/models/linglong_repository_config.dart';
 import '../../domain/repositories/linglong_cli_repository.dart';
 import '../../domain/repositories/linglong_repository_management_repository.dart';
@@ -78,9 +80,7 @@ class LinglongCliRepositoryImpl
   }
 
   String _operationLabel(InstallTaskKind kind) {
-    return kind == InstallTaskKind.update
-        ? _messages.updateLabel
-        : _messages.installLabel;
+    return kind == InstallTaskKind.update ? 'update' : 'install';
   }
 
   InstallProgressEventType _mapEventType(ParsedJsonEvent? jsonEvent) {
@@ -97,28 +97,7 @@ class LinglongCliRepositoryImpl
   }
 
   String _extractRawMessage(String line, {ParsedJsonEvent? jsonEvent}) {
-    final raw = jsonEvent?.message ?? _messages.extractMessageText(line);
-    return raw.trim();
-  }
-
-  String _buildFailureMessage({
-    required String operationLabel,
-    required String errorDetail,
-    int? errorCode,
-  }) {
-    final detail = _messages.extractMessageText(errorDetail).trim();
-    final summary = errorCode == -1
-        ? _messages.failed(operationLabel)
-        : errorCode != null
-        ? _messages.getErrorMessageFromCode(errorCode)
-        : _messages.getStatusFromMessage(detail);
-
-    if (detail.isEmpty || detail == summary || summary.contains(detail)) {
-      return summary;
-    }
-
-    // ll-cli 的 code 只能提供粗分类，真实排障原因必须保留 message 详情。
-    return '$summary：$detail';
+    return (jsonEvent?.message ?? line).trim();
   }
 
   Stream<InstallProgress> _runInstallLikeOperation(
@@ -153,8 +132,7 @@ class LinglongCliRepositoryImpl
       appId: appId,
       eventType: InstallProgressEventType.message,
       status: InstallStatus.pending,
-      message: _messages.preparing(operationLabel, appId),
-      rawMessage: _messages.preparing(operationLabel, appId),
+      messageCode: AppOperationMessageCode.preparing,
       outputLine: commandLine,
     );
 
@@ -176,9 +154,7 @@ class LinglongCliRepositoryImpl
             appId: appId,
             eventType: InstallProgressEventType.cancelled,
             status: InstallStatus.cancelled,
-            message: _messages.cancelled(operationLabel),
-            rawMessage: _messages.cancelled(operationLabel),
-            outputLine: _messages.cancelled(operationLabel),
+            outputLine: 'Operation cancelled by user',
           );
           return;
         }
@@ -186,7 +162,6 @@ class LinglongCliRepositoryImpl
         final jsonEvent = CliOutputParser.parseJsonLine(event.line);
         final progressInfo = CliOutputParser.parseInstallProgressEx(event.line);
         final rawMessage = _extractRawMessage(event.line, jsonEvent: jsonEvent);
-        final displayMessage = _messages.getStatusFromMessage(rawMessage);
 
         if (progressInfo.phase == InstallPhase.downloading) {
           yield InstallProgress(
@@ -194,7 +169,7 @@ class LinglongCliRepositoryImpl
             eventType: _mapEventType(jsonEvent),
             status: InstallStatus.downloading,
             progress: progressInfo.progress,
-            message: displayMessage,
+            messageCode: progressInfo.messageCode,
             rawMessage: rawMessage,
             outputLine: event.line,
           );
@@ -204,7 +179,7 @@ class LinglongCliRepositoryImpl
             eventType: _mapEventType(jsonEvent),
             status: InstallStatus.installing,
             progress: progressInfo.progress,
-            message: displayMessage,
+            messageCode: progressInfo.messageCode,
             rawMessage: rawMessage,
             outputLine: event.line,
           );
@@ -214,10 +189,8 @@ class LinglongCliRepositoryImpl
             eventType: _mapEventType(jsonEvent),
             status: InstallStatus.success,
             progress: 100,
-            message: _messages.completed(operationLabel),
-            rawMessage: rawMessage.isNotEmpty
-                ? rawMessage
-                : _messages.completed(operationLabel),
+            messageCode: AppOperationMessageCode.completed,
+            rawMessage: rawMessage.isNotEmpty ? rawMessage : null,
             outputLine: event.line,
           );
           return;
@@ -228,24 +201,21 @@ class LinglongCliRepositoryImpl
           final exactErrorMessage = jsonEvent?.message;
           final errorDetail =
               exactErrorMessage ??
-              (rawMessage.isNotEmpty
-                  ? rawMessage
-                  : (progressInfo.errorMessage ?? event.line).trim());
-          final errorMessage = _buildFailureMessage(
-            operationLabel: operationLabel,
-            errorDetail: errorDetail,
-            errorCode: errorCode,
-          );
+              (rawMessage.isNotEmpty ? rawMessage : event.line.trim());
 
           yield InstallProgress(
             appId: appId,
             eventType: InstallProgressEventType.error,
             status: InstallStatus.failed,
-            message: errorMessage,
             rawMessage: errorDetail,
-            error: errorMessage,
-            errorCode: errorCode,
-            errorDetail: errorDetail,
+            failure: AppOperationFailure(
+              kind: AppOperationFailureKind.cli,
+              cliCode: errorCode,
+              diagnostic: errorDetail,
+              guidanceScenario: kind == InstallTaskKind.update
+                  ? LinuxDistributionGuidanceScenario.appUpdateFailure
+                  : LinuxDistributionGuidanceScenario.appInstallFailure,
+            ),
             outputLine: event.line,
           );
           return;
@@ -266,26 +236,29 @@ class LinglongCliRepositoryImpl
           eventType: InstallProgressEventType.progress,
           status: InstallStatus.success,
           progress: 100,
-          message: _messages.completed(operationLabel),
-          rawMessage: _messages.completed(operationLabel),
-          outputLine: _messages.completed(operationLabel),
+          messageCode: AppOperationMessageCode.completed,
+          outputLine: 'Operation result confirmed',
         );
       } else {
-        final confirmMessage = _messages.confirmFailed(operationLabel);
         final targetRef = version != null && version.isNotEmpty
             ? '$appId/$version'
             : appId;
+        final diagnostic =
+            'Installed target not found after $operationLabel: $targetRef';
 
         yield InstallProgress(
           appId: appId,
           eventType: InstallProgressEventType.error,
           status: InstallStatus.failed,
-          message: confirmMessage,
-          error: confirmMessage,
-          rawMessage: confirmMessage,
-          outputLine: confirmMessage,
-          errorDetail:
-              'Installed target not found after $operationLabel: $targetRef',
+          rawMessage: diagnostic,
+          outputLine: diagnostic,
+          failure: AppOperationFailure(
+            kind: AppOperationFailureKind.resultUnconfirmed,
+            diagnostic: diagnostic,
+            guidanceScenario: kind == InstallTaskKind.update
+                ? LinuxDistributionGuidanceScenario.appUpdateFailure
+                : LinuxDistributionGuidanceScenario.appInstallFailure,
+          ),
         );
       }
     } on CliTimeoutException catch (e) {
@@ -293,21 +266,22 @@ class LinglongCliRepositoryImpl
         appId: appId,
         eventType: InstallProgressEventType.error,
         status: InstallStatus.failed,
-        message: _messages.timeout(operationLabel),
         outputLine: e.message,
-        error: e.message,
-        errorCode: -2,
         rawMessage: e.message,
-        errorDetail: e.message,
+        failure: AppOperationFailure(
+          kind: AppOperationFailureKind.timeout,
+          diagnostic: e.message,
+          guidanceScenario: kind == InstallTaskKind.update
+              ? LinuxDistributionGuidanceScenario.appUpdateFailure
+              : LinuxDistributionGuidanceScenario.appInstallFailure,
+        ),
       );
     } on CliCancelledException {
       yield InstallProgress(
         appId: appId,
         eventType: InstallProgressEventType.cancelled,
         status: InstallStatus.cancelled,
-        message: _messages.cancelled(operationLabel),
-        rawMessage: _messages.cancelled(operationLabel),
-        outputLine: _messages.cancelled(operationLabel),
+        outputLine: 'Operation cancelled',
       );
     } catch (e, stack) {
       AppLogger.error('[LinglongCli] $operationLabel异常: $appId', e, stack);
@@ -315,11 +289,15 @@ class LinglongCliRepositoryImpl
         appId: appId,
         eventType: InstallProgressEventType.error,
         status: InstallStatus.failed,
-        message: _messages.failed(operationLabel),
         outputLine: e.toString(),
-        error: e.toString(),
         rawMessage: e.toString(),
-        errorDetail: e.toString(),
+        failure: AppOperationFailure(
+          kind: AppOperationFailureKind.execution,
+          diagnostic: e.toString(),
+          guidanceScenario: kind == InstallTaskKind.update
+              ? LinuxDistributionGuidanceScenario.appUpdateFailure
+              : LinuxDistributionGuidanceScenario.appInstallFailure,
+        ),
       );
     } finally {
       _cancelFlags.remove(processId);

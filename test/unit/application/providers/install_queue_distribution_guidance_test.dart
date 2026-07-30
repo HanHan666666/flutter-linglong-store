@@ -5,6 +5,7 @@ import 'package:linglong_store/application/providers/app_operation_queue_provide
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/linglong_env_provider.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
+import 'package:linglong_store/domain/models/app_operation_failure.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
@@ -31,8 +32,11 @@ void main() {
             InstallProgress(
               appId: 'ignored',
               status: InstallStatus.failed,
-              error: '安装失败',
-              errorCode: 2001,
+              failure: AppOperationFailure(
+                kind: AppOperationFailureKind.cli,
+                cliCode: 2001,
+                diagnostic: 'install failed',
+              ),
             ),
           ];
 
@@ -61,8 +65,15 @@ void main() {
 
         final failedTask = await _waitForFirstHistoryTask(container);
         expect(failedTask.status, InstallStatus.failed);
-        expect(failedTask.errorMessage, contains('开发者模式'));
-        expect(failedTask.message, contains('开发者模式'));
+        final message = container
+            .read(installMessagesProvider)
+            .errorMessageForTask(
+              failedTask,
+              distribution: LinuxDistribution.uos,
+            );
+        expect(message, contains('开发者模式'));
+        expect(failedTask.errorMessage, isNull);
+        expect(failedTask.message, isNull);
       },
     );
 
@@ -74,8 +85,11 @@ void main() {
             InstallProgress(
               appId: 'ignored',
               status: InstallStatus.failed,
-              error: '更新失败',
-              errorCode: 2001,
+              failure: AppOperationFailure(
+                kind: AppOperationFailureKind.cli,
+                cliCode: 2001,
+                diagnostic: 'update failed',
+              ),
             ),
           ];
 
@@ -104,7 +118,13 @@ void main() {
 
         final failedTask = await _waitForFirstHistoryTask(container);
         expect(failedTask.status, InstallStatus.failed);
-        expect(failedTask.errorMessage, isNot(contains('开发者模式')));
+        final message = container
+            .read(installMessagesProvider)
+            .errorMessageForTask(
+              failedTask,
+              distribution: LinuxDistribution.uos,
+            );
+        expect(message, isNot(contains('开发者模式')));
       },
     );
 
@@ -116,8 +136,11 @@ void main() {
             InstallProgress(
               appId: 'ignored',
               status: InstallStatus.failed,
-              error: '安装失败',
-              errorCode: 2001,
+              failure: AppOperationFailure(
+                kind: AppOperationFailureKind.cli,
+                cliCode: 2001,
+                diagnostic: 'install failed',
+              ),
             ),
           ];
 
@@ -146,7 +169,13 @@ void main() {
 
         final failedTask = await _waitForFirstHistoryTask(container);
         expect(failedTask.status, InstallStatus.failed);
-        expect(failedTask.errorMessage, equals('安装失败'));
+        final message = container
+            .read(installMessagesProvider)
+            .errorMessageForTask(
+              failedTask,
+              distribution: const LinuxDistribution(displayName: 'Deepin 23'),
+            );
+        expect(message, isNot(contains('开发者模式')));
       },
     );
   });

@@ -1,16 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:linglong_store/core/i18n/install_messages.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
-import 'package:linglong_store/core/network/api_exceptions.dart';
 import 'package:linglong_store/core/platform/cli_executor.dart';
 import 'package:linglong_store/data/repositories/linglong_cli_repository_impl.dart';
 import 'package:linglong_store/domain/models/app_operation_failure.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
+import 'package:linglong_store/domain/models/linglong_cli_failure.dart';
 
 class _RecordingCliExecutor {
   final List<List<String>> executeCalls = [];
@@ -21,7 +19,7 @@ class _RecordingCliExecutor {
   final Map<String, CliOutput> executeOutputsByCommand = {};
   final Map<String, List<CliOutput>> executeOutputSequencesByCommand = {};
   CliOutput nextExecuteOutput = const CliOutput(
-    stdout: 'ok',
+    stdout: '[]',
     stderr: '',
     exitCode: 0,
   );
@@ -85,7 +83,6 @@ void main() {
       () async {
         final executor = _RecordingCliExecutor();
         final repository = LinglongCliRepositoryImpl.withExecutor(
-          InstallMessages.fromLocale(const Locale('zh')),
           execute: executor.execute,
           executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
           cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -107,7 +104,6 @@ void main() {
       () async {
         final executor = _RecordingCliExecutor();
         final repository = LinglongCliRepositoryImpl.withExecutor(
-          InstallMessages.fromLocale(const Locale('zh')),
           execute: executor.execute,
           executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
           cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -129,7 +125,6 @@ void main() {
     test('installApp with force appends force flag', () async {
       final executor = _RecordingCliExecutor();
       final repository = LinglongCliRepositoryImpl.withExecutor(
-        InstallMessages.fromLocale(const Locale('zh')),
         execute: executor.execute,
         executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
         cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -165,7 +160,6 @@ void main() {
             exitCode: 0,
           );
         final repository = LinglongCliRepositoryImpl.withExecutor(
-          InstallMessages.fromLocale(const Locale('zh')),
           execute: executor.execute,
           executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
           cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -215,7 +209,6 @@ void main() {
             ),
           ];
         final repository = LinglongCliRepositoryImpl.withExecutor(
-          InstallMessages.fromLocale(const Locale('zh')),
           execute: executor.execute,
           executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
           cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -234,7 +227,6 @@ void main() {
     test('updateApp uses upgrade command without version suffix', () async {
       final executor = _RecordingCliExecutor();
       final repository = LinglongCliRepositoryImpl.withExecutor(
-        InstallMessages.fromLocale(const Locale('zh')),
         execute: executor.execute,
         executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
         cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -263,7 +255,6 @@ void main() {
             ),
           ];
         final repository = LinglongCliRepositoryImpl.withExecutor(
-          InstallMessages.fromLocale(const Locale('zh')),
           execute: executor.execute,
           executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
           cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -288,7 +279,6 @@ void main() {
           ),
         ];
       final repository = LinglongCliRepositoryImpl.withExecutor(
-        InstallMessages.fromLocale(const Locale('zh')),
         execute: executor.execute,
         executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
         cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -312,7 +302,6 @@ void main() {
           ),
         ];
       final repository = LinglongCliRepositoryImpl.withExecutor(
-        InstallMessages.fromLocale(const Locale('zh')),
         execute: executor.execute,
         executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
         cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -332,7 +321,6 @@ void main() {
       final executor = _RecordingCliExecutor()
         ..cancelWithSystemKillResult = false;
       final repository = LinglongCliRepositoryImpl.withExecutor(
-        InstallMessages.fromLocale(const Locale('zh')),
         execute: executor.execute,
         executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
         cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -356,7 +344,6 @@ void main() {
           exitCode: 255,
         );
       final repository = LinglongCliRepositoryImpl.withExecutor(
-        InstallMessages.fromLocale(const Locale('zh')),
         execute: executor.execute,
         executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
         cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -368,9 +355,9 @@ void main() {
           '138.0.3351.95',
         ),
         throwsA(
-          isA<UninstallException>().having(
-            (UninstallException error) => error.message,
-            'message',
+          isA<LinglongCliException>().having(
+            (LinglongCliException error) => error.failure.diagnostic,
+            'diagnostic',
             'main:com.browser.softedge.stable/138.0.3351.95/x86_64',
           ),
         ),
@@ -393,7 +380,6 @@ void main() {
             exitCode: 0,
           );
         final repository = LinglongCliRepositoryImpl.withExecutor(
-          InstallMessages.fromLocale(const Locale('zh')),
           execute: executor.execute,
           executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
           cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -409,6 +395,65 @@ void main() {
       },
     );
 
+    test(
+      'getInstalledApps distinguishes valid empty data from command failure',
+      () async {
+        final executor = _RecordingCliExecutor()
+          ..executeOutputSequencesByCommand['list --json'] = [
+            const CliOutput(stdout: '[]', stderr: '', exitCode: 0),
+            const CliOutput(
+              stdout: '',
+              stderr: 'permission denied',
+              exitCode: 126,
+            ),
+          ];
+        final repository = LinglongCliRepositoryImpl.withExecutor(
+          execute: executor.execute,
+          executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+          cancelWithSystemKill: executor.cancelWithSystemKill,
+        );
+
+        expect(await repository.getInstalledApps(), isEmpty);
+        await expectLater(
+          repository.getInstalledApps(),
+          throwsA(
+            isA<LinglongCliException>()
+                .having(
+                  (error) => error.failure.kind,
+                  'kind',
+                  LinglongCliFailureKind.permissionDenied,
+                )
+                .having((error) => error.failure.exitCode, 'exitCode', 126),
+          ),
+        );
+      },
+    );
+
+    test('getInstalledApps reports malformed successful output', () async {
+      final executor = _RecordingCliExecutor()
+        ..executeOutputsByCommand['list --json'] = const CliOutput(
+          stdout: 'not json',
+          stderr: '',
+          exitCode: 0,
+        );
+      final repository = LinglongCliRepositoryImpl.withExecutor(
+        execute: executor.execute,
+        executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+        cancelWithSystemKill: executor.cancelWithSystemKill,
+      );
+
+      await expectLater(
+        repository.getInstalledApps(),
+        throwsA(
+          isA<LinglongCliException>().having(
+            (error) => error.failure.kind,
+            'kind',
+            LinglongCliFailureKind.invalidOutput,
+          ),
+        ),
+      );
+    });
+
     test('getRepositoryConfig parses json repo show output', () async {
       final executor = _RecordingCliExecutor()
         ..executeOutputsByCommand['--json repo show'] = const CliOutput(
@@ -418,7 +463,6 @@ void main() {
           exitCode: 0,
         );
       final repository = LinglongCliRepositoryImpl.withExecutor(
-        InstallMessages.fromLocale(const Locale('zh')),
         execute: executor.execute,
         executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
         cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -455,7 +499,6 @@ void main() {
             exitCode: 0,
           );
         final repository = LinglongCliRepositoryImpl.withExecutor(
-          InstallMessages.fromLocale(const Locale('zh')),
           execute: executor.execute,
           executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
           cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -489,7 +532,6 @@ void main() {
               exitCode: 0,
             );
       final repository = LinglongCliRepositoryImpl.withExecutor(
-        InstallMessages.fromLocale(const Locale('zh')),
         execute: executor.execute,
         executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
         cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -520,7 +562,6 @@ void main() {
           exitCode: 0,
         );
       final repository = LinglongCliRepositoryImpl.withExecutor(
-        InstallMessages.fromLocale(const Locale('zh')),
         execute: executor.execute,
         executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
         cancelWithSystemKill: executor.cancelWithSystemKill,
@@ -544,7 +585,6 @@ void main() {
       () async {
         final executor = _RecordingCliExecutor();
         final repository = LinglongCliRepositoryImpl.withExecutor(
-          InstallMessages.fromLocale(const Locale('zh')),
           execute: executor.execute,
           executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
           cancelWithSystemKill: executor.cancelWithSystemKill,

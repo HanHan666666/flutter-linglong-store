@@ -6,10 +6,15 @@ import 'package:linglong_store/domain/models/app_operation_failure.dart';
 void main() {
   group('CliOutputParser', () {
     group('parseInstalledApps', () {
-      test('returns empty list when output is empty', () {
-        expect(CliOutputParser.parseInstalledApps(''), isEmpty);
-        expect(CliOutputParser.parseInstalledApps('   '), isEmpty);
-        expect(CliOutputParser.parseInstalledApps('\n\n'), isEmpty);
+      test('accepts a valid empty json array', () {
+        expect(CliOutputParser.parseInstalledApps('[]'), isEmpty);
+      });
+
+      test('rejects empty output', () {
+        expect(
+          () => CliOutputParser.parseInstalledApps(''),
+          throwsFormatException,
+        );
       });
 
       test('parses ll-cli list json output', () {
@@ -45,20 +50,29 @@ void main() {
         expect(apps.single.description, '微信是一款国内知名的免费即时通讯应用程序');
       });
 
-      test('does not parse legacy text table output', () {
+      test('rejects legacy text table output', () {
         const output = '''
 AppID                     Version    Arch    Channel    Size
 com.tencent.wechat        4.0.0      x86_64  stable     256M
 ''';
 
-        expect(CliOutputParser.parseInstalledApps(output), isEmpty);
+        expect(
+          () => CliOutputParser.parseInstalledApps(output),
+          throwsFormatException,
+        );
       });
     });
 
     group('parseRunningApps', () {
-      test('returns empty list when output is empty', () {
-        expect(CliOutputParser.parseRunningApps(''), isEmpty);
-        expect(CliOutputParser.parseRunningApps('   '), isEmpty);
+      test('accepts a valid empty json array', () {
+        expect(CliOutputParser.parseRunningApps('[]'), isEmpty);
+      });
+
+      test('rejects empty output', () {
+        expect(
+          () => CliOutputParser.parseRunningApps(''),
+          throwsFormatException,
+        );
       });
 
       test('parses ll-cli --json ps array output', () {
@@ -115,13 +129,16 @@ com.tencent.wechat        4.0.0      x86_64  stable     256M
         expect(apps.single.pid, 9012);
       });
 
-      test('does not parse legacy ps text table output', () {
+      test('rejects legacy ps text table output', () {
         const output = '''
 App              ContainerID   Pid
 org.deepin.calculator  abcdef123456  12345
 ''';
 
-        expect(CliOutputParser.parseRunningApps(output), isEmpty);
+        expect(
+          () => CliOutputParser.parseRunningApps(output),
+          throwsFormatException,
+        );
       });
     });
 
@@ -165,14 +182,17 @@ org.deepin.calculator  abcdef123456  12345
         expect(results[1].repoName, 'testing');
       });
 
-      test('does not parse legacy search text table output', () {
+      test('rejects legacy search text table output', () {
         const output = '''
 AppID                     Version
 com.example.app1          1.0.0
 com.example.app2          2.0.0
 ''';
 
-        expect(CliOutputParser.parseSearchResults(output), isEmpty);
+        expect(
+          () => CliOutputParser.parseSearchResults(output),
+          throwsFormatException,
+        );
       });
     });
   });

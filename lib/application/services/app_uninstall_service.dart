@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import '../../core/logging/app_logger.dart';
-import '../../core/network/api_exceptions.dart';
 import '../../domain/models/installed_app.dart';
+import '../../domain/models/linglong_cli_failure.dart';
 import '../../domain/models/running_app.dart';
 import '../../domain/models/uninstall_result.dart';
 
@@ -11,7 +11,7 @@ typedef RunningAppKiller = Future<bool> Function(RunningApp app);
 
 /// [version] 为 `null` 或空字符串时，仅按 appId 执行卸载命令，不拼接版本号。
 typedef AppUninstallExecutor =
-    Future<String> Function(String appId, String? version);
+    Future<void> Function(String appId, String? version);
 typedef InstalledAppRemover = void Function(String appId, String version);
 typedef AppCollectionSyncer = Future<void> Function();
 typedef UninstallReporter =
@@ -117,9 +117,10 @@ class AppUninstallService {
       unawaited(_reportUninstallSafely(app));
 
       return UninstallResultSuccess();
-    } on UninstallException catch (e) {
-      AppLogger.warning('[AppUninstall] 卸载失败: ${e.message}');
-      return UninstallResultError(e.message);
+    } on LinglongCliException catch (e) {
+      final diagnostic = e.failure.diagnostic ?? e.toString();
+      AppLogger.warning('[AppUninstall] 卸载失败: $diagnostic');
+      return UninstallResultError(diagnostic);
     } catch (e) {
       AppLogger.error('[AppUninstall] 卸载异常', e);
       return UninstallResultError(e.toString());

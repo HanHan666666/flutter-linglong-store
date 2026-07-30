@@ -15,7 +15,7 @@ void main() {
       final service = AppUninstallService(
         readRunningApps: () => const [],
         killRunningApp: (_) async => true,
-        uninstallApp: (appId, version) async => 'ok',
+        uninstallApp: (appId, version) async {},
         removeInstalledApp: (appId, version) {},
         syncAfterUninstall: () async {},
         reportUninstall: (appId, version, {appName}) async {},
@@ -29,7 +29,7 @@ void main() {
       final service = AppUninstallService(
         readRunningApps: () => const [],
         killRunningApp: (_) async => true,
-        uninstallApp: (appId, version) async => 'ok',
+        uninstallApp: (appId, version) async {},
         removeInstalledApp: (appId, version) {},
         syncAfterUninstall: () async {},
         reportUninstall: (appId, version, {appName}) async {},
@@ -82,7 +82,7 @@ void main() {
       final service = AppUninstallService(
         readRunningApps: () => runningApps,
         killRunningApp: (_) async => true,
-        uninstallApp: (appId, version) async => 'ok',
+        uninstallApp: (appId, version) async {},
         removeInstalledApp: (appId, version) {},
         syncAfterUninstall: () async {},
         reportUninstall: (appId, version, {appName}) async {},
@@ -101,7 +101,6 @@ void main() {
         killRunningApp: (_) async => true,
         uninstallApp: (appId, version) async {
           events.add('uninstall:$appId@$version');
-          return 'ok';
         },
         removeInstalledApp: (appId, version) {
           events.add('remove:$appId@$version');
@@ -141,7 +140,6 @@ void main() {
           killRunningApp: (_) async => true,
           uninstallApp: (appId, version) async {
             events.add('uninstall:$appId@$version');
-            return 'ok';
           },
           removeInstalledApp: (appId, version) {
             events.add('remove:$appId@$version');
@@ -200,7 +198,6 @@ void main() {
         },
         uninstallApp: (appId, version) async {
           events.add('uninstall:$appId@$version');
-          return 'ok';
         },
         removeInstalledApp: (appId, version) {
           events.add('remove:$appId@$version');
@@ -244,7 +241,7 @@ void main() {
           ),
         ],
         killRunningApp: (_) async => false,
-        uninstallApp: (appId, version) async => 'ok',
+        uninstallApp: (appId, version) async {},
         removeInstalledApp: (appId, version) {},
         syncAfterUninstall: () async {},
         reportUninstall: (appId, version, {appName}) async {},

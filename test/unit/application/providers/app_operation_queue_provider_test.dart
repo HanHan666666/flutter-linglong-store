@@ -14,6 +14,7 @@ import 'package:linglong_store/domain/models/app_operation_target_snapshot.dart'
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
+import 'package:linglong_store/domain/models/linglong_cli_failure.dart';
 import 'package:linglong_store/domain/models/running_app.dart';
 import 'package:linglong_store/domain/repositories/analytics_repository.dart';
 import 'package:linglong_store/domain/repositories/app_operation_journal_repository.dart';
@@ -50,7 +51,12 @@ class _FakeLinglongCliRepository implements LinglongCliRepository {
   }
 
   @override
-  Future<String> createDesktopShortcut(String appId) async => '';
+  Future<DesktopShortcutResult> createDesktopShortcut(String appId) async {
+    return const DesktopShortcutResult(
+      path: '/tmp/example.desktop',
+      disposition: DesktopShortcutDisposition.created,
+    );
+  }
 
   @override
   Future<List<InstalledApp>> getInstalledApps({
@@ -78,10 +84,10 @@ class _FakeLinglongCliRepository implements LinglongCliRepository {
   }
 
   @override
-  Future<String> killApp(String appName) async => '';
+  Future<void> killApp(String appName) async {}
 
   @override
-  Future<String> pruneApps() async => '';
+  Future<void> pruneApps() async {}
 
   @override
   Future<void> runApp(String appId) async {}
@@ -90,7 +96,7 @@ class _FakeLinglongCliRepository implements LinglongCliRepository {
   Future<List<InstalledApp>> searchVersions(String appId) async => const [];
 
   @override
-  Future<String> uninstallApp(String appId, String? version) async => '';
+  Future<void> uninstallApp(String appId, String? version) async {}
 
   @override
   Stream<InstallProgress> updateApp(String appId) async* {

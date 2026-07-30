@@ -2,6 +2,7 @@ import '../models/installed_app.dart';
 import '../models/running_app.dart';
 import '../models/install_progress.dart';
 import '../models/install_task.dart';
+import '../models/linglong_cli_failure.dart';
 
 /// ll-cli 操作 Repository 接口
 abstract class LinglongCliRepository {
@@ -37,7 +38,7 @@ abstract class LinglongCliRepository {
   ///
   /// 参考 Rust 版本的 `cancel_linglong_install` 实现：
   /// 1. 标记取消状态
-  /// 2. 通过 pkexec killall 终止 ll-cli 和 ll-package-manager
+  /// 2. 通过 pkexec 向本任务的精确 PID 发送 SIGTERM
   /// 3. 发送取消事件
   Future<bool> cancelOperation(String appId, {required InstallTaskKind kind});
 
@@ -50,22 +51,22 @@ abstract class LinglongCliRepository {
   ///   自身解析目标（用于应用详情页头部“整体卸载”场景，此处不应
   ///   依赖详情接口返回的“最新版本号”，因为该版本号不一定对应
   ///   实际已安装实例）。
-  Future<String> uninstallApp(String appId, String? version);
+  Future<void> uninstallApp(String appId, String? version);
 
   /// 运行应用
   Future<void> runApp(String appId);
 
   /// 停止应用
-  Future<String> killApp(String appName);
+  Future<void> killApp(String appName);
 
   /// 创建桌面快捷方式
-  Future<String> createDesktopShortcut(String appId);
+  Future<DesktopShortcutResult> createDesktopShortcut(String appId);
 
   /// 搜索版本
   Future<List<InstalledApp>> searchVersions(String appId);
 
   /// 清理废弃服务
-  Future<String> pruneApps();
+  Future<void> pruneApps();
 
   /// 获取 ll-cli 版本
   Future<String> getLlCliVersion();

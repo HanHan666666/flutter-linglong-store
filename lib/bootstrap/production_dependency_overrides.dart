@@ -10,8 +10,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart' show Override;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../application/providers/application_dependency_providers.dart';
-import '../application/providers/install_queue_provider.dart'
-    show installMessagesProvider;
 import '../core/storage/app_xdg_paths.dart';
 import '../data/repositories/analytics_repository_impl.dart';
 import '../data/repositories/app_repository_impl.dart';
@@ -38,10 +36,10 @@ List<Override> createProductionDependencyOverrides({
       (ref) => ErrorSolutionRepositoryImpl(),
     ),
     linglongCliRepositoryProvider.overrideWith((ref) {
-      return LinglongCliRepositoryImpl(ref.watch(installMessagesProvider));
+      return LinglongCliRepositoryImpl();
     }),
     linglongRepositoryManagementRepositoryProvider.overrideWith((ref) {
-      return LinglongCliRepositoryImpl(ref.watch(installMessagesProvider));
+      return LinglongCliRepositoryImpl();
     }),
     appOperationJournalRepositoryProvider.overrideWith((ref) {
       final journalPath = AppXdgPaths.resolveOperationJournalFilePath();

@@ -14,12 +14,13 @@ class CliOutputParser {
 
   /// 解析已安装应用列表。
   ///
-  /// 仅接受 `ll-cli list --json` 返回的顶层数组；解析失败时返回空列表，
-  /// 由调用方根据命令退出码决定是否展示环境异常。
+  /// 仅接受 `ll-cli list --json` 返回的顶层数组。合法 `[]` 表示真实空结果；
+  /// 空输出、错误类型或缺失必需字段会抛出 [FormatException]，防止 Data
+  /// Repository 把协议故障伪装成“没有安装应用”。
   static List<InstalledApp> parseInstalledApps(String output) {
     final sanitizedOutput = output.trim();
     if (sanitizedOutput.isEmpty) {
-      return const [];
+      throw const FormatException('ll-cli list returned empty output');
     }
 
     return _parseInstalledAppsFromJson(sanitizedOutput);
@@ -30,20 +31,36 @@ class CliOutputParser {
   /// 字段结构与旧版 Rust 商店保持一致：`arch`/`size` 可能是字符串、数字或数组，
   /// 因此这里做宽松解析，避免因为字段类型变化导致安装列表富化链路中断。
   static List<InstalledApp> _parseInstalledAppsFromJson(String output) {
-    try {
-      final decoded = jsonDecode(output);
-      if (decoded is! List<dynamic>) {
-        return const [];
-      }
-
-      return decoded
-          .whereType<Map<String, dynamic>>()
-          .map(_mapInstalledAppFromJson)
-          .whereType<InstalledApp>()
-          .toList();
-    } catch (_) {
-      return const [];
+    final decoded = jsonDecode(output);
+    if (decoded is! List<dynamic>) {
+      throw const FormatException('ll-cli list output must be a JSON array');
     }
+
+    return _parseInstalledAppEntries(decoded);
+  }
+
+  /// 严格转换应用条目，同时保留字段值类型的跨版本宽容性。
+  static List<InstalledApp> _parseInstalledAppEntries(
+    List<dynamic> entries, {
+    String? fallbackRepoName,
+  }) {
+    final apps = <InstalledApp>[];
+    for (final entry in entries) {
+      if (entry is! Map<String, dynamic>) {
+        throw const FormatException('ll-cli app entry must be a JSON object');
+      }
+      final app = _mapInstalledAppFromJson(
+        entry,
+        fallbackRepoName: fallbackRepoName,
+      );
+      if (app == null) {
+        throw const FormatException(
+          'll-cli app entry is missing required identity fields',
+        );
+      }
+      apps.add(app);
+    }
+    return apps;
   }
 
   /// 将单个应用 JSON 对象转换为已安装应用模型。
@@ -122,30 +139,37 @@ class CliOutputParser {
   static List<RunningApp> parseRunningApps(String output) {
     final trimmed = output.trim();
     if (trimmed.isEmpty) {
-      return const [];
+      throw const FormatException('ll-cli ps returned empty output');
     }
 
-    try {
-      final decoded = jsonDecode(trimmed);
-      final entries = switch (decoded) {
-        List<dynamic>() => decoded,
-        Map<String, dynamic>() =>
-          decoded['apps'] ?? decoded['processes'] ?? decoded['data'],
-        _ => null,
-      };
+    final decoded = jsonDecode(trimmed);
+    final entries = switch (decoded) {
+      List<dynamic>() => decoded,
+      Map<String, dynamic>() =>
+        decoded['apps'] ?? decoded['processes'] ?? decoded['data'],
+      _ => null,
+    };
 
-      if (entries is! List<dynamic>) {
-        return const [];
+    if (entries is! List<dynamic>) {
+      throw const FormatException(
+        'll-cli ps output must contain a JSON process array',
+      );
+    }
+
+    final apps = <RunningApp>[];
+    for (final entry in entries) {
+      if (entry is! Map<String, dynamic>) {
+        throw const FormatException('ll-cli process entry must be an object');
       }
-
-      return entries
-          .whereType<Map<String, dynamic>>()
-          .map(_mapRunningAppFromJson)
-          .whereType<RunningApp>()
-          .toList();
-    } catch (_) {
-      return const [];
+      final app = _mapRunningAppFromJson(entry);
+      if (app == null) {
+        throw const FormatException(
+          'll-cli process entry is missing required identity fields',
+        );
+      }
+      apps.add(app);
     }
+    return apps;
   }
 
   /// 将单个进程 JSON 对象转换为运行中应用模型。
@@ -235,43 +259,33 @@ class CliOutputParser {
   static List<InstalledApp> parseSearchResults(String output) {
     final trimmed = output.trim();
     if (trimmed.isEmpty) {
-      return const [];
+      throw const FormatException('ll-cli search returned empty output');
     }
 
-    try {
-      final decoded = jsonDecode(trimmed);
-      if (decoded is List<dynamic>) {
-        return decoded
-            .whereType<Map<String, dynamic>>()
-            .map(_mapInstalledAppFromJson)
-            .whereType<InstalledApp>()
-            .toList();
-      }
+    final decoded = jsonDecode(trimmed);
+    if (decoded is List<dynamic>) {
+      return _parseInstalledAppEntries(decoded);
+    }
 
-      if (decoded is Map<String, dynamic>) {
-        final results = <InstalledApp>[];
-        for (final entry in decoded.entries) {
-          final apps = entry.value;
-          if (apps is! List<dynamic>) {
-            continue;
-          }
-          for (final appJson in apps.whereType<Map<String, dynamic>>()) {
-            final app = _mapInstalledAppFromJson(
-              appJson,
-              fallbackRepoName: entry.key,
-            );
-            if (app != null) {
-              results.add(app);
-            }
-          }
+    if (decoded is Map<String, dynamic>) {
+      final results = <InstalledApp>[];
+      for (final entry in decoded.entries) {
+        final apps = entry.value;
+        if (apps is! List<dynamic>) {
+          throw const FormatException(
+            'll-cli search repository value must be an array',
+          );
         }
-        return results;
+        results.addAll(
+          _parseInstalledAppEntries(apps, fallbackRepoName: entry.key),
+        );
       }
-    } catch (_) {
-      return const [];
+      return results;
     }
 
-    return const [];
+    throw const FormatException(
+      'll-cli search output must be an array or repository object',
+    );
   }
 
   /// 解析 `ll-cli --json` 安装/更新输出的单行 JSON。

@@ -260,14 +260,9 @@ class RunningProcess extends _$RunningProcess {
 
     try {
       final repo = ref.read(linglongCliRepositoryProvider);
-      final result = await repo.killApp(app.appId);
-      final success = !result.contains('失败') && !result.contains('异常');
-
-      if (success) {
-        await _fetchOnce(silent: true);
-      }
-
-      return success;
+      await repo.killApp(app.appId);
+      await _fetchOnce(silent: true);
+      return true;
     } catch (_) {
       return false;
     } finally {

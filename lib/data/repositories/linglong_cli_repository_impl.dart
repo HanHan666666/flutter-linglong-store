@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import '../../core/i18n/install_messages.dart';
 import '../../core/network/api_exceptions.dart';
 import '../../domain/models/app_operation_failure.dart';
 import '../../domain/models/linglong_env_check_result.dart';
 import '../../domain/models/installed_app.dart';
+import '../../domain/models/linglong_cli_failure.dart';
 import '../../domain/models/running_app.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_task.dart';
@@ -40,14 +40,13 @@ typedef CliCancelWithSystemKillFn =
 /// ll-cli Repository 实现
 class LinglongCliRepositoryImpl
     implements LinglongCliRepository, LinglongRepositoryManagementRepository {
-  LinglongCliRepositoryImpl(this._messages)
+  LinglongCliRepositoryImpl()
     : _execute = CliExecutor.execute,
       _executeWithProgressAndProcess =
           CliExecutor.executeWithProgressAndProcess,
       _cancelWithSystemKill = CliExecutor.cancelWithSystemKill;
 
-  LinglongCliRepositoryImpl.withExecutor(
-    this._messages, {
+  LinglongCliRepositoryImpl.withExecutor({
     required CliExecuteFn execute,
     required CliExecuteWithProgressAndProcessFn executeWithProgressAndProcess,
     required CliCancelWithSystemKillFn cancelWithSystemKill,
@@ -55,16 +54,121 @@ class LinglongCliRepositoryImpl
        _executeWithProgressAndProcess = executeWithProgressAndProcess,
        _cancelWithSystemKill = cancelWithSystemKill;
 
-  final InstallMessages _messages;
   final CliExecuteFn _execute;
   final CliExecuteWithProgressAndProcessFn _executeWithProgressAndProcess;
   final CliCancelWithSystemKillFn _cancelWithSystemKill;
 
-  /// 活跃的安装任务进程 PID（用于取消）
-  final Map<String, int> _activeProcessPids = {};
-
   /// 取消标志
   final Map<String, bool> _cancelFlags = {};
+
+  /// 把非零退出结果转换为稳定领域失败。
+  LinglongCliException _commandOutputException(
+    String command,
+    CliOutput output,
+  ) {
+    final diagnostic = output.primaryMessage;
+    final lowerDiagnostic = diagnostic.toLowerCase();
+    final kind =
+        output.exitCode == 127 ||
+            lowerDiagnostic.contains('command not found') ||
+            lowerDiagnostic.contains('no such file or directory')
+        ? LinglongCliFailureKind.commandNotFound
+        : output.exitCode == 126 ||
+              output.exitCode == 13 ||
+              lowerDiagnostic.contains('permission denied') ||
+              lowerDiagnostic.contains('not authorized') ||
+              lowerDiagnostic.contains('request dismissed')
+        ? LinglongCliFailureKind.permissionDenied
+        : LinglongCliFailureKind.commandFailed;
+    return LinglongCliException(
+      LinglongCliFailure(
+        kind: kind,
+        command: command,
+        diagnostic: diagnostic.isEmpty ? null : diagnostic,
+        exitCode: output.exitCode,
+      ),
+    );
+  }
+
+  /// 把 Platform/Core 异常翻译为 Domain 失败，防止上层依赖进程实现细节。
+  LinglongCliException _domainException(String command, Object error) {
+    if (error is LinglongCliException) {
+      return error;
+    }
+    if (error is CliTimeoutException) {
+      return LinglongCliException(
+        LinglongCliFailure(
+          kind: LinglongCliFailureKind.timeout,
+          command: command,
+          diagnostic: error.message,
+        ),
+      );
+    }
+    if (error is CliExecutionException) {
+      return LinglongCliException(
+        LinglongCliFailure(
+          kind: LinglongCliFailureKind.commandFailed,
+          command: command,
+          diagnostic: error.message,
+          exitCode: error.exitCode,
+        ),
+      );
+    }
+    if (error is ProcessException) {
+      final kind = switch (error.errorCode) {
+        2 => LinglongCliFailureKind.commandNotFound,
+        13 => LinglongCliFailureKind.permissionDenied,
+        _ => LinglongCliFailureKind.unexpected,
+      };
+      return LinglongCliException(
+        LinglongCliFailure(
+          kind: kind,
+          command: command,
+          diagnostic: error.message,
+          exitCode: error.errorCode,
+        ),
+      );
+    }
+    if (error is FileSystemException) {
+      return LinglongCliException(
+        LinglongCliFailure(
+          kind: LinglongCliFailureKind.filesystem,
+          command: command,
+          diagnostic: error.message,
+        ),
+      );
+    }
+    if (error is FormatException) {
+      return LinglongCliException(
+        LinglongCliFailure(
+          kind: LinglongCliFailureKind.invalidOutput,
+          command: command,
+          diagnostic: error.message,
+        ),
+      );
+    }
+    return LinglongCliException(
+      LinglongCliFailure(
+        kind: LinglongCliFailureKind.unexpected,
+        command: command,
+        diagnostic: error.toString(),
+      ),
+    );
+  }
+
+  /// 在 Data 边界统一记录并转换普通命令异常。
+  Future<T> _guardCommand<T>(
+    String command,
+    Future<T> Function() action,
+  ) async {
+    try {
+      return await action();
+    } catch (error, stack) {
+      final exception = _domainException(command, error);
+      AppLogger.error('[LinglongCli] $command 失败', exception, stack);
+      throw exception;
+    }
+  }
 
   String _operationProcessId(String appId, InstallTaskKind kind) {
     return '${kind.name}_$appId';
@@ -143,7 +247,6 @@ class LinglongCliRepositoryImpl
         args,
         processId: processId,
         onProcessCreated: (process) {
-          _activeProcessPids[processId] = process.pid;
           AppLogger.debug(
             '[LinglongCli] 记录$operationLabel进程 PID: ${process.pid}',
           );
@@ -301,7 +404,6 @@ class LinglongCliRepositoryImpl
       );
     } finally {
       _cancelFlags.remove(processId);
-      _activeProcessPids.remove(processId);
     }
   }
 
@@ -468,42 +570,46 @@ class LinglongCliRepositoryImpl
   }
 
   Future<String> _runRepositoryCommand(List<String> args) async {
-    final output = await _execute(args, timeout: kQueryTimeout);
-    if (!output.success) {
-      throw Exception(
-        output.primaryMessage.isNotEmpty ? output.primaryMessage : '仓库命令执行失败',
-      );
-    }
-    return output.stdout.trim().isNotEmpty ? output.stdout.trim() : 'ok';
+    return _guardCommand('repo', () async {
+      final output = await _execute(args, timeout: kQueryTimeout);
+      if (!output.success) {
+        throw _commandOutputException('repo', output);
+      }
+      return output.stdout.trim();
+    });
   }
 
   @override
-  Future<LinglongRepositoryConfig> getRepositoryConfig() async {
-    final jsonOutput = await _execute([
-      '--json',
-      'repo',
-      'show',
-    ], timeout: kQueryTimeout);
-    if (jsonOutput.success) {
-      final config = _parseRepositoryConfigJson(jsonOutput.stdout);
-      if (config != null) {
-        return config;
+  Future<LinglongRepositoryConfig> getRepositoryConfig() {
+    return _guardCommand('repo show', () async {
+      final jsonOutput = await _execute([
+        '--json',
+        'repo',
+        'show',
+      ], timeout: kQueryTimeout);
+      if (jsonOutput.success) {
+        final config = _parseRepositoryConfigJson(jsonOutput.stdout);
+        if (config != null) {
+          return config;
+        }
       }
-    }
 
-    final textOutput = await _execute(['repo', 'show'], timeout: kQueryTimeout);
-    if (!textOutput.success) {
-      final detail = textOutput.primaryMessage.isNotEmpty
-          ? textOutput.primaryMessage
-          : jsonOutput.primaryMessage;
-      throw Exception(detail.isNotEmpty ? detail : '读取仓库配置失败');
-    }
+      final textOutput = await _execute([
+        'repo',
+        'show',
+      ], timeout: kQueryTimeout);
+      if (!textOutput.success) {
+        throw _commandOutputException('repo show', textOutput);
+      }
 
-    final config = _parseRepositoryConfigText(textOutput.stdout);
-    if (config.repos.isEmpty && config.defaultRepo == null) {
-      throw Exception('无法解析仓库配置输出');
-    }
-    return config;
+      final config = _parseRepositoryConfigText(textOutput.stdout);
+      if (config.repos.isEmpty && config.defaultRepo == null) {
+        throw const FormatException(
+          'll-cli repo show output does not contain a repository',
+        );
+      }
+      return config;
+    });
   }
 
   @override
@@ -564,8 +670,8 @@ class LinglongCliRepositoryImpl
   @override
   Future<List<InstalledApp>> getInstalledApps({
     bool includeBaseService = false,
-  }) async {
-    try {
+  }) {
+    return _guardCommand('list', () async {
       final output = await _execute(
         includeBaseService
             ? ['list', '--json', '--type=all']
@@ -574,10 +680,7 @@ class LinglongCliRepositoryImpl
       );
 
       if (!output.success) {
-        AppLogger.warning(
-          '[LinglongCli] 获取已安装应用列表失败: ${output.primaryMessage}',
-        );
-        return [];
+        throw _commandOutputException('list', output);
       }
 
       final apps = CliOutputParser.parseInstalledApps(output.stdout);
@@ -590,22 +693,16 @@ class LinglongCliRepositoryImpl
       }
 
       return apps;
-    } catch (e, stack) {
-      AppLogger.error('[LinglongCli] 获取已安装应用列表异常', e, stack);
-      return [];
-    }
+    });
   }
 
   @override
-  Future<List<RunningApp>> getRunningApps() async {
-    try {
+  Future<List<RunningApp>> getRunningApps() {
+    return _guardCommand('ps', () async {
       final psOutput = await _execute(['--json', 'ps'], timeout: kQueryTimeout);
 
       if (!psOutput.success) {
-        AppLogger.warning(
-          '[LinglongCli] 获取运行中进程失败: ${psOutput.primaryMessage}',
-        );
-        throw Exception('获取运行中进程失败: ${psOutput.primaryMessage}');
+        throw _commandOutputException('ps', psOutput);
       }
 
       final runningApps = CliOutputParser.parseRunningApps(psOutput.stdout);
@@ -634,10 +731,7 @@ class LinglongCliRepositoryImpl
           icon: installed?.icon,
         );
       }).toList();
-    } catch (e, stack) {
-      AppLogger.error('[LinglongCli] 获取运行中进程异常', e, stack);
-      rethrow;
-    }
+    });
   }
 
   @override
@@ -706,7 +800,7 @@ class LinglongCliRepositoryImpl
   }
 
   @override
-  Future<String> uninstallApp(String appId, String? version) async {
+  Future<void> uninstallApp(String appId, String? version) {
     // version 为空时只传 appId，交由 ll-cli 自行解析目标（应用详情页头部
     // “整体卸载”场景）；version 非空时按 appId/version 精确卸载指定版本
     // （应用详情页历史版本列表场景）。ll-cli uninstall 会把 APP 解析为
@@ -714,7 +808,7 @@ class LinglongCliRepositoryImpl
     final hasVersion = version != null && version.isNotEmpty;
     final target = hasVersion ? '$appId/$version' : appId;
 
-    try {
+    return _guardCommand('uninstall', () async {
       AppLogger.info('[LinglongCli] 卸载应用: $target');
 
       final output = await _execute([
@@ -724,31 +818,16 @@ class LinglongCliRepositoryImpl
 
       if (output.success) {
         AppLogger.info('[LinglongCli] 卸载成功: $appId');
-        return output.stdout;
-      } else {
-        // 失败时抛出异常，让调用方正确处理错误
-        final errorMessage = output.primaryMessage.isNotEmpty
-            ? output.primaryMessage
-            : '卸载命令执行失败';
-        AppLogger.warning('[LinglongCli] 卸载失败: $errorMessage');
-        throw UninstallException(
-          errorMessage,
-          appId: appId,
-          exitCode: output.exitCode,
-        );
+        return;
       }
-    } on UninstallException {
-      // 已是 UninstallException，直接重新抛出
-      rethrow;
-    } catch (e, stack) {
-      AppLogger.error('[LinglongCli] 卸载异常: $appId', e, stack);
-      throw UninstallException(e.toString(), appId: appId);
-    }
+
+      throw _commandOutputException('uninstall', output);
+    });
   }
 
   @override
-  Future<void> runApp(String appId) async {
-    try {
+  Future<void> runApp(String appId) {
+    return _guardCommand('run', () async {
       AppLogger.info('[LinglongCli] 运行应用: $appId');
 
       // run 命令不等待完成，后台运行
@@ -761,33 +840,31 @@ class LinglongCliRepositoryImpl
 
       // 不等待结果，直接返回
       AppLogger.info('[LinglongCli] 应用已启动: $appId (pid: ${process.pid})');
-    } catch (e, stack) {
-      AppLogger.error('[LinglongCli] 启动应用失败: $appId', e, stack);
-      rethrow;
-    }
+    });
   }
 
   @override
-  Future<String> killApp(String appName) async {
-    try {
+  Future<void> killApp(String appName) {
+    return _guardCommand('kill', () async {
       AppLogger.info('[LinglongCli] 终止应用: $appName');
 
+      CliOutput? lastOutput;
       for (var attempt = 1; attempt <= 5; attempt++) {
         final runningApps = await getRunningApps();
         final isStillRunning = runningApps.any((app) => app.appId == appName);
         if (!isStillRunning) {
-          return 'Successfully stopped $appName';
+          return;
         }
 
-        final output = await _execute([
+        lastOutput = await _execute([
           'kill',
           '-s',
           '9',
           appName,
         ], timeout: const Duration(seconds: 10));
 
-        if (!output.success && attempt == 5) {
-          return _messages.stopFailed(output.primaryMessage);
+        if (!lastOutput.success && attempt == 5) {
+          throw _commandOutputException('kill', lastOutput);
         }
 
         if (attempt < 5) {
@@ -795,11 +872,20 @@ class LinglongCliRepositoryImpl
         }
       }
 
-      return 'Successfully stopped $appName';
-    } catch (e, stack) {
-      AppLogger.error('[LinglongCli] 终止应用异常: $appName', e, stack);
-      return _messages.stopException(e.toString());
-    }
+      final runningApps = await getRunningApps();
+      if (runningApps.any((app) => app.appId == appName)) {
+        throw LinglongCliException(
+          LinglongCliFailure(
+            kind: LinglongCliFailureKind.commandFailed,
+            command: 'kill',
+            diagnostic: lastOutput?.primaryMessage.isNotEmpty == true
+                ? lastOutput!.primaryMessage
+                : 'Target process is still running after kill attempts',
+            exitCode: lastOutput?.exitCode,
+          ),
+        );
+      }
+    });
   }
 
   String _extractSource(String? runtime) {
@@ -815,16 +901,18 @@ class LinglongCliRepositoryImpl
   /// 优先级顺序：
   /// 1. XDG_DESKTOP_DIR 环境变量
   /// 2. xdg-user-dir DESKTOP 命令
-  /// 3. ~/.config/user-dirs.dirs 配置文件
+  /// 3. $XDG_CONFIG_HOME/user-dirs.dirs 配置文件
   /// 4. 默认 ~/Desktop
   Future<String> _getDesktopDirectory() async {
+    final home = Platform.environment['HOME'];
+
     // 优先级1: XDG_DESKTOP_DIR 环境变量
     final xdgDesktop = Platform.environment['XDG_DESKTOP_DIR'];
     if (xdgDesktop != null && xdgDesktop.isNotEmpty) {
-      final dir = Directory(xdgDesktop);
-      if (await dir.exists()) {
-        AppLogger.debug('[LinglongCli] 使用 XDG_DESKTOP_DIR: $xdgDesktop');
-        return xdgDesktop;
+      final resolvedPath = _expandHome(xdgDesktop, home);
+      if (_isUsableDesktopPath(resolvedPath)) {
+        AppLogger.debug('[LinglongCli] 使用 XDG_DESKTOP_DIR: $resolvedPath');
+        return resolvedPath;
       }
     }
 
@@ -833,23 +921,24 @@ class LinglongCliRepositoryImpl
       final result = await Process.run('xdg-user-dir', ['DESKTOP']);
       if (result.exitCode == 0) {
         final path = (result.stdout as String).trim();
-        if (path.isNotEmpty && path != '/') {
-          final dir = Directory(path);
-          if (await dir.exists()) {
-            AppLogger.debug('[LinglongCli] 使用 xdg-user-dir: $path');
-            return path;
-          }
+        if (_isUsableDesktopPath(path)) {
+          AppLogger.debug('[LinglongCli] 使用 xdg-user-dir: $path');
+          return path;
         }
       }
     } catch (e) {
       AppLogger.debug('[LinglongCli] xdg-user-dir 命令不可用: $e');
     }
 
-    // 优先级3: 解析 ~/.config/user-dirs.dirs
+    // 优先级3: 按 XDG Base Directory 规范解析 user-dirs.dirs。
     try {
-      final home = Platform.environment['HOME'];
       if (home != null && home.isNotEmpty) {
-        final userDirsFile = File('$home/.config/user-dirs.dirs');
+        final configuredRoot = Platform.environment['XDG_CONFIG_HOME'];
+        final configRoot =
+            configuredRoot != null && configuredRoot.startsWith('/')
+            ? _expandHome(configuredRoot, home)
+            : '$home/.config';
+        final userDirsFile = File('$configRoot/user-dirs.dirs');
         if (await userDirsFile.exists()) {
           final content = await userDirsFile.readAsString();
           final match = RegExp(
@@ -857,11 +946,8 @@ class LinglongCliRepositoryImpl
           ).firstMatch(content);
           if (match != null) {
             final rawPath = match.group(1)!;
-            final path = rawPath
-                .replaceAll(r'\$HOME', home)
-                .replaceAll(r'$HOME', home);
-            final dir = Directory(path);
-            if (await dir.exists()) {
+            final path = _expandHome(rawPath, home);
+            if (_isUsableDesktopPath(path)) {
               AppLogger.debug('[LinglongCli] 使用 user-dirs.dirs: $path');
               return path;
             }
@@ -873,25 +959,48 @@ class LinglongCliRepositoryImpl
     }
 
     // Fallback: 默认 ~/Desktop
-    final home = Platform.environment['HOME'];
     if (home == null || home.isEmpty) {
-      throw Exception('无法获取 HOME 目录');
+      throw const FileSystemException(
+        'HOME is unavailable while resolving the XDG desktop directory',
+      );
     }
     final fallbackPath = '$home/Desktop';
     AppLogger.debug('[LinglongCli] 使用 fallback 路径: $fallbackPath');
     return fallbackPath;
   }
 
+  /// XDG 用户目录必须是绝对路径，并拒绝把文件直接写入根目录。
+  bool _isUsableDesktopPath(String path) {
+    return path.startsWith('/') && path != '/';
+  }
+
+  /// 展开 user-dirs.dirs 允许使用的 HOME 表达式。
+  String _expandHome(String path, String? home) {
+    if (home == null || home.isEmpty) {
+      return path;
+    }
+    return path
+        .replaceAll(r'\$HOME', home)
+        .replaceAll(r'$HOME', home)
+        .replaceFirst(RegExp(r'^~(?=/|$)'), home);
+  }
+
   @override
-  Future<String> createDesktopShortcut(String appId) async {
-    try {
+  Future<DesktopShortcutResult> createDesktopShortcut(String appId) {
+    return _guardCommand('create-desktop-shortcut', () async {
       AppLogger.info('[LinglongCli] 创建桌面快捷方式: $appId');
 
       // 1. 检查应用是否已安装
       final installedApps = await getInstalledApps();
       final isInstalled = installedApps.any((app) => app.appId == appId);
       if (!isInstalled) {
-        return '应用未安装，无法创建快捷方式: $appId';
+        throw LinglongCliException(
+          LinglongCliFailure(
+            kind: LinglongCliFailureKind.commandFailed,
+            command: 'create-desktop-shortcut',
+            diagnostic: 'Application is not installed: $appId',
+          ),
+        );
       }
 
       // 2. 使用 ll-cli content 获取应用导出的文件列表
@@ -901,7 +1010,7 @@ class LinglongCliRepositoryImpl
       ], timeout: const Duration(seconds: 10));
 
       if (!output.success) {
-        return _messages.shortcutCreateFailed(output.primaryMessage);
+        throw _commandOutputException('content', output);
       }
 
       // 3. 从输出中找到 .desktop 文件路径
@@ -916,7 +1025,13 @@ class LinglongCliRepositoryImpl
       }
 
       if (desktopSource == null) {
-        return '未找到应用导出的 desktop 文件: $appId';
+        throw LinglongCliException(
+          LinglongCliFailure(
+            kind: LinglongCliFailureKind.invalidOutput,
+            command: 'content',
+            diagnostic: 'No exported desktop file found for $appId',
+          ),
+        );
       }
 
       // 4. 根据 XDG 规范获取桌面目录路径
@@ -935,31 +1050,46 @@ class LinglongCliRepositoryImpl
       // 7. 检查是否已存在
       final targetFile = File(targetPath);
       if (await targetFile.exists()) {
-        return '快捷方式已存在，不会覆盖: $targetPath';
+        return DesktopShortcutResult(
+          path: targetPath,
+          disposition: DesktopShortcutDisposition.alreadyExists,
+        );
       }
 
       // 8. 复制 .desktop 文件到桌面
       final sourceFile = File(desktopSource);
       if (!await sourceFile.exists()) {
-        return '源 desktop 文件不存在: $desktopSource';
+        throw FileSystemException(
+          'Exported desktop file does not exist',
+          desktopSource,
+        );
       }
       await sourceFile.copy(targetPath);
 
       // 9. 设置可执行权限 (0o755)
-      await Process.run('chmod', ['755', targetPath]);
+      final chmodResult = await Process.run('chmod', ['755', targetPath]);
+      if (chmodResult.exitCode != 0) {
+        final diagnostic = chmodResult.stderr.toString().trim();
+        throw FileSystemException(
+          diagnostic.isEmpty
+              ? 'Failed to mark desktop file as executable'
+              : diagnostic,
+          targetPath,
+        );
+      }
 
       AppLogger.info('[LinglongCli] 桌面快捷方式创建成功: $appId -> $targetPath');
 
-      return '已创建桌面快捷方式: $targetPath';
-    } catch (e, stack) {
-      AppLogger.error('[LinglongCli] 创建桌面快捷方式异常: $appId', e, stack);
-      return _messages.shortcutCreateException(e.toString());
-    }
+      return DesktopShortcutResult(
+        path: targetPath,
+        disposition: DesktopShortcutDisposition.created,
+      );
+    });
   }
 
   @override
-  Future<List<InstalledApp>> searchVersions(String appId) async {
-    try {
+  Future<List<InstalledApp>> searchVersions(String appId) {
+    return _guardCommand('search', () async {
       final output = await _execute([
         'search',
         appId,
@@ -967,19 +1097,16 @@ class LinglongCliRepositoryImpl
       ], timeout: kQueryTimeout);
 
       if (!output.success) {
-        return [];
+        throw _commandOutputException('search', output);
       }
 
       return CliOutputParser.parseSearchResults(output.stdout);
-    } catch (e, stack) {
-      AppLogger.error('[LinglongCli] 搜索版本异常: $appId', e, stack);
-      return [];
-    }
+    });
   }
 
   @override
-  Future<String> pruneApps() async {
-    try {
+  Future<void> pruneApps() {
+    return _guardCommand('prune', () async {
       AppLogger.info('[LinglongCli] 开始清理废弃服务');
 
       final output = await _execute([
@@ -987,30 +1114,29 @@ class LinglongCliRepositoryImpl
       ], timeout: const Duration(minutes: 5));
 
       if (output.success) {
-        return output.stdout;
-      } else {
-        return _messages.pruneFailed(output.primaryMessage);
+        return;
       }
-    } catch (e, stack) {
-      AppLogger.error('[LinglongCli] 清理异常', e, stack);
-      return _messages.pruneException(e.toString());
-    }
+
+      throw _commandOutputException('prune', output);
+    });
   }
 
   @override
-  Future<String> getLlCliVersion() async {
-    try {
+  Future<String> getLlCliVersion() {
+    return _guardCommand('version', () async {
       final output = await _execute([
         '--version',
       ], timeout: const Duration(seconds: 5));
 
-      if (output.success) {
-        return output.stdout.trim();
-      } else {
-        return _messages.versionFailed;
+      if (!output.success) {
+        throw _commandOutputException('version', output);
       }
-    } catch (e) {
-      return _messages.llCliNotInstalled;
-    }
+
+      final version = output.stdout.trim();
+      if (version.isEmpty) {
+        throw const FormatException('ll-cli version output is empty');
+      }
+      return version;
+    });
   }
 }

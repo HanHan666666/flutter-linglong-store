@@ -324,7 +324,7 @@ void main() {
       final statusBar = find.byKey(const Key('app-detail-hero-status-bar'));
       expect(statusBar, findsOneWidget);
       expect(
-        find.descendant(of: statusBar, matching: find.text(displayedMessage)),
+        find.descendant(of: statusBar, matching: find.text(errorMessage)),
         findsOneWidget,
       );
       expect(
@@ -664,7 +664,7 @@ void main() {
         expect(find.text('安 装'), findsOneWidget);
         expect(find.text('创建桌面快捷方式'), findsNothing);
         expect(find.text('卸 载'), findsNothing);
-        expect(find.byTooltip('分享'), findsOneWidget);
+        expect(find.byTooltip('分享'), findsNothing);
       },
     );
 
@@ -701,11 +701,11 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.descendant(of: actionPanel, matching: find.text('创建桌面快捷方式')),
+        find.descendant(of: actionPanel, matching: find.byTooltip('创建桌面快捷方式')),
         findsOneWidget,
       );
       expect(
-        find.descendant(of: actionPanel, matching: find.text('卸 载')),
+        find.descendant(of: actionPanel, matching: find.byTooltip('卸 载')),
         findsOneWidget,
       );
       expect(
@@ -1231,7 +1231,7 @@ class _RecordingUninstallService extends AppUninstallService {
     : super(
         readRunningApps: () => const <RunningApp>[],
         killRunningApp: (_) async => true,
-        uninstallApp: (_, __) async => '',
+        uninstallApp: (_, __) async {},
         removeInstalledApp: (_, __) {},
         syncAfterUninstall: () async {},
         reportUninstall: (_, __, {String? appName}) async {},

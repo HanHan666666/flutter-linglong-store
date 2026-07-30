@@ -205,7 +205,7 @@ class _NoopAppUninstallService extends AppUninstallService {
     : super(
         readRunningApps: () => const <RunningApp>[],
         killRunningApp: (_) async => true,
-        uninstallApp: (_, __) async => '',
+        uninstallApp: (_, __) async {},
         removeInstalledApp: (_, __) {},
         syncAfterUninstall: () async {},
         reportUninstall: (_, __, {String? appName}) async {},

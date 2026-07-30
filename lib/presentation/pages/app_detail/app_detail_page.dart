@@ -1,68 +1,44 @@
+/// 应用详情页公共入口和 Provider 容器。
+///
+/// 该文件只管理页面生命周期、全局状态聚合、评论版本选择和区域组合。
+/// 纯派生规则、异步动作以及头部、内容、评论和版本区域位于独立文件。
+library;
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../application/providers/app_detail_provider.dart';
-import '../../../application/providers/application_dependency_providers.dart'
-    show linglongCliRepositoryProvider;
-import '../../../application/providers/app_uninstall_provider.dart';
-import '../../../application/providers/global_provider.dart';
 import '../../../application/providers/installed_apps_provider.dart';
 import '../../../application/providers/install_queue_provider.dart';
 import '../../../application/providers/linglong_env_provider.dart';
 import '../../../application/providers/network_speed_provider.dart';
 import '../../../application/providers/update_apps_provider.dart';
-import '../../../domain/models/installed_app.dart';
-import '../../../domain/models/install_task.dart';
-import '../../../domain/models/install_progress.dart';
-import '../../../domain/models/install_queue_state.dart';
-import '../../../domain/models/linux_distribution.dart';
-import '../../../domain/models/app_version.dart';
-import '../../../core/logging/app_logger.dart';
 import '../../../core/config/routes.dart';
-import '../../helpers/app_uninstall_flow.dart';
-import '../../widgets/app_detail_comment_section.dart';
-import '../../widgets/app_detail_hero_header.dart';
-import '../../widgets/app_detail_info_section.dart';
-import '../../widgets/install_to_download_flyout.dart';
-import '../../widgets/install_button.dart';
-import '../../widgets/confirm_dialog.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
-import '../../../core/utils/format_utils.dart';
-import '../../../core/utils/app_notification_helpers.dart';
-import '../../../core/config/theme.dart';
-import '../../../core/utils/version_compare.dart';
-import 'screenshot_preview_lightbox.dart';
+import '../../../domain/models/install_button_state.dart';
+import '../../../domain/models/install_queue_state.dart';
+import '../../../domain/models/install_task.dart';
+import '../../../domain/models/installed_app.dart';
+import '../../../domain/models/linux_distribution.dart';
+import 'app_detail_comments_panel.dart';
+import 'app_detail_content_sections.dart';
+import 'app_detail_header_section.dart';
+import 'app_detail_page_actions.dart';
+import 'app_detail_page_logic.dart';
+import 'app_detail_version_section.dart';
 
-bool shouldShowDescriptionExpandButton({
-  required String text,
-  required double maxWidth,
-  required TextStyle? style,
-  required TextDirection textDirection,
-  int maxLines = 3,
-}) {
-  if (text.trim().isEmpty || maxWidth <= 0) {
-    return false;
-  }
+export 'app_detail_content_sections.dart'
+    show shouldShowDescriptionExpandButton;
 
-  final textPainter = TextPainter(
-    text: TextSpan(text: text, style: style),
-    textDirection: textDirection,
-    maxLines: maxLines,
-  )..layout(maxWidth: maxWidth);
-
-  return textPainter.didExceedMaxLines;
-}
-
-/// 应用详情页
+/// 展示指定玲珑应用的完整详情。
 class AppDetailPage extends ConsumerStatefulWidget {
+  /// 创建应用详情页。
   const AppDetailPage({required this.appId, this.appInfo, super.key});
 
-  /// 应用 ID
+  /// 应用 ID。
   final String appId;
 
-  /// 可选的应用信息（从列表页传递）
+  /// 列表页可选传入的应用摘要，用于首屏快速展示。
   final InstalledApp? appInfo;
 
   @override
@@ -74,12 +50,14 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   final GlobalKey _installSourceKey = GlobalKey(
     debugLabel: 'app-detail-install-source',
   );
+  late final AppDetailPageActions _actions;
 
   @override
   void initState() {
     super.initState();
-    // 延迟加载详情
+    _actions = AppDetailPageActions(ref);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       ref
           .read(appDetailProvider(widget.appId).notifier)
           .loadDetail(widget.appInfo);
@@ -90,7 +68,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   Widget build(BuildContext context) {
     final detailState = ref.watch(appDetailProvider(widget.appId));
     final installState = ref.watch(installQueueProvider);
-    final installTask = installState.getAppInstallStatus(widget.appId);
     final installedApps = ref
         .watch(installedAppsProvider)
         .apps
@@ -98,13 +75,37 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         .toList(growable: false);
     final installedVersions = installedApps.map((app) => app.version).toSet();
     final hasInstalledInstance = installedVersions.isNotEmpty;
-    final hasUpdate = _hasAvailableUpdate(
-      detailState,
+    final updateAppIds = hasInstalledInstance
+        ? ref.watch(updateAppsProvider).apps.map((app) => app.appId).toSet()
+        : const <String>{};
+    final distribution = ref.watch(
+      linglongEnvProvider.select(
+        (state) => state.result?.distribution ?? LinuxDistribution.unknown,
+      ),
+    );
+    final installTask = installState.getAppInstallStatus(widget.appId);
+    final hasUpdate = AppDetailPageLogic.hasAvailableUpdate(
+      appId: widget.appId,
       hasInstalledInstance: hasInstalledInstance,
-      highestInstalledVersion: _resolveHighestInstalledVersion(
+      updateAppIds: updateAppIds,
+      remoteVersion: detailState.appDetail?.version ?? detailState.app?.version,
+      highestInstalledVersion: AppDetailPageLogic.highestInstalledVersion(
         installedVersions,
       ),
     );
+    final buttonState = AppDetailPageLogic.installButtonState(
+      installTask,
+      hasInstalledInstance: hasInstalledInstance,
+      hasUpdate: hasUpdate,
+    );
+    final statusMessage = installTask == null
+        ? null
+        : ref
+              .watch(installMessagesProvider)
+              .messageForTask(installTask, distribution: distribution);
+    final downloadSpeed = buttonState == InstallButtonState.installing
+        ? (installTask?.cliSpeed ?? ref.watch(networkSpeedProvider).formatted)
+        : '';
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -116,36 +117,43 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       ),
       body: _buildBody(
         context,
-        detailState,
-        installState,
-        installTask,
-        installedVersions,
+        detailState: detailState,
+        installState: installState,
+        installTask: installTask,
+        installedVersions: installedVersions,
+        installTaskStatusMessage: statusMessage,
+        buttonState: buttonState,
+        downloadSpeed: downloadSpeed,
         hasInstalledInstance: hasInstalledInstance,
-        hasUpdate: hasUpdate,
       ),
     );
   }
 
+  /// 根据详情加载状态组合页面各区域。
   Widget _buildBody(
-    BuildContext context,
-    AppDetailState detailState,
-    InstallQueueState installState,
-    InstallTask? installTask,
-    Set<String> installedVersions, {
+    BuildContext context, {
+    required AppDetailState detailState,
+    required InstallQueueState installState,
+    required InstallTask? installTask,
+    required Set<String> installedVersions,
+    required String? installTaskStatusMessage,
+    required InstallButtonState buttonState,
+    required String downloadSpeed,
     required bool hasInstalledInstance,
-    required bool hasUpdate,
   }) {
-    // 加载中
     if (detailState.isLoading && detailState.app == null) {
       return const Center(child: CircularProgressIndicator());
     }
-
-    // 错误状态
     if (detailState.error != null && detailState.app == null) {
-      return _buildErrorView(context, detailState.error!);
+      return AppDetailErrorView(
+        error: detailState.error!,
+        onRetry: () {
+          ref
+              .read(appDetailProvider(widget.appId).notifier)
+              .loadDetail(widget.appInfo);
+        },
+      );
     }
-
-    // 空状态
     if (detailState.app == null) {
       return Center(
         child: Text(AppLocalizations.of(context)?.appNotFound ?? '未找到应用信息'),
@@ -153,1423 +161,134 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     }
 
     final app = detailState.app!;
+    final commentVersionOptions = AppDetailPageLogic.commentVersionOptions(
+      currentVersion: app.version,
+      versions: detailState.versions,
+    );
+    final selectedCommentVersion = AppDetailPageLogic.selectedCommentVersion(
+      requestedVersion: _selectedCommentVersion,
+      versionOptions: commentVersionOptions,
+      fallbackVersion: app.version,
+    );
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 头部信息区
-          _buildHeader(
-            context,
-            detailState,
-            app,
-            installTask,
-            hasInstalledInstance: hasInstalledInstance,
-            hasUpdate: hasUpdate,
+          AppDetailHeaderSection(
+            app: app,
+            installSourceKey: _installSourceKey,
+            buttonState: buttonState,
+            installTask: installTask,
+            downloadSpeed: downloadSpeed,
+            showInstalledActions: hasInstalledInstance,
+            description: detailState.appDetail?.description,
+            tags: detailState.appDetail?.tags ?? const [],
+            statusMessage: installTaskStatusMessage,
+            onTagPressed: context.goToTagSearch,
+            onPrimaryPressed: () {
+              _actions.handlePrimaryAction(
+                context,
+                app: app,
+                buttonState: buttonState,
+                installSourceKey: _installSourceKey,
+              );
+            },
+            onCancel: () => _actions.cancelInstall(app),
+            onCreateShortcut: () => _actions.createShortcut(context, app),
+            onUninstall: () {
+              _actions.showHeaderUninstallDialog(context, app);
+            },
+            onShare: () => _actions.shareApp(context, app),
           ),
-
           const Divider(height: 1),
-
-          // 截图轮播区
-          _buildScreenshots(context, detailState),
-
-          const Divider(height: 1),
-
-          // 描述区
-          _buildDescription(context, detailState, app),
-
-          const Divider(height: 1),
-
-          // 应用信息表格
-          _buildAppInfoTable(context, detailState),
-
-          const Divider(height: 1),
-
-          // 评论区
-          _buildCommentSection(
-            context,
-            detailState,
-            hasInstalledInstance: hasInstalledInstance,
+          AppDetailScreenshotsSection(
+            screenshots: detailState.screenshots,
+            onOpenPreview: (initialIndex) {
+              _actions.showScreenshotPreview(
+                context,
+                screenshots: detailState.screenshotUrls,
+                initialIndex: initialIndex,
+              );
+            },
           ),
-
           const Divider(height: 1),
-
-          // 版本列表
-          _buildVersionList(
-            context,
-            detailState,
-            installState,
-            installedVersions,
+          AppDetailDescriptionSection(
+            app: app,
+            detail: detailState.appDetail,
+            isExpanded: detailState.isDescriptionExpanded,
+            onToggleExpanded: () {
+              ref
+                  .read(appDetailProvider(widget.appId).notifier)
+                  .toggleDescription();
+            },
           ),
-
+          const Divider(height: 1),
+          AppDetailMetadataSection(app: app, detail: detailState.appDetail),
+          const Divider(height: 1),
+          AppDetailCommentsPanel(
+            comments: detailState.comments,
+            versionOptions: commentVersionOptions,
+            selectedVersion: selectedCommentVersion,
+            isLoading: detailState.isLoadingComments,
+            canSubmitComment: hasInstalledInstance,
+            errorMessage: detailState.commentsError,
+            onVersionChanged: (value) {
+              setState(() {
+                _selectedCommentVersion = value;
+              });
+            },
+            onRetry: () {
+              ref
+                  .read(appDetailProvider(widget.appId).notifier)
+                  .retryComments();
+            },
+            onSubmit: (remark, version) => _actions.submitComment(
+              context,
+              appId: widget.appId,
+              remark: remark,
+              version: version,
+            ),
+          ),
+          const Divider(height: 1),
+          AppDetailVersionSection(
+            app: app,
+            versions: detailState.versions,
+            isLoading: detailState.isLoadingVersions,
+            errorMessage: detailState.versionsError,
+            isExpanded: detailState.isVersionListExpanded,
+            installState: installState,
+            installedVersions: installedVersions,
+            onToggleExpanded: () {
+              ref
+                  .read(appDetailProvider(widget.appId).notifier)
+                  .toggleVersionList();
+            },
+            onRetry: () {
+              ref
+                  .read(appDetailProvider(widget.appId).notifier)
+                  .retryVersions();
+            },
+            onInstallVersion: (version) {
+              _actions.installVersion(
+                context,
+                app: app,
+                version: version,
+                installSourceKey: _installSourceKey,
+              );
+            },
+            onUninstallVersion: (version) {
+              _actions.uninstallVersion(
+                context,
+                currentApp: app,
+                detail: detailState.appDetail,
+                version: version,
+              );
+            },
+          ),
           const SizedBox(height: 24),
         ],
       ),
     );
-  }
-
-  Widget _buildCommentSection(
-    BuildContext context,
-    AppDetailState detailState, {
-    required bool hasInstalledInstance,
-  }) {
-    final l10n = AppLocalizations.of(context)!;
-    final versionOptions = _buildCommentVersionOptions(detailState);
-    final selectedVersion = _resolveSelectedCommentVersion(
-      detailState,
-      versionOptions,
-    );
-
-    return Semantics(
-      label: l10n.a11yCommentSection,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: AppDetailCommentSection(
-          comments: detailState.comments,
-          versionOptions: versionOptions,
-          selectedVersion: selectedVersion,
-          isLoading: detailState.isLoadingComments,
-          canSubmitComment: hasInstalledInstance,
-          errorMessage: detailState.commentsError,
-          onVersionChanged: (value) {
-            setState(() {
-              _selectedCommentVersion = value;
-            });
-          },
-          onRetry: () {
-            ref.read(appDetailProvider(widget.appId).notifier).retryComments();
-          },
-          onSubmit: (remark, version) =>
-              _submitComment(context, remark, version),
-        ),
-      ),
-    );
-  }
-
-  /// 构建头部信息区
-  Widget _buildHeader(
-    BuildContext context,
-    AppDetailState detailState,
-    InstalledApp app,
-    InstallTask? installTask, {
-    required bool hasInstalledInstance,
-    required bool hasUpdate,
-  }) {
-    final appDetail = detailState.appDetail;
-
-    // 确定安装按钮状态
-    final buttonState = _getInstallButtonState(
-      installTask,
-      hasInstalledInstance: hasInstalledInstance,
-      hasUpdate: hasUpdate,
-    );
-    final progress = installTask?.progress ?? 0.0;
-    final distribution = ref.watch(
-      linglongEnvProvider.select(
-        (state) => state.result?.distribution ?? LinuxDistribution.unknown,
-      ),
-    );
-    final displayMessage = installTask == null
-        ? null
-        : ref
-              .watch(installMessagesProvider)
-              .messageForTask(installTask, distribution: distribution);
-    final installLogCopyText = _resolveInstallLogCopyText(installTask);
-
-    return AppDetailHeroHeader(
-      app: app,
-      installSourceKey: _installSourceKey,
-      buttonState: buttonState,
-      progress: progress,
-      downloadSpeed: buttonState == InstallButtonState.installing
-          ? (installTask?.cliSpeed ?? ref.watch(networkSpeedProvider).formatted)
-          : null,
-      showInstalledActions: hasInstalledInstance,
-      description: appDetail?.description,
-      // 标签原样透传完整 name+language，点击统一进入标签搜索路由，禁止页面拼 URL
-      tags: appDetail?.tags ?? const [],
-      onTagPressed: context.goToTagSearch,
-      statusMessage: displayMessage,
-      statusLogCopyText: installLogCopyText,
-      isStatusFailed: installTask?.isFailed ?? false,
-      onPrimaryPressed: () => _handleInstallAction(app, buttonState),
-      onCancel: () => _handleCancelInstall(app),
-      onCreateShortcut: () => _createShortcut(app),
-      onUninstall: () => _showHeaderUninstallDialog(app),
-      onShare: () => _shareApp(context, app),
-    );
-  }
-
-  /// 解析详情页状态条可复制的安装日志。
-  ///
-  /// 详情页必须复用下载管理 item 上保存的 `commandOutput`，避免复制 UI
-  /// 状态文案或失败摘要。没有日志时返回 null，由头部组件隐藏复制入口。
-  String? _resolveInstallLogCopyText(InstallTask? installTask) {
-    final output = installTask?.commandOutput.trim();
-    if (output == null || output.isEmpty) {
-      return null;
-    }
-    return output;
-  }
-
-  /// 构建截图轮播区（使用真实截图数据）
-  Widget _buildScreenshots(BuildContext context, AppDetailState detailState) {
-    final l10n = AppLocalizations.of(context)!;
-    final screenshots = detailState.screenshots;
-
-    if (screenshots.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Semantics(
-      label: l10n.a11yScreenshotArea,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                l10n.screenShots,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: context.appFontWeight(FontWeight.w700),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 180,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: screenshots.length,
-                itemBuilder: (context, index) {
-                  final screenshot = screenshots[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: GestureDetector(
-                      onTap: () => _showScreenshotPreview(
-                        context,
-                        detailState.screenshotUrls,
-                        index,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          screenshot.url,
-                          width: 280,
-                          height: 180,
-                          fit: BoxFit.cover,
-                          // 限制解码尺寸，避免原图 1920x1080 全量解码到内存
-                          cacheWidth:
-                              (280 * MediaQuery.devicePixelRatioOf(context))
-                                  .toInt(),
-                          cacheHeight:
-                              (180 * MediaQuery.devicePixelRatioOf(context))
-                                  .toInt(),
-                          errorBuilder: (_, __, ___) => Container(
-                            width: 280,
-                            height: 180,
-                            color: Colors.grey[300],
-                            child: const Icon(
-                              Icons.image,
-                              size: 48,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 构建描述区
-  Widget _buildDescription(
-    BuildContext context,
-    AppDetailState detailState,
-    InstalledApp app,
-  ) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-
-    // 优先使用长描述（detailDescription），为空时降级为简短描述
-    // 将 HTML <br> 标签转换为换行符，保证换行正确渲染
-    final rawDescription =
-        detailState.appDetail?.detailDescription?.isNotEmpty == true
-        ? detailState.appDetail!.detailDescription!
-        : (detailState.appDetail?.description ??
-              app.description ??
-              l10n?.noDescription ??
-              '暂无描述');
-    final description = rawDescription.replaceAll(
-      RegExp(r'<br\s*/?>', caseSensitive: false),
-      '\n',
-    );
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final shouldShowExpandButton = shouldShowDescriptionExpandButton(
-            text: description,
-            maxWidth: constraints.maxWidth,
-            style: theme.textTheme.bodyMedium,
-            textDirection: Directionality.of(context),
-          );
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                AppLocalizations.of(context)?.appIntroduction ?? '应用介绍',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: context.appFontWeight(FontWeight.w700),
-                ),
-              ),
-              const SizedBox(height: 12),
-              AnimatedCrossFade(
-                firstChild: Text(
-                  description,
-                  style: theme.textTheme.bodyMedium,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                secondChild: Text(
-                  description,
-                  style: theme.textTheme.bodyMedium,
-                ),
-                crossFadeState: detailState.isDescriptionExpanded
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
-                duration: const Duration(milliseconds: 200),
-              ),
-              if (shouldShowExpandButton) ...[
-                const SizedBox(height: 8),
-                // 展开/收起按钮只在文本真实超过三行时显示，避免短文本被字符阈值误判。
-                TextButton(
-                  onPressed: () {
-                    ref
-                        .read(appDetailProvider(widget.appId).notifier)
-                        .toggleDescription();
-                  },
-                  child: Text(
-                    detailState.isDescriptionExpanded
-                        ? (AppLocalizations.of(context)?.collapse ?? '收起')
-                        : (AppLocalizations.of(context)?.expandAll ?? '展开全部'),
-                  ),
-                ),
-              ],
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  /// 构建应用信息表格（使用详情数据）
-  Widget _buildAppInfoTable(BuildContext context, AppDetailState detailState) {
-    final app = detailState.app;
-    final detail = detailState.appDetail;
-    final formattedAppSize = app?.size == null
-        ? null
-        : FormatUtils.formatFileSizeValue(app!.size);
-
-    if (app == null) return const SizedBox.shrink();
-
-    // 长字段独占整行，短字段按三列栅格排布，避免继续把所有信息竖着堆成表格。
-    final entries = <AppDetailInfoEntry>[
-      AppDetailInfoEntry(
-        label: AppLocalizations.of(context)?.packageName ?? '包名',
-        value: app.appId,
-        span: AppDetailInfoSpan.full,
-        isCopyable: true,
-      ),
-      AppDetailInfoEntry(
-        label: AppLocalizations.of(context)?.version ?? '版本',
-        value: app.version,
-      ),
-      if (app.arch != null)
-        AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.architecture ?? '架构',
-          value: app.arch!,
-        ),
-      if (app.channel != null)
-        AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.channelLabel ?? '渠道',
-          value: app.channel!,
-        ),
-      if (formattedAppSize != null)
-        AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.size ?? '大小',
-          value: formattedAppSize,
-        ),
-      if (app.kind != null)
-        AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.appType ?? '类型',
-          value: app.kind!,
-        ),
-      if (detail?.developerName != null)
-        AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.developer ?? '开发者',
-          value: detail!.developerName!,
-        ),
-      if (detail?.categoryName != null)
-        AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.categoryLabel ?? '分类',
-          value: detail!.categoryName!,
-        ),
-      if (app.runtime != null)
-        AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.runtime ?? '运行时',
-          value: app.runtime!,
-          span: AppDetailInfoSpan.full,
-          isCopyable: true,
-        ),
-      if (detail?.license != null)
-        AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.license ?? '许可证',
-          value: detail!.license!,
-          span: AppDetailInfoSpan.full,
-        ),
-      if (detail?.homePage != null)
-        AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.homepage ?? '主页',
-          value: detail!.homePage!,
-          span: AppDetailInfoSpan.full,
-        ),
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppLocalizations.of(context)?.appInfo ?? '应用信息',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: context.appFontWeight(FontWeight.w700),
-            ),
-          ),
-          const SizedBox(height: 12),
-          AppDetailInfoSection(entries: entries),
-        ],
-      ),
-    );
-  }
-
-  /// 构建版本列表（使用真实版本数据）
-  Widget _buildVersionList(
-    BuildContext context,
-    AppDetailState detailState,
-    InstallQueueState installState,
-    Set<String> installedVersions,
-  ) {
-    final allVersions = detailState.versions;
-    final isLoading = detailState.isLoadingVersions;
-    final versionsError = detailState.versionsError;
-    final currentApp = detailState.app;
-    final isExpanded = detailState.isVersionListExpanded;
-    final l10n = AppLocalizations.of(context)!;
-
-    // 根据折叠状态计算展示列表
-    final displayVersions = isExpanded
-        ? allVersions
-        : _computeCollapsedVersions(allVersions, installedVersions);
-
-    // 判断是否需要显示折叠按钮（版本数 > 2 时才显示）
-    final shouldShowToggle = allVersions.length > 2;
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 标题行：左侧标题 + 右侧折叠按钮
-          Row(
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Text(
-                      l10n.versionHistory,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: context.appFontWeight(FontWeight.w700),
-                      ),
-                    ),
-                    if (isLoading) ...[
-                      const SizedBox(width: 12),
-                      const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              // 折叠按钮在右上角
-              if (shouldShowToggle)
-                TextButton(
-                  onPressed: () {
-                    ref
-                        .read(appDetailProvider(widget.appId).notifier)
-                        .toggleVersionList();
-                  },
-                  child: Text(isExpanded ? l10n.collapse : l10n.expandAll),
-                ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // 错误提示区域
-          if (versionsError != null && allVersions.isEmpty)
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.versionListLoadFailed,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    ref
-                        .read(appDetailProvider(widget.appId).notifier)
-                        .retryVersions();
-                  },
-                  child: Text(l10n.retry),
-                ),
-              ],
-            )
-          else if (versionsError != null)
-            Text(
-              l10n.versionListUpdateFailed,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.error,
-              ),
-            ),
-
-          if (versionsError != null) const SizedBox(height: 12),
-
-          // 版本列表（使用计算后的 displayVersions）
-          if (displayVersions.isEmpty && !isLoading)
-            Text(l10n.noVersionHistory)
-          else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: displayVersions.length,
-              itemBuilder: (context, index) {
-                final version = displayVersions[index];
-                final isInstalledVersion = installedVersions.contains(
-                  version.versionNo,
-                );
-                final activeTask = _resolveVersionInstallTask(
-                  installState,
-                  detailState,
-                  version.versionNo,
-                );
-                final formattedPackageSize = FormatUtils.formatFileSizeValue(
-                  version.packageSize,
-                );
-                final subtitleParts = <String>[
-                  if (version.releaseTime?.isNotEmpty ?? false)
-                    version.releaseTime!,
-                  if (formattedPackageSize != '--') formattedPackageSize,
-                ];
-
-                return ListTile(
-                  key: Key('app-detail-version-row-${version.versionNo}'),
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    isInstalledVersion ? Icons.check_circle : Icons.history,
-                    color: isInstalledVersion
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey,
-                  ),
-                  title: Text('v${version.versionNo}'),
-                  subtitle: Text(
-                    subtitleParts.isEmpty ? '--' : subtitleParts.join(' · '),
-                  ),
-                  trailing: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 220),
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: _buildVersionActionArea(
-                        context,
-                        currentApp!,
-                        detailState,
-                        version.versionNo,
-                        activeTask: activeTask,
-                        isInstalledVersion: isInstalledVersion,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-        ],
-      ),
-    );
-  }
-
-  /// 构建错误视图
-  Widget _buildErrorView(BuildContext context, String error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context)?.loadFailed ?? '加载失败',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: () {
-                ref
-                    .read(appDetailProvider(widget.appId).notifier)
-                    .loadDetail(widget.appInfo);
-              },
-              icon: const Icon(Icons.refresh),
-              label: Text(AppLocalizations.of(context)?.retry ?? '重试'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 获取安装按钮状态
-  InstallButtonState _getInstallButtonState(
-    InstallTask? installTask, {
-    required bool hasInstalledInstance,
-    required bool hasUpdate,
-  }) {
-    // 如果有安装任务，根据任务状态返回
-    if (installTask != null) {
-      switch (installTask.status) {
-        case InstallStatus.pending:
-          return InstallButtonState.pending;
-        case InstallStatus.downloading:
-        case InstallStatus.installing:
-          return InstallButtonState.installing;
-        case InstallStatus.success:
-          // 任务成功后，需再次检查实际安装状态（用户可能已卸载）
-          if (hasInstalledInstance) {
-            return InstallButtonState.open;
-          }
-          // 已卸载，显示为安装状态
-          return InstallButtonState.notInstalled;
-        case InstallStatus.failed:
-        case InstallStatus.cancelled:
-        case InstallStatus.interrupted:
-          // 任务失败、取消或中断后，重新依据本机事实决定可用操作。
-          break;
-      }
-    }
-
-    // 主按钮与次级操作共用同一份本地安装态判断，避免页面内规则漂移。
-    if (hasInstalledInstance) {
-      return hasUpdate ? InstallButtonState.update : InstallButtonState.open;
-    }
-
-    return InstallButtonState.notInstalled;
-  }
-
-  bool _hasAvailableUpdate(
-    AppDetailState detailState, {
-    required bool hasInstalledInstance,
-    required String? highestInstalledVersion,
-  }) {
-    if (!hasInstalledInstance) {
-      return false;
-    }
-
-    final updateApps = ref.watch(updateAppsProvider).apps;
-    if (updateApps.any((app) => app.appId == widget.appId)) {
-      return true;
-    }
-
-    final remoteVersion =
-        detailState.appDetail?.version ?? detailState.app?.version;
-    if (remoteVersion == null ||
-        remoteVersion.isEmpty ||
-        highestInstalledVersion == null ||
-        highestInstalledVersion.isEmpty) {
-      return false;
-    }
-
-    return VersionCompare.greaterThan(remoteVersion, highestInstalledVersion);
-  }
-
-  String? _resolveHighestInstalledVersion(Iterable<String> versions) {
-    String? highestVersion;
-    for (final version in versions) {
-      if (highestVersion == null ||
-          VersionCompare.greaterThan(version, highestVersion)) {
-        highestVersion = version;
-      }
-    }
-    return highestVersion;
-  }
-
-  List<String> _buildCommentVersionOptions(AppDetailState detailState) {
-    final versions = <String>[];
-
-    void addVersion(String? version) {
-      if (version == null || version.isEmpty || versions.contains(version)) {
-        return;
-      }
-      versions.add(version);
-    }
-
-    addVersion(detailState.app?.version);
-    for (final version in detailState.versions) {
-      addVersion(version.versionNo);
-    }
-
-    return versions;
-  }
-
-  String? _resolveSelectedCommentVersion(
-    AppDetailState detailState,
-    List<String> versionOptions,
-  ) {
-    final currentSelection = _selectedCommentVersion;
-    if (currentSelection != null && versionOptions.contains(currentSelection)) {
-      return currentSelection;
-    }
-    if (versionOptions.isNotEmpty) {
-      return versionOptions.first;
-    }
-    return detailState.app?.version;
-  }
-
-  Future<bool> _submitComment(
-    BuildContext context,
-    String remark,
-    String? version,
-  ) async {
-    try {
-      await ref
-          .read(appDetailProvider(widget.appId).notifier)
-          .submitComment(remark, version: version);
-      if (!context.mounted) {
-        return false;
-      }
-      showAppNotification(
-        context,
-        AppLocalizations.of(context)?.commentSubmitSuccess ?? '评论已提交',
-      );
-      return true;
-    } catch (e) {
-      if (!context.mounted) {
-        return false;
-      }
-      showAppError(
-        context,
-        AppLocalizations.of(context)?.commentSubmitFailed(e.toString()) ??
-            '评论提交失败: $e',
-      );
-      return false;
-    }
-  }
-
-  /// 处理安装操作
-  void _handleInstallAction(InstalledApp app, InstallButtonState currentState) {
-    switch (currentState) {
-      case InstallButtonState.notInstalled:
-        // 详情页主按钮走默认安装，不指定版本；只有版本列表入口才允许传版本。
-        final taskId = ref
-            .read(installQueueProvider.notifier)
-            .enqueueInstall(
-              appId: app.appId,
-              appName: app.name,
-              icon: app.icon,
-            );
-        _triggerInstallFlyout(app, taskId: taskId);
-        break;
-      case InstallButtonState.update:
-        // 详情页更新统一走 update 队列，不再伪装成带版本安装。
-        final taskId = ref
-            .read(installQueueProvider.notifier)
-            .enqueueOperation(
-              kind: InstallTaskKind.update,
-              appId: app.appId,
-              appName: app.name,
-              icon: app.icon,
-            );
-        _triggerInstallFlyout(app, taskId: taskId);
-        break;
-      case InstallButtonState.installed:
-      case InstallButtonState.open:
-        // 打开应用
-        _openApp(app);
-        break;
-      case InstallButtonState.installing:
-      case InstallButtonState.pending:
-        // 安装中，不做操作
-        break;
-      case InstallButtonState.uninstall:
-        // 卸载应用（主按钮当前不会进入该状态，保留分支仅为穷举安全）
-        _showHeaderUninstallDialog(app);
-        break;
-    }
-  }
-
-  /// 处理取消安装
-  void _handleCancelInstall(InstalledApp app) {
-    ref.read(installQueueProvider.notifier).cancelTask(app.appId);
-  }
-
-  /// 打开应用
-  Future<void> _openApp(InstalledApp app) async {
-    try {
-      final cliRepo = ref.read(linglongCliRepositoryProvider);
-      await cliRepo.runApp(app.appId);
-
-      if (mounted) {
-        showAppLaunching(context, app.name);
-      }
-    } catch (e) {
-      if (mounted) {
-        showAppLaunchFailed(context, e.toString());
-      }
-    }
-  }
-
-  /// 安装指定版本（含降级确认和强制重装确认）
-  ///
-  /// - 已安装相同版本 → 役 [showReinstallConfirm]
-  /// - 目标版本低于已安装版本 → 役 [showDowngradeConfirm]
-  /// - 其余情况 → 直接入队
-  Future<void> _installVersion(InstalledApp app, String version) async {
-    // 检查当前已安装的此应用的所有版本
-    final installedList = ref.read(installedAppsListProvider);
-    final installedVersions = installedList
-        .where((a) => a.appId == app.appId)
-        .map((a) => a.version)
-        .toList();
-    var shouldForceInstall = false;
-
-    final isSameVersionInstalled = installedVersions.contains(version);
-    if (isSameVersionInstalled) {
-      // 安装版本已存在，弹出强制重装确认
-      final confirmed = await ConfirmDialog.showReinstallConfirm(
-        context,
-        appName: app.name,
-        version: version,
-      );
-      if (confirmed != true || !mounted) return;
-      // 同版本重装必须显式带 --force，避免 ll-cli 直接拒绝为“已安装同版本”。
-      shouldForceInstall = true;
-    } else {
-      // 检查是否为降级（目标版本低于已安装的最高版本）
-      if (installedVersions.isNotEmpty) {
-        final highestInstalled = installedVersions.reduce(
-          (a, b) => VersionCompare.greaterThan(a, b) ? a : b,
-        );
-        final isDowngrade = VersionCompare.lessThan(version, highestInstalled);
-        if (isDowngrade) {
-          final confirmed = await ConfirmDialog.showDowngradeConfirm(
-            context,
-            appName: app.name,
-            currentVersion: highestInstalled,
-            targetVersion: version,
-          );
-          if (confirmed != true || !mounted) return;
-          // 历史版本降级安装同样要走 force，否则 ll-cli 会快速拒绝安装。
-          shouldForceInstall = true;
-        }
-      }
-    }
-
-    // 入安装队列
-    final taskId = ref
-        .read(installQueueProvider.notifier)
-        .enqueueInstall(
-          appId: app.appId,
-          appName: app.name,
-          icon: app.icon,
-          version: version,
-          force: shouldForceInstall,
-        );
-    _triggerInstallFlyout(app, taskId: taskId);
-  }
-
-  void _triggerInstallFlyout(InstalledApp app, {required String taskId}) {
-    if (taskId.isEmpty) {
-      return;
-    }
-
-    final flyoutController = InstallToDownloadFlyoutLayer.maybeOf(context);
-    final launched = flyoutController?.launch(
-      sourceKey: _installSourceKey,
-      appId: app.appId,
-      appName: app.name,
-      iconUrl: app.icon,
-    );
-    if (launched != true) {
-      flyoutController?.pulseDownloadCenter();
-    }
-  }
-
-  Widget _buildVersionActionArea(
-    BuildContext context,
-    InstalledApp app,
-    AppDetailState detailState,
-    String version, {
-    InstallTask? activeTask,
-    required bool isInstalledVersion,
-  }) {
-    final l10n = AppLocalizations.of(context)!;
-
-    if (activeTask != null) {
-      return _buildVersionActionButton(
-        context,
-        key: Key('app-detail-version-progress-$version'),
-        label: _resolveVersionActionLabel(context, activeTask),
-        progress: activeTask.progressValue,
-        isLoading:
-            activeTask.status == InstallStatus.downloading ||
-            activeTask.status == InstallStatus.installing,
-        isPending: activeTask.status == InstallStatus.pending,
-      );
-    }
-
-    if (!isInstalledVersion) {
-      return _buildVersionActionButton(
-        context,
-        key: Key('app-detail-version-install-$version'),
-        label: l10n.install,
-        onPressed: () => _installVersion(app, version),
-      );
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildInstalledVersionBadge(context, version),
-        const SizedBox(width: 8),
-        _buildVersionActionButton(
-          context,
-          key: Key('app-detail-version-uninstall-$version'),
-          label: l10n.uninstall,
-          isDestructive: true,
-          onPressed: () => _uninstallVersion(detailState, version),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInstalledVersionBadge(BuildContext context, String version) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
-
-    return Container(
-      key: Key('app-detail-version-installed-badge-$version'),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        l10n.installedBadge,
-        style: theme.textTheme.labelMedium?.copyWith(
-          color: theme.colorScheme.primary,
-          fontWeight: context.appFontWeight(FontWeight.w600),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVersionActionButton(
-    BuildContext context, {
-    required Key key,
-    required String label,
-    VoidCallback? onPressed,
-    bool isDestructive = false,
-    bool isLoading = false,
-    bool isPending = false,
-    double progress = 0.0,
-  }) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    const buttonHeight = 32.0;
-
-    if (isLoading || isPending) {
-      final progressTask = InstallTask(
-        id: 'app-detail-version-progress',
-        appId: widget.appId,
-        appName: widget.appId,
-        progress: progress,
-        createdAt: 0,
-      );
-      final displayLabel = isLoading
-          ? (progressTask.progressValue > 0
-                ? progressTask.progressPercentLabel
-                : l10n.installing)
-          : l10n.waitingForInstall;
-
-      return SizedBox(
-        height: buttonHeight,
-        child: FilledButton(
-          key: key,
-          onPressed: null,
-          style: FilledButton.styleFrom(
-            minimumSize: const Size(72, 32),
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
-            shape: const StadiumBorder(),
-            backgroundColor: AppColors.primary.withValues(alpha: 0.72),
-            foregroundColor: Colors.white,
-            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.72),
-            disabledForegroundColor: Colors.white,
-            textStyle: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: context.appFontWeight(FontWeight.w600),
-            ),
-          ),
-          child: isLoading
-              ? Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ExcludeSemantics(
-                      child: SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(
-                          value: progressTask.progressValue > 0
-                              ? progressTask.progressValue
-                              : null,
-                          strokeWidth: 2,
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(displayLabel),
-                  ],
-                )
-              : Text(displayLabel),
-        ),
-      );
-    }
-
-    final buttonStyle = isDestructive
-        ? OutlinedButton.styleFrom(
-            minimumSize: const Size(72, 32),
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
-            side: BorderSide(color: theme.colorScheme.error),
-            foregroundColor: theme.colorScheme.error,
-            textStyle: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: context.appFontWeight(FontWeight.w600),
-            ),
-          )
-        : FilledButton.styleFrom(
-            minimumSize: const Size(72, 32),
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
-            textStyle: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: context.appFontWeight(FontWeight.w600),
-            ),
-          );
-
-    final button = isDestructive
-        ? OutlinedButton(
-            key: key,
-            onPressed: onPressed,
-            style: buttonStyle,
-            child: Text(label),
-          )
-        : FilledButton(
-            key: key,
-            onPressed: onPressed,
-            style: buttonStyle,
-            child: Text(label),
-          );
-
-    return SizedBox(height: buttonHeight, child: button);
-  }
-
-  String _resolveVersionActionLabel(BuildContext context, InstallTask task) {
-    final l10n = AppLocalizations.of(context)!;
-    return switch (task.status) {
-      InstallStatus.pending => l10n.waitingForInstall,
-      InstallStatus.downloading || InstallStatus.installing =>
-        task.progressValue > 0 ? task.progressPercentLabel : l10n.installing,
-      InstallStatus.success => l10n.open,
-      InstallStatus.failed => l10n.install,
-      InstallStatus.cancelled => l10n.install,
-      InstallStatus.interrupted => l10n.install,
-    };
-  }
-
-  InstallTask? _resolveVersionInstallTask(
-    InstallQueueState installState,
-    AppDetailState detailState,
-    String version,
-  ) {
-    final appId = detailState.app?.appId;
-    if (appId == null || appId.isEmpty) {
-      return null;
-    }
-
-    final latestVersion = detailState.versions.isNotEmpty
-        ? detailState.versions.first.versionNo
-        : detailState.app?.version;
-
-    for (final task in installState.getActiveTasksForApp(appId)) {
-      if (_versionTaskMatchesRow(task, version, latestVersion: latestVersion)) {
-        return task;
-      }
-    }
-    return null;
-  }
-
-  bool _versionTaskMatchesRow(
-    InstallTask task,
-    String version, {
-    String? latestVersion,
-  }) {
-    final taskVersion = task.version?.trim();
-    if (taskVersion != null && taskVersion.isNotEmpty) {
-      return taskVersion == version;
-    }
-
-    if (latestVersion == null || latestVersion.isEmpty) {
-      return false;
-    }
-
-    return version == latestVersion &&
-        (task.kind == InstallTaskKind.install ||
-            task.kind == InstallTaskKind.update);
-  }
-
-  Future<void> _uninstallVersion(
-    AppDetailState detailState,
-    String version,
-  ) async {
-    final targetApp = _resolveInstalledVersionTarget(detailState, version);
-    if (targetApp == null) {
-      if (!mounted) return;
-      showAppError(
-        context,
-        AppLocalizations.of(context)?.versionInstallTargetMissing ??
-            '未找到对应已安装版本，请刷新后重试',
-      );
-      return;
-    }
-
-    await _showUninstallDialog(targetApp);
-  }
-
-  InstalledApp? _resolveInstalledVersionTarget(
-    AppDetailState detailState,
-    String version,
-  ) {
-    final currentApp = detailState.app;
-    if (currentApp == null) {
-      AppLogger.warning('[AppDetail] 版本卸载失败：当前应用详情为空');
-      return null;
-    }
-
-    final matches = ref
-        .read(installedAppsProvider)
-        .apps
-        .where((app) => app.appId == currentApp.appId && app.version == version)
-        .toList();
-
-    if (matches.isEmpty) {
-      AppLogger.warning(
-        '[AppDetail] 版本卸载失败：未找到目标安装实例 ${currentApp.appId}@$version',
-      );
-      return null;
-    }
-
-    if (matches.length == 1) {
-      return matches.first;
-    }
-
-    final preferredArch = detailState.appDetail?.arch ?? currentApp.arch;
-    final preferredChannel =
-        detailState.appDetail?.channel ?? currentApp.channel;
-    final preferredModule = detailState.appDetail?.module ?? currentApp.module;
-
-    matches.sort((left, right) {
-      final leftScore = _scoreInstalledVersionTarget(
-        left,
-        preferredArch: preferredArch,
-        preferredChannel: preferredChannel,
-        preferredModule: preferredModule,
-      );
-      final rightScore = _scoreInstalledVersionTarget(
-        right,
-        preferredArch: preferredArch,
-        preferredChannel: preferredChannel,
-        preferredModule: preferredModule,
-      );
-      return rightScore.compareTo(leftScore);
-    });
-
-    AppLogger.warning(
-      '[AppDetail] 版本卸载命中多个安装实例，已选择上下文最优实例: '
-      '${currentApp.appId}@$version (${matches.length} candidates)',
-    );
-    return matches.first;
-  }
-
-  int _scoreInstalledVersionTarget(
-    InstalledApp app, {
-    String? preferredArch,
-    String? preferredChannel,
-    String? preferredModule,
-  }) {
-    var score = 0;
-    if (preferredArch != null && app.arch == preferredArch) {
-      score += 4;
-    }
-    if (preferredChannel != null && app.channel == preferredChannel) {
-      score += 2;
-    }
-    if (preferredModule != null && app.module == preferredModule) {
-      score += 1;
-    }
-    return score;
-  }
-
-  /// 分享应用链接。
-  ///
-  /// 优先调用系统原生分享（通过 XDG portal），
-  /// 不可用时 fallback 到复制链接到剪贴板。
-  Future<void> _shareApp(BuildContext context, InstalledApp app) async {
-    final l10n = AppLocalizations.of(context);
-    // 从全局状态获取当前系统架构，不写死
-    final arch = ref.read(globalAppProvider).arch ?? 'x86_64';
-    final shareUrl =
-        'https://store.linyaps.org.cn/apps/${app.appId}?arch=$arch';
-
-    try {
-      await Share.shareUri(Uri.parse(shareUrl));
-      // Share.shareUri 在 Linux 上可能静默失败（无分享面板），
-      // 不抛异常但也不执行任何操作，所以需要额外检查
-      return;
-    } catch (_) {
-      // 原生分享不可用，fallback 到剪贴板
-    }
-
-    // Fallback：复制到剪贴板
-    try {
-      await Clipboard.setData(ClipboardData(text: shareUrl));
-      if (!context.mounted) return;
-      showAppSuccess(context, l10n?.linkCopied ?? '链接已复制');
-    } catch (_) {
-      if (!context.mounted) return;
-      showAppError(context, l10n?.shareFailed ?? '分享失败');
-    }
-  }
-
-  /// 显示头部“整体卸载”确认对话框（应用标题栏/主按钮入口）。
-  ///
-  /// 与历史版本列表的按版本卸载不同，头部卸载不需要也不应该携带版本号：
-  /// `detailState.app`（即入参 [app]）来自 `/app/getAppDetail` 详情接口，
-  /// 反映的是服务端“当前展示版本”（往往是最新版本），并不一定等于本机
-  /// 实际已安装的版本；如果直接拿它去拼 `appId/version` 卸载，version
-  /// 不存在时会导致 ll-cli 卸载失败或误卸载。
-  ///
-  /// 因此这里先从 [installedAppsProvider]（真实已安装列表）按 appId 解析
-  /// 出实际已安装实例，仅用于本地状态移除/统计上报的版本号来源；卸载命令
-  /// 本身通过 `includeVersion: false` 只传 appId，交由 ll-cli 自行解析。
-  Future<void> _showHeaderUninstallDialog(InstalledApp app) async {
-    final target = _resolvePrimaryInstalledInstance(app);
-    if (target == null) {
-      if (!mounted) return;
-      showAppError(
-        context,
-        AppLocalizations.of(context)?.versionInstallTargetMissing ??
-            '未找到对应已安装版本，请刷新后重试',
-      );
-      return;
-    }
-
-    await _showUninstallDialog(target, includeVersion: false);
-  }
-
-  /// 从真实已安装列表中解析当前应用的“主已安装实例”。
-  ///
-  /// 用于头部整体卸载场景：当同一 appId 只有一个已安装实例时直接返回；
-  /// 存在多实例（多 arch/channel/module）时，复用与历史版本卸载相同的
-  /// 打分规则，优先选择与详情页当前上下文（[app] 的 arch/channel/module）
-  /// 最接近的实例。
-  InstalledApp? _resolvePrimaryInstalledInstance(InstalledApp app) {
-    final matches = ref
-        .read(installedAppsProvider)
-        .apps
-        .where((installed) => installed.appId == app.appId)
-        .toList();
-
-    if (matches.isEmpty) {
-      AppLogger.warning('[AppDetail] 头部卸载失败：未找到已安装实例 ${app.appId}');
-      return null;
-    }
-
-    if (matches.length == 1) {
-      return matches.first;
-    }
-
-    matches.sort((left, right) {
-      final leftScore = _scoreInstalledVersionTarget(
-        left,
-        preferredArch: app.arch,
-        preferredChannel: app.channel,
-        preferredModule: app.module,
-      );
-      final rightScore = _scoreInstalledVersionTarget(
-        right,
-        preferredArch: app.arch,
-        preferredChannel: app.channel,
-        preferredModule: app.module,
-      );
-      return rightScore.compareTo(leftScore);
-    });
-
-    AppLogger.warning(
-      '[AppDetail] 头部卸载命中多个安装实例，已选择上下文最优实例: '
-      '${app.appId} (${matches.length} candidates)',
-    );
-    return matches.first;
-  }
-
-  /// 显示卸载确认对话框
-  ///
-  /// 使用统一的卸载流程处理所有逻辑：
-  /// - 运行中检测
-  /// - 确认弹窗
-  /// - kill 进程
-  /// - 执行卸载
-  ///
-  /// [includeVersion] 透传给 [AppUninstallFlow.run]：历史版本列表按版本
-  /// 精确卸载时保持默认 `true`；头部整体卸载通过
-  /// [_showHeaderUninstallDialog] 传 `false`，避免拼接不存在的版本号。
-  Future<void> _showUninstallDialog(
-    InstalledApp app, {
-    bool includeVersion = true,
-  }) async {
-    final currentContext = context;
-    final service = ref.read(appUninstallServiceProvider);
-    final success = await AppUninstallFlow.run(
-      currentContext,
-      app,
-      service,
-      includeVersion: includeVersion,
-    );
-    if (!currentContext.mounted) return;
-
-    if (success) {
-      showAppSuccess(currentContext, '${app.name} 已卸载');
-    }
-  }
-
-  /// 在主窗口内以灯箱形式预览截图
-  Future<void> _showScreenshotPreview(
-    BuildContext context,
-    List<String> screenshots,
-    int initialIndex,
-  ) async {
-    try {
-      await showScreenshotPreviewLightbox(
-        context,
-        screenshots: screenshots,
-        initialIndex: initialIndex,
-      );
-    } catch (error, stackTrace) {
-      AppLogger.error(
-        'Failed to open screenshot preview lightbox',
-        error,
-        stackTrace,
-      );
-      if (!context.mounted) {
-        return;
-      }
-      showAppError(context, AppLocalizations.of(context)?.loadFailed ?? '加载失败');
-    }
-  }
-
-  /// 创建快捷方式
-  Future<void> _createShortcut(InstalledApp app) async {
-    final currentContext = context;
-    final l10n = AppLocalizations.of(currentContext);
-
-    try {
-      final cliRepo = ref.read(linglongCliRepositoryProvider);
-      await cliRepo.createDesktopShortcut(app.appId);
-
-      if (!currentContext.mounted) return;
-      showAppSuccess(currentContext, l10n?.shortcutCreated ?? '快捷方式已创建');
-    } catch (e) {
-      if (!currentContext.mounted) return;
-      showAppError(
-        currentContext,
-        l10n?.shortcutCreateFailed(e.toString()) ?? '创建失败: $e',
-      );
-    }
-  }
-
-  /// 计算折叠状态下的版本列表
-  ///
-  /// 规则：
-  /// 1. 始终包含最新版本（列表第一条）
-  /// 2. 如果已安装版本 ≠ 最新版本，添加已安装版本
-  /// 3. 去重：最新版本恰好是已安装版本时只显示一条
-  List<AppVersion> _computeCollapsedVersions(
-    List<AppVersion> allVersions,
-    Set<String> installedVersions,
-  ) {
-    if (allVersions.isEmpty) {
-      return [];
-    }
-
-    final latestVersion = allVersions.first;
-    final result = <AppVersion>[latestVersion];
-
-    // 查找已安装但不是最新版本的其他版本
-    for (final version in allVersions) {
-      final isInstalled = installedVersions.contains(version.versionNo);
-      final isNotLatest = version.versionNo != latestVersion.versionNo;
-
-      if (isInstalled && isNotLatest) {
-        result.add(version);
-      }
-    }
-
-    return result;
   }
 }

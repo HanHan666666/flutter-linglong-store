@@ -22,9 +22,7 @@ build/native_assets/
 .worktrees/
 .claude/worktrees/
 
-# Generated
-*.g.dart
-*.freezed.dart
+# 参与编译的生成源码必须提交，并由 CI 重放生成器校验一致性。
 
 # Coverage
 coverage/

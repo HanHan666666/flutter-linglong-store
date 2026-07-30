@@ -26,11 +26,15 @@
 保留内容：
 
 - `flutter pub get`
-- `dart run build_runner build --delete-conflicting-outputs`
+- `build/scripts/verify-generated-sources.sh`
 - `flutter analyze`
 - `flutter test`
 - `build/scripts/release-cli-smoke-test.sh`
 - `build/scripts/nightly-cli-smoke-test.sh`
+
+生成源码校验会重放 `build_runner` 和 Flutter l10n，并检查应用身份生成物。任何
+生成文件的修改、删除或未跟踪新增都会使 CI 失败；禁止退回“只生成后继续执行”
+的步骤，否则注解源码和已提交产物可以静默漂移。
 
 禁止回加：
 

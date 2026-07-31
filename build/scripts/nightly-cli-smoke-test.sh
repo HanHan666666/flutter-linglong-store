@@ -146,7 +146,9 @@ test "$desktop_count" = "1"
 canonical_desktop_path="$RENDER_OUTPUT_DIR/$CANONICAL_DESKTOP_ID"
 test -f "$canonical_desktop_path"
 grep -q '^Name=.*Nightly' "$canonical_desktop_path"
+grep -q '^Name\[ru\]=Магазин Linyaps — ночная версия сообщества$' "$canonical_desktop_path"
 grep -q '^Comment=.*Nightly' "$canonical_desktop_path"
+grep -q '^Comment\[ru\]=Ночная версия магазина приложений Linyaps$' "$canonical_desktop_path"
 grep -q '^X-GNOME-UsesNotifications=true$' "$canonical_desktop_path"
 mapfile -t nightly_compat_desktop_ids < <(
   application_identity_compat_desktop_ids nightly
@@ -158,7 +160,9 @@ for compat_desktop_id in "${nightly_compat_desktop_ids[@]}"; do
   grep -q '^MimeType=x-scheme-handler/og;$' "$compat_desktop_path"
 done
 grep -q '<name>.*Nightly</name>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
+grep -q '<name xml:lang="ru">Магазин Linyaps — ночная версия сообщества</name>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 grep -q '<summary>.*Nightly</summary>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
+grep -q '<summary xml:lang="ru">Ночная версия магазина приложений Linyaps</summary>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 grep -Fq "<launchable type=\"desktop-id\">$CANONICAL_DESKTOP_ID</launchable>" \
   "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 

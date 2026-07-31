@@ -101,8 +101,11 @@ normalize_linux_release_arch "$target_arch"
 
 package_name="linglong-store"
 display_name="玲珑应用商店社区版"
+display_name_ru="Магазин Linyaps — версия сообщества"
 summary_text="Linglong Store Community Edition"
+summary_text_ru="Магазин приложений Linyaps — версия сообщества"
 description_text="Desktop store for browsing and installing Linglong applications."
+description_text_ru="Магазин для поиска и установки приложений Linyaps."
 app_id="$APPLICATION_ID"
 desktop_filename="$CANONICAL_DESKTOP_ID"
 launchable_desktop_id="$desktop_filename"
@@ -165,7 +168,9 @@ case "$channel" in
   nightly)
     # Nightly only changes the visible metadata; layout and executable stay stable.
     display_name="玲珑应用商店社区版 Nightly"
+    display_name_ru="Магазин Linyaps — ночная версия сообщества"
     summary_text="Linglong Store Community Edition Nightly"
+    summary_text_ru="Ночная версия магазина приложений Linyaps"
     aur_pkgname="linglong-store-nightly-bin"
     # Nightly reuses the stable install paths, so both the concrete stable
     # package name and the shared virtual package must be treated as conflicts.
@@ -222,8 +227,11 @@ render_file() {
   content="$(<"$input_path")"
   content="${content//@PACKAGE_NAME@/$package_name}"
   content="${content//@DISPLAY_NAME@/$display_name}"
+  content="${content//@DISPLAY_NAME_RU@/$display_name_ru}"
   content="${content//@SUMMARY@/$summary_text}"
+  content="${content//@SUMMARY_RU@/$summary_text_ru}"
   content="${content//@DESCRIPTION@/$description_text}"
+  content="${content//@DESCRIPTION_RU@/$description_text_ru}"
   content="${content//@EXECUTABLE_NAME@/$executable_name}"
   content="${content//@ICON_NAME@/$icon_name}"
   content="${content//@DESKTOP_FILENAME@/$desktop_filename}"

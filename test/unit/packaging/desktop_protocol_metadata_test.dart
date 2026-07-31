@@ -30,6 +30,17 @@ void main() {
       expect(desktopTemplate, isNot(contains('NoDisplay=true')));
     });
 
+    test('declares Russian XDG desktop metadata', () {
+      final desktopTemplate = File(
+        'build/packaging/linux/linglong-store.desktop.in',
+      ).readAsStringSync();
+
+      expect(desktopTemplate, contains('Name[ru]=@DISPLAY_NAME_RU@'));
+      expect(desktopTemplate, contains('GenericName[ru]=Магазин приложений'));
+      expect(desktopTemplate, contains('Comment[ru]=@SUMMARY_RU@'));
+      expect(desktopTemplate, contains('Keywords[ru]='));
+    });
+
     test(
       'keeps the old desktop id as a hidden og protocol compatibility entry',
       () {

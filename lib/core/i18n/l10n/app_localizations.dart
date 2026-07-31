@@ -582,6 +582,24 @@ abstract class AppLocalizations {
   /// **'这里还没有任何内容'**
   String get noDataDescription;
 
+  /// No description provided for @pageNotFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'页面未找到'**
+  String get pageNotFound;
+
+  /// No description provided for @pageNotFoundDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'抱歉，页面未找到'**
+  String get pageNotFoundDescription;
+
+  /// No description provided for @backToHome.
+  ///
+  /// In zh, this message translates to:
+  /// **'返回首页'**
+  String get backToHome;
+
   /// No description provided for @searchApps.
   ///
   /// In zh, this message translates to:
@@ -1068,6 +1086,24 @@ abstract class AppLocalizations {
   /// **'下载管理'**
   String get downloadManager;
 
+  /// No description provided for @downloadWaitingForTask.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待下载任务开始'**
+  String get downloadWaitingForTask;
+
+  /// No description provided for @downloadRealtimeSpeed.
+  ///
+  /// In zh, this message translates to:
+  /// **'实时速度 {speed}'**
+  String downloadRealtimeSpeed(String speed);
+
+  /// No description provided for @downloadHistoryCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 条记录'**
+  String downloadHistoryCount(int count);
+
   /// No description provided for @ogInstallRequestReceived.
   ///
   /// In zh, this message translates to:
@@ -1487,6 +1523,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'展开全部'**
   String get expandAll;
+
+  /// No description provided for @collapseCategories.
+  ///
+  /// In zh, this message translates to:
+  /// **'收起分类'**
+  String get collapseCategories;
+
+  /// No description provided for @expandCategories.
+  ///
+  /// In zh, this message translates to:
+  /// **'展开分类'**
+  String get expandCategories;
 
   /// No description provided for @packageName.
   ///

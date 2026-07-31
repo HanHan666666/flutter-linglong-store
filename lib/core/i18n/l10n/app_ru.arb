@@ -82,6 +82,9 @@
   "confirmUninstallMessage": "Вы уверены, что хотите удалить это приложение?",
   "noData": "Нет данных",
   "noDataDescription": "Здесь пока нет контента",
+  "pageNotFound": "Страница не найдена",
+  "pageNotFoundDescription": "К сожалению, эта страница не найдена",
+  "backToHome": "На главную",
   "searchApps": "Поиск приложений...",
   "languageSettings": "Языковые настройки",
   "themeSettings": "Настройки темы",
@@ -279,6 +282,23 @@
   "exitWithInstalling": "Есть текущие задачи по установке. Вы уверены, что хотите выйти?",
   "exitBtn": "Выход",
   "downloadManager": "Менеджер загрузок",
+  "downloadWaitingForTask": "Ожидание начала загрузки",
+  "downloadRealtimeSpeed": "Текущая скорость: {speed}",
+  "@downloadRealtimeSpeed": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadHistoryCount": "Записей: {count}",
+  "@downloadHistoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "ogInstallRequestReceived": "Получен запрос на веб-установку {appName}.",
   "@ogInstallRequestReceived": {
     "placeholders": {
@@ -468,6 +488,8 @@
   "appIntroduction": "Введение в приложение",
   "collapse": "Свернуть",
   "expandAll": "Развернуть все",
+  "collapseCategories": "Свернуть категории",
+  "expandCategories": "Развернуть категории",
   "packageName": "Имя пакета",
   "architecture": "Архитектура",
   "channelLabel": "Канал",

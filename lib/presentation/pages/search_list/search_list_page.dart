@@ -137,10 +137,8 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
     // 无结果状态
     if (state.results.isEmpty) {
       return EmptyState.search(
-        title: AppLocalizations.of(context)?.searchNotFound ?? '未找到相关应用',
-        description:
-            AppLocalizations.of(context)?.searchTryOtherKeywords ??
-            '尝试使用其他关键词搜索',
+        title: AppLocalizations.of(context)!.searchNotFound,
+        description: AppLocalizations.of(context)!.searchTryOtherKeywords,
       );
     }
 
@@ -176,7 +174,7 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
   }
 
   Widget _buildEmptySearch() {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -188,14 +186,14 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
           ),
           const SizedBox(height: 16),
           Text(
-            l10n?.searchInputHint ?? '在顶部搜索框输入关键词',
+            l10n.searchInputHint,
             style: context.appTextStyles.body.copyWith(
               color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            l10n?.searchPressEnter ?? '按 Enter 开始搜索应用',
+            l10n.searchPressEnter,
             style: context.appTextStyles.bodyMedium.copyWith(
               color: context.appColors.textTertiary,
             ),
@@ -206,7 +204,7 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
   }
 
   Widget _buildResultHeader(SearchState state) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     // 结果标题统一读取当前条件（标签名称优先，回退到文本关键词），
     // 避免标签搜索时因 query 为空被误判为未搜索状态
     final displayTerm = state.tag?.name ?? state.query;
@@ -218,7 +216,7 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
       child: Row(
         children: [
           Text(
-            l10n?.searchResultCount(state.total) ?? '找到 ${state.total} 个结果',
+            l10n.searchResultCount(state.total),
             style: context.appTextStyles.bodyMedium.copyWith(
               color: context.appColors.textSecondary,
             ),
@@ -238,9 +236,9 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
   }
 
   Widget _buildLoadingState() {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Semantics(
-      label: l10n?.loading ?? '加载中',
+      label: l10n.loading,
       child: const SingleChildScrollView(
         physics: AlwaysScrollableScrollPhysics(),
         child: Padding(
@@ -268,11 +266,11 @@ class _AppsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return ResponsiveAppGrid<RecommendAppInfo>(
       items: apps,
-      emptyTitle: l10n?.searchNotFound ?? '未找到相关应用',
-      emptyDescription: l10n?.searchTryOtherKeywords ?? '尝试使用其他关键词搜索',
+      emptyTitle: l10n.searchNotFound,
+      emptyDescription: l10n.searchTryOtherKeywords,
       itemBuilder: (ref, index, app, cardState) {
         return AppCard(
           appId: app.appId,

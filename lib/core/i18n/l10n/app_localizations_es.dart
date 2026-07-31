@@ -258,6 +258,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noDataDescription => 'No hay contenido disponible aquí';
 
   @override
+  String get pageNotFound => 'Página no encontrada';
+
+  @override
+  String get pageNotFoundDescription =>
+      'Lo sentimos, no se pudo encontrar esta página';
+
+  @override
+  String get backToHome => 'Volver al inicio';
+
+  @override
   String get searchApps => 'Buscar aplicaciones...';
 
   @override
@@ -556,6 +566,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get downloadManager => 'Gestor de Descargas';
 
   @override
+  String get downloadWaitingForTask => 'Esperando que comience una descarga';
+
+  @override
+  String downloadRealtimeSpeed(String speed) {
+    return 'Velocidad en tiempo real: $speed';
+  }
+
+  @override
+  String downloadHistoryCount(int count) {
+    return '$count registros';
+  }
+
+  @override
   String ogInstallRequestReceived(String appName) {
     return 'Solicitud de instalación recibida desde el navegador: $appName';
   }
@@ -815,6 +838,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get expandAll => 'Expandir Todo';
+
+  @override
+  String get collapseCategories => 'Contraer categorías';
+
+  @override
+  String get expandCategories => 'Expandir categorías';
 
   @override
   String get packageName => 'Nombre del Paquete';

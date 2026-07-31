@@ -239,7 +239,7 @@ class _GuidedRepairExecutionDialogState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final appColors = context.appColors;
     return PopScope(
       canPop: !_isRunning,
@@ -263,7 +263,7 @@ class _GuidedRepairExecutionDialogState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n?.repairExecutionTitle ?? '一键修复',
+                    l10n.repairExecutionTitle,
                     style: context.appTextStyles.title3.copyWith(
                       color: appColors.textPrimary,
                       fontWeight: context.appFontWeight(FontWeight.w600),
@@ -273,7 +273,7 @@ class _GuidedRepairExecutionDialogState
                   _buildStatus(context),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    l10n?.repairOutputTitle ?? '实时输出',
+                    l10n.repairOutputTitle,
                     style: context.appTextStyles.bodyMedium.copyWith(
                       color: appColors.textPrimary,
                       fontWeight: context.appFontWeight(FontWeight.w600),
@@ -291,7 +291,7 @@ class _GuidedRepairExecutionDialogState
                           icon: const ExcludeSemantics(
                             child: Icon(Icons.copy_outlined, size: 18),
                           ),
-                          label: Text(l10n?.copyRepairOutput ?? '复制当前输出'),
+                          label: Text(l10n.copyRepairOutput),
                         ),
                       if (_logFilePath != null)
                         TextButton.icon(
@@ -299,14 +299,14 @@ class _GuidedRepairExecutionDialogState
                           icon: const ExcludeSemantics(
                             child: Icon(Icons.folder_open_outlined, size: 18),
                           ),
-                          label: Text(l10n?.openRepairLog ?? '打开日志目录'),
+                          label: Text(l10n.openRepairLog),
                         ),
                       const SizedBox(width: AppSpacing.sm),
                       FilledButton(
                         onPressed: _isRunning
                             ? null
                             : () => Navigator.of(context).pop(),
-                        child: Text(l10n?.close ?? '关闭'),
+                        child: Text(l10n.close),
                       ),
                     ],
                   ),
@@ -321,37 +321,35 @@ class _GuidedRepairExecutionDialogState
 
   /// 构建执行状态提示。
   Widget _buildStatus(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final appColors = context.appColors;
     String message;
     Color color;
     IconData icon;
 
     if (_isRunning) {
-      message = l10n?.repairExecuting ?? '正在执行修复脚本…';
+      message = l10n.repairExecuting;
       color = appColors.primary;
       icon = Icons.sync_rounded;
     } else if (_error != null) {
       message = _error is InvalidTrustedContentSignatureException
-          ? l10n?.repairInvalidSignature ?? '修复脚本签名无效，已阻止执行。'
-          : l10n?.repairExecutionError(_error.toString()) ?? '修复脚本无法执行：$_error';
+          ? l10n.repairInvalidSignature
+          : l10n.repairExecutionError(_error.toString());
       color = AppColors.error;
       icon = Icons.error_outline;
     } else {
       final result = _result!;
       switch (result.status) {
         case GuidedRepairStatus.success:
-          message = l10n?.repairCompleteRetry ?? '修复完成，请重新尝试安装。';
+          message = l10n.repairCompleteRetry;
           color = appColors.success;
           icon = Icons.check_circle_outline;
         case GuidedRepairStatus.failed:
-          message =
-              l10n?.repairFailedWithExitCode(result.exitCode ?? -1) ??
-              '修复脚本执行失败（退出码 ${result.exitCode ?? -1}）。';
+          message = l10n.repairFailedWithExitCode(result.exitCode ?? -1);
           color = AppColors.error;
           icon = Icons.error_outline;
         case GuidedRepairStatus.timedOut:
-          message = l10n?.repairTimedOut ?? '修复脚本执行超过 30 分钟，已停止等待。请查看日志确认系统状态。';
+          message = l10n.repairTimedOut;
           color = appColors.warning;
           icon = Icons.timer_off_outlined;
       }
@@ -389,8 +387,7 @@ class _GuidedRepairExecutionDialogState
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          l10n?.repairElapsedTime(_formatElapsed(_elapsed)) ??
-              '已运行 ${_formatElapsed(_elapsed)}',
+          l10n.repairElapsedTime(_formatElapsed(_elapsed)),
           style: context.appTextStyles.caption.copyWith(
             color: appColors.textSecondary,
           ),
@@ -409,7 +406,7 @@ class _GuidedRepairExecutionDialogState
 
   /// 构建高性能实时输出列表。
   Widget _buildOutput(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final appColors = context.appColors;
     return Container(
       width: double.infinity,
@@ -421,7 +418,7 @@ class _GuidedRepairExecutionDialogState
       child: _visibleLines.isEmpty
           ? Center(
               child: Text(
-                l10n?.repairOutputEmpty ?? '等待脚本输出…',
+                l10n.repairOutputEmpty,
                 style: context.appTextStyles.caption.copyWith(
                   color: appColors.textSecondary,
                 ),
@@ -438,8 +435,7 @@ class _GuidedRepairExecutionDialogState
                 itemBuilder: (context, index) {
                   if (_droppedLineCount > 0 && index == 0) {
                     return Text(
-                      l10n?.repairOutputTruncated(_droppedLineCount) ??
-                          '界面已省略较早的 $_droppedLineCount 行，完整内容请查看日志。',
+                      l10n.repairOutputTruncated(_droppedLineCount),
                       style: context.appTextStyles.caption.copyWith(
                         color: appColors.warning,
                         fontFamily: 'monospace',

@@ -219,7 +219,7 @@ class _ErrorSolutionHelpButtonState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return CompositedTransformTarget(
       link: _layerLink,
       child: OverlayPortal(
@@ -253,8 +253,8 @@ class _ErrorSolutionHelpButtonState
         ),
         child: A11yIconButton(
           key: const Key('errorSolutionHelpButton'),
-          semanticsLabel: l10n?.a11yErrorSolutionHelp ?? '查询该安装错误的解决方案',
-          tooltip: l10n?.errorSolutionHelpTooltip ?? '查看解决方案',
+          semanticsLabel: l10n.a11yErrorSolutionHelp,
+          tooltip: l10n.errorSolutionHelpTooltip,
           enabled: !_isLoading,
           iconSize: 18,
           focusNode: _triggerFocusNode,
@@ -321,7 +321,7 @@ class _HelpPopover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final appColors = context.appColors;
     final isNoSolution = kind == _HelpPopoverKind.noSolution;
 
@@ -366,8 +366,8 @@ class _HelpPopover extends StatelessWidget {
                       Expanded(
                         child: Text(
                           isNoSolution
-                              ? l10n?.errorSolutionNoSolution ?? '暂无解决方案'
-                              : l10n?.errorSolutionQueryFailed ?? '查询失败，请重试',
+                              ? l10n.errorSolutionNoSolution
+                              : l10n.errorSolutionQueryFailed,
                           style: context.appTextStyles.bodyMedium.copyWith(
                             color: appColors.textPrimary,
                           ),
@@ -379,7 +379,7 @@ class _HelpPopover extends StatelessWidget {
                         child: IconButton(
                           focusNode: closeFocusNode,
                           padding: EdgeInsets.zero,
-                          tooltip: l10n?.close ?? '关闭',
+                          tooltip: l10n.close,
                           onPressed: onClose,
                           icon: const ExcludeSemantics(
                             child: Icon(Icons.close, size: 16),
@@ -400,7 +400,7 @@ class _HelpPopover extends StatelessWidget {
                           icon: const ExcludeSemantics(
                             child: Icon(Icons.refresh, size: 16),
                           ),
-                          label: Text(l10n?.errorSolutionRetry ?? '重新查询'),
+                          label: Text(l10n.errorSolutionRetry),
                         ),
                       TextButton.icon(
                         key: const Key('errorSolutionCommunityPostButton'),
@@ -409,7 +409,7 @@ class _HelpPopover extends StatelessWidget {
                         icon: const ExcludeSemantics(
                           child: Icon(Icons.forum_outlined, size: 16),
                         ),
-                        label: Text(l10n?.errorSolutionCommunityPost ?? '社区发帖'),
+                        label: Text(l10n.errorSolutionCommunityPost),
                       ),
                     ],
                   ),

@@ -83,22 +83,17 @@ class AppUninstallFlow {
     }
 
     if (result is UninstallResultKillFailed && context.mounted) {
-      final l10n = AppLocalizations.of(context);
+      final l10n = AppLocalizations.of(context)!;
       showAppError(
         context,
-        l10n?.uninstallFailedWithError(l10n.appRunningMessage) ??
-            '卸载失败: 无法关闭运行中的应用',
+        l10n.uninstallFailedWithError(l10n.appRunningMessage),
       );
       return false;
     }
 
     if (result is UninstallResultError && context.mounted) {
-      final l10n = AppLocalizations.of(context);
-      showAppError(
-        context,
-        l10n?.uninstallFailedWithError(result.message) ??
-            '卸载失败: ${result.message}',
-      );
+      final l10n = AppLocalizations.of(context)!;
+      showAppError(context, l10n.uninstallFailedWithError(result.message));
       return false;
     }
 

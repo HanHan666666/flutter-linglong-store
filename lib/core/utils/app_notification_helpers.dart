@@ -6,10 +6,7 @@ import '../i18n/l10n/app_localizations.dart';
 void showAppNotification(BuildContext context, String message) {
   if (!context.mounted) return;
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message),
-      behavior: SnackBarBehavior.floating,
-    ),
+    SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
   );
 }
 
@@ -51,30 +48,21 @@ void showAppSuccess(BuildContext context, String message) {
 
 /// 显示链接无法打开的错误通知
 void showLinkOpenError(BuildContext context, String url) {
-  final l10n = AppLocalizations.of(context);
+  final l10n = AppLocalizations.of(context)!;
   if (!context.mounted) return;
-  showAppError(
-    context,
-    l10n?.cannotOpenLink(url) ?? '无法打开链接: $url',
-  );
+  showAppError(context, l10n.cannotOpenLink(url));
 }
 
 /// 显示应用启动通知
 void showAppLaunching(BuildContext context, String appName) {
-  final l10n = AppLocalizations.of(context);
+  final l10n = AppLocalizations.of(context)!;
   if (!context.mounted) return;
-  showAppNotification(
-    context,
-    l10n?.launching(appName) ?? '正在启动 $appName...',
-  );
+  showAppNotification(context, l10n.launching(appName));
 }
 
 /// 显示应用启动失败通知
 void showAppLaunchFailed(BuildContext context, String error) {
-  final l10n = AppLocalizations.of(context);
+  final l10n = AppLocalizations.of(context)!;
   if (!context.mounted) return;
-  showAppError(
-    context,
-    l10n?.launchFailed(error) ?? '启动失败: $error',
-  );
+  showAppError(context, l10n.launchFailed(error));
 }

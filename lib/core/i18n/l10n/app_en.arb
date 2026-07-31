@@ -83,6 +83,9 @@
   "confirmUninstallMessage": "Are you sure you want to uninstall this app?",
   "noData": "No Data",
   "noDataDescription": "There is no content here yet",
+  "pageNotFound": "Page not found",
+  "pageNotFoundDescription": "Sorry, this page could not be found",
+  "backToHome": "Back to Home",
   "searchApps": "Search apps...",
   "languageSettings": "Language Settings",
   "themeSettings": "Theme Settings",
@@ -280,6 +283,23 @@
   "exitWithInstalling": "There are ongoing installation tasks. Are you sure you want to exit?",
   "exitBtn": "Exit",
   "downloadManager": "Download Manager",
+  "downloadWaitingForTask": "Waiting for a download to start",
+  "downloadRealtimeSpeed": "Live speed: {speed}",
+  "@downloadRealtimeSpeed": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadHistoryCount": "{count} records",
+  "@downloadHistoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "ogInstallRequestReceived": "Received a web install request for {appName}",
   "@ogInstallRequestReceived": {
     "placeholders": {
@@ -469,6 +489,8 @@
   "appIntroduction": "App Introduction",
   "collapse": "Collapse",
   "expandAll": "Expand All",
+  "collapseCategories": "Collapse categories",
+  "expandCategories": "Expand categories",
   "packageName": "Package Name",
   "architecture": "Architecture",
   "channelLabel": "Channel",

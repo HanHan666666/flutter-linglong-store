@@ -258,6 +258,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noDataDescription => 'There is no content here yet';
 
   @override
+  String get pageNotFound => 'Page not found';
+
+  @override
+  String get pageNotFoundDescription => 'Sorry, this page could not be found';
+
+  @override
+  String get backToHome => 'Back to Home';
+
+  @override
   String get searchApps => 'Search apps...';
 
   @override
@@ -555,6 +564,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadManager => 'Download Manager';
 
   @override
+  String get downloadWaitingForTask => 'Waiting for a download to start';
+
+  @override
+  String downloadRealtimeSpeed(String speed) {
+    return 'Live speed: $speed';
+  }
+
+  @override
+  String downloadHistoryCount(int count) {
+    return '$count records';
+  }
+
+  @override
   String ogInstallRequestReceived(String appName) {
     return 'Received a web install request for $appName';
   }
@@ -812,6 +834,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expandAll => 'Expand All';
+
+  @override
+  String get collapseCategories => 'Collapse categories';
+
+  @override
+  String get expandCategories => 'Expand categories';
 
   @override
   String get packageName => 'Package Name';

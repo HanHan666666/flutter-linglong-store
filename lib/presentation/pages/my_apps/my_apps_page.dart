@@ -120,7 +120,10 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
     if (!mounted) return;
 
     if (success) {
-      showAppSuccess(context, '${app.name} 已卸载');
+      showAppSuccess(
+        context,
+        AppLocalizations.of(context)!.uninstallSuccess(app.name),
+      );
     }
   }
 
@@ -194,8 +197,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
           });
         },
         decoration: InputDecoration(
-          hintText:
-              AppLocalizations.of(context)?.searchInstalledApps ?? '搜索已安装的应用',
+          hintText: AppLocalizations.of(context)!.searchInstalledApps,
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
@@ -229,9 +231,9 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
     if (state.error != null) {
       return EmptyState(
         icon: Icons.error_outline,
-        title: AppLocalizations.of(context)?.loadFailed ?? '加载失败',
+        title: AppLocalizations.of(context)!.loadFailed,
         description: state.error,
-        retryText: AppLocalizations.of(context)?.retry ?? '重试',
+        retryText: AppLocalizations.of(context)!.retry,
         onRetry: () {
           ref.read(installedAppsProvider.notifier).refresh();
         },
@@ -241,10 +243,8 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
     if (state.apps.isEmpty) {
       return EmptyState(
         icon: Icons.apps_outage,
-        title: AppLocalizations.of(context)?.noInstalledApps ?? '暂无已安装应用',
-        description:
-            AppLocalizations.of(context)?.noInstalledAppsHint ??
-            '您还没有安装任何玲珑应用，去推荐页看看吧',
+        title: AppLocalizations.of(context)!.noInstalledApps,
+        description: AppLocalizations.of(context)!.noInstalledAppsHint,
       );
     }
 

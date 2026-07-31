@@ -327,7 +327,7 @@ class _ImageStage extends StatelessWidget {
             child: Center(
               child: _NavArrowButton(
                 icon: Icons.chevron_left_rounded,
-                tooltip: 'Previous screenshot',
+                tooltip: l10n.a11yPrevious,
                 onTap: () => onGoTo(currentIndex - 1),
               ),
             ),
@@ -340,7 +340,7 @@ class _ImageStage extends StatelessWidget {
             child: Center(
               child: _NavArrowButton(
                 icon: Icons.chevron_right_rounded,
-                tooltip: 'Next screenshot',
+                tooltip: l10n.a11yNext,
                 onTap: () => onGoTo(currentIndex + 1),
               ),
             ),

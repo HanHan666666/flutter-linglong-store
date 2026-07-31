@@ -218,9 +218,9 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
   }
 
   Widget _buildLoadingState() {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Semantics(
-      label: l10n?.loading ?? 'Loading',
+      label: l10n.loading,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(

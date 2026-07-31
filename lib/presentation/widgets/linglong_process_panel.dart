@@ -567,8 +567,7 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
                                   ),
                                 )
                               : const Icon(Icons.more_horiz),
-                          tooltip: AppLocalizations.of(context)?.moreActions ??
-                              '更多操作',
+                          tooltip: AppLocalizations.of(context)!.moreActions,
                         ),
                       ),
                     ),

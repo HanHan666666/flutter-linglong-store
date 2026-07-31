@@ -28,7 +28,7 @@ class ErrorSolutionDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final appColors = context.appColors;
 
     return Dialog(
@@ -49,7 +49,7 @@ class ErrorSolutionDialog extends StatelessWidget {
             children: [
               _DialogTitleBar(
                 title: solution.title,
-                closeLabel: l10n?.errorSolutionClose ?? '关闭解决方案',
+                closeLabel: l10n.errorSolutionClose,
               ),
               Divider(height: 1, color: appColors.divider),
               Expanded(
@@ -94,7 +94,7 @@ class ErrorSolutionDialog extends StatelessWidget {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: Text(l10n?.close ?? '关闭'),
+                      child: Text(l10n.close),
                     ),
                     if (solution.hasRepairScript &&
                         onRepairRequested != null) ...[
@@ -108,7 +108,7 @@ class ErrorSolutionDialog extends StatelessWidget {
                         icon: const ExcludeSemantics(
                           child: Icon(Icons.build_circle_outlined, size: 18),
                         ),
-                        label: Text(l10n?.errorSolutionRepair ?? '一键修复'),
+                        label: Text(l10n.errorSolutionRepair),
                       ),
                     ],
                   ],
@@ -127,17 +127,17 @@ class ErrorSolutionDialog extends StatelessWidget {
   /// 资源或把大段内联数据直接交给图片解码器。解码宽度按对话框上限约束，降低
   /// 高分辨率远程图对桌面端内存和 UI 响应的影响。
   Widget _buildMarkdownImage(BuildContext context, Uri uri, String? alt) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     if (uri.scheme != 'http' && uri.scheme != 'https') {
       return _MarkdownImageFallback(
         icon: Icons.block_outlined,
-        label: l10n?.errorSolutionImageBlocked ?? '已阻止非网络图片',
+        label: l10n.errorSolutionImageBlocked,
       );
     }
 
     final semanticLabel = alt?.trim().isNotEmpty == true
         ? alt!.trim()
-        : l10n?.errorSolutionRemoteImage ?? '解决方案远程图片';
+        : l10n.errorSolutionRemoteImage;
     final cacheWidth = (720 * MediaQuery.devicePixelRatioOf(context)).round();
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 360),
@@ -153,7 +153,7 @@ class ErrorSolutionDialog extends StatelessWidget {
               return child;
             }
             return Semantics(
-              label: l10n?.loading ?? '加载中',
+              label: l10n.loading,
               child: const SizedBox(
                 height: 96,
                 child: Center(child: CircularProgressIndicator()),
@@ -162,7 +162,7 @@ class ErrorSolutionDialog extends StatelessWidget {
           },
           errorBuilder: (_, _, _) => _MarkdownImageFallback(
             icon: Icons.broken_image_outlined,
-            label: l10n?.errorSolutionImageLoadFailed ?? '远程图片加载失败',
+            label: l10n.errorSolutionImageLoadFailed,
           ),
         ),
       ),

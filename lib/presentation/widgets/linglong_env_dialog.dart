@@ -61,7 +61,7 @@ class LinglongEnvDialog extends ConsumerWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           Text(
-            AppLocalizations.of(context)?.envCheckTitle ?? '环境检测',
+            AppLocalizations.of(context)!.envCheckTitle,
             style: context.appTextStyles.title3.copyWith(
               color: context.appColors.textPrimary,
             ),
@@ -106,7 +106,7 @@ class LinglongEnvDialog extends ConsumerWidget {
         const CircularProgressIndicator(),
         const SizedBox(height: AppSpacing.xl),
         Text(
-          AppLocalizations.of(context)?.checkingLinglongEnv ?? '正在检测玲珑环境...',
+          AppLocalizations.of(context)!.checkingLinglongEnv,
           style: context.appTextStyles.body.copyWith(
             color: context.appColors.textSecondary,
           ),
@@ -126,7 +126,7 @@ class LinglongEnvDialog extends ConsumerWidget {
 
     if (result == null) {
       return Text(
-        AppLocalizations.of(context)?.unknownStatus ?? '未知状态',
+        AppLocalizations.of(context)!.unknownStatus,
         style: context.appTextStyles.body.copyWith(
           color: context.appColors.textSecondary,
         ),
@@ -134,7 +134,7 @@ class LinglongEnvDialog extends ConsumerWidget {
     }
 
     final distributionGuidance = _resolveDistributionGuidance(context, result);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -159,7 +159,7 @@ class LinglongEnvDialog extends ConsumerWidget {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  localizeLinglongEnvironmentStatus(l10n!, result),
+                  localizeLinglongEnvironmentStatus(l10n, result),
                   style: context.appTextStyles.body.copyWith(
                     color: result.isOk ? AppColors.success : AppColors.warning,
                     fontWeight: context.appFontWeight(FontWeight.w500),
@@ -180,13 +180,13 @@ class LinglongEnvDialog extends ConsumerWidget {
         // 详细信息
         _buildDetailItem(
           context,
-          AppLocalizations.of(context)?.llCliVersion ?? 'll-cli 版本',
-          AppLocalizations.of(context)?.notDetected ?? '未检测到',
+          AppLocalizations.of(context)!.llCliVersion,
+          AppLocalizations.of(context)!.notDetected,
           result.llCliVersion != null,
         ),
 
         // 错误信息
-        if (result.errorMessage != null) ...[
+        if (!result.isOk) ...[
           const SizedBox(height: AppSpacing.lg),
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
@@ -219,7 +219,7 @@ class LinglongEnvDialog extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  result.errorMessage ?? '',
+                  localizeLinglongEnvironmentStatus(l10n, result),
                   style: context.appTextStyles.caption.copyWith(
                     color: context.appColors.textSecondary,
                   ),
@@ -256,10 +256,15 @@ class LinglongEnvDialog extends ConsumerWidget {
     LinglongEnvState envState,
     LinglongEnvCheckResult result,
   ) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final command = result.failedCommand ?? 'll-cli --json repo show';
     final isRestarting = envState.isRestartingPackageManagerService;
-    final restartMessage = envState.serviceRestartMessage;
+    final restartDiagnostic = envState.serviceRestartMessage;
+    final restartMessage = restartDiagnostic == null
+        ? null
+        : isRestarting
+        ? l10n.restartingPackageManagerService
+        : l10n.packageManagerServiceRestartFailed(restartDiagnostic);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -281,7 +286,7 @@ class LinglongEnvDialog extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n?.repoShowFailureInstalledQuestion ?? '已经安装好了应用环境？',
+                  l10n.repoShowFailureInstalledQuestion,
                   style: context.appTextStyles.caption.copyWith(
                     color: context.appColors.textPrimary,
                     fontWeight: context.appFontWeight(FontWeight.w600),
@@ -289,8 +294,7 @@ class LinglongEnvDialog extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  l10n?.repoShowFailureCommand(command) ??
-                      '执行 $command 读取玲珑仓库配置失败。',
+                  l10n.repoShowFailureCommand(command),
                   style: context.appTextStyles.caption.copyWith(
                     color: context.appColors.textSecondary,
                     height: 1.35,
@@ -298,8 +302,7 @@ class LinglongEnvDialog extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  l10n?.repoShowFailureReason ??
-                      '该命令需要通过系统服务 org.deepin.linglong.PackageManager.service 读取仓库配置；服务未运行时会返回失败。',
+                  l10n.repoShowFailureReason,
                   style: context.appTextStyles.caption.copyWith(
                     color: context.appColors.textSecondary,
                     height: 1.35,
@@ -307,8 +310,7 @@ class LinglongEnvDialog extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  l10n?.repoShowFailureRestartHint ??
-                      '如果已经安装 ll-cli 和应用环境，可以尝试重启该系统服务后重新检测。',
+                  l10n.repoShowFailureRestartHint,
                   style: context.appTextStyles.caption.copyWith(
                     color: context.appColors.textSecondary,
                     height: 1.35,
@@ -353,10 +355,8 @@ class LinglongEnvDialog extends ConsumerWidget {
                         Expanded(
                           child: Text(
                             isRestarting
-                                ? l10n?.restartingPackageManagerService ??
-                                      '正在重启 org.deepin.linglong.PackageManager.service...'
-                                : l10n?.restartPackageManagerService ??
-                                      '尝试重启 org.deepin.linglong.PackageManager.service',
+                                ? l10n.restartingPackageManagerService
+                                : l10n.restartPackageManagerService,
                             softWrap: true,
                             style: context.appTextStyles.caption.copyWith(
                               color: isRestarting
@@ -384,10 +384,7 @@ class LinglongEnvDialog extends ConsumerWidget {
     BuildContext context,
     LinglongEnvCheckResult result,
   ) {
-    final l10n = AppLocalizations.of(context);
-    if (l10n == null) {
-      return null;
-    }
+    final l10n = AppLocalizations.of(context)!;
 
     // 对话框只负责“按当前场景请求 guidance”，
     // 不直接知道 UOS/Deepin 等发行版细节，避免弹窗逻辑再次退化成 `if (isXxx)`。
@@ -489,9 +486,7 @@ class LinglongEnvDialog extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         Text(
-          envState.installMessage ??
-              AppLocalizations.of(context)?.installingLinglong ??
-              '正在安装...',
+          AppLocalizations.of(context)!.installingLinglong,
           style: context.appTextStyles.body.copyWith(
             color: context.appColors.textSecondary,
           ),
@@ -534,7 +529,7 @@ class LinglongEnvDialog extends ConsumerWidget {
       TextButton(
         onPressed: () => _handleExit(context),
         child: Text(
-          AppLocalizations.of(context)?.exitStore ?? '退出商店',
+          AppLocalizations.of(context)!.exitStore,
           style: TextStyle(color: context.appColors.textSecondary),
         ),
       ),
@@ -543,7 +538,7 @@ class LinglongEnvDialog extends ConsumerWidget {
       TextButton.icon(
         onPressed: () => _handleManualInstall(context, ref),
         icon: const Icon(Icons.open_in_new, size: 16),
-        label: Text(AppLocalizations.of(context)?.manualInstall ?? '手动安装'),
+        label: Text(AppLocalizations.of(context)!.manualInstall),
         style: TextButton.styleFrom(foregroundColor: AppColors.info),
       ),
 
@@ -556,14 +551,14 @@ class LinglongEnvDialog extends ConsumerWidget {
             ? null
             : () => _handleAutoInstall(context, ref),
         icon: const Icon(Icons.download, size: 16),
-        label: Text(AppLocalizations.of(context)?.autoInstall ?? '自动安装'),
+        label: Text(AppLocalizations.of(context)!.autoInstall),
       ),
 
       // 重新检测按钮
       OutlinedButton.icon(
         onPressed: () => _handleRecheck(context, ref),
         icon: const Icon(Icons.refresh, size: 16),
-        label: Text(AppLocalizations.of(context)?.recheck ?? '重新检测'),
+        label: Text(AppLocalizations.of(context)!.recheck),
         style: OutlinedButton.styleFrom(
           foregroundColor: context.appColors.textPrimary,
           side: BorderSide(color: context.appColors.border),
@@ -575,7 +570,7 @@ class LinglongEnvDialog extends ConsumerWidget {
         TextButton(
           onPressed: () => _handleSkip(context, ref),
           child: Text(
-            AppLocalizations.of(context)?.skipCheck ?? '跳过检测',
+            AppLocalizations.of(context)!.skipCheck,
             style: TextStyle(color: context.appColors.textSecondary),
           ),
         ),
@@ -591,9 +586,7 @@ class LinglongEnvDialog extends ConsumerWidget {
       onPressed: () =>
           _handleOpenInstallLogDirectory(context, ref, logFilePath),
       icon: const Icon(Icons.folder_open, size: 16),
-      label: Text(
-        AppLocalizations.of(context)?.openInstallLogDirectory ?? '打开日志目录',
-      ),
+      label: Text(AppLocalizations.of(context)!.openInstallLogDirectory),
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.info,
         side: const BorderSide(color: AppColors.info),
@@ -619,7 +612,7 @@ class LinglongEnvDialog extends ConsumerWidget {
       if (context.mounted) {
         showAppError(
           context,
-          AppLocalizations.of(context)?.cannotOpenLink(url) ?? '无法打开链接: $url',
+          AppLocalizations.of(context)!.cannotOpenLink(url),
         );
       }
     }
@@ -637,16 +630,10 @@ class LinglongEnvDialog extends ConsumerWidget {
       if (envState.result?.isOk ?? false) {
         // 环境正常，关闭对话框，由 launch_page 继续启动流程
         Navigator.of(context).pop();
-        showAppSuccess(
-          context,
-          AppLocalizations.of(context)?.envCheckPassed ?? '安装完成，环境检测通过',
-        );
+        showAppSuccess(context, AppLocalizations.of(context)!.envCheckPassed);
       } else {
         // 环境仍异常，提示用户
-        showAppWarning(
-          context,
-          AppLocalizations.of(context)?.envCheckFailed ?? '安装完成，但环境仍异常，请检查',
-        );
+        showAppWarning(context, AppLocalizations.of(context)!.envCheckFailed);
       }
     }
   }
@@ -663,8 +650,7 @@ class LinglongEnvDialog extends ConsumerWidget {
     if (!opened && context.mounted) {
       showAppError(
         context,
-        AppLocalizations.of(context)?.cannotOpenDirectory(directoryPath) ??
-            '无法打开目录: $directoryPath',
+        AppLocalizations.of(context)!.cannotOpenDirectory(directoryPath),
       );
     }
   }
@@ -689,7 +675,7 @@ class LinglongEnvDialog extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final success = await ref
         .read(linglongEnvProvider.notifier)
         .restartPackageManagerServiceAndRecheck();
@@ -701,10 +687,7 @@ class LinglongEnvDialog extends ConsumerWidget {
     final envState = ref.read(linglongEnvProvider);
     if (success && (envState.result?.isOk ?? false)) {
       Navigator.of(context).pop();
-      showAppSuccess(
-        context,
-        l10n?.packageManagerServiceRestartPassed ?? '服务已重启，环境检测通过',
-      );
+      showAppSuccess(context, l10n.packageManagerServiceRestartPassed);
       return;
     }
 
@@ -712,16 +695,12 @@ class LinglongEnvDialog extends ConsumerWidget {
     if (restartMessage != null && restartMessage.trim().isNotEmpty) {
       showAppError(
         context,
-        l10n?.packageManagerServiceRestartFailed(restartMessage) ??
-            '服务重启失败: $restartMessage',
+        l10n.packageManagerServiceRestartFailed(restartMessage),
       );
       return;
     }
 
-    showAppWarning(
-      context,
-      l10n?.packageManagerServiceRestartStillFailed ?? '服务已重启，但环境仍异常，请查看错误信息',
-    );
+    showAppWarning(context, l10n.packageManagerServiceRestartStillFailed);
   }
 
   /// 处理跳过

@@ -48,8 +48,13 @@ void main(List<String> arguments) async {
     exit(0);
   }
 
-  // 初始化窗口管理器
-  await WindowService.init();
+  // 初始化阶段尚未读取用户偏好，先使用系统语言的 ARB 标题；窗口显示前会再按
+  // 持久化语言覆盖，确保原生标题从创建起就不会混入固定中文。
+  await WindowService.init(
+    initialTitle: appLocalizationsForLocale(
+      WidgetsBinding.instance.platformDispatcher.locale,
+    ).appTitle,
+  );
 
   // 执行数据迁移：必须在 SharedPreferences/ApiClient/CacheService 等任何依赖
   // 应用数据目录的服务初始化之前执行。app_data_migrations 框架自带
@@ -135,14 +140,10 @@ void _registerExitHandler() {
 /// - 启动阶段无 Flutter UI 上下文，无法弹窗兜底。如需 UI 提示，可改为在
 ///   runApp 后第一个画面里执行迁移，但本项目选择"启动失败即退出"的简单策略。
 Future<void> _runMigrations() async {
-  final stateFilePath =
-      AppXdgPaths.resolveMigrationStateFilePath();
-  final lockFilePath =
-      AppXdgPaths.resolveMigrationLockFilePath();
+  final stateFilePath = AppXdgPaths.resolveMigrationStateFilePath();
+  final lockFilePath = AppXdgPaths.resolveMigrationLockFilePath();
   if (stateFilePath == null || lockFilePath == null) {
-    AppLogger.warning(
-      '无法解析应用数据目录，跳过数据迁移。这可能导致旧数据无法被迁移到新版本。',
-    );
+    AppLogger.warning('无法解析应用数据目录，跳过数据迁移。这可能导致旧数据无法被迁移到新版本。');
     return;
   }
 
@@ -166,18 +167,10 @@ Future<void> _runMigrations() async {
       );
     }
   } on MigrationFailedException catch (e, st) {
-    AppLogger.error(
-      '迁移失败: ${e.failedMigrationId}',
-      e.cause,
-      st,
-    );
+    AppLogger.error('迁移失败: ${e.failedMigrationId}', e.cause, st);
     exit(1);
   } on MigrationIdConflictException catch (e, st) {
-    AppLogger.error(
-      '迁移注册表 id 冲突: ${e.conflictingId}',
-      e,
-      st,
-    );
+    AppLogger.error('迁移注册表 id 冲突: ${e.conflictingId}', e, st);
     exit(1);
   }
 }

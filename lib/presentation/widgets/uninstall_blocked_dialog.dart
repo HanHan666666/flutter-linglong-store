@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../domain/models/uninstall_blocked_action.dart';
 
-export '../../domain/models/uninstall_blocked_action.dart' show UninstallBlockedAction;
+export '../../domain/models/uninstall_blocked_action.dart'
+    show UninstallBlockedAction;
 
 /// 展示安装中卸载拦截弹窗
 ///

@@ -100,6 +100,9 @@
   "confirmUninstallMessage": "确定要卸载此应用吗？",
   "noData": "暂无数据",
   "noDataDescription": "这里还没有任何内容",
+  "pageNotFound": "页面未找到",
+  "pageNotFoundDescription": "抱歉，页面未找到",
+  "backToHome": "返回首页",
   "searchApps": "搜索应用...",
   "languageSettings": "语言设置",
   "themeSettings": "主题设置",
@@ -297,6 +300,23 @@
   "exitWithInstalling": "有正在进行的安装任务，确定要退出吗？",
   "exitBtn": "退出",
   "downloadManager": "下载管理",
+  "downloadWaitingForTask": "等待下载任务开始",
+  "downloadRealtimeSpeed": "实时速度 {speed}",
+  "@downloadRealtimeSpeed": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadHistoryCount": "{count} 条记录",
+  "@downloadHistoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "ogInstallRequestReceived": "已收到来自网页的安装请求：{appName}",
   "@ogInstallRequestReceived": {
     "placeholders": {
@@ -487,6 +507,8 @@
   "appIntroduction": "应用介绍",
   "collapse": "收起",
   "expandAll": "展开全部",
+  "collapseCategories": "收起分类",
+  "expandCategories": "展开分类",
   "packageName": "包名",
   "architecture": "架构",
   "channelLabel": "渠道",

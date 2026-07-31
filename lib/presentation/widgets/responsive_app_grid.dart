@@ -106,10 +106,11 @@ class ResponsiveAppGrid<T> extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (items.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
       return SliverToBoxAdapter(
         child: EmptyState.noData(
-          title: emptyTitle ?? '暂无应用',
-          description: emptyDescription ?? '该分类下暂无应用',
+          title: emptyTitle ?? l10n.noApps,
+          description: emptyDescription ?? l10n.noAppsInCategory,
         ),
       );
     }

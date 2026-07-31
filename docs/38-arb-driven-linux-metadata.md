@@ -162,6 +162,8 @@ locale 的跨发行版回退值。英文同时属于完整发布语言集合，�
 
 - `MaterialApp` 下的 Presentation 代码必须使用非空 `AppLocalizations`，禁止
   `l10n?.key ?? '中文兜底'`。
+- `verify_localization_resources.dart` 同时校验 ARB 完整性和上述非空接线约定；
+  禁止为了绕过校验恢复可空 `AppLocalizations` 参数。
 - 新增用户可见文案必须先添加到模板 ARB，再补齐所有正式 ARB。
 - Application/Domain 不保存自然语言运行状态；跨层状态使用枚举、代码和结构化参数，
   由 Presentation 映射到 ARB。

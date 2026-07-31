@@ -112,30 +112,30 @@ class ConfirmDialog extends StatelessWidget {
     String? message,
     String? itemName,
   }) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) => ConfirmDialog.delete(
-        title: title ?? (l10n?.confirmDelete ?? '确认删除'),
-        message: message ?? (l10n?.confirmDeleteMessage ?? '确定要删除此项吗？此操作无法撤销。'),
-        confirmText: l10n?.uninstall ?? '删除',
-        cancelText: l10n?.cancel ?? '取消',
+        title: title ?? (l10n.confirmDelete),
+        message: message ?? (l10n.confirmDeleteMessage),
+        confirmText: l10n.uninstall,
+        cancelText: l10n.cancel,
       ),
     );
   }
 
   /// 显示卸载确认对话框
   static Future<bool?> showUninstall(BuildContext context, {String? appName}) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) => ConfirmDialog.uninstall(
-        title: l10n?.confirmUninstall ?? '确认卸载',
-        message: l10n?.confirmUninstallMessage ?? '确定要卸载此应用吗？',
-        confirmText: l10n?.uninstall ?? '卸载',
-        cancelText: l10n?.cancel ?? '取消',
+        title: l10n.confirmUninstall,
+        message: l10n.confirmUninstallMessage,
+        confirmText: l10n.uninstall,
+        cancelText: l10n.cancel,
       ),
     );
   }
@@ -145,18 +145,16 @@ class ConfirmDialog extends StatelessWidget {
     BuildContext context, {
     String? appName,
   }) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final name = appName ?? '该应用';
     return showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) => ConfirmDialog.delete(
-        title: l10n?.appRunningTitle ?? '应用正在运行',
-        message:
-            l10n?.appRunningUninstallMessage(name) ??
-            '$name 当前正在运行中，卸载前需要强制关闭所有运行实例。\n是否强制关闭并卸载？',
-        confirmText: l10n?.forceCloseAndUninstall ?? '强制关闭并卸载',
-        cancelText: l10n?.cancel ?? '取消',
+        title: l10n.appRunningTitle,
+        message: l10n.appRunningUninstallMessage(name),
+        confirmText: l10n.forceCloseAndUninstall,
+        cancelText: l10n.cancel,
       ),
     );
   }
@@ -170,23 +168,19 @@ class ConfirmDialog extends StatelessWidget {
     required String currentVersion,
     required String targetVersion,
   }) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) => ConfirmDialog(
-        title: l10n?.confirmDowngrade ?? '确认降级',
-        message:
-            l10n?.downgradeMessageWithVersion(
-              appName,
-              currentVersion,
-              targetVersion,
-            ) ??
-            '当前已安装 $appName v$currentVersion，'
-                '您尝试安装较低的版本 v$targetVersion。\n'
-                '降级安装可能导致功能异常，是否继续？',
-        confirmText: l10n?.confirmDowngrade ?? '确认降级',
-        cancelText: l10n?.cancel ?? '取消',
+        title: l10n.confirmDowngrade,
+        message: l10n.downgradeMessageWithVersion(
+          appName,
+          currentVersion,
+          targetVersion,
+        ),
+        confirmText: l10n.confirmDowngrade,
+        cancelText: l10n.cancel,
         confirmStyle: ConfirmButtonStyle.warning,
       ),
     );
@@ -200,17 +194,15 @@ class ConfirmDialog extends StatelessWidget {
     required String appName,
     required String version,
   }) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) => ConfirmDialog(
-        title: l10n?.alreadyInstalledVersion ?? '已安装此版本',
-        message:
-            l10n?.reinstallMessage(appName, version) ??
-            '$appName v$version 已安装。\n是否重新安装（将覆盖现有安装）？',
-        confirmText: l10n?.forceReinstall ?? '强制重装',
-        cancelText: l10n?.cancel ?? '取消',
+        title: l10n.alreadyInstalledVersion,
+        message: l10n.reinstallMessage(appName, version),
+        confirmText: l10n.forceReinstall,
+        cancelText: l10n.cancel,
         confirmStyle: ConfirmButtonStyle.primary,
       ),
     );

@@ -18,7 +18,7 @@ class ScriptReviewDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final appColors = context.appColors;
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(
@@ -40,7 +40,7 @@ class ScriptReviewDialog extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n?.scriptReviewTitle ?? '脚本内容预览',
+                  l10n.scriptReviewTitle,
                   style: context.appTextStyles.title3.copyWith(
                     color: appColors.textPrimary,
                     fontWeight: context.appFontWeight(FontWeight.w600),
@@ -51,8 +51,7 @@ class ScriptReviewDialog extends StatelessWidget {
                   child: SingleChildScrollView(
                     child: CopyableCommandBlock(
                       command: script,
-                      semanticLabel:
-                          l10n?.scriptReviewSemanticLabel ?? '即将执行的完整修复脚本',
+                      semanticLabel: l10n.scriptReviewSemanticLabel,
                     ),
                   ),
                 ),
@@ -62,7 +61,7 @@ class ScriptReviewDialog extends StatelessWidget {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(false),
-                      child: Text(l10n?.cancel ?? '取消'),
+                      child: Text(l10n.cancel),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     FilledButton.icon(
@@ -71,7 +70,7 @@ class ScriptReviewDialog extends StatelessWidget {
                       icon: const ExcludeSemantics(
                         child: Icon(Icons.admin_panel_settings_outlined),
                       ),
-                      label: Text(l10n?.executeRepairScript ?? '确认并执行'),
+                      label: Text(l10n.executeRepairScript),
                     ),
                   ],
                 ),

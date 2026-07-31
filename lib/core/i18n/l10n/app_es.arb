@@ -82,6 +82,9 @@
   "confirmUninstallMessage": "¿Está seguro de que desea desinstalar esta aplicación?",
   "noData": "Sin datos",
   "noDataDescription": "No hay contenido disponible aquí",
+  "pageNotFound": "Página no encontrada",
+  "pageNotFoundDescription": "Lo sentimos, no se pudo encontrar esta página",
+  "backToHome": "Volver al inicio",
   "searchApps": "Buscar aplicaciones...",
   "languageSettings": "Configuración de Idioma",
   "themeSettings": "Configuración de Tema",
@@ -291,6 +294,23 @@
   "exitWithInstalling": "Hay tareas de instalación en curso. ¿Está seguro de que desea salir?",
   "exitBtn": "Salir",
   "downloadManager": "Gestor de Descargas",
+  "downloadWaitingForTask": "Esperando que comience una descarga",
+  "downloadRealtimeSpeed": "Velocidad en tiempo real: {speed}",
+  "@downloadRealtimeSpeed": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadHistoryCount": "{count} registros",
+  "@downloadHistoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "ogInstallRequestReceived": "Solicitud de instalación recibida desde el navegador: {appName}",
   "@ogInstallRequestReceived": {
     "placeholders": {
@@ -480,6 +500,8 @@
   "appIntroduction": "Descripción de la Aplicación",
   "collapse": "Contraer",
   "expandAll": "Expandir Todo",
+  "collapseCategories": "Contraer categorías",
+  "expandCategories": "Expandir categorías",
   "packageName": "Nombre del Paquete",
   "architecture": "Arquitectura",
   "channelLabel": "Canal",

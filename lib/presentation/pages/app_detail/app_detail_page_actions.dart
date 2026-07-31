@@ -54,7 +54,7 @@ class AppDetailPageActions {
       }
       showAppNotification(
         context,
-        AppLocalizations.of(context)?.commentSubmitSuccess ?? '评论已提交',
+        AppLocalizations.of(context)!.commentSubmitSuccess,
       );
       return true;
     } catch (error) {
@@ -63,8 +63,7 @@ class AppDetailPageActions {
       }
       showAppError(
         context,
-        AppLocalizations.of(context)?.commentSubmitFailed(error.toString()) ??
-            '评论提交失败: $error',
+        AppLocalizations.of(context)!.commentSubmitFailed(error.toString()),
       );
       return false;
     }
@@ -212,8 +211,7 @@ class AppDetailPageActions {
       if (!context.mounted) return;
       showAppError(
         context,
-        AppLocalizations.of(context)?.versionInstallTargetMissing ??
-            '未找到对应已安装版本，请刷新后重试',
+        AppLocalizations.of(context)!.versionInstallTargetMissing,
       );
       return;
     }
@@ -232,8 +230,7 @@ class AppDetailPageActions {
       if (!context.mounted) return;
       showAppError(
         context,
-        AppLocalizations.of(context)?.versionInstallTargetMissing ??
-            '未找到对应已安装版本，请刷新后重试',
+        AppLocalizations.of(context)!.versionInstallTargetMissing,
       );
       return;
     }
@@ -242,7 +239,7 @@ class AppDetailPageActions {
 
   /// 分享应用链接；系统分享不可用时回退到剪贴板。
   Future<void> shareApp(BuildContext context, InstalledApp app) async {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final arch = ref.read(globalAppProvider).arch ?? 'x86_64';
     final shareUrl =
         'https://store.linyaps.org.cn/apps/${app.appId}?arch=$arch';
@@ -257,10 +254,10 @@ class AppDetailPageActions {
     try {
       await Clipboard.setData(ClipboardData(text: shareUrl));
       if (!context.mounted) return;
-      showAppSuccess(context, l10n?.linkCopied ?? '链接已复制');
+      showAppSuccess(context, l10n.linkCopied);
     } catch (_) {
       if (!context.mounted) return;
-      showAppError(context, l10n?.shareFailed ?? '分享失败');
+      showAppError(context, l10n.shareFailed);
     }
   }
 
@@ -283,25 +280,22 @@ class AppDetailPageActions {
         stackTrace,
       );
       if (!context.mounted) return;
-      showAppError(context, AppLocalizations.of(context)?.loadFailed ?? '加载失败');
+      showAppError(context, AppLocalizations.of(context)!.loadFailed);
     }
   }
 
   /// 创建符合 XDG 目录规则的桌面快捷方式并展示结果。
   Future<void> createShortcut(BuildContext context, InstalledApp app) async {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     try {
       await ref
           .read(linglongCliRepositoryProvider)
           .createDesktopShortcut(app.appId);
       if (!context.mounted) return;
-      showAppSuccess(context, l10n?.shortcutCreated ?? '快捷方式已创建');
+      showAppSuccess(context, l10n.shortcutCreated);
     } catch (error) {
       if (!context.mounted) return;
-      showAppError(
-        context,
-        l10n?.shortcutCreateFailed(error.toString()) ?? '创建失败: $error',
-      );
+      showAppError(context, l10n.shortcutCreateFailed(error.toString()));
     }
   }
 
@@ -428,7 +422,10 @@ class AppDetailPageActions {
     );
     if (!context.mounted) return;
     if (success) {
-      showAppSuccess(context, '${app.name} 已卸载');
+      showAppSuccess(
+        context,
+        AppLocalizations.of(context)!.uninstallSuccess(app.name),
+      );
     }
   }
 }

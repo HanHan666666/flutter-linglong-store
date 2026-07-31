@@ -127,6 +127,7 @@ class CategoryFilterHeaderBox extends StatelessWidget {
 
   /// 折叠态：横向滚动 + 末尾展开按钮
   Widget _buildCollapsedLayout(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
@@ -157,7 +158,9 @@ class CategoryFilterHeaderBox extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.sm),
             child: Tooltip(
-              message: isExpanded ? '收起分类' : '展开分类',
+              message: isExpanded
+                  ? l10n.collapseCategories
+                  : l10n.expandCategories,
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
                 onTap: onToggleExpand,

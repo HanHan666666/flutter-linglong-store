@@ -148,13 +148,10 @@ class AppDetailDescriptionSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final rawDescription = detail?.detailDescription?.isNotEmpty == true
         ? detail!.detailDescription!
-        : (detail?.description ??
-              app.description ??
-              l10n?.noDescription ??
-              '暂无描述');
+        : (detail?.description ?? app.description ?? l10n.noDescription);
     final description = rawDescription.replaceAll(
       RegExp(r'<br\s*/?>', caseSensitive: false),
       '\n',
@@ -175,7 +172,7 @@ class AppDetailDescriptionSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n?.appIntroduction ?? '应用介绍',
+                l10n.appIntroduction,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: context.appFontWeight(FontWeight.w700),
                 ),
@@ -201,11 +198,7 @@ class AppDetailDescriptionSection extends StatelessWidget {
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: onToggleExpanded,
-                  child: Text(
-                    isExpanded
-                        ? (l10n?.collapse ?? '收起')
-                        : (l10n?.expandAll ?? '展开全部'),
-                  ),
+                  child: Text(isExpanded ? (l10n.collapse) : (l10n.expandAll)),
                 ),
               ],
             ],
@@ -238,61 +231,61 @@ class AppDetailMetadataSection extends StatelessWidget {
         : FormatUtils.formatFileSizeValue(app.size);
     final entries = <AppDetailInfoEntry>[
       AppDetailInfoEntry(
-        label: AppLocalizations.of(context)?.packageName ?? '包名',
+        label: AppLocalizations.of(context)!.packageName,
         value: app.appId,
         span: AppDetailInfoSpan.full,
         isCopyable: true,
       ),
       AppDetailInfoEntry(
-        label: AppLocalizations.of(context)?.version ?? '版本',
+        label: AppLocalizations.of(context)!.version,
         value: app.version,
       ),
       if (app.arch != null)
         AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.architecture ?? '架构',
+          label: AppLocalizations.of(context)!.architecture,
           value: app.arch!,
         ),
       if (app.channel != null)
         AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.channelLabel ?? '渠道',
+          label: AppLocalizations.of(context)!.channelLabel,
           value: app.channel!,
         ),
       if (formattedAppSize != null)
         AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.size ?? '大小',
+          label: AppLocalizations.of(context)!.size,
           value: formattedAppSize,
         ),
       if (app.kind != null)
         AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.appType ?? '类型',
+          label: AppLocalizations.of(context)!.appType,
           value: app.kind!,
         ),
       if (detail?.developerName != null)
         AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.developer ?? '开发者',
+          label: AppLocalizations.of(context)!.developer,
           value: detail!.developerName!,
         ),
       if (detail?.categoryName != null)
         AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.categoryLabel ?? '分类',
+          label: AppLocalizations.of(context)!.categoryLabel,
           value: detail!.categoryName!,
         ),
       if (app.runtime != null)
         AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.runtime ?? '运行时',
+          label: AppLocalizations.of(context)!.runtime,
           value: app.runtime!,
           span: AppDetailInfoSpan.full,
           isCopyable: true,
         ),
       if (detail?.license != null)
         AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.license ?? '许可证',
+          label: AppLocalizations.of(context)!.license,
           value: detail!.license!,
           span: AppDetailInfoSpan.full,
         ),
       if (detail?.homePage != null)
         AppDetailInfoEntry(
-          label: AppLocalizations.of(context)?.homepage ?? '主页',
+          label: AppLocalizations.of(context)!.homepage,
           value: detail!.homePage!,
           span: AppDetailInfoSpan.full,
         ),
@@ -304,7 +297,7 @@ class AppDetailMetadataSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context)?.appInfo ?? '应用信息',
+            AppLocalizations.of(context)!.appInfo,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: context.appFontWeight(FontWeight.w700),
             ),
@@ -343,7 +336,7 @@ class AppDetailErrorView extends StatelessWidget {
             Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              AppLocalizations.of(context)?.loadFailed ?? '加载失败',
+              AppLocalizations.of(context)!.loadFailed,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
@@ -358,7 +351,7 @@ class AppDetailErrorView extends StatelessWidget {
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: Text(AppLocalizations.of(context)?.retry ?? '重试'),
+              label: Text(AppLocalizations.of(context)!.retry),
             ),
           ],
         ),

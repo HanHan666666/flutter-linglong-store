@@ -249,6 +249,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noDataDescription => '这里还没有任何内容';
 
   @override
+  String get pageNotFound => '页面未找到';
+
+  @override
+  String get pageNotFoundDescription => '抱歉，页面未找到';
+
+  @override
+  String get backToHome => '返回首页';
+
+  @override
   String get searchApps => '搜索应用...';
 
   @override
@@ -529,6 +538,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadManager => '下载管理';
 
   @override
+  String get downloadWaitingForTask => '等待下载任务开始';
+
+  @override
+  String downloadRealtimeSpeed(String speed) {
+    return '实时速度 $speed';
+  }
+
+  @override
+  String downloadHistoryCount(int count) {
+    return '$count 条记录';
+  }
+
+  @override
   String ogInstallRequestReceived(String appName) {
     return '已收到来自网页的安装请求：$appName';
   }
@@ -775,6 +797,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get expandAll => '展开全部';
+
+  @override
+  String get collapseCategories => '收起分类';
+
+  @override
+  String get expandCategories => '展开分类';
 
   @override
   String get packageName => '包名';

@@ -35,8 +35,8 @@ Future<void> showGuidedRepairFlow(
     return;
   }
   if (!signatureValid) {
-    final l10n = AppLocalizations.of(context);
-    showAppError(context, l10n?.repairInvalidSignature ?? '修复脚本签名无效，已阻止执行。');
+    final l10n = AppLocalizations.of(context)!;
+    showAppError(context, l10n.repairInvalidSignature);
     return;
   }
 

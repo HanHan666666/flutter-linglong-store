@@ -216,7 +216,7 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
   /// 构建应用名称
   Widget _buildAppName(BuildContext context) {
     return Text(
-      AppLocalizations.of(context)?.appTitleShort ?? '玲珑应用商店',
+      AppLocalizations.of(context)!.appTitleShort,
       style: context.appTextStyles.title1.copyWith(
         color: context.appColors.textPrimary,
         fontWeight: context.appFontWeight(FontWeight.w600),
@@ -366,9 +366,7 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
 
           // 错误消息
           Text(
-            launchState.errorMessage ??
-                AppLocalizations.of(context)?.launchFailedTitle ??
-                '启动失败',
+            AppLocalizations.of(context)!.launchFailedTitle,
             style: context.appTextStyles.body.copyWith(
               color: context.appColors.textPrimary,
             ),
@@ -389,7 +387,7 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
                   ref.read(launchSequenceProvider.notifier).retry();
                 },
                 icon: const Icon(Icons.refresh, size: 18),
-                label: Text(AppLocalizations.of(context)?.retry ?? '重试'),
+                label: Text(AppLocalizations.of(context)!.retry),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -408,7 +406,7 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
                   ref.read(launchSequenceProvider.notifier).skipCurrentStep();
                 },
                 child: Text(
-                  AppLocalizations.of(context)?.skip ?? '跳过',
+                  AppLocalizations.of(context)!.skip,
                   style: TextStyle(color: context.appColors.textSecondary),
                 ),
               ),

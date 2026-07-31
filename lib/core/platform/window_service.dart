@@ -17,16 +17,16 @@ class WindowService {
   /// 默认窗口高度
   static const double defaultHeight = 800.0;
 
-  /// 初始化窗口
-  static Future<void> init() async {
+  /// 使用调用方已经按系统语言解析的标题初始化窗口。
+  static Future<void> init({required String initialTitle}) async {
     await windowManager.ensureInitialized();
 
-    const windowOptions = WindowOptions(
-      size: Size(defaultWidth, defaultHeight),
-      minimumSize: Size(minWidth, minHeight),
+    final windowOptions = WindowOptions(
+      size: const Size(defaultWidth, defaultHeight),
+      minimumSize: const Size(minWidth, minHeight),
       center: true,
       titleBarStyle: TitleBarStyle.hidden,
-      title: '玲珑应用商店社区版',
+      title: initialTitle,
       backgroundColor: Colors.transparent,
       skipTaskbar: false,
     );

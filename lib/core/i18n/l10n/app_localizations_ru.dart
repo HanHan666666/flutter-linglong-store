@@ -258,6 +258,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noDataDescription => 'Здесь пока нет контента';
 
   @override
+  String get pageNotFound => 'Страница не найдена';
+
+  @override
+  String get pageNotFoundDescription => 'К сожалению, эта страница не найдена';
+
+  @override
+  String get backToHome => 'На главную';
+
+  @override
   String get searchApps => 'Поиск приложений...';
 
   @override
@@ -565,6 +574,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get downloadManager => 'Менеджер загрузок';
 
   @override
+  String get downloadWaitingForTask => 'Ожидание начала загрузки';
+
+  @override
+  String downloadRealtimeSpeed(String speed) {
+    return 'Текущая скорость: $speed';
+  }
+
+  @override
+  String downloadHistoryCount(int count) {
+    return 'Записей: $count';
+  }
+
+  @override
   String ogInstallRequestReceived(String appName) {
     return 'Получен запрос на веб-установку $appName.';
   }
@@ -824,6 +846,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get expandAll => 'Развернуть все';
+
+  @override
+  String get collapseCategories => 'Свернуть категории';
+
+  @override
+  String get expandCategories => 'Развернуть категории';
 
   @override
   String get packageName => 'Имя пакета';

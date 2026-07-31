@@ -30,7 +30,7 @@ class DownloadManagerHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appColors = context.appColors;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       key: const Key('downloadManagerTitleBar'),
@@ -51,7 +51,7 @@ class DownloadManagerHeader extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.sm),
           Text(
-            l10n?.downloadManager ?? '下载管理',
+            l10n.downloadManager,
             style: context.appTextStyles.bodyMedium.copyWith(
               color: appColors.textPrimary,
               fontWeight: context.appFontWeight(FontWeight.w600),
@@ -66,7 +66,7 @@ class DownloadManagerHeader extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: Text(l10n?.clearRecords ?? '清空记录'),
+              child: Text(l10n.clearRecords),
             ),
           const SizedBox(width: AppSpacing.sm),
           _DownloadManagerCloseButton(onTap: onClose),
@@ -93,7 +93,7 @@ class _DownloadManagerCloseButtonState
   @override
   Widget build(BuildContext context) {
     final appColors = context.appColors;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final backgroundColor = _hovered
         ? AppColors.error.withValues(alpha: 0.88)
         : appColors.textPrimary.withValues(alpha: 0.06);
@@ -102,7 +102,7 @@ class _DownloadManagerCloseButtonState
         : appColors.textSecondary.withValues(alpha: 0.86);
 
     return Tooltip(
-      message: l10n?.close ?? '关闭',
+      message: l10n.close,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         onEnter: (_) => setState(() => _hovered = true),

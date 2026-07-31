@@ -12,6 +12,7 @@ import '../../presentation/pages/update_app/update_app_page.dart';
 import '../../domain/models/app_detail.dart';
 import '../../domain/models/installed_app.dart';
 import '../../application/providers/launch_provider.dart';
+import '../i18n/l10n/app_localizations.dart';
 
 /// 路由路径常量
 abstract class AppRoutes {
@@ -198,15 +199,19 @@ class AppErrorPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('页面未找到')),
+      appBar: AppBar(title: Text(l10n.pageNotFound)),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.error_outline, size: 64, color: Colors.grey),
             const SizedBox(height: 24),
-            Text('抱歉，页面未找到', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              l10n.pageNotFoundDescription,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             if (error != null)
               Padding(
@@ -223,7 +228,7 @@ class AppErrorPage extends StatelessWidget {
             FilledButton.icon(
               onPressed: () => context.go(AppRoutes.recommend),
               icon: const Icon(Icons.home),
-              label: const Text('返回首页'),
+              label: Text(l10n.backToHome),
             ),
           ],
         ),

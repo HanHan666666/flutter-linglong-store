@@ -6,6 +6,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../../core/config/theme.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
 
 /// 展示下载实时速度和历史记录数量。
 class DownloadManagerFooter extends StatelessWidget {
@@ -25,6 +26,7 @@ class DownloadManagerFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appColors = context.appColors;
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       key: const Key('downloadManagerStatusBar'),
       width: double.infinity,
@@ -44,14 +46,16 @@ class DownloadManagerFooter extends StatelessWidget {
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(
-              speed.isEmpty ? '等待下载任务开始' : '实时速度 $speed',
+              speed.isEmpty
+                  ? l10n.downloadWaitingForTask
+                  : l10n.downloadRealtimeSpeed(speed),
               style: context.appTextStyles.caption.copyWith(
                 color: appColors.textSecondary,
               ),
             ),
           ),
           Text(
-            '$historyCount 条记录',
+            l10n.downloadHistoryCount(historyCount),
             style: context.appTextStyles.caption.copyWith(
               color: appColors.textTertiary,
             ),

@@ -155,9 +155,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       );
     }
     if (detailState.app == null) {
-      return Center(
-        child: Text(AppLocalizations.of(context)?.appNotFound ?? '未找到应用信息'),
-      );
+      return Center(child: Text(AppLocalizations.of(context)!.appNotFound));
     }
 
     final app = detailState.app!;

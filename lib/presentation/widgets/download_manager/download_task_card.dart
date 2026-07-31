@@ -484,11 +484,9 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
 
   /// 构建只复制 `InstallTask.commandOutput` 的日志按钮。
   Widget _buildCopyOutputButton(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final appColors = context.appColors;
-    final buttonLabel = _isOutputCopied
-        ? (l10n?.copySucceeded ?? '复制成功')
-        : (l10n?.copyLog ?? '复制日志');
+    final buttonLabel = _isOutputCopied ? (l10n.copySucceeded) : (l10n.copyLog);
 
     return Tooltip(
       message: buttonLabel,
@@ -512,7 +510,7 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
 
   /// 根据任务状态生成取消、重试、打开或移除操作。
   List<Widget> _buildTaskActionWidgets(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     if (widget.task.isProcessing ||
         widget.task.status == InstallStatus.downloading ||
@@ -521,7 +519,7 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
         _buildIconActionButton(
           icon: Icons.close,
           onPressed: widget.onCancel,
-          tooltip: l10n?.cancel ?? '取消',
+          tooltip: l10n.cancel,
         ),
       ];
     }
@@ -531,13 +529,13 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
         _buildIconActionButton(
           icon: Icons.refresh,
           onPressed: widget.onRetry,
-          tooltip: l10n?.retry ?? '重试',
+          tooltip: l10n.retry,
         ),
         if (widget.onRemove != null)
           _buildIconActionButton(
             icon: Icons.close,
             onPressed: widget.onRemove,
-            tooltip: l10n?.remove ?? '移除',
+            tooltip: l10n.remove,
           ),
       ];
     }
@@ -547,13 +545,13 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
         _buildIconActionButton(
           icon: Icons.open_in_new,
           onPressed: widget.onOpen,
-          tooltip: l10n?.open ?? '打开',
+          tooltip: l10n.open,
         ),
         if (widget.onRemove != null)
           _buildIconActionButton(
             icon: Icons.close,
             onPressed: widget.onRemove,
-            tooltip: l10n?.remove ?? '移除',
+            tooltip: l10n.remove,
           ),
       ];
     }
@@ -563,7 +561,7 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
         _buildIconActionButton(
           icon: Icons.close,
           onPressed: widget.onRemove,
-          tooltip: l10n?.remove ?? '移除',
+          tooltip: l10n.remove,
         ),
       ];
     }

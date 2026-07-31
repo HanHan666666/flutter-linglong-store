@@ -143,7 +143,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
   ) {
     final isUpdating = installState.hasActiveTasks();
     final isChecking = state.isLoading;
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final ignoredUpdatesL10n = AppLocalizations.of(context)!;
 
     return Container(
@@ -199,9 +199,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
                 onPressed: isChecking ? null : () => unawaited(_syncUpdates()),
                 icon: const Icon(Icons.refresh, size: 18),
                 label: Text(
-                  isChecking
-                      ? (l10n?.checkingUpdate ?? '检查更新中...')
-                      : (l10n?.checkUpdate ?? '检查更新'),
+                  isChecking ? (l10n.checkingUpdate) : (l10n.checkUpdate),
                 ),
               ),
               if (state.apps.isNotEmpty) ...[
@@ -216,11 +214,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.update, size: 18),
-                  label: Text(
-                    isUpdating
-                        ? (l10n?.updating ?? '正在更新...')
-                        : (l10n?.updateAll ?? '全部更新'),
-                  ),
+                  label: Text(isUpdating ? (l10n.updating) : (l10n.updateAll)),
                 ),
               ],
             ],
@@ -231,20 +225,20 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
   }
 
   String _buildHeaderSummaryText(BuildContext context, UpdateAppsState state) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     if (state.apps.isNotEmpty) {
-      return l10n?.updateCount(state.count) ?? '共 ${state.count} 个应用可更新';
+      return l10n.updateCount(state.count);
     }
 
     if (state.error != null) {
-      return l10n?.updateCheckFailed ?? '检查更新失败';
+      return l10n.updateCheckFailed;
     }
 
     if (state.isLoading && !state.hasLoadedOnce) {
-      return l10n?.checkingUpdate ?? '检查更新中...';
+      return l10n.checkingUpdate;
     }
 
-    return l10n?.noUpdate ?? '暂无更新';
+    return l10n.noUpdate;
   }
 
   /// 构建内容区域
@@ -253,7 +247,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
     UpdateAppsState state,
     InstallQueueState installState,
   ) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     // 加载中状态 — 仅在首次加载（列表为空且尚无历史结果）时显示全屏 loading。
     if (state.isLoading && state.apps.isEmpty && !state.hasLoadedOnce) {
@@ -266,9 +260,9 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
         isRefreshing: state.isLoading,
         child: EmptyState(
           icon: Icons.error_outline,
-          title: l10n?.updateCheckFailed ?? '检查更新失败',
+          title: l10n.updateCheckFailed,
           description: state.error,
-          retryText: l10n?.retry ?? '重试',
+          retryText: l10n.retry,
           onRetry: () {
             unawaited(_syncUpdates());
           },
@@ -282,8 +276,8 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
         isRefreshing: state.isLoading,
         child: EmptyState(
           icon: Icons.update,
-          title: l10n?.noUpdate ?? '暂无更新',
-          description: l10n?.allAppsUpToDate ?? '您的所有应用都是最新版本',
+          title: l10n.noUpdate,
+          description: l10n.allAppsUpToDate,
         ),
       );
     }

@@ -47,10 +47,8 @@ class _CopyableCommandBlockState extends State<CopyableCommandBlock> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
-    final tooltip = _isCopied
-        ? (l10n?.copied(widget.command) ?? '已复制命令')
-        : (l10n?.copy ?? '复制');
+    final l10n = AppLocalizations.of(context)!;
+    final tooltip = _isCopied ? (l10n.copied(widget.command)) : (l10n.copy);
 
     return Semantics(
       label: widget.semanticLabel,

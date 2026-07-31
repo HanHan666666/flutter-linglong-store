@@ -237,7 +237,7 @@ class AppDetailHeroHeader extends StatelessWidget {
   /// 点击时透传完整 name+language 身份，由页面层统一接入标签搜索路由。
   Widget _buildTags(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final canPress = onTagPressed != null;
 
     return Wrap(
@@ -246,8 +246,7 @@ class AppDetailHeroHeader extends StatelessWidget {
       children: tags
           .map(
             (tag) => A11yButton(
-              semanticsLabel:
-                  l10n?.a11ySearchByTag(tag.name) ?? '按标签搜索：${tag.name}',
+              semanticsLabel: l10n.a11ySearchByTag(tag.name),
               enabled: canPress,
               onTap: () => onTagPressed?.call(tag),
               child: Container(

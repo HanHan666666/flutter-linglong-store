@@ -71,12 +71,17 @@ void main() {
     });
 
     testWidgets('next arrow updates screenshot index', (tester) async {
-      await _pumpHost(tester, themeMode: ThemeMode.dark, initialIndex: 0);
+      await _pumpHost(
+        tester,
+        themeMode: ThemeMode.dark,
+        locale: const Locale('en'),
+        initialIndex: 0,
+      );
 
       await tester.tap(find.text('Open Preview'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Next screenshot'));
+      await tester.tap(find.byTooltip('Next'));
       await tester.pumpAndSettle();
 
       expect(find.text('2 / 2'), findsOneWidget);

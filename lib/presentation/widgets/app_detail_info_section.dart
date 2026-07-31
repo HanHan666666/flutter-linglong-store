@@ -135,10 +135,10 @@ class _CopyableValueState extends State<_CopyableValue> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final copyTooltip = l10n?.copy ?? '复制';
-    final copiedTooltip = l10n?.copied(widget.value) ?? '已复制：${widget.value}';
+    final copyTooltip = l10n.copy;
+    final copiedTooltip = l10n.copied(widget.value);
 
     return LayoutBuilder(
       builder: (context, constraints) {

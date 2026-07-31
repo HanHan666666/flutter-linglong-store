@@ -423,7 +423,7 @@ class _AppCardState extends State<AppCard> {
   }
 
   String _resolveLabel(
-    AppLocalizations? l10n,
+    AppLocalizations l10n,
     InstallButtonState state,
     bool isLoading,
   ) {
@@ -438,17 +438,17 @@ class _AppCardState extends State<AppCard> {
       final progressPercent = progressTask.progressPercentLabel;
       return progressTask.progressValue > 0
           ? progressPercent
-          : (l10n?.installing ?? '安装中');
+          : (l10n.installing);
     }
 
     return switch (state) {
-      InstallButtonState.notInstalled => l10n?.install ?? '安装',
-      InstallButtonState.update => l10n?.update_action ?? '更新',
-      InstallButtonState.installed => l10n?.open ?? '打开',
-      InstallButtonState.open => l10n?.open ?? '打开',
-      InstallButtonState.installing => l10n?.installing ?? '安装中',
-      InstallButtonState.pending => l10n?.waitingForInstall ?? '等待安装',
-      InstallButtonState.uninstall => l10n?.uninstall ?? '卸载',
+      InstallButtonState.notInstalled => l10n.install,
+      InstallButtonState.update => l10n.update_action,
+      InstallButtonState.installed => l10n.open,
+      InstallButtonState.open => l10n.open,
+      InstallButtonState.installing => l10n.installing,
+      InstallButtonState.pending => l10n.waitingForInstall,
+      InstallButtonState.uninstall => l10n.uninstall,
     };
   }
 

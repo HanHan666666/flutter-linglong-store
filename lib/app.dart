@@ -231,48 +231,34 @@ class _OgProtocolInstallBootstrapState
   void _showOgInstallEvent(OgInstallEvent event) {
     if (!mounted) return;
 
-    final l10n = AppLocalizations.of(context);
-    final displayName = event.appName ?? event.appId ?? '应用';
+    final l10n = AppLocalizations.of(context)!;
+    final displayName = event.appName ?? event.appId ?? l10n.unknown;
     switch (event.type) {
       case OgInstallEventType.received:
         showAppNotification(
           context,
-          l10n?.ogInstallRequestReceived(displayName) ??
-              '已收到来自网页的安装请求：$displayName',
+          l10n.ogInstallRequestReceived(displayName),
         );
         break;
       case OgInstallEventType.enqueued:
-        showAppSuccess(
-          context,
-          l10n?.ogInstallEnqueued(displayName) ?? '已加入下载管理：$displayName',
-        );
+        showAppSuccess(context, l10n.ogInstallEnqueued(displayName));
         break;
       case OgInstallEventType.invalid:
-        showAppError(
-          context,
-          l10n?.ogInstallInvalidLink ?? '无法识别网页安装链接，仅支持 og://appId',
-        );
+        showAppError(context, l10n.ogInstallInvalidLink);
         break;
       case OgInstallEventType.environmentUnavailable:
-        showAppWarning(
-          context,
-          l10n?.ogInstallEnvironmentUnavailable ?? '玲珑运行环境不可用，暂不能从网页自动安装',
-        );
+        showAppWarning(context, l10n.ogInstallEnvironmentUnavailable);
         break;
       case OgInstallEventType.duplicate:
-        showAppNotification(
-          context,
-          l10n?.ogInstallDuplicate(displayName) ?? '$displayName 已在下载管理中',
-        );
+        showAppNotification(context, l10n.ogInstallDuplicate(displayName));
         break;
       case OgInstallEventType.detailFailed:
         final error = event.error;
         showAppError(
           context,
           error == null || error.isEmpty
-              ? l10n?.ogInstallDetailFailed ?? '无法获取应用信息，安装未开始'
-              : l10n?.ogInstallDetailFailedWithError(error) ??
-                    '无法获取应用信息，安装未开始：$error',
+              ? l10n.ogInstallDetailFailed
+              : l10n.ogInstallDetailFailedWithError(error),
         );
         break;
     }

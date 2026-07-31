@@ -11,19 +11,19 @@
 使用，但页面高度会随新增语言线性增长，语言设置也会逐渐挤占主题、字体和缓存等设置
 的可视空间。
 
-项目的更新卡片、通用应用卡片和仓库管理同时直接使用 Material
-`PopupMenuButton`。Flutter 3.41 中该组件通过 `PopupRoute` 打开菜单，默认执行
+项目的更新卡片、通用应用卡片和仓库管理曾同时直接使用 Material 的旧式路由菜单。
+Flutter 3.41 中该组件通过 `PopupRoute` 打开菜单，默认执行
 300ms 动画，并让菜单项在动画的不同区间分段淡入。单项菜单也会等待动画进度后才
 完整出现，因此用户会明显感到点击反馈滞后。
 
-继续在各页面分别调整 `PopupMenuButton` 只能缓解单个入口，无法统一菜单的视觉、
+继续在各页面分别调整旧组件只能缓解单个入口，无法统一菜单的视觉、
 键盘行为、无障碍和性能边界。需要建立一个应用级锚点菜单原语，并在它之上实现只负责
 Locale 业务的语言选择器。
 
 ## 2. 目标
 
-1. 使用 Flutter Material 3 推荐的 `MenuAnchor` 替代项目内所有
-   `PopupMenuButton`，消除基于路由的 300ms 展开等待。
+1. 使用 Flutter Material 3 推荐的 `MenuAnchor` 替代项目内所有旧式路由菜单，消除
+   基于路由的 300ms 展开等待。
 2. 菜单显示和关闭保持同步，不增加自定义展开、缩放或淡入动画；悬停反馈仍由 Material
    状态层提供。
 3. 集中维护菜单宽高、圆角、边框、阴影、选中态、禁用态和最小交互尺寸。
@@ -45,15 +45,15 @@ Locale 业务的语言选择器。
 
 ## 4. 方案选择
 
-### 4.1 保留 `PopupMenuButton` 并关闭动画
+### 4.1 保留旧式路由菜单并关闭动画
 
 改动最少，但仍保留 Navigator Route、旧式 API 和每个页面独立定义菜单样式的问题。
 它适合作为短期止痛，不适合作为项目的长期组件边界。
 
 ### 4.2 统一封装 `MenuAnchor`（采用）
 
-`MenuAnchor` 使用 Flutter Overlay 锚定菜单，默认同步显示，不包含
-`PopupMenuButton` 的路由动画。它同时负责屏幕边缘避让、方向键、Escape、焦点和点击
+`MenuAnchor` 使用 Flutter Overlay 锚定菜单，默认同步显示，不包含旧组件的路由动画。
+它同时负责屏幕边缘避让、方向键、Escape、焦点和点击
 外部关闭，能够在不重复实现复杂桌面交互的情况下获得直接反馈。
 
 项目新增 `AppAnchoredMenu<T>` 和结构化菜单项模型。Presentation 页面只声明动作值、
@@ -135,7 +135,7 @@ AppAnchoredMenu<T>
 
 ## 8. 迁移范围
 
-本次必须迁移以下旧菜单，完成后 Production 代码不再出现 `PopupMenuButton`：
+本次必须迁移以下旧菜单，完成后 Production 代码不再依赖路由式按钮菜单：
 
 1. 更新应用行的“忽略此应用更新”。
 2. 通用 `AppCard` 的页面注入动作。
@@ -158,7 +158,7 @@ AppAnchoredMenu<T>
 ## 10. 后续维护约定
 
 1. 新增紧邻按钮或字段展开的轻量菜单时必须复用 `AppAnchoredMenu<T>`，禁止重新引入
-   `PopupMenuButton`、`showMenu` 或页面私有 Overlay。
+   路由式按钮菜单、`showMenu` 或页面私有 Overlay。
 2. Linux 原生菜单仅用于右键上下文场景；普通按钮菜单不得为了“原生感”跨平台通道。
 3. 新增语言只按 `docs/38-arb-driven-linux-metadata.md` 的 ARB 流程操作；设置页会自动
    出现新语言，禁止增加语言白名单或单独修改语言选择器。

@@ -45,12 +45,14 @@ class AppDetailSecondaryActions extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         ExpandableIconButton(
+          key: const Key('app_detail_create_shortcut'),
           icon: Icons.shortcut_outlined,
           label: l10n.createDesktopShortcut,
           onTap: onCreateShortcut,
         ),
         const SizedBox(width: 8),
         ExpandableIconButton(
+          key: const Key('app_detail_uninstall'),
           icon: Icons.delete_outline_rounded,
           label: l10n.uninstall,
           onTap: onUninstall,
@@ -59,6 +61,7 @@ class AppDetailSecondaryActions extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         ExpandableIconButton(
+          key: const Key('app_detail_share'),
           icon: Icons.share_outlined,
           label: l10n.shareLink,
           onTap: onShare,

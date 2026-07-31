@@ -85,11 +85,8 @@ class AppDetailRobot extends BaseRobot {
   /// 查找安装指定版本按钮
   PatrolFinder installVersionButton() => $(TextButton).containing('安装');
 
-  /// 查找更多操作菜单按钮
-  PatrolFinder moreMenuButton() => $(PopupMenuButton<String>);
-
-  /// 查找创建快捷方式菜单项
-  PatrolFinder createShortcutMenuItem() => text('创建快捷方式');
+  /// 查找详情页独立的创建桌面快捷方式按钮。
+  PatrolFinder createShortcutButton() => $(#app_detail_create_shortcut);
 
   /// 查找返回按钮
   PatrolFinder backButton() => $(IconButton).first;
@@ -132,15 +129,9 @@ class AppDetailRobot extends BaseRobot {
     await tap(installVersionButton());
   }
 
-  /// 点击更多菜单
-  Future<void> tapMoreMenu() async {
-    await tap(moreMenuButton());
-  }
-
-  /// 点击创建快捷方式
+  /// 点击当前详情页直接展示的创建桌面快捷方式按钮。
   Future<void> tapCreateShortcut() async {
-    await tapMoreMenu();
-    await tap(createShortcutMenuItem());
+    await tap(createShortcutButton());
   }
 
   /// 点击截图查看预览

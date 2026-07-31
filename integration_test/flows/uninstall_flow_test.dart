@@ -12,6 +12,7 @@ import 'package:patrol/patrol.dart';
 import 'package:patrol_finders/patrol_finders.dart' show PatrolTester;
 
 import 'package:linglong_store/app.dart';
+import 'package:linglong_store/presentation/widgets/app_anchored_menu.dart';
 
 import '../robots/base_robot.dart';
 import '../utils/test_helpers.dart';
@@ -89,8 +90,8 @@ class MyAppsRobot extends BaseRobot {
   /// 查找打开按钮
   PatrolFinder openButton() => $(ElevatedButton).containing('打开');
 
-  /// 查找更多菜单按钮
-  PatrolFinder moreMenuButton() => $(PopupMenuButton<String>);
+  /// 查找应用卡片统一的无动画锚点菜单按钮。
+  PatrolFinder moreMenuButton() => $(AppAnchoredMenuButton<String>);
 
   /// 查找卸载菜单项
   PatrolFinder uninstallMenuItem() => text('卸载');

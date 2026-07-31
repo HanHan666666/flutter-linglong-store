@@ -10,6 +10,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 未经允许，禁止使用git worktree功能。
 - 所有的业务细节都要落实到文档里面去，详细的细节文档，docs目录
 - 当前项目要求绝对的高性能，高UI响应速度。
+- 严禁使用 `PopupMenuButton`。按钮和设置字段展开的轻量菜单必须统一复用
+  `AppAnchoredMenu<T>` / `AppAnchoredMenuButton<T>`；右键上下文操作继续使用项目既有
+  原生菜单入口，禁止以 `showMenu` 或页面私有 Overlay 规避此约定。
 - 每开发一个功能点就进行一次commit
 - Git commit 必须遵循 Conventional Commits，统一使用 `type: 简短描述`，不要再写无类型前缀的自然语句提交信息。
 - 在接到用户的任务的时候，先不要着急开始修改代码，要先分析需求，分析代码，列举解决方案，
@@ -296,8 +299,8 @@ Semantics(
 
 - 2026-07-31：紧邻按钮或设置字段展开的轻量菜单统一使用
   `lib/presentation/widgets/app_anchored_menu.dart` 中的 `AppAnchoredMenu<T>`；标准三点
-  入口使用 `AppAnchoredMenuButton<T>`，禁止在 Presentation 重新引入
-  `PopupMenuButton`、`showMenu` 或页面私有 Overlay。右键上下文菜单继续使用既有原生
+  入口使用 `AppAnchoredMenuButton<T>`，禁止在 Presentation 重新引入上述旧式组件、
+  `showMenu` 或页面私有 Overlay。右键上下文菜单继续使用既有原生
   菜单边界。设置页语言选择保持 `AppLanguageSelector` 单一入口，候选语言只允许来自
   `selectableAppLocales`，新增语言按 `docs/38-arb-driven-linux-metadata.md` 的 ARB 流程
   接入，禁止维护第二份语言白名单。菜单不得读取高频 Provider、执行 IO 或增加展开动画；

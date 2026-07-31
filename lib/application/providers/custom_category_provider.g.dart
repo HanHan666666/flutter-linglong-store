@@ -61,7 +61,7 @@ final class CustomCategoryProvider
   }
 }
 
-String _$customCategoryHash() => r'7fc18c2d762017c39a59b22e424b83ff613d0e86';
+String _$customCategoryHash() => r'85067c2224d2a0d5eb8b2e50b38a49c18302fb95';
 
 /// 自定义分类页状态 Provider
 

@@ -1,402 +1,248 @@
-# 40. 应用自更新（App Self-Update）设计方案
+# 40. 应用自更新设计
 
-> 状态：设计中
-> 分支：`feat/app-self-update`
-> 涉及范围：设置页检查更新弹窗、DEB / RPM / AppImage 三种安装包的自动安装
+> 状态：已确认并实现
+>
+> 支持范围：DEB、RPM、AppImage
+>
+> 完成行为：安装新版后由用户手动关闭并重新打开应用
 
-## 1. 背景与目标
+## 1. 目标与边界
 
-### 1.1 现状痛点
+设置页检测到商店自身存在新版本后，用户可以直接下载并安装与当前运行身份匹配的发布资产。
 
-设置页「检查新版本」功能目前非常鸡肋：
+本功能只负责：
 
-1. 检测到新版本后只弹出一个 `AlertDialog`，内容是「发现新版本 X，当前版本 Y」+ 一个「前往下载」按钮；
-2. 「前往下载」只打开**检测成功那一个源**（Gitee 或 GitHub）的 release 页面，没有同时给两个链接；
-3. 弹窗不展示更新日志；
-4. **完全没有安装能力**——用户必须手动下载 deb / rpm / AppImage 再手动安装。
+1. 识别当前进程实际来自 DEB、RPM、AppImage 还是其它手动安装；
+2. 从 Release 资产中选择当前架构对应的安装包；
+3. 下载安装包与同一 Release 的 `hashes.sha256`；
+4. 本地计算安装包 SHA256，完全一致后才调用安装器；
+5. 安装成功后提示用户手动关闭并重新打开应用。
 
-### 1.2 目标
+明确不做：
 
-- **弹窗改进**：检测到新版本时，弹窗只提示有更新，平铺展示 **GitHub** 与 **Gitee** 两个链接按钮（不做下拉选择），另有一个「立即更新」主按钮触发自动安装；
-- **自动安装**：支持 DEB（dpkg 系）、RPM（rpm 系）、AppImage 三种安装包的一键自动安装；
-- **安装方式检测**：两步确认——先检测发行版，再去对应包管理器查询是否安装了本包；包管理器查不到时，若当前以 AppImage 方式运行，则直接检测当前运行的 AppImage 路径并原地替换。
+- 不自动退出或重启应用；
+- 不创建等待旧 PID 退出的重启协调器；
+- 不创建签名更新清单，不使用 Ed25519，不新增发布私钥或 GitHub Secret；
+- 不支持 tar.gz、源码构建、Arch/AUR 或其它手动安装方式的自动覆盖；
+- 不在系统包管理器开始工作后强行取消事务。
 
-## 2. 现状调研
+这里选择 SHA256 的目标是发现下载损坏或资产内容不一致。`hashes.sha256` 与安装包来自同一 HTTPS Release，它不是独立的供应链签名；如以后需要更强的来源真实性保证，应单独提出需求并重新评审密钥生命周期，不能顺手塞进当前流程。
 
-### 2.1 检查更新链路
+## 2. 总体架构
 
-```
-设置页「检查新版本」按钮
-  └─ SettingPage._checkForUpdate()
-      └─ VersionCheckService.checkForUpdate(currentVersion)
-          ├─ 优先 Gitee latest release API
-          └─ 失败回退 GitHub latest release API
-      └─ 返回 sealed VersionCheckResult
-          ├─ NoUpdate / UpdateAvailable / VersionInfoMissing / NetworkError
-```
+依赖方向保持为：
 
-- 文件：`lib/application/services/version_check_service.dart`
-- 入口：`lib/presentation/pages/setting/setting_page.dart`（`_checkForUpdate`）
-- `VersionCheckResultUpdateAvailable` 目前携带 `currentVersion` / `latestVersion` / `releasePageUrl` / `releaseNotes`
-- GitHub / Gitee 的 `latest release` API 返回的 JSON 中带 `assets` 数组（`name` + `browser_download_url` + `size`），**安装包直链可直接复用该接口**，无需新增接口
-
-### 2.2 发布资产现状
-
-从 `release.yml` + 打包脚本确认（`build/scripts/package-{deb,rpm,appimage}.sh`）：
-
-| 架构 | DEB | RPM | AppImage |
-|------|-----|-----|----------|
-| amd64 | `linglong-store_${v}_amd64.deb` | `linglong-store-${v}-1.x86_64.rpm` | `linglong-store-${v}-amd64.AppImage` |
-| arm64 | `linglong-store_${v}_arm64.deb` | `linglong-store-${v}-1.aarch64.rpm` | `linglong-store-${v}-arm64.AppImage` |
-| loong64 | `linglong-store_${v}_loong64.deb` | ❌ 无 | ❌ 无 |
-
-- DEB 包名：`linglong-store`（`build/packaging/linux/deb/control.in`）
-- RPM 包名：`linglong-store`（`build/packaging/linux/rpm/linglong-store.spec.in`）
-- 资产经 `sync-gitee-release.sh` 全量同步到 Gitee，**双源都有完整资产**
-- release 附带 `hashes.sha256` 资产（`append-release-asset-hashes.sh` 生成并随 release 上传），可作为下载后校验来源
-
-### 2.3 可复用基础设施
-
-| 能力 | 位置 | 说明 |
-|------|------|------|
-| 特权执行 | `lib/core/platform/shell_command_executor.dart` + `shellCommandExecutorProvider` | `pkexec` 模式，已有 30 分钟超时、日志、流式输出 |
-| 关闭应用 | `lib/core/platform/window_service.dart` 的 `WindowService.close()` | 通过 window_manager 关窗 |
-| 架构检测 | `globalAppProvider.arch`（`lib/application/providers/global_provider.dart`） | 当前系统架构 |
-| 发行版解析 | `lib/application/services/linux_distribution_resolver.dart` | 目前只识别 UOS，需扩展 debian / rpm 系 |
-| 签名信封 | `lib/core/security/trusted_content_signature.dart` | 特权脚本签名体系（本次仅做 sha256 校验，不扩展脚本签名） |
-| HTTP | Dio（已在 `pubspec.yaml`，`version_check_service` 与 `api_provider` 使用） | 下载安装包 |
-
-## 3. 需求明细
-
-### 3.1 弹窗（阶段一 + 阶段三共用入口）
-
-检测到新版本时弹出：
-
-```
-┌────────────────────────────────────────────┐
-│  检查更新                                   │
-│  发现新版本 vX.Y.Z，当前版本 vA.B.C         │
-│                                            │
-│  [GitHub]  [Gitee]     （链接平铺，点击跳转）│
-│                                            │
-│  [立即更新]              [取消]             │
-└────────────────────────────────────────────┘
+```text
+Presentation
+  AppUpdateFlowDialog（只观察状态和发送事件）
+        ↓
+Application
+  AppSelfUpdateController（唯一状态源、单飞约束）
+        ↓
+  AppSelfUpdateService（业务顺序编排）
+        ↓
+Domain ports
+  Probe / WorkspaceFactory / Installer
+        ↑
+Platform
+  LinuxAppInstallationProbe
+  XdgAppUpdateWorkspaceFactory
+  Dpkg / Rpm / AppImage installers
 ```
 
-- 不展示 changelog；
-- GitHub / Gitee 两个链接按钮**平铺**，不做下拉；
-- 「立即更新」为主按钮，触发自动安装流程；
-- 「取消」关闭弹窗。
+生产实现只在 `lib/bootstrap/production_dependency_overrides.dart` 组装。Application 和 Presentation 不创建 Dio、文件系统或 Shell 具体实现。
 
-### 3.2 自动安装流程
+## 3. Release 资产契约
 
-点击「立即更新」后，依次执行：
+### 3.1 资产来源
 
-```
-检测安装方式 → 选择安装包 → 下载 → sha256 校验 → 安装 → 重启
-```
+`VersionCheckService` 从 Gitee、GitHub 的 latest Release API 读取：
 
-每个阶段在进度弹窗中展示：阶段文字 + 进度条。
+- `tag_name`；
+- Release 页面 URL；
+- 全部 `assets` 的文件名、下载 URL 和可选大小。
 
-## 4. 总体架构
+若镜像报告新版本但没有 `hashes.sha256`，服务继续尝试下一发布源；如果所有源都缺少哈希文件，仍然报告“存在新版本”，让用户可以打开下载页，但自动安装会明确失败为“校验信息缺失”。
 
-新增/修改组件：
+### 3.2 安装包选择
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│ presentation                                                │
-│  setting_page.dart            （修改）弹窗 + 进度弹窗        │
-│  widgets/app_update_flow.dart （新增）进度弹窗 UI           │
-├─────────────────────────────────────────────────────────────┤
-│ application                                                  │
-│  services/app_self_update_service.dart   （新增）编排服务    │
-│  services/app_installation_probe.dart    （新增）安装方式检测│
-│  services/version_check_service.dart     （修改）携带资产    │
-│  services/linux_distribution_resolver.dart（修改）发行版扩展 │
-│  providers/app_self_update_provider.dart（新增）Provider    │
-├─────────────────────────────────────────────────────────────┤
-│ domain                                                        │
-│  models/linux_distribution.dart          （修改）包管理器字段│
-│  models/app_self_update.dart             （新增）自更新模型  │
-├─────────────────────────────────────────────────────────────┤
-│ core                                                          │
-│  platform/file_downloader.dart           （新增）下载服务    │
-└─────────────────────────────────────────────────────────────┘
+客户端不绑定完整版本文件名，只按当前运行身份和架构后缀选择唯一资产：
+
+| 当前身份 | amd64 | arm64 | loong64 |
+|---|---|---|---|
+| DEB | `*amd64.deb` | `*arm64.deb` | `*loong64.deb` |
+| RPM | `*x86_64.rpm` | `*aarch64.rpm` | 不支持 |
+| AppImage | `*-amd64.AppImage` | `*-arm64.AppImage` | 不支持 |
+
+规则同时兼容 stable 和 nightly 的分隔符差异。匹配不到时返回“不支持当前架构”；同一目标匹配到多个文件时拒绝安装，避免随意选择。
+
+### 3.3 SHA256 校验
+
+发布流程已有 `build/scripts/append-release-asset-hashes.sh`，它为发布资产生成标准格式：
+
+```text
+<64 位 SHA256>  <完整资产文件名>
 ```
 
-分层约定（遵循 `docs/02-flutter-architecture.md`）：
-- domain 只放纯模型与纯函数，不依赖 IO；
-- application 编排服务，可注入依赖便于测试；
-- presentation 只消费 Provider，不直接执行 `pkexec` / 下载。
+客户端使用完整文件名精确匹配，不做 `contains` 或相似文件名匹配。缺少目标摘要、重复摘要、摘要不一致都必须在进入安装器之前失败。
 
-## 5. 详细设计
+## 4. 当前运行身份探测
 
-### 5.1 发行版检测扩展
+`LinuxAppInstallationProbe` 判断的是当前进程来源，不是“系统安装过什么”：
 
-`lib/domain/models/linux_distribution.dart`：
+1. `APPIMAGE` 非空且文件存在时，当前进程直接识别为 AppImage；该证据优先级最高；
+2. 否则用 `Platform.resolvedExecutable` 查询 `dpkg-query -S <executable>`；
+3. dpkg 未命中时查询 `rpm -qf --qf '%{NAME}\n' <executable>`；
+4. 只有归属包名精确为 `linglong-store` 才识别为 DEB/RPM；
+5. 其它情况统一为 manual，只允许用户前往下载页手动安装。
 
-- 新增 `LinuxDistributionId.debian`、`LinuxDistributionId.rpm`（保留 `unknown` / `uos`）；
-- 新增字段 `LinuxPackageManager? packageManager`（`dpkg` / `rpm` / `null`）；
-- 新增枚举 `LinuxPackageManager { dpkg, rpm }`。
+因此，机器上残留一个 DEB 包不会把当前运行的 AppImage 误判为 DEB；也不需要把 Debian、Ubuntu、Deepin、Fedora、RHEL、openSUSE 等发行版名称维护到业务模型中。
 
-`lib/application/services/linux_distribution_resolver.dart`：
+## 5. 应用级任务生命周期
 
-- 新增 matcher：
-  - debian 系：`ID` / `ID_LIKE` 含 `debian` / `ubuntu` / `deepin` / `uos` / `linuxmint` / `elementary` 等 → `packageManager = dpkg`；
-  - rpm 系：`ID` / `ID_LIKE` 含 `fedora` / `rhel` / `centos` / `opensuse` / `suse` / `rocky` / `almalinux` 等 → `packageManager = rpm`；
-- UOS 保留原能力标签，同时归入 debian 系（`packageManager = dpkg`）。
+`AppSelfUpdateController` 是唯一任务所有者：
 
-### 5.2 安装方式检测（两步确认 + AppImage 兜底）
+- 保存本次 `VersionCheckResultUpdateAvailable` 快照；
+- 同一时间最多运行一个任务，重复 `start` 保持幂等；
+- 保存阶段、进度、错误和取消信号；
+- 处理开始、重试、取消、重置事件；
+- 弹窗关闭、重建或语言切换不能创建第二个任务。
 
-新文件 `lib/application/services/app_installation_probe.dart`：
+状态阶段如下：
 
-```dart
-enum AppInstallationKind {
-  packageManagerDpkg,  // 包管理器 dpkg 已安装本包
-  packageManagerRpm,   // 包管理器 rpm 已安装本包
-  appImage,            // 以 AppImage 方式运行（APPIMAGE 环境变量）
-  manual,              // 手动解压 tar.gz 等，无法自动更新
-}
+```text
+detectingInstallation
+  → resolvingAsset
+  → downloading
+  → verifying
+  → installing
+  → done
+
+任一可失败阶段 → failed
+安装前用户取消 → cancelled
 ```
 
-检测逻辑：
+下载、选择和校验阶段允许协作取消。进入 `installing` 后不再显示取消按钮，因为中断 dpkg/RPM 事务可能留下半安装状态。
 
-```
-1. 读取 /etc/os-release（File('/etc/os-release')）
-   └─ LinuxDistributionResolver.resolve() → packageManager
-2. 按 packageManager 查包：
-   ├─ dpkg：执行 dpkg -s linglong-store（退出码 0 = 已安装）
-   └─ rpm： 执行 rpm -q linglong-store（退出码 0 = 已安装）
-3. 若包管理器查到已安装 → AppInstallationKind.packageManagerDpkg / Rpm
-4. 若未查到（或 packageManager 为 null）：
-   └─ 检查 Platform.environment['APPIMAGE'] 非空 且 文件存在
-       └─ 是 → AppInstallationKind.appImage（记录真实 AppImage 路径）
-5. 否则 → AppInstallationKind.manual
+`AppUpdateFlowDialog` 只读取 Controller 状态并发送取消、重试、关闭事件。任务运行期间弹窗禁止通过 Escape 或点击遮罩关闭，避免 UI 消失后用户误以为任务停止。
+
+## 6. XDG 下载工作区
+
+每次任务创建隔离目录：
+
+```text
+$XDG_CACHE_HOME/<application-id>/self-update/session-*/
 ```
 
-依赖注入：`osReleaseReader`、`shellExecutor`、`environment` 全部可注入，便于单测。
+未设置 `XDG_CACHE_HOME` 时使用 XDG 标准回退：
 
-### 5.3 发布资产解析
-
-`lib/application/services/version_check_service.dart` 修改：
-
-- 新增领域模型 `ReleaseAsset { name, browserDownloadUrl, size }`（domain 层）；
-- `VersionCheckResultUpdateAvailable` 增加字段 `List<ReleaseAsset> assets`；
-- `checkForUpdate` 从 release JSON 的 `assets` 数组解析出全部资产（含 `hashes.sha256` 本身）；
-- 保留 `releasePageUrl`（GitHub 或 Gitee 中成功源对应的页面）。
-
-新增纯函数 `lib/domain/models/app_self_update.dart`：
-
-- `resolveAssetForPackage({required List<ReleaseAsset> assets, required String arch, required LinuxPackageManager manager})`
-  - dpkg + amd64 → 匹配 `*_amd64.deb`；
-  - dpkg + loong64 → 匹配 `*_loong64.deb`；
-  - rpm + amd64 → 匹配 `*-1.x86_64.rpm`；
-  - rpm + arm64 → 匹配 `*-1.aarch64.rpm`；
-  - AppImage + amd64 → 匹配 `*-amd64.AppImage`；arm64 → `*-arm64.AppImage`；
-  - 匹配规则统一用「文件名前缀 `linglong-store` + 架构段 + 后缀」，不硬编码完整文件名。
-
-架构归一化（amd64 / arm64 / loong64）由 `linux-arch-utils` 的约定 + 现有 `globalAppProvider.arch` 提供；若 arch 无法归一化 → 视为不支持。
-
-### 5.4 文件下载服务
-
-新文件 `lib/core/platform/file_downloader.dart`：
-
-```dart
-class FileDownloader {
-  FileDownloader({Dio? dio});
-  Future<File> downloadToFile({
-    required String url,
-    required String destinationPath,
-    void Function(int received, int total)? onProgress,
-  });
-}
+```text
+$HOME/.cache/<application-id>/self-update/session-*/
 ```
 
-- 使用 Dio 流式下载（`ResponseType.stream`），逐块写入文件；
-- `onProgress` 回调（received / total），total 未知时为 -1；
-- 下载到临时目录（XDG cache 或系统 tmp）；
-- 超时、失败统一抛 `FileDownloadException`。
+下载先写 `<asset>.part`，完成后在同一目录原子改名。以下所有路径都通过 `finally` 释放整个 session：
 
-### 5.5 自更新编排服务
+- 下载失败或超时；
+- 用户取消下载；
+- SHA256 文件缺失或无法解析；
+- SHA256 不一致；
+- 用户取消 pkexec 授权；
+- dpkg、RPM 或 AppImage 安装失败；
+- 安装成功。
 
-新文件 `lib/application/services/app_self_update_service.dart`：
+清理失败只记录日志，不能覆盖真实的安装结果。
 
-```dart
-enum AppSelfUpdatePhase {
-  detectingInstallation,
-  resolvingAsset,
-  downloading,
-  verifying,
-  installing,
-  restarting,
-  done,
-  failed,
-}
+## 7. 安装适配器
 
-class AppSelfUpdateProgress {
-  final AppSelfUpdatePhase phase;
-  final double progress;      // 0..1
-  final String? message;      // 阶段描述（由 UI 用 l10n 本地化，这里传语义 key）
-  final Object? error;
-}
+### 7.1 DEB
+
+校验成功后执行：
+
+```text
+pkexec dpkg -i <downloaded.deb>
 ```
 
-服务接口（全部依赖注入，可测试）：
+### 7.2 RPM
 
-```dart
-class AppSelfUpdateService {
-  AppSelfUpdateService({
-    required AppInstallationProbe probe,
-    required FileDownloader downloader,
-    required ShellCommandExecutor shellExecutor,
-    required String Function() currentArch,
-    required Future<void> Function(String path) restartApp,
-    required Future<void> Function() closeApp,
-  });
+校验成功后执行：
 
-  Future<bool> performUpdate({
-    required VersionCheckResultUpdateAvailable update,
-    required void Function(AppSelfUpdateProgress) onProgress,
-  });
-}
+```text
+pkexec rpm -Uvh <downloaded.rpm>
 ```
 
-#### 5.5.1 DEB 安装路径
+### 7.3 AppImage
 
-```
-1. probe 检测 → packageManagerDpkg
-2. 从 update.assets 按 arch 选 .deb（resolveAssetForPackage）
-3. 下载到临时目录（进度回调）
-4. 下载 hashes.sha256 资产 → 解析本文件 sha256 → 本地计算比对
-5. 校验通过 → shellExecutor.run(['pkexec', 'dpkg', '-i', debPath], timeout: 30min, logOptions)
-6. 安装成功 → 自动重启
-```
+AppImage 使用 Probe 返回的真实 `APPIMAGE` 路径：
 
-#### 5.5.2 RPM 安装路径
+1. 把下载文件复制为同目录 `<oldPath>.new`；
+2. 设置权限为 `0755`；
+3. 同目录 rename 原子替换旧文件；
+4. 当前用户无权替换时，清理 staging 文件并回退：
 
-与 DEB 相同，第 5 步改为 `['pkexec', 'rpm', '-Uvh', rpmPath]`。
-
-#### 5.5.3 AppImage 路径
-
-```
-1. probe 检测 → appImage，拿到 APPIMAGE 真实路径 oldPath
-2. 从 update.assets 按 arch 选 .AppImage
-3. 下载到临时目录（进度回调）
-4. sha256 校验（同上）
-5. 替换：
-   ├─ oldPath 所在目录当前用户可写 → 直接覆盖（File.rename/copy）
-   └─ 不可写 → shellExecutor.run(['pkexec', 'install', '-m755', newPath, oldPath])
-6. 重启：使用 oldPath（已替换为新版）重新拉起进程
+```text
+pkexec install -m 755 <downloaded.AppImage> <oldPath>
 ```
 
-**AppImage 替换为什么安全**：AppImage 运行时把内部 squashfs 挂载到 `/tmp/.mount_xxx`，进程从挂载点（已映射内存）运行，磁盘上的 `.AppImage` 仅是数据源；Linux 打开文件按 inode 持有，运行中覆盖磁盘文件不影响当前进程。桌面快捷方式 `Exec` 指向的路径不变，替换内容后依然有效。
+必须显式恢复执行位。普通 `openWrite`、`copy` 或下载文件通常受 umask 影响成为 `0600/0644`，直接替换会导致下一次无法启动。
 
-#### 5.5.4 手动安装兜底
+三个适配器只负责安装，不管理 Controller、不关闭窗口、不拉起进程。
 
-`AppInstallationKind.manual` 时：
-- 弹窗提示「无法自动更新，请前往下载页手动安装」；
-- 仅提供 GitHub / Gitee 链接，不提供安装按钮（或安装按钮置灰）。
+## 8. 安装完成后的行为
 
-#### 5.5.5 重启实现
+`done` 只表示新版已经写入系统包或 AppImage 原路径。当前旧进程继续运行，弹窗显示：
 
-- deb / rpm：安装完成后调用 `restartApp('/opt/linglong-store/linglong_store')`（dpkg/rpm 固定安装路径）；
-- AppImage：调用 `restartApp(oldAppImagePath)`（**不能用** `/proc/self/exe` / `Platform.resolvedExecutable`，因为 AppImage 下它指向已卸载的挂载点）；
-- 重启方式：`Process.start(executable, const [], mode: ProcessStartMode.detached)`，随后 `closeApp()`（`WindowService.close()`）。
+> 更新已安装，请关闭应用后重新打开以使用新版本
 
-### 5.6 UI 设计
+用户点击“关闭”只关闭结果弹窗，不强制退出应用。用户之后正常关闭窗口并重新打开即可进入新版本。
 
-#### 5.6.1 检测到更新弹窗（修改 `_checkForUpdate`）
+这样避免：
 
-`AlertDialog`：
-- 标题：`l10n.checkUpdate`（检查更新）
-- 内容：`l10n.newVersionFound(latestVersion, currentVersion)`
-- 按钮行 1：`OutlinedButton` **GitHub** + **Gitee**（平铺，`_openUrl` 跳 release 页）
-- 按钮行 2：`FilledButton` **立即更新**（主按钮，触发安装流程）+ `TextButton` **取消**
+- 新旧进程与单实例锁竞争；
+- 不同桌面环境和包类型的重启行为差异；
+- 安装完成但拉起失败导致结果语义混乱；
+- 为一个简单更新功能引入 PID 协调器和额外生命周期状态。
 
-#### 5.6.2 安装进度弹窗（新文件 `lib/presentation/widgets/app_update_flow.dart`）
+## 9. 错误与用户行为
 
-- `showDialog` 全屏/居中弹窗，内容：
-  - 阶段标题（检测安装方式 / 下载中 / 校验中 / 安装中 / 完成 / 失败）
-  - `LinearProgressIndicator`（进度 0..1）
-  - 失败时显示错误 + 「重试」/「关闭」按钮
-  - 安装完成自动进入重启流程，不需要用户确认
+| 场景 | 结果 |
+|---|---|
+| 当前身份不是 DEB/RPM/AppImage | 提示手动下载安装 |
+| 当前架构没有匹配资产 | 提示当前架构不支持自动安装 |
+| 缺少 `hashes.sha256` 或目标摘要 | 中止安装，提示校验信息缺失 |
+| 本地 SHA256 不一致 | 中止安装，提示校验失败 |
+| 下载失败 | 显示失败，可重试或关闭 |
+| 下载/校验阶段取消 | 进入 cancelled，可重试或关闭 |
+| pkexec 授权取消或安装命令失败 | 显示失败并清理下载文件 |
+| 安装成功 | 提示手动关闭并重新打开 |
 
-### 5.7 错误处理与边界情况
+## 10. 维护约定
 
-| 场景 | 处理 |
-|------|------|
-| 检测不到发行版 / 包管理器查询失败 | 回退 AppImage 检测；再失败 → manual |
-| 当前架构无对应包（如 loong64 无 rpm/AppImage） | 提示「当前架构暂无安装包」，仅提供链接 |
-| 下载失败 / 超时 | 进度弹窗显示失败，可重试 |
-| sha256 校验失败 | 中止安装，提示「文件校验失败」，不执行安装 |
-| `hashes.sha256` 资产缺失 | 跳过校验（降级为仅大小校验），或直接拒绝安装（保守策略：拒绝） |
-| 用户取消 pkexec 授权 | pkexec 非零退出 → 提示安装失败/已取消 |
-| 安装完成后自动重启失败 | 提示「更新已安装，请手动重启应用」 |
-| AppImage 旧文件不存在 | 回退 manual 提示 |
+新增包类型时必须新增独立 `AppUpdateInstaller`，并同步扩展资产选择规则；禁止把新分支堆进现有 DEB/RPM/AppImage 适配器。
 
-### 5.8 安全说明
+不得在页面或弹窗中直接下载文件、执行 `pkexec`、识别发行版或保存任务状态。所有任务入口继续收敛到 `AppSelfUpdateController`。
 
-- 下载源固定为官方 GitHub / Gitee release，资产来自 `latest release` API 的官方 assets；
-- deb / rpm 安装前强制 sha256 校验（来源 `hashes.sha256` 官方资产）；
-- pkexec 执行时使用参数数组（`['pkexec', 'dpkg', '-i', filePath]`），不拼接 shell 字符串，避免注入；
-- 安装包文件路径来自临时目录且由本服务生成，不信任任何用户输入路径。
+不得把自更新重新绑定到 `LinuxDistribution`。是否可自动更新只取决于当前可执行文件的真实归属。
 
-## 6. i18n 文案
+不得加入自动重启。若未来产品需求变化，必须先重新评审单实例、进程退出、失败恢复和三种安装身份的差异。
 
-新增（`app_zh.arb` / `app_en.arb` / `app_es.arb` / `app_ru.arb` + `l10n.yaml` 生成）：
+不得自行加入签名清单或发布私钥。当前确认方案是 Release 的 `hashes.sha256` 下载后校验。
 
-| key | zh |
-|-----|-----|
-| `updateNow` | 立即更新 |
-| `updateDownloading` | 正在下载更新包… |
-| `updateVerifying` | 正在校验更新包… |
-| `updateInstalling` | 正在安装更新… |
-| `updateDetectingInstallation` | 正在检测安装方式… |
-| `updateRestarting` | 更新完成，正在重启… |
-| `updateSucceeded` | 更新完成 |
-| `updateFailed` | 更新失败 |
-| `updateRetry` | 重试 |
-| `updateUnsupportedArch` | 当前架构暂不支持自动安装 |
-| `updateManualInstallHint` | 无法自动更新，请手动下载安装 |
-| `updateChecksumFailed` | 更新包校验失败，已中止安装 |
-| `updateRestartFailed` | 更新已安装，请手动重启应用 |
-| `updateCancelled` | 已取消更新 |
-| `noInstallationDetected` | 未检测到可更新的安装方式 |
+## 11. 验证边界
 
-## 7. 测试方案
+自动化验证只覆盖真实风险：
 
-### 7.1 单元测试
+- AppImage 优先级和当前可执行文件归属探测；
+- DEB/RPM/AppImage 后缀选择与 SHA256 精确解析；
+- Controller 禁止并发；
+- 下载、校验、授权失败和取消后的工作区清理；
+- XDG cache 路径；
+- AppImage 替换后的执行权限；
+- UI 成功态的手动重启提示和失败重试。
 
-- `test/unit/domain/models/app_self_update_test.dart`：`resolveAssetForPackage` 按架构/包类型匹配（含 loong64 无 rpm 的边界）；
-- `test/unit/application/services/app_installation_probe_test.dart`：模拟 os-release + shell 输出 + APPIMAGE 环境变量，覆盖 dpkg/rpm/appImage/manual 四种结果；
-- `test/unit/application/services/version_check_service_test.dart`：扩展测试资产解析（携带 assets / hashes.sha256 / 无 assets）；
-- `test/unit/application/services/app_self_update_service_test.dart`：注入 fake 依赖，覆盖 deb / rpm / appimage / manual / 校验失败 / 下载失败 / pkexec 失败 / 重启失败 各路径；
-- `test/unit/core/platform/file_downloader_test.dart`：下载成功 / 进度回调 / 失败。
+交付前执行：
 
-### 7.2 Widget 测试
-
-- `test/widget/presentation/pages/setting_page_test.dart`：扩展检测到更新弹窗（GitHub / Gitee 链接存在、「立即更新」按钮存在）；
-- `test/widget/presentation/widgets/app_update_flow_test.dart`：进度弹窗各阶段渲染。
-
-### 7.3 验证命令
-
-```
+```bash
 flutter analyze
-flutter test test/unit/application/services/version_check_service_test.dart
-flutter test test/unit/application/services/app_installation_probe_test.dart
-flutter test test/unit/application/services/app_self_update_service_test.dart
-flutter test test/unit/domain/models/app_self_update_test.dart
-flutter test test/unit/core/platform/file_downloader_test.dart
-flutter test test/widget/presentation/pages/setting_page_test.dart
-flutter test test/widget/presentation/widgets/app_update_flow_test.dart
+flutter test <自更新相关测试>
+flutter build linux --release
 ```
-
-## 8. 风险与取舍
-
-| 项 | 说明 |
-|----|------|
-| 自动重启体验 | deb/rpm 安装后自动重启应用；若重启失败，回退提示手动重启 |
-| AppImage 无系统集成 | AppImage 场景只替换文件，不重建 .desktop；替换后快捷方式仍指向原路径，有效 |
-| 发行版识别覆盖度 | debian / rpm 两大系覆盖绝大多数桌面发行版；Arch 系（AUR 安装）归入 manual，提示手动更新 |
-| sha256 校验依赖官方资产 | 若 `hashes.sha256` 缺失则拒绝自动安装（保守策略），仅保留链接引导 |
-| pkexec 交互 | 依赖桌面 polkit 弹窗，用户取消 → 提示失败/取消，不破坏现有状态 |

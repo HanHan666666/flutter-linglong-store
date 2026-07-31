@@ -10,6 +10,7 @@ import '../../../application/providers/linglong_environment_management_provider.
 import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/linglong_env_check_result.dart';
+import '../app_anchored_menu.dart';
 import 'environment_management_components.dart';
 
 /// 展示仓库配置并提供仓库操作入口。
@@ -222,9 +223,10 @@ class _RepositoryTile extends StatelessWidget {
               ],
             ),
           ),
-          PopupMenuButton<_RepositoryAction>(
+          AppAnchoredMenuButton<_RepositoryAction>(
             enabled: !isBusy,
             tooltip: l10n.envRepositoryActions,
+            semanticsLabel: l10n.envRepositoryActions,
             onSelected: (action) {
               switch (action) {
                 case _RepositoryAction.editUrl:
@@ -241,31 +243,31 @@ class _RepositoryTile extends StatelessWidget {
                   onRemoveRepository(repo);
               }
             },
-            itemBuilder: (context) => [
-              PopupMenuItem(
+            entries: [
+              AppAnchoredMenuItem(
                 value: _RepositoryAction.editUrl,
-                child: Text(l10n.envEditAddress),
+                label: l10n.envEditAddress,
               ),
-              PopupMenuItem(
+              AppAnchoredMenuItem(
                 value: _RepositoryAction.setDefault,
-                child: Text(l10n.envSetDefault),
+                label: l10n.envSetDefault,
               ),
-              PopupMenuItem(
+              AppAnchoredMenuItem(
                 value: _RepositoryAction.setPriority,
-                child: Text(l10n.envSetPriority),
+                label: l10n.envSetPriority,
               ),
-              PopupMenuItem(
+              AppAnchoredMenuItem(
                 value: _RepositoryAction.enableMirror,
-                child: Text(l10n.envEnableMirror),
+                label: l10n.envEnableMirror,
               ),
-              PopupMenuItem(
+              AppAnchoredMenuItem(
                 value: _RepositoryAction.disableMirror,
-                child: Text(l10n.envDisableMirror),
+                label: l10n.envDisableMirror,
               ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
+              const AppAnchoredMenuDivider(),
+              AppAnchoredMenuItem(
                 value: _RepositoryAction.remove,
-                child: Text(l10n.envRemoveRepositoryTitle),
+                label: l10n.envRemoveRepositoryTitle,
               ),
             ],
           ),

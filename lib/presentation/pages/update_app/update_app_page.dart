@@ -21,6 +21,7 @@ import '../../../domain/models/install_progress.dart';
 import '../../../domain/models/install_queue_state.dart';
 import '../../../domain/models/install_task.dart';
 import '../../widgets/app_icon.dart';
+import '../../widgets/app_anchored_menu.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/ignored_updates_dialog.dart';
 import '../../widgets/install_to_download_flyout.dart';
@@ -513,43 +514,27 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
   /// 让用户仍能理解该能力存在但此刻不可用。
   Widget _buildOverflowMenu(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Semantics(
-      button: true,
-      label: l10n.a11yUpdateAppMoreActions(widget.app.name),
-      excludeSemantics: true,
-      child: PopupMenuButton<_UpdateAppMenuAction>(
-        key: ValueKey('update-app-more-${widget.app.appId}'),
-        tooltip: l10n.moreActions,
-        icon: const ExcludeSemantics(child: Icon(Icons.more_vert)),
-        onSelected: (action) {
-          switch (action) {
-            case _UpdateAppMenuAction.ignoreUpdates:
-              unawaited(widget.onIgnore());
-              break;
-          }
-        },
-        itemBuilder: (context) => [
-          PopupMenuItem<_UpdateAppMenuAction>(
-            value: _UpdateAppMenuAction.ignoreUpdates,
-            enabled: widget.canIgnore,
-            child: Semantics(
-              button: true,
-              enabled: widget.canIgnore,
-              label: l10n.a11yIgnoreAppUpdates(widget.app.name),
-              excludeSemantics: true,
-              child: Row(
-                children: [
-                  const ExcludeSemantics(
-                    child: Icon(Icons.notifications_off_outlined, size: 18),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Flexible(child: Text(l10n.ignoreAppUpdates)),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+    return AppAnchoredMenuButton<_UpdateAppMenuAction>(
+      buttonKey: ValueKey('update-app-more-${widget.app.appId}'),
+      tooltip: l10n.moreActions,
+      semanticsLabel: l10n.a11yUpdateAppMoreActions(widget.app.name),
+      onSelected: (action) {
+        switch (action) {
+          case _UpdateAppMenuAction.ignoreUpdates:
+            unawaited(widget.onIgnore());
+            break;
+        }
+      },
+      entries: [
+        AppAnchoredMenuItem<_UpdateAppMenuAction>(
+          key: ValueKey('ignore-updates-${widget.app.appId}'),
+          value: _UpdateAppMenuAction.ignoreUpdates,
+          label: l10n.ignoreAppUpdates,
+          semanticsLabel: l10n.a11yIgnoreAppUpdates(widget.app.name),
+          icon: Icons.notifications_off_outlined,
+          enabled: widget.canIgnore,
+        ),
+      ],
     );
   }
 

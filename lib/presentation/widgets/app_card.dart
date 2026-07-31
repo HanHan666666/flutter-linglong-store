@@ -5,6 +5,7 @@ import '../../core/accessibility/accessibility.dart';
 import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../domain/models/install_task.dart';
+import 'app_anchored_menu.dart';
 import 'app_icon.dart';
 import 'install_button.dart';
 
@@ -395,8 +396,10 @@ class _AppCardState extends State<AppCard> {
   }
 
   Widget _buildOverflowMenu() {
-    return PopupMenuButton<String>(
-      icon: const Icon(Icons.more_vert),
+    final l10n = AppLocalizations.of(context)!;
+    return AppAnchoredMenuButton<String>(
+      tooltip: l10n.moreActions,
+      semanticsLabel: l10n.moreActions,
       onSelected: (value) {
         for (final action in widget.menuActions) {
           if (action.value == value) {
@@ -405,17 +408,12 @@ class _AppCardState extends State<AppCard> {
           }
         }
       },
-      itemBuilder: (context) => widget.menuActions
+      entries: widget.menuActions
           .map(
-            (action) => PopupMenuItem<String>(
+            (action) => AppAnchoredMenuItem<String>(
               value: action.value,
-              child: Row(
-                children: [
-                  Icon(action.icon, size: 20),
-                  const SizedBox(width: 12),
-                  Text(action.label),
-                ],
-              ),
+              label: action.label,
+              icon: action.icon,
             ),
           )
           .toList(),

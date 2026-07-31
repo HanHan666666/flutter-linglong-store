@@ -708,14 +708,11 @@ void main() {
       await tester.tap(
         find.byKey(const ValueKey('update-app-more-org.example.demo')),
       );
-      // 当前行持续显示安装进度动画，不能用 pumpAndSettle 等待“完全静止”；
-      // 只推进菜单展开动画所需时间即可检查禁用状态。
-      await tester.pump(const Duration(milliseconds: 300));
+      // 锚点菜单同步显示，不再为旧 PopupMenuRoute 推进 300ms 动画。
+      await tester.pump();
 
-      final disabledItem = tester.widget<PopupMenuItem<dynamic>>(
-        find.byWidgetPredicate(
-          (widget) => widget is PopupMenuItem<dynamic> && !widget.enabled,
-        ),
+      final disabledItem = tester.widget<MenuItemButton>(
+        find.byKey(const ValueKey('ignore-updates-org.example.demo')),
       );
       expect(disabledItem.enabled, isFalse);
       expect(storage.load(), isEmpty);

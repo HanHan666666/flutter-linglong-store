@@ -29,6 +29,20 @@ void main() {
       );
     });
 
+    test('俄罗斯区域 Locale 归一为俄语资源', () {
+      expect(
+        resolveInitialAppLocale(
+          persistedLanguageCode: null,
+          platformLocales: const [Locale('ru', 'RU')],
+        ),
+        const Locale('ru'),
+      );
+      final l10n = appLocalizationsForLocale('ru_RU');
+      expect(l10n.languageSelfName, 'Русский');
+      expect(l10n.updateBatchAllSucceededTitle(1), 'Обновлено 1 приложение');
+      expect(l10n.updateBatchAllSucceededTitle(5), 'Обновлено 5 приложений');
+    });
+
     test('没有受支持语言时回退产品默认语言', () {
       expect(
         resolveInitialAppLocale(

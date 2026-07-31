@@ -342,7 +342,11 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
   /// 构建当前任务阶段、百分比、进度条、速度和版本信息。
   Widget _buildProgressBar(BuildContext context) {
     final appColors = context.appColors;
+    final l10n = AppLocalizations.of(context)!;
     final message = widget.statusMessage.trim();
+    final displayMessage = message.isNotEmpty
+        ? message
+        : l10n.installStatusProcessing;
     final speed = widget.downloadSpeed?.trim();
 
     return Column(
@@ -352,10 +356,10 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
           children: [
             Expanded(
               child: Tooltip(
-                message: message.isNotEmpty ? message : '处理中',
+                message: displayMessage,
                 constraints: const BoxConstraints(maxWidth: 500),
                 child: Text(
-                  message.isNotEmpty ? message : '处理中',
+                  displayMessage,
                   style: context.appTextStyles.caption.copyWith(
                     color: appColors.textSecondary,
                   ),

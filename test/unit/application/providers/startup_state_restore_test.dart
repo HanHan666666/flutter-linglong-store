@@ -85,5 +85,21 @@ void main() {
         expect(state.toString(), isNot(contains('repo:test')));
       },
     );
+
+    test('global provider persists Russian locale selection', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(container.dispose);
+
+      await container
+          .read(globalAppProvider.notifier)
+          .setLocale(const Locale('ru', 'RU'));
+
+      expect(container.read(globalAppProvider).locale, const Locale('ru'));
+      expect(prefs.getString('linglong-store-language'), 'ru');
+    });
   });
 }

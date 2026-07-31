@@ -67,6 +67,10 @@ void main(List<String> arguments) async {
     ),
     platformLocales: WidgetsBinding.instance.platformDispatcher.locales,
   );
+  // 窗口显示前写入首选语言标题，避免非中文系统短暂显示中文标题。
+  await WindowService.setTitle(
+    appLocalizationsForLocale(initialLocale).appTitle,
+  );
 
   // 初始化网络客户端，避免 Provider 首次读取时访问未初始化的 Dio 单例
   ApiClient.init(

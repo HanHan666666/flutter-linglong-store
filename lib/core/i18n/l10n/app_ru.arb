@@ -1,0 +1,1292 @@
+{
+  "@@locale": "ru",
+  "appTitle": "Магазин Linyaps — версия сообщества",
+  "recommend": "Рекомендации",
+  "allApps": "Все приложения",
+  "ranking": "Рейтинг",
+  "myApps": "Мои приложения",
+  "update": "Обновления",
+  "settings": "Настройки",
+  "category": "Категория",
+  "office": "Офис",
+  "system": "Система",
+  "develop": "Разработка",
+  "entertainment": "Развлечение",
+  "searchPlaceholder": "Ищите приложения здесь",
+  "search": "Поиск",
+  "refresh": "Обновить",
+  "linglongRecommend": "Рекомендации Linyaps",
+  "loading": "Загрузка...",
+  "installing": "Установка...",
+  "success": "Успех",
+  "failed": "Ошибка",
+  "cancel": "Отмена",
+  "noMoreData": "Больше нет данных",
+  "install": "Установить",
+  "uninstall": "Удалить",
+  "open": "Открыть",
+  "update_action": "Обновить",
+  "run": "Запустить",
+  "confirm": "Подтвердить",
+  "viewDetail": "Посмотреть детали",
+  "screenShots": "Скриншоты",
+  "versionSelect": "Выбор версии",
+  "versionNumber": "Версия",
+  "appType": "Тип приложения",
+  "channel": "Канал",
+  "mode": "Режим",
+  "repoSource": "Источник репо",
+  "fileSize": "Размер файла",
+  "downloadCount": "Загрузки",
+  "operation": "Операция",
+  "linglongProcess": "Процессы Linyaps",
+  "baseSetting": "Настройки",
+  "about": "О приложении",
+  "envMissing": "Отсутствует среда Linyaps",
+  "envMissingDetail": "Компоненты Linyaps отсутствуют или устарели. Пожалуйста, сначала установите их.",
+  "autoInstall": "Автоматическая установка",
+  "manualInstall": "Ручная установка",
+  "recheck": "Перепроверить",
+  "exitStore": "Выход",
+  "errorNetwork": "Ошибка сети",
+  "errorNetworkDetail": "Пожалуйста, проверьте сетевое соединение и повторите попытку.",
+  "errorInstallFailed": "Установка не удалась",
+  "errorUninstallFailed": "Удаление не удалось",
+  "errorUpdateFailed": "Обновление не удалось",
+  "errorUnknown": "Неизвестная ошибка",
+  "retry": "Повторить попытку",
+  "downloading": "Загрузка...",
+  "downloadComplete": "Загрузка завершена",
+  "installComplete": "Установка завершена",
+  "uninstallComplete": "Удаление завершено",
+  "updateComplete": "Обновление завершено",
+  "noApps": "Нет доступных приложений",
+  "noInstalledApps": "Нет установленных приложений",
+  "noInstalledAppsHint": "Вы еще не установили ни одно приложение Linyaps, ознакомьтесь с рекомендациями.",
+  "noUpdateApps": "Нет доступных обновлений",
+  "version": "Версия",
+  "size": "Размер",
+  "description": "Описание",
+  "developer": "Разработчик",
+  "confirmDelete": "Подтвердить удаление",
+  "confirmDeleteMessage": "Вы уверены, что хотите удалить этот элемент? Это действие невозможно отменить.",
+  "confirmUninstall": "Подтвердить удаление",
+  "confirmUninstallMessage": "Вы уверены, что хотите удалить это приложение?",
+  "noData": "Нет данных",
+  "noDataDescription": "Здесь пока нет контента",
+  "searchApps": "Поиск приложений...",
+  "languageSettings": "Языковые настройки",
+  "themeSettings": "Настройки темы",
+  "fontSettings": "Настройки шрифта",
+  "cacheManagement": "Управление кэшем",
+  "storeOptions": "Параметры магазина",
+  "fontSettingsHint": "Настройки системного шрифта остаются базовыми значениями, а приведенные ниже настройки накладываются сверху.",
+  "fontSizeAdjustment": "Размер шрифта",
+  "fontWeightAdjustmentLabel": "Вес шрифта",
+  "fontWeightLighter": "Тоньше",
+  "fontWeightNormal": "Стандартный",
+  "fontWeightBolder": "Жирнее",
+  "fontScalePercent": "{percent}%",
+  "@fontScalePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "checkUpdate": "Проверьте наличие обновлений",
+  "currentVersion": "Текущая версия: {version}.",
+  "@currentVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "newVersionFound": "Найдена новая версия {tagName}, текущая версия {currentVersion}",
+  "@newVersionFound": {
+    "placeholders": {
+      "tagName": {
+        "type": "String"
+      },
+      "currentVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadyLatest": "Уже последняя версия {version}",
+  "@alreadyLatest": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "checkingUpdate": "Проверяем наличие обновлений...",
+  "goDownload": "Перейти к загрузке",
+  "cacheSize": "Размер кэша",
+  "startupCheckUpdate": "Проверяйте обновления магазина при запуске",
+  "startupCheckUpdateDesc": "Проверяйте, доступна ли новая версия при каждом запуске",
+  "systemNotifications": "Системные уведомления",
+  "systemNotificationsDescription": "Показывать результат обновления в уведомлении на рабочем столе после завершения обновления всех.",
+  "updateBatchAllSucceededTitle": "{count, plural, one{Обновлено {count} приложение} few{Обновлено {count} приложения} many{Обновлено {count} приложений} other{Обновлено {count} приложения}}",
+  "@updateBatchAllSucceededTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchFinishedTitle": "Пакетное обновление завершено",
+  "updateBatchNoSuccessTitle": "Не удалось обновить приложения",
+  "updateBatchResultSummary": "Результат: {summary}",
+  "@updateBatchResultSummary": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchResultSeparator": ",",
+  "updateBatchSucceededCount": "Успешно: {count}",
+  "@updateBatchSucceededCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchFailedCount": "С ошибкой: {count}",
+  "@updateBatchFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchCancelledCount": "Отменено: {count}",
+  "@updateBatchCancelledCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchInterruptedCount": "Прервано: {count}",
+  "@updateBatchInterruptedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchAppNameSeparator": ",",
+  "updateBatchUpdatedApps": "Обновлено: {names}.",
+  "@updateBatchUpdatedApps": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchUpdatedAppsOverflow": "Обновлено: {names} и еще {remainingCount}.",
+  "@updateBatchUpdatedAppsOverflow": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "remainingCount": {
+        "type": "int"
+      }
+    }
+  },
+  "softwareRendering": "Программный рендеринг",
+  "softwareRenderingEnabled": "Программный рендеринг",
+  "hardwareRenderingEnabled": "Аппаратный рендеринг",
+  "rendererModeDetecting": "Определение текущего состояния рендеринга…",
+  "rendererModeDetectFailed": "Текущее состояние рендеринга не удалось прочитать, но вы все равно можете сохранить настройки для следующего запуска.",
+  "rendererModeCurrentStatus": "Сейчас используется режим «{mode}». {reason}",
+  "@rendererModeCurrentStatus": {
+    "placeholders": {
+      "mode": {},
+      "reason": {}
+    }
+  },
+  "rendererModeReasonEnvironment": "Рендеринг контролируется переменной среды {value}.",
+  "@rendererModeReasonEnvironment": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "rendererModeReasonUserPreference": "Сохраненная настройка в настоящее время действует.",
+  "rendererModeReasonCpuFallback": "Программный рендеринг на этом устройстве включен по умолчанию для лучшей совместимости.",
+  "rendererModeReasonDefault": "Аппаратный рендеринг на этом устройстве включен по умолчанию.",
+  "rendererModeEnvLocked": "Обнаружена переменная среды {value}. Рендеринг контролируется системной средой и не может быть изменен здесь.",
+  "@rendererModeEnvLocked": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "rendererModeNextLaunchStatus": "При следующем запуске приложение будет использовать {mode}.",
+  "@rendererModeNextLaunchStatus": {
+    "placeholders": {
+      "mode": {}
+    }
+  },
+  "rendererModeWhitelistHint": "На этом устройстве рекомендуется программный рендеринг для более стабильного вывода изображения.",
+  "rendererModeHardwareRiskHint": "Аппаратный рендеринг будет использован при следующем запуске. Если интерфейс отображается неправильно, используйте команду ниже для восстановления.",
+  "rendererModeDisableWarningTitle": "Подтвердите отключение программного рендеринга",
+  "rendererModeDisableWarningMessage": "Если на этом устройстве отключен программный рендеринг, приложение может отображаться неправильно. Для большей стабильности рекомендуется оставить включенным программный рендеринг.",
+  "rendererModeDetectedCpu": "Обнаруженный процессор: {cpu}",
+  "@rendererModeDetectedCpu": {
+    "placeholders": {
+      "cpu": {}
+    }
+  },
+  "rendererModeDisableBlackScreenHint": "Если приложение не отображается правильно при следующем запуске, выполните приведенную ниже команду в терминале, а затем снова откройте приложение.",
+  "rendererModeDataDirectoryLabel": "Каталог данных",
+  "rendererModeDeleteCommandLabel": "Удалить команду",
+  "rendererModeSaveCommandHint": "Скопируйте и сохраните эту команду сейчас, чтобы вы могли восстановить приложение, если оно больше не отображается правильно.",
+  "rendererModeDisableConfirm": "Продолжить",
+  "rendererModeSavedSoftware": "Программный рендеринг включен для следующего запуска.",
+  "rendererModeSavedHardware": "Аппаратный рендеринг включен для следующего запуска.",
+  "rendererModeSaveFailed": "Не удалось сохранить настройки рендеринга. Пожалуйста, попробуйте еще раз.",
+  "showBaseServices": "Показать базовые службы времени выполнения",
+  "showBaseServicesDesc": "Показывать базовые службы времени выполнения в списке установленных.",
+  "cleanDeprecatedServices": "Очистка устаревших базовых служб",
+  "cleanDeprecatedServicesDesc": "Удалите неиспользуемые базовые службы среды выполнения, чтобы освободить место на диске.",
+  "checkNewVersion": "Проверить новую версию",
+  "feedbackMenu": "Обратная связь",
+  "officialWebsite": "Официальный сайт",
+  "communityExchange": "Сообщество",
+  "aboutDevelopers": "Разработчики",
+  "feedbackTitle": "Обратная связь",
+  "uploadLog": "Также загрузите файл журнала",
+  "noPrivacyInfo": "Журналы не содержат личной информации о конфиденциальности.",
+  "submitFeedback": "Отправить",
+  "feedbackHint": "Пожалуйста, опишите проблему",
+  "feedbackSuccess": "Спасибо за ваш отзыв!",
+  "feedbackFailed": "Не удалось отправить отзыв. Повторите попытку позже.",
+  "confirmExit": "Подтвердить выход",
+  "exitWithInstalling": "Есть текущие задачи по установке. Вы уверены, что хотите выйти?",
+  "exitBtn": "Выход",
+  "downloadManager": "Менеджер загрузок",
+  "ogInstallRequestReceived": "Получен запрос на веб-установку {appName}.",
+  "@ogInstallRequestReceived": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallEnqueued": "В диспетчер загрузок добавлено: {appName}.",
+  "@ogInstallEnqueued": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallInvalidLink": "Невозможно распознать эту ссылку для веб-установки. Поддерживается только og://appId.",
+  "ogInstallEnvironmentUnavailable": "Среда Linyaps недоступна, поэтому веб-установка пока не может начаться.",
+  "ogInstallDuplicate": "{appName} уже находится в диспетчере загрузок.",
+  "@ogInstallDuplicate": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallDetailFailed": "Не удалось загрузить информацию о приложении. Установка не началась.",
+  "ogInstallDetailFailedWithError": "Не удалось загрузить информацию о приложении. Установка не началась: {error}",
+  "@ogInstallDetailFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearRecords": "Очистить записи",
+  "noDownloadTasks": "Нет задач по загрузке",
+  "cannotOpenLink": "Не удалось открыть ссылку: {url}",
+  "@cannotOpenLink": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "envCheckPassed": "Установка завершена, проверка среды пройдена",
+  "envCheckFailed": "Установка завершена, но среда по-прежнему работает некорректно. Проверьте её состояние.",
+  "launching": "Запускаем {appName}...",
+  "@launching": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "launchFailed": "Запуск не удался: {error}",
+  "@launchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "copied": "Скопировано: {value}",
+  "@copied": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "shareLink": "Делиться",
+  "shareMessage": "Взгляните на \"{name}\"",
+  "@shareMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linkCopied": "Ссылка скопирована — поделитесь",
+  "shareFailed": "Не удалось поделиться",
+  "createDesktopShortcut": "Создать ярлык на рабочем столе",
+  "appDetailTitle": "Подробности приложения",
+  "appNotFound": "Информация о приложении не найдена",
+  "noVersionHistory": "Нет истории версий",
+  "installedBadge": "Установлено",
+  "versionInstallTargetMissing": "Установленная версия не найдена. Обновите и повторите попытку.",
+  "uninstallFailed": "Не удалось удалить: {result}.",
+  "@uninstallFailed": {
+    "placeholders": {
+      "result": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallSuccess": "{name} удален.",
+  "@uninstallSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallError": "Ошибка удаления: {error}.",
+  "@uninstallError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "commandCopied": "Команда скопирована в буфер обмена, вставьте и запустите в терминале.",
+  "copy": "Копировать",
+  "copyLog": "Копировать журнал",
+  "copySucceeded": "Скопировано",
+  "copyErrorMessage": "Копировать сообщение об ошибке",
+  "skipCheck": "Пропустить проверку",
+  "loadFailed": "Загрузка не удалась",
+  "shortcutCreated": "Ярлык создан.",
+  "appComments": "Комментарии",
+  "appCommentsEmpty": "Комментариев пока нет. Оставьте первый комментарий.",
+  "commentInputHint": "Поделитесь своим опытом использования этого приложения",
+  "submitComment": "Опубликовать комментарий",
+  "commentVersionLabel": "Версия",
+  "anonymousComment": "Анонимный пользователь",
+  "commentHelpful": "Полезный",
+  "commentNotHelpful": "Не полезно",
+  "commentAnonymousHint": "Анонимные комментарии отображаются в обратном хронологическом порядке.",
+  "commentSubmitSuccess": "Комментарий отправлен",
+  "commentSubmitFailed": "Не удалось отправить комментарий: {error}.",
+  "@commentSubmitFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreateFailed": "Ошибка создания: {error}",
+  "@shortcutCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "envCheckTitle": "Проверка среды",
+  "checkingLinglongEnv": "Проверка среды Linyaps...",
+  "unknownStatus": "Неизвестный статус",
+  "llCliVersion": "Версия ll-cli",
+  "notDetected": "Не обнаружен",
+  "errorMessage": "Сообщение об ошибке",
+  "repoShowFailureTitle": "Не удалось выполнить команду чтения репозитория",
+  "repoShowFailureCommand": "Не удалось прочитать конфигурацию репозитория с помощью {command}.",
+  "@repoShowFailureCommand": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "repoShowFailureReason": "Эта команда считывает конфигурацию репозитория через системный сервис org.deepin.linglong.PackageManager.service. Это может привести к сбою, если служба не запущена.",
+  "repoShowFailureInstalledQuestion": "Вы уже установили среду приложения?",
+  "repoShowFailureRestartHint": "Если ll-cli и среда приложения уже установлены, попробуйте перезапустить эту системную службу и проверьте еще раз.",
+  "restartPackageManagerService": "Перезапустите org.deepin.linglong.PackageManager.service.",
+  "restartingPackageManagerService": "Перезапуск org.deepin.linglong.PackageManager.service...",
+  "packageManagerServiceRestartPassed": "Служба перезапущена, проверка среды пройдена",
+  "packageManagerServiceRestartStillFailed": "Служба перезапущена, но среда по-прежнему ненормальна. Проверьте сведения об ошибке.",
+  "packageManagerServiceRestartFailed": "Не удалось перезапустить службу: {error}.",
+  "@packageManagerServiceRestartFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "installingLinglong": "Установка...",
+  "openInstallLogDirectory": "Открыть каталог журналов",
+  "cannotOpenDirectory": "Невозможно открыть каталог: {path}.",
+  "@cannotOpenDirectory": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "appIntroduction": "Введение в приложение",
+  "collapse": "Свернуть",
+  "expandAll": "Развернуть все",
+  "packageName": "Имя пакета",
+  "architecture": "Архитектура",
+  "channelLabel": "Канал",
+  "runtime": "Время выполнения",
+  "license": "Лицензия",
+  "homepage": "Домашняя страница",
+  "appInfo": "Информация о приложении",
+  "versionHistory": "История версий",
+  "versionListLoadFailed": "Не удалось загрузить список версий, повторите попытку.",
+  "versionListUpdateFailed": "Не удалось обновить список версий. Показаны последние результаты.",
+  "uninstallApp": "Удалить приложение",
+  "uninstallConfirmMessage": "Вы уверены, что хотите удалить {name}?\nДанные приложения будут удалены без возможности восстановления.",
+  "@uninstallConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noDescription": "Нет описания",
+  "categoryLabel": "Категория",
+  "searchNotFound": "Похожие приложения не найдены",
+  "searchTryOtherKeywords": "Попробуйте другие ключевые слова",
+  "searchInputHint": "Введите ключевые слова в поле поиска выше",
+  "searchPressEnter": "Нажмите Enter для поиска",
+  "searchResultCount": "{count, plural, one{Найден {count} результат} few{Найдено {count} результата} many{Найдено {count} результатов} other{Найдено {count} результата}}",
+  "@searchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchInstalledApps": "Поиск установленных приложений",
+  "noMatchingApp": "Подходящее приложение не найдено",
+  "noMatchingAppHint": "Приложение для \"{query}\" не найдено.",
+  "@noMatchingAppHint": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "updateCount": "{count, plural, one{Доступно обновление для {count} приложения} few{Доступны обновления для {count} приложений} many{Доступны обновления для {count} приложений} other{Доступны обновления для {count} приложения}}",
+  "@updateCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ignoredUpdatesCount": "Игнорируется ({count})",
+  "@ignoredUpdatesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ignoredUpdatesTitle": "Игнорируемые обновления",
+  "ignoredUpdatesEmptyTitle": "Нет игнорируемых приложений",
+  "ignoredUpdatesEmptyDescription": "Используйте меню «Дополнительно» обновляемого приложения, чтобы скрыть будущие обновления.",
+  "ignoreAppUpdates": "Игнорировать обновления для этого приложения",
+  "restoreUpdateNotifications": "Восстановить оповещения об обновлениях",
+  "ignoredVersion": "Версия при игнорировании: {version}",
+  "@ignoredVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateSuccess": "Будущие обновления для {appName} игнорируются. Восстановите их из игнорируемого.",
+  "@ignoreUpdateSuccess": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateActiveTask": "{appName} уже находится в очереди обновлений, и его пока нельзя игнорировать.",
+  "@ignoreUpdateActiveTask": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateFailed": "Не удалось сохранить игнорируемую настройку обновления. Попробуйте еще раз.",
+  "ignoreUpdateInvalidApp": "Это приложение нельзя игнорировать, поскольку его идентификатор недействителен.",
+  "restoreUpdateSuccess": "Оповещения об обновлениях восстановлены для {appName}.",
+  "@restoreUpdateSuccess": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreUpdateFailed": "Не удалось восстановить оповещения об обновлениях. Попробуйте еще раз.",
+  "restoreUpdateRefreshFailed": "Оповещения об обновлениях были восстановлены, но проверка обновлений не удалась. Повторите попытку позже.",
+  "a11yManageIgnoredUpdates": "Управление игнорируемыми обновлениями, приложений: {count}",
+  "@a11yManageIgnoredUpdates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "a11yIgnoreAppUpdates": "Игнорировать будущие обновления для {appName}.",
+  "@a11yIgnoreAppUpdates": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yUpdateAppMoreActions": "Дополнительные действия по обновлению для {appName}",
+  "@a11yUpdateAppMoreActions": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yRestoreAppUpdates": "Восстановить оповещения об обновлениях для {appName}",
+  "@a11yRestoreAppUpdates": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yIgnoredUpdateItem": "{appName}, идентификатор приложения {appId}, версия при игнорировании {version}",
+  "@a11yIgnoredUpdateItem": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "appId": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updating": "Обновление...",
+  "updateAll": "Обновить все",
+  "updateCheckFailed": "Проверка обновлений не удалась",
+  "noUpdate": "Нет обновлений",
+  "allAppsUpToDate": "Все ваши приложения обновлены",
+  "noMore": "Больше не надо",
+  "appTitleShort": "Магазин Linyaps",
+  "detectingEnv": "Проверка среды Linyaps...",
+  "stepEnvCheck": "Проверка среды",
+  "stepAppLoad": "Загрузка приложений",
+  "stepUpdateCheck": "Проверка обновлений",
+  "stepQueueRecovery": "Восстановление очереди",
+  "launchFailedTitle": "Запуск не удался",
+  "skip": "Пропускать",
+  "cannotGetVersion": "Невозможно получить информацию о версии",
+  "newVersionAvailable": "Доступна новая версия {version}!\nТекущая версия: {current}",
+  "@newVersionAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      }
+    }
+  },
+  "languageZh": "Китайский",
+  "languageSelfName": "Русский",
+  "themeFollowSystem": "Следовать за системой",
+  "themeLight": "Светлый режим",
+  "themeDark": "Темный режим",
+  "clearingCache": "Очистка...",
+  "clearCache": "Очистить кэш",
+  "clearCacheDesc": "Очистка кэша может освободить место для хранения, но приведет к повторной загрузке значков приложений и некоторых данных.",
+  "clearCacheConfirm": "Подтвердить очистку кэша",
+  "clearCacheMessage": "Очистить весь кеш?",
+  "cacheCleared": "Кэш очищен",
+  "clearCacheFailed": "Не удалось очистить кэш",
+  "appVersion": "Версия приложения",
+  "appCount": "Всего приложений",
+  "systemArch": "Системная архитектура",
+  "linglongVersion": "Версия Linyaps",
+  "checkNetwork": "Пожалуйста, проверьте сеть и повторите попытку.",
+  "copyContainerCommand": "Команда копирования контейнера",
+  "commandCopiedToClipboard": "Команда скопирована в буфер обмена",
+  "copyAppId": "Скопировать идентификатор приложения",
+  "stopSuccess": "{name} остановлен",
+  "@stopSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stopFailed": "Остановить не удалось",
+  "processRefreshFailed": "Не удалось обновить список процессов...",
+  "noRunningApps": "Нет запущенных приложений",
+  "notRefreshed": "Не обновлено",
+  "lastRefresh": "Последнее обновление",
+  "refreshing": "Обновление...",
+  "appName": "Имя приложения",
+  "versionNo": "Версия",
+  "source": "Источник",
+  "containerId": "Идентификатор контейнера",
+  "appRunningTitle": "Приложение работает",
+  "appRunningMessage": "Приложение запущено, сначала закройте его",
+  "downgradeConfirm": "Подтвердить переход на более раннюю версию",
+  "downgradeMessage": "Целевая версия ниже. Подтвердить переход на более раннюю версию?",
+  "alreadyInstalledVersion": "Эта версия установлена",
+  "waiting": "Ожидание",
+  "completed": "Завершено",
+  "remove": "Удалить",
+  "feedbackCategories": "Ошибка магазина, обновление приложения, проблема с приложением",
+  "feedbackCategory": "Категория",
+  "overview": "Обзор",
+  "overviewHint": "Кратко опишите проблему",
+  "detailDescription": "Подробное описание",
+  "none": "Нет",
+  "clearSearch": "Очистить поиск",
+  "minimize": "Свернуть",
+  "restore": "Восстановить",
+  "maximize": "Максимизировать",
+  "close": "Закрыть",
+  "goRecommend": "Проверить рекомендации",
+  "processRefreshFailedHint": "Не удалось обновить список процессов, показаны последние успешные данные",
+  "moreActions": "Дополнительные действия",
+  "appRunningUninstallMessage": "{name} в настоящее время работает. Перед удалением все экземпляры должны быть закрыты.\nПринудительно закрыть и удалить?",
+  "@appRunningUninstallMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "forceCloseAndUninstall": "Принудительно закрыть и удалить",
+  "downgradeMessageWithVersion": "{appName} v{currentVersion} установлен, вы пытаетесь установить более раннюю версию v{targetVersion}.\nПереход на более раннюю версию может вызвать проблемы, продолжить?",
+  "@downgradeMessageWithVersion": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "currentVersion": {
+        "type": "String"
+      },
+      "targetVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmDowngrade": "Подтвердить переход на более раннюю версию",
+  "reinstallMessage": "{appName} v{version} уже установлен.\nПереустановить (перезапишет существующую установку)?",
+  "@reinstallMessage": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "forceReinstall": "Принудительная переустановка",
+  "installingLabel": "Установка",
+  "waitingCount": "Ожидание ({count})",
+  "@waitingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "detailDescriptionHint": "Подробно опишите проблему",
+  "linglongCommunity": "Сообщество Linyaps",
+  "unknown": "Неизвестный",
+  "copyPid": "Копировать PID",
+  "copyContainerId": "Копировать идентификатор контейнера",
+  "refreshProcessList": "Обновить список процессов",
+  "stopProcess": "Остановить процесс",
+  "checkUpdateNetworkError": "Проверка обновлений не удалась, проверьте сетевое соединение",
+  "pruneServiceTitle": "Очистить устаревшие базовые службы",
+  "pruneServiceMessage": "Выполнит обрезку ll-cli, чтобы удалить все неиспользуемые базовые службы времени выполнения.\n\n Это освобождает место на диске, но для текущих операций может потребоваться повторная загрузка.",
+  "pruneServiceSuccess": "Устаревшие базовые службы удалены.",
+  "pruneServiceFailed": "Не удалось выполнить очистку. Повторите попытку позже.",
+  "clearCacheHint": "Очистка кэша может освободить место для хранения, но может потребовать перезагрузки данных приложения.",
+  "pruneBaseServiceMessage": "Выполнит обрезку ll-cli, чтобы удалить все неиспользуемые базовые службы времени выполнения.\n\n Это освобождает место на диске, но для текущих операций может потребоваться повторная загрузка.",
+  "clean": "Очистить",
+  "baseServiceCleaned": "Устаревшие базовые службы удалены.",
+  "cleanFailed": "Не удалось выполнить очистку. Повторите попытку позже.",
+  "appCountValue": "{count, plural, one{{count} приложение} few{{count} приложения} many{{count} приложений} other{{count} приложения}}",
+  "@appCountValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "llCliVersionLabel": "Версия ll-cli",
+  "rankingTabDownload": "Загрузки",
+  "rankingTabRising": "Новые приложения",
+  "rankingTabUpdate": "Обновления",
+  "rankingTabHot": "Тенденции",
+  "sidebarAllApps": "Все приложения",
+  "sidebarRanking": "Рейтинг",
+  "installErrorGeneric": "Установка не удалась",
+  "installErrorTimeout": "Установка не удалась: тайм-аут выполнения",
+  "installCancelled": "Установка отменена",
+  "installErrorUnknown": "Установка не удалась: неизвестная ошибка.",
+  "installErrorAppNotFoundRemote": "Установка не удалась: приложение не найдено в удаленном репозитории.",
+  "installErrorAppNotFoundLocal": "Установка не удалась: приложение не найдено локально",
+  "installFailed": "Установка не удалась",
+  "installErrorAppNotInRemote": "Установка не удалась: приложение отсутствует в удалённом репозитории.",
+  "installErrorSameVersion": "Установка не удалась: та же версия уже установлена.",
+  "installErrorDowngrade": "Установка не удалась: требуется переход на более раннюю версию",
+  "installErrorModuleVersionNotAllowed": "Установка не удалась: версия не разрешена для модуля.",
+  "installErrorModuleRequiresApp": "Установка не удалась: сначала установите приложение, а затем модуль.",
+  "installErrorModuleExists": "Установка не удалась: модуль уже существует.",
+  "installErrorArchMismatch": "Установка не удалась: несоответствие архитектуры.",
+  "installErrorModuleNotInRemote": "Установка не удалась: модуль отсутствует в удалённом репозитории.",
+  "installErrorMissingErofs": "Установка не удалась: отсутствует команда распаковки erofs.",
+  "installErrorUnsupportedFormat": "Установка не удалась: неподдерживаемый формат файла.",
+  "installErrorNetwork": "Установка не удалась: ошибка сети.",
+  "installErrorInvalidRef": "Установка не удалась: неверная ссылка.",
+  "installErrorUnknownArch": "Установка не удалась: неизвестная архитектура.",
+  "installErrorCode": "Установка не удалась: код ошибки {code}.",
+  "@installErrorCode": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "installStatusStarting": "Запуск установки",
+  "installStatusInstallingApp": "Установка приложения",
+  "installStatusInstallingRuntime": "Установка среды выполнения",
+  "installStatusInstallingBase": "Установка базового пакета",
+  "installStatusDownloadingMeta": "Загрузка метаданных",
+  "installStatusDownloadingFiles": "Загрузка файлов",
+  "installStatusPostProcessing": "Постинсталляционная обработка",
+  "installStatusCompleted": "Установка завершена",
+  "installStatusProcessing": "Обработка",
+  "waitingForOperation": "Жду {operation}...",
+  "@waitingForOperation": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationInstall": "Установить",
+  "operationUpdate": "Обновить",
+  "operationPreparing": "Подготовка {operation} {appId}...",
+  "@operationPreparing": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      },
+      "appId": {
+        "type": "String"
+      }
+    }
+  },
+  "operationCancelled": "{operation} отменен",
+  "@operationCancelled": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationCompleted": "{operation} завершено",
+  "@operationCompleted": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationUnknown": "Статус {operation} неизвестен",
+  "@operationUnknown": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationConfirmFailed": "Невозможно подтвердить результат {operation}",
+  "@operationConfirmFailed": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationTimeout": "Тайм-аут {operation}",
+  "@operationTimeout": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationFailed": "{operation} не удалось",
+  "@operationFailed": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "taskCrashInterrupted": "Приложение вылетело, задача прервана",
+  "taskCrashRetryHint": "Приложение вышло из строя во время выполнения, повторите попытку.",
+  "uninstallFailedWithError": "Не удалось удалить: {error}.",
+  "@uninstallFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallException": "Исключение удаления: {error}",
+  "@uninstallException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "stopFailedWithError": "Остановить не удалось: {error}",
+  "@stopFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "stopException": "Ошибка остановки: {error}",
+  "@stopException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreatedWithPath": "Ярлык создан: {path}.",
+  "@shortcutCreatedWithPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreateFailedWithError": "Не удалось создать: {error}.",
+  "@shortcutCreateFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pruneFailedWithError": "Очистка не удалась: {error}.",
+  "@pruneFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pruneException": "Ошибка очистки: {error}",
+  "@pruneException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "getVersionFailed": "Не удалось получить версию",
+  "llCliNotInstalled": "ll-cli не установлен",
+  "uosEnvInstallHint": "В UOS для установки среды Linyaps необходимо включить режим разработчика, а текущая учетная запись должна иметь права root («Настройки» > «Основные» > «Параметры разработчика» > «Войти в режим разработчика»). Если вы используете управляемые офисные устройства, проконсультируйтесь с ИТ-специалистом, прежде чем продолжить.",
+  "uosAppInstallFailureHint": "Если вы используете UOS, убедитесь, что режим разработчика включен («Настройки» > «Основные» > «Параметры разработчика» > «Войти в режим разработчика»). Если вы используете управляемые офисные устройства, проконсультируйтесь с ИТ-специалистом, прежде чем продолжить.",
+  "appInfoUnavailable": "Невозможно получить информацию о приложении",
+  "shortcutCreateException": "Не удалось создать ярлык: {error}.",
+  "@shortcutCreateException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingForInstall": "Ожидающий",
+  "cancelInstall": "Отмена",
+  "uninstallBlockedTitle": "Сейчас удалить нельзя",
+  "uninstallBlockedMessage": "Выполняется установка/обновление 「{activeTaskName}」. Linyaps не поддерживает одновременную установку и удаление. Пожалуйста, дождитесь завершения текущей задачи или сначала отмените ее.",
+  "@uninstallBlockedMessage": {
+    "placeholders": {
+      "activeTaskName": {
+        "type": "String"
+      }
+    }
+  },
+  "iKnow": "Понятно",
+  "viewDownloadManager": "Посмотреть загрузки",
+  "a11ySearchByTag": "Поиск по тегу: {tag}",
+  "@a11ySearchByTag": {
+    "placeholders": {
+      "tag": {}
+    }
+  },
+  "a11yRemoveSearchTag": "Удалить тег поиска: {tag}",
+  "@a11yRemoveSearchTag": {
+    "placeholders": {
+      "tag": {}
+    }
+  },
+  "a11yInstallApp": "Установить {appName}",
+  "@a11yInstallApp": {
+    "placeholders": {
+      "appName": {}
+    }
+  },
+  "a11yUpdateApp": "Обновить {appName}",
+  "@a11yUpdateApp": {
+    "placeholders": {
+      "appName": {}
+    }
+  },
+  "a11yOpenApp": "Открыть {appName}",
+  "@a11yOpenApp": {
+    "placeholders": {
+      "appName": {}
+    }
+  },
+  "a11yUninstallApp": "Удалить {appName}",
+  "@a11yUninstallApp": {
+    "placeholders": {
+      "appName": {}
+    }
+  },
+  "a11ySearchBox": "Поиск приложений",
+  "a11ySearchInputHint": "Введите ключевые слова для поиска",
+  "a11yCommentInputHint": "Введите свой комментарий",
+  "a11ySidebarNav": "Боковая панель навигации",
+  "a11yAppCard": "{appName}, версия {version}, {status}",
+  "@a11yAppCard": {
+    "placeholders": {
+      "appName": {},
+      "version": {},
+      "status": {}
+    }
+  },
+  "a11yRankingItem": "Ранг #{rank}, {appName}",
+  "@a11yRankingItem": {
+    "placeholders": {
+      "rank": {},
+      "appName": {}
+    }
+  },
+  "a11yProcessItem": "Процесс {name}, ПИД {pid}",
+  "@a11yProcessItem": {
+    "placeholders": {
+      "name": {},
+      "pid": {}
+    }
+  },
+  "a11yDownloadItem": "Загрузка {appName}, {percent}%",
+  "@a11yDownloadItem": {
+    "placeholders": {
+      "appName": {},
+      "percent": {}
+    }
+  },
+  "a11yRecommendPage": "Рекомендации",
+  "a11yAllAppsPage": "Все приложения",
+  "a11yRankingPage": "Рейтинг",
+  "a11yMyAppsPage": "Мои приложения",
+  "a11ySettingsPage": "Настройки",
+  "a11yAppDetailPage": "Подробности приложения",
+  "a11yScreenshotArea": "Скриншоты",
+  "a11yCommentSection": "Комментарии",
+  "a11yCarouselArea": "Карусель",
+  "a11yAppListArea": "Список приложений",
+  "a11ySidebarArea": "Боковая панель",
+  "a11yMinimize": "Свернуть",
+  "a11yMaximize": "Максимизировать",
+  "a11yRestore": "Восстановить",
+  "a11yClose": "Закрыть",
+  "a11yPrevious": "Предыдущий",
+  "a11yNext": "Следующий",
+  "a11yTabSelected": "выбрано",
+  "a11yTabNotSelected": "не выбран",
+  "a11yStatusInstalled": "установлен",
+  "a11yStatusUpdatable": "доступно обновление",
+  "a11yStatusNotInstalled": "не установлен",
+  "noAppsInCategory": "В этой категории нет приложений",
+  "noRanking": "Нет доступных рейтингов",
+  "noRecommend": "Нет доступных рекомендаций",
+  "installTimeout": "Тайм-аут установки: обновления прогресса отсутствуют в течение длительного периода.",
+  "downloadManagerSlowInstallHint": "Если прогресс выглядит медленным, возможно, необходимые зависимости все еще устанавливаются. Пожалуйста, подождите еще немного…",
+  "loadingInstalledApps": "Загрузка установленных приложений...",
+  "appDescriptionPlaceholder": "Описание приложения",
+  "rankingTabNewUpload": "Новые загрузки",
+  "rankingTabDownloadCount": "Загрузки",
+  "uploadedXHoursAgo": "{count, plural, one{Загружено {count} час назад} few{Загружено {count} часа назад} many{Загружено {count} часов назад} other{Загружено {count} часа назад}}",
+  "@uploadedXHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadedXDaysAgo": "{count, plural, one{Загружено {count} день назад} few{Загружено {count} дня назад} many{Загружено {count} дней назад} other{Загружено {count} дня назад}}",
+  "@uploadedXDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadedOnDate": "Загружено на {date}",
+  "@uploadedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedXTimes": "{count} загрузки",
+  "@downloadedXTimes": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "envManagementWarning": "Эта функция всё ещё дорабатывается и предназначена только для тестовых компьютеров. Не используйте её в рабочей среде. Если после операции возникнет проблема, не повторяйте действие: запишите симптомы и обратитесь за помощью.",
+  "repoManagementHintTitle": "Только управление репозиторием",
+  "repoManagementHintMessage": "Этот магазин может получать данные приложения только из официального стабильного репозитория. Не удаляйте стабильный репозиторий, иначе установка приложения не удастся.",
+  "envManagementTitle": "Управление средой Linyaps",
+  "envManagementDescription": "Проверка среды, управление репозиториями, восстановление базовых компонентов и перенос хранилища.",
+  "envManagementAnalysisTab": "Среда",
+  "envManagementRepositoryTab": "Репозитории",
+  "envManagementStorageTab": "Хранилище",
+  "envManagementAnalyzing": "Анализ среды Linyaps...",
+  "envManagementApplying": "Применение операции...",
+  "envManagementNotAnalyzed": "Анализ среды ещё не выполнен",
+  "envManagementHealthyTitle": "Нет проблем, требующих внимания",
+  "envManagementHealthyMessage": "Базовая среда Linyaps, репозитории и локальные данные исправны.",
+  "envManagementBaseEnvironment": "Базовая среда",
+  "envManagementRepositoryMetric": "Репозиторий",
+  "envManagementLocalData": "Локальные данные",
+  "envManagementStorageLocation": "Место хранения",
+  "envManagementNotDetected": "Не обнаружено",
+  "envManagementUnknown": "Неизвестный",
+  "envManagementUsagePercent": "{percent}% использовано",
+  "envManagementEnvironmentHealthyUpgrade": "Исправна (рекомендуется обновление)",
+  "envManagementEnvironmentHealthy": "Исправна",
+  "envManagementRepositoryReadFailed": "Конфигурацию репозитория не удалось прочитать",
+  "envManagementEnvironmentAbnormal": "Проблема со средой",
+  "envRepoStatusNormal": "Исправен",
+  "envRepoStatusNotConfigured": "Не настроено",
+  "envRepoStatusMisconfigured": "Неправильно настроен",
+  "envRepoStatusUnavailable": "Недоступно",
+  "envRepoStatusUnknown": "Неизвестно",
+  "envLocalDataDetectionFailed": "Проверка не удалась",
+  "envLocalDataUnavailable": "Недоступно",
+  "envLocalDataNormal": "Исправны",
+  "envIssueLlCliUnavailableTitle": "ll-cli недоступен",
+  "envIssueLlCliUnavailableDescription": "Пригодная для использования среда командной строки Linyaps не обнаружена.",
+  "envIssueRepositoryNotConfiguredTitle": "Репозиторий Linyaps не настроен",
+  "envIssueRepositoryNotConfiguredDescription": "Ни один пригодный к использованию репозиторий Linyaps не настроен. Сначала добавьте или исправьте репозиторий.",
+  "envIssueDataPermissionTitle": "Права доступа к каталогу данных Linyaps недействительны.",
+  "envIssueDataPermissionDescription": "ll-package-manager работает от имени {serviceUser}, но владелец каталога данных Linyaps или важных файлов состояния задан неверно. Из-за этого перенос репозитория, загрузка объектов или создание слоёв могут завершиться ошибкой.",
+  "envIssueLocalDataDetectionTitle": "Проверка локальных данных Linyaps не удалась",
+  "envIssueLocalDataDetectionDescription": "Не удалось выполнить проверку чтения локальных данных linyaps. Проверьте статус службы ll-cli и диспетчера пакетов.",
+  "envIssueLocalDataUnavailableTitle": "Локальные данные Linyaps недоступны.",
+  "envIssueLocalDataUnavailableDescription": "Данные установленного приложения не могут быть прочитаны через путь выполнения linyaps. Это может повлиять на листинг, установку или запуск приложения. Перед попыткой восстановления проверьте права доступа к каталогу данных и базовую среду.",
+  "envIssueStorageSpaceTitle": "В хранилище Linyaps мало места.",
+  "envIssueStorageSpaceDescription": "Файловая система, содержащая {path}, заполнена примерно на {percent}%. Очистите его или переместите место хранения.",
+  "envIssueRunningAppsTitle": "Приложения Linyaps работают.",
+  "envIssueRunningAppsDescription": "{count, plural, one{Сейчас работает {count} приложение Linyaps. Закройте его перед переносом хранилища.} few{Сейчас работают {count} приложения Linyaps. Закройте их перед переносом хранилища.} many{Сейчас работают {count} приложений Linyaps. Закройте их перед переносом хранилища.} other{Сейчас работают {count} приложения Linyaps. Закройте их перед переносом хранилища.}}",
+  "envRepairAction": "Исправить",
+  "envHandleAction": "Устранить",
+  "envRepairLocalDataTitle": "Восстановить локальные данные Linyaps",
+  "envRepairLocalDataMessage": "Будет предпринята попытка восстановить локальные данные Linyaps с правами администратора. Если данные приложения или базовой среды необходимо получить снова, загрузка может произойти и занять много времени. Продолжать?",
+  "envRepairLocalDataConfirm": "Начать восстановление",
+  "envRepairPermissionTitle": "Восстановить права доступа к каталогу данных Linyaps",
+  "envRepairPermissionMessage": "Это восстановит право собственности на ключевые каталоги и файлы состояния из {rootPath} в {serviceUser} с правами администратора, а затем перезапустит менеджер пакетов Linyaps. Продолжать?",
+  "envRepairPermissionConfirm": "Исправить права доступа",
+  "envMoveStorageTitle": "Переместить место хранения Linyaps",
+  "envMoveStorageMessage": "Это скопирует {rootPath} в {targetPath} и создаст привязку systemd. Убедитесь, что в целевой файловой системе достаточно места.",
+  "envMoveStorageConfirm": "Начать перенос",
+  "envAddRepositoryTitle": "Добавить репозиторий Linyaps",
+  "envRepositoryName": "Имя репозитория",
+  "envRepositoryAddress": "Адрес репозитория",
+  "envRepositoryAliasOptional": "Псевдоним (необязательно)",
+  "envAddAction": "Добавить",
+  "envSaveAction": "Сохранить",
+  "envDeleteAction": "Удалить",
+  "envUpdateRepositoryTitle": "Изменить адрес репозитория: {name}.",
+  "envSetPriorityTitle": "Установить приоритет: {name}",
+  "envRepositoryPriority": "Приоритет",
+  "envPriorityMustBeNumber": "Приоритет должен быть числом",
+  "envRemoveRepositoryTitle": "Удалить репозиторий",
+  "envRemoveRepositoryMessage": "Удалить репозиторий {name}?",
+  "envRepositoryAdded": "Репозиторий добавлен",
+  "envRepositoryAddFailed": "Не удалось добавить репозиторий: {error}.",
+  "envRepositoryUpdated": "Репозиторий обновлен",
+  "envRepositoryUpdateFailed": "Не удалось обновить репозиторий: {error}.",
+  "envPriorityUpdated": "Приоритет обновлен",
+  "envPriorityUpdateFailed": "Не удалось установить приоритет: {error}.",
+  "envRepositoryRemoved": "Репозиторий удален.",
+  "envRepositoryRemoveFailed": "Не удалось удалить репозиторий: {error}.",
+  "envDefaultRepositoryUpdated": "Репозиторий по умолчанию обновлен.",
+  "envDefaultRepositoryUpdateFailed": "Не удалось установить репозиторий по умолчанию: {error}.",
+  "envMirrorEnabled": "Зеркало включено",
+  "envMirrorDisabled": "Зеркало отключено",
+  "envMirrorUpdateFailed": "Не удалось изменить статус зеркала: {error}.",
+  "envOpenLogDirectoryFailed": "Не удалось открыть папку журнала",
+  "envRepositoryNotLoaded": "Конфигурация репозитория не загружена",
+  "envRepositoryDefaultValue": "Репозиторий по умолчанию: {name}.",
+  "envNotSet": "Не установлено",
+  "envAddRepository": "Добавить репозиторий",
+  "envNoRepositories": "Репозитории не настроены",
+  "envDefaultBadge": "По умолчанию",
+  "envRepositoryDetails": "имя={name} приоритет={priority}",
+  "envRepositoryActions": "Действия с репозиторием",
+  "envEditAddress": "Изменить адрес",
+  "envSetDefault": "Установить по умолчанию",
+  "envSetPriority": "Установить приоритет",
+  "envEnableMirror": "Включить зеркало",
+  "envDisableMirror": "Отключить зеркало",
+  "envCurrentStorageLocation": "Текущее место хранения",
+  "envStorageNotAnalyzed": "Анализ места хранения не завершен",
+  "envStorageSummary": "{path} {percent}% использовано",
+  "envNewStorageLocation": "Новое место хранения",
+  "envStorageMoveMethod": "Метод перемещения",
+  "envStorageMoveMethodDescription": "Linyaps в настоящее время не поддерживает непосредственное изменение каталога установки. Эта операция копирует данные и создает привязку systemd по адресу {rootPath}.",
+  "envMoveStorageAction": "Переместить место хранения",
+  "envCloseAppsBeforeMoveTitle": "Закройте приложения перед перемещением",
+  "envCloseAppsBeforeMoveMessage": "{count, plural, one{Сейчас работает {count} приложение Linyaps.} few{Сейчас работают {count} приложения Linyaps.} many{Сейчас работают {count} приложений Linyaps.} other{Сейчас работают {count} приложения Linyaps.}}",
+  "envResultDataPermissionCompleted": "Права доступа к каталогу данных Linyaps были восстановлены.",
+  "envResultDataPermissionFailed": "Не удалось восстановить права доступа к каталогу данных Linyaps.",
+  "envResultLocalDataUnsupported": "Текущие компоненты системы не могут автоматически удалять проблемные объекты. Обновите соответствующие компоненты или используйте инструменты вашего дистрибутива для восстановления локальных данных Linyaps.",
+  "envResultLocalDataCompleted": "Восстановление локальных данных Linyaps завершено",
+  "envResultLocalDataCompletedLegacy": "Восстановление локальных данных Linyaps завершено с использованием параметров устаревшей системы.",
+  "envResultLocalDataFailed": "Не удалось восстановить локальные данные Linyaps",
+  "envResultLocalDataChecksumMismatch": "После автоматической очистки проверка по-прежнему обнаруживает несовпадение контрольной суммы объекта. Если ошибка повторяется после повторной загрузки данных, возможно, требуется исправить данные исходного репозитория или совместимость локального хранилища Linyaps.",
+  "envPartialCommitsUnknown": "несколько частичных коммитов",
+  "envPartialCommitsCount": "{count, plural, one{{count} частичный коммит} few{{count} частичных коммита} many{{count} частичных коммитов} other{{count} частичного коммита}}",
+  "envResultLocalDataRepullCompleted": "Проблемные объекты были удалены, {partialCommits} были получены снова, и проверка прошла.",
+  "envResultLocalDataRepullCompletedLegacy": "Проблемные объекты были удалены, {partialCommits} были извлечены снова, и проверка прошла с использованием устаревших системных параметров.",
+  "envResultLocalDataRepullFailed": "Автоматически восстанавливаемые объекты были удалены, а {partialCommits} был получен снова, но проверка по-прежнему не удалась. Проверьте журнал на предмет ссылки, которую не удалось получить или проверить.",
+  "envResultLocalDataRepullFailedLegacy": "Автоматически восстанавливаемые объекты были удалены, а {partialCommits} снова получен с использованием устаревших системных параметров, но проверка по-прежнему не удалась. Проверьте журнал на предмет ссылки, которую не удалось получить или проверить.",
+  "envResultLocalDataRepullChecksumMismatch": "Автоматически восстанавливаемые объекты были удалены, а {partialCommits} был получен снова, но проверка по-прежнему обнаружила несовпадения контрольных сумм. Данные восходящего репозитория могут быть несовместимы с режимом локального хранилища linyaps.",
+  "envResultLocalDataRepullChecksumMismatchLegacy": "Автоматически восстанавливаемые объекты были удалены, а {partialCommits} был снова получен с использованием устаревших системных параметров, но проверка по-прежнему обнаружила несовпадения контрольных сумм. Данные восходящего репозитория могут быть несовместимы с режимом локального хранилища linyaps.",
+  "envResultStorageBlockedRunningApps": "{count, plural, one{Сейчас работает {count} приложение Linyaps. Закройте его перед переносом хранилища.} few{Сейчас работают {count} приложения Linyaps. Закройте их перед переносом хранилища.} many{Сейчас работают {count} приложений Linyaps. Закройте их перед переносом хранилища.} other{Сейчас работают {count} приложения Linyaps. Закройте их перед переносом хранилища.}}",
+  "envResultStorageBlockedActiveTask": "Установка или обновление все еще активны в диспетчере загрузок. Дождитесь завершения или отмените его, прежде чем перемещать место хранения Linyaps.",
+  "envResultStorageBlockedNamedTask": "{name} в настоящее время обрабатывается. Дождитесь завершения или отмените его, прежде чем перемещать место хранения Linyaps.",
+  "envResultStorageAlreadyBindMounted": "{path} уже является привязкой. Перед миграцией просмотрите существующую конфигурацию монтирования.",
+  "envResultStorageFilesystemUnavailable": "Не удалось прочитать пространство файловой системы для целевого пути: {path}.",
+  "envResultStorageSpaceUnknown": "Не удалось определить свободное место для текущего или целевого каталога. Проверьте это и попробуйте еще раз.",
+  "envResultStorageInsufficientSpace": "Для целевого пути требуется как минимум {requiredSpace}, но доступен только {availableSpace}.",
+  "envResultStorageTargetNotAbsolute": "Целевой путь должен быть абсолютным.",
+  "envResultStorageTargetContainsLineBreak": "Целевой путь не может содержать разрывы строк.",
+  "envResultStorageTargetUnsafeSystemPath": "Целевой путь не может быть корневым каталогом системы или текущим каталогом Linyaps.",
+  "envResultStorageTargetInsideCurrentRoot": "Целевой путь не может находиться внутри текущего каталога Linyaps.",
+  "envResultStorageMoveCompleted": "Хранилище Linyaps перенесено.",
+  "envResultStorageMoveFailed": "Не удалось переместить место хранения Linyaps.",
+  "envResultUnexpectedFailure": "Операция не удалась: {error}",
+  "errorSolutionHelpTooltip": "Посмотреть решение",
+  "a11yErrorSolutionHelp": "Найдите решение этой ошибки установки",
+  "errorSolutionNoSolution": "Решение недоступно",
+  "errorSolutionQueryFailed": "Запрос не удался. Пожалуйста, попробуйте еще раз",
+  "errorSolutionRetry": "Попробуйте еще раз",
+  "errorSolutionCommunityPost": "Опубликовать в сообществе",
+  "errorSolutionRepair": "Отремонтировать сейчас",
+  "errorSolutionClose": "Закрыть решение",
+  "errorSolutionRemoteImage": "Изображение удаленного решения",
+  "errorSolutionImageBlocked": "Несетевое изображение было заблокировано",
+  "errorSolutionImageLoadFailed": "Удаленное изображение не удалось загрузить.",
+  "scriptReviewTitle": "Предварительный просмотр содержимого скрипта",
+  "scriptReviewSemanticLabel": "Полный сценарий восстановления, который необходимо выполнить",
+  "executeRepairScript": "Подтвердите и запустите",
+  "repairExecutionTitle": "Восстановление",
+  "repairExecuting": "Запуск сценария восстановления…",
+  "repairOutputTitle": "Живой выход",
+  "repairOutputEmpty": "Ожидание вывода скрипта…",
+  "repairOutputTruncated": "{count, plural, one{Скрыта {count} предыдущая строка.} few{Скрыты {count} предыдущие строки.} many{Скрыты {count} предыдущих строк.} other{Скрыты {count} предыдущей строки.}} Откройте журнал, чтобы увидеть полный вывод.",
+  "@repairOutputTruncated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repairCompleteRetry": "Ремонт завершен. Пожалуйста, попробуйте установку еще раз.",
+  "repairFailedWithExitCode": "Сценарий восстановления завершился с ошибкой с кодом выхода {exitCode}.",
+  "@repairFailedWithExitCode": {
+    "placeholders": {
+      "exitCode": {
+        "type": "int"
+      }
+    }
+  },
+  "repairTimedOut": "Сценарий ремонта превысил 30 минут. Проверьте журнал, чтобы подтвердить состояние системы.",
+  "repairExecutionError": "Не удалось запустить сценарий восстановления: {message}.",
+  "@repairExecutionError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "repairInvalidSignature": "Подпись сценария восстановления недействительна. Выполнение заблокировано.",
+  "openRepairLog": "Открыть папку с журналами",
+  "copyRepairOutput": "Копировать текущий вывод",
+  "repairElapsedTime": "Прошло {elapsed}",
+  "@repairElapsedTime": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      }
+    }
+  }
+}

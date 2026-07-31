@@ -764,7 +764,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    AppConfig.appName,
+                    l10n.appTitle,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: context.appFontWeight(FontWeight.w700),
                     ),

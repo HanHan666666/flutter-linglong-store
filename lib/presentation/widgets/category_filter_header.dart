@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/config/theme.dart';
+import '../../core/i18n/l10n/app_localizations.dart';
 import '../../domain/models/recommend_models.dart';
 
 /// 推荐页/全部应用页通用分类筛选栏
@@ -209,7 +210,7 @@ class CategoryFilterHeaderBox extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(left: AppSpacing.xs),
               child: Tooltip(
-                message: '收起分类',
+                message: AppLocalizations.of(context)!.collapse,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(8),
                   onTap: onToggleExpand,

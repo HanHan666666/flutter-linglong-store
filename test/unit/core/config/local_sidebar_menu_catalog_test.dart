@@ -11,6 +11,7 @@ void main() {
       expect(office!.resolveLabel(const Locale('zh')), '办 公');
       expect(office.resolveLabel(const Locale('en')), 'Office');
       expect(office.resolveLabel(const Locale('es')), 'Oficina');
+      expect(office.resolveLabel(const Locale('ru')), 'Офис');
     });
 
     test('unknown menu code falls back to backend name and generic icons', () {

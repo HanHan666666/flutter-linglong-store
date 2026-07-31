@@ -9,8 +9,10 @@ import 'core/accessibility/accessibility.dart';
 import 'core/config/routes.dart';
 import 'core/config/theme.dart';
 import 'core/i18n/l10n/app_localizations.dart';
+import 'core/logging/app_logger.dart';
 import 'core/platform/native_menu_theme_sync.dart';
 import 'core/platform/single_instance.dart';
+import 'core/platform/window_service.dart';
 import 'core/utils/app_notification_helpers.dart';
 
 /// 玲珑应用商店 MaterialApp 配置
@@ -56,7 +58,7 @@ class LinglongStoreApp extends ConsumerWidget {
 
     return A11yKeyboardHandler(
       child: MaterialApp.router(
-        title: '玲珑应用商店社区版',
+        onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
         debugShowCheckedModeBanner: false,
 
         // 国际化配置
@@ -102,8 +104,10 @@ class LinglongStoreApp extends ConsumerWidget {
               child: Theme(
                 data: resolvedTheme,
                 child: A11yFocusScope(
-                  child: _OgProtocolInstallBootstrap(
-                    child: child ?? const SizedBox.shrink(),
+                  child: _LocalizedWindowTitleSync(
+                    child: _OgProtocolInstallBootstrap(
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ),
@@ -116,6 +120,50 @@ class LinglongStoreApp extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// 把 Flutter 当前语言对应的应用名称同步给 Linux 原生窗口。
+///
+/// `MaterialApp.onGenerateTitle` 只维护 Flutter 应用标题，窗口管理器仍需要显式
+/// 更新。该组件只在本地化依赖变化且标题确实改变时调用平台接口，避免普通页面
+/// 重建产生重复的 MethodChannel 往返。
+class _LocalizedWindowTitleSync extends StatefulWidget {
+  /// 创建窗口标题同步边界。
+  const _LocalizedWindowTitleSync({required this.child});
+
+  /// MaterialApp 当前渲染的路由内容。
+  final Widget child;
+
+  @override
+  State<_LocalizedWindowTitleSync> createState() =>
+      _LocalizedWindowTitleSyncState();
+}
+
+/// 维护最近一次已经请求同步的窗口标题。
+class _LocalizedWindowTitleSyncState extends State<_LocalizedWindowTitleSync> {
+  String? _lastRequestedTitle;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final title = AppLocalizations.of(context)!.appTitle;
+    if (_lastRequestedTitle == title) return;
+
+    _lastRequestedTitle = title;
+    unawaited(_setWindowTitle(title));
+  }
+
+  /// 更新原生窗口标题；失败只记日志，不影响语言切换和页面渲染。
+  Future<void> _setWindowTitle(String title) async {
+    try {
+      await WindowService.setTitle(title);
+    } catch (error, stackTrace) {
+      AppLogger.warning('同步本地化窗口标题失败', error, stackTrace);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// og 协议安装入口桥接组件。

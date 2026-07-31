@@ -6,6 +6,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../../core/config/theme.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
 
 /// 展示下载管理三个稳定任务指标。
 class DownloadManagerOverview extends StatelessWidget {
@@ -28,6 +29,7 @@ class DownloadManagerOverview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       key: const Key('downloadManagerOverviewBar'),
       padding: const EdgeInsets.fromLTRB(
@@ -42,7 +44,7 @@ class DownloadManagerOverview extends StatelessWidget {
           Expanded(
             child: _DownloadManagerOverviewTile(
               icon: Icons.downloading_rounded,
-              label: '进行中',
+              label: l10n.installStatusProcessing,
               count: activeCount,
               highlighted: activeCount > 0,
             ),
@@ -51,7 +53,7 @@ class DownloadManagerOverview extends StatelessWidget {
           Expanded(
             child: _DownloadManagerOverviewTile(
               icon: Icons.schedule_rounded,
-              label: '等待中',
+              label: l10n.waiting,
               count: queuedCount,
             ),
           ),
@@ -59,7 +61,7 @@ class DownloadManagerOverview extends StatelessWidget {
           Expanded(
             child: _DownloadManagerOverviewTile(
               icon: Icons.done_all_rounded,
-              label: '已完成',
+              label: l10n.completed,
               count: historyCount,
             ),
           ),

@@ -21,6 +21,7 @@ generated_pathspecs=(
 
 cd "$ROOT_DIR"
 
+"$DART_BIN" run build/scripts/verify_localization_resources.dart
 "$DART_BIN" run build_runner build --delete-conflicting-outputs
 "$FLUTTER_BIN" gen-l10n
 bash build/scripts/generate-application-identity.sh --check

@@ -7,6 +7,7 @@ library;
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/application/providers/application_dependency_providers.dart';
 import 'package:linglong_store/application/providers/app_operation_lifecycle_coordinator.dart';
@@ -75,6 +76,23 @@ void main() {
       state.batches.single.notificationState,
       AppOperationNotificationState.suppressed,
     );
+  });
+
+  test('俄语环境使用俄语生成批次完成系统通知', () async {
+    final gateway = _RecordingNotificationGateway();
+    final container = _createContainer(
+      enableNotifications: true,
+      gateway: gateway,
+      locale: const Locale('ru'),
+    );
+    addTearDown(container.dispose);
+
+    container.read(appOperationLifecycleCoordinatorProvider);
+    await _waitForOutboxToDrain(container);
+
+    expect(gateway.messages, hasLength(1));
+    expect(gateway.messages.single.title, 'Обновлено 1 приложение');
+    expect(gateway.messages.single.body, 'Обновлено: 示例应用.');
   });
 
   test('Outbox 尝试记录落盘前不会调用系统网关', () async {
@@ -152,6 +170,7 @@ ProviderContainer _createContainer({
   required bool enableNotifications,
   required SystemNotificationGateway gateway,
   AppOperationJournalRepository? journal,
+  Locale locale = const Locale('zh'),
 }) {
   return ProviderContainer(
     overrides: [
@@ -161,6 +180,7 @@ ProviderContainer _createContainer({
       globalAppProvider.overrideWith(
         () => _TestGlobalApp(
           GlobalAppState(
+            locale: locale,
             userPreferences: UserPreferences(
               enableNotifications: enableNotifications,
             ),

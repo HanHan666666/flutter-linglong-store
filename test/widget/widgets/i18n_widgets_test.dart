@@ -234,7 +234,12 @@ void main() {
       expect(AppLocalizations.localizationsDelegates.length, greaterThan(0));
       expect(
         AppLocalizations.supportedLocales,
-        containsAll(const [Locale('zh'), Locale('en'), Locale('es')]),
+        containsAll(const [
+          Locale('zh'),
+          Locale('en'),
+          Locale('es'),
+          Locale('ru'),
+        ]),
       );
     });
   });

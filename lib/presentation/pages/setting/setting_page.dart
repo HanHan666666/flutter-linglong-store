@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../application/providers/api_provider.dart';
+import '../../../application/providers/app_self_update_provider.dart';
 import '../../../application/providers/global_provider.dart';
 import '../../../application/providers/linux_renderer_provider.dart';
 import '../../../application/providers/setting_provider.dart';
@@ -137,9 +140,16 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               onOpenUrl: _openUrl,
               onUpdateNow: () {
                 Navigator.of(ctx).pop();
+                // Controller 先取得 Release 快照，弹窗只观察应用级任务状态。
+                unawaited(
+                  ref
+                      .read(appSelfUpdateControllerProvider.notifier)
+                      .start(result),
+                );
                 showDialog(
                   context: context,
-                  builder: (_) => AppUpdateFlowDialog(update: result),
+                  barrierDismissible: false,
+                  builder: (_) => const AppUpdateFlowDialog(),
                 );
               },
             ),

@@ -1,30 +1,30 @@
-/// 应用自更新相关领域模型。
+/// 应用自更新领域模型与纯解析规则。
 ///
-/// 只包含纯数据模型与纯函数，不依赖 IO / UI：
-/// - [ReleaseAsset]：发布资产（安装包 / 校验文件）的下载信息；
-/// - [AppInstallationKind] 与 [AppInstallation]：当前应用安装方式的检测结果；
-/// - [normalizeSelfUpdateArch] / [resolveAssetForPackage]：按架构与包类型选择安装包。
+/// 本文件只描述 Release 资产、当前运行身份和 SHA256 文件格式，不包含网络、
+/// 文件或提权操作。客户端按宽松文件名后缀选择包，再用 Release 的哈希文件校验。
 library;
 
-/// 发布资产。
-///
-/// 来自 GitHub / Gitee latest release API 的 `assets` 数组。
+import 'dart:convert';
+
+/// Release API 返回的发布资产。
 class ReleaseAsset {
+  /// 创建发布资产。
   const ReleaseAsset({
     required this.name,
     required this.browserDownloadUrl,
     this.size,
   });
 
-  /// 资产文件名，如 `linglong-store_3.5.0_amd64.deb`。
+  /// 资产文件名。
   final String name;
 
   /// 可直接下载的 URL。
   final String browserDownloadUrl;
 
-  /// 资产大小（字节），API 未提供时为 null。
+  /// Release API 报告的资产大小；未提供时为空。
   final int? size;
 
+  /// 从 GitHub 或 Gitee Release API 结构读取资产。
   factory ReleaseAsset.fromJson(Map<String, dynamic> json) {
     return ReleaseAsset(
       name: (json['name'] as String?) ?? '',
@@ -46,57 +46,154 @@ class ReleaseAsset {
 
   @override
   int get hashCode => Object.hash(name, browserDownloadUrl, size);
-
-  @override
-  String toString() {
-    return 'ReleaseAsset(name: $name, browserDownloadUrl: $browserDownloadUrl, size: $size)';
-  }
 }
 
-/// 当前应用的安装方式。
+/// 当前进程的安装方式。
 enum AppInstallationKind {
-  /// 通过 dpkg 系包管理器安装（Debian / Ubuntu / Deepin / UOS 等）。
+  /// 当前可执行文件属于 dpkg 安装包。
   packageManagerDpkg,
 
-  /// 通过 rpm 系包管理器安装（Fedora / RHEL / openSUSE 等）。
+  /// 当前可执行文件属于 RPM 安装包。
   packageManagerRpm,
 
-  /// 以 AppImage 方式运行（可通过 `APPIMAGE` 环境变量定位真实文件并原地替换）。
+  /// 当前进程由 AppImage 启动。
   appImage,
 
-  /// 手动解压 tar.gz 等方式安装，无法自动更新，只能引导下载。
+  /// 其它手动安装方式，不执行自动更新。
   manual,
 }
 
-/// 安装方式检测结果。
+/// 当前进程安装身份的探测结果。
 class AppInstallation {
-  const AppInstallation({
-    required this.kind,
-    this.appImagePath,
-    this.managerLabel,
-  });
+  /// 创建安装身份。
+  const AppInstallation({required this.kind, this.appImagePath});
 
+  /// 当前进程的安装方式。
   final AppInstallationKind kind;
 
-  /// AppImage 方式运行时，磁盘上真实 AppImage 文件的绝对路径。
-  ///
-  /// 仅 [AppInstallationKind.appImage] 时有值。
+  /// AppImage 真实文件路径，仅 AppImage 身份有效。
   final String? appImagePath;
-
-  /// 检测到的发行版 / 包管理器标签，用于诊断展示。
-  final String? managerLabel;
 }
 
-/// 把运行环境的架构标识归一化为发布资产使用的架构段。
+/// Release 中 SHA256 清单的固定资产名。
+const String appUpdateHashesAssetName = 'hashes.sha256';
+
+/// 按当前安装身份和架构选择唯一的 Release 安装包。
 ///
-/// 支持的输入：`x86_64` / `amd64` / `aarch64` / `arm64` / `loongarch64` / `loong64`。
-/// 无法识别时返回 null，调用方应视为「当前架构不支持自动安装」。
+/// 文件名只依赖发布脚本已有的架构后缀，不绑定版本号；stable 与 nightly 的
+/// 中间分隔符可以不同。匹配到多个候选时拒绝继续，避免资产异常时随意安装。
+ReleaseAsset? resolveAppUpdatePackageAsset({
+  required List<ReleaseAsset> assets,
+  required AppInstallationKind installationKind,
+  required String? arch,
+}) {
+  final normalizedArch = normalizeSelfUpdateArch(arch);
+  if (normalizedArch == null ||
+      installationKind == AppInstallationKind.manual) {
+    return null;
+  }
+  final suffix = switch (installationKind) {
+    AppInstallationKind.packageManagerDpkg => '$normalizedArch.deb',
+    AppInstallationKind.packageManagerRpm => switch (normalizedArch) {
+      'amd64' => 'x86_64.rpm',
+      'arm64' => 'aarch64.rpm',
+      _ => null,
+    },
+    AppInstallationKind.appImage => '-$normalizedArch.AppImage',
+    AppInstallationKind.manual => null,
+  };
+  if (suffix == null) {
+    return null;
+  }
+
+  ReleaseAsset? match;
+  for (final asset in assets) {
+    if (asset.browserDownloadUrl.isEmpty || !asset.name.endsWith(suffix)) {
+      continue;
+    }
+    if (match != null) {
+      throw StateError('同一架构和安装方式存在多个更新资产');
+    }
+    match = asset;
+  }
+  return match;
+}
+
+/// 查找 Release 中唯一的 `hashes.sha256` 资产。
+ReleaseAsset? resolveAppUpdateHashesAsset(List<ReleaseAsset> assets) {
+  ReleaseAsset? match;
+  for (final asset in assets) {
+    if (asset.name != appUpdateHashesAssetName ||
+        asset.browserDownloadUrl.isEmpty) {
+      continue;
+    }
+    if (match != null) {
+      throw StateError('Release 中存在多个 hashes.sha256');
+    }
+    match = asset;
+  }
+  return match;
+}
+
+/// 从标准 `sha256sum` 输出中读取指定资产的摘要。
+///
+/// 文件名必须完整匹配，不能使用 contains 或仅匹配 basename 的一部分，避免一份
+/// 清单同时包含相似文件名时取错摘要。重复条目同样视为发布资产异常。
+String? parseAppUpdateSha256(String content, String assetName) {
+  final linePattern = RegExp(r'^([0-9a-fA-F]{64})[ \t]+\*?(.+)$');
+  String? match;
+  for (final line in const LineSplitter().convert(content)) {
+    final parsed = linePattern.firstMatch(line);
+    if (parsed == null || parsed.group(2) != assetName) {
+      continue;
+    }
+    if (match != null) {
+      throw StateError('hashes.sha256 中存在重复资产摘要');
+    }
+    match = parsed.group(1)!.toLowerCase();
+  }
+  return match;
+}
+
+/// 无法执行自动更新的稳定原因。
+enum AppSelfUpdateUnsupportedReason {
+  /// 当前运行方式不是 DEB、RPM 或 AppImage。
+  manualInstall,
+
+  /// Release 没有当前架构和安装方式的资产。
+  unsupportedArch,
+
+  /// Release 缺少哈希文件或目标安装包的摘要。
+  missingChecksumFile,
+
+  /// 下载包的 SHA256 与 Release 清单不一致。
+  checksumMismatch,
+}
+
+/// 无法安全执行自动更新。
+class AppSelfUpdateUnsupportedException implements Exception {
+  /// 创建稳定业务异常。
+  const AppSelfUpdateUnsupportedException(this.reason);
+
+  /// 不支持原因。
+  final AppSelfUpdateUnsupportedReason reason;
+
+  @override
+  String toString() => 'AppSelfUpdateUnsupportedException($reason)';
+}
+
+/// 用户在进入安装阶段前取消更新。
+class AppSelfUpdateCancelledException implements Exception {
+  /// 创建取消异常。
+  const AppSelfUpdateCancelledException();
+}
+
+/// 把系统架构归一化为发布资产使用的架构。
 String? normalizeSelfUpdateArch(String? arch) {
   if (arch == null) {
     return null;
   }
-  final normalized = arch.trim().toLowerCase();
-  switch (normalized) {
+  switch (arch.trim().toLowerCase()) {
     case 'x86_64':
     case 'amd64':
       return 'amd64';
@@ -109,66 +206,4 @@ String? normalizeSelfUpdateArch(String? arch) {
     default:
       return null;
   }
-}
-
-/// 从发布资产中为指定架构与包类型挑选安装包。
-///
-/// 匹配规则基于文件名后缀，避免硬编码完整文件名：
-/// - dpkg：`linglong-store_<version>_<arch>.deb`；
-/// - rpm：`linglong-store-<version>-1.<rpmArch>.rpm`（amd64→x86_64，arm64→aarch64，loong64 无）；
-/// - AppImage：`linglong-store-<version>-<arch>.AppImage`（amd64 / arm64，loong64 无）。
-///
-/// 找不到匹配资产时返回 null。
-ReleaseAsset? resolveAssetForPackage({
-  required List<ReleaseAsset> assets,
-  required String? arch,
-  required AppInstallationKind kind,
-}) {
-  final normalizedArch = normalizeSelfUpdateArch(arch);
-  if (normalizedArch == null) {
-    return null;
-  }
-
-  String? suffix;
-  switch (kind) {
-    case AppInstallationKind.packageManagerDpkg:
-      suffix = '_$normalizedArch.deb';
-      break;
-    case AppInstallationKind.packageManagerRpm:
-      switch (normalizedArch) {
-        case 'amd64':
-          suffix = '1.x86_64.rpm';
-          break;
-        case 'arm64':
-          suffix = '1.aarch64.rpm';
-          break;
-        default:
-          // loong64 无 RPM 资产。
-          return null;
-      }
-      break;
-    case AppInstallationKind.appImage:
-      switch (normalizedArch) {
-        case 'amd64':
-        case 'arm64':
-          suffix = '-$normalizedArch.AppImage';
-          break;
-        default:
-          // loong64 无 AppImage 资产。
-          return null;
-      }
-      break;
-    case AppInstallationKind.manual:
-      return null;
-  }
-
-  for (final asset in assets) {
-    if (!asset.name.startsWith('linglong-store')) {
-      continue;
-    }
-    if (asset.name.endsWith(suffix)) {
-      return asset;
-    }
-  }
-  return null;
 }

@@ -13,43 +13,13 @@ class LinuxDistributionResolver {
   /// - 识别规则优先收敛到 resolver，不要在业务层直接读 `/etc/os-release`；
   /// - distribution 画像来自 `linux_distribution.dart`，这里仅负责匹配；
   /// - 如果某发行版未来不再需要特殊适配，只需移除对应 matcher / 画像映射。
-  static const List<_LinuxDistributionMatcher> _matchers = <
-    _LinuxDistributionMatcher
-  >[
-    _LinuxDistributionMatcher(
-      distribution: LinuxDistribution.uos,
-      aliases: <String>['uos', 'uniontech', 'union tech'],
-    ),
-    // Debian 系：ID / ID_LIKE 命中即标记 dpkg 包管理器。
-    // 注意：deepin 单独 ID 时（无 ID_LIKE）保持 unknown，避免与既有
-    // “无特殊规则返回普通画像”的行为冲突；真实 Deepin 的 ID_LIKE 含 debian。
-    _LinuxDistributionMatcher(
-      distribution: LinuxDistribution.debian,
-      aliases: <String>[
-        'debian',
-        'ubuntu',
-        'linuxmint',
-        'elementary',
-        'kali',
-        'raspbian',
-        'pop',
-      ],
-    ),
-    // RPM 系：ID / ID_LIKE 命中即标记 rpm 包管理器。
-    _LinuxDistributionMatcher(
-      distribution: LinuxDistribution.rpm,
-      aliases: <String>[
-        'fedora',
-        'rhel',
-        'centos',
-        'rocky',
-        'almalinux',
-        'opensuse',
-        'suse',
-        'mageia',
-      ],
-    ),
-  ];
+  static const List<_LinuxDistributionMatcher> _matchers =
+      <_LinuxDistributionMatcher>[
+        _LinuxDistributionMatcher(
+          distribution: LinuxDistribution.uos,
+          aliases: <String>['uos', 'uniontech', 'union tech'],
+        ),
+      ];
 
   LinuxDistribution resolve(Map<String, String>? osRelease) {
     if (osRelease == null || osRelease.isEmpty) {

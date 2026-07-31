@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:linglong_store/application/services/app_installation_probe.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/core/platform/shell_command_executor.dart';
 import 'package:linglong_store/domain/models/app_self_update.dart';
+import 'package:linglong_store/platform/self_update/linux_app_installation_probe.dart';
 
-/// 可控的 shell runner 替身，按命令返回预设结果。
+/// 按命令返回预设结果的系统边界替身。
 class _FakeShellRunner implements ShellCommandRunner {
   _FakeShellRunner(this.onRun);
 
@@ -21,183 +21,88 @@ class _FakeShellRunner implements ShellCommandRunner {
   }
 }
 
-ShellCommandResult _ok() => const ShellCommandResult(
-  stdout: '',
-  stderr: '',
-  exitCode: 0,
-);
-
-ShellCommandResult _notFound() => const ShellCommandResult(
-  stdout: '',
-  stderr: 'dpkg: no packages found matching linglong-store',
-  exitCode: 1,
-);
+/// 创建固定命令结果。
+ShellCommandResult _result({String stdout = '', int exitCode = 0}) {
+  return ShellCommandResult(stdout: stdout, stderr: '', exitCode: exitCode);
+}
 
 void main() {
-  setUpAll(() async {
-    await AppLogger.init();
-  });
+  setUpAll(AppLogger.init);
 
-  group('parseOsRelease', () {
-    test('parses plain and quoted values, ignores comments and blanks', () {
-      final parsed = parseOsRelease('''
-# comment
-ID=ubuntu
-NAME="Ubuntu"
-PRETTY_NAME='Ubuntu 24.04'
-VERSION_ID=24.04
-
-EMPTY=""
-''');
-      expect(parsed['ID'], 'ubuntu');
-      expect(parsed['NAME'], 'Ubuntu');
-      expect(parsed['PRETTY_NAME'], 'Ubuntu 24.04');
-      expect(parsed['VERSION_ID'], '24.04');
-      expect(parsed['EMPTY'], '');
-      expect(parsed.containsKey('comment'), isFalse);
-    });
-
-    test('returns empty map for empty content', () {
-      expect(parseOsRelease(''), isEmpty);
-    });
-  });
-
-  group('AppInstallationProbe', () {
-    test('detects dpkg install when distro is debian-based and dpkg owns package', () async {
-      final probe = AppInstallationProbe(
-        readOsRelease: () async => const <String, String>{
-          'ID': 'ubuntu',
-          'ID_LIKE': 'debian',
-        },
+  group('LinuxAppInstallationProbe', () {
+    test('AppImage 证据优先于机器上残留的 DEB 包', () async {
+      final probe = LinuxAppInstallationProbe(
         shellExecutor: ShellCommandExecutor(
-          runner: _FakeShellRunner((command) async {
-            expect(command.first, 'dpkg');
-            return _ok();
+          runner: _FakeShellRunner((_) async {
+            fail('AppImage 身份明确时不应查询系统包数据库');
           }),
         ),
-        environment: const <String, String>{
-          'APPIMAGE': '/home/u/linglong-store.AppImage',
-        },
-        fileExists: (path) async => true,
+        environment: const {'APPIMAGE': '/opt/store.AppImage'},
+        resolvedExecutable: '/tmp/.mount_store/store',
+        fileExists: (path) async => path == '/opt/store.AppImage',
       );
 
-      final result = await probe.detect();
+      final installation = await probe.detect();
 
-      expect(result.kind, AppInstallationKind.packageManagerDpkg);
-      expect(result.managerLabel, 'dpkg');
-      expect(result.appImagePath, isNull);
+      expect(installation.kind, AppInstallationKind.appImage);
+      expect(installation.appImagePath, '/opt/store.AppImage');
     });
 
-    test('detects rpm install when distro is rpm-based and rpm owns package', () async {
-      final probe = AppInstallationProbe(
-        readOsRelease: () async => const <String, String>{
-          'ID': 'fedora',
-          'ID_LIKE': 'fedora',
-        },
+    test('当前可执行文件归属 linglong-store DEB 时识别为 dpkg', () async {
+      final commands = <List<String>>[];
+      final probe = LinuxAppInstallationProbe(
         shellExecutor: ShellCommandExecutor(
           runner: _FakeShellRunner((command) async {
-            expect(command.first, 'rpm');
-            return _ok();
+            commands.add(command);
+            return _result(stdout: 'linglong-store: /usr/bin/linglong-store\n');
           }),
         ),
-        environment: const <String, String>{
-          'APPIMAGE': '/home/u/linglong-store.AppImage',
-        },
-        fileExists: (path) async => true,
+        environment: const {},
+        resolvedExecutable: '/usr/bin/linglong-store',
       );
 
-      final result = await probe.detect();
-
-      expect(result.kind, AppInstallationKind.packageManagerRpm);
-      expect(result.managerLabel, 'rpm');
-    });
-
-    test('falls back to AppImage when package manager has no record', () async {
-      final probe = AppInstallationProbe(
-        readOsRelease: () async => const <String, String>{
-          'ID': 'ubuntu',
-          'ID_LIKE': 'debian',
-        },
-        shellExecutor: ShellCommandExecutor(
-          runner: _FakeShellRunner((command) async => _notFound()),
-        ),
-        environment: const <String, String>{
-          'APPIMAGE': '/home/u/linglong-store.AppImage',
-        },
-        fileExists: (path) async => path == '/home/u/linglong-store.AppImage',
+      expect(
+        (await probe.detect()).kind,
+        AppInstallationKind.packageManagerDpkg,
       );
-
-      final result = await probe.detect();
-
-      expect(result.kind, AppInstallationKind.appImage);
-      expect(result.appImagePath, '/home/u/linglong-store.AppImage');
+      expect(commands.single, ['dpkg-query', '-S', '/usr/bin/linglong-store']);
     });
 
-    test('falls back to AppImage when distro has no package manager', () async {
-      final probe = AppInstallationProbe(
-        readOsRelease: () async => const <String, String>{
-          'ID': 'arch',
-        },
-        shellExecutor: ShellCommandExecutor(runner: _FakeShellRunner((_) async => _ok())),
-        environment: const <String, String>{
-          'APPIMAGE': '/opt/linglong-store.AppImage',
-        },
-        fileExists: (path) async => true,
-      );
-
-      final result = await probe.detect();
-
-      expect(result.kind, AppInstallationKind.appImage);
-    });
-
-    test('returns manual when AppImage path does not exist', () async {
-      final probe = AppInstallationProbe(
-        readOsRelease: () async => const <String, String>{
-          'ID': 'arch',
-        },
-        shellExecutor: ShellCommandExecutor(runner: _FakeShellRunner((_) async => _ok())),
-        environment: const <String, String>{
-          'APPIMAGE': '/gone/linglong-store.AppImage',
-        },
-        fileExists: (path) async => false,
-      );
-
-      final result = await probe.detect();
-
-      expect(result.kind, AppInstallationKind.manual);
-    });
-
-    test('returns manual when no distro, no package manager and no AppImage', () async {
-      final probe = AppInstallationProbe(
-        readOsRelease: () async => null,
-        shellExecutor: ShellCommandExecutor(runner: _FakeShellRunner((_) async => _ok())),
-        environment: const <String, String>{},
-        fileExists: (path) async => false,
-      );
-
-      final result = await probe.detect();
-
-      expect(result.kind, AppInstallationKind.manual);
-    });
-
-    test('treats missing package manager command as not installed', () async {
-      final probe = AppInstallationProbe(
-        readOsRelease: () async => const <String, String>{
-          'ID': 'ubuntu',
-          'ID_LIKE': 'debian',
-        },
+    test('dpkg 不归属且 RPM 包名匹配时识别为 rpm', () async {
+      final probe = LinuxAppInstallationProbe(
         shellExecutor: ShellCommandExecutor(
           runner: _FakeShellRunner((command) async {
-            throw StateError('command not found');
+            if (command.first == 'dpkg-query') {
+              return _result(exitCode: 1);
+            }
+            return _result(stdout: 'linglong-store\n');
           }),
         ),
-        environment: const <String, String>{},
-        fileExists: (path) async => false,
+        environment: const {},
+        resolvedExecutable: '/usr/bin/linglong-store',
       );
 
-      final result = await probe.detect();
+      expect(
+        (await probe.detect()).kind,
+        AppInstallationKind.packageManagerRpm,
+      );
+    });
 
-      expect(result.kind, AppInstallationKind.manual);
+    test('包数据库只命中其它软件时保持手动安装身份', () async {
+      final probe = LinuxAppInstallationProbe(
+        shellExecutor: ShellCommandExecutor(
+          runner: _FakeShellRunner((command) async {
+            if (command.first == 'dpkg-query') {
+              return _result(stdout: 'another-package: /usr/local/bin/store\n');
+            }
+            return _result(stdout: 'another-package\n');
+          }),
+        ),
+        environment: const {},
+        resolvedExecutable: '/usr/local/bin/store',
+      );
+
+      expect((await probe.detect()).kind, AppInstallationKind.manual);
     });
   });
 }

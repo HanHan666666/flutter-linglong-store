@@ -1,33 +1,46 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/application/providers/app_self_update_provider.dart';
-import 'package:linglong_store/application/services/app_installation_probe.dart';
 import 'package:linglong_store/application/services/app_self_update_service.dart';
 import 'package:linglong_store/application/services/version_check_service.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
-import 'package:linglong_store/core/platform/file_downloader.dart';
-import 'package:linglong_store/core/platform/shell_command_executor.dart';
+import 'package:linglong_store/core/logging/app_logger.dart';
+import 'package:linglong_store/domain/models/app_self_update.dart';
+import 'package:linglong_store/domain/repositories/app_self_update_gateways.dart';
 import 'package:linglong_store/presentation/widgets/app_update_flow.dart';
 
-/// 可控自更新服务替身：按预设触发进度回调，不执行真实下载/安装。
+/// 只为构造测试服务提供的未调用探测端口。
+class _UnusedProbe implements AppInstallationProbe {
+  @override
+  Future<AppInstallation> detect() => throw UnimplementedError();
+}
+
+/// 只为构造测试服务提供的未调用工作区端口。
+class _UnusedWorkspaceFactory implements AppUpdateWorkspaceFactory {
+  @override
+  Future<AppUpdateWorkspace> create() => throw UnimplementedError();
+}
+
+/// 可控自更新用例替身，不执行真实下载和安装。
 class _FakeSelfUpdateService extends AppSelfUpdateService {
   _FakeSelfUpdateService({this.failWith})
     : super(
-        probe: AppInstallationProbe(),
-        downloader: FileDownloader(),
-        shellExecutor: ShellCommandExecutor(),
-        currentArch: () => 'x86_64',
-        restartApp: (_) async {},
-        closeApp: () async {},
+        probe: _UnusedProbe(),
+        workspaceFactory: _UnusedWorkspaceFactory(),
+        installers: const <AppUpdateInstaller>[],
+        currentArch: () => 'amd64',
       );
 
-  final AppSelfUpdateUnsupportedException? failWith;
+  final Object? failWith;
   int callCount = 0;
 
   @override
-  Future<bool> performUpdate({
+  Future<void> performUpdate({
     required VersionCheckResultUpdateAvailable update,
+    required AppSelfUpdateCancellation cancellation,
     required void Function(AppSelfUpdateProgress progress) onProgress,
   }) async {
     callCount++;
@@ -37,32 +50,27 @@ class _FakeSelfUpdateService extends AppSelfUpdateService {
         progress: 0.3,
       ),
     );
-    onProgress(
-      const AppSelfUpdateProgress(AppSelfUpdatePhase.verifying, progress: 0.8),
-    );
+    await Future<void>.delayed(Duration.zero);
     final error = failWith;
     if (error != null) {
-      onProgress(
-        AppSelfUpdateProgress(
-          AppSelfUpdatePhase.failed,
-          progress: 0,
-          error: error,
-        ),
-      );
       throw error;
     }
-    onProgress(const AppSelfUpdateProgress(AppSelfUpdatePhase.done, progress: 1));
-    return true;
+    onProgress(
+      const AppSelfUpdateProgress(AppSelfUpdatePhase.done, progress: 1),
+    );
   }
 }
 
 void main() {
+  setUpAll(AppLogger.init);
+
   const update = VersionCheckResultUpdateAvailable(
     currentVersion: '3.5.0',
     latestVersion: 'v3.5.1',
     releasePageUrl: 'https://example.com/releases/v3.5.1',
   );
 
+  /// 打开由应用级 Controller 驱动的流程弹窗。
   Future<void> openDialog(
     WidgetTester tester,
     _FakeSelfUpdateService service,
@@ -74,14 +82,20 @@ void main() {
           locale: const Locale('zh'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Builder(
-            builder: (context) => Scaffold(
+          home: Consumer(
+            builder: (context, ref, child) => Scaffold(
               body: Center(
                 child: ElevatedButton(
                   onPressed: () {
+                    unawaited(
+                      ref
+                          .read(appSelfUpdateControllerProvider.notifier)
+                          .start(update),
+                    );
                     showDialog<void>(
                       context: context,
-                      builder: (_) => const AppUpdateFlowDialog(update: update),
+                      barrierDismissible: false,
+                      builder: (_) => const AppUpdateFlowDialog(),
                     );
                   },
                   child: const Text('open'),
@@ -96,17 +110,15 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('shows progress phases and completes', (tester) async {
+  testWidgets('安装完成后提示用户手动关闭并重新打开', (tester) async {
     await openDialog(tester, _FakeSelfUpdateService());
 
-    // 完成阶段文案。
-    expect(find.text('更新完成'), findsOneWidget);
+    expect(find.text('更新已安装，请关闭应用后重新打开以使用新版本'), findsOneWidget);
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
-    // 成功后不提供重试/取消按钮。
-    expect(find.text('重试'), findsNothing);
+    expect(find.text('关闭'), findsOneWidget);
   });
 
-  testWidgets('shows error and retry on failure', (tester) async {
+  testWidgets('校验失败时展示稳定错误并允许重试', (tester) async {
     final service = _FakeSelfUpdateService(
       failWith: const AppSelfUpdateUnsupportedException(
         AppSelfUpdateUnsupportedReason.checksumMismatch,
@@ -116,21 +128,10 @@ void main() {
 
     expect(find.text('更新包校验失败，已中止安装'), findsOneWidget);
     expect(find.text('重试'), findsOneWidget);
-    expect(find.text('取消'), findsOneWidget);
-  });
-
-  testWidgets('retry re-runs the update flow', (tester) async {
-    final service = _FakeSelfUpdateService(
-      failWith: const AppSelfUpdateUnsupportedException(
-        AppSelfUpdateUnsupportedReason.checksumMismatch,
-      ),
-    );
-    await openDialog(tester, service);
-    expect(service.callCount, 1);
+    expect(find.text('关闭'), findsOneWidget);
 
     await tester.tap(find.text('重试'));
     await tester.pumpAndSettle();
-
     expect(service.callCount, 2);
   });
 }

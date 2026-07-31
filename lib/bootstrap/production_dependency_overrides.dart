@@ -6,10 +6,13 @@ library;
 
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart' show Override;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../application/providers/application_dependency_providers.dart';
+import '../core/platform/file_downloader.dart';
+import '../core/platform/shell_command_executor.dart';
 import '../core/storage/app_xdg_paths.dart';
 import '../data/repositories/analytics_repository_impl.dart';
 import '../data/repositories/app_repository_impl.dart';
@@ -17,7 +20,11 @@ import '../data/repositories/error_solution_repository_impl.dart';
 import '../data/repositories/file_app_operation_journal_repository.dart';
 import '../data/repositories/linglong_cli_repository_impl.dart';
 import '../data/repositories/shared_preferences_legacy_app_operation_state_repository.dart';
+import '../domain/repositories/app_self_update_gateways.dart';
 import '../platform/notifications/linux_system_notification_gateway.dart';
+import '../platform/self_update/linux_app_installation_probe.dart';
+import '../platform/self_update/linux_app_update_installers.dart';
+import '../platform/self_update/xdg_app_update_workspace.dart';
 
 /// 创建正式应用根 ProviderScope 使用的完整依赖覆盖。
 ///
@@ -26,6 +33,10 @@ import '../platform/notifications/linux_system_notification_gateway.dart';
 List<Override> createProductionDependencyOverrides({
   required SharedPreferences sharedPreferences,
 }) {
+  // 自更新的系统命令统一复用一个无状态执行器，避免三个安装适配器各自创建边界。
+  final selfUpdateCommandExecutor = ShellCommandExecutor();
+  final selfUpdateNetworkClient = Dio();
+
   return [
     sharedPreferencesProvider.overrideWithValue(sharedPreferences),
     appRepositoryProvider.overrideWith((ref) => AppRepositoryImpl()),
@@ -55,5 +66,22 @@ List<Override> createProductionDependencyOverrides({
     systemNotificationGatewayProvider.overrideWith(
       (ref) => const LinuxSystemNotificationGateway(),
     ),
+    appInstallationProbeProvider.overrideWith((ref) {
+      return LinuxAppInstallationProbe(
+        shellExecutor: selfUpdateCommandExecutor,
+      );
+    }),
+    appUpdateWorkspaceFactoryProvider.overrideWith((ref) {
+      return XdgAppUpdateWorkspaceFactory(
+        downloader: FileDownloader(dio: selfUpdateNetworkClient),
+      );
+    }),
+    appUpdateInstallersProvider.overrideWith((ref) {
+      return <AppUpdateInstaller>[
+        DpkgAppUpdateInstaller(selfUpdateCommandExecutor),
+        RpmAppUpdateInstaller(selfUpdateCommandExecutor),
+        AppImageAppUpdateInstaller(selfUpdateCommandExecutor),
+      ];
+    }),
   ];
 }

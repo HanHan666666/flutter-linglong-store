@@ -351,13 +351,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get updateInstalling => 'Устанавливаем обновление...';
 
   @override
-  String get updateRestarting => 'Обновление завершено, перезапуск...';
-
-  @override
-  String get updateSucceeded => 'Обновление завершено';
+  String get updateSucceeded =>
+      'Обновление установлено. Закройте приложение и откройте его снова, чтобы использовать новую версию.';
 
   @override
   String get updateFailed => 'Ошибка обновления';
+
+  @override
+  String get updateCancelled => 'Обновление отменено';
 
   @override
   String get updateRetry => 'Повторить';

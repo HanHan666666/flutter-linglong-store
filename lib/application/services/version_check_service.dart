@@ -4,10 +4,7 @@ import '../../../core/utils/version_compare.dart';
 import '../../domain/models/app_self_update.dart';
 
 class _ReleaseSource {
-  const _ReleaseSource({
-    required this.apiUrl,
-    required this.defaultHtmlUrl,
-  });
+  const _ReleaseSource({required this.apiUrl, required this.defaultHtmlUrl});
 
   final String apiUrl;
   final String defaultHtmlUrl;
@@ -35,7 +32,8 @@ class VersionCheckService {
     _ReleaseSource(
       apiUrl:
           'https://gitee.com/api/v5/repos/hanplus/flutter-linglong-store/releases/latest',
-      defaultHtmlUrl: 'https://gitee.com/hanplus/flutter-linglong-store/releases/latest',
+      defaultHtmlUrl:
+          'https://gitee.com/hanplus/flutter-linglong-store/releases/latest',
     ),
     // Gitee 镜像异常时，回退到当前 Flutter 仓库的 GitHub 正式 Release。
     _ReleaseSource(
@@ -87,9 +85,7 @@ class VersionCheckService {
     final assets = <ReleaseAsset>[];
     for (final raw in rawAssets) {
       if (raw is Map) {
-        assets.add(
-          ReleaseAsset.fromJson(Map<String, dynamic>.from(raw)),
-        );
+        assets.add(ReleaseAsset.fromJson(Map<String, dynamic>.from(raw)));
       }
     }
     return assets;
@@ -103,8 +99,8 @@ class VersionCheckService {
     final cleanCurrent = currentVersion.replaceAll(RegExp(r'^v'), '');
     var sawVersionInfoMissing = false;
     DioException? lastDioError;
-    // 若某源返回了更新但未携带资产（如 Gitee 资产结构差异），先记录，
-    // 继续尝试下一个源获取完整资产；全部无资产时兜底返回最后结果。
+    // 若某源返回了更新但未携带 SHA256 文件，先记录并继续尝试下一个镜像；
+    // 自动安装必须先完成下载后哈希校验。
     VersionCheckResultUpdateAvailable? pendingUpdate;
 
     for (final source in _kReleaseSources) {
@@ -131,7 +127,7 @@ class VersionCheckService {
             ),
             assets: _parseAssets(release),
           );
-          if (result.assets.isNotEmpty) {
+          if (_hasChecksumAsset(result.assets)) {
             return result;
           }
           // 资产为空：先记录，继续尝试其他源。
@@ -163,6 +159,17 @@ class VersionCheckService {
     }
     return const VersionCheckResultVersionInfoMissing();
   }
+
+  /// 判断 Release 是否携带自动安装所需的 SHA256 文件。
+  bool _hasChecksumAsset(List<ReleaseAsset> assets) {
+    for (final asset in assets) {
+      if (asset.name == appUpdateHashesAssetName &&
+          asset.browserDownloadUrl.isNotEmpty) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
 
 /// 版本检查结果（sealed class）
@@ -192,7 +199,7 @@ class VersionCheckResultUpdateAvailable extends VersionCheckResult {
   final String releasePageUrl;
   final String? releaseNotes;
 
-  /// 本次发布携带的全部资产（含 `hashes.sha256` 校验文件），用于自动安装。
+  /// 本次发布携带的全部资产（含 `hashes.sha256`），用于下载后校验。
   final List<ReleaseAsset> assets;
 }
 

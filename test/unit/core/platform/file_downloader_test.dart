@@ -86,7 +86,7 @@ void main() {
     final file = File('${tempDir.path}/hash.bin');
     await file.writeAsBytes(utf8.encode('abc'));
 
-    final digest = await computeSha256(file);
+    final digest = await computeFileSha256(file);
 
     // sha256("abc") 的标准摘要。
     expect(

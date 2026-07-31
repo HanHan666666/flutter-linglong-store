@@ -17,8 +17,7 @@ mixin _$LinuxDistribution {
 
  LinuxDistributionId get id; String get displayName;/// 能力标签只描述“这个发行版在哪些业务场景需要特殊处理”，
 /// 不直接绑定某个页面实现，避免 UI 和 Provider 重新长出发行版分支。
- List<LinuxDistributionCapability> get capabilities;/// 当前发行版对应的系统包管理器；无法识别时为空。
- LinuxPackageManager? get packageManager;
+ List<LinuxDistributionCapability> get capabilities;
 /// Create a copy of LinuxDistribution
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -31,16 +30,16 @@ $LinuxDistributionCopyWith<LinuxDistribution> get copyWith => _$LinuxDistributio
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinuxDistribution&&(identical(other.id, id) || other.id == id)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&const DeepCollectionEquality().equals(other.capabilities, capabilities)&&(identical(other.packageManager, packageManager) || other.packageManager == packageManager));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LinuxDistribution&&(identical(other.id, id) || other.id == id)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&const DeepCollectionEquality().equals(other.capabilities, capabilities));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,displayName,const DeepCollectionEquality().hash(capabilities),packageManager);
+int get hashCode => Object.hash(runtimeType,id,displayName,const DeepCollectionEquality().hash(capabilities));
 
 @override
 String toString() {
-  return 'LinuxDistribution(id: $id, displayName: $displayName, capabilities: $capabilities, packageManager: $packageManager)';
+  return 'LinuxDistribution(id: $id, displayName: $displayName, capabilities: $capabilities)';
 }
 
 
@@ -51,7 +50,7 @@ abstract mixin class $LinuxDistributionCopyWith<$Res>  {
   factory $LinuxDistributionCopyWith(LinuxDistribution value, $Res Function(LinuxDistribution) _then) = _$LinuxDistributionCopyWithImpl;
 @useResult
 $Res call({
- LinuxDistributionId id, String displayName, List<LinuxDistributionCapability> capabilities, LinuxPackageManager? packageManager
+ LinuxDistributionId id, String displayName, List<LinuxDistributionCapability> capabilities
 });
 
 
@@ -68,13 +67,12 @@ class _$LinuxDistributionCopyWithImpl<$Res>
 
 /// Create a copy of LinuxDistribution
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? displayName = null,Object? capabilities = null,Object? packageManager = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? displayName = null,Object? capabilities = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as LinuxDistributionId,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String,capabilities: null == capabilities ? _self.capabilities : capabilities // ignore: cast_nullable_to_non_nullable
-as List<LinuxDistributionCapability>,packageManager: freezed == packageManager ? _self.packageManager : packageManager // ignore: cast_nullable_to_non_nullable
-as LinuxPackageManager?,
+as List<LinuxDistributionCapability>,
   ));
 }
 
@@ -156,10 +154,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LinuxDistributionId id,  String displayName,  List<LinuxDistributionCapability> capabilities,  LinuxPackageManager? packageManager)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( LinuxDistributionId id,  String displayName,  List<LinuxDistributionCapability> capabilities)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LinuxDistribution() when $default != null:
-return $default(_that.id,_that.displayName,_that.capabilities,_that.packageManager);case _:
+return $default(_that.id,_that.displayName,_that.capabilities);case _:
   return orElse();
 
 }
@@ -177,10 +175,10 @@ return $default(_that.id,_that.displayName,_that.capabilities,_that.packageManag
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LinuxDistributionId id,  String displayName,  List<LinuxDistributionCapability> capabilities,  LinuxPackageManager? packageManager)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( LinuxDistributionId id,  String displayName,  List<LinuxDistributionCapability> capabilities)  $default,) {final _that = this;
 switch (_that) {
 case _LinuxDistribution():
-return $default(_that.id,_that.displayName,_that.capabilities,_that.packageManager);}
+return $default(_that.id,_that.displayName,_that.capabilities);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -194,10 +192,10 @@ return $default(_that.id,_that.displayName,_that.capabilities,_that.packageManag
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LinuxDistributionId id,  String displayName,  List<LinuxDistributionCapability> capabilities,  LinuxPackageManager? packageManager)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( LinuxDistributionId id,  String displayName,  List<LinuxDistributionCapability> capabilities)?  $default,) {final _that = this;
 switch (_that) {
 case _LinuxDistribution() when $default != null:
-return $default(_that.id,_that.displayName,_that.capabilities,_that.packageManager);case _:
+return $default(_that.id,_that.displayName,_that.capabilities);case _:
   return null;
 
 }
@@ -209,7 +207,7 @@ return $default(_that.id,_that.displayName,_that.capabilities,_that.packageManag
 @JsonSerializable()
 
 class _LinuxDistribution extends LinuxDistribution {
-  const _LinuxDistribution({this.id = LinuxDistributionId.unknown, this.displayName = '', final  List<LinuxDistributionCapability> capabilities = const <LinuxDistributionCapability>[], this.packageManager}): _capabilities = capabilities,super._();
+  const _LinuxDistribution({this.id = LinuxDistributionId.unknown, this.displayName = '', final  List<LinuxDistributionCapability> capabilities = const <LinuxDistributionCapability>[]}): _capabilities = capabilities,super._();
   factory _LinuxDistribution.fromJson(Map<String, dynamic> json) => _$LinuxDistributionFromJson(json);
 
 @override@JsonKey() final  LinuxDistributionId id;
@@ -225,8 +223,6 @@ class _LinuxDistribution extends LinuxDistribution {
   return EqualUnmodifiableListView(_capabilities);
 }
 
-/// 当前发行版对应的系统包管理器；无法识别时为空。
-@override final  LinuxPackageManager? packageManager;
 
 /// Create a copy of LinuxDistribution
 /// with the given fields replaced by the non-null parameter values.
@@ -241,16 +237,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LinuxDistribution&&(identical(other.id, id) || other.id == id)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&const DeepCollectionEquality().equals(other._capabilities, _capabilities)&&(identical(other.packageManager, packageManager) || other.packageManager == packageManager));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LinuxDistribution&&(identical(other.id, id) || other.id == id)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&const DeepCollectionEquality().equals(other._capabilities, _capabilities));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,displayName,const DeepCollectionEquality().hash(_capabilities),packageManager);
+int get hashCode => Object.hash(runtimeType,id,displayName,const DeepCollectionEquality().hash(_capabilities));
 
 @override
 String toString() {
-  return 'LinuxDistribution(id: $id, displayName: $displayName, capabilities: $capabilities, packageManager: $packageManager)';
+  return 'LinuxDistribution(id: $id, displayName: $displayName, capabilities: $capabilities)';
 }
 
 
@@ -261,7 +257,7 @@ abstract mixin class _$LinuxDistributionCopyWith<$Res> implements $LinuxDistribu
   factory _$LinuxDistributionCopyWith(_LinuxDistribution value, $Res Function(_LinuxDistribution) _then) = __$LinuxDistributionCopyWithImpl;
 @override @useResult
 $Res call({
- LinuxDistributionId id, String displayName, List<LinuxDistributionCapability> capabilities, LinuxPackageManager? packageManager
+ LinuxDistributionId id, String displayName, List<LinuxDistributionCapability> capabilities
 });
 
 
@@ -278,13 +274,12 @@ class __$LinuxDistributionCopyWithImpl<$Res>
 
 /// Create a copy of LinuxDistribution
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? displayName = null,Object? capabilities = null,Object? packageManager = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? displayName = null,Object? capabilities = null,}) {
   return _then(_LinuxDistribution(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as LinuxDistributionId,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String,capabilities: null == capabilities ? _self._capabilities : capabilities // ignore: cast_nullable_to_non_nullable
-as List<LinuxDistributionCapability>,packageManager: freezed == packageManager ? _self.packageManager : packageManager // ignore: cast_nullable_to_non_nullable
-as LinuxPackageManager?,
+as List<LinuxDistributionCapability>,
   ));
 }
 

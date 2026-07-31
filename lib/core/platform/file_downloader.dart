@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cryptography/cryptography.dart';
@@ -12,6 +13,15 @@ class FileDownloadException implements Exception {
 
   @override
   String toString() => 'FileDownloadException: $message';
+}
+
+/// 用户取消文件下载。
+///
+/// 单独类型让 XDG 工作区把 Dio 取消转换为领域取消事件，普通网络错误仍保持原样。
+class FileDownloadCancelledException extends FileDownloadException {
+  /// 创建下载取消异常。
+  const FileDownloadCancelledException({Object? cause})
+    : super('下载已取消', cause: cause);
 }
 
 /// 通用文件下载器。
@@ -30,7 +40,18 @@ class FileDownloader {
     required String url,
     required String destinationPath,
     void Function(int received, int total)? onProgress,
+    Future<void>? cancellationSignal,
   }) async {
+    final cancelToken = CancelToken();
+    if (cancellationSignal != null) {
+      unawaited(
+        cancellationSignal.then((_) {
+          if (!cancelToken.isCancelled) {
+            cancelToken.cancel('user-cancelled');
+          }
+        }),
+      );
+    }
     try {
       final response = await _dio.get<ResponseBody>(
         url,
@@ -40,6 +61,7 @@ class FileDownloader {
           sendTimeout: const Duration(seconds: 30),
           followRedirects: true,
         ),
+        cancelToken: cancelToken,
       );
 
       final body = response.data;
@@ -67,6 +89,9 @@ class FileDownloader {
     } on FileDownloadException {
       rethrow;
     } on DioException catch (e) {
+      if (CancelToken.isCancel(e)) {
+        throw FileDownloadCancelledException(cause: e);
+      }
       throw FileDownloadException('下载失败: ${e.message}', cause: e);
     } on FileSystemException catch (e) {
       throw FileDownloadException('写入文件失败: ${e.message}', cause: e);
@@ -77,7 +102,7 @@ class FileDownloader {
 /// 计算文件的 SHA-256 摘要（十六进制字符串）。
 ///
 /// 使用增量哈希避免把整个文件读入内存。
-Future<String> computeSha256(File file) async {
+Future<String> computeFileSha256(File file) async {
   final sha256 = Sha256();
   final sink = sha256.newHashSink();
   await for (final chunk in file.openRead()) {

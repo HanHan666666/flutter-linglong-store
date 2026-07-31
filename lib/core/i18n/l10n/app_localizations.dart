@@ -750,16 +750,10 @@ abstract class AppLocalizations {
   /// **'正在安装更新...'**
   String get updateInstalling;
 
-  /// No description provided for @updateRestarting.
-  ///
-  /// In zh, this message translates to:
-  /// **'更新完成，正在重启...'**
-  String get updateRestarting;
-
   /// No description provided for @updateSucceeded.
   ///
   /// In zh, this message translates to:
-  /// **'更新完成'**
+  /// **'更新已安装，请关闭应用后重新打开以使用新版本'**
   String get updateSucceeded;
 
   /// No description provided for @updateFailed.
@@ -767,6 +761,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'更新失败'**
   String get updateFailed;
+
+  /// No description provided for @updateCancelled.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新已取消'**
+  String get updateCancelled;
 
   /// No description provided for @updateRetry.
   ///

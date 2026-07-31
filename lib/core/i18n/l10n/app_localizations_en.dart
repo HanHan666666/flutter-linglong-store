@@ -351,13 +351,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateInstalling => 'Installing update...';
 
   @override
-  String get updateRestarting => 'Update complete, restarting...';
-
-  @override
-  String get updateSucceeded => 'Update complete';
+  String get updateSucceeded =>
+      'Update installed. Close the app and open it again to use the new version.';
 
   @override
   String get updateFailed => 'Update failed';
+
+  @override
+  String get updateCancelled => 'Update cancelled';
 
   @override
   String get updateRetry => 'Retry';

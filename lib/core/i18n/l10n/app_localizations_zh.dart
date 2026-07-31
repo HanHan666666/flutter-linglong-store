@@ -341,13 +341,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get updateInstalling => '正在安装更新...';
 
   @override
-  String get updateRestarting => '更新完成，正在重启...';
-
-  @override
-  String get updateSucceeded => '更新完成';
+  String get updateSucceeded => '更新已安装，请关闭应用后重新打开以使用新版本';
 
   @override
   String get updateFailed => '更新失败';
+
+  @override
+  String get updateCancelled => '更新已取消';
 
   @override
   String get updateRetry => '重试';

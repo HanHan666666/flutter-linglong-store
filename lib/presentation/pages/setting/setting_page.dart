@@ -20,6 +20,7 @@ import '../../../data/models/api_dto.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/feedback_dialog.dart';
 import '../../widgets/linglong_environment_management_dialog.dart';
+import 'widgets/app_language_selector.dart';
 import 'widgets/renderer_preference_tile.dart';
 
 /// 设置页
@@ -257,51 +258,12 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
   /// 构建语言设置部分
   Widget _buildLanguageSection(BuildContext context, GlobalAppState state) {
-    final locales = selectableAppLocales;
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.outlineVariant,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          for (var index = 0; index < locales.length; index++) ...[
-            if (index > 0) _buildDivider(context),
-            _buildLanguageTile(
-              context,
-              locale: locales[index],
-              label: appLanguageSelfName(locales[index]),
-              isSelected:
-                  state.locale.languageCode == locales[index].languageCode,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  /// 构建语言选项
-  Widget _buildLanguageTile(
-    BuildContext context, {
-    required Locale locale,
-    required String label,
-    required bool isSelected,
-  }) {
-    return RadioListTile<Locale>(
-      title: Text(label),
-      value: locale,
-      groupValue: isSelected ? locale : null, // ignore: deprecated_member_use
-      // ignore: deprecated_member_use
-      onChanged: (value) {
-        if (value != null) {
-          ref.read(globalAppProvider.notifier).setLocale(value);
-        }
-      },
-      activeColor: Theme.of(context).colorScheme.primary,
+    final l10n = AppLocalizations.of(context)!;
+    return AppLanguageSelector(
+      currentLocale: state.locale,
+      locales: selectableAppLocales,
+      label: l10n.languageSettings,
+      onSelected: ref.read(globalAppProvider.notifier).setLocale,
     );
   }
 

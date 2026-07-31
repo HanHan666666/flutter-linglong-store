@@ -4,9 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:linglong_store/application/providers/application_dependency_providers.dart';
+import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/services/version_check_service.dart';
 import 'package:linglong_store/application/providers/linux_renderer_provider.dart';
 import 'package:linglong_store/core/config/theme.dart';
+import 'package:linglong_store/core/i18n/app_locale.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/core/platform/linux_renderer_service.dart';
@@ -41,6 +43,54 @@ void main() {
       expect(find.text('当前仓库源'), findsNothing);
       expect(find.text('可选仓库'), findsNothing);
       expect(find.text('玲珑环境管理'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'setting page collapses languages and updates the selected locale',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({'linglong-store-language': 'zh'});
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: SettingPage()),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(RadioListTile<Locale>), findsNothing);
+      expect(find.text('中文'), findsOneWidget);
+      expect(find.text('English'), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('language-selector-trigger')));
+      await tester.pump();
+
+      for (final locale in selectableAppLocales) {
+        expect(
+          find.byKey(ValueKey('language-option-${locale.toLanguageTag()}')),
+          findsOneWidget,
+        );
+      }
+
+      await tester.tap(find.byKey(const ValueKey('language-option-en')));
+      await tester.pump();
+      await tester.pump();
+
+      expect(container.read(globalAppProvider).locale.languageCode, 'en');
+      expect(find.text('English'), findsOneWidget);
+      expect(find.byType(MenuItemButton), findsNothing);
     },
   );
 

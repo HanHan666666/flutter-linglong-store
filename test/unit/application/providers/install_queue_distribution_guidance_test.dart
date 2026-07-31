@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/application/providers/application_dependency_providers.dart';
 import 'package:linglong_store/application/providers/app_operation_queue_provider.dart';
+import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/linglong_env_provider.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
@@ -328,6 +330,15 @@ Future<ProviderContainer> _createTestContainer(
       ),
       linglongCliRepositoryProvider.overrideWith((ref) => fakeRepo),
       linglongEnvProvider.overrideWithValue(envState),
+      globalAppProvider.overrideWith(_ChineseGlobalApp.new),
     ],
   );
+}
+
+/// 为错误提示测试固定中文，避免并行测试修改平台或持久化 Locale。
+class _ChineseGlobalApp extends GlobalApp {
+  @override
+  GlobalAppState build() {
+    return const GlobalAppState(locale: Locale('zh'), isInitialized: true);
+  }
 }

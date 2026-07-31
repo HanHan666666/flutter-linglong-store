@@ -28,6 +28,7 @@ void main() {
           overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
           child: MaterialApp(
             theme: AppTheme.lightTheme,
+            locale: const Locale('zh'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: const Scaffold(body: SettingPage()),
@@ -225,13 +226,13 @@ void main() {
         matching: find.byType(ListTile),
       );
       final icon = tester.widget<Icon>(
-        find.descendant(of: tile, matching: find.byIcon(Icons.settings_suggest_outlined)),
+        find.descendant(
+          of: tile,
+          matching: find.byIcon(Icons.settings_suggest_outlined),
+        ),
       );
 
-      expect(
-        icon.color,
-        AppTheme.lightTheme.colorScheme.onSurfaceVariant,
-      );
+      expect(icon.color, AppTheme.lightTheme.colorScheme.onSurfaceVariant);
     },
   );
 }

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:linglong_store/application/providers/app_detail_provider.dart';
 import 'package:linglong_store/application/providers/app_uninstall_provider.dart';
+import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/installed_apps_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
@@ -1085,6 +1086,7 @@ Widget _buildTestApp({
       updateAppsProvider.overrideWith(() => _StaticUpdateApps(updateAppsState)),
       installQueueProvider.overrideWith(() => effectiveInstallQueue),
       appUninstallServiceProvider.overrideWithValue(uninstallService),
+      globalAppProvider.overrideWith(_ChineseGlobalApp.new),
     ],
     child: MaterialApp(
       locale: const Locale('zh'),
@@ -1095,6 +1097,14 @@ Widget _buildTestApp({
       home: home,
     ),
   );
+}
+
+/// 为依赖 Application 本地化入口的详情页测试固定中文，隔离宿主系统语言。
+class _ChineseGlobalApp extends GlobalApp {
+  @override
+  GlobalAppState build() {
+    return const GlobalAppState(locale: Locale('zh'), isInitialized: true);
+  }
 }
 
 AppDetailState _detailState({required List<AppVersion> versions}) {

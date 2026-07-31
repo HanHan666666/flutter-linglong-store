@@ -966,6 +966,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageZh => '中文';
 
   @override
+  String get languageSelfName => '中文';
+
+  @override
   String get themeFollowSystem => '跟随系统';
 
   @override

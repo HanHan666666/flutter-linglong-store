@@ -634,6 +634,7 @@
     }
   },
   "languageZh": "中文",
+  "languageSelfName": "中文",
   "themeFollowSystem": "跟随系统",
   "themeLight": "浅色模式",
   "themeDark": "深色模式",

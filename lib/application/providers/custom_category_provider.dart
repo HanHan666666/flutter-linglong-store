@@ -1,6 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/config/local_sidebar_menu_catalog.dart';
+import '../../core/i18n/app_locale.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_exceptions.dart';
@@ -11,7 +13,6 @@ import '../../domain/models/recommend_models.dart';
 import 'api_provider.dart';
 import 'global_provider.dart';
 import 'sidebar_config_provider.dart';
-import '../../core/config/local_sidebar_menu_catalog.dart';
 
 part 'custom_category_provider.freezed.dart';
 part 'custom_category_provider.g.dart';
@@ -74,7 +75,10 @@ class CustomCategory extends _$CustomCategory {
         ),
       );
 
-      final apps = mapAppListToRecommendApps(appsResponse.data.data, pageSize: _customCategoryPageSize);
+      final apps = mapAppListToRecommendApps(
+        appsResponse.data.data,
+        pageSize: _customCategoryPageSize,
+      );
       final categoryInfo = _buildCategoryInfo(menu, apps.total);
 
       state = state.copyWith(
@@ -91,7 +95,7 @@ class CustomCategory extends _$CustomCategory {
 
   /// 根据菜单配置和真实分页总数构建分类头部信息
   CategoryInfo _buildCategoryInfo(SidebarMenuDTO? menu, int total) {
-    final locale = resolveSidebarMenuLocale(ApiClient.getLocale?.call());
+    final locale = resolveSupportedAppLocale(ApiClient.getLocale?.call());
     if (menu != null) {
       return CategoryInfo(
         code: menu.menuCode,
@@ -116,7 +120,9 @@ class CustomCategory extends _$CustomCategory {
 
   /// 加载更多应用
   Future<void> loadMore() async {
-    if (state.isLoading || state.isLoadingMore || state.data?.apps.hasMore == false) {
+    if (state.isLoading ||
+        state.isLoadingMore ||
+        state.data?.apps.hasMore == false) {
       return;
     }
 
@@ -139,7 +145,10 @@ class CustomCategory extends _$CustomCategory {
       );
 
       final currentApps = state.data?.apps.items ?? [];
-      final newApps = mapAppListToRecommendApps(response.data.data, pageSize: _customCategoryPageSize);
+      final newApps = mapAppListToRecommendApps(
+        response.data.data,
+        pageSize: _customCategoryPageSize,
+      );
       final mergedApps = <RecommendAppInfo>[...currentApps, ...newApps.items];
 
       state = state.copyWith(

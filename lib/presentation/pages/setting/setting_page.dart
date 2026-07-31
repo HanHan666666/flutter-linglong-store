@@ -10,6 +10,7 @@ import '../../../application/providers/setting_provider.dart';
 import '../../../application/services/version_check_service.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/config/theme.dart';
+import '../../../core/i18n/app_locale.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/platform/linux_renderer_service.dart';
@@ -257,7 +258,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
   /// 构建语言设置部分
   Widget _buildLanguageSection(BuildContext context, GlobalAppState state) {
-    final l10n = AppLocalizations.of(context)!;
+    final locales = selectableAppLocales;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -269,26 +270,16 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       ),
       child: Column(
         children: [
-          _buildLanguageTile(
-            context,
-            locale: const Locale('zh'),
-            label: l10n.languageZh,
-            isSelected: state.locale.languageCode == 'zh',
-          ),
-          _buildDivider(context),
-          _buildLanguageTile(
-            context,
-            locale: const Locale('en'),
-            label: 'English',
-            isSelected: state.locale.languageCode == 'en',
-          ),
-          _buildDivider(context),
-          _buildLanguageTile(
-            context,
-            locale: const Locale('es'),
-            label: 'Español',
-            isSelected: state.locale.languageCode == 'es',
-          ),
+          for (var index = 0; index < locales.length; index++) ...[
+            if (index > 0) _buildDivider(context),
+            _buildLanguageTile(
+              context,
+              locale: locales[index],
+              label: appLanguageSelfName(locales[index]),
+              isSelected:
+                  state.locale.languageCode == locales[index].languageCode,
+            ),
+          ],
         ],
       ),
     );

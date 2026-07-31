@@ -1804,6 +1804,12 @@ abstract class AppLocalizations {
   /// **'中文'**
   String get languageZh;
 
+  /// No description provided for @languageSelfName.
+  ///
+  /// In zh, this message translates to:
+  /// **'中文'**
+  String get languageSelfName;
+
   /// No description provided for @themeFollowSystem.
   ///
   /// In zh, this message translates to:

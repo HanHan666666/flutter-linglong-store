@@ -6,8 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
-import 'bootstrap/production_dependency_overrides.dart';
 import 'application/providers/og_install_controller.dart';
+import 'bootstrap/production_dependency_overrides.dart';
+import 'core/i18n/app_locale.dart';
 import 'core/logging/app_logger.dart';
 import 'core/migrations/file_migration_lock.dart';
 import 'core/migrations/migrations.dart';
@@ -60,11 +61,18 @@ void main(List<String> arguments) async {
   // 搬到新目录，这里能读到用户历史数据）
   await PreferencesService.init();
   final sharedPreferences = await SharedPreferences.getInstance();
+  final initialLocale = resolveInitialAppLocale(
+    persistedLanguageCode: sharedPreferences.getString(
+      'linglong-store-language',
+    ),
+    platformLocales: WidgetsBinding.instance.platformDispatcher.locales,
+  );
 
   // 初始化网络客户端，避免 Provider 首次读取时访问未初始化的 Dio 单例
   ApiClient.init(
     localeGetter: () =>
-        sharedPreferences.getString('linglong-store-language') ?? 'zh',
+        sharedPreferences.getString('linglong-store-language') ??
+        initialLocale.languageCode,
   );
 
   // 初始化缓存系统；这里需要同步完成 cache box 打开，

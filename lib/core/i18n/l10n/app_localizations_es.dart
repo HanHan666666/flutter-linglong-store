@@ -1011,6 +1011,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get languageZh => 'Chino';
 
   @override
+  String get languageSelfName => 'Español';
+
+  @override
   String get themeFollowSystem => 'Seguir Sistema';
 
   @override

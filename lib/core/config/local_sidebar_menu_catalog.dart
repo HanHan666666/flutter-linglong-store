@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../data/models/api_dto.dart';
+import '../i18n/app_locale.dart';
 import '../i18n/l10n/app_localizations.dart';
 
 enum SidebarMenuLabelKey { office, system, develop, entertainment }
@@ -31,7 +32,7 @@ class LocalSidebarMenuConfig {
   final SidebarMenuLabelKey _labelKey;
 
   String resolveLabel(Locale locale) {
-    final l10n = lookupAppLocalizations(normalizeSidebarMenuLocale(locale));
+    final l10n = lookupAppLocalizations(resolveSupportedAppLocale(locale));
     return switch (_labelKey) {
       SidebarMenuLabelKey.office => l10n.office,
       SidebarMenuLabelKey.system => l10n.system,
@@ -106,30 +107,6 @@ LocalSidebarMenuConfig? lookupLocalSidebarMenuConfig(String menuCode) {
     }
   }
   return null;
-}
-
-/// 将界面语言归一到生成器声明的受支持语言，未知语言保持中文回退。
-Locale normalizeSidebarMenuLocale(Locale locale) {
-  final languageCode = locale.languageCode.toLowerCase();
-  for (final supportedLocale in AppLocalizations.supportedLocales) {
-    if (supportedLocale.languageCode == languageCode) {
-      return supportedLocale;
-    }
-  }
-  return const Locale('zh');
-}
-
-/// 将持久化语言值解析成侧边栏可安全使用的受支持语言。
-Locale resolveSidebarMenuLocale(String? localeName) {
-  final normalized = localeName?.trim().replaceAll('-', '_').toLowerCase();
-  if (normalized == null || normalized.isEmpty) {
-    return const Locale('zh');
-  }
-  final languageCode = normalized.split('_').first;
-  if (languageCode.isEmpty) {
-    return const Locale('zh');
-  }
-  return normalizeSidebarMenuLocale(Locale(languageCode));
 }
 
 SidebarMenuPresentation buildSidebarMenuPresentation({

@@ -1,12 +1,10 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/platform/linux_renderer_service.dart';
 import 'application_dependency_providers.dart'
@@ -266,13 +264,3 @@ String formatBytes(int bytes) {
     return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
   }
 }
-
-/// 支持的语言列表，复用生成结果以避免新增语言时出现重复配置漂移。
-const List<Locale> supportedLocales = AppLocalizations.supportedLocales;
-
-/// 语言名称映射
-const Map<String, String> languageNames = {
-  'zh': '中文',
-  'en': 'English',
-  'es': 'Español',
-};

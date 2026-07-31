@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
@@ -6,8 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../core/logging/app_logger.dart';
 import '../../core/config/theme.dart';
+import '../../core/i18n/app_locale.dart';
+import '../../core/logging/app_logger.dart';
 import 'all_apps_provider.dart';
 import 'application_dependency_providers.dart';
 import 'ranking_provider.dart';
@@ -199,18 +201,19 @@ class GlobalApp extends Notifier<GlobalAppState> {
   /// 的语言和主题，而不是先展示默认值再切换。
   GlobalAppState _restorePersistedSettings() {
     final prefs = _prefs;
+    final initialLocale = resolveInitialAppLocale(
+      persistedLanguageCode: prefs?.getString(_kLanguageKey),
+      platformLocales: PlatformDispatcher.instance.locales,
+    );
     if (prefs == null) {
-      return const GlobalAppState(isInitialized: true);
+      return GlobalAppState(locale: initialLocale, isInitialized: true);
     }
 
     try {
-      var restoredState = const GlobalAppState(isInitialized: true);
-
-      // 加载语言设置
-      final languageCode = prefs.getString(_kLanguageKey);
-      if (languageCode != null) {
-        restoredState = restoredState.copyWith(locale: Locale(languageCode));
-      }
+      var restoredState = GlobalAppState(
+        locale: initialLocale,
+        isInitialized: true,
+      );
 
       // 加载主题模式
       final themeModeIndex = prefs.getInt(_kThemeModeKey);
@@ -233,7 +236,7 @@ class GlobalApp extends Notifier<GlobalAppState> {
       return restoredState;
     } catch (e, s) {
       AppLogger.error('Failed to load persisted settings', e, s);
-      return const GlobalAppState(isInitialized: true);
+      return GlobalAppState(locale: initialLocale, isInitialized: true);
     }
   }
 
@@ -279,12 +282,13 @@ class GlobalApp extends Notifier<GlobalAppState> {
 
   /// 设置语言
   Future<void> setLocale(Locale locale) async {
-    state = state.copyWith(locale: locale);
+    final supportedLocale = resolveSupportedAppLocale(locale);
+    state = state.copyWith(locale: supportedLocale);
     final prefs = _prefs;
     if (prefs != null) {
-      await prefs.setString(_kLanguageKey, locale.languageCode);
+      await prefs.setString(_kLanguageKey, supportedLocale.languageCode);
     }
-    AppLogger.info('Locale changed to: ${locale.languageCode}');
+    AppLogger.info('Locale changed to: ${supportedLocale.languageCode}');
 
     // 刷新所有依赖语言的数据 Provider
     _invalidateLocaleDependentProviders();
@@ -305,15 +309,6 @@ class GlobalApp extends Notifier<GlobalAppState> {
     ref.invalidate(searchProvider);
     ref.invalidate(sidebarConfigProvider);
   }
-
-  /// 设置中文
-  Future<void> setChinese() => setLocale(const Locale('zh'));
-
-  /// 设置英文
-  Future<void> setEnglish() => setLocale(const Locale('en'));
-
-  /// 设置西班牙语
-  Future<void> setSpanish() => setLocale(const Locale('es'));
 
   // ==================== 主题设置 ====================
 

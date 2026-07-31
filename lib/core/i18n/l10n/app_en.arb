@@ -633,6 +633,7 @@
     }
   },
   "languageZh": "Chinese",
+  "languageSelfName": "English",
   "themeFollowSystem": "Follow System",
   "themeLight": "Light Mode",
   "themeDark": "Dark Mode",

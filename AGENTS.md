@@ -291,3 +291,14 @@ Semantics(
 - **合并语义**：`MergeSemantics` 内部子节点被正确合并
 
 测试文件位于 `test/unit/core/accessibility/a11y_semantics_test.dart`。
+
+## 变更记录
+
+- 2026-07-31：紧邻按钮或设置字段展开的轻量菜单统一使用
+  `lib/presentation/widgets/app_anchored_menu.dart` 中的 `AppAnchoredMenu<T>`；标准三点
+  入口使用 `AppAnchoredMenuButton<T>`，禁止在 Presentation 重新引入
+  `PopupMenuButton`、`showMenu` 或页面私有 Overlay。右键上下文菜单继续使用既有原生
+  菜单边界。设置页语言选择保持 `AppLanguageSelector` 单一入口，候选语言只允许来自
+  `selectableAppLocales`，新增语言按 `docs/38-arb-driven-linux-metadata.md` 的 ARB 流程
+  接入，禁止维护第二份语言白名单。菜单不得读取高频 Provider、执行 IO 或增加展开动画；
+  动作项统一保持至少 48px 高度，并保留键盘、焦点恢复和本地化无障碍语义。

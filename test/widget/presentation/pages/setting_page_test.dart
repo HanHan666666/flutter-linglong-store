@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:linglong_store/application/providers/application_dependency_providers.dart';
-import 'package:linglong_store/application/services/version_check_service.dart';
 import 'package:linglong_store/application/providers/linux_renderer_provider.dart';
 import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
@@ -183,20 +182,6 @@ void main() {
 
     expect(find.widgetWithText(FilledButton, '清除缓存'), findsOneWidget);
     expect(find.widgetWithText(ElevatedButton, '清除缓存'), findsNothing);
-  });
-
-  test('setting page uses release result url for update downloads', () {
-    const result = VersionCheckResultUpdateAvailable(
-      currentVersion: '3.3.1',
-      latestVersion: 'v3.3.2',
-      releasePageUrl:
-          'https://github.com/HanHan666666/flutter-linglong-store/releases/tag/v3.3.2',
-    );
-
-    expect(
-      resolveSettingPageUpdateDownloadUrl(result),
-      'https://github.com/HanHan666666/flutter-linglong-store/releases/tag/v3.3.2',
-    );
   });
 
   // 入口图标颜色应与其他列表项一致使用中性灰（onSurfaceVariant），不再使用主题蓝

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../../../core/utils/version_compare.dart';
+import '../../domain/models/app_self_update.dart';
 
 class _ReleaseSource {
   const _ReleaseSource({
@@ -78,6 +79,22 @@ class VersionCheckService {
     return fallbackUrl;
   }
 
+  List<ReleaseAsset> _parseAssets(Map<String, dynamic> release) {
+    final rawAssets = release['assets'];
+    if (rawAssets is! List) {
+      return const [];
+    }
+    final assets = <ReleaseAsset>[];
+    for (final raw in rawAssets) {
+      if (raw is Map) {
+        assets.add(
+          ReleaseAsset.fromJson(Map<String, dynamic>.from(raw)),
+        );
+      }
+    }
+    return assets;
+  }
+
   /// 检查是否有新版本可用
   ///
   /// [currentVersion] 当前应用版本号。
@@ -86,6 +103,9 @@ class VersionCheckService {
     final cleanCurrent = currentVersion.replaceAll(RegExp(r'^v'), '');
     var sawVersionInfoMissing = false;
     DioException? lastDioError;
+    // 若某源返回了更新但未携带资产（如 Gitee 资产结构差异），先记录，
+    // 继续尝试下一个源获取完整资产；全部无资产时兜底返回最后结果。
+    VersionCheckResultUpdateAvailable? pendingUpdate;
 
     for (final source in _kReleaseSources) {
       try {
@@ -101,7 +121,7 @@ class VersionCheckService {
         // 使用 VersionCompare 进行 semver 比较。
         if (VersionCompare.greaterThan(cleanTag, cleanCurrent)) {
           final releaseNotes = release['body'] as String?;
-          return VersionCheckResultUpdateAvailable(
+          final result = VersionCheckResultUpdateAvailable(
             currentVersion: currentVersion,
             latestVersion: tagName,
             releaseNotes: releaseNotes,
@@ -109,7 +129,14 @@ class VersionCheckService {
               release,
               source.defaultHtmlUrl,
             ),
+            assets: _parseAssets(release),
           );
+          if (result.assets.isNotEmpty) {
+            return result;
+          }
+          // 资产为空：先记录，继续尝试其他源。
+          pendingUpdate = result;
+          continue;
         }
 
         return VersionCheckResultNoUpdate(currentVersion: currentVersion);
@@ -125,6 +152,9 @@ class VersionCheckService {
       }
     }
 
+    if (pendingUpdate != null) {
+      return pendingUpdate;
+    }
     if (sawVersionInfoMissing) {
       return const VersionCheckResultVersionInfoMissing();
     }
@@ -155,11 +185,15 @@ class VersionCheckResultUpdateAvailable extends VersionCheckResult {
     required this.latestVersion,
     required this.releasePageUrl,
     this.releaseNotes,
+    this.assets = const [],
   });
   final String currentVersion;
   final String latestVersion;
   final String releasePageUrl;
   final String? releaseNotes;
+
+  /// 本次发布携带的全部资产（含 `hashes.sha256` 校验文件），用于自动安装。
+  final List<ReleaseAsset> assets;
 }
 
 /// 版本信息缺失（tag_name 为空）

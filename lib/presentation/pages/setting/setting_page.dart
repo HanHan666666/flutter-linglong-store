@@ -20,6 +20,8 @@ import '../../../data/models/api_dto.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/feedback_dialog.dart';
 import '../../widgets/linglong_environment_management_dialog.dart';
+import '../../widgets/app_update_flow.dart';
+import '../../widgets/update_available_dialog.dart';
 import 'widgets/renderer_preference_tile.dart';
 
 /// 设置页
@@ -50,14 +52,6 @@ Future<void> runSettingPageInitialization({
   if (!isMounted() || total == null) return;
 
   setAppTotalCount(total);
-}
-
-@visibleForTesting
-String? resolveSettingPageUpdateDownloadUrl(VersionCheckResult result) {
-  return switch (result) {
-    VersionCheckResultUpdateAvailable(:final releasePageUrl) => releasePageUrl,
-    _ => null,
-  };
 }
 
 class _SettingPageState extends ConsumerState<SettingPage> {
@@ -135,33 +129,19 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       switch (result) {
         case VersionCheckResultNoUpdate(:final currentVersion):
           showAppNotification(context, l10n.alreadyLatest(currentVersion));
-        case VersionCheckResultUpdateAvailable(
-          :final latestVersion,
-          :final currentVersion,
-        ):
-          final releasePageUrl = resolveSettingPageUpdateDownloadUrl(result);
+        case VersionCheckResultUpdateAvailable():
           showDialog(
             context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text(l10n.checkUpdate),
-              content: Text(
-                l10n.newVersionFound(latestVersion, currentVersion),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                    if (releasePageUrl != null) {
-                      _openUrl(releasePageUrl);
-                    }
-                  },
-                  child: Text(l10n.goDownload),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(l10n.confirm),
-                ),
-              ],
+            builder: (ctx) => UpdateAvailableDialog(
+              update: result,
+              onOpenUrl: _openUrl,
+              onUpdateNow: () {
+                Navigator.of(ctx).pop();
+                showDialog(
+                  context: context,
+                  builder: (_) => AppUpdateFlowDialog(update: result),
+                );
+              },
             ),
           );
         case VersionCheckResultVersionInfoMissing():

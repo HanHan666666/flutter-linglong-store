@@ -10,6 +10,20 @@ part 'linux_distribution.g.dart';
 enum LinuxDistributionId {
   unknown,
   uos,
+  debian,
+  rpm,
+}
+
+/// 发行版对应的包管理器类型。
+///
+/// 供「应用自更新」等需要按系统包管理器升级的场景消费；
+/// 无法识别或不需要包管理器适配时为空（如纯手动安装的环境）。
+enum LinuxPackageManager {
+  /// dpkg 系（Debian / Ubuntu / Deepin / UOS 等）。
+  dpkg,
+
+  /// rpm 系（Fedora / RHEL / openSUSE 等）。
+  rpm,
 }
 
 /// 发行版能力标签。
@@ -54,6 +68,8 @@ sealed class LinuxDistribution with _$LinuxDistribution {
     /// 能力标签只描述“这个发行版在哪些业务场景需要特殊处理”，
     /// 不直接绑定某个页面实现，避免 UI 和 Provider 重新长出发行版分支。
     @Default(<LinuxDistributionCapability>[]) List<LinuxDistributionCapability> capabilities,
+    /// 当前发行版对应的系统包管理器；无法识别时为空。
+    LinuxPackageManager? packageManager,
   }) = _LinuxDistribution;
 
   factory LinuxDistribution.fromJson(Map<String, dynamic> json) =>
@@ -70,12 +86,29 @@ sealed class LinuxDistribution with _$LinuxDistribution {
   static const uos = LinuxDistribution(
     id: LinuxDistributionId.uos,
     displayName: 'UOS',
+    packageManager: LinuxPackageManager.dpkg,
     capabilities: <LinuxDistributionCapability>[
       LinuxDistributionCapability.envInstallGuidance,
       LinuxDistributionCapability.envInstallRequiresDeveloperMode,
       LinuxDistributionCapability.envInstallRequiresRootPrivilege,
       LinuxDistributionCapability.appInstallFailureGuidance,
     ],
+  );
+
+  /// Debian 系发行版画像（Debian / Ubuntu / Linux Mint 等）。
+  ///
+  /// 仅承担“系统包管理器为 dpkg”的画像，不做特殊文案适配。
+  static const debian = LinuxDistribution(
+    id: LinuxDistributionId.debian,
+    packageManager: LinuxPackageManager.dpkg,
+  );
+
+  /// RPM 系发行版画像（Fedora / RHEL / openSUSE 等）。
+  ///
+  /// 仅承担“系统包管理器为 rpm”的画像，不做特殊文案适配。
+  static const rpm = LinuxDistribution(
+    id: LinuxDistributionId.rpm,
+    packageManager: LinuxPackageManager.rpm,
   );
 
   bool get isKnown => id != LinuxDistributionId.unknown;

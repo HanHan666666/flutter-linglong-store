@@ -12,6 +12,9 @@ import '../../../widgets/app_anchored_menu.dart';
 
 /// 在固定高度设置卡片中展示当前语言，并按需展开完整语言列表。
 class AppLanguageSelector extends StatelessWidget {
+  /// 桌面语言列表保持紧凑可扫读，窄窗口下再由父约束缩小。
+  static const double _preferredMenuWidth = 320;
+
   /// 创建由 ARB 支持列表驱动的语言选择器。
   const AppLanguageSelector({
     required this.currentLocale,
@@ -44,12 +47,16 @@ class AppLanguageSelector extends StatelessWidget {
       padding: const EdgeInsets.all(4),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final menuWidth = constraints.hasBoundedWidth
+          final availableWidth = constraints.hasBoundedWidth
               ? constraints.maxWidth
-              : null;
+              : _preferredMenuWidth;
+          final menuWidth = availableWidth > _preferredMenuWidth
+              ? _preferredMenuWidth
+              : availableWidth;
           return AppAnchoredMenu<Locale>(
             key: const ValueKey('language-selector-menu'),
             menuWidth: menuWidth,
+            alignment: AlignmentDirectional.topStart,
             entries: [
               for (final locale in locales)
                 AppAnchoredMenuItem<Locale>(

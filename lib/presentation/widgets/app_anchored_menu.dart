@@ -176,10 +176,10 @@ class _AppAnchoredMenuState<T> extends State<AppAnchoredMenu<T>> {
         padding: const WidgetStatePropertyAll(
           EdgeInsets.symmetric(vertical: AppSpacing.xs),
         ),
+        // 精确宽度通过相同的最小/最大宽度表达，纵向仍由内容决定。
+        // Size.fromWidth 会携带无限高度，与 maximumSize 组合后可能被 SDK
+        // 钳制为最大高度，导致少量菜单项也撑满整个滚动区域。
         minimumSize: WidgetStatePropertyAll(Size(minimumWidth, 0)),
-        fixedSize: fixedWidth == null
-            ? null
-            : WidgetStatePropertyAll(Size.fromWidth(fixedWidth)),
         maximumSize: WidgetStatePropertyAll(
           Size(maximumWidth, widget.maximumMenuHeight),
         ),

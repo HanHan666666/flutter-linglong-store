@@ -49,6 +49,8 @@ void main() {
   testWidgets(
     'setting page collapses languages and updates the selected locale',
     (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
       SharedPreferences.setMockInitialValues({'linglong-store-language': 'zh'});
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
@@ -83,6 +85,17 @@ void main() {
           findsOneWidget,
         );
       }
+
+      final firstOption = find.byKey(const ValueKey('language-option-zh'));
+      final lastOption = find.byKey(const ValueKey('language-option-ru'));
+      final trigger = find.byKey(const ValueKey('language-selector-trigger'));
+      expect(tester.getSize(firstOption).width, 320);
+      expect(tester.getSize(trigger).width, greaterThan(320));
+      expect(
+        tester.getBottomRight(lastOption).dy -
+            tester.getTopLeft(firstOption).dy,
+        lessThan(320),
+      );
 
       await tester.tap(find.byKey(const ValueKey('language-option-en')));
       await tester.pump();

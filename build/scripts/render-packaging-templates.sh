@@ -100,12 +100,10 @@ fi
 normalize_linux_release_arch "$target_arch"
 
 package_name="linglong-store"
-display_name="玲珑应用商店社区版"
-display_name_ru="Магазин Linyaps — версия сообщества"
-summary_text="Linglong Store Community Edition"
-summary_text_ru="Магазин приложений Linyaps — версия сообщества"
-description_text="Desktop store for browsing and installing Linglong applications."
-description_text_ru="Магазин для поиска и установки приложений Linyaps."
+# DEB/RPM 控制字段不支持在同一文件嵌入全部 locale，保持英文包索引元数据；
+# XDG/AppStream 的自然语言字段由 ARB 生成器单独渲染，禁止在 Shell 声明翻译。
+package_summary_text="Linyaps Store Community Edition"
+package_description_text="Desktop store for browsing, installing, and managing Linyaps applications."
 app_id="$APPLICATION_ID"
 desktop_filename="$CANONICAL_DESKTOP_ID"
 launchable_desktop_id="$desktop_filename"
@@ -167,10 +165,7 @@ case "$channel" in
     ;;
   nightly)
     # Nightly only changes the visible metadata; layout and executable stay stable.
-    display_name="玲珑应用商店社区版 Nightly"
-    display_name_ru="Магазин Linyaps — ночная версия сообщества"
-    summary_text="Linglong Store Community Edition Nightly"
-    summary_text_ru="Ночная версия магазина приложений Linyaps"
+    package_summary_text="Linyaps Store Community Edition Nightly"
     aur_pkgname="linglong-store-nightly-bin"
     # Nightly reuses the stable install paths, so both the concrete stable
     # package name and the shared virtual package must be treated as conflicts.
@@ -226,12 +221,8 @@ render_file() {
   mkdir -p "$(dirname "$output_path")"
   content="$(<"$input_path")"
   content="${content//@PACKAGE_NAME@/$package_name}"
-  content="${content//@DISPLAY_NAME@/$display_name}"
-  content="${content//@DISPLAY_NAME_RU@/$display_name_ru}"
-  content="${content//@SUMMARY@/$summary_text}"
-  content="${content//@SUMMARY_RU@/$summary_text_ru}"
-  content="${content//@DESCRIPTION@/$description_text}"
-  content="${content//@DESCRIPTION_RU@/$description_text_ru}"
+  content="${content//@SUMMARY@/$package_summary_text}"
+  content="${content//@DESCRIPTION@/$package_description_text}"
   content="${content//@EXECUTABLE_NAME@/$executable_name}"
   content="${content//@ICON_NAME@/$icon_name}"
   content="${content//@DESKTOP_FILENAME@/$desktop_filename}"
@@ -275,6 +266,14 @@ cp "$ROOT_DIR/build/packaging/linux/appimage/AppRun" "$output_dir/appimage/AppRu
 render_file \
   "$ROOT_DIR/build/packaging/linux/appimage/linglong-store.appdata.xml" \
   "$output_dir/appimage/linglong-store.appdata.xml"
+
+# 所有自然语言字段由同一 ARB 目录生成；Shell 只传渠道和待渲染文件位置。
+bash "$ROOT_DIR/build/scripts/run-release-dart-tool.sh" \
+  "$ROOT_DIR/build/scripts/render_localized_linux_metadata.dart" \
+  --channel "$channel" \
+  --desktop-file "$output_dir/$desktop_filename" \
+  --compat-directory "$output_dir/compat" \
+  --appstream-file "$output_dir/appimage/linglong-store.appdata.xml"
 
 chmod +x "$output_dir/appimage/AppRun"
 

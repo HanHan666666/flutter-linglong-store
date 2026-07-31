@@ -12,6 +12,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appTitle => 'Tienda de Aplicaciones Linyaps Edición Comunitaria';
 
   @override
+  String get linuxDesktopNameNightly =>
+      'Tienda de Aplicaciones Linyaps Edición Comunitaria Nightly';
+
+  @override
+  String get linuxDesktopGenericName => 'Tienda de aplicaciones';
+
+  @override
+  String get linuxDesktopComment =>
+      'Explora, instala y gestiona aplicaciones Linyaps';
+
+  @override
+  String get linuxDesktopCommentNightly =>
+      'Versión Nightly para explorar, instalar y gestionar aplicaciones Linyaps';
+
+  @override
+  String get linuxDesktopKeywords => 'linyaps;tienda;aplicación;paquete;';
+
+  @override
+  String get linuxAppStreamDescription =>
+      'Una tienda de escritorio para explorar, instalar y gestionar aplicaciones Linyaps.';
+
+  @override
   String get recommend => 'Recomendar';
 
   @override

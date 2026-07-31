@@ -108,6 +108,42 @@ abstract class AppLocalizations {
   /// **'玲珑应用商店社区版'**
   String get appTitle;
 
+  /// Linux Nightly 包在启动器和软件中心显示的应用名称
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑应用商店社区版 Nightly'**
+  String get linuxDesktopNameNightly;
+
+  /// Linux Desktop Entry 使用的通用应用类型名称
+  ///
+  /// In zh, this message translates to:
+  /// **'应用商店'**
+  String get linuxDesktopGenericName;
+
+  /// Linux Stable 包在启动器和软件中心显示的短摘要
+  ///
+  /// In zh, this message translates to:
+  /// **'浏览、安装和管理玲珑应用'**
+  String get linuxDesktopComment;
+
+  /// Linux Nightly 包在启动器和软件中心显示的短摘要
+  ///
+  /// In zh, this message translates to:
+  /// **'用于浏览、安装和管理玲珑应用的 Nightly 构建'**
+  String get linuxDesktopCommentNightly;
+
+  /// Linux 启动器使用的分号分隔搜索关键词，末尾必须保留分号
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑;应用商店;应用;软件包;'**
+  String get linuxDesktopKeywords;
+
+  /// Linux 软件中心通过 AppStream 展示的完整单段描述
+  ///
+  /// In zh, this message translates to:
+  /// **'用于浏览、安装和管理玲珑应用的桌面应用商店。'**
+  String get linuxAppStreamDescription;
+
   /// No description provided for @recommend.
   ///
   /// In zh, this message translates to:

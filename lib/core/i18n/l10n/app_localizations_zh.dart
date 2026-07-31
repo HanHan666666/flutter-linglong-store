@@ -12,6 +12,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appTitle => '玲珑应用商店社区版';
 
   @override
+  String get linuxDesktopNameNightly => '玲珑应用商店社区版 Nightly';
+
+  @override
+  String get linuxDesktopGenericName => '应用商店';
+
+  @override
+  String get linuxDesktopComment => '浏览、安装和管理玲珑应用';
+
+  @override
+  String get linuxDesktopCommentNightly => '用于浏览、安装和管理玲珑应用的 Nightly 构建';
+
+  @override
+  String get linuxDesktopKeywords => '玲珑;应用商店;应用;软件包;';
+
+  @override
+  String get linuxAppStreamDescription => '用于浏览、安装和管理玲珑应用的桌面应用商店。';
+
+  @override
   String get recommend => '推 荐';
 
   @override

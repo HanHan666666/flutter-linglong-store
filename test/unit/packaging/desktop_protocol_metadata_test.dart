@@ -30,15 +30,16 @@ void main() {
       expect(desktopTemplate, isNot(contains('NoDisplay=true')));
     });
 
-    test('declares Russian XDG desktop metadata', () {
+    test('delegates every localized field to the ARB metadata renderer', () {
       final desktopTemplate = File(
         'build/packaging/linux/linglong-store.desktop.in',
       ).readAsStringSync();
 
-      expect(desktopTemplate, contains('Name[ru]=@DISPLAY_NAME_RU@'));
-      expect(desktopTemplate, contains('GenericName[ru]=Магазин приложений'));
-      expect(desktopTemplate, contains('Comment[ru]=@SUMMARY_RU@'));
-      expect(desktopTemplate, contains('Keywords[ru]='));
+      expect(desktopTemplate, contains('@LOCALIZED_DESKTOP_NAME@'));
+      expect(desktopTemplate, contains('@LOCALIZED_DESKTOP_GENERIC_NAME@'));
+      expect(desktopTemplate, contains('@LOCALIZED_DESKTOP_COMMENT@'));
+      expect(desktopTemplate, contains('@LOCALIZED_DESKTOP_KEYWORDS@'));
+      expect(desktopTemplate, isNot(contains(RegExp(r'Name\[[^]]+\]='))));
     });
 
     test(

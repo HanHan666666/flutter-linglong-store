@@ -5,12 +5,8 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=@DISPLAY_NAME@
-Name[zh_CN]=@DISPLAY_NAME@
-Name[ru]=@DISPLAY_NAME_RU@
-Comment=@SUMMARY@
-Comment[zh_CN]=@DISPLAY_NAME@
-Comment[ru]=@SUMMARY_RU@
+@LOCALIZED_DESKTOP_NAME@
+@LOCALIZED_DESKTOP_COMMENT@
 Exec=@EXECUTABLE_NAME@ %u
 Icon=@ICON_NAME@
 StartupWMClass=@WM_CLASS@

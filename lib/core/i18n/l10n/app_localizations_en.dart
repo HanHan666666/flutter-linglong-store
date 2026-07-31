@@ -12,6 +12,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Linyaps Store Community Edition';
 
   @override
+  String get linuxDesktopNameNightly =>
+      'Linyaps Store Community Edition Nightly';
+
+  @override
+  String get linuxDesktopGenericName => 'Application Store';
+
+  @override
+  String get linuxDesktopComment =>
+      'Browse, install, and manage Linyaps applications';
+
+  @override
+  String get linuxDesktopCommentNightly =>
+      'Nightly build for browsing, installing, and managing Linyaps applications';
+
+  @override
+  String get linuxDesktopKeywords => 'linyaps;store;application;package;';
+
+  @override
+  String get linuxAppStreamDescription =>
+      'A desktop store for browsing, installing, and managing Linyaps applications.';
+
+  @override
   String get recommend => 'Recommend';
 
   @override

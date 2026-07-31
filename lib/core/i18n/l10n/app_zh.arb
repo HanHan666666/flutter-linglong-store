@@ -1,6 +1,32 @@
 {
   "@@locale": "zh",
+  "@@linuxDesktopLocale": "zh_CN",
+  "@@appStreamLocale": "zh-CN",
   "appTitle": "玲珑应用商店社区版",
+  "linuxDesktopNameNightly": "玲珑应用商店社区版 Nightly",
+  "@linuxDesktopNameNightly": {
+    "description": "Linux Nightly 包在启动器和软件中心显示的应用名称"
+  },
+  "linuxDesktopGenericName": "应用商店",
+  "@linuxDesktopGenericName": {
+    "description": "Linux Desktop Entry 使用的通用应用类型名称"
+  },
+  "linuxDesktopComment": "浏览、安装和管理玲珑应用",
+  "@linuxDesktopComment": {
+    "description": "Linux Stable 包在启动器和软件中心显示的短摘要"
+  },
+  "linuxDesktopCommentNightly": "用于浏览、安装和管理玲珑应用的 Nightly 构建",
+  "@linuxDesktopCommentNightly": {
+    "description": "Linux Nightly 包在启动器和软件中心显示的短摘要"
+  },
+  "linuxDesktopKeywords": "玲珑;应用商店;应用;软件包;",
+  "@linuxDesktopKeywords": {
+    "description": "Linux 启动器使用的分号分隔搜索关键词，末尾必须保留分号"
+  },
+  "linuxAppStreamDescription": "用于浏览、安装和管理玲珑应用的桌面应用商店。",
+  "@linuxAppStreamDescription": {
+    "description": "Linux 软件中心通过 AppStream 展示的完整单段描述"
+  },
   "recommend": "推 荐",
   "allApps": "全部应用",
   "ranking": "排行榜",

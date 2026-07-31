@@ -319,10 +319,8 @@ desktop_count="$(find "$RENDER_OUTPUT_DIR" -maxdepth 1 -type f -name '*.desktop'
 test "$desktop_count" = "1"
 canonical_desktop_path="$RENDER_OUTPUT_DIR/$CANONICAL_DESKTOP_ID"
 test -f "$canonical_desktop_path"
-grep -q '^Name=玲珑应用商店社区版$' "$canonical_desktop_path"
-grep -q '^Name\[ru\]=Магазин Linyaps — версия сообщества$' "$canonical_desktop_path"
-grep -q '^Comment=Linglong Store Community Edition$' "$canonical_desktop_path"
-grep -q '^Comment\[ru\]=Магазин приложений Linyaps — версия сообщества$' "$canonical_desktop_path"
+grep -q '^Name=Linyaps Store Community Edition$' "$canonical_desktop_path"
+grep -q '^Comment=Browse, install, and manage Linyaps applications$' "$canonical_desktop_path"
 grep -q '^X-GNOME-UsesNotifications=true$' "$canonical_desktop_path"
 mapfile -t stable_compat_desktop_ids < <(
   application_identity_compat_desktop_ids stable
@@ -333,10 +331,8 @@ for compat_desktop_id in "${stable_compat_desktop_ids[@]}"; do
   grep -q '^NoDisplay=true$' "$compat_desktop_path"
   grep -q '^MimeType=x-scheme-handler/og;$' "$compat_desktop_path"
 done
-grep -q '<name>玲珑应用商店社区版</name>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
-grep -q '<name xml:lang="ru">Магазин Linyaps — версия сообщества</name>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
-grep -q '<summary>Linglong Store Community Edition</summary>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
-grep -q '<summary xml:lang="ru">Магазин приложений Linyaps — версия сообщества</summary>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
+grep -q '<name>Linyaps Store Community Edition</name>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
+grep -q '<summary>Browse, install, and manage Linyaps applications</summary>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 grep -Fq "<launchable type=\"desktop-id\">$CANONICAL_DESKTOP_ID</launchable>" \
   "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 

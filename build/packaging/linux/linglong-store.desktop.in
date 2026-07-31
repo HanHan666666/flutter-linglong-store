@@ -1,21 +1,14 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=@DISPLAY_NAME@
-Name[zh_CN]=@DISPLAY_NAME@
-Name[ru]=@DISPLAY_NAME_RU@
-GenericName=Application Store
-GenericName[zh_CN]=应用商店
-GenericName[ru]=Магазин приложений
-Comment=@SUMMARY@
-Comment[zh_CN]=@DISPLAY_NAME@
-Comment[ru]=@SUMMARY_RU@
+@LOCALIZED_DESKTOP_NAME@
+@LOCALIZED_DESKTOP_GENERIC_NAME@
+@LOCALIZED_DESKTOP_COMMENT@
 Exec=@EXECUTABLE_NAME@ %u
 Icon=@ICON_NAME@
 StartupWMClass=@WM_CLASS@
 Terminal=false
 Categories=System;PackageManager;
 MimeType=x-scheme-handler/og;
-Keywords=linglong;store;app;package;
-Keywords[ru]=linyaps;магазин;приложение;пакет;
+@LOCALIZED_DESKTOP_KEYWORDS@
 X-GNOME-UsesNotifications=true

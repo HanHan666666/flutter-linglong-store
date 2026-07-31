@@ -1,7 +1,8 @@
 # ARB 驱动的 Linux 本地化元数据设计
 
-> 状态：已确认，作为后续新增语言和维护 Linux 平台元数据的强制约定  
-> 适用范围：Flutter 界面、XDG Desktop Entry、AppStream、Stable/Nightly 打包  
+> 状态：已确认，作为后续新增语言和维护 Linux 平台元数据的强制约定
+>
+> 适用范围：Flutter 界面、XDG Desktop Entry、AppStream、Stable/Nightly 打包
 > 关联文档：`docs/37-russian-localization-design.md`
 
 ## 1. 背景

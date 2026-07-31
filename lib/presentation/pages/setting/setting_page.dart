@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../application/providers/api_provider.dart';
+import '../../../application/providers/app_self_update_provider.dart';
 import '../../../application/providers/global_provider.dart';
 import '../../../application/providers/linux_renderer_provider.dart';
 import '../../../application/providers/setting_provider.dart';
@@ -20,6 +23,8 @@ import '../../../data/models/api_dto.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/feedback_dialog.dart';
 import '../../widgets/linglong_environment_management_dialog.dart';
+import '../../widgets/app_update_flow.dart';
+import '../../widgets/update_available_dialog.dart';
 import 'widgets/app_language_selector.dart';
 import 'widgets/renderer_preference_tile.dart';
 
@@ -51,14 +56,6 @@ Future<void> runSettingPageInitialization({
   if (!isMounted() || total == null) return;
 
   setAppTotalCount(total);
-}
-
-@visibleForTesting
-String? resolveSettingPageUpdateDownloadUrl(VersionCheckResult result) {
-  return switch (result) {
-    VersionCheckResultUpdateAvailable(:final releasePageUrl) => releasePageUrl,
-    _ => null,
-  };
 }
 
 class _SettingPageState extends ConsumerState<SettingPage> {
@@ -136,33 +133,26 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       switch (result) {
         case VersionCheckResultNoUpdate(:final currentVersion):
           showAppNotification(context, l10n.alreadyLatest(currentVersion));
-        case VersionCheckResultUpdateAvailable(
-          :final latestVersion,
-          :final currentVersion,
-        ):
-          final releasePageUrl = resolveSettingPageUpdateDownloadUrl(result);
+        case VersionCheckResultUpdateAvailable():
           showDialog(
             context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text(l10n.checkUpdate),
-              content: Text(
-                l10n.newVersionFound(latestVersion, currentVersion),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                    if (releasePageUrl != null) {
-                      _openUrl(releasePageUrl);
-                    }
-                  },
-                  child: Text(l10n.goDownload),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: Text(l10n.confirm),
-                ),
-              ],
+            builder: (ctx) => UpdateAvailableDialog(
+              update: result,
+              onOpenUrl: _openUrl,
+              onUpdateNow: () {
+                Navigator.of(ctx).pop();
+                // Controller 先取得 Release 快照，弹窗只观察应用级任务状态。
+                unawaited(
+                  ref
+                      .read(appSelfUpdateControllerProvider.notifier)
+                      .start(result),
+                );
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => const AppUpdateFlowDialog(),
+                );
+              },
             ),
           );
         case VersionCheckResultVersionInfoMissing():

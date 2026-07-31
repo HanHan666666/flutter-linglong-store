@@ -323,6 +323,48 @@ class AppLocalizationsZh extends AppLocalizations {
   String get goDownload => '前往下载';
 
   @override
+  String get updateNow => '立即更新';
+
+  @override
+  String get updateDetectingInstallation => '正在检测安装方式...';
+
+  @override
+  String get updateResolvingAsset => '正在选择安装包...';
+
+  @override
+  String get updateDownloading => '正在下载更新包...';
+
+  @override
+  String get updateVerifying => '正在校验更新包...';
+
+  @override
+  String get updateInstalling => '正在安装更新...';
+
+  @override
+  String get updateSucceeded => '更新已安装，请关闭应用后重新打开以使用新版本';
+
+  @override
+  String get updateFailed => '更新失败';
+
+  @override
+  String get updateCancelled => '更新已取消';
+
+  @override
+  String get updateRetry => '重试';
+
+  @override
+  String get updateManualInstallHint => '无法自动更新，请前往下载页手动安装';
+
+  @override
+  String get updateUnsupportedArch => '当前架构暂不支持自动安装';
+
+  @override
+  String get updateChecksumMissing => '更新包校验信息缺失，已中止安装';
+
+  @override
+  String get updateChecksumFailed => '更新包校验失败，已中止安装';
+
+  @override
   String get cacheSize => '缓存大小';
 
   @override

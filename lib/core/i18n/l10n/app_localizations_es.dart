@@ -334,6 +334,55 @@ class AppLocalizationsEs extends AppLocalizations {
   String get goDownload => 'Ir a Descargar';
 
   @override
+  String get updateNow => 'Actualizar Ahora';
+
+  @override
+  String get updateDetectingInstallation =>
+      'Detectando método de instalación...';
+
+  @override
+  String get updateResolvingAsset =>
+      'Seleccionando paquete de actualización...';
+
+  @override
+  String get updateDownloading => 'Descargando actualización...';
+
+  @override
+  String get updateVerifying => 'Verificando actualización...';
+
+  @override
+  String get updateInstalling => 'Instalando actualización...';
+
+  @override
+  String get updateSucceeded =>
+      'Actualización instalada. Cierre la aplicación y vuelva a abrirla para usar la nueva versión.';
+
+  @override
+  String get updateFailed => 'Error en la actualización';
+
+  @override
+  String get updateCancelled => 'Actualización cancelada';
+
+  @override
+  String get updateRetry => 'Reintentar';
+
+  @override
+  String get updateManualInstallHint =>
+      'No se puede actualizar automáticamente. Instale la nueva versión manualmente desde la página de descarga.';
+
+  @override
+  String get updateUnsupportedArch =>
+      'La instalación automática no es compatible con la arquitectura actual.';
+
+  @override
+  String get updateChecksumMissing =>
+      'Falta la información de verificación de la actualización. Instalación cancelada.';
+
+  @override
+  String get updateChecksumFailed =>
+      'La verificación de la actualización falló. Instalación cancelada.';
+
+  @override
   String get cacheSize => 'Tamaño de Caché';
 
   @override

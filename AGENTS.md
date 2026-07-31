@@ -295,6 +295,17 @@ Semantics(
 
 测试文件位于 `test/unit/core/accessibility/a11y_semantics_test.dart`。
 
+## 应用自更新约定
+
+- 应用自更新只支持当前实际运行身份为 DEB、RPM 或 AppImage 的场景；其它身份提示用户手动下载安装。
+- 当前运行身份必须由 `LinuxAppInstallationProbe` 判断：有效 `APPIMAGE` 优先，否则查询 `Platform.resolvedExecutable` 的 dpkg/RPM 文件归属。禁止按发行版名称或机器上是否残留同名包推断。
+- `AppSelfUpdateController` 是唯一任务状态和生命周期所有者，必须禁止并发；Presentation 只观察状态并发送开始、重试、取消、关闭事件。
+- 下载工作区必须位于 `$XDG_CACHE_HOME/<application-id>/self-update/session-*`，并在成功、下载失败、SHA256 失败、取消授权和用户取消等所有退出路径清理。
+- Release 安装包按当前身份与架构的宽松文件名后缀选择，随后必须下载同一 Release 的 `hashes.sha256`，按完整文件名读取摘要并校验本地 SHA256；缺少或不一致时禁止安装。
+- 当前方案明确不使用签名更新清单、Ed25519 发布密钥或额外 GitHub Secret，禁止在没有新需求评审时自行增加。
+- DEB、RPM、AppImage 必须保持三个独立 `AppUpdateInstaller`；AppImage 替换后必须设置 `0755`，避免下载文件权限导致应用无法再次启动。
+- 安装成功后不自动退出、不拉起新进程、不引入 PID 重启协调器；只提示用户手动关闭并重新打开应用。
+
 ## 变更记录
 
 - 2026-07-31：紧邻按钮或设置字段展开的轻量菜单统一使用

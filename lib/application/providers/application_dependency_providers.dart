@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../domain/repositories/analytics_repository.dart';
+import '../../domain/repositories/app_self_update_gateways.dart';
 import '../../domain/repositories/app_operation_journal_repository.dart';
 import '../../domain/repositories/app_repository.dart';
 import '../../domain/repositories/error_solution_repository.dart';
@@ -68,6 +69,23 @@ final systemNotificationGatewayProvider = Provider<SystemNotificationGateway>((
   ref,
 ) {
   return _missingDependency('systemNotificationGatewayProvider');
+});
+
+/// 当前进程安装身份探测端口。
+final appInstallationProbeProvider = Provider<AppInstallationProbe>((ref) {
+  return _missingDependency('appInstallationProbeProvider');
+});
+
+/// XDG 自更新工作区工厂端口。
+final appUpdateWorkspaceFactoryProvider = Provider<AppUpdateWorkspaceFactory>((
+  ref,
+) {
+  return _missingDependency('appUpdateWorkspaceFactoryProvider');
+});
+
+/// DEB、RPM 与 AppImage 安装适配器集合。
+final appUpdateInstallersProvider = Provider<List<AppUpdateInstaller>>((ref) {
+  return _missingDependency('appUpdateInstallersProvider');
 });
 
 /// 为遗漏的根装配提供包含端口名称的确定性错误。

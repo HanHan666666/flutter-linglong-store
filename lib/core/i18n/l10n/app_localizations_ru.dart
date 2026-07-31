@@ -333,6 +333,53 @@ class AppLocalizationsRu extends AppLocalizations {
   String get goDownload => 'Перейти к загрузке';
 
   @override
+  String get updateNow => 'Обновить сейчас';
+
+  @override
+  String get updateDetectingInstallation => 'Определяем способ установки...';
+
+  @override
+  String get updateResolvingAsset => 'Выбираем пакет обновления...';
+
+  @override
+  String get updateDownloading => 'Загружаем обновление...';
+
+  @override
+  String get updateVerifying => 'Проверяем обновление...';
+
+  @override
+  String get updateInstalling => 'Устанавливаем обновление...';
+
+  @override
+  String get updateSucceeded =>
+      'Обновление установлено. Закройте приложение и откройте его снова, чтобы использовать новую версию.';
+
+  @override
+  String get updateFailed => 'Ошибка обновления';
+
+  @override
+  String get updateCancelled => 'Обновление отменено';
+
+  @override
+  String get updateRetry => 'Повторить';
+
+  @override
+  String get updateManualInstallHint =>
+      'Автоматическое обновление недоступно. Установите новую версию вручную со страницы загрузки.';
+
+  @override
+  String get updateUnsupportedArch =>
+      'Автоматическая установка не поддерживается для текущей архитектуры.';
+
+  @override
+  String get updateChecksumMissing =>
+      'Отсутствует контрольная информация обновления. Установка отменена.';
+
+  @override
+  String get updateChecksumFailed =>
+      'Проверка контрольной суммы обновления не удалась. Установка отменена.';
+
+  @override
   String get cacheSize => 'Размер кэша';
 
   @override

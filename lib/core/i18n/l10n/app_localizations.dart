@@ -714,6 +714,90 @@ abstract class AppLocalizations {
   /// **'前往下载'**
   String get goDownload;
 
+  /// No description provided for @updateNow.
+  ///
+  /// In zh, this message translates to:
+  /// **'立即更新'**
+  String get updateNow;
+
+  /// No description provided for @updateDetectingInstallation.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在检测安装方式...'**
+  String get updateDetectingInstallation;
+
+  /// No description provided for @updateResolvingAsset.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在选择安装包...'**
+  String get updateResolvingAsset;
+
+  /// No description provided for @updateDownloading.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在下载更新包...'**
+  String get updateDownloading;
+
+  /// No description provided for @updateVerifying.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在校验更新包...'**
+  String get updateVerifying;
+
+  /// No description provided for @updateInstalling.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在安装更新...'**
+  String get updateInstalling;
+
+  /// No description provided for @updateSucceeded.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新已安装，请关闭应用后重新打开以使用新版本'**
+  String get updateSucceeded;
+
+  /// No description provided for @updateFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新失败'**
+  String get updateFailed;
+
+  /// No description provided for @updateCancelled.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新已取消'**
+  String get updateCancelled;
+
+  /// No description provided for @updateRetry.
+  ///
+  /// In zh, this message translates to:
+  /// **'重试'**
+  String get updateRetry;
+
+  /// No description provided for @updateManualInstallHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法自动更新，请前往下载页手动安装'**
+  String get updateManualInstallHint;
+
+  /// No description provided for @updateUnsupportedArch.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前架构暂不支持自动安装'**
+  String get updateUnsupportedArch;
+
+  /// No description provided for @updateChecksumMissing.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新包校验信息缺失，已中止安装'**
+  String get updateChecksumMissing;
+
+  /// No description provided for @updateChecksumFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新包校验失败，已中止安装'**
+  String get updateChecksumFailed;
+
   /// No description provided for @cacheSize.
   ///
   /// In zh, this message translates to:

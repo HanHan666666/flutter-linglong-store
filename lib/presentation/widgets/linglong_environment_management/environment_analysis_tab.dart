@@ -8,9 +8,10 @@ import 'package:flutter/material.dart';
 
 import '../../../application/providers/linglong_environment_management_provider.dart';
 import '../../../core/config/theme.dart';
-import '../../../domain/models/linglong_env_check_result.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/linglong_environment_management.dart';
 import 'environment_management_components.dart';
+import 'environment_management_localizations.dart';
 
 /// 展示玲珑基础环境、本地数据和可修复问题。
 class EnvironmentAnalysisTab extends StatelessWidget {
@@ -41,11 +42,14 @@ class EnvironmentAnalysisTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final analysis = state.analysis;
     if (analysis == null) {
       return EnvironmentManagementEmptyState(
         icon: Icons.manage_search,
-        title: state.errorMessage ?? '尚未完成环境分析',
+        title: state.errorMessage == null
+            ? l10n.envManagementNotAnalyzed
+            : l10n.envResultUnexpectedFailure(state.errorMessage!),
       );
     }
 
@@ -55,10 +59,10 @@ class EnvironmentAnalysisTab extends StatelessWidget {
         _EnvironmentStatusSummary(analysis: analysis),
         const SizedBox(height: 12),
         if (issues.isEmpty)
-          const EnvironmentManagementInfoPanel(
+          EnvironmentManagementInfoPanel(
             icon: Icons.check_circle_outline,
-            title: '未发现需要处理的问题',
-            message: '玲珑基础环境、仓库与本地数据当前状态正常。',
+            title: l10n.envManagementHealthyTitle,
+            message: l10n.envManagementHealthyMessage,
           )
         else
           ...issues.map(
@@ -94,39 +98,40 @@ class _EnvironmentStatusSummary extends StatelessWidget {
     final env = analysis.envResult;
     final storage = analysis.storage;
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     // 固定四列等宽布局，避免 Wrap 在最后一行让单个指标占满可用宽度。
     final chips = <_EnvironmentMetricChip>[
       _EnvironmentMetricChip(
         icon: env.isOk ? Icons.check_circle_outline : Icons.error_outline,
-        label: '基础环境',
-        value: env.statusDescription,
+        label: l10n.envManagementBaseEnvironment,
+        value: localizeLinglongEnvironmentStatus(l10n, env),
         color: env.isOk ? AppColors.success : AppColors.warning,
       ),
       _EnvironmentMetricChip(
         icon: Icons.terminal_outlined,
         label: 'll-cli',
-        value: env.llCliVersion ?? '未检测到',
+        value: env.llCliVersion ?? l10n.envManagementNotDetected,
         color: theme.colorScheme.primary,
       ),
       _EnvironmentMetricChip(
         icon: Icons.hub_outlined,
-        label: '仓库',
-        value: _repoStatusLabel(env.repoStatus),
+        label: l10n.envManagementRepositoryMetric,
+        value: localizeLinglongRepositoryStatus(l10n, env.repoStatus),
         color: theme.colorScheme.secondary,
       ),
       _EnvironmentMetricChip(
         icon: _localDataMetricIcon(analysis.ostree),
-        label: '本地数据',
-        value: _localDataMetricValue(analysis.ostree),
+        label: l10n.envManagementLocalData,
+        value: localizeLinglongLocalDataStatus(l10n, analysis.ostree),
         color: _localDataMetricColor(analysis.ostree),
       ),
       _EnvironmentMetricChip(
         icon: Icons.storage_outlined,
-        label: '保存位置',
+        label: l10n.envManagementStorageLocation,
         value: storage.usagePercent == null
-            ? '未知'
-            : '使用率 ${storage.usagePercent}%',
+            ? l10n.envManagementUnknown
+            : l10n.envManagementUsagePercent(storage.usagePercent!),
         color: storage.isNearlyFull ? AppColors.warning : AppColors.info,
       ),
     ];
@@ -158,28 +163,6 @@ class _EnvironmentStatusSummary extends StatelessWidget {
         return Column(children: rows);
       },
     );
-  }
-
-  /// 把仓库状态映射为环境摘要中的紧凑文案。
-  static String _repoStatusLabel(RepoStatus status) {
-    return switch (status) {
-      RepoStatus.ok => '正常',
-      RepoStatus.notConfigured => '未配置',
-      RepoStatus.misconfigured => '配置异常',
-      RepoStatus.unavailable => '不可用',
-      RepoStatus.unknown => '未知',
-    };
-  }
-
-  /// 根据 linyaps 运行路径的本地数据状态展示指标文案。
-  static String _localDataMetricValue(LinglongOstreeCheckResult localData) {
-    if (!localData.isAvailable) {
-      return '检测失败';
-    }
-    if (!localData.isOk) {
-      return '不可用';
-    }
-    return '正常';
   }
 
   /// 为本地数据指标选择与状态文案一致的图标。
@@ -300,6 +283,8 @@ class _EnvironmentIssueTile extends StatelessWidget {
     final color = issue.severity == LinglongEnvironmentIssueSeverity.error
         ? AppColors.error
         : AppColors.warning;
+    final l10n = AppLocalizations.of(context)!;
+    final issueText = localizeLinglongEnvironmentIssue(l10n, issue);
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -317,13 +302,13 @@ class _EnvironmentIssueTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  issue.title,
+                  issueText.title,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: context.appFontWeight(FontWeight.w600),
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(issue.description),
+                Text(issueText.description),
                 if (issue.rawDetail != null &&
                     issue.rawDetail!.trim().isNotEmpty) ...[
                   const SizedBox(height: 6),
@@ -342,19 +327,19 @@ class _EnvironmentIssueTile extends StatelessWidget {
               LinglongEnvironmentRepairAction.ostreeFsckDelete)
             FilledButton.tonal(
               onPressed: onRepairOstree,
-              child: const Text('修复'),
+              child: Text(l10n.envRepairAction),
             )
           else if (issue.repairAction ==
               LinglongEnvironmentRepairAction.fixDataPermissions)
             FilledButton.tonal(
               onPressed: onRepairDataPermissions,
-              child: const Text('修复'),
+              child: Text(l10n.envRepairAction),
             )
           else if (issue.repairAction ==
               LinglongEnvironmentRepairAction.moveStorageRoot)
             FilledButton.tonal(
               onPressed: onOpenStorageTab,
-              child: const Text('处理'),
+              child: Text(l10n.envHandleAction),
             ),
         ],
       ),

@@ -1651,6 +1651,478 @@ class AppLocalizationsZh extends AppLocalizations {
       '本商店仅能获取官方 stable 仓库的应用数据，请勿删除 stable 仓库，否则将导致无法安装应用。';
 
   @override
+  String get envManagementTitle => '玲珑环境管理';
+
+  @override
+  String get envManagementDescription => '分析环境、管理仓库、修复基础环境和移动保存位置';
+
+  @override
+  String get envManagementAnalysisTab => '环境分析';
+
+  @override
+  String get envManagementRepositoryTab => '仓库管理';
+
+  @override
+  String get envManagementStorageTab => '保存位置';
+
+  @override
+  String get envManagementAnalyzing => '正在分析玲珑环境...';
+
+  @override
+  String get envManagementApplying => '正在执行操作...';
+
+  @override
+  String get envManagementNotAnalyzed => '尚未完成环境分析';
+
+  @override
+  String get envManagementHealthyTitle => '未发现需要处理的问题';
+
+  @override
+  String get envManagementHealthyMessage => '玲珑基础环境、仓库与本地数据当前状态正常。';
+
+  @override
+  String get envManagementBaseEnvironment => '基础环境';
+
+  @override
+  String get envManagementRepositoryMetric => '仓库';
+
+  @override
+  String get envManagementLocalData => '本地数据';
+
+  @override
+  String get envManagementStorageLocation => '保存位置';
+
+  @override
+  String get envManagementNotDetected => '未检测到';
+
+  @override
+  String get envManagementUnknown => '未知';
+
+  @override
+  String envManagementUsagePercent(int percent) {
+    return '使用率 $percent%';
+  }
+
+  @override
+  String get envManagementEnvironmentHealthyUpgrade => '环境正常（建议升级）';
+
+  @override
+  String get envManagementEnvironmentHealthy => '环境正常';
+
+  @override
+  String get envManagementRepositoryReadFailed => '仓库配置读取失败';
+
+  @override
+  String get envManagementEnvironmentAbnormal => '环境异常';
+
+  @override
+  String get envRepoStatusNormal => '正常';
+
+  @override
+  String get envRepoStatusNotConfigured => '未配置';
+
+  @override
+  String get envRepoStatusMisconfigured => '配置异常';
+
+  @override
+  String get envRepoStatusUnavailable => '不可用';
+
+  @override
+  String get envRepoStatusUnknown => '未知';
+
+  @override
+  String get envLocalDataDetectionFailed => '检测失败';
+
+  @override
+  String get envLocalDataUnavailable => '不可用';
+
+  @override
+  String get envLocalDataNormal => '正常';
+
+  @override
+  String get envIssueLlCliUnavailableTitle => 'll-cli 不可用';
+
+  @override
+  String get envIssueLlCliUnavailableDescription => '未检测到可用的玲珑命令行环境。';
+
+  @override
+  String get envIssueRepositoryNotConfiguredTitle => '未配置玲珑仓库';
+
+  @override
+  String get envIssueRepositoryNotConfiguredDescription =>
+      '当前没有可用的玲珑仓库配置，需要先添加或修复仓库。';
+
+  @override
+  String get envIssueDataPermissionTitle => '玲珑数据目录权限异常';
+
+  @override
+  String envIssueDataPermissionDescription(String serviceUser) {
+    return 'll-package-manager 以 $serviceUser 用户运行，但玲珑数据目录或关键状态文件属主异常，可能导致仓库迁移、下载对象或创建 layer 失败。';
+  }
+
+  @override
+  String get envIssueLocalDataDetectionTitle => '玲珑本地数据检测失败';
+
+  @override
+  String get envIssueLocalDataDetectionDescription =>
+      '无法执行 linyaps 本地数据读取检查，请确认 ll-cli 和 package-manager 服务状态。';
+
+  @override
+  String get envIssueLocalDataUnavailableTitle => '玲珑本地数据不可用';
+
+  @override
+  String get envIssueLocalDataUnavailableDescription =>
+      '无法按 linyaps 运行路径读取已安装应用数据，可能影响应用列表、安装或运行。请先确认玲珑数据目录权限和基础环境状态，再按需执行修复。';
+
+  @override
+  String get envIssueStorageSpaceTitle => '玲珑保存位置空间不足';
+
+  @override
+  String envIssueStorageSpaceDescription(String path, int percent) {
+    return '当前 $path 所在文件系统使用率约 $percent%，建议清理或移动保存位置。';
+  }
+
+  @override
+  String get envIssueRunningAppsTitle => '有玲珑应用正在运行';
+
+  @override
+  String envIssueRunningAppsDescription(int count) {
+    return '当前仍有 $count 个玲珑应用正在运行，移动保存位置前必须先关闭。';
+  }
+
+  @override
+  String get envRepairAction => '修复';
+
+  @override
+  String get envHandleAction => '处理';
+
+  @override
+  String get envRepairLocalDataTitle => '修复玲珑本地数据';
+
+  @override
+  String get envRepairLocalDataMessage =>
+      '将以管理员权限尝试修复玲珑本地数据；如果检测到需要重新拉取的应用或基础环境数据，可能产生下载并耗时较长。是否继续？';
+
+  @override
+  String get envRepairLocalDataConfirm => '执行修复';
+
+  @override
+  String get envRepairPermissionTitle => '修复玲珑数据目录权限';
+
+  @override
+  String envRepairPermissionMessage(String rootPath, String serviceUser) {
+    return '将以管理员权限把 $rootPath 的关键目录和状态文件属主恢复为 $serviceUser，并重启玲珑 package-manager。是否继续？';
+  }
+
+  @override
+  String get envRepairPermissionConfirm => '修复权限';
+
+  @override
+  String get envMoveStorageTitle => '移动玲珑保存位置';
+
+  @override
+  String envMoveStorageMessage(String rootPath, String targetPath) {
+    return '将复制 $rootPath 到 $targetPath，并创建 systemd bind mount。请确认目标分区空间充足。';
+  }
+
+  @override
+  String get envMoveStorageConfirm => '开始移动';
+
+  @override
+  String get envAddRepositoryTitle => '添加玲珑仓库';
+
+  @override
+  String get envRepositoryName => '仓库名称';
+
+  @override
+  String get envRepositoryAddress => '仓库地址';
+
+  @override
+  String get envRepositoryAliasOptional => '别名（可选）';
+
+  @override
+  String get envAddAction => '添加';
+
+  @override
+  String get envSaveAction => '保存';
+
+  @override
+  String get envDeleteAction => '删除';
+
+  @override
+  String envUpdateRepositoryTitle(String name) {
+    return '修改仓库地址：$name';
+  }
+
+  @override
+  String envSetPriorityTitle(String name) {
+    return '设置优先级：$name';
+  }
+
+  @override
+  String get envRepositoryPriority => '优先级';
+
+  @override
+  String get envPriorityMustBeNumber => '优先级必须是数字';
+
+  @override
+  String get envRemoveRepositoryTitle => '删除仓库';
+
+  @override
+  String envRemoveRepositoryMessage(String name) {
+    return '确定删除仓库 $name 吗？';
+  }
+
+  @override
+  String get envRepositoryAdded => '仓库已添加';
+
+  @override
+  String envRepositoryAddFailed(String error) {
+    return '添加仓库失败：$error';
+  }
+
+  @override
+  String get envRepositoryUpdated => '仓库已更新';
+
+  @override
+  String envRepositoryUpdateFailed(String error) {
+    return '更新仓库失败：$error';
+  }
+
+  @override
+  String get envPriorityUpdated => '优先级已更新';
+
+  @override
+  String envPriorityUpdateFailed(String error) {
+    return '设置优先级失败：$error';
+  }
+
+  @override
+  String get envRepositoryRemoved => '仓库已删除';
+
+  @override
+  String envRepositoryRemoveFailed(String error) {
+    return '删除仓库失败：$error';
+  }
+
+  @override
+  String get envDefaultRepositoryUpdated => '默认仓库已更新';
+
+  @override
+  String envDefaultRepositoryUpdateFailed(String error) {
+    return '设置默认仓库失败：$error';
+  }
+
+  @override
+  String get envMirrorEnabled => '镜像已启用';
+
+  @override
+  String get envMirrorDisabled => '镜像已禁用';
+
+  @override
+  String envMirrorUpdateFailed(String error) {
+    return '修改镜像状态失败：$error';
+  }
+
+  @override
+  String get envOpenLogDirectoryFailed => '打开日志目录失败';
+
+  @override
+  String get envRepositoryNotLoaded => '尚未加载仓库配置';
+
+  @override
+  String envRepositoryDefaultValue(String name) {
+    return '默认仓库：$name';
+  }
+
+  @override
+  String get envNotSet => '未设置';
+
+  @override
+  String get envAddRepository => '添加仓库';
+
+  @override
+  String get envNoRepositories => '暂无仓库配置';
+
+  @override
+  String get envDefaultBadge => '默认';
+
+  @override
+  String envRepositoryDetails(String name, String priority) {
+    return 'name=$name  priority=$priority';
+  }
+
+  @override
+  String get envRepositoryActions => '仓库操作';
+
+  @override
+  String get envEditAddress => '修改地址';
+
+  @override
+  String get envSetDefault => '设为默认';
+
+  @override
+  String get envSetPriority => '设置优先级';
+
+  @override
+  String get envEnableMirror => '启用镜像';
+
+  @override
+  String get envDisableMirror => '禁用镜像';
+
+  @override
+  String get envCurrentStorageLocation => '当前保存位置';
+
+  @override
+  String get envStorageNotAnalyzed => '尚未完成保存位置分析';
+
+  @override
+  String envStorageSummary(String path, int percent) {
+    return '$path  使用率 $percent%';
+  }
+
+  @override
+  String get envNewStorageLocation => '新的保存位置';
+
+  @override
+  String get envStorageMoveMethod => '移动方式';
+
+  @override
+  String envStorageMoveMethodDescription(String rootPath) {
+    return '玲珑当前不支持直接改安装目录。这里会复制数据后创建 systemd bind mount，将新目录挂载到 $rootPath。';
+  }
+
+  @override
+  String get envMoveStorageAction => '移动保存位置';
+
+  @override
+  String get envCloseAppsBeforeMoveTitle => '移动前需要关闭应用';
+
+  @override
+  String envCloseAppsBeforeMoveMessage(int count) {
+    return '当前仍有 $count 个玲珑应用正在运行。';
+  }
+
+  @override
+  String get envResultDataPermissionCompleted => '玲珑数据目录权限已修复';
+
+  @override
+  String get envResultDataPermissionFailed => '玲珑数据目录权限修复失败';
+
+  @override
+  String get envResultLocalDataUnsupported =>
+      '当前系统组件不支持自动清理问题对象，无法自动修复玲珑本地数据，请升级系统相关组件或使用发行版工具处理。';
+
+  @override
+  String get envResultLocalDataCompleted => '玲珑本地数据修复已执行';
+
+  @override
+  String get envResultLocalDataCompletedLegacy => '玲珑本地数据修复已执行（已兼容旧版系统参数）';
+
+  @override
+  String get envResultLocalDataFailed => '玲珑本地数据修复失败';
+
+  @override
+  String get envResultLocalDataChecksumMismatch =>
+      '玲珑本地数据复验发现对象 checksum 不一致，自动清理后仍未完成修复；若重新拉取后仍复现，通常需要上游仓库数据或 linyaps 本地存储兼容性修复。';
+
+  @override
+  String get envPartialCommitsUnknown => '部分 partial commits';
+
+  @override
+  String envPartialCommitsCount(int count) {
+    return '$count 个 partial commits';
+  }
+
+  @override
+  String envResultLocalDataRepullCompleted(String partialCommits) {
+    return '玲珑本地数据已清理问题对象，并重新拉取 $partialCommits，复验通过。';
+  }
+
+  @override
+  String envResultLocalDataRepullCompletedLegacy(String partialCommits) {
+    return '玲珑本地数据已清理问题对象，并重新拉取 $partialCommits，复验通过（已兼容旧版系统参数）。';
+  }
+
+  @override
+  String envResultLocalDataRepullFailed(String partialCommits) {
+    return '玲珑本地数据已清理可自动处理的问题对象，并尝试重新拉取 $partialCommits，但重新拉取后复验仍未通过。请查看日志确认具体 ref 的拉取或复验失败原因。';
+  }
+
+  @override
+  String envResultLocalDataRepullFailedLegacy(String partialCommits) {
+    return '玲珑本地数据已清理可自动处理的问题对象，并尝试重新拉取 $partialCommits，但重新拉取后复验仍未通过。请查看日志确认具体 ref 的拉取或复验失败原因。（已兼容旧版系统参数）';
+  }
+
+  @override
+  String envResultLocalDataRepullChecksumMismatch(String partialCommits) {
+    return '玲珑本地数据已清理可自动处理的问题对象，并尝试重新拉取 $partialCommits，但复验仍发现 checksum 不一致，可能是上游仓库数据与 linyaps 本地存储模式不兼容。';
+  }
+
+  @override
+  String envResultLocalDataRepullChecksumMismatchLegacy(String partialCommits) {
+    return '玲珑本地数据已清理可自动处理的问题对象，并尝试重新拉取 $partialCommits，但复验仍发现 checksum 不一致，可能是上游仓库数据与 linyaps 本地存储模式不兼容。（已兼容旧版系统参数）';
+  }
+
+  @override
+  String envResultStorageBlockedRunningApps(int count) {
+    return '仍有 $count 个玲珑应用正在运行，请关闭后再移动保存位置。';
+  }
+
+  @override
+  String get envResultStorageBlockedActiveTask =>
+      '下载管理中仍有安装或更新任务，请等待完成或取消任务后再移动玲珑保存位置。';
+
+  @override
+  String envResultStorageBlockedNamedTask(String name) {
+    return '当前正在处理「$name」，请等待完成或取消任务后再移动玲珑保存位置。';
+  }
+
+  @override
+  String envResultStorageAlreadyBindMounted(String path) {
+    return '$path 当前已经是 bind mount，请先确认现有挂载配置后再迁移。';
+  }
+
+  @override
+  String envResultStorageFilesystemUnavailable(String path) {
+    return '无法读取目标路径所在文件系统空间：$path';
+  }
+
+  @override
+  String get envResultStorageSpaceUnknown => '无法确认当前目录或目标路径的磁盘空间，请检查后重试。';
+
+  @override
+  String envResultStorageInsufficientSpace(
+    String requiredSpace,
+    String availableSpace,
+  ) {
+    return '目标路径可用空间不足，需要至少 $requiredSpace，当前可用 $availableSpace。';
+  }
+
+  @override
+  String get envResultStorageTargetNotAbsolute => '目标路径必须是绝对路径。';
+
+  @override
+  String get envResultStorageTargetContainsLineBreak => '目标路径不能包含换行符。';
+
+  @override
+  String get envResultStorageTargetUnsafeSystemPath => '目标路径不能是系统根目录或当前玲珑目录。';
+
+  @override
+  String get envResultStorageTargetInsideCurrentRoot => '目标路径不能位于当前玲珑目录内部。';
+
+  @override
+  String get envResultStorageMoveCompleted => '玲珑保存位置已移动';
+
+  @override
+  String get envResultStorageMoveFailed => '移动玲珑保存位置失败';
+
+  @override
+  String envResultUnexpectedFailure(String error) {
+    return '操作失败：$error';
+  }
+
+  @override
   String get errorSolutionHelpTooltip => '查看解决方案';
 
   @override

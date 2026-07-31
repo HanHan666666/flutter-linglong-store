@@ -3002,6 +3002,801 @@ abstract class AppLocalizations {
   /// **'本商店仅能获取官方 stable 仓库的应用数据，请勿删除 stable 仓库，否则将导致无法安装应用。'**
   String get repoManagementHintMessage;
 
+  /// No description provided for @envManagementTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑环境管理'**
+  String get envManagementTitle;
+
+  /// No description provided for @envManagementDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'分析环境、管理仓库、修复基础环境和移动保存位置'**
+  String get envManagementDescription;
+
+  /// No description provided for @envManagementAnalysisTab.
+  ///
+  /// In zh, this message translates to:
+  /// **'环境分析'**
+  String get envManagementAnalysisTab;
+
+  /// No description provided for @envManagementRepositoryTab.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库管理'**
+  String get envManagementRepositoryTab;
+
+  /// No description provided for @envManagementStorageTab.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存位置'**
+  String get envManagementStorageTab;
+
+  /// No description provided for @envManagementAnalyzing.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在分析玲珑环境...'**
+  String get envManagementAnalyzing;
+
+  /// No description provided for @envManagementApplying.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在执行操作...'**
+  String get envManagementApplying;
+
+  /// No description provided for @envManagementNotAnalyzed.
+  ///
+  /// In zh, this message translates to:
+  /// **'尚未完成环境分析'**
+  String get envManagementNotAnalyzed;
+
+  /// No description provided for @envManagementHealthyTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'未发现需要处理的问题'**
+  String get envManagementHealthyTitle;
+
+  /// No description provided for @envManagementHealthyMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑基础环境、仓库与本地数据当前状态正常。'**
+  String get envManagementHealthyMessage;
+
+  /// No description provided for @envManagementBaseEnvironment.
+  ///
+  /// In zh, this message translates to:
+  /// **'基础环境'**
+  String get envManagementBaseEnvironment;
+
+  /// No description provided for @envManagementRepositoryMetric.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库'**
+  String get envManagementRepositoryMetric;
+
+  /// No description provided for @envManagementLocalData.
+  ///
+  /// In zh, this message translates to:
+  /// **'本地数据'**
+  String get envManagementLocalData;
+
+  /// No description provided for @envManagementStorageLocation.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存位置'**
+  String get envManagementStorageLocation;
+
+  /// No description provided for @envManagementNotDetected.
+  ///
+  /// In zh, this message translates to:
+  /// **'未检测到'**
+  String get envManagementNotDetected;
+
+  /// No description provided for @envManagementUnknown.
+  ///
+  /// In zh, this message translates to:
+  /// **'未知'**
+  String get envManagementUnknown;
+
+  /// No description provided for @envManagementUsagePercent.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用率 {percent}%'**
+  String envManagementUsagePercent(int percent);
+
+  /// No description provided for @envManagementEnvironmentHealthyUpgrade.
+  ///
+  /// In zh, this message translates to:
+  /// **'环境正常（建议升级）'**
+  String get envManagementEnvironmentHealthyUpgrade;
+
+  /// No description provided for @envManagementEnvironmentHealthy.
+  ///
+  /// In zh, this message translates to:
+  /// **'环境正常'**
+  String get envManagementEnvironmentHealthy;
+
+  /// No description provided for @envManagementRepositoryReadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库配置读取失败'**
+  String get envManagementRepositoryReadFailed;
+
+  /// No description provided for @envManagementEnvironmentAbnormal.
+  ///
+  /// In zh, this message translates to:
+  /// **'环境异常'**
+  String get envManagementEnvironmentAbnormal;
+
+  /// No description provided for @envRepoStatusNormal.
+  ///
+  /// In zh, this message translates to:
+  /// **'正常'**
+  String get envRepoStatusNormal;
+
+  /// No description provided for @envRepoStatusNotConfigured.
+  ///
+  /// In zh, this message translates to:
+  /// **'未配置'**
+  String get envRepoStatusNotConfigured;
+
+  /// No description provided for @envRepoStatusMisconfigured.
+  ///
+  /// In zh, this message translates to:
+  /// **'配置异常'**
+  String get envRepoStatusMisconfigured;
+
+  /// No description provided for @envRepoStatusUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'不可用'**
+  String get envRepoStatusUnavailable;
+
+  /// No description provided for @envRepoStatusUnknown.
+  ///
+  /// In zh, this message translates to:
+  /// **'未知'**
+  String get envRepoStatusUnknown;
+
+  /// No description provided for @envLocalDataDetectionFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'检测失败'**
+  String get envLocalDataDetectionFailed;
+
+  /// No description provided for @envLocalDataUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'不可用'**
+  String get envLocalDataUnavailable;
+
+  /// No description provided for @envLocalDataNormal.
+  ///
+  /// In zh, this message translates to:
+  /// **'正常'**
+  String get envLocalDataNormal;
+
+  /// No description provided for @envIssueLlCliUnavailableTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'ll-cli 不可用'**
+  String get envIssueLlCliUnavailableTitle;
+
+  /// No description provided for @envIssueLlCliUnavailableDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'未检测到可用的玲珑命令行环境。'**
+  String get envIssueLlCliUnavailableDescription;
+
+  /// No description provided for @envIssueRepositoryNotConfiguredTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'未配置玲珑仓库'**
+  String get envIssueRepositoryNotConfiguredTitle;
+
+  /// No description provided for @envIssueRepositoryNotConfiguredDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前没有可用的玲珑仓库配置，需要先添加或修复仓库。'**
+  String get envIssueRepositoryNotConfiguredDescription;
+
+  /// No description provided for @envIssueDataPermissionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑数据目录权限异常'**
+  String get envIssueDataPermissionTitle;
+
+  /// No description provided for @envIssueDataPermissionDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'ll-package-manager 以 {serviceUser} 用户运行，但玲珑数据目录或关键状态文件属主异常，可能导致仓库迁移、下载对象或创建 layer 失败。'**
+  String envIssueDataPermissionDescription(String serviceUser);
+
+  /// No description provided for @envIssueLocalDataDetectionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑本地数据检测失败'**
+  String get envIssueLocalDataDetectionTitle;
+
+  /// No description provided for @envIssueLocalDataDetectionDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法执行 linyaps 本地数据读取检查，请确认 ll-cli 和 package-manager 服务状态。'**
+  String get envIssueLocalDataDetectionDescription;
+
+  /// No description provided for @envIssueLocalDataUnavailableTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑本地数据不可用'**
+  String get envIssueLocalDataUnavailableTitle;
+
+  /// No description provided for @envIssueLocalDataUnavailableDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法按 linyaps 运行路径读取已安装应用数据，可能影响应用列表、安装或运行。请先确认玲珑数据目录权限和基础环境状态，再按需执行修复。'**
+  String get envIssueLocalDataUnavailableDescription;
+
+  /// No description provided for @envIssueStorageSpaceTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑保存位置空间不足'**
+  String get envIssueStorageSpaceTitle;
+
+  /// No description provided for @envIssueStorageSpaceDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前 {path} 所在文件系统使用率约 {percent}%，建议清理或移动保存位置。'**
+  String envIssueStorageSpaceDescription(String path, int percent);
+
+  /// No description provided for @envIssueRunningAppsTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'有玲珑应用正在运行'**
+  String get envIssueRunningAppsTitle;
+
+  /// No description provided for @envIssueRunningAppsDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前仍有 {count} 个玲珑应用正在运行，移动保存位置前必须先关闭。'**
+  String envIssueRunningAppsDescription(int count);
+
+  /// No description provided for @envRepairAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'修复'**
+  String get envRepairAction;
+
+  /// No description provided for @envHandleAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'处理'**
+  String get envHandleAction;
+
+  /// No description provided for @envRepairLocalDataTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'修复玲珑本地数据'**
+  String get envRepairLocalDataTitle;
+
+  /// No description provided for @envRepairLocalDataMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'将以管理员权限尝试修复玲珑本地数据；如果检测到需要重新拉取的应用或基础环境数据，可能产生下载并耗时较长。是否继续？'**
+  String get envRepairLocalDataMessage;
+
+  /// No description provided for @envRepairLocalDataConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'执行修复'**
+  String get envRepairLocalDataConfirm;
+
+  /// No description provided for @envRepairPermissionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'修复玲珑数据目录权限'**
+  String get envRepairPermissionTitle;
+
+  /// No description provided for @envRepairPermissionMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'将以管理员权限把 {rootPath} 的关键目录和状态文件属主恢复为 {serviceUser}，并重启玲珑 package-manager。是否继续？'**
+  String envRepairPermissionMessage(String rootPath, String serviceUser);
+
+  /// No description provided for @envRepairPermissionConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'修复权限'**
+  String get envRepairPermissionConfirm;
+
+  /// No description provided for @envMoveStorageTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'移动玲珑保存位置'**
+  String get envMoveStorageTitle;
+
+  /// No description provided for @envMoveStorageMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'将复制 {rootPath} 到 {targetPath}，并创建 systemd bind mount。请确认目标分区空间充足。'**
+  String envMoveStorageMessage(String rootPath, String targetPath);
+
+  /// No description provided for @envMoveStorageConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始移动'**
+  String get envMoveStorageConfirm;
+
+  /// No description provided for @envAddRepositoryTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加玲珑仓库'**
+  String get envAddRepositoryTitle;
+
+  /// No description provided for @envRepositoryName.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库名称'**
+  String get envRepositoryName;
+
+  /// No description provided for @envRepositoryAddress.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库地址'**
+  String get envRepositoryAddress;
+
+  /// No description provided for @envRepositoryAliasOptional.
+  ///
+  /// In zh, this message translates to:
+  /// **'别名（可选）'**
+  String get envRepositoryAliasOptional;
+
+  /// No description provided for @envAddAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加'**
+  String get envAddAction;
+
+  /// No description provided for @envSaveAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存'**
+  String get envSaveAction;
+
+  /// No description provided for @envDeleteAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除'**
+  String get envDeleteAction;
+
+  /// No description provided for @envUpdateRepositoryTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改仓库地址：{name}'**
+  String envUpdateRepositoryTitle(String name);
+
+  /// No description provided for @envSetPriorityTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置优先级：{name}'**
+  String envSetPriorityTitle(String name);
+
+  /// No description provided for @envRepositoryPriority.
+  ///
+  /// In zh, this message translates to:
+  /// **'优先级'**
+  String get envRepositoryPriority;
+
+  /// No description provided for @envPriorityMustBeNumber.
+  ///
+  /// In zh, this message translates to:
+  /// **'优先级必须是数字'**
+  String get envPriorityMustBeNumber;
+
+  /// No description provided for @envRemoveRepositoryTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除仓库'**
+  String get envRemoveRepositoryTitle;
+
+  /// No description provided for @envRemoveRepositoryMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定删除仓库 {name} 吗？'**
+  String envRemoveRepositoryMessage(String name);
+
+  /// No description provided for @envRepositoryAdded.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库已添加'**
+  String get envRepositoryAdded;
+
+  /// No description provided for @envRepositoryAddFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加仓库失败：{error}'**
+  String envRepositoryAddFailed(String error);
+
+  /// No description provided for @envRepositoryUpdated.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库已更新'**
+  String get envRepositoryUpdated;
+
+  /// No description provided for @envRepositoryUpdateFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新仓库失败：{error}'**
+  String envRepositoryUpdateFailed(String error);
+
+  /// No description provided for @envPriorityUpdated.
+  ///
+  /// In zh, this message translates to:
+  /// **'优先级已更新'**
+  String get envPriorityUpdated;
+
+  /// No description provided for @envPriorityUpdateFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置优先级失败：{error}'**
+  String envPriorityUpdateFailed(String error);
+
+  /// No description provided for @envRepositoryRemoved.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库已删除'**
+  String get envRepositoryRemoved;
+
+  /// No description provided for @envRepositoryRemoveFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除仓库失败：{error}'**
+  String envRepositoryRemoveFailed(String error);
+
+  /// No description provided for @envDefaultRepositoryUpdated.
+  ///
+  /// In zh, this message translates to:
+  /// **'默认仓库已更新'**
+  String get envDefaultRepositoryUpdated;
+
+  /// No description provided for @envDefaultRepositoryUpdateFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置默认仓库失败：{error}'**
+  String envDefaultRepositoryUpdateFailed(String error);
+
+  /// No description provided for @envMirrorEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'镜像已启用'**
+  String get envMirrorEnabled;
+
+  /// No description provided for @envMirrorDisabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'镜像已禁用'**
+  String get envMirrorDisabled;
+
+  /// No description provided for @envMirrorUpdateFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改镜像状态失败：{error}'**
+  String envMirrorUpdateFailed(String error);
+
+  /// No description provided for @envOpenLogDirectoryFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开日志目录失败'**
+  String get envOpenLogDirectoryFailed;
+
+  /// No description provided for @envRepositoryNotLoaded.
+  ///
+  /// In zh, this message translates to:
+  /// **'尚未加载仓库配置'**
+  String get envRepositoryNotLoaded;
+
+  /// No description provided for @envRepositoryDefaultValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'默认仓库：{name}'**
+  String envRepositoryDefaultValue(String name);
+
+  /// No description provided for @envNotSet.
+  ///
+  /// In zh, this message translates to:
+  /// **'未设置'**
+  String get envNotSet;
+
+  /// No description provided for @envAddRepository.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加仓库'**
+  String get envAddRepository;
+
+  /// No description provided for @envNoRepositories.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无仓库配置'**
+  String get envNoRepositories;
+
+  /// No description provided for @envDefaultBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'默认'**
+  String get envDefaultBadge;
+
+  /// No description provided for @envRepositoryDetails.
+  ///
+  /// In zh, this message translates to:
+  /// **'name={name}  priority={priority}'**
+  String envRepositoryDetails(String name, String priority);
+
+  /// No description provided for @envRepositoryActions.
+  ///
+  /// In zh, this message translates to:
+  /// **'仓库操作'**
+  String get envRepositoryActions;
+
+  /// No description provided for @envEditAddress.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改地址'**
+  String get envEditAddress;
+
+  /// No description provided for @envSetDefault.
+  ///
+  /// In zh, this message translates to:
+  /// **'设为默认'**
+  String get envSetDefault;
+
+  /// No description provided for @envSetPriority.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置优先级'**
+  String get envSetPriority;
+
+  /// No description provided for @envEnableMirror.
+  ///
+  /// In zh, this message translates to:
+  /// **'启用镜像'**
+  String get envEnableMirror;
+
+  /// No description provided for @envDisableMirror.
+  ///
+  /// In zh, this message translates to:
+  /// **'禁用镜像'**
+  String get envDisableMirror;
+
+  /// No description provided for @envCurrentStorageLocation.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前保存位置'**
+  String get envCurrentStorageLocation;
+
+  /// No description provided for @envStorageNotAnalyzed.
+  ///
+  /// In zh, this message translates to:
+  /// **'尚未完成保存位置分析'**
+  String get envStorageNotAnalyzed;
+
+  /// No description provided for @envStorageSummary.
+  ///
+  /// In zh, this message translates to:
+  /// **'{path}  使用率 {percent}%'**
+  String envStorageSummary(String path, int percent);
+
+  /// No description provided for @envNewStorageLocation.
+  ///
+  /// In zh, this message translates to:
+  /// **'新的保存位置'**
+  String get envNewStorageLocation;
+
+  /// No description provided for @envStorageMoveMethod.
+  ///
+  /// In zh, this message translates to:
+  /// **'移动方式'**
+  String get envStorageMoveMethod;
+
+  /// No description provided for @envStorageMoveMethodDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑当前不支持直接改安装目录。这里会复制数据后创建 systemd bind mount，将新目录挂载到 {rootPath}。'**
+  String envStorageMoveMethodDescription(String rootPath);
+
+  /// No description provided for @envMoveStorageAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'移动保存位置'**
+  String get envMoveStorageAction;
+
+  /// No description provided for @envCloseAppsBeforeMoveTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'移动前需要关闭应用'**
+  String get envCloseAppsBeforeMoveTitle;
+
+  /// No description provided for @envCloseAppsBeforeMoveMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前仍有 {count} 个玲珑应用正在运行。'**
+  String envCloseAppsBeforeMoveMessage(int count);
+
+  /// No description provided for @envResultDataPermissionCompleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑数据目录权限已修复'**
+  String get envResultDataPermissionCompleted;
+
+  /// No description provided for @envResultDataPermissionFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑数据目录权限修复失败'**
+  String get envResultDataPermissionFailed;
+
+  /// No description provided for @envResultLocalDataUnsupported.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前系统组件不支持自动清理问题对象，无法自动修复玲珑本地数据，请升级系统相关组件或使用发行版工具处理。'**
+  String get envResultLocalDataUnsupported;
+
+  /// No description provided for @envResultLocalDataCompleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑本地数据修复已执行'**
+  String get envResultLocalDataCompleted;
+
+  /// No description provided for @envResultLocalDataCompletedLegacy.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑本地数据修复已执行（已兼容旧版系统参数）'**
+  String get envResultLocalDataCompletedLegacy;
+
+  /// No description provided for @envResultLocalDataFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑本地数据修复失败'**
+  String get envResultLocalDataFailed;
+
+  /// No description provided for @envResultLocalDataChecksumMismatch.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑本地数据复验发现对象 checksum 不一致，自动清理后仍未完成修复；若重新拉取后仍复现，通常需要上游仓库数据或 linyaps 本地存储兼容性修复。'**
+  String get envResultLocalDataChecksumMismatch;
+
+  /// No description provided for @envPartialCommitsUnknown.
+  ///
+  /// In zh, this message translates to:
+  /// **'部分 partial commits'**
+  String get envPartialCommitsUnknown;
+
+  /// No description provided for @envPartialCommitsCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个 partial commits'**
+  String envPartialCommitsCount(int count);
+
+  /// No description provided for @envResultLocalDataRepullCompleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑本地数据已清理问题对象，并重新拉取 {partialCommits}，复验通过。'**
+  String envResultLocalDataRepullCompleted(String partialCommits);
+
+  /// No description provided for @envResultLocalDataRepullCompletedLegacy.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑本地数据已清理问题对象，并重新拉取 {partialCommits}，复验通过（已兼容旧版系统参数）。'**
+  String envResultLocalDataRepullCompletedLegacy(String partialCommits);
+
+  /// No description provided for @envResultLocalDataRepullFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑本地数据已清理可自动处理的问题对象，并尝试重新拉取 {partialCommits}，但重新拉取后复验仍未通过。请查看日志确认具体 ref 的拉取或复验失败原因。'**
+  String envResultLocalDataRepullFailed(String partialCommits);
+
+  /// No description provided for @envResultLocalDataRepullFailedLegacy.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑本地数据已清理可自动处理的问题对象，并尝试重新拉取 {partialCommits}，但重新拉取后复验仍未通过。请查看日志确认具体 ref 的拉取或复验失败原因。（已兼容旧版系统参数）'**
+  String envResultLocalDataRepullFailedLegacy(String partialCommits);
+
+  /// No description provided for @envResultLocalDataRepullChecksumMismatch.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑本地数据已清理可自动处理的问题对象，并尝试重新拉取 {partialCommits}，但复验仍发现 checksum 不一致，可能是上游仓库数据与 linyaps 本地存储模式不兼容。'**
+  String envResultLocalDataRepullChecksumMismatch(String partialCommits);
+
+  /// No description provided for @envResultLocalDataRepullChecksumMismatchLegacy.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑本地数据已清理可自动处理的问题对象，并尝试重新拉取 {partialCommits}，但复验仍发现 checksum 不一致，可能是上游仓库数据与 linyaps 本地存储模式不兼容。（已兼容旧版系统参数）'**
+  String envResultLocalDataRepullChecksumMismatchLegacy(String partialCommits);
+
+  /// No description provided for @envResultStorageBlockedRunningApps.
+  ///
+  /// In zh, this message translates to:
+  /// **'仍有 {count} 个玲珑应用正在运行，请关闭后再移动保存位置。'**
+  String envResultStorageBlockedRunningApps(int count);
+
+  /// No description provided for @envResultStorageBlockedActiveTask.
+  ///
+  /// In zh, this message translates to:
+  /// **'下载管理中仍有安装或更新任务，请等待完成或取消任务后再移动玲珑保存位置。'**
+  String get envResultStorageBlockedActiveTask;
+
+  /// No description provided for @envResultStorageBlockedNamedTask.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前正在处理「{name}」，请等待完成或取消任务后再移动玲珑保存位置。'**
+  String envResultStorageBlockedNamedTask(String name);
+
+  /// No description provided for @envResultStorageAlreadyBindMounted.
+  ///
+  /// In zh, this message translates to:
+  /// **'{path} 当前已经是 bind mount，请先确认现有挂载配置后再迁移。'**
+  String envResultStorageAlreadyBindMounted(String path);
+
+  /// No description provided for @envResultStorageFilesystemUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法读取目标路径所在文件系统空间：{path}'**
+  String envResultStorageFilesystemUnavailable(String path);
+
+  /// No description provided for @envResultStorageSpaceUnknown.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法确认当前目录或目标路径的磁盘空间，请检查后重试。'**
+  String get envResultStorageSpaceUnknown;
+
+  /// No description provided for @envResultStorageInsufficientSpace.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标路径可用空间不足，需要至少 {requiredSpace}，当前可用 {availableSpace}。'**
+  String envResultStorageInsufficientSpace(
+    String requiredSpace,
+    String availableSpace,
+  );
+
+  /// No description provided for @envResultStorageTargetNotAbsolute.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标路径必须是绝对路径。'**
+  String get envResultStorageTargetNotAbsolute;
+
+  /// No description provided for @envResultStorageTargetContainsLineBreak.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标路径不能包含换行符。'**
+  String get envResultStorageTargetContainsLineBreak;
+
+  /// No description provided for @envResultStorageTargetUnsafeSystemPath.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标路径不能是系统根目录或当前玲珑目录。'**
+  String get envResultStorageTargetUnsafeSystemPath;
+
+  /// No description provided for @envResultStorageTargetInsideCurrentRoot.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标路径不能位于当前玲珑目录内部。'**
+  String get envResultStorageTargetInsideCurrentRoot;
+
+  /// No description provided for @envResultStorageMoveCompleted.
+  ///
+  /// In zh, this message translates to:
+  /// **'玲珑保存位置已移动'**
+  String get envResultStorageMoveCompleted;
+
+  /// No description provided for @envResultStorageMoveFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'移动玲珑保存位置失败'**
+  String get envResultStorageMoveFailed;
+
+  /// No description provided for @envResultUnexpectedFailure.
+  ///
+  /// In zh, this message translates to:
+  /// **'操作失败：{error}'**
+  String envResultUnexpectedFailure(String error);
+
   /// No description provided for @errorSolutionHelpTooltip.
   ///
   /// In zh, this message translates to:

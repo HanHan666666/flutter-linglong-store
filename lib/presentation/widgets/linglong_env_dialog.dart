@@ -13,6 +13,7 @@ import '../../core/platform/window_service.dart';
 import '../../core/utils/app_notification_helpers.dart';
 import '../../domain/models/linux_distribution.dart';
 import '../../domain/models/linglong_env_check_result.dart';
+import 'linglong_environment_management/environment_management_localizations.dart';
 
 /// 玲珑环境检测对话框
 ///
@@ -158,7 +159,7 @@ class LinglongEnvDialog extends ConsumerWidget {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  result.statusDescription,
+                  localizeLinglongEnvironmentStatus(l10n!, result),
                   style: context.appTextStyles.body.copyWith(
                     color: result.isOk ? AppColors.success : AppColors.warning,
                     fontWeight: context.appFontWeight(FontWeight.w500),
@@ -207,8 +208,8 @@ class LinglongEnvDialog extends ConsumerWidget {
                     const SizedBox(width: AppSpacing.sm),
                     Text(
                       result.shouldSuggestPackageManagerRestart
-                          ? l10n?.repoShowFailureTitle ?? '仓库读取命令执行失败'
-                          : l10n?.errorMessage ?? '错误信息',
+                          ? l10n.repoShowFailureTitle
+                          : l10n.errorMessage,
                       style: context.appTextStyles.caption.copyWith(
                         color: AppColors.error,
                         fontWeight: context.appFontWeight(FontWeight.w500),

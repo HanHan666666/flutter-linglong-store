@@ -250,25 +250,24 @@ exit "\$verify_rc"
       return LinglongEnvironmentRepairResult(
         action: action,
         success: false,
-        message: '当前系统组件不支持自动清理问题对象，无法自动修复玲珑本地数据，请升级系统相关组件或使用发行版工具处理。',
+        code: LinglongEnvironmentRepairResultCode.localDataRepairUnsupported,
         logFilePath: logFilePath,
         output: output,
       );
     }
 
-    final successMessage = usedLegacyFallback
-        ? '玲珑本地数据修复已执行（已兼容旧版系统参数）'
-        : '玲珑本地数据修复已执行';
-    final failureMessage = _hasChecksumCorruption(result)
-        ? '玲珑本地数据复验发现对象 checksum 不一致，自动清理后仍未完成修复；'
-              '若重新拉取后仍复现，通常需要上游仓库数据或 linyaps 本地存储兼容性修复。'
-        : '玲珑本地数据修复失败';
+    final resultCode = result.success
+        ? LinglongEnvironmentRepairResultCode.localDataRepairCompleted
+        : _hasChecksumCorruption(result)
+        ? LinglongEnvironmentRepairResultCode.localDataRepairChecksumMismatch
+        : LinglongEnvironmentRepairResultCode.localDataRepairFailed;
     return LinglongEnvironmentRepairResult(
       action: action,
       success: result.success,
-      message: result.success ? successMessage : failureMessage,
+      code: resultCode,
       logFilePath: logFilePath,
       output: output,
+      usedLegacyFallback: usedLegacyFallback,
     );
   }
 
@@ -281,8 +280,6 @@ exit "\$verify_rc"
     bool usedLegacyFallback = false,
   }) {
     final count = _extractPartialCommitCount(fsckResult);
-    final countText = count == null ? '部分' : '$count 个';
-    final legacySuffix = usedLegacyFallback ? '（已兼容旧版系统参数）' : '';
     final output = _workspace.truncateOutput(
       _workspace.combinedCommandOutputs(outputResults),
     );
@@ -292,25 +289,24 @@ exit "\$verify_rc"
       return LinglongEnvironmentRepairResult(
         action: action,
         success: true,
-        message:
-            '玲珑本地数据已清理问题对象，并重新拉取 $countText partial commits，'
-            '复验通过$legacySuffix。',
+        code: LinglongEnvironmentRepairResultCode.localDataRepullCompleted,
         logFilePath: logFilePath,
         output: output,
+        count: count,
+        usedLegacyFallback: usedLegacyFallback,
       );
     }
 
-    final compatibilityHint = _hasChecksumCorruption(repullResult)
-        ? '复验仍发现 checksum 不一致，可能是上游仓库数据与 linyaps 本地存储模式不兼容。'
-        : '请查看日志确认具体 ref 的拉取或复验失败原因。';
     return LinglongEnvironmentRepairResult(
       action: action,
       success: false,
-      message:
-          '玲珑本地数据已清理可自动处理的问题对象，并尝试重新拉取 $countText partial commits，'
-          '但重新拉取后复验仍未通过。$compatibilityHint$legacySuffix',
+      code: _hasChecksumCorruption(repullResult)
+          ? LinglongEnvironmentRepairResultCode.localDataRepullChecksumMismatch
+          : LinglongEnvironmentRepairResultCode.localDataRepullFailed,
       logFilePath: logFilePath,
       output: output,
+      count: count,
+      usedLegacyFallback: usedLegacyFallback,
     );
   }
 

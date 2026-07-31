@@ -33,23 +33,33 @@ class LinglongStorageMigrationService {
     String targetPath, {
     String? logFilePath,
   }) async {
+    final targetFailure = _targetPathFailure(targetPath);
+    if (targetFailure != null) {
+      return LinglongEnvironmentRepairResult(
+        action: LinglongEnvironmentRepairAction.moveStorageRoot,
+        success: false,
+        code: LinglongEnvironmentRepairResultCode.storageTargetInvalid,
+        subject: targetPath,
+        storageTargetFailureReason: targetFailure,
+      );
+    }
     final normalizedTargetPath = _normalizeTargetPath(targetPath);
     final runningAppCount = await _probe.loadRunningAppCount();
     if (runningAppCount > 0) {
       return LinglongEnvironmentRepairResult(
         action: LinglongEnvironmentRepairAction.moveStorageRoot,
         success: false,
-        message: '仍有 $runningAppCount 个玲珑应用正在运行，请关闭后再移动保存位置',
+        code:
+            LinglongEnvironmentRepairResultCode.storageMoveBlockedByRunningApps,
+        count: runningAppCount,
       );
     }
 
-    final validationError = await _validatePreconditions(normalizedTargetPath);
-    if (validationError != null) {
-      return LinglongEnvironmentRepairResult(
-        action: LinglongEnvironmentRepairAction.moveStorageRoot,
-        success: false,
-        message: validationError,
-      );
+    final validationFailure = await _validatePreconditions(
+      normalizedTargetPath,
+    );
+    if (validationFailure != null) {
+      return validationFailure;
     }
 
     final scriptFile = await _workspace.writeTemporaryScript(
@@ -74,7 +84,9 @@ class LinglongStorageMigrationService {
       return LinglongEnvironmentRepairResult(
         action: LinglongEnvironmentRepairAction.moveStorageRoot,
         success: result.success,
-        message: result.success ? '玲珑保存位置已移动' : '移动玲珑保存位置失败',
+        code: result.success
+            ? LinglongEnvironmentRepairResultCode.storageMoveCompleted
+            : LinglongEnvironmentRepairResultCode.storageMoveFailed,
         logFilePath: resolvedLogFilePath,
         output: _workspace.truncateOutput(_workspace.primaryOutput(result)),
       );
@@ -164,10 +176,18 @@ echo "旧目录备份：\$BACKUP"
   }
 
   /// 校验挂载状态和目标文件系统空间，不执行任何变更命令。
-  Future<String?> _validatePreconditions(String normalizedTargetPath) async {
+  Future<LinglongEnvironmentRepairResult?> _validatePreconditions(
+    String normalizedTargetPath,
+  ) async {
+    const action = LinglongEnvironmentRepairAction.moveStorageRoot;
     final storage = await _probe.loadStorageInfo();
     if (storage.isBindMounted) {
-      return '${_probe.rootPath} 当前已经是 bind mount，请先确认现有挂载配置后再迁移。';
+      return LinglongEnvironmentRepairResult(
+        action: action,
+        success: false,
+        code: LinglongEnvironmentRepairResultCode.storageAlreadyBindMounted,
+        subject: _probe.rootPath,
+      );
     }
 
     final targetProbePath = await _probe.nearestExistingPath(
@@ -175,13 +195,23 @@ echo "旧目录备份：\$BACKUP"
     );
     final targetInfo = await _probe.loadFilesystemInfo(targetProbePath);
     if (targetInfo == null) {
-      return '无法读取目标路径所在文件系统空间：$targetProbePath';
+      return LinglongEnvironmentRepairResult(
+        action: action,
+        success: false,
+        code: LinglongEnvironmentRepairResultCode
+            .storageTargetFilesystemUnavailable,
+        subject: targetProbePath,
+      );
     }
 
     final sourceUsedBytes = storage.usedBytes;
     final targetAvailableBytes = targetInfo.availableBytes;
     if (sourceUsedBytes == null || targetAvailableBytes == null) {
-      return '无法确认当前目录或目标路径的磁盘空间，请检查后重试。';
+      return const LinglongEnvironmentRepairResult(
+        action: action,
+        success: false,
+        code: LinglongEnvironmentRepairResultCode.storageSpaceUnknown,
+      );
     }
 
     final safetyMarginBytes = math.max(
@@ -190,8 +220,13 @@ echo "旧目录备份：\$BACKUP"
     );
     final requiredBytes = sourceUsedBytes + safetyMarginBytes;
     if (targetAvailableBytes < requiredBytes) {
-      return '目标路径可用空间不足，需要至少 ${_formatBytes(requiredBytes)}，'
-          '当前可用 ${_formatBytes(targetAvailableBytes)}。';
+      return LinglongEnvironmentRepairResult(
+        action: action,
+        success: false,
+        code: LinglongEnvironmentRepairResultCode.storageInsufficientSpace,
+        requiredSpace: _formatBytes(requiredBytes),
+        availableSpace: _formatBytes(targetAvailableBytes),
+      );
     }
 
     return null;
@@ -199,27 +234,32 @@ echo "旧目录备份：\$BACKUP"
 
   /// 规范化目标绝对路径并拒绝系统级或玲珑根目录内部的危险目标。
   String _normalizeTargetPath(String targetPath) {
+    final failure = _targetPathFailure(targetPath);
+    if (failure != null) {
+      throw ArgumentError.value(targetPath, 'targetPath', failure.name);
+    }
+    return path.normalize(targetPath.trim());
+  }
+
+  /// 返回目标路径不满足安全边界时的稳定失败原因。
+  LinglongStorageTargetFailureReason? _targetPathFailure(String targetPath) {
     final trimmed = targetPath.trim();
     if (trimmed.isEmpty || !path.isAbsolute(trimmed)) {
-      throw ArgumentError.value(targetPath, 'targetPath', '必须是绝对路径');
+      return LinglongStorageTargetFailureReason.notAbsolute;
     }
     if (trimmed.contains('\n') || trimmed.contains('\r')) {
-      throw ArgumentError.value(targetPath, 'targetPath', '路径不能包含换行符');
+      return LinglongStorageTargetFailureReason.containsLineBreak;
     }
     final normalized = path.normalize(trimmed);
     final currentRoot = path.normalize(_probe.rootPath);
     const blockedTargets = {'/', '/var', '/var/lib'};
     if (blockedTargets.contains(normalized) || normalized == currentRoot) {
-      throw ArgumentError.value(
-        targetPath,
-        'targetPath',
-        '目标路径不能是系统根目录或当前玲珑目录',
-      );
+      return LinglongStorageTargetFailureReason.unsafeSystemPath;
     }
     if (path.isWithin(currentRoot, normalized)) {
-      throw ArgumentError.value(targetPath, 'targetPath', '目标路径不能位于当前玲珑目录内部');
+      return LinglongStorageTargetFailureReason.insideCurrentRoot;
     }
-    return normalized;
+    return null;
   }
 
   /// 使用迁移提示约定的二进制单位格式化容量。

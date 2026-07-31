@@ -5,6 +5,7 @@ enum LinglongEnvironmentIssueSeverity { info, warning, error }
 enum LinglongEnvironmentIssueCode {
   llCliUnavailable,
   repositoryNotConfigured,
+  localDataDetectionFailed,
   ostreeRepositoryCorrupted,
   ostreeToolUnavailable,
 
@@ -27,19 +28,35 @@ class LinglongEnvironmentIssue {
   const LinglongEnvironmentIssue({
     required this.code,
     required this.severity,
-    required this.title,
-    required this.description,
     this.repairAction,
     this.rawDetail,
+    this.subject,
+    this.count,
+    this.percent,
   });
 
+  /// 可供 Presentation 稳定映射本地化文案的问题代码。
   final LinglongEnvironmentIssueCode code;
+
+  /// 决定问题卡片视觉层级的严重程度。
   final LinglongEnvironmentIssueSeverity severity;
-  final String title;
-  final String description;
+
+  /// 用户确认后允许执行的受控修复动作。
   final LinglongEnvironmentRepairAction? repairAction;
+
+  /// 不参与翻译的原始命令或系统诊断。
   final String? rawDetail;
 
+  /// 问题涉及的服务用户、路径或其他不可翻译标识。
+  final String? subject;
+
+  /// 问题涉及的应用或对象数量。
+  final int? count;
+
+  /// 问题涉及的整数百分比。
+  final int? percent;
+
+  /// 当前问题是否提供受控修复入口。
   bool get isRepairable => repairAction != null;
 }
 
@@ -144,18 +161,90 @@ class LinglongEnvironmentAnalysis {
   bool get canMoveStorage => runningAppCount == 0;
 }
 
+/// 环境管理操作的稳定结果代码。
+///
+/// Application 只返回代码和事实，Presentation 根据当前 Locale 生成用户文案。
+enum LinglongEnvironmentRepairResultCode {
+  dataPermissionRepairCompleted,
+  dataPermissionRepairFailed,
+  localDataRepairUnsupported,
+  localDataRepairCompleted,
+  localDataRepairFailed,
+  localDataRepairChecksumMismatch,
+  localDataRepullCompleted,
+  localDataRepullFailed,
+  localDataRepullChecksumMismatch,
+  storageMoveBlockedByRunningApps,
+  storageMoveBlockedByActiveTask,
+  storageMoveBlockedByNamedActiveTask,
+  storageAlreadyBindMounted,
+  storageTargetFilesystemUnavailable,
+  storageSpaceUnknown,
+  storageInsufficientSpace,
+  storageTargetInvalid,
+  storageMoveCompleted,
+  storageMoveFailed,
+  unexpectedFailure,
+}
+
+/// 保存位置输入校验失败的稳定原因。
+enum LinglongStorageTargetFailureReason {
+  notAbsolute,
+  containsLineBreak,
+  unsafeSystemPath,
+  insideCurrentRoot,
+}
+
+/// 环境修复或保存位置迁移结果。
 class LinglongEnvironmentRepairResult {
   const LinglongEnvironmentRepairResult({
     required this.action,
     required this.success,
-    required this.message,
+    required this.code,
     this.logFilePath,
     this.output,
+    this.diagnostic,
+    this.subject,
+    this.count,
+    this.requiredSpace,
+    this.availableSpace,
+    this.usedLegacyFallback = false,
+    this.storageTargetFailureReason,
   });
 
+  /// 本次结果对应的受控动作。
   final LinglongEnvironmentRepairAction action;
+
+  /// 动作是否达到业务成功终态。
   final bool success;
-  final String message;
+
+  /// 供 Presentation 映射本地化文案的稳定代码。
+  final LinglongEnvironmentRepairResultCode code;
+
+  /// 完整日志文件路径。
   final String? logFilePath;
+
+  /// 界面允许展示的截断命令输出。
   final String? output;
+
+  /// 不参与翻译的异常或命令诊断。
+  final String? diagnostic;
+
+  /// 路径、任务名称等不可翻译的动态事实。
+  final String? subject;
+
+  /// 应用或 partial commit 数量。
+  final int? count;
+
+  /// 空间校验要求的格式化容量。
+  final String? requiredSpace;
+
+  /// 空间校验中当前可用的格式化容量。
+  final String? availableSpace;
+
+  /// 是否使用了旧版系统参数兼容路径。
+  final bool usedLegacyFallback;
+
+  /// 保存位置输入失败时的具体稳定原因。
+  final LinglongStorageTargetFailureReason? storageTargetFailureReason;
 }

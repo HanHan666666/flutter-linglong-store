@@ -7,6 +7,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../../application/providers/linglong_environment_management_provider.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/linglong_environment_management.dart';
 import 'environment_management_components.dart';
 
@@ -35,6 +36,7 @@ class StorageManagementTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final analysis = state.analysis;
     final storage = analysis?.storage;
 
@@ -42,27 +44,30 @@ class StorageManagementTab extends StatelessWidget {
       children: [
         EnvironmentManagementInfoPanel(
           icon: Icons.folder_copy_outlined,
-          title: '当前保存位置',
+          title: l10n.envCurrentStorageLocation,
           message: storage == null
-              ? '尚未完成保存位置分析'
-              : '${storage.rootPath}  ${storage.usagePercent == null ? '' : '使用率 ${storage.usagePercent}%'}',
+              ? l10n.envStorageNotAnalyzed
+              : storage.usagePercent == null
+              ? storage.rootPath
+              : l10n.envStorageSummary(storage.rootPath, storage.usagePercent!),
         ),
         const SizedBox(height: 12),
         TextField(
           controller: targetController,
           enabled: !state.isBusy,
-          decoration: const InputDecoration(
-            labelText: '新的保存位置',
-            prefixIcon: Icon(Icons.folder_outlined),
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: l10n.envNewStorageLocation,
+            prefixIcon: const Icon(Icons.folder_outlined),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 12),
-        const EnvironmentManagementInfoPanel(
+        EnvironmentManagementInfoPanel(
           icon: Icons.info_outline,
-          title: '移动方式',
-          message:
-              '玲珑当前不支持直接改安装目录。这里会复制数据后创建 systemd bind mount，将新目录挂载到 $linglongEnvironmentRootPath。',
+          title: l10n.envStorageMoveMethod,
+          message: l10n.envStorageMoveMethodDescription(
+            linglongEnvironmentRootPath,
+          ),
         ),
         const SizedBox(height: 12),
         FilledButton.icon(
@@ -70,14 +75,14 @@ class StorageManagementTab extends StatelessWidget {
               ? null
               : onMoveStorage,
           icon: const Icon(Icons.drive_file_move_outline, size: 18),
-          label: const Text('移动保存位置'),
+          label: Text(l10n.envMoveStorageAction),
         ),
         if (analysis?.runningAppCount case final count? when count > 0) ...[
           const SizedBox(height: 12),
           EnvironmentManagementInfoPanel(
             icon: Icons.warning_amber_rounded,
-            title: '移动前需要关闭应用',
-            message: '当前仍有 $count 个玲珑应用正在运行。',
+            title: l10n.envCloseAppsBeforeMoveTitle,
+            message: l10n.envCloseAppsBeforeMoveMessage(count),
             warning: true,
           ),
         ],

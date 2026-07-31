@@ -108,7 +108,12 @@ void main() {
 
         final state = container.read(linglongEnvironmentManagementProvider);
         expect(result.success, isFalse);
-        expect(result.message, contains('Demo'));
+        expect(
+          result.code,
+          LinglongEnvironmentRepairResultCode
+              .storageMoveBlockedByNamedActiveTask,
+        );
+        expect(result.subject, 'Demo');
         expect(state.status, LinglongEnvironmentManagementStatus.failed);
         expect(state.repairResult?.success, isFalse);
         expect(service.moveStorageCallCount, 0);
@@ -211,7 +216,7 @@ class _FakeManagementService extends LinglongEnvironmentManagementService {
     return const LinglongEnvironmentRepairResult(
       action: LinglongEnvironmentRepairAction.ostreeFsckDelete,
       success: true,
-      message: 'ok',
+      code: LinglongEnvironmentRepairResultCode.localDataRepairCompleted,
       logFilePath: '/tmp/repair.log',
     );
   }
@@ -224,7 +229,7 @@ class _FakeManagementService extends LinglongEnvironmentManagementService {
     return const LinglongEnvironmentRepairResult(
       action: LinglongEnvironmentRepairAction.fixDataPermissions,
       success: true,
-      message: 'fixed',
+      code: LinglongEnvironmentRepairResultCode.dataPermissionRepairCompleted,
       logFilePath: '/tmp/permission.log',
     );
   }
@@ -238,7 +243,7 @@ class _FakeManagementService extends LinglongEnvironmentManagementService {
     return const LinglongEnvironmentRepairResult(
       action: LinglongEnvironmentRepairAction.moveStorageRoot,
       success: true,
-      message: 'moved',
+      code: LinglongEnvironmentRepairResultCode.storageMoveCompleted,
       logFilePath: '/tmp/move.log',
     );
   }

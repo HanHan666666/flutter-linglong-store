@@ -57,7 +57,9 @@ class LinglongDataPermissionRepairService {
       return LinglongEnvironmentRepairResult(
         action: LinglongEnvironmentRepairAction.fixDataPermissions,
         success: result.success,
-        message: result.success ? '玲珑数据目录权限已修复' : '玲珑数据目录权限修复失败',
+        code: result.success
+            ? LinglongEnvironmentRepairResultCode.dataPermissionRepairCompleted
+            : LinglongEnvironmentRepairResultCode.dataPermissionRepairFailed,
         logFilePath: resolvedLogFilePath,
         output: _workspace.truncateOutput(
           _workspace.combinedCommandOutput(result),

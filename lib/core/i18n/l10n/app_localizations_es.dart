@@ -1732,6 +1732,510 @@ class AppLocalizationsEs extends AppLocalizations {
       'Esta tienda solo puede obtener datos de aplicaciones del repositorio oficial stable. No elimine el repositorio stable, ya que esto impedirá la instalación de aplicaciones.';
 
   @override
+  String get envManagementTitle => 'Gestión del Entorno de Linyaps';
+
+  @override
+  String get envManagementDescription =>
+      'Analizar el entorno, gestionar repositorios, reparar el entorno base y mover la ubicación de almacenamiento';
+
+  @override
+  String get envManagementAnalysisTab => 'Entorno';
+
+  @override
+  String get envManagementRepositoryTab => 'Repositorios';
+
+  @override
+  String get envManagementStorageTab => 'Almacenamiento';
+
+  @override
+  String get envManagementAnalyzing => 'Analizando el entorno de Linyaps...';
+
+  @override
+  String get envManagementApplying => 'Ejecutando la operación...';
+
+  @override
+  String get envManagementNotAnalyzed =>
+      'El análisis del entorno aún no ha finalizado';
+
+  @override
+  String get envManagementHealthyTitle =>
+      'No hay problemas que requieran atención';
+
+  @override
+  String get envManagementHealthyMessage =>
+      'El entorno base, los repositorios y los datos locales de Linyaps funcionan correctamente.';
+
+  @override
+  String get envManagementBaseEnvironment => 'Entorno base';
+
+  @override
+  String get envManagementRepositoryMetric => 'Repositorio';
+
+  @override
+  String get envManagementLocalData => 'Datos locales';
+
+  @override
+  String get envManagementStorageLocation => 'Ubicación de almacenamiento';
+
+  @override
+  String get envManagementNotDetected => 'No detectado';
+
+  @override
+  String get envManagementUnknown => 'Desconocido';
+
+  @override
+  String envManagementUsagePercent(int percent) {
+    return '$percent% utilizado';
+  }
+
+  @override
+  String get envManagementEnvironmentHealthyUpgrade =>
+      'Correcto (se recomienda actualizar)';
+
+  @override
+  String get envManagementEnvironmentHealthy => 'Correcto';
+
+  @override
+  String get envManagementRepositoryReadFailed =>
+      'No se pudo leer la configuración del repositorio';
+
+  @override
+  String get envManagementEnvironmentAbnormal => 'Problema del entorno';
+
+  @override
+  String get envRepoStatusNormal => 'Normal';
+
+  @override
+  String get envRepoStatusNotConfigured => 'Sin configurar';
+
+  @override
+  String get envRepoStatusMisconfigured => 'Configuración incorrecta';
+
+  @override
+  String get envRepoStatusUnavailable => 'No disponible';
+
+  @override
+  String get envRepoStatusUnknown => 'Desconocido';
+
+  @override
+  String get envLocalDataDetectionFailed => 'Error de comprobación';
+
+  @override
+  String get envLocalDataUnavailable => 'No disponibles';
+
+  @override
+  String get envLocalDataNormal => 'Normales';
+
+  @override
+  String get envIssueLlCliUnavailableTitle => 'll-cli no está disponible';
+
+  @override
+  String get envIssueLlCliUnavailableDescription =>
+      'No se detectó un entorno de línea de comandos de Linyaps utilizable.';
+
+  @override
+  String get envIssueRepositoryNotConfiguredTitle =>
+      'No hay un repositorio de Linyaps configurado';
+
+  @override
+  String get envIssueRepositoryNotConfiguredDescription =>
+      'No hay ningún repositorio de Linyaps utilizable. Añada o repare primero un repositorio.';
+
+  @override
+  String get envIssueDataPermissionTitle =>
+      'Los permisos del directorio de datos de Linyaps no son válidos';
+
+  @override
+  String envIssueDataPermissionDescription(String serviceUser) {
+    return 'll-package-manager se ejecuta como $serviceUser, pero el directorio de datos de Linyaps o los archivos de estado importantes tienen un propietario incorrecto. La migración del repositorio, la descarga de objetos o la creación de capas pueden fallar.';
+  }
+
+  @override
+  String get envIssueLocalDataDetectionTitle =>
+      'Falló la comprobación de datos locales de Linyaps';
+
+  @override
+  String get envIssueLocalDataDetectionDescription =>
+      'No se pudo ejecutar la comprobación de lectura de datos locales de linyaps. Verifique el estado de ll-cli y del servicio package-manager.';
+
+  @override
+  String get envIssueLocalDataUnavailableTitle =>
+      'Los datos locales de Linyaps no están disponibles';
+
+  @override
+  String get envIssueLocalDataUnavailableDescription =>
+      'No se pueden leer los datos de las aplicaciones instaladas mediante la ruta de ejecución de linyaps. La lista, instalación o ejecución de aplicaciones pueden verse afectadas. Compruebe los permisos y el entorno base antes de reparar.';
+
+  @override
+  String get envIssueStorageSpaceTitle =>
+      'Queda poco espacio en la ubicación de Linyaps';
+
+  @override
+  String envIssueStorageSpaceDescription(String path, int percent) {
+    return 'El sistema de archivos que contiene $path está aproximadamente al $percent%. Libere espacio o mueva la ubicación de almacenamiento.';
+  }
+
+  @override
+  String get envIssueRunningAppsTitle =>
+      'Hay aplicaciones de Linyaps en ejecución';
+
+  @override
+  String envIssueRunningAppsDescription(int count) {
+    return 'Aún hay $count aplicaciones de Linyaps en ejecución. Ciérrelas antes de mover la ubicación de almacenamiento.';
+  }
+
+  @override
+  String get envRepairAction => 'Reparar';
+
+  @override
+  String get envHandleAction => 'Resolver';
+
+  @override
+  String get envRepairLocalDataTitle => 'Reparar los datos locales de Linyaps';
+
+  @override
+  String get envRepairLocalDataMessage =>
+      'Se intentarán reparar los datos locales de Linyaps con privilegios de administrador. Si es necesario volver a descargar datos de aplicaciones o del entorno base, el proceso puede tardar bastante. ¿Desea continuar?';
+
+  @override
+  String get envRepairLocalDataConfirm => 'Ejecutar reparación';
+
+  @override
+  String get envRepairPermissionTitle =>
+      'Reparar los permisos del directorio de datos de Linyaps';
+
+  @override
+  String envRepairPermissionMessage(String rootPath, String serviceUser) {
+    return 'Se restaurará con privilegios de administrador el propietario de los directorios y archivos de estado importantes de $rootPath a $serviceUser, y después se reiniciará package-manager. ¿Desea continuar?';
+  }
+
+  @override
+  String get envRepairPermissionConfirm => 'Reparar permisos';
+
+  @override
+  String get envMoveStorageTitle =>
+      'Mover la ubicación de almacenamiento de Linyaps';
+
+  @override
+  String envMoveStorageMessage(String rootPath, String targetPath) {
+    return 'Se copiará $rootPath a $targetPath y se creará un bind mount de systemd. Confirme que el sistema de archivos de destino tiene espacio suficiente.';
+  }
+
+  @override
+  String get envMoveStorageConfirm => 'Iniciar traslado';
+
+  @override
+  String get envAddRepositoryTitle => 'Añadir repositorio de Linyaps';
+
+  @override
+  String get envRepositoryName => 'Nombre del repositorio';
+
+  @override
+  String get envRepositoryAddress => 'Dirección del repositorio';
+
+  @override
+  String get envRepositoryAliasOptional => 'Alias (opcional)';
+
+  @override
+  String get envAddAction => 'Añadir';
+
+  @override
+  String get envSaveAction => 'Guardar';
+
+  @override
+  String get envDeleteAction => 'Eliminar';
+
+  @override
+  String envUpdateRepositoryTitle(String name) {
+    return 'Editar dirección del repositorio: $name';
+  }
+
+  @override
+  String envSetPriorityTitle(String name) {
+    return 'Establecer prioridad: $name';
+  }
+
+  @override
+  String get envRepositoryPriority => 'Prioridad';
+
+  @override
+  String get envPriorityMustBeNumber => 'La prioridad debe ser un número';
+
+  @override
+  String get envRemoveRepositoryTitle => 'Eliminar repositorio';
+
+  @override
+  String envRemoveRepositoryMessage(String name) {
+    return '¿Desea eliminar el repositorio $name?';
+  }
+
+  @override
+  String get envRepositoryAdded => 'Repositorio añadido';
+
+  @override
+  String envRepositoryAddFailed(String error) {
+    return 'No se pudo añadir el repositorio: $error';
+  }
+
+  @override
+  String get envRepositoryUpdated => 'Repositorio actualizado';
+
+  @override
+  String envRepositoryUpdateFailed(String error) {
+    return 'No se pudo actualizar el repositorio: $error';
+  }
+
+  @override
+  String get envPriorityUpdated => 'Prioridad actualizada';
+
+  @override
+  String envPriorityUpdateFailed(String error) {
+    return 'No se pudo establecer la prioridad: $error';
+  }
+
+  @override
+  String get envRepositoryRemoved => 'Repositorio eliminado';
+
+  @override
+  String envRepositoryRemoveFailed(String error) {
+    return 'No se pudo eliminar el repositorio: $error';
+  }
+
+  @override
+  String get envDefaultRepositoryUpdated =>
+      'Repositorio predeterminado actualizado';
+
+  @override
+  String envDefaultRepositoryUpdateFailed(String error) {
+    return 'No se pudo establecer el repositorio predeterminado: $error';
+  }
+
+  @override
+  String get envMirrorEnabled => 'Espejo activado';
+
+  @override
+  String get envMirrorDisabled => 'Espejo desactivado';
+
+  @override
+  String envMirrorUpdateFailed(String error) {
+    return 'No se pudo cambiar el estado del espejo: $error';
+  }
+
+  @override
+  String get envOpenLogDirectoryFailed =>
+      'No se pudo abrir la carpeta de registros';
+
+  @override
+  String get envRepositoryNotLoaded =>
+      'La configuración del repositorio aún no se ha cargado';
+
+  @override
+  String envRepositoryDefaultValue(String name) {
+    return 'Repositorio predeterminado: $name';
+  }
+
+  @override
+  String get envNotSet => 'Sin establecer';
+
+  @override
+  String get envAddRepository => 'Añadir repositorio';
+
+  @override
+  String get envNoRepositories => 'No hay repositorios configurados';
+
+  @override
+  String get envDefaultBadge => 'Predeterminado';
+
+  @override
+  String envRepositoryDetails(String name, String priority) {
+    return 'name=$name  priority=$priority';
+  }
+
+  @override
+  String get envRepositoryActions => 'Acciones del repositorio';
+
+  @override
+  String get envEditAddress => 'Editar dirección';
+
+  @override
+  String get envSetDefault => 'Establecer como predeterminado';
+
+  @override
+  String get envSetPriority => 'Establecer prioridad';
+
+  @override
+  String get envEnableMirror => 'Activar espejo';
+
+  @override
+  String get envDisableMirror => 'Desactivar espejo';
+
+  @override
+  String get envCurrentStorageLocation => 'Ubicación de almacenamiento actual';
+
+  @override
+  String get envStorageNotAnalyzed =>
+      'El análisis de la ubicación aún no ha finalizado';
+
+  @override
+  String envStorageSummary(String path, int percent) {
+    return '$path  $percent% utilizado';
+  }
+
+  @override
+  String get envNewStorageLocation => 'Nueva ubicación de almacenamiento';
+
+  @override
+  String get envStorageMoveMethod => 'Método de traslado';
+
+  @override
+  String envStorageMoveMethodDescription(String rootPath) {
+    return 'Linyaps no permite cambiar directamente el directorio de instalación. Esta operación copia los datos y crea un bind mount de systemd en $rootPath.';
+  }
+
+  @override
+  String get envMoveStorageAction => 'Mover ubicación de almacenamiento';
+
+  @override
+  String get envCloseAppsBeforeMoveTitle =>
+      'Cierre las aplicaciones antes de mover';
+
+  @override
+  String envCloseAppsBeforeMoveMessage(int count) {
+    return 'Aún hay $count aplicaciones de Linyaps en ejecución.';
+  }
+
+  @override
+  String get envResultDataPermissionCompleted =>
+      'Se repararon los permisos del directorio de datos de Linyaps';
+
+  @override
+  String get envResultDataPermissionFailed =>
+      'No se pudieron reparar los permisos del directorio de datos de Linyaps';
+
+  @override
+  String get envResultLocalDataUnsupported =>
+      'Los componentes actuales del sistema no pueden eliminar automáticamente los objetos problemáticos. Actualice los componentes pertinentes o utilice las herramientas de su distribución para reparar los datos locales de Linyaps.';
+
+  @override
+  String get envResultLocalDataCompleted =>
+      'Se completó la reparación de los datos locales de Linyaps';
+
+  @override
+  String get envResultLocalDataCompletedLegacy =>
+      'Se completó la reparación de los datos locales de Linyaps usando parámetros de sistemas antiguos';
+
+  @override
+  String get envResultLocalDataFailed =>
+      'Falló la reparación de los datos locales de Linyaps';
+
+  @override
+  String get envResultLocalDataChecksumMismatch =>
+      'La verificación todavía encontró objetos con checksum incorrecto después de la limpieza automática. Si reaparecen tras descargar los datos, puede ser necesario corregir el repositorio de origen o la compatibilidad del almacenamiento local de linyaps.';
+
+  @override
+  String get envPartialCommitsUnknown => 'algunos partial commits';
+
+  @override
+  String envPartialCommitsCount(int count) {
+    return '$count partial commits';
+  }
+
+  @override
+  String envResultLocalDataRepullCompleted(String partialCommits) {
+    return 'Se eliminaron los objetos problemáticos, se descargaron de nuevo $partialCommits y la verificación fue correcta.';
+  }
+
+  @override
+  String envResultLocalDataRepullCompletedLegacy(String partialCommits) {
+    return 'Se eliminaron los objetos problemáticos, se descargaron de nuevo $partialCommits y la verificación fue correcta usando parámetros de sistemas antiguos.';
+  }
+
+  @override
+  String envResultLocalDataRepullFailed(String partialCommits) {
+    return 'Se eliminaron los objetos reparables automáticamente y se descargaron de nuevo $partialCommits, pero la verificación siguió fallando. Consulte el registro para identificar el ref que no pudo descargarse o verificarse.';
+  }
+
+  @override
+  String envResultLocalDataRepullFailedLegacy(String partialCommits) {
+    return 'Se eliminaron los objetos reparables automáticamente y se descargaron de nuevo $partialCommits usando parámetros de sistemas antiguos, pero la verificación siguió fallando. Consulte el registro para identificar el ref afectado.';
+  }
+
+  @override
+  String envResultLocalDataRepullChecksumMismatch(String partialCommits) {
+    return 'Se eliminaron los objetos reparables automáticamente y se descargaron de nuevo $partialCommits, pero la verificación siguió encontrando checksum incorrectos. Los datos del repositorio de origen pueden ser incompatibles con el modo de almacenamiento local de linyaps.';
+  }
+
+  @override
+  String envResultLocalDataRepullChecksumMismatchLegacy(String partialCommits) {
+    return 'Se eliminaron los objetos reparables automáticamente y se descargaron de nuevo $partialCommits usando parámetros de sistemas antiguos, pero la verificación siguió encontrando checksum incorrectos. Los datos del repositorio de origen pueden ser incompatibles con el almacenamiento local de linyaps.';
+  }
+
+  @override
+  String envResultStorageBlockedRunningApps(int count) {
+    return 'Aún hay $count aplicaciones de Linyaps en ejecución. Ciérrelas antes de mover la ubicación.';
+  }
+
+  @override
+  String get envResultStorageBlockedActiveTask =>
+      'Hay una instalación o actualización activa en el gestor de descargas. Espere a que termine o cancélela antes de mover la ubicación de Linyaps.';
+
+  @override
+  String envResultStorageBlockedNamedTask(String name) {
+    return 'Se está procesando $name. Espere a que termine o cancele la tarea antes de mover la ubicación de Linyaps.';
+  }
+
+  @override
+  String envResultStorageAlreadyBindMounted(String path) {
+    return '$path ya es un bind mount. Revise la configuración de montaje existente antes de migrar.';
+  }
+
+  @override
+  String envResultStorageFilesystemUnavailable(String path) {
+    return 'No se pudo leer el espacio del sistema de archivos de destino: $path';
+  }
+
+  @override
+  String get envResultStorageSpaceUnknown =>
+      'No se pudo determinar el espacio disponible del directorio actual o de destino. Compruébelo e inténtelo de nuevo.';
+
+  @override
+  String envResultStorageInsufficientSpace(
+    String requiredSpace,
+    String availableSpace,
+  ) {
+    return 'La ruta de destino necesita al menos $requiredSpace, pero solo hay $availableSpace disponibles.';
+  }
+
+  @override
+  String get envResultStorageTargetNotAbsolute =>
+      'La ruta de destino debe ser absoluta.';
+
+  @override
+  String get envResultStorageTargetContainsLineBreak =>
+      'La ruta de destino no puede contener saltos de línea.';
+
+  @override
+  String get envResultStorageTargetUnsafeSystemPath =>
+      'La ruta de destino no puede ser un directorio raíz del sistema ni el directorio actual de Linyaps.';
+
+  @override
+  String get envResultStorageTargetInsideCurrentRoot =>
+      'La ruta de destino no puede estar dentro del directorio actual de Linyaps.';
+
+  @override
+  String get envResultStorageMoveCompleted =>
+      'Se movió la ubicación de almacenamiento de Linyaps';
+
+  @override
+  String get envResultStorageMoveFailed =>
+      'No se pudo mover la ubicación de almacenamiento de Linyaps';
+
+  @override
+  String envResultUnexpectedFailure(String error) {
+    return 'La operación falló: $error';
+  }
+
+  @override
   String get errorSolutionHelpTooltip => 'Ver solución';
 
   @override

@@ -50,11 +50,14 @@ class RepositoryManagementTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final config = state.repositoryConfig;
     if (config == null) {
       return EnvironmentManagementEmptyState(
         icon: Icons.hub_outlined,
-        title: state.errorMessage ?? '尚未加载仓库配置',
+        title: state.errorMessage == null
+            ? l10n.envRepositoryNotLoaded
+            : l10n.envResultUnexpectedFailure(state.errorMessage!),
       );
     }
 
@@ -64,7 +67,9 @@ class RepositoryManagementTab extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                '默认仓库：${config.defaultRepo ?? '未设置'}',
+                l10n.envRepositoryDefaultValue(
+                  config.defaultRepo ?? l10n.envNotSet,
+                ),
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: context.appFontWeight(FontWeight.w600),
                 ),
@@ -73,7 +78,7 @@ class RepositoryManagementTab extends StatelessWidget {
             FilledButton.icon(
               onPressed: state.isBusy ? null : onAddRepository,
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('添加仓库'),
+              label: Text(l10n.envAddRepository),
             ),
           ],
         ),
@@ -86,9 +91,9 @@ class RepositoryManagementTab extends StatelessWidget {
         const SizedBox(height: 12),
         Expanded(
           child: config.repos.isEmpty
-              ? const EnvironmentManagementEmptyState(
+              ? EnvironmentManagementEmptyState(
                   icon: Icons.hub_outlined,
-                  title: '暂无仓库配置',
+                  title: l10n.envNoRepositories,
                 )
               : ListView.separated(
                   itemCount: config.repos.length,
@@ -140,6 +145,7 @@ class _RepositoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -183,7 +189,7 @@ class _RepositoryTile extends StatelessWidget {
                           borderRadius: BorderRadius.circular(AppRadius.full),
                         ),
                         child: Text(
-                          '默认',
+                          l10n.envDefaultBadge,
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
                                 color: AppColors.warning,
@@ -207,7 +213,10 @@ class _RepositoryTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'name=${repo.name}  priority=${repo.priority ?? '未设置'}',
+                  l10n.envRepositoryDetails(
+                    repo.name,
+                    repo.priority ?? l10n.envNotSet,
+                  ),
                   style: Theme.of(context).textTheme.labelSmall,
                 ),
               ],
@@ -215,7 +224,7 @@ class _RepositoryTile extends StatelessWidget {
           ),
           PopupMenuButton<_RepositoryAction>(
             enabled: !isBusy,
-            tooltip: '仓库操作',
+            tooltip: l10n.envRepositoryActions,
             onSelected: (action) {
               switch (action) {
                 case _RepositoryAction.editUrl:
@@ -233,30 +242,30 @@ class _RepositoryTile extends StatelessWidget {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: _RepositoryAction.editUrl,
-                child: Text('修改地址'),
+                child: Text(l10n.envEditAddress),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: _RepositoryAction.setDefault,
-                child: Text('设为默认'),
+                child: Text(l10n.envSetDefault),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: _RepositoryAction.setPriority,
-                child: Text('设置优先级'),
+                child: Text(l10n.envSetPriority),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: _RepositoryAction.enableMirror,
-                child: Text('启用镜像'),
+                child: Text(l10n.envEnableMirror),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: _RepositoryAction.disableMirror,
-                child: Text('禁用镜像'),
+                child: Text(l10n.envDisableMirror),
               ),
               const PopupMenuDivider(),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: _RepositoryAction.remove,
-                child: Text('删除仓库'),
+                child: Text(l10n.envRemoveRepositoryTitle),
               ),
             ],
           ),

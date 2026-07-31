@@ -1709,6 +1709,503 @@ class AppLocalizationsEn extends AppLocalizations {
       'This store can only fetch app data from the official stable repository. Do not remove the stable repository, otherwise app installation will fail.';
 
   @override
+  String get envManagementTitle => 'Linyaps Environment Management';
+
+  @override
+  String get envManagementDescription =>
+      'Analyze the environment, manage repositories, repair the base environment, and move the storage location';
+
+  @override
+  String get envManagementAnalysisTab => 'Environment';
+
+  @override
+  String get envManagementRepositoryTab => 'Repositories';
+
+  @override
+  String get envManagementStorageTab => 'Storage';
+
+  @override
+  String get envManagementAnalyzing => 'Analyzing the Linyaps environment...';
+
+  @override
+  String get envManagementApplying => 'Applying operation...';
+
+  @override
+  String get envManagementNotAnalyzed =>
+      'Environment analysis has not completed';
+
+  @override
+  String get envManagementHealthyTitle => 'No issues require attention';
+
+  @override
+  String get envManagementHealthyMessage =>
+      'The Linyaps base environment, repositories, and local data are healthy.';
+
+  @override
+  String get envManagementBaseEnvironment => 'Base environment';
+
+  @override
+  String get envManagementRepositoryMetric => 'Repository';
+
+  @override
+  String get envManagementLocalData => 'Local data';
+
+  @override
+  String get envManagementStorageLocation => 'Storage location';
+
+  @override
+  String get envManagementNotDetected => 'Not detected';
+
+  @override
+  String get envManagementUnknown => 'Unknown';
+
+  @override
+  String envManagementUsagePercent(int percent) {
+    return '$percent% used';
+  }
+
+  @override
+  String get envManagementEnvironmentHealthyUpgrade =>
+      'Healthy (upgrade recommended)';
+
+  @override
+  String get envManagementEnvironmentHealthy => 'Healthy';
+
+  @override
+  String get envManagementRepositoryReadFailed =>
+      'Repository configuration could not be read';
+
+  @override
+  String get envManagementEnvironmentAbnormal => 'Environment issue';
+
+  @override
+  String get envRepoStatusNormal => 'Normal';
+
+  @override
+  String get envRepoStatusNotConfigured => 'Not configured';
+
+  @override
+  String get envRepoStatusMisconfigured => 'Misconfigured';
+
+  @override
+  String get envRepoStatusUnavailable => 'Unavailable';
+
+  @override
+  String get envRepoStatusUnknown => 'Unknown';
+
+  @override
+  String get envLocalDataDetectionFailed => 'Check failed';
+
+  @override
+  String get envLocalDataUnavailable => 'Unavailable';
+
+  @override
+  String get envLocalDataNormal => 'Normal';
+
+  @override
+  String get envIssueLlCliUnavailableTitle => 'll-cli is unavailable';
+
+  @override
+  String get envIssueLlCliUnavailableDescription =>
+      'No usable Linyaps command-line environment was detected.';
+
+  @override
+  String get envIssueRepositoryNotConfiguredTitle =>
+      'No Linyaps repository configured';
+
+  @override
+  String get envIssueRepositoryNotConfiguredDescription =>
+      'No usable Linyaps repository is configured. Add or repair a repository first.';
+
+  @override
+  String get envIssueDataPermissionTitle =>
+      'Linyaps data directory permissions are invalid';
+
+  @override
+  String envIssueDataPermissionDescription(String serviceUser) {
+    return 'll-package-manager runs as $serviceUser, but the Linyaps data directory or key state files have incorrect ownership. Repository migration, object downloads, or layer creation might fail.';
+  }
+
+  @override
+  String get envIssueLocalDataDetectionTitle =>
+      'Linyaps local data check failed';
+
+  @override
+  String get envIssueLocalDataDetectionDescription =>
+      'The linyaps local data read check could not run. Verify the ll-cli and package-manager service status.';
+
+  @override
+  String get envIssueLocalDataUnavailableTitle =>
+      'Linyaps local data is unavailable';
+
+  @override
+  String get envIssueLocalDataUnavailableDescription =>
+      'Installed app data cannot be read through the linyaps runtime path. App listing, installation, or launching might be affected. Check data directory permissions and the base environment before attempting a repair.';
+
+  @override
+  String get envIssueStorageSpaceTitle =>
+      'The Linyaps storage location is low on space';
+
+  @override
+  String envIssueStorageSpaceDescription(String path, int percent) {
+    return 'The filesystem containing $path is about $percent% full. Clean it up or move the storage location.';
+  }
+
+  @override
+  String get envIssueRunningAppsTitle => 'Linyaps apps are running';
+
+  @override
+  String envIssueRunningAppsDescription(int count) {
+    return '$count Linyaps apps are still running. Close them before moving the storage location.';
+  }
+
+  @override
+  String get envRepairAction => 'Repair';
+
+  @override
+  String get envHandleAction => 'Resolve';
+
+  @override
+  String get envRepairLocalDataTitle => 'Repair Linyaps local data';
+
+  @override
+  String get envRepairLocalDataMessage =>
+      'This will attempt to repair Linyaps local data with administrator privileges. If app or base environment data must be fetched again, downloads may occur and take a long time. Continue?';
+
+  @override
+  String get envRepairLocalDataConfirm => 'Run repair';
+
+  @override
+  String get envRepairPermissionTitle =>
+      'Repair Linyaps data directory permissions';
+
+  @override
+  String envRepairPermissionMessage(String rootPath, String serviceUser) {
+    return 'This will restore ownership of key directories and state files under $rootPath to $serviceUser with administrator privileges, then restart the Linyaps package-manager. Continue?';
+  }
+
+  @override
+  String get envRepairPermissionConfirm => 'Repair permissions';
+
+  @override
+  String get envMoveStorageTitle => 'Move the Linyaps storage location';
+
+  @override
+  String envMoveStorageMessage(String rootPath, String targetPath) {
+    return 'This will copy $rootPath to $targetPath and create a systemd bind mount. Make sure the target filesystem has enough space.';
+  }
+
+  @override
+  String get envMoveStorageConfirm => 'Start moving';
+
+  @override
+  String get envAddRepositoryTitle => 'Add Linyaps repository';
+
+  @override
+  String get envRepositoryName => 'Repository name';
+
+  @override
+  String get envRepositoryAddress => 'Repository address';
+
+  @override
+  String get envRepositoryAliasOptional => 'Alias (optional)';
+
+  @override
+  String get envAddAction => 'Add';
+
+  @override
+  String get envSaveAction => 'Save';
+
+  @override
+  String get envDeleteAction => 'Delete';
+
+  @override
+  String envUpdateRepositoryTitle(String name) {
+    return 'Edit repository address: $name';
+  }
+
+  @override
+  String envSetPriorityTitle(String name) {
+    return 'Set priority: $name';
+  }
+
+  @override
+  String get envRepositoryPriority => 'Priority';
+
+  @override
+  String get envPriorityMustBeNumber => 'Priority must be a number';
+
+  @override
+  String get envRemoveRepositoryTitle => 'Delete repository';
+
+  @override
+  String envRemoveRepositoryMessage(String name) {
+    return 'Delete repository $name?';
+  }
+
+  @override
+  String get envRepositoryAdded => 'Repository added';
+
+  @override
+  String envRepositoryAddFailed(String error) {
+    return 'Failed to add repository: $error';
+  }
+
+  @override
+  String get envRepositoryUpdated => 'Repository updated';
+
+  @override
+  String envRepositoryUpdateFailed(String error) {
+    return 'Failed to update repository: $error';
+  }
+
+  @override
+  String get envPriorityUpdated => 'Priority updated';
+
+  @override
+  String envPriorityUpdateFailed(String error) {
+    return 'Failed to set priority: $error';
+  }
+
+  @override
+  String get envRepositoryRemoved => 'Repository deleted';
+
+  @override
+  String envRepositoryRemoveFailed(String error) {
+    return 'Failed to delete repository: $error';
+  }
+
+  @override
+  String get envDefaultRepositoryUpdated => 'Default repository updated';
+
+  @override
+  String envDefaultRepositoryUpdateFailed(String error) {
+    return 'Failed to set the default repository: $error';
+  }
+
+  @override
+  String get envMirrorEnabled => 'Mirror enabled';
+
+  @override
+  String get envMirrorDisabled => 'Mirror disabled';
+
+  @override
+  String envMirrorUpdateFailed(String error) {
+    return 'Failed to change mirror status: $error';
+  }
+
+  @override
+  String get envOpenLogDirectoryFailed => 'Failed to open the log folder';
+
+  @override
+  String get envRepositoryNotLoaded =>
+      'Repository configuration has not loaded';
+
+  @override
+  String envRepositoryDefaultValue(String name) {
+    return 'Default repository: $name';
+  }
+
+  @override
+  String get envNotSet => 'Not set';
+
+  @override
+  String get envAddRepository => 'Add repository';
+
+  @override
+  String get envNoRepositories => 'No repositories configured';
+
+  @override
+  String get envDefaultBadge => 'Default';
+
+  @override
+  String envRepositoryDetails(String name, String priority) {
+    return 'name=$name  priority=$priority';
+  }
+
+  @override
+  String get envRepositoryActions => 'Repository actions';
+
+  @override
+  String get envEditAddress => 'Edit address';
+
+  @override
+  String get envSetDefault => 'Set as default';
+
+  @override
+  String get envSetPriority => 'Set priority';
+
+  @override
+  String get envEnableMirror => 'Enable mirror';
+
+  @override
+  String get envDisableMirror => 'Disable mirror';
+
+  @override
+  String get envCurrentStorageLocation => 'Current storage location';
+
+  @override
+  String get envStorageNotAnalyzed =>
+      'Storage location analysis has not completed';
+
+  @override
+  String envStorageSummary(String path, int percent) {
+    return '$path  $percent% used';
+  }
+
+  @override
+  String get envNewStorageLocation => 'New storage location';
+
+  @override
+  String get envStorageMoveMethod => 'Move method';
+
+  @override
+  String envStorageMoveMethodDescription(String rootPath) {
+    return 'Linyaps does not currently support changing the installation directory directly. This operation copies the data and creates a systemd bind mount at $rootPath.';
+  }
+
+  @override
+  String get envMoveStorageAction => 'Move storage location';
+
+  @override
+  String get envCloseAppsBeforeMoveTitle => 'Close apps before moving';
+
+  @override
+  String envCloseAppsBeforeMoveMessage(int count) {
+    return '$count Linyaps apps are still running.';
+  }
+
+  @override
+  String get envResultDataPermissionCompleted =>
+      'Linyaps data directory permissions were repaired';
+
+  @override
+  String get envResultDataPermissionFailed =>
+      'Failed to repair Linyaps data directory permissions';
+
+  @override
+  String get envResultLocalDataUnsupported =>
+      'The current system components cannot automatically remove problematic objects. Upgrade the relevant components or use your distribution\'s tools to repair Linyaps local data.';
+
+  @override
+  String get envResultLocalDataCompleted =>
+      'Linyaps local data repair completed';
+
+  @override
+  String get envResultLocalDataCompletedLegacy =>
+      'Linyaps local data repair completed using legacy system parameters';
+
+  @override
+  String get envResultLocalDataFailed => 'Linyaps local data repair failed';
+
+  @override
+  String get envResultLocalDataChecksumMismatch =>
+      'Verification still found object checksum mismatches after automatic cleanup. If they reappear after fetching the data again, the upstream repository data or linyaps local storage compatibility may need to be fixed.';
+
+  @override
+  String get envPartialCommitsUnknown => 'some partial commits';
+
+  @override
+  String envPartialCommitsCount(int count) {
+    return '$count partial commits';
+  }
+
+  @override
+  String envResultLocalDataRepullCompleted(String partialCommits) {
+    return 'Problematic objects were removed, $partialCommits were fetched again, and verification passed.';
+  }
+
+  @override
+  String envResultLocalDataRepullCompletedLegacy(String partialCommits) {
+    return 'Problematic objects were removed, $partialCommits were fetched again, and verification passed using legacy system parameters.';
+  }
+
+  @override
+  String envResultLocalDataRepullFailed(String partialCommits) {
+    return 'Automatically repairable objects were removed and $partialCommits were fetched again, but verification still failed. Check the log for the ref that failed to fetch or verify.';
+  }
+
+  @override
+  String envResultLocalDataRepullFailedLegacy(String partialCommits) {
+    return 'Automatically repairable objects were removed and $partialCommits were fetched again using legacy system parameters, but verification still failed. Check the log for the ref that failed to fetch or verify.';
+  }
+
+  @override
+  String envResultLocalDataRepullChecksumMismatch(String partialCommits) {
+    return 'Automatically repairable objects were removed and $partialCommits were fetched again, but verification still found checksum mismatches. The upstream repository data might be incompatible with the linyaps local storage mode.';
+  }
+
+  @override
+  String envResultLocalDataRepullChecksumMismatchLegacy(String partialCommits) {
+    return 'Automatically repairable objects were removed and $partialCommits were fetched again using legacy system parameters, but verification still found checksum mismatches. The upstream repository data might be incompatible with the linyaps local storage mode.';
+  }
+
+  @override
+  String envResultStorageBlockedRunningApps(int count) {
+    return '$count Linyaps apps are still running. Close them before moving the storage location.';
+  }
+
+  @override
+  String get envResultStorageBlockedActiveTask =>
+      'An installation or update is still active in Download Manager. Wait for it to finish or cancel it before moving the Linyaps storage location.';
+
+  @override
+  String envResultStorageBlockedNamedTask(String name) {
+    return '$name is currently being processed. Wait for it to finish or cancel it before moving the Linyaps storage location.';
+  }
+
+  @override
+  String envResultStorageAlreadyBindMounted(String path) {
+    return '$path is already a bind mount. Review the existing mount configuration before migrating.';
+  }
+
+  @override
+  String envResultStorageFilesystemUnavailable(String path) {
+    return 'Could not read filesystem space for the target path: $path';
+  }
+
+  @override
+  String get envResultStorageSpaceUnknown =>
+      'Could not determine free space for the current or target directory. Check it and try again.';
+
+  @override
+  String envResultStorageInsufficientSpace(
+    String requiredSpace,
+    String availableSpace,
+  ) {
+    return 'The target path needs at least $requiredSpace, but only $availableSpace is available.';
+  }
+
+  @override
+  String get envResultStorageTargetNotAbsolute =>
+      'The target path must be absolute.';
+
+  @override
+  String get envResultStorageTargetContainsLineBreak =>
+      'The target path cannot contain line breaks.';
+
+  @override
+  String get envResultStorageTargetUnsafeSystemPath =>
+      'The target path cannot be a system root directory or the current Linyaps directory.';
+
+  @override
+  String get envResultStorageTargetInsideCurrentRoot =>
+      'The target path cannot be inside the current Linyaps directory.';
+
+  @override
+  String get envResultStorageMoveCompleted =>
+      'The Linyaps storage location was moved';
+
+  @override
+  String get envResultStorageMoveFailed =>
+      'Failed to move the Linyaps storage location';
+
+  @override
+  String envResultUnexpectedFailure(String error) {
+    return 'Operation failed: $error';
+  }
+
+  @override
   String get errorSolutionHelpTooltip => 'View solution';
 
   @override

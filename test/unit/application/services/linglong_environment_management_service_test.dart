@@ -50,8 +50,8 @@ void main() {
           contains(LinglongEnvironmentIssueCode.storageNearlyFull),
         );
         expect(
-          analysis.issues.map((issue) => issue.title),
-          isNot(contains('OSTree 对象完整性风险')),
+          analysis.issues.map((issue) => issue.code),
+          isNot(contains(LinglongEnvironmentIssueCode.ostreeToolUnavailable)),
         );
         expect(
           runner.commands.map((command) => command.join(' ')),
@@ -101,7 +101,6 @@ void main() {
               LinglongEnvironmentIssueCode.ostreeRepositoryCorrupted,
         );
         expect(localDataIssue.severity, LinglongEnvironmentIssueSeverity.error);
-        expect(localDataIssue.title, '玲珑本地数据不可用');
         expect(localDataIssue.rawDetail, contains('failed to load repo cache'));
         expect(
           runner.commands.map((command) => command.join(' ')),
@@ -145,9 +144,8 @@ void main() {
         final localDataIssue = analysis.issues.firstWhere(
           (issue) =>
               issue.code ==
-              LinglongEnvironmentIssueCode.ostreeRepositoryCorrupted,
+              LinglongEnvironmentIssueCode.localDataDetectionFailed,
         );
-        expect(localDataIssue.title, '玲珑本地数据检测失败');
         expect(localDataIssue.rawDetail, contains('ll-cli list 命令执行失败'));
       },
     );
@@ -283,7 +281,7 @@ void main() {
             LinglongEnvironmentIssueCode.linglongDataPermissionAbnormal,
       );
       expect(issue.severity, LinglongEnvironmentIssueSeverity.error);
-      expect(issue.title, '玲珑数据目录权限异常');
+      expect(issue.subject, 'deepin-linglong');
       expect(
         issue.repairAction,
         LinglongEnvironmentRepairAction.fixDataPermissions,
@@ -342,8 +340,11 @@ void main() {
         );
 
         expect(result.success, isTrue);
-        expect(result.message, contains('修复已执行'));
-        expect(result.message, isNot(contains('重新拉取')));
+        expect(
+          result.code,
+          LinglongEnvironmentRepairResultCode.localDataRepairCompleted,
+        );
+        expect(result.count, isNull);
         expect(runner.commands, [
           [
             'pkexec',
@@ -398,9 +399,11 @@ void main() {
         );
 
         expect(result.success, isFalse);
-        expect(result.message, contains('32 个 partial commits'));
-        expect(result.message, contains('重新拉取后复验仍未通过'));
-        expect(result.message, contains('上游仓库数据'));
+        expect(
+          result.code,
+          LinglongEnvironmentRepairResultCode.localDataRepullChecksumMismatch,
+        );
+        expect(result.count, 32);
         expect(result.output, contains('fsck-detected corruption'));
         expect(
           result.output,
@@ -466,8 +469,11 @@ void main() {
         );
 
         expect(result.success, isFalse);
-        expect(result.message, contains('22 个 partial commits'));
-        expect(result.message, contains('重新拉取后复验仍未通过'));
+        expect(
+          result.code,
+          LinglongEnvironmentRepairResultCode.localDataRepullChecksumMismatch,
+        );
+        expect(result.count, 22);
         expect(result.output, contains('Repository corruption encountered'));
         expect(
           result.output,
@@ -511,7 +517,7 @@ void main() {
         );
 
         expect(result.success, isTrue);
-        expect(result.message, contains('已兼容旧版系统参数'));
+        expect(result.usedLegacyFallback, isTrue);
         expect(runner.commands, [
           [
             'pkexec',
@@ -552,8 +558,10 @@ void main() {
         );
 
         expect(result.success, isFalse);
-        expect(result.message, contains('系统组件不支持自动清理'));
-        expect(result.message, contains('无法自动修复玲珑本地数据'));
+        expect(
+          result.code,
+          LinglongEnvironmentRepairResultCode.localDataRepairUnsupported,
+        );
         expect(runner.commands, [
           [
             'pkexec',
@@ -696,7 +704,11 @@ void main() {
 
       expect(result.success, isFalse);
       expect(result.action, LinglongEnvironmentRepairAction.moveStorageRoot);
-      expect(result.message, contains('仍有 1 个玲珑应用正在运行'));
+      expect(
+        result.code,
+        LinglongEnvironmentRepairResultCode.storageMoveBlockedByRunningApps,
+      );
+      expect(result.count, 1);
       expect(runner.commands, [
         ['ll-cli', '--json', 'ps'],
       ]);
@@ -738,7 +750,12 @@ void main() {
         );
 
         expect(result.success, isFalse);
-        expect(result.message, contains('目标路径可用空间不足'));
+        expect(
+          result.code,
+          LinglongEnvironmentRepairResultCode.storageInsufficientSpace,
+        );
+        expect(result.requiredSpace, '1.4 GiB');
+        expect(result.availableSpace, '95.4 MiB');
         expect(
           runner.commands.any(
             (command) => command.length >= 2 && command.first == 'pkexec',

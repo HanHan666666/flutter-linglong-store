@@ -15,6 +15,7 @@ import '../../../core/utils/app_notification_helpers.dart';
 import '../../../domain/models/linglong_env_check_result.dart';
 import '../../../domain/models/linglong_environment_management.dart';
 import 'environment_management_components.dart';
+import 'environment_management_localizations.dart';
 
 /// 编排环境管理对话框中的用户交互和 Provider 用例调用。
 class LinglongEnvironmentManagementActions {
@@ -28,13 +29,12 @@ class LinglongEnvironmentManagementActions {
 
   /// 二次确认后修复玲珑本地数据并展示结果。
   Future<void> confirmAndRepairOstree(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await _showConfirmDialog(
       context,
-      title: '修复玲珑本地数据',
-      content:
-          '将以管理员权限尝试修复玲珑本地数据；'
-          '如果检测到需要重新拉取的应用或基础环境数据，可能产生下载并耗时较长。是否继续？',
-      confirmText: '执行修复',
+      title: l10n.envRepairLocalDataTitle,
+      content: l10n.envRepairLocalDataMessage,
+      confirmText: l10n.envRepairLocalDataConfirm,
     );
     if (!confirmed || !context.mounted) return;
 
@@ -47,13 +47,15 @@ class LinglongEnvironmentManagementActions {
 
   /// 二次确认后修复玲珑数据目录属主和写权限。
   Future<void> confirmAndRepairDataPermissions(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await _showConfirmDialog(
       context,
-      title: '修复玲珑数据目录权限',
-      content:
-          '将以管理员权限把 $linglongEnvironmentRootPath 的关键目录和状态文件属主恢复为 '
-          'deepin-linglong:deepin-linglong，并重启玲珑 package-manager。是否继续？',
-      confirmText: '修复权限',
+      title: l10n.envRepairPermissionTitle,
+      content: l10n.envRepairPermissionMessage(
+        linglongEnvironmentRootPath,
+        'deepin-linglong:deepin-linglong',
+      ),
+      confirmText: l10n.envRepairPermissionConfirm,
     );
     if (!confirmed || !context.mounted) return;
 
@@ -70,12 +72,15 @@ class LinglongEnvironmentManagementActions {
     TextEditingController targetController,
   ) async {
     final targetPath = targetController.text.trim();
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await _showConfirmDialog(
       context,
-      title: '移动玲珑保存位置',
-      content:
-          '将复制 $linglongEnvironmentRootPath 到 $targetPath，并创建 systemd bind mount。请确认目标分区空间充足。',
-      confirmText: '开始移动',
+      title: l10n.envMoveStorageTitle,
+      content: l10n.envMoveStorageMessage(
+        linglongEnvironmentRootPath,
+        targetPath,
+      ),
+      confirmText: l10n.envMoveStorageConfirm,
     );
     if (!confirmed || !context.mounted) return;
 
@@ -88,6 +93,7 @@ class LinglongEnvironmentManagementActions {
 
   /// 展示仓库新增表单并提交有效输入。
   Future<void> showAddRepositoryDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController();
     final urlController = TextEditingController();
     final aliasController = TextEditingController();
@@ -96,7 +102,7 @@ class LinglongEnvironmentManagementActions {
         context: context,
         builder: (dialogContext) {
           return AlertDialog(
-            title: const Text('添加玲珑仓库'),
+            title: Text(l10n.envAddRepositoryTitle),
             content: SizedBox(
               width: 460,
               child: Column(
@@ -104,18 +110,24 @@ class LinglongEnvironmentManagementActions {
                 children: [
                   TextField(
                     controller: nameController,
-                    decoration: const InputDecoration(labelText: '仓库名称'),
+                    decoration: InputDecoration(
+                      labelText: l10n.envRepositoryName,
+                    ),
                     autofocus: true,
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: urlController,
-                    decoration: const InputDecoration(labelText: '仓库地址'),
+                    decoration: InputDecoration(
+                      labelText: l10n.envRepositoryAddress,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: aliasController,
-                    decoration: const InputDecoration(labelText: '别名（可选）'),
+                    decoration: InputDecoration(
+                      labelText: l10n.envRepositoryAliasOptional,
+                    ),
                   ),
                 ],
               ),
@@ -123,11 +135,11 @@ class LinglongEnvironmentManagementActions {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: Text(AppLocalizations.of(context)!.cancel),
+                child: Text(l10n.cancel),
               ),
               FilledButton(
                 onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: const Text('添加'),
+                child: Text(l10n.envAddAction),
               ),
             ],
           );
@@ -144,9 +156,11 @@ class LinglongEnvironmentManagementActions {
                 ? null
                 : aliasController.text.trim(),
           );
-      if (context.mounted) showAppSuccess(context, '仓库已添加');
+      if (context.mounted) showAppSuccess(context, l10n.envRepositoryAdded);
     } catch (error) {
-      if (context.mounted) showAppError(context, '添加仓库失败：$error');
+      if (context.mounted) {
+        showAppError(context, l10n.envRepositoryAddFailed(error.toString()));
+      }
     } finally {
       nameController.dispose();
       urlController.dispose();
@@ -159,29 +173,36 @@ class LinglongEnvironmentManagementActions {
     BuildContext context,
     LinglongRepoInfo repo,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final urlController = TextEditingController(text: repo.url);
     try {
       final submitted = await showDialog<bool>(
         context: context,
         builder: (dialogContext) {
           return AlertDialog(
-            title: Text('修改仓库地址：${linglongRepositoryDisplayName(repo)}'),
+            title: Text(
+              l10n.envUpdateRepositoryTitle(
+                linglongRepositoryDisplayName(repo),
+              ),
+            ),
             content: SizedBox(
               width: 460,
               child: TextField(
                 controller: urlController,
-                decoration: const InputDecoration(labelText: '仓库地址'),
+                decoration: InputDecoration(
+                  labelText: l10n.envRepositoryAddress,
+                ),
                 autofocus: true,
               ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: Text(AppLocalizations.of(context)!.cancel),
+                child: Text(l10n.cancel),
               ),
               FilledButton(
                 onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: const Text('保存'),
+                child: Text(l10n.envSaveAction),
               ),
             ],
           );
@@ -195,9 +216,11 @@ class LinglongEnvironmentManagementActions {
             aliasOrName: linglongRepositoryDisplayName(repo),
             url: urlController.text.trim(),
           );
-      if (context.mounted) showAppSuccess(context, '仓库已更新');
+      if (context.mounted) showAppSuccess(context, l10n.envRepositoryUpdated);
     } catch (error) {
-      if (context.mounted) showAppError(context, '更新仓库失败：$error');
+      if (context.mounted) {
+        showAppError(context, l10n.envRepositoryUpdateFailed(error.toString()));
+      }
     } finally {
       urlController.dispose();
     }
@@ -208,6 +231,7 @@ class LinglongEnvironmentManagementActions {
     BuildContext context,
     LinglongRepoInfo repo,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final priorityController = TextEditingController(
       text: repo.priority ?? '0',
     );
@@ -216,12 +240,16 @@ class LinglongEnvironmentManagementActions {
         context: context,
         builder: (dialogContext) {
           return AlertDialog(
-            title: Text('设置优先级：${linglongRepositoryDisplayName(repo)}'),
+            title: Text(
+              l10n.envSetPriorityTitle(linglongRepositoryDisplayName(repo)),
+            ),
             content: SizedBox(
               width: 320,
               child: TextField(
                 controller: priorityController,
-                decoration: const InputDecoration(labelText: '优先级'),
+                decoration: InputDecoration(
+                  labelText: l10n.envRepositoryPriority,
+                ),
                 keyboardType: TextInputType.number,
                 autofocus: true,
               ),
@@ -229,11 +257,11 @@ class LinglongEnvironmentManagementActions {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: Text(AppLocalizations.of(context)!.cancel),
+                child: Text(l10n.cancel),
               ),
               FilledButton(
                 onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: const Text('保存'),
+                child: Text(l10n.envSaveAction),
               ),
             ],
           );
@@ -243,15 +271,17 @@ class LinglongEnvironmentManagementActions {
 
       final priority = int.tryParse(priorityController.text.trim());
       if (priority == null) {
-        showAppError(context, '优先级必须是数字');
+        showAppError(context, l10n.envPriorityMustBeNumber);
         return;
       }
       await ref
           .read(linglongEnvironmentManagementProvider.notifier)
           .setRepositoryPriority(linglongRepositoryDisplayName(repo), priority);
-      if (context.mounted) showAppSuccess(context, '优先级已更新');
+      if (context.mounted) showAppSuccess(context, l10n.envPriorityUpdated);
     } catch (error) {
-      if (context.mounted) showAppError(context, '设置优先级失败：$error');
+      if (context.mounted) {
+        showAppError(context, l10n.envPriorityUpdateFailed(error.toString()));
+      }
     } finally {
       priorityController.dispose();
     }
@@ -262,12 +292,13 @@ class LinglongEnvironmentManagementActions {
     BuildContext context,
     LinglongRepoInfo repo,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final displayName = linglongRepositoryDisplayName(repo);
     final confirmed = await _showConfirmDialog(
       context,
-      title: '删除仓库',
-      content: '确定删除仓库 $displayName 吗？',
-      confirmText: '删除',
+      title: l10n.envRemoveRepositoryTitle,
+      content: l10n.envRemoveRepositoryMessage(displayName),
+      confirmText: l10n.envDeleteAction,
     );
     if (!confirmed || !context.mounted) return;
 
@@ -275,9 +306,11 @@ class LinglongEnvironmentManagementActions {
       await ref
           .read(linglongEnvironmentManagementProvider.notifier)
           .removeRepository(displayName);
-      if (context.mounted) showAppSuccess(context, '仓库已删除');
+      if (context.mounted) showAppSuccess(context, l10n.envRepositoryRemoved);
     } catch (error) {
-      if (context.mounted) showAppError(context, '删除仓库失败：$error');
+      if (context.mounted) {
+        showAppError(context, l10n.envRepositoryRemoveFailed(error.toString()));
+      }
     }
   }
 
@@ -286,13 +319,21 @@ class LinglongEnvironmentManagementActions {
     BuildContext context,
     LinglongRepoInfo repo,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await ref
           .read(linglongEnvironmentManagementProvider.notifier)
           .setDefaultRepository(linglongRepositoryDisplayName(repo));
-      if (context.mounted) showAppSuccess(context, '默认仓库已更新');
+      if (context.mounted) {
+        showAppSuccess(context, l10n.envDefaultRepositoryUpdated);
+      }
     } catch (error) {
-      if (context.mounted) showAppError(context, '设置默认仓库失败：$error');
+      if (context.mounted) {
+        showAppError(
+          context,
+          l10n.envDefaultRepositoryUpdateFailed(error.toString()),
+        );
+      }
     }
   }
 
@@ -302,6 +343,7 @@ class LinglongEnvironmentManagementActions {
     LinglongRepoInfo repo, {
     required bool enabled,
   }) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await ref
           .read(linglongEnvironmentManagementProvider.notifier)
@@ -310,10 +352,15 @@ class LinglongEnvironmentManagementActions {
             enabled: enabled,
           );
       if (context.mounted) {
-        showAppSuccess(context, enabled ? '镜像已启用' : '镜像已禁用');
+        showAppSuccess(
+          context,
+          enabled ? l10n.envMirrorEnabled : l10n.envMirrorDisabled,
+        );
       }
     } catch (error) {
-      if (context.mounted) showAppError(context, '修改镜像状态失败：$error');
+      if (context.mounted) {
+        showAppError(context, l10n.envMirrorUpdateFailed(error.toString()));
+      }
     }
   }
 
@@ -322,12 +369,13 @@ class LinglongEnvironmentManagementActions {
     BuildContext context,
     String logFilePath,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final success = await ref
         .read(localPathOpenerProvider)
         .openDirectory(path.dirname(logFilePath));
     if (!context.mounted) return;
     if (!success) {
-      showAppError(context, '打开日志目录失败');
+      showAppError(context, l10n.envOpenLogDirectoryFailed);
     }
   }
 
@@ -363,10 +411,12 @@ class LinglongEnvironmentManagementActions {
     BuildContext context,
     LinglongEnvironmentRepairResult result,
   ) {
+    final l10n = AppLocalizations.of(context)!;
+    final message = localizeLinglongEnvironmentRepairResult(l10n, result);
     if (result.success) {
-      showAppSuccess(context, result.message);
+      showAppSuccess(context, message);
     } else {
-      showAppError(context, result.message);
+      showAppError(context, message);
     }
   }
 }

@@ -118,9 +118,8 @@ void main() {
     final l10n = await AppLocalizations.delegate.load(const Locale('en'));
     expect(find.text(l10n.envManagementWarning), findsOneWidget);
 
-    // 验证仓库管理说明提示在英文 locale 下也正确渲染。
-    // 注意：Tab 标签当前为硬编码中文，不随 locale 变化，故仍按 '仓库管理' 定位。
-    await tester.tap(find.text('仓库管理'));
+    // 使用本地化标签切换页面，防止测试绕过实际语言资源契约。
+    await tester.tap(find.text(l10n.envManagementRepositoryTab));
     await tester.pumpAndSettle();
     expect(find.text(l10n.repoManagementHintTitle), findsOneWidget);
     expect(find.text(l10n.repoManagementHintMessage), findsOneWidget);
@@ -201,7 +200,7 @@ class _FakeManagementService extends LinglongEnvironmentManagementService {
     return const LinglongEnvironmentRepairResult(
       action: LinglongEnvironmentRepairAction.fixDataPermissions,
       success: true,
-      message: '玲珑数据目录权限已修复',
+      code: LinglongEnvironmentRepairResultCode.dataPermissionRepairCompleted,
       logFilePath: '/tmp/permission.log',
     );
   }
@@ -249,10 +248,9 @@ LinglongEnvironmentAnalysis _permissionIssueAnalysis() {
       LinglongEnvironmentIssue(
         code: LinglongEnvironmentIssueCode.linglongDataPermissionAbnormal,
         severity: LinglongEnvironmentIssueSeverity.error,
-        title: '玲珑数据目录权限异常',
-        description: '关键目录属主异常，可能导致仓库迁移、下载对象或创建 layer 失败。',
         repairAction: LinglongEnvironmentRepairAction.fixDataPermissions,
         rawDetail: '/var/lib/linglong/repo 当前 root:root mode=775',
+        subject: 'deepin-linglong',
       ),
     ],
     runningAppCount: 0,

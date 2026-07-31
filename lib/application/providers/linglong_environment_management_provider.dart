@@ -172,7 +172,7 @@ class LinglongEnvironmentManagement
         status: LinglongEnvironmentManagementStatus.failed,
         activeAction: LinglongEnvironmentRepairAction.moveStorageRoot,
         repairResult: blockedResult,
-        errorMessage: blockedResult.message,
+        clearError: true,
       );
       return blockedResult;
     }
@@ -196,15 +196,15 @@ class LinglongEnvironmentManagement
         : (currentTask.appName.isNotEmpty
               ? currentTask.appName
               : currentTask.appId);
-    final message = activeName == null
-        ? '下载管理中仍有安装或更新任务，请等待完成或取消任务后再移动玲珑保存位置。'
-        : '当前正在处理「$activeName」，请等待完成或取消任务后再移动玲珑保存位置。';
-
     // 保存位置迁移会整体操作 /var/lib/linglong，必须避免与 ll-cli 安装队列并发。
     return LinglongEnvironmentRepairResult(
       action: LinglongEnvironmentRepairAction.moveStorageRoot,
       success: false,
-      message: message,
+      code: activeName == null
+          ? LinglongEnvironmentRepairResultCode.storageMoveBlockedByActiveTask
+          : LinglongEnvironmentRepairResultCode
+                .storageMoveBlockedByNamedActiveTask,
+      subject: activeName,
     );
   }
 
@@ -292,13 +292,14 @@ class LinglongEnvironmentManagement
       final result = LinglongEnvironmentRepairResult(
         action: action,
         success: false,
-        message: _formatError(error),
+        code: LinglongEnvironmentRepairResultCode.unexpectedFailure,
+        diagnostic: _formatError(error),
       );
       state = state.copyWith(
         status: LinglongEnvironmentManagementStatus.failed,
         activeAction: action,
         repairResult: result,
-        errorMessage: result.message,
+        errorMessage: result.diagnostic,
       );
       return result;
     }

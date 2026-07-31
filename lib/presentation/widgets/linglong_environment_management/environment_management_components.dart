@@ -7,8 +7,10 @@ library;
 import 'package:flutter/material.dart';
 
 import '../../../core/config/theme.dart';
+import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/linglong_env_check_result.dart';
 import '../../../domain/models/linglong_environment_management.dart';
+import 'environment_management_localizations.dart';
 
 /// 玲珑本地数据的固定运行根目录，仅用于现有界面说明文案。
 const String linglongEnvironmentRootPath = '/var/lib/linglong';
@@ -101,6 +103,7 @@ class EnvironmentManagementRepairResultPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = result.success ? AppColors.success : AppColors.error;
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -122,7 +125,7 @@ class EnvironmentManagementRepairResultPanel extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  result.message,
+                  localizeLinglongEnvironmentRepairResult(l10n, result),
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: context.appFontWeight(FontWeight.w600),
                   ),
@@ -150,7 +153,7 @@ class EnvironmentManagementRepairResultPanel extends StatelessWidget {
                 TextButton.icon(
                   onPressed: () => onOpenLogDirectory(result.logFilePath!),
                   icon: const Icon(Icons.folder_open, size: 18),
-                  label: const Text('打开日志目录'),
+                  label: Text(l10n.openRepairLog),
                 ),
               ],
             ),
@@ -296,19 +299,25 @@ class EnvironmentManagementSegmentedTabBar extends StatelessWidget {
   /// 刷新完整环境管理状态的回调。
   final VoidCallback onRefresh;
 
-  static const _tabs = <_EnvironmentManagementTabData>[
-    _EnvironmentManagementTabData(
-      icon: Icons.health_and_safety_outlined,
-      label: '环境分析',
-    ),
-    _EnvironmentManagementTabData(icon: Icons.hub_outlined, label: '仓库管理'),
-    _EnvironmentManagementTabData(icon: Icons.storage_outlined, label: '保存位置'),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final controller = DefaultTabController.of(context);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final tabs = <_EnvironmentManagementTabData>[
+      _EnvironmentManagementTabData(
+        icon: Icons.health_and_safety_outlined,
+        label: l10n.envManagementAnalysisTab,
+      ),
+      _EnvironmentManagementTabData(
+        icon: Icons.hub_outlined,
+        label: l10n.envManagementRepositoryTab,
+      ),
+      _EnvironmentManagementTabData(
+        icon: Icons.storage_outlined,
+        label: l10n.envManagementStorageTab,
+      ),
+    ];
 
     return Container(
       padding: const EdgeInsets.all(4),
@@ -322,10 +331,10 @@ class EnvironmentManagementSegmentedTabBar extends StatelessWidget {
           final selectedIndex = controller.animation!.value.round();
           return Row(
             children: [
-              for (var i = 0; i < _tabs.length; i++)
+              for (var i = 0; i < tabs.length; i++)
                 Expanded(
                   child: _EnvironmentManagementTabItem(
-                    data: _tabs[i],
+                    data: tabs[i],
                     selected: i == selectedIndex,
                     onTap: () => controller.animateTo(i),
                   ),
@@ -337,7 +346,7 @@ class EnvironmentManagementSegmentedTabBar extends StatelessWidget {
                 child: IconButton(
                   padding: EdgeInsets.zero,
                   iconSize: 18,
-                  tooltip: '刷新',
+                  tooltip: l10n.refresh,
                   onPressed: isBusy ? null : onRefresh,
                   icon: Icon(
                     Icons.refresh,

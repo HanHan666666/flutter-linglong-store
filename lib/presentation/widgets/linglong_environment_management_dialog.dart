@@ -73,7 +73,7 @@ class _LinglongEnvironmentManagementDialogState
           children: [
             const Icon(Icons.settings_suggest_outlined, size: 24),
             const SizedBox(width: 10),
-            const Expanded(child: Text('玲珑环境管理')),
+            Expanded(child: Text(l10n.envManagementTitle)),
             IconButton(
               tooltip: l10n.close,
               onPressed: () => Navigator.of(context).pop(),
@@ -159,13 +159,13 @@ class _LinglongEnvironmentManagementDialogState
                     ),
                     if (state.status ==
                         LinglongEnvironmentManagementStatus.loading)
-                      const EnvironmentManagementBlockingOverlay(
-                        message: '正在分析玲珑环境...',
+                      EnvironmentManagementBlockingOverlay(
+                        message: l10n.envManagementAnalyzing,
                       ),
                     if (state.status ==
                         LinglongEnvironmentManagementStatus.applying)
-                      const EnvironmentManagementBlockingOverlay(
-                        message: '正在执行操作...',
+                      EnvironmentManagementBlockingOverlay(
+                        message: l10n.envManagementApplying,
                       ),
                   ],
                 ),

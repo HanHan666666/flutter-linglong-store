@@ -136,18 +136,6 @@ extension LinglongEnvCheckResultX on LinglongEnvCheckResult {
   /// 是否可以跳过（部分功能不可用）
   bool get canSkip => !isOk && llCliVersion != null;
 
-  /// 获取状态描述
-  String get statusDescription {
-    if (isOk && warningMessage != null) return '环境正常（建议升级）';
-    if (isOk) return '环境正常';
-    if (recoveryAction ==
-        LinglongEnvRecoveryAction.restartPackageManagerService) {
-      return '仓库配置读取失败';
-    }
-    if (llCliVersion == null) return 'll-cli 不可用';
-    return '环境异常';
-  }
-
   /// 是否建议用户重启玲珑包管理器服务。
   bool get shouldSuggestPackageManagerRestart =>
       recoveryAction == LinglongEnvRecoveryAction.restartPackageManagerService;

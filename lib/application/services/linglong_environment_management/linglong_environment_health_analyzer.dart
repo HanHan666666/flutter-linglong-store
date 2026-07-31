@@ -65,9 +65,7 @@ class LinglongEnvironmentHealthAnalyzer {
         LinglongEnvironmentIssue(
           code: LinglongEnvironmentIssueCode.llCliUnavailable,
           severity: LinglongEnvironmentIssueSeverity.error,
-          title: 'll-cli 不可用',
-          description: envResult.errorMessage ?? '未检测到可用的玲珑命令行环境',
-          rawDetail: envResult.errorDetail,
+          rawDetail: envResult.errorDetail ?? envResult.errorMessage,
         ),
       );
     } else if (envResult.repoStatus == RepoStatus.notConfigured ||
@@ -76,8 +74,6 @@ class LinglongEnvironmentHealthAnalyzer {
         LinglongEnvironmentIssue(
           code: LinglongEnvironmentIssueCode.repositoryNotConfigured,
           severity: LinglongEnvironmentIssueSeverity.error,
-          title: '未配置玲珑仓库',
-          description: '当前没有可用的玲珑仓库配置，需要先添加或修复仓库。',
           repairAction: LinglongEnvironmentRepairAction.refreshRepositoryConfig,
           rawDetail: envResult.errorDetail,
         ),
@@ -89,12 +85,9 @@ class LinglongEnvironmentHealthAnalyzer {
         LinglongEnvironmentIssue(
           code: LinglongEnvironmentIssueCode.linglongDataPermissionAbnormal,
           severity: LinglongEnvironmentIssueSeverity.error,
-          title: '玲珑数据目录权限异常',
-          description:
-              'll-package-manager 以 ${_probe.serviceUser} 用户运行，但玲珑数据目录或关键状态文件属主异常，'
-              '可能导致仓库迁移、下载对象或创建 layer 失败。',
           repairAction: LinglongEnvironmentRepairAction.fixDataPermissions,
           rawDetail: dataPermission.detail,
+          subject: _probe.serviceUser,
         ),
       );
     }
@@ -103,13 +96,10 @@ class LinglongEnvironmentHealthAnalyzer {
       final isDetectionFailure = !localData.isAvailable;
       issues.add(
         LinglongEnvironmentIssue(
-          code: LinglongEnvironmentIssueCode.ostreeRepositoryCorrupted,
+          code: isDetectionFailure
+              ? LinglongEnvironmentIssueCode.localDataDetectionFailed
+              : LinglongEnvironmentIssueCode.ostreeRepositoryCorrupted,
           severity: LinglongEnvironmentIssueSeverity.error,
-          title: isDetectionFailure ? '玲珑本地数据检测失败' : '玲珑本地数据不可用',
-          description: isDetectionFailure
-              ? '无法执行 linyaps 本地数据读取检查，请确认 ll-cli 和 package-manager 服务状态。'
-              : '无法按 linyaps 运行路径读取已安装应用数据，可能影响应用列表、安装或运行。'
-                    '请先确认玲珑数据目录权限和基础环境状态，再按需执行修复。',
           repairAction: LinglongEnvironmentRepairAction.ostreeFsckDelete,
           rawDetail: localData.detail,
         ),
@@ -123,10 +113,9 @@ class LinglongEnvironmentHealthAnalyzer {
           severity: (storage.usagePercent ?? 0) >= 95
               ? LinglongEnvironmentIssueSeverity.error
               : LinglongEnvironmentIssueSeverity.warning,
-          title: '玲珑保存位置空间不足',
-          description:
-              '当前 ${_probe.rootPath} 所在文件系统使用率约 ${storage.usagePercent}%，建议清理或移动保存位置。',
           repairAction: LinglongEnvironmentRepairAction.moveStorageRoot,
+          subject: _probe.rootPath,
+          percent: storage.usagePercent,
         ),
       );
     }
@@ -136,8 +125,7 @@ class LinglongEnvironmentHealthAnalyzer {
         LinglongEnvironmentIssue(
           code: LinglongEnvironmentIssueCode.runningAppsBlockStorageMove,
           severity: LinglongEnvironmentIssueSeverity.warning,
-          title: '有玲珑应用正在运行',
-          description: '当前仍有 $runningAppCount 个玲珑应用正在运行，移动保存位置前必须先关闭。',
+          count: runningAppCount,
         ),
       );
     }

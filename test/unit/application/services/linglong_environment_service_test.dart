@@ -199,7 +199,6 @@ void main() {
 
         expect(result.isOk, isFalse);
         expect(result.repoStatus, RepoStatus.unavailable);
-        expect(result.statusDescription, '仓库配置读取失败');
         expect(result.errorMessage, '无法通过 ll-cli --json repo show 读取玲珑仓库配置');
         expect(result.failedCommand, 'll-cli --json repo show');
         expect(result.failedCommandExitCode, 255);

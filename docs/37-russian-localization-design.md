@@ -270,3 +270,16 @@ Stable 与 Nightly 的名称和摘要仍由公共渲染脚本产生，所有 Deb
 4. 所有参与编译的生成本地化文件必须提交。
 5. 新增用户可见文案时同步更新全部受支持 ARB；验证不得依赖 Flutter 的运行时回退掩盖缺失翻译。
 6. Linux 桌面可见产品文案变更时，同步维护 Desktop Entry 与 AppStream，并运行公共打包渲染验证。
+
+## 实施结果
+
+本方案已按以下边界落地：
+
+- `app_ru.arb` 完整覆盖中文模板的 642 个业务消息键，并对应用数量、时间、运行中应用、partial commit 和日志行数使用俄语 ICU 复数规则。
+- `app_locale.dart` 是 Locale 规范化、系统语言匹配、设置页语言列表和无 `BuildContext` 文案加载的统一入口；`ru_RU`、`ru-RU` 等输入统一解析为 `ru`。
+- 环境管理 Domain/Application 只返回问题码、结果码、计数、路径和原始诊断，Presentation 负责按当前语言生成文案。
+- Flutter 应用标题、Linux 原生窗口标题、关于页名称和一键更新系统通知都使用当前 Locale；启动时在窗口显示前完成标题同步，运行期语言切换只更新一次原生标题。
+- canonical/兼容 Desktop Entry 与 AppStream 由公共打包渲染器生成 Stable/Nightly 俄语元数据，未增加发行版或桌面环境判断。
+- `verify_localization_resources.dart` 已接入生成源码校验，在 `gen-l10n` 前阻断 ARB 消息键、占位符和 `@@locale` 漂移。
+
+后端接口语言能力不属于本次范围：远端应用内容继续遵守现有 API 语言映射和后端返回结果，客户端不伪造俄语后端数据，也不影响俄语界面、系统通知和 XDG 元数据的完整性。

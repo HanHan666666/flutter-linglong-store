@@ -322,6 +322,20 @@ Nightly version label: <nightly_label>
 
 如果这些元数据缺失，nightly 应按“无法确认已发布 SHA”处理，重新构建并重写 body，而不是静默跳过。
 
+### Nightly 打包门禁
+
+Nightly 的 packaging smoke test 用于保证已编译的 Flutter bundle 真正被组装成可发布的
+DEB、RPM 和 AppImage；它不代替编译检查，只保护产物名称、包内路径、兼容入口和
+XDG/AppStream 元数据等发布契约。PR 不运行这条重型链路，完整验证只放在
+Nightly 和正式发布边界。
+
+本地化元数据门禁必须遵守以下规则：
+
+- Stable/Nightly 名称和摘要必须在每种 ARB 中保持渠道差异。
+- 禁止通过英文 `Nightly` 的出现位置判断渠道，允许各语言使用完全本地化的表达。
+- 最终 DEB 内的 canonical desktop、兼容 desktop 和 AppStream 文件必须与当次
+  ARB 生成结果逐字节一致，防止打包阶段遗漏或换错元数据。
+
 ## Nightly AUR 规则
 
 nightly 在 GitHub prerelease 发布成功后，必须继续执行 AUR 发布，当前目标仓库固定为 `linglong-store-nightly-bin`。

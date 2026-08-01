@@ -48,13 +48,33 @@ assert_file_contains() {
   fi
 }
 
+# 确认打包后的元数据与 ARB 生成器输出完全一致。
+assert_files_equal() {
+  local expected_path="$1"
+  local actual_path="$2"
+
+  assert_artifact_exists "$expected_path"
+  assert_artifact_exists "$actual_path"
+  if ! cmp -s "$expected_path" "$actual_path"; then
+    echo "Packaged metadata differs from generated metadata: $actual_path" >&2
+    diff -u "$expected_path" "$actual_path" >&2 || true
+    exit 1
+  fi
+}
+
+# 检查 Nightly DEB 中安装的用户可见元数据和兼容入口。
 verify_nightly_packaged_metadata() {
   local deb_artifact_path="$1"
   (
     local inspect_root
+    local expected_metadata_root
     local canonical_desktop_path
+    local expected_canonical_desktop_path
+    local appstream_path
+    local expected_appstream_path
     local compat_desktop_id
     local compat_desktop_path
+    local expected_compat_desktop_path
     local -a nightly_compat_desktop_ids=()
 
     if ! command -v dpkg-deb >/dev/null 2>&1; then
@@ -67,32 +87,31 @@ verify_nightly_packaged_metadata() {
 
     dpkg-deb -x "$deb_artifact_path" "$inspect_root/deb"
 
+    # package-deb 保留当次 ARB 渲染结果；逐字节比较可以验证
+    # Desktop Entry/AppStream 确实完整进入最终安装包。
+    expected_metadata_root="$ROOT_DIR/build/tmp/package-deb/$RELEASE_VERSION-$TARGET_ARCH/rendered"
     canonical_desktop_path="$inspect_root/deb/usr/share/applications/$CANONICAL_DESKTOP_ID"
+    expected_canonical_desktop_path="$expected_metadata_root/$CANONICAL_DESKTOP_ID"
+    appstream_path="$inspect_root/deb/usr/share/metainfo/linglong-store.appdata.xml"
+    expected_appstream_path="$expected_metadata_root/appimage/linglong-store.appdata.xml"
     mapfile -t nightly_compat_desktop_ids < <(
       application_identity_compat_desktop_ids nightly
     )
 
-    assert_artifact_exists "$canonical_desktop_path"
-    assert_artifact_exists "$inspect_root/deb/usr/share/metainfo/linglong-store.appdata.xml"
-    assert_file_contains '^Name=.*Nightly$' \
-      "$canonical_desktop_path"
-    assert_file_contains '^Comment=.*Nightly$' \
-      "$canonical_desktop_path"
+    assert_files_equal "$expected_canonical_desktop_path" "$canonical_desktop_path"
+    assert_files_equal "$expected_appstream_path" "$appstream_path"
     assert_file_contains '^X-GNOME-UsesNotifications=true$' \
       "$canonical_desktop_path"
     for compat_desktop_id in "${nightly_compat_desktop_ids[@]}"; do
       compat_desktop_path="$inspect_root/deb/usr/share/applications/$compat_desktop_id"
-      assert_artifact_exists "$compat_desktop_path"
+      expected_compat_desktop_path="$expected_metadata_root/compat/$compat_desktop_id"
+      assert_files_equal "$expected_compat_desktop_path" "$compat_desktop_path"
       assert_file_contains '^NoDisplay=true$' "$compat_desktop_path"
       assert_file_contains '^MimeType=x-scheme-handler/og;$' \
         "$compat_desktop_path"
     done
-    assert_file_contains '<name>.*Nightly</name>' \
-      "$inspect_root/deb/usr/share/metainfo/linglong-store.appdata.xml"
-    assert_file_contains '<summary>.*Nightly</summary>' \
-      "$inspect_root/deb/usr/share/metainfo/linglong-store.appdata.xml"
     assert_file_contains "<launchable type=\"desktop-id\">$CANONICAL_DESKTOP_ID</launchable>" \
-      "$inspect_root/deb/usr/share/metainfo/linglong-store.appdata.xml"
+      "$appstream_path"
   )
 }
 

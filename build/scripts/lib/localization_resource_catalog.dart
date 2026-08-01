@@ -298,6 +298,8 @@ void _validateLinuxMetadataMessages(
     }
   }
 
+  _validateNightlyMetadataDiffers(resource, errors);
+
   final keywords = resource.values['linuxDesktopKeywords'];
   if (keywords is! String || !keywords.endsWith(';')) {
     errors.add('${resource.fileName}: linuxDesktopKeywords 必须以分号结尾');
@@ -308,6 +310,36 @@ void _validateLinuxMetadataMessages(
       parts.last.isNotEmpty ||
       parts.take(parts.length - 1).any((part) => part.trim().isEmpty)) {
     errors.add('${resource.fileName}: linuxDesktopKeywords 必须是非空分号列表');
+  }
+}
+
+/// 校验每种语言的 Nightly 名称和摘要与 Stable 确实不同。
+///
+/// 渠道语义应由 ARB 内容表达，不能通过测试搜索英文 `Nightly`
+/// 推断；这样新增语言可以使用完全本地化的渠道文案。
+void _validateNightlyMetadataDiffers(
+  LocalizationResource resource,
+  List<String> errors,
+) {
+  const channelMessagePairs = <({String stableKey, String nightlyKey})>[
+    (stableKey: 'appTitle', nightlyKey: 'linuxDesktopNameNightly'),
+    (
+      stableKey: 'linuxDesktopComment',
+      nightlyKey: 'linuxDesktopCommentNightly',
+    ),
+  ];
+
+  for (final pair in channelMessagePairs) {
+    final stableValue = resource.values[pair.stableKey];
+    final nightlyValue = resource.values[pair.nightlyKey];
+    if (stableValue is String &&
+        nightlyValue is String &&
+        stableValue == nightlyValue) {
+      errors.add(
+        '${resource.fileName}: ${pair.nightlyKey} '
+        '必须与 ${pair.stableKey} 保持渠道差异',
+      );
+    }
   }
 }
 

@@ -56,6 +56,29 @@ assert_file_contains() {
   fi
 }
 
+# 确认同一元数据字段组在 Stable/Nightly 之间存在渠道差异。
+assert_metadata_family_differs() {
+  local label="$1"
+  local pattern="$2"
+  local stable_file="$3"
+  local nightly_file="$4"
+  local stable_lines
+  local nightly_lines
+
+  if ! stable_lines="$(grep -E "$pattern" "$stable_file")"; then
+    echo "Stable metadata is missing $label: $stable_file" >&2
+    exit 1
+  fi
+  if ! nightly_lines="$(grep -E "$pattern" "$nightly_file")"; then
+    echo "Nightly metadata is missing $label: $nightly_file" >&2
+    exit 1
+  fi
+  if [[ "$stable_lines" == "$nightly_lines" ]]; then
+    echo "Stable and Nightly metadata unexpectedly share $label: $nightly_file" >&2
+    exit 1
+  fi
+}
+
 metadata_output="$(bash "$ROOT_DIR/build/scripts/resolve-nightly-metadata.sh")"
 base_version=""
 nightly_date=""
@@ -144,9 +167,19 @@ grep -q 'linglong-store-'"$nightly_label"'-linux-arm64.tar.gz::https://github.co
 desktop_count="$(find "$RENDER_OUTPUT_DIR" -maxdepth 1 -type f -name '*.desktop' | awk 'END { print NR }')"
 test "$desktop_count" = "1"
 canonical_desktop_path="$RENDER_OUTPUT_DIR/$CANONICAL_DESKTOP_ID"
+stable_canonical_desktop_path="$STABLE_AUR_OUTPUT_DIR/$CANONICAL_DESKTOP_ID"
 test -f "$canonical_desktop_path"
-grep -q '^Name=.*Nightly' "$canonical_desktop_path"
-grep -q '^Comment=.*Nightly' "$canonical_desktop_path"
+test -f "$stable_canonical_desktop_path"
+assert_metadata_family_differs \
+  'Desktop Entry Name' \
+  '^Name(\[[^]]+\])?=' \
+  "$stable_canonical_desktop_path" \
+  "$canonical_desktop_path"
+assert_metadata_family_differs \
+  'Desktop Entry Comment' \
+  '^Comment(\[[^]]+\])?=' \
+  "$stable_canonical_desktop_path" \
+  "$canonical_desktop_path"
 grep -q '^X-GNOME-UsesNotifications=true$' "$canonical_desktop_path"
 mapfile -t nightly_compat_desktop_ids < <(
   application_identity_compat_desktop_ids nightly
@@ -157,8 +190,16 @@ for compat_desktop_id in "${nightly_compat_desktop_ids[@]}"; do
   grep -q '^NoDisplay=true$' "$compat_desktop_path"
   grep -q '^MimeType=x-scheme-handler/og;$' "$compat_desktop_path"
 done
-grep -q '<name>.*Nightly</name>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
-grep -q '<summary>.*Nightly</summary>' "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
+assert_metadata_family_differs \
+  'AppStream name' \
+  '^[[:space:]]*<name( xml:lang="[^"]+")?>.*</name>$' \
+  "$STABLE_AUR_OUTPUT_DIR/appimage/linglong-store.appdata.xml" \
+  "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
+assert_metadata_family_differs \
+  'AppStream summary' \
+  '^[[:space:]]*<summary( xml:lang="[^"]+")?>.*</summary>$' \
+  "$STABLE_AUR_OUTPUT_DIR/appimage/linglong-store.appdata.xml" \
+  "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 grep -Fq "<launchable type=\"desktop-id\">$CANONICAL_DESKTOP_ID</launchable>" \
   "$RENDER_OUTPUT_DIR/appimage/linglong-store.appdata.xml"
 

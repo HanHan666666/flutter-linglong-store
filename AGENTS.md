@@ -13,6 +13,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 严禁使用 `PopupMenuButton`。按钮和设置字段展开的轻量菜单必须统一复用
   `AppAnchoredMenu<T>` / `AppAnchoredMenuButton<T>`；右键上下文操作继续使用项目既有
   原生菜单入口，禁止以 `showMenu` 或页面私有 Overlay 规避此约定。
+- 严禁硬编码物理方向做布局对齐：禁止新增 `Alignment.centerLeft/centerRight/topLeft` 等、
+  `EdgeInsets.only(left:/right:)`、`TextAlign.left/right`、`Positioned(left:/right:)`，
+  必须使用方向感知写法（`AlignmentDirectional` / `EdgeInsetsDirectional` /
+  `TextAlign.start/end` / `PositionedDirectional`），否则 RTL（阿拉伯语）下布局不镜像；
+  方向性图标（如展开箭头）按 `Directionality` 镜像。CI 门禁
+  `build/scripts/verify_directional_layout.dart` 会拦截违规；确属窗口物理几何等合理豁免时，
+  在源码加 `// ignore: hardcoded_direction` 注释说明理由。
 - 每开发一个功能点就进行一次commit
 - Git commit 必须遵循 Conventional Commits，统一使用 `type: 简短描述`，不要再写无类型前缀的自然语句提交信息。
 - 在接到用户的任务的时候，先不要着急开始修改代码，要先分析需求，分析代码，列举解决方案，
@@ -308,6 +315,15 @@ Semantics(
 
 ## 变更记录
 
+- 2026-08-01：新增阿拉伯语（ar）支持后，项目强制方向感知布局约定：新代码禁止
+  硬编码物理方向（`Alignment.centerLeft` 等、`EdgeInsets.only(left:/right:)`、
+  `TextAlign.left/right`、`Positioned(left:/right:)`），统一使用
+  `AlignmentDirectional` / `EdgeInsetsDirectional` / `TextAlign.start/end` /
+  `PositionedDirectional`；方向性图标按 `Directionality` 镜像。CI 门禁
+  `build/scripts/verify_directional_layout.dart`（已挂进
+  `verify-generated-sources.sh`）自动拦截违规，合理豁免需用
+  `// ignore: hardcoded_direction` 注释说明理由。阿拉伯语复数（CLDR
+  zero/one/two/few/many/other）与 RTL 细节见 `docs/41-arabic-localization-design.md`。
 - 2026-07-31：紧邻按钮或设置字段展开的轻量菜单统一使用
   `lib/presentation/widgets/app_anchored_menu.dart` 中的 `AppAnchoredMenu<T>`；标准三点
   入口使用 `AppAnchoredMenuButton<T>`，禁止在 Presentation 重新引入上述旧式组件、

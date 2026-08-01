@@ -20,6 +20,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 每一处代码修改都要有必要的注释
 - 先方案后编码：先梳理背景/现状 → 列备选方案（含改动面、影响范围、取舍理由）→ 让用户确认 → 再动手。**只有在用户确认你的方案后，才开始动手写代码, 不然你很快就会被关机，更换下一个AI，一定要小心。**
 - 统一入口：能收敛的业务逻辑要集中封装（如卸载流程用 `useAppUninstall`），避免在多个页面/组件里写重复弹窗或副作用。
+- 严禁硬编码物理方向做布局对齐：禁止新增 `Alignment.centerLeft/centerRight/topLeft` 等、
+  `EdgeInsets.only(left:/right:)`、`TextAlign.left/right`、`Positioned(left:/right:)`，
+  必须使用方向感知写法（`AlignmentDirectional` / `EdgeInsetsDirectional` /
+  `TextAlign.start/end` / `PositionedDirectional`），否则 RTL（阿拉伯语）下布局不镜像；
+  方向性图标（如展开箭头）按 `Directionality` 镜像。CI 门禁
+  `build/scripts/verify_directional_layout.dart` 会拦截违规；确属窗口物理几何等合理豁免时，
+  在源码加 `// ignore: hardcoded_direction` 注释说明理由。
 - 完成功能后，将关键经验和约定同步到本指南，方便后续遵循。
 - 在编写代码前先**明确用户需求并确认方案**；优先**复用已有的 hooks/store**，避免新增零散的 `invoke` 或 `ll-cli` 调用。
 - 保持 ll-cli 的使用**最小化且可预测**：优先使用现有的 **Rust 命令与 IPC 事件**，而不是新增 Shell 调用。

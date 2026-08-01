@@ -101,6 +101,14 @@
 - 门禁：`verify_localization_resources.dart`（5 locales/670 键一致）→ `gen-l10n` → `flutter analyze` 0 issue → `flutter test` 全量（LTR 下方向感知改动渲染等价，回归为零）。
 - 元数据：渲染 Stable/Nightly 后做语言集合校验与 `desktop-file-validate`；`appstreamcli` 在开发机缺失时以渲染脚本内置校验兜底。
 
+## 后续维护注意
+
+1. **模板复数变更警告**：ar 的六类复数依赖 `gen-l10n` 对非模板语言的宽松支持。若将来有人把模板 `app_zh.arb` 的计数键改为 `{count, plural, ...}` 写法，`gen-l10n` 会强制所有语言的复数类别为模板类别的子集，**ar 六类将构建失败**。此时需先确认模板类别集合是否覆盖 ar 的 `zero/one/two/few/many/other`。
+2. **语言菜单高度断言是隐性上限**：`test/widget/presentation/pages/setting_page_test.dart` 断言语言菜单最大高度 `<320`。当前 5 种语言（含 ar）为 240px，每新增一种语言（动作项 48px）都要复核该断言，避免第 6 种语言时意外失败。
+3. **方向性图标镜像的提取时机**：title_bar 的展开箭头当前用 `Directionality.of(...) == rtl ? arrow_back_ios : arrow_forward_ios` 内联判断（全项目唯一一处）。出现第二处方向性图标时再提取统一 helper，现阶段不为单点做封装。
+4. **RTL 回归防护**：`build/scripts/verify_directional_layout.dart`（已挂进 `verify-generated-sources.sh`）会拦截新增的硬编码物理方向布局；方向感知门禁只覆盖布局 API，图标语义、文本长度溢出（如标题栏标题）仍需在新增页面时人工目测 RTL 效果。
+
 ## 变更记录
 
 - 2026-08-01：新增 `app_ar.arb`（670 键完整翻译）；RTL 方向感知修复 16 处；字体回退追加 `Noto Sans Arabic`；补充单元测试与 RTL 冒烟测试。
+- 2026-08-01：补充 RTL 组件测试（标题栏展开箭头镜像、安装进度条方向），修复标题栏 Logo 区在长语言下的 Row 溢出与搜索建议浮层 hover 选中不刷新两个真实缺陷；新增方向感知布局扫描门禁；AGENTS.md 增加 RTL 硬性约定。

@@ -268,7 +268,8 @@ render_file \
   "$output_dir/appimage/linglong-store.appdata.xml"
 
 # 所有自然语言字段由同一 ARB 目录生成；Shell 只传渠道和待渲染文件位置。
-bash "$ROOT_DIR/build/scripts/run-release-dart-tool.sh" \
+LINGLONG_RELEASE_TOOL_ROOT="$ROOT_DIR" \
+  bash "$ROOT_DIR/build/scripts/run-release-dart-tool.sh" \
   "$ROOT_DIR/build/scripts/render_localized_linux_metadata.dart" \
   --channel "$channel" \
   --desktop-file "$output_dir/$desktop_filename" \

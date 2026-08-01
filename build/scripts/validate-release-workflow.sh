@@ -193,6 +193,7 @@ require_grep "augment-nightly-release-notes-loong64.sh" .github/workflows/nightl
 require_grep "--replace-existing" .github/workflows/nightly-loong64.yml
 require_grep 'PACKAGE_CHANNEL="${PACKAGE_CHANNEL:-stable}"' build/scripts/package-smoke-test.sh
 require_grep '--channel "$PACKAGE_CHANNEL"' build/scripts/package-smoke-test.sh
+require_grep 'LINGLONG_RELEASE_TOOL_ROOT="$ROOT_DIR"' build/scripts/render-packaging-templates.sh
 require_grep "load_application_identity" build/scripts/package-smoke-test.sh
 require_grep "CANONICAL_DESKTOP_ID" build/scripts/package-smoke-test.sh
 require_grep "application_identity_compat_desktop_ids nightly" build/scripts/package-smoke-test.sh

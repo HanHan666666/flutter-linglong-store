@@ -68,6 +68,45 @@ void main() {
     expect(find.text('浏览器'), findsOneWidget);
   });
 
+  testWidgets('RTL 下选中搜索建议时展开箭头镜像为 back 方向', (tester) async {
+    await tester.pumpWidget(_buildRouterApp(locale: const Locale('ar')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, '浏览');
+    await tester.pump(const Duration(milliseconds: 150));
+    await tester.pumpAndSettle();
+
+    // 悬停第一项触发 MouseRegion 选中（避免 ArrowDown 触发 TextField
+    // 在 RTL 文本下的垂直光标移动框架断言）
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    await tester.pump();
+    await mouse.moveTo(tester.getCenter(find.text('浏览器')));
+    await tester.pump();
+
+    // RTL 下 start 在右侧，展开指示器应指向左（back）
+    expect(find.byIcon(Icons.arrow_back_ios), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_forward_ios), findsNothing);
+  });
+
+  testWidgets('LTR 下选中搜索建议时展开箭头保持 forward 方向', (tester) async {
+    await tester.pumpWidget(_buildRouterApp(locale: const Locale('zh')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, '浏览');
+    await tester.pump(const Duration(milliseconds: 150));
+    await tester.pumpAndSettle();
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    await tester.pump();
+    await mouse.moveTo(tester.getCenter(find.text('浏览器')));
+    await tester.pump();
+
+    expect(find.byIcon(Icons.arrow_forward_ios), findsOneWidget);
+    expect(find.byIcon(Icons.arrow_back_ios), findsNothing);
+  });
+
   testWidgets('tapping header suggestion opens detail page', (tester) async {
     await tester.pumpWidget(_buildRouterApp());
     await tester.pumpAndSettle();
@@ -356,7 +395,10 @@ void main() {
   });
 }
 
-Widget _buildRouterApp({String initialLocation = '/'}) {
+Widget _buildRouterApp({
+  String initialLocation = '/',
+  Locale locale = const Locale('zh'),
+}) {
   final router = GoRouter(
     initialLocation: initialLocation,
     routes: [
@@ -439,7 +481,7 @@ Widget _buildRouterApp({String initialLocation = '/'}) {
       searchHintAppsProvider.overrideWithValue(const <SearchHintApp>[]),
     ],
     child: MaterialApp.router(
-      locale: const Locale('zh'),
+      locale: locale,
       theme: AppTheme.lightTheme,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

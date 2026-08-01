@@ -107,11 +107,20 @@ class CustomTitleBar extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.sm),
         // 应用名称（标题栏级别：16px shell 文字）
-        Text(
-          l10n.appTitle,
-          style: context.appTextStyles.body.copyWith(
-            color: context.appColors.textPrimary,
-            fontWeight: context.appFontWeight(FontWeight.w400),
+        // 长语言（如阿拉伯语）下标题远超中文宽度，限制最大宽度并省略号
+        // 截断，避免撑爆标题栏导致 Row 溢出
+        Flexible(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 240),
+            child: Text(
+              l10n.appTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.appTextStyles.body.copyWith(
+                color: context.appColors.textPrimary,
+                fontWeight: context.appFontWeight(FontWeight.w400),
+              ),
+            ),
           ),
         ),
       ],
@@ -528,6 +537,9 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
                     setState(() {
                       _selectedIndex = index;
                     });
+                    // OverlayEntry builder 结果被缓存，仅 setState 不会刷新
+                    // 浮层内容；显式同步才能更新选中态展开箭头
+                    _syncSuggestionsOverlay();
                   },
                   child: GestureDetector(
                     onTap: () {

@@ -24,6 +24,36 @@ require_no_grep() {
   fi
 }
 
+# 将依赖约束限定到指定 job，避免同一 workflow 的其他 job 偶然满足检查。
+require_grep_in_job() {
+  local job_name="$1"
+  local pattern="$2"
+  local file="$3"
+
+  if ! awk -v job="  ${job_name}:" -v pattern="$pattern" '
+    $0 == job {
+      in_job = 1
+      next
+    }
+
+    in_job && $0 ~ /^  [[:alnum:]_-]+:$/ {
+      exit
+    }
+
+    in_job && index($0, pattern) > 0 {
+      found = 1
+      exit
+    }
+
+    END {
+      exit found ? 0 : 1
+    }
+  ' "$file"; then
+    echo "Missing expected pattern '$pattern' in job '$job_name' from $file" >&2
+    exit 1
+  fi
+}
+
 find_line_after_anchor() {
   local anchor_pattern="$1"
   local target_pattern="$2"
@@ -120,6 +150,7 @@ require_grep "always()" .github/workflows/nightly.yml
 require_grep "needs.build-nightly-amd64.result == 'success'" .github/workflows/nightly.yml
 require_grep "needs.build-nightly-arm64.result != 'success' && needs.build-nightly-arm64-qemu.result == 'success'" .github/workflows/nightly.yml
 require_grep "publish-aur-nightly:" .github/workflows/nightly.yml
+require_grep_in_job "publish-aur-nightly" "dart-lang/setup-dart@v1" .github/workflows/nightly.yml
 require_grep "should_publish_release" .github/workflows/nightly.yml
 require_grep "should_publish_aur" .github/workflows/nightly.yml
 require_grep "aur_asset_source" .github/workflows/nightly.yml
@@ -149,6 +180,7 @@ require_grep "validate-aur-package.sh" .github/workflows/nightly.yml
 require_grep "publish-aur.sh" .github/workflows/nightly.yml
 require_grep "linglong-store-nightly-bin" .github/workflows/nightly.yml
 require_grep "ssh://aur@aur.archlinux.org/linglong-store-nightly-bin.git" .github/workflows/nightly.yml
+require_grep_in_job "publish-aur" "dart-lang/setup-dart@v1" .github/workflows/release.yml
 require_grep "listReleases" .github/workflows/nightly.yml
 require_grep "workflow_run" .github/workflows/nightly-loong64.yml
 require_grep "workflow_dispatch" .github/workflows/nightly-loong64.yml
@@ -181,5 +213,7 @@ require_grep 'engine.realm' build/scripts/build-loong64-in-container.sh
 require_grep 'flutter_tools.stamp' build/scripts/build-loong64-in-container.sh
 require_grep "git diff --cached --quiet" build/scripts/publish-aur.sh
 require_grep "Generating .SRCINFO requires makepkg or a Docker-based Arch Linux fallback" build/scripts/publish-aur.sh
+require_grep 'render_validation_metadata "$metadata_host_dir"' build/scripts/validate-aur-package.sh
+require_grep '--metadata-dir "$metadata_container_dir"' build/scripts/validate-aur-package.sh
 
 echo "Release workflow validation passed."

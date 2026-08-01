@@ -547,6 +547,9 @@ jobs:
           ref: ${{ needs.prepare-nightly.outputs.source_commit }}
           fetch-depth: 0
 
+      - name: Set up Dart SDK
+        uses: dart-lang/setup-dart@v1
+
       - name: Download signed nightly assets from this run
         if: ${{ needs.prepare-nightly.outputs.aur_asset_source == 'artifact' }}
         uses: actions/download-artifact@v4

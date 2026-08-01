@@ -19,10 +19,11 @@ sha256_sig_arm64="${SHA256_SIG_ARM64:-}"
 gpg_key_id="${GPG_KEY_ID:-}"
 run_inner="false"
 verification_mode="offline"
+pre_rendered_metadata_dir=""
 
 usage() {
   cat <<'EOF' >&2
-Usage: validate-aur-package.sh --version <version> [--channel stable|nightly] [--package-name <pkgname>] [--aur-version <pkgver>] [--sha256-amd64 <sha>] [--sha256-arm64 <sha>] [--sha256-sig-amd64 <sha>] [--sha256-sig-arm64 <sha>] [--gpg-key-id <keyid>] [--verify-source|--online] [--inner]
+Usage: validate-aur-package.sh --version <version> [--channel stable|nightly] [--package-name <pkgname>] [--aur-version <pkgver>] [--sha256-amd64 <sha>] [--sha256-arm64 <sha>] [--sha256-sig-amd64 <sha>] [--sha256-sig-arm64 <sha>] [--gpg-key-id <keyid>] [--verify-source|--online] [--inner [--metadata-dir <path>]]
 
 Default mode is offline structural validation: render PKGBUILD/.SRCINFO, build against
 local synthetic fixtures, and assert package metadata/layout without depending on live
@@ -125,6 +126,69 @@ build_release_asset_url() {
   esac
 
   printf '%s/releases/download/%s/%s\n' "$PROJECT_URL" "$tag_root" "$asset_name"
+}
+
+# 统一补齐在线校验摘要或离线占位摘要，保证宿主渲染与 Arch 容器校验消费同一份输入。
+resolve_validation_checksums() {
+  if [[ "$verification_mode" == "online" ]]; then
+    if [[ -z "$sha256_amd64" ]]; then
+      sha256_amd64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-amd64.tar.gz")")"
+    fi
+
+    if [[ -z "$sha256_arm64" ]]; then
+      sha256_arm64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-arm64.tar.gz")")"
+    fi
+
+    if [[ -z "$sha256_sig_amd64" ]]; then
+      sha256_sig_amd64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-amd64.tar.gz.asc")")"
+    fi
+
+    if [[ -z "$sha256_sig_arm64" ]]; then
+      sha256_sig_arm64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-arm64.tar.gz.asc")")"
+    fi
+  else
+    # 离线校验只验证渲染结构和包布局，固定占位摘要可以避免意外访问网络。
+    : "${sha256_amd64:=$(placeholder_sha256 "${channel}:${release_version}:amd64:bundle")}"
+    : "${sha256_sig_amd64:=$(placeholder_sha256 "${channel}:${release_version}:amd64:signature")}"
+    : "${sha256_arm64:=$(placeholder_sha256 "${channel}:${release_version}:arm64:bundle")}"
+    : "${sha256_sig_arm64:=$(placeholder_sha256 "${channel}:${release_version}:arm64:signature")}"
+  fi
+}
+
+# ARB 驱动的元数据固定在宿主 Dart 环境渲染，Arch 容器只承担 makepkg 校验职责。
+render_validation_metadata() {
+  local metadata_dir="$1"
+
+  bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
+    --inner \
+    --version "$release_version" \
+    --arch amd64 \
+    --output-dir "$metadata_dir" \
+    --channel "$channel" \
+    --sha256-amd64 "$sha256_amd64" \
+    --sha256-arm64 "$sha256_arm64" \
+    --sha256-sig-amd64 "$sha256_sig_amd64" \
+    --sha256-sig-arm64 "$sha256_sig_arm64" \
+    --gpg-key-id "$gpg_key_id"
+}
+
+# 内层只接受工作区专用临时目录，避免后续 chown 误作用于任意宿主挂载路径。
+resolve_pre_rendered_metadata_dir() {
+  local requested_dir="$1"
+  local allowed_root
+  local resolved_dir
+
+  allowed_root="$(realpath "$ROOT_DIR/build/tmp")"
+  resolved_dir="$(realpath "$requested_dir")"
+  case "$resolved_dir/" in
+    "$allowed_root"/*/)
+      printf '%s\n' "$resolved_dir"
+      ;;
+    *)
+      echo "Pre-rendered AUR metadata must be located below $allowed_root." >&2
+      exit 64
+      ;;
+  esac
 }
 
 create_offline_source_fixtures() {
@@ -247,34 +311,14 @@ run_inner_validation() {
   run_with_retries pacman -Sy --noconfirm --needed "${pacman_packages[@]}" >/dev/null
   useradd -m builder >/dev/null 2>&1 || true
 
-  metadata_dir="$(mktemp -d)"
-  trap 'rm -rf "$metadata_dir"' RETURN
-  build_dir="$metadata_dir/aur-build"
-
-  if [[ "$verification_mode" == "online" ]]; then
-    if [[ -z "$sha256_amd64" ]]; then
-      sha256_amd64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-amd64.tar.gz")")"
-    fi
-
-    if [[ -z "$sha256_arm64" ]]; then
-      sha256_arm64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-arm64.tar.gz")")"
-    fi
-
-    if [[ -z "$sha256_sig_amd64" ]]; then
-      sha256_sig_amd64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-amd64.tar.gz.asc")")"
-    fi
-
-    if [[ -z "$sha256_sig_arm64" ]]; then
-      sha256_sig_arm64="$(compute_release_sha256 "$(build_release_asset_url "linglong-store-${release_version}-linux-arm64.tar.gz.asc")")"
-    fi
+  if [[ -n "$pre_rendered_metadata_dir" ]]; then
+    metadata_dir="$(resolve_pre_rendered_metadata_dir "$pre_rendered_metadata_dir")"
   else
-    # Offline validation only checks rendered structure and package layout, so
-    # deterministic placeholder digests avoid any accidental network access.
-    : "${sha256_amd64:=$(placeholder_sha256 "${channel}:${release_version}:amd64:bundle")}"
-    : "${sha256_sig_amd64:=$(placeholder_sha256 "${channel}:${release_version}:amd64:signature")}"
-    : "${sha256_arm64:=$(placeholder_sha256 "${channel}:${release_version}:arm64:bundle")}"
-    : "${sha256_sig_arm64:=$(placeholder_sha256 "${channel}:${release_version}:arm64:signature")}"
+    metadata_dir="$(mktemp -d)"
+    trap 'rm -rf "$metadata_dir"' RETURN
+    render_validation_metadata "$metadata_dir"
   fi
+  build_dir="$metadata_dir/aur-build"
 
   case "$channel" in
     stable)
@@ -294,18 +338,6 @@ run_inner_validation() {
     application_identity_compat_desktop_ids "$channel"
   )
   expected_pkginfo_pkgver="${aur_version}-1"
-
-  bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
-    --inner \
-    --version "$release_version" \
-    --arch amd64 \
-    --output-dir "$metadata_dir" \
-    --channel "$channel" \
-    --sha256-amd64 "$sha256_amd64" \
-    --sha256-arm64 "$sha256_arm64" \
-    --sha256-sig-amd64 "$sha256_sig_amd64" \
-    --sha256-sig-arm64 "$sha256_sig_arm64" \
-    --gpg-key-id "$gpg_key_id"
 
   if [[ "$verification_mode" == "online" ]]; then
     build_dir="$(prepare_online_build_workspace "$metadata_dir/aur")"
@@ -479,6 +511,10 @@ while [[ $# -gt 0 ]]; do
       run_inner="true"
       shift
       ;;
+    --metadata-dir)
+      pre_rendered_metadata_dir="$2"
+      shift 2
+      ;;
     *)
       usage
       exit 64
@@ -492,11 +528,19 @@ if [[ -z "$release_version" ]]; then
 fi
 
 resolve_channel_defaults
+resolve_validation_checksums
 
 if [[ "$run_inner" == "true" ]]; then
   run_inner_validation
   exit 0
 fi
+
+# Docker 只挂载工作区，因此将宿主生成物放入专用目录并在退出时统一回收。
+mkdir -p "$ROOT_DIR/build/tmp"
+metadata_host_dir="$(mktemp -d "$ROOT_DIR/build/tmp/aur-validation-metadata.XXXXXX")"
+trap 'rm -rf "$metadata_host_dir"' EXIT
+render_validation_metadata "$metadata_host_dir"
+metadata_container_dir="/workspace/${metadata_host_dir#"$ROOT_DIR"/}"
 
 docker_cmd=(
   docker run --rm
@@ -514,6 +558,7 @@ docker_cmd=(
   --channel "$channel"
   --package-name "$package_name"
   --aur-version "$aur_version"
+  --metadata-dir "$metadata_container_dir"
 )
 
 if [[ "$verification_mode" == "online" ]]; then

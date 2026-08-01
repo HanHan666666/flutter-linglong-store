@@ -353,6 +353,7 @@ nightly 在 GitHub prerelease 发布成功后，必须继续执行 AUR 发布，
   `Nightly`。
 - `nightly.yml` 当前发布顺序固定为：生成并签名 nightly 资产 → 发布 GitHub prerelease → 发布 nightly AUR；不要把 AUR 发布提前到 prerelease 之前
 - nightly AUR 的 checksum/render/validate/publish 必须同时消费 `amd64` / `arm64` tarball 与 `.asc`，禁止再把 arm64 当成 stable-only 逻辑
+- Nightly 与正式 Release 的 AUR job 必须在宿主 runner 配置 Dart SDK；ARB/XDG 元数据由宿主统一渲染，再把生成物交给 Arch Linux 容器做 `makepkg` 校验。禁止在临时 Arch 容器里另行安装 Dart 或维护第二套元数据生成逻辑
 - `publish-aur.sh` 在宿主机没有 `makepkg` 时，必须通过临时 Arch 容器生成 `.SRCINFO`，不要假定 Ubuntu runner 自带 Arch 打包工具
 - 容器兜底只允许在容器内部临时工作目录生成 `.SRCINFO` 后再拷回结果，禁止对挂载进来的宿主 AUR 仓库执行递归 `chown`
 

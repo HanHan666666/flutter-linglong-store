@@ -434,7 +434,8 @@ class AppDetailHeroHeader extends StatelessWidget {
         if (logCopyText != null) ...[
           const SizedBox(height: 6),
           Align(
-            alignment: Alignment.centerRight,
+            // 复制按钮随文本方向镜像（RTL 下靠左）
+            alignment: AlignmentDirectional.centerEnd,
             child: _buildStatusCopyButton(context, logCopyText),
           ),
         ],

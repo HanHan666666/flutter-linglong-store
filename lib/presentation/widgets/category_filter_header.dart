@@ -156,7 +156,8 @@ class CategoryFilterHeaderBox extends StatelessWidget {
         // 展开按钮仅切换外层面板，头部本身保持固定高度。
         if (onToggleExpand != null)
           Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.sm),
+            // 尾部按钮间距随文本方向镜像
+            padding: const EdgeInsetsDirectional.only(end: AppSpacing.sm),
             child: Tooltip(
               message: isExpanded
                   ? l10n.collapseCategories
@@ -211,7 +212,8 @@ class CategoryFilterHeaderBox extends StatelessWidget {
           ),
           if (onToggleExpand != null)
             Padding(
-              padding: const EdgeInsets.only(left: AppSpacing.xs),
+              // 内层按钮间距随文本方向镜像
+              padding: const EdgeInsetsDirectional.only(start: AppSpacing.xs),
               child: Tooltip(
                 message: AppLocalizations.of(context)!.collapse,
                 child: InkWell(

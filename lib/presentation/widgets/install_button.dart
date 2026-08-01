@@ -331,9 +331,10 @@ class _InstallButtonState extends State<InstallButton> {
                       ),
                     ),
                     // 用与进度同宽的裁剪层覆盖白色前景，实现进度区黑白切换。
+                    // 方向感知：RTL 下进度条从右向左增长，与 Material 惯例一致
                     ClipRect(
                       child: Align(
-                        alignment: Alignment.centerLeft,
+                        alignment: AlignmentDirectional.centerStart,
                         widthFactor: progressValue,
                         child: ExcludeSemantics(
                           child: _buildProgressForegroundLayer(

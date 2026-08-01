@@ -66,7 +66,8 @@ class CustomTitleBar extends StatelessWidget {
         children: [
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(left: AppSpacing.lg),
+              // 方向感知间距：RTL 下 logo 区靠右留白，镜像布局
+              padding: const EdgeInsetsDirectional.only(start: AppSpacing.lg),
               child: Row(
                 children: [
                   // 搜索框改为真实输入后，拖拽区域需要避开输入控件。
@@ -563,11 +564,17 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
                             ),
                           ),
                           if (isSelected)
-                            const Padding(
-                              padding: EdgeInsets.only(left: 8),
+                            Padding(
+                              // 展开指示器：间距随文本方向镜像，箭头在 RTL 下反向
+                              padding: const EdgeInsetsDirectional.only(
+                                start: 8,
+                              ),
                               child: ExcludeSemantics(
                                 child: Icon(
-                                  Icons.arrow_forward_ios,
+                                  Directionality.of(overlayContext) ==
+                                          TextDirection.rtl
+                                      ? Icons.arrow_back_ios
+                                      : Icons.arrow_forward_ios,
                                   size: 12,
                                   color: AppColors.primary,
                                 ),
@@ -797,11 +804,12 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
         label: l10n.a11ySearchByTag(tag.name),
         container: true,
         child: Align(
-          alignment: Alignment.centerLeft,
+          // 标签 chip 内容随文本方向镜像（RTL 下从右开始）
+          alignment: AlignmentDirectional.centerStart,
           child: Container(
             height: 24,
             constraints: const BoxConstraints(maxWidth: 320),
-            padding: const EdgeInsets.only(left: 10),
+            padding: const EdgeInsetsDirectional.only(start: 10),
             decoration: BoxDecoration(
               color: context.appColors.primaryLight,
               borderRadius: AppRadius.fullRadius,
@@ -889,10 +897,10 @@ class _AnimatedSearchHint extends StatelessWidget {
 
     // 外层 SizedBox.expand + Align 把 placeholder 文案垂直居中到搜索框可用区，
     // 对齐底层 TextField 的 textAlignVertical.center，避免动画 Text 贴在 Stack
-    // 顶部导致与输入文字基线不一致。水平方向居左，保持从左到右阅读。
+    // 顶部导致与输入文字基线不一致。水平方向随文本方向（RTL 下居右）。
     return SizedBox.expand(
       child: Align(
-        alignment: Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         child: AnimatedSwitcher(
           // 关闭系统动画时降级为瞬切，遵守无障碍偏好。
           duration: animationsDisabled ? Duration.zero : animDuration,
@@ -914,7 +922,8 @@ class _AnimatedSearchHint extends StatelessWidget {
           layoutBuilder: (currentChild, previousChildren) {
             // 让新旧文案在切换瞬间重叠堆叠，避免切换期高度跳动。
             return Stack(
-              alignment: Alignment.centerLeft,
+              // 堆叠基准随文本方向镜像，保证动画文案起点与输入方向一致
+              alignment: AlignmentDirectional.centerStart,
               children: <Widget>[
                 ...previousChildren,
                 if (currentChild != null) currentChild,

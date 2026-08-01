@@ -251,7 +251,8 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Align(
-        alignment: Alignment.centerLeft,
+        // 骨架屏标题占位随文本方向镜像
+        alignment: AlignmentDirectional.centerStart,
         child: Container(
           width: 112,
           height: 20,

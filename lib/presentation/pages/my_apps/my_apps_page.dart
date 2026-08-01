@@ -163,7 +163,8 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
     final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      alignment: Alignment.centerLeft,
+      // Tab 标题区随文本方向镜像（RTL 下从右排起）
+      alignment: AlignmentDirectional.centerStart,
       child: Row(
         children: [
           Semantics(

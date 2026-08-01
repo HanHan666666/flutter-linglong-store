@@ -372,7 +372,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                     l10n.fontScalePercent(
                       (preferences.fontScaleFactor * 100).round(),
                     ),
-                    textAlign: TextAlign.right,
+                    // 数值跟随文本方向：RTL 下靠左显示
+                    textAlign: TextAlign.end,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: context.appFontWeight(FontWeight.w500),
                     ),

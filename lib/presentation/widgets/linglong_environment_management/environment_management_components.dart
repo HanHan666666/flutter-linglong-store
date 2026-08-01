@@ -258,7 +258,8 @@ class EnvironmentManagementWarningBanner extends StatelessWidget {
         children: [
           const ExcludeSemantics(
             child: Padding(
-              padding: EdgeInsets.only(right: 8, top: 1),
+              // 错误图标与文本间距随文本方向镜像
+              padding: EdgeInsetsDirectional.only(end: 8, top: 1),
               child: Icon(
                 Icons.error_outline,
                 size: 18,

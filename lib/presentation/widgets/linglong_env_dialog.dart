@@ -336,7 +336,8 @@ class LinglongEnvDialog extends ConsumerWidget {
                               _handleRestartPackageManagerService(context, ref),
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.info,
-                      alignment: Alignment.centerLeft,
+                      // 按钮内容随文本方向镜像
+                      alignment: AlignmentDirectional.centerStart,
                       padding: EdgeInsets.zero,
                       minimumSize: const Size(0, 36),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,

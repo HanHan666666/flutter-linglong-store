@@ -176,7 +176,8 @@ class AppDetailVersionSection extends StatelessWidget {
                   trailing: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 220),
                     child: Align(
-                      alignment: Alignment.centerRight,
+                      // 版本操作区随文本方向镜像（RTL 下靠左）
+                      alignment: AlignmentDirectional.centerEnd,
                       child: _buildVersionActionArea(
                         context,
                         version.versionNo,

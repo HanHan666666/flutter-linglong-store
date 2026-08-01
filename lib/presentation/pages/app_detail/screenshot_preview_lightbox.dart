@@ -393,7 +393,7 @@ class _ThumbnailBar extends StatelessWidget {
               onTap: () => onTapThumbnail(index),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
-                margin: const EdgeInsets.only(right: 6),
+                margin: const EdgeInsetsDirectional.only(end: 6),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(5),
                   border: Border.all(

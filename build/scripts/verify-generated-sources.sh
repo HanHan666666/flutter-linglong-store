@@ -22,6 +22,8 @@ generated_pathspecs=(
 cd "$ROOT_DIR"
 
 "$DART_BIN" run build/scripts/verify_localization_resources.dart
+# 方向感知布局门禁：拒绝新增硬编码物理方向（left/right 等）造成的 RTL 回归
+"$DART_BIN" run build/scripts/verify_directional_layout.dart
 "$DART_BIN" run build_runner build --delete-conflicting-outputs
 "$FLUTTER_BIN" gen-l10n
 bash build/scripts/generate-application-identity.sh --check

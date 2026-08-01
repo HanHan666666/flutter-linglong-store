@@ -554,14 +554,17 @@ class _BannerItem extends StatelessWidget {
     return RecommendBannerBackground(
       banner: banner,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(
+        // 左 inset 是为信息停靠区预留的空间：方向感知后 RTL 下停靠区移到
+        // 右下角，留白随之镜像到 start 侧
+        padding: const EdgeInsetsDirectional.fromSTEB(
           AppSpacing.lg + _recommendBannerInfoDockLeftInset,
           AppSpacing.lg,
           AppSpacing.lg,
           AppSpacing.lg,
         ),
         child: Align(
-          alignment: Alignment.bottomLeft,
+          // 信息停靠区随文本方向镜像（RTL 下停靠右下角）
+          alignment: AlignmentDirectional.bottomStart,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: BackdropFilter(

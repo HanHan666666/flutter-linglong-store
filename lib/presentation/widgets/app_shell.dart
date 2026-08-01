@@ -208,6 +208,8 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     final updateCount = ref.watch(updatableAppsCountProvider);
     final contentPadding = _isMaximized
         ? EdgeInsets.zero
+        // ignore: hardcoded_direction - 窗口右下角 content padding 属窗口物理
+        // 几何，RTL 下保持物理右侧留白
         : const EdgeInsets.only(right: AppSpacing.sm, bottom: AppSpacing.sm);
     final contentRadius = _isMaximized
         ? const BorderRadius.only(topLeft: Radius.circular(AppRadius.lg))

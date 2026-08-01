@@ -43,6 +43,24 @@ void main() {
       expect(l10n.updateBatchAllSucceededTitle(5), 'Обновлено 5 приложений');
     });
 
+    test('阿拉伯区域 Locale 归一为阿拉伯语资源', () {
+      expect(
+        resolveInitialAppLocale(
+          persistedLanguageCode: null,
+          platformLocales: const [Locale('ar', 'SA')],
+        ),
+        const Locale('ar'),
+      );
+      final l10n = appLocalizationsForLocale('ar_SA');
+      expect(l10n.languageSelfName, 'العربية');
+      // 阿拉伯语复数六类：0→zero、1→one、2→two、3-10→few、11-99→many
+      expect(l10n.updateBatchAllSucceededTitle(0), 'لم يتم تحديث أي تطبيق');
+      expect(l10n.updateBatchAllSucceededTitle(1), 'تم تحديث تطبيق واحد');
+      expect(l10n.updateBatchAllSucceededTitle(2), 'تم تحديث تطبيقين');
+      expect(l10n.updateBatchAllSucceededTitle(5), 'تم تحديث 5 تطبيقات');
+      expect(l10n.updateBatchAllSucceededTitle(20), 'تم تحديث 20 تطبيقًا');
+    });
+
     test('没有受支持语言时回退产品默认语言', () {
       expect(
         resolveInitialAppLocale(

@@ -4,11 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/core/config/theme.dart';
 
 void main() {
+  // 与 AppTheme._linuxFontFamilyFallback 保持一致：CJK + 阿拉伯语 + 表情符号
   const expectedLinuxFontFallback = <String>[
     'Noto Sans CJK SC',
     'Source Han Sans SC',
     'WenQuanYi Micro Hei',
     'WenQuanYi Zen Hei',
+    'Noto Sans Arabic',
     'Noto Color Emoji',
   ];
 

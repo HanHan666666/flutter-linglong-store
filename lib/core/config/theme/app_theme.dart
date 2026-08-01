@@ -12,12 +12,14 @@ class AppTheme {
     waitDuration: Duration(milliseconds: 800),
   );
 
-  // Explicit Linux CJK fallbacks avoid relying on distro-specific defaults.
+  // Explicit Linux CJK/Arabic fallbacks avoid relying on distro-specific
+  // defaults. Noto Sans Arabic 保证阿拉伯语（RTL）正文有确定性字体回退。
   static const _linuxFontFamilyFallback = <String>[
     'Noto Sans CJK SC',
     'Source Han Sans SC',
     'WenQuanYi Micro Hei',
     'WenQuanYi Zen Hei',
+    'Noto Sans Arabic',
     'Noto Color Emoji',
   ];
 

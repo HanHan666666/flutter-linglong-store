@@ -186,6 +186,75 @@ void main() {
         },
       );
 
+      testWidgets('RTL 下进度前景从右缘向左增长，LTR 下从左缘向右增长', (
+        tester,
+      ) async {
+        Future<void> pumpWith(Locale locale) async {
+          await tester.pumpWidget(
+            MaterialApp(
+              locale: locale,
+              localizationsDelegates:
+                  AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: Center(
+                  child: SizedBox(
+                    width: 200,
+                    child: InstallButton(
+                      state: InstallButtonState.installing,
+                      progress: 0.5,
+                      onCancel: () {},
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        Rect clipRectOf() => tester.getRect(
+          find.descendant(
+            of: find.byType(InstallButton),
+            matching: find.byType(ClipRect),
+          ),
+        );
+
+        // ButtonSize.medium 的横向内边距：前景裁剪层基准是内容区（按钮减内边距）
+        const horizontalPadding = 16.0;
+
+        // LTR 基准：前景裁剪层贴内容区左缘，宽度为进度比例
+        await pumpWith(const Locale('zh'));
+        var clipRect = clipRectOf();
+        var buttonRect = tester.getRect(find.byType(InstallButton));
+        expect(
+          clipRect.left,
+          closeTo(buttonRect.left + horizontalPadding, 1.0),
+        );
+        expect(
+          clipRect.width,
+          closeTo(
+            (buttonRect.width - 2 * horizontalPadding) * 0.5,
+            1.0,
+          ),
+        );
+
+        // RTL：前景裁剪层贴内容区右缘（进度从右向左，与 Material 惯例一致）
+        await pumpWith(const Locale('ar'));
+        clipRect = clipRectOf();
+        buttonRect = tester.getRect(find.byType(InstallButton));
+        expect(
+          clipRect.right,
+          closeTo(buttonRect.right - horizontalPadding, 1.0),
+        );
+        expect(
+          clipRect.width,
+          closeTo(
+            (buttonRect.width - 2 * horizontalPadding) * 0.5,
+            1.0,
+          ),
+        );
+      });
+
       testWidgets(
         'hero installing state should fit progress speed and cancel action',
         (tester) async {

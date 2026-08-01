@@ -215,5 +215,6 @@ require_grep "git diff --cached --quiet" build/scripts/publish-aur.sh
 require_grep "Generating .SRCINFO requires makepkg or a Docker-based Arch Linux fallback" build/scripts/publish-aur.sh
 require_grep 'render_validation_metadata "$metadata_host_dir"' build/scripts/validate-aur-package.sh
 require_grep '--metadata-dir "$metadata_container_dir"' build/scripts/validate-aur-package.sh
+require_grep '-v "$ROOT_DIR:/workspace:ro"' build/scripts/validate-aur-package.sh
 
 echo "Release workflow validation passed."

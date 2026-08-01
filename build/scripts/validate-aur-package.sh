@@ -311,11 +311,12 @@ run_inner_validation() {
   run_with_retries pacman -Sy --noconfirm --needed "${pacman_packages[@]}" >/dev/null
   useradd -m builder >/dev/null 2>&1 || true
 
+  metadata_dir="$(mktemp -d)"
+  trap 'rm -rf "$metadata_dir"' RETURN
   if [[ -n "$pre_rendered_metadata_dir" ]]; then
-    metadata_dir="$(resolve_pre_rendered_metadata_dir "$pre_rendered_metadata_dir")"
+    # 宿主生成物是只读输入；复制到容器临时目录可避免 chown/makepkg 污染挂载工作区。
+    cp -a "$(resolve_pre_rendered_metadata_dir "$pre_rendered_metadata_dir")/." "$metadata_dir/"
   else
-    metadata_dir="$(mktemp -d)"
-    trap 'rm -rf "$metadata_dir"' RETURN
     render_validation_metadata "$metadata_dir"
   fi
   build_dir="$metadata_dir/aur-build"
@@ -544,7 +545,7 @@ metadata_container_dir="/workspace/${metadata_host_dir#"$ROOT_DIR"/}"
 
 docker_cmd=(
   docker run --rm
-  -v "$ROOT_DIR:/workspace"
+  -v "$ROOT_DIR:/workspace:ro"
   -w /workspace
   -e "SHA256_AMD64=$sha256_amd64"
   -e "SHA256_ARM64=$sha256_arm64"

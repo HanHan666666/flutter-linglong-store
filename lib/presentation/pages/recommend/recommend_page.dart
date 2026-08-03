@@ -401,10 +401,10 @@ class _BannerSectionState extends State<_BannerSection> {
                   );
                 },
               ),
-              // 左侧切换按钮
+              // 上一项位于阅读起始侧，RTL 下自动移动到右侧。
               if (widget.banners.length > 1)
-                Positioned(
-                  left: 8,
+                PositionedDirectional(
+                  start: 8,
                   top: 0,
                   bottom: 0,
                   child: Center(
@@ -431,10 +431,10 @@ class _BannerSectionState extends State<_BannerSection> {
                     ),
                   ),
                 ),
-              // 右侧切换按钮
+              // 下一项位于阅读结束侧，RTL 下自动移动到左侧。
               if (widget.banners.length > 1)
-                Positioned(
-                  right: 8,
+                PositionedDirectional(
+                  end: 8,
                   top: 0,
                   bottom: 0,
                   child: Center(

@@ -195,6 +195,40 @@ void main() {
       expect(infoDockRect.left, greaterThan(backgroundRect.left + 80));
     });
 
+    testWidgets('RTL 下轮播上一项位于右侧、下一项位于左侧', (tester) async {
+      final l10n = lookupAppLocalizations(const Locale('ar'));
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          const RecommendState(
+            data: RecommendData(
+              banners: [
+                BannerInfo(id: 'banner-1', title: 'Banner App', imageUrl: ''),
+                BannerInfo(id: 'banner-2', title: 'Banner App 2', imageUrl: ''),
+              ],
+              categories: [CategoryInfo(code: 'all', name: 'الكل')],
+              apps: PaginatedResponse<RecommendAppInfo>(
+                items: [],
+                total: 0,
+                page: 1,
+                pageSize: 10,
+                hasMore: false,
+              ),
+            ),
+          ),
+          locale: const Locale('ar'),
+        ),
+      );
+      await tester.pump();
+
+      final previousRect = tester.getRect(
+        find.bySemanticsLabel(l10n.a11yPrevious),
+      );
+      final nextRect = tester.getRect(find.bySemanticsLabel(l10n.a11yNext));
+
+      expect(previousRect.center.dx, greaterThan(nextRect.center.dx));
+    });
+
     testWidgets('shows shared footer no-more copy', (tester) async {
       await tester.pumpWidget(
         _buildTestApp(
@@ -348,6 +382,7 @@ void main() {
 Widget _buildTestApp(
   RecommendState state, {
   ThemeMode themeMode = ThemeMode.light,
+  Locale locale = const Locale('zh'),
 }) {
   return ProviderScope(
     overrides: [
@@ -361,7 +396,7 @@ Widget _buildTestApp(
       ),
     ],
     child: MaterialApp(
-      locale: const Locale('zh'),
+      locale: locale,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,

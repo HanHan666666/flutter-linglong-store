@@ -194,10 +194,16 @@ class _TitleBar extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    final titleBarColor = isDark ? const Color(0xFF15151F) : const Color(0xFFF6F7FA);
+    final titleBarColor = isDark
+        ? const Color(0xFF15151F)
+        : const Color(0xFFF6F7FA);
     final borderColor = isDark ? Colors.white10 : AppColors.borderSecondary;
-    final primaryText = colors.onSurface.withValues(alpha: isDark ? 0.70 : 0.86);
-    final secondaryText = colors.onSurface.withValues(alpha: isDark ? 0.60 : 0.64);
+    final primaryText = colors.onSurface.withValues(
+      alpha: isDark ? 0.70 : 0.86,
+    );
+    final secondaryText = colors.onSurface.withValues(
+      alpha: isDark ? 0.60 : 0.64,
+    );
     final hintBackground = isDark
         ? Colors.white.withValues(alpha: 0.06)
         : colors.onSurface.withValues(alpha: 0.04);
@@ -320,8 +326,9 @@ class _ImageStage extends StatelessWidget {
           },
         ),
         if (currentIndex > 0)
-          Positioned(
-            left: 12,
+          PositionedDirectional(
+            // 上一张始终位于当前语言的阅读起始侧。
+            start: 12,
             top: 0,
             bottom: 0,
             child: Center(
@@ -333,8 +340,9 @@ class _ImageStage extends StatelessWidget {
             ),
           ),
         if (currentIndex < screenshots.length - 1)
-          Positioned(
-            right: 12,
+          PositionedDirectional(
+            // 下一张始终位于当前语言的阅读结束侧。
+            end: 12,
             top: 0,
             bottom: 0,
             child: Center(
@@ -370,8 +378,12 @@ class _ThumbnailBar extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final barColor = isDark ? const Color(0xFF15151F) : const Color(0xFFF6F7FA);
     final borderColor = isDark ? Colors.white10 : AppColors.borderSecondary;
-    final placeholderColor = colors.onSurface.withValues(alpha: isDark ? 0.10 : 0.08);
-    final placeholderIconColor = colors.onSurface.withValues(alpha: isDark ? 0.24 : 0.32);
+    final placeholderColor = colors.onSurface.withValues(
+      alpha: isDark ? 0.10 : 0.08,
+    );
+    final placeholderIconColor = colors.onSurface.withValues(
+      alpha: isDark ? 0.24 : 0.32,
+    );
     final l10n = AppLocalizations.of(context)!;
 
     return Container(
@@ -459,7 +471,9 @@ class _NavArrowButtonState extends State<_NavArrowButton> {
     final backgroundColor = isDark
         ? Colors.white.withValues(alpha: _hovered ? 0.22 : 0.10)
         : Colors.black.withValues(alpha: _hovered ? 0.16 : 0.08);
-    final iconColor = isDark ? Colors.white : Theme.of(context).colorScheme.onSurface;
+    final iconColor = isDark
+        ? Colors.white
+        : Theme.of(context).colorScheme.onSurface;
 
     return Tooltip(
       message: widget.tooltip,
@@ -486,10 +500,7 @@ class _NavArrowButtonState extends State<_NavArrowButton> {
 }
 
 class _KeyHintBadge extends StatelessWidget {
-  const _KeyHintBadge({
-    required this.label,
-    required this.backgroundColor,
-  });
+  const _KeyHintBadge({required this.label, required this.backgroundColor});
 
   final String label;
   final Color backgroundColor;

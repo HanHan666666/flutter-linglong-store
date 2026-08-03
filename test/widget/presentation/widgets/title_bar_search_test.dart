@@ -68,7 +68,7 @@ void main() {
     expect(find.text('浏览器'), findsOneWidget);
   });
 
-  testWidgets('RTL 下选中搜索建议时展开箭头镜像为 back 方向', (tester) async {
+  testWidgets('RTL 下展开箭头复用 Flutter 内建方向镜像', (tester) async {
     await tester.pumpWidget(_buildRouterApp(locale: const Locale('ar')));
     await tester.pumpAndSettle();
 
@@ -84,9 +84,10 @@ void main() {
     await mouse.moveTo(tester.getCenter(find.text('浏览器')));
     await tester.pump();
 
-    // RTL 下 start 在右侧，展开指示器应指向左（back）
-    expect(find.byIcon(Icons.arrow_back_ios), findsOneWidget);
-    expect(find.byIcon(Icons.arrow_forward_ios), findsNothing);
+    // arrow_forward_ios 自带 matchTextDirection，图标数据保持不变即可由框架镜像。
+    final icon = tester.widget<Icon>(find.byIcon(Icons.arrow_forward_ios));
+    expect(icon.icon?.matchTextDirection, isTrue);
+    expect(find.byIcon(Icons.arrow_back_ios), findsNothing);
   });
 
   testWidgets('LTR 下选中搜索建议时展开箭头保持 forward 方向', (tester) async {
@@ -105,6 +106,42 @@ void main() {
 
     expect(find.byIcon(Icons.arrow_forward_ios), findsOneWidget);
     expect(find.byIcon(Icons.arrow_back_ios), findsNothing);
+  });
+
+  testWidgets('RTL 下窗口控制按钮仍固定在右上角并保持平台顺序', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appSearchIndexProvider.overrideWith(() => _EmptyFakeIndex()),
+          searchHintAppsProvider.overrideWithValue(const <SearchHintApp>[]),
+        ],
+        child: MaterialApp(
+          locale: const Locale('ar'),
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: CustomTitleBar(
+              isMaximized: false,
+              showSearch: false,
+              onMinimize: () {},
+              onMaximize: () {},
+              onClose: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final minimizeRect = tester.getRect(find.byIcon(Icons.remove));
+    final maximizeRect = tester.getRect(find.byIcon(Icons.crop_square));
+    final closeRect = tester.getRect(find.byIcon(Icons.close));
+
+    expect(minimizeRect.center.dx, lessThan(maximizeRect.center.dx));
+    expect(maximizeRect.center.dx, lessThan(closeRect.center.dx));
+    expect(closeRect.right, lessThanOrEqualTo(800));
+    expect(closeRect.center.dx, greaterThan(760));
   });
 
   testWidgets('tapping header suggestion opens detail page', (tester) async {

@@ -63,6 +63,9 @@ class CustomTitleBar extends StatelessWidget {
       // decoration 需要读取 context 颜色，不能使用 const
       decoration: BoxDecoration(color: context.appColors.background),
       child: Row(
+        // Linux 窗口控制区属于窗口物理几何：始终固定在右上角，不随内容语言换边。
+        // Expanded 内部仍从环境继承 RTL，阿拉伯语内容会正常镜像。
+        textDirection: TextDirection.ltr,
         children: [
           Expanded(
             child: Padding(
@@ -577,16 +580,13 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
                           ),
                           if (isSelected)
                             Padding(
-                              // 展开指示器：间距随文本方向镜像，箭头在 RTL 下反向
+                              // 图标内建 matchTextDirection，保持单一图标即可随环境镜像。
                               padding: const EdgeInsetsDirectional.only(
                                 start: 8,
                               ),
                               child: ExcludeSemantics(
                                 child: Icon(
-                                  Directionality.of(overlayContext) ==
-                                          TextDirection.rtl
-                                      ? Icons.arrow_back_ios
-                                      : Icons.arrow_forward_ios,
+                                  Icons.arrow_forward_ios,
                                   size: 12,
                                   color: AppColors.primary,
                                 ),
@@ -1008,6 +1008,8 @@ class _WindowControls extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Row(
+      // 窗口管理按钮遵循 Linux 平台物理顺序，关闭按钮固定在最右侧。
+      textDirection: TextDirection.ltr,
       mainAxisSize: MainAxisSize.min,
       children: [
         _WindowButton(

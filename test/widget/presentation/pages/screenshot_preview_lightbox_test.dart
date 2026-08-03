@@ -9,7 +9,11 @@ void main() {
 
   group('ScreenshotPreviewLightbox', () {
     testWidgets('shows localized title and current index', (tester) async {
-      await _pumpHost(tester, themeMode: ThemeMode.light, locale: const Locale('en'));
+      await _pumpHost(
+        tester,
+        themeMode: ThemeMode.light,
+        locale: const Locale('en'),
+      );
 
       await tester.tap(find.text('Open Preview'));
       await tester.pumpAndSettle();
@@ -63,7 +67,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(ScreenshotPreviewLightbox), findsOneWidget);
 
-      expect(find.byKey(const Key('screenshotPreviewBackdrop')), findsOneWidget);
+      expect(
+        find.byKey(const Key('screenshotPreviewBackdrop')),
+        findsOneWidget,
+      );
       await tester.tapAt(const Offset(24, 24));
       await tester.pumpAndSettle();
 
@@ -87,6 +94,31 @@ void main() {
       expect(find.text('2 / 2'), findsOneWidget);
     });
 
+    testWidgets('RTL 下上一张位于右侧、下一张位于左侧', (tester) async {
+      const screenshots = [
+        'https://example.com/1.png',
+        'https://example.com/2.png',
+        'https://example.com/3.png',
+      ];
+      final l10n = lookupAppLocalizations(const Locale('ar'));
+
+      await _pumpHost(
+        tester,
+        themeMode: ThemeMode.dark,
+        locale: const Locale('ar'),
+        screenshots: screenshots,
+        initialIndex: 1,
+      );
+
+      await tester.tap(find.text('Open Preview'));
+      await tester.pumpAndSettle();
+
+      final previousRect = tester.getRect(find.byTooltip(l10n.a11yPrevious));
+      final nextRect = tester.getRect(find.byTooltip(l10n.a11yNext));
+
+      expect(previousRect.center.dx, greaterThan(nextRect.center.dx));
+    });
+
     testWidgets('hides thumbnail rail for a single screenshot', (tester) async {
       await _pumpHost(
         tester,
@@ -97,7 +129,10 @@ void main() {
       await tester.tap(find.text('Open Preview'));
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('screenshotPreviewThumbnailBar')), findsNothing);
+      expect(
+        find.byKey(const Key('screenshotPreviewThumbnailBar')),
+        findsNothing,
+      );
     });
   });
 }

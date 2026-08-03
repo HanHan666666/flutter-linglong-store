@@ -86,8 +86,9 @@ class _RecommendBannerBackgroundState extends State<RecommendBannerBackground> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Positioned(
-              left: -36,
+            PositionedDirectional(
+              // 装饰光晕跟随内容起始侧，保持与品牌预览区相对分离。
+              start: -36,
               top: 34,
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -105,8 +106,8 @@ class _RecommendBannerBackgroundState extends State<RecommendBannerBackground> {
                 child: const SizedBox(width: 1, height: 1),
               ),
             ),
-            Positioned(
-              right: -44,
+            PositionedDirectional(
+              end: -44,
               top: -34,
               child: Container(
                 width: 220,
@@ -118,8 +119,9 @@ class _RecommendBannerBackgroundState extends State<RecommendBannerBackground> {
               ),
             ),
             if (banner.imageUrl.isNotEmpty)
-              Positioned(
-                right: -12,
+              PositionedDirectional(
+                // 品牌图位于内容结束侧，RTL 下避免遮挡右侧信息区。
+                end: -12,
                 top: -8,
                 child: IgnorePointer(
                   child: Opacity(
@@ -145,13 +147,13 @@ class _RecommendBannerBackgroundState extends State<RecommendBannerBackground> {
                 ),
               )
             else
-              Positioned(
-                right: -18,
+              PositionedDirectional(
+                end: -18,
                 top: -8,
                 child: _FallbackBrandShape(palette: palette),
               ),
-            Positioned(
-              right: 36,
+            PositionedDirectional(
+              end: 36,
               top: 30,
               child: _PreviewPlate(isDark: isDark),
             ),
@@ -200,8 +202,8 @@ class _FallbackBrandShape extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Positioned(
-            left: 32,
+          PositionedDirectional(
+            start: 32,
             top: 26,
             child: Container(
               width: 92,
@@ -212,8 +214,8 @@ class _FallbackBrandShape extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            right: 30,
+          PositionedDirectional(
+            end: 30,
             bottom: 30,
             child: Container(
               width: 76,

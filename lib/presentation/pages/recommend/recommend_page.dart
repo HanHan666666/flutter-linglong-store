@@ -461,9 +461,9 @@ class _BannerSectionState extends State<_BannerSection> {
                     ),
                   ),
                 ),
-              Positioned(
-                left: 0,
-                right: 0,
+              PositionedDirectional(
+                start: 0,
+                end: 0,
                 bottom: _recommendBannerIndicatorBottom,
                 child: _BannerIndicators(
                   count: widget.banners.length,

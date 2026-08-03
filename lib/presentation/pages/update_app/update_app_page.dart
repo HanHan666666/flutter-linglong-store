@@ -328,10 +328,10 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
     return Stack(
       children: [
         Positioned.fill(child: child),
-        const Positioned(
+        const PositionedDirectional(
           top: 0,
-          left: 0,
-          right: 0,
+          start: 0,
+          end: 0,
           child: LinearProgressIndicator(minHeight: 2),
         ),
       ],

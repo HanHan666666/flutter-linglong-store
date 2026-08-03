@@ -388,6 +388,7 @@ class _InstallFlightWidgetState extends State<_InstallFlightWidget>
           progress,
         )!;
 
+        // ignore: hardcoded_direction - 飞行动画中心点来自屏幕物理坐标
         return Positioned(
           left: center.dx - (haloSize / 2),
           top: center.dy - (haloSize / 2),
@@ -565,6 +566,7 @@ class _DownloadPulseWidgetState extends State<_DownloadPulseWidget>
 
         return Stack(
           children: [
+            // ignore: hardcoded_direction - 脉冲中心点来自屏幕物理坐标
             Positioned(
               left: center.dx - (secondarySize / 2),
               top: center.dy - (secondarySize / 2),
@@ -585,6 +587,7 @@ class _DownloadPulseWidgetState extends State<_DownloadPulseWidget>
                 ),
               ),
             ),
+            // ignore: hardcoded_direction - 脉冲中心点来自屏幕物理坐标
             Positioned(
               left: center.dx - (primarySize / 2),
               top: center.dy - (primarySize / 2),
@@ -600,6 +603,7 @@ class _DownloadPulseWidgetState extends State<_DownloadPulseWidget>
                 ),
               ),
             ),
+            // ignore: hardcoded_direction - 脉冲中心点来自屏幕物理坐标
             Positioned(
               left: center.dx - (highlightSize / 2),
               top: center.dy - (highlightSize / 2),

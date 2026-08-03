@@ -66,7 +66,7 @@ class _LinglongEnvironmentManagementDialogState
       length: 3,
       child: AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: AppRadius.smRadius),
-        titlePadding: const EdgeInsets.fromLTRB(24, 20, 16, 0),
+        titlePadding: const EdgeInsetsDirectional.fromSTEB(24, 20, 16, 0),
         contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
         actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         title: Row(

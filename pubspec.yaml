@@ -69,6 +69,8 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  # 方向感知布局门禁需要解析 Dart AST，避免正则漏检多行构造参数。
+  analyzer: ^9.0.0
   build_runner: ^2.4.13
   freezed: ^3.2.5
   json_serializable: ^6.8.0

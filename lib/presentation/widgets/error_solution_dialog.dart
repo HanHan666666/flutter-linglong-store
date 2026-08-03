@@ -245,7 +245,7 @@ class _DialogTitleBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final appColors = context.appColors;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding: const EdgeInsetsDirectional.fromSTEB(
         AppSpacing.xl,
         AppSpacing.lg,
         AppSpacing.sm,

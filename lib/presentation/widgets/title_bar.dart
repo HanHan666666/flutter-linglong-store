@@ -499,6 +499,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
     final left = boxOffset.dx;
     final top = boxOffset.dy + 36;
 
+    // ignore: hardcoded_direction - Overlay 使用屏幕物理坐标，不能按语言再次镜像
     return Positioned(
       left: left,
       top: top,
@@ -579,11 +580,9 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
                             ),
                           ),
                           if (isSelected)
-                            Padding(
+                            const Padding(
                               // 图标内建 matchTextDirection，保持单一图标即可随环境镜像。
-                              padding: const EdgeInsetsDirectional.only(
-                                start: 8,
-                              ),
+                              padding: EdgeInsetsDirectional.only(start: 8),
                               child: ExcludeSemantics(
                                 child: Icon(
                                   Icons.arrow_forward_ios,

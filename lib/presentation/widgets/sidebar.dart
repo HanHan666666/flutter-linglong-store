@@ -484,7 +484,11 @@ class _BottomIconButton extends StatelessWidget {
             ),
           ),
           if (badgeCount > 0)
-            Positioned(top: -4, right: -4, child: _Badge(count: badgeCount)),
+            PositionedDirectional(
+              top: -4,
+              end: -4,
+              child: _Badge(count: badgeCount),
+            ),
         ],
       ),
     );

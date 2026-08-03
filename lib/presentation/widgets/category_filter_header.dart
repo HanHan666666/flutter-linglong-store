@@ -183,7 +183,7 @@ class CategoryFilterHeaderBox extends StatelessWidget {
   /// 展开态：复用顶部同一容器，直接在内部使用多行 Wrap 展示完整分类。
   Widget _buildExpandedLayout(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
+      padding: const EdgeInsetsDirectional.fromSTEB(
         AppSpacing.sm,
         AppSpacing.sm,
         AppSpacing.xs,

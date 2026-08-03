@@ -1,3 +1,5 @@
+// ignore_for_file: text_direction_code_point_in_literal, text_direction_code_point_in_comment
+
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
@@ -1723,8 +1725,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String downloadedXTimes(String count) {
-    return '下载 $count次';
+  String downloadedXTimes(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '下载 $countString次';
   }
 
   @override

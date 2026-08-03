@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import 'package:linglong_store/core/utils/format_utils.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
@@ -195,106 +196,162 @@ void main() {
 
   group('formatRelativeTime', () {
     testWidgets('小于24小时显示小时数', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('zh'),
-        home: Builder(
-          builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
-            final now = DateTime.now();
-            final createTime = now.subtract(const Duration(hours: 5)).toIso8601String();
-            final result = formatRelativeTime(createTime, l10n);
-            expect(result, contains('5小时前上架'));
-            return const SizedBox();
-          },
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              final now = DateTime.now();
+              final createTime = now
+                  .subtract(const Duration(hours: 5))
+                  .toIso8601String();
+              final result = formatRelativeTime(createTime, l10n);
+              expect(result, contains('5小时前上架'));
+              return const SizedBox();
+            },
+          ),
         ),
-      ));
+      );
     });
 
     testWidgets('小于7天显示天数', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('zh'),
-        home: Builder(
-          builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
-            final now = DateTime.now();
-            final createTime = now.subtract(const Duration(days: 3)).toIso8601String();
-            final result = formatRelativeTime(createTime, l10n);
-            expect(result, contains('3天前上架'));
-            return const SizedBox();
-          },
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              final now = DateTime.now();
+              final createTime = now
+                  .subtract(const Duration(days: 3))
+                  .toIso8601String();
+              final result = formatRelativeTime(createTime, l10n);
+              expect(result, contains('3天前上架'));
+              return const SizedBox();
+            },
+          ),
         ),
-      ));
+      );
     });
 
     testWidgets('超过7天显示完整日期', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('zh'),
-        home: Builder(
-          builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
-            final createTime = DateTime(2026, 4, 1, 10, 30).toIso8601String();
-            final result = formatRelativeTime(createTime, l10n);
-            expect(result, contains('2026-04-01上架'));
-            return const SizedBox();
-          },
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              final createTime = DateTime(2026, 4, 1, 10, 30).toIso8601String();
+              final result = formatRelativeTime(createTime, l10n);
+              expect(result, contains('2026-04-01上架'));
+              return const SizedBox();
+            },
+          ),
         ),
-      ));
+      );
     });
 
     testWidgets('null返回null', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('zh'),
-        home: Builder(
-          builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
-            final result = formatRelativeTime(null, l10n);
-            expect(result, isNull);
-            return const SizedBox();
-          },
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              final result = formatRelativeTime(null, l10n);
+              expect(result, isNull);
+              return const SizedBox();
+            },
+          ),
         ),
-      ));
+      );
     });
   });
 
   group('formatDownloadCountText', () {
     testWidgets('正常数值显示千位分隔符', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('zh'),
-        home: Builder(
-          builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
-            final result = formatDownloadCountText(12345, l10n);
-            expect(result, '下载 12,345次');
-            return const SizedBox();
-          },
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              final result = formatDownloadCountText(12345, l10n);
+              expect(result, '下载 12,345次');
+              return const SizedBox();
+            },
+          ),
         ),
-      ));
+      );
     });
 
     testWidgets('null或0返回null', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        locale: const Locale('zh'),
-        home: Builder(
-          builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
-            expect(formatDownloadCountText(null, l10n), isNull);
-            expect(formatDownloadCountText(0, l10n), isNull);
-            return const SizedBox();
-          },
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              expect(formatDownloadCountText(null, l10n), isNull);
+              expect(formatDownloadCountText(0, l10n), isNull);
+              return const SizedBox();
+            },
+          ),
         ),
-      ));
+      );
+    });
+
+    test('阿拉伯语按六类复数并使用本地数字格式', () {
+      final l10n = lookupAppLocalizations(const Locale('ar'));
+      final numberFormat = NumberFormat.decimalPattern('ar');
+
+      expect(formatDownloadCountText(1, l10n), 'تم التنزيل مرة واحدة');
+      expect(formatDownloadCountText(2, l10n), 'تم التنزيل مرتين');
+      expect(
+        formatDownloadCountText(5, l10n),
+        'تم التنزيل $_lri${numberFormat.format(5)}$_pdi مرات',
+      );
+      expect(
+        formatDownloadCountText(20, l10n),
+        'تم التنزيل $_lri${numberFormat.format(20)}$_pdi مرة',
+      );
+      expect(
+        formatDownloadCountText(12345, l10n),
+        'تم التنزيل $_lri${numberFormat.format(12345)}$_pdi مرة',
+      );
+    });
+
+    test('英语、西班牙语和俄语使用各自下载次数复数', () {
+      final en = lookupAppLocalizations(const Locale('en'));
+      final es = lookupAppLocalizations(const Locale('es'));
+      final ru = lookupAppLocalizations(const Locale('ru'));
+
+      expect(formatDownloadCountText(1, en), '1 download');
+      expect(formatDownloadCountText(2, en), '2 downloads');
+      expect(formatDownloadCountText(1, es), '1 descarga');
+      expect(formatDownloadCountText(2, es), '2 descargas');
+      expect(formatDownloadCountText(1, ru), '1 загрузка');
+      expect(formatDownloadCountText(2, ru), '2 загрузки');
+      expect(formatDownloadCountText(5, ru), '5 загрузок');
     });
   });
 }
+
+/// Left-to-Right Isolate，确保阿拉伯语数字片段不受外层 RTL 重排。
+const String _lri = '\u2066';
+
+/// Pop Directional Isolate，结束数字片段。
+const String _pdi = '\u2069';

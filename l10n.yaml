@@ -2,3 +2,6 @@ arb-dir: lib/core/i18n/l10n
 template-arb-file: app_zh.arb
 output-localization-file: app_localizations.dart
 output-class: AppLocalizations
+# 阿拉伯语 ARB 有意使用成对 BiDi isolate；资源测试负责校验边界完整性。
+header: |
+  // ignore_for_file: text_direction_code_point_in_literal, text_direction_code_point_in_comment

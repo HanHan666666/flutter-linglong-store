@@ -57,8 +57,15 @@ void main() {
       expect(l10n.updateBatchAllSucceededTitle(0), 'لم يتم تحديث أي تطبيق');
       expect(l10n.updateBatchAllSucceededTitle(1), 'تم تحديث تطبيق واحد');
       expect(l10n.updateBatchAllSucceededTitle(2), 'تم تحديث تطبيقين');
-      expect(l10n.updateBatchAllSucceededTitle(5), 'تم تحديث 5 تطبيقات');
-      expect(l10n.updateBatchAllSucceededTitle(20), 'تم تحديث 20 تطبيقًا');
+      // 数字用 LRI/PDI 隔离，避免与相邻阿拉伯语和标点发生双向重排。
+      expect(
+        l10n.updateBatchAllSucceededTitle(5),
+        'تم تحديث \u20665\u2069 تطبيقات',
+      );
+      expect(
+        l10n.updateBatchAllSucceededTitle(20),
+        'تم تحديث \u206620\u2069 تطبيقًا',
+      );
     });
 
     test('没有受支持语言时回退产品默认语言', () {

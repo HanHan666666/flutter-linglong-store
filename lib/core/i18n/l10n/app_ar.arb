@@ -115,7 +115,7 @@
   "fontWeightLighter": "أنحف",
   "fontWeightNormal": "عادي",
   "fontWeightBolder": "أسمك",
-  "fontScalePercent": "{percent}%",
+  "fontScalePercent": "\u2066{percent}%\u2069",
   "@fontScalePercent": {
     "placeholders": {
       "percent": {
@@ -124,7 +124,7 @@
     }
   },
   "checkUpdate": "التحقق من التحديثات",
-  "currentVersion": "الإصدار الحالي: {version}",
+  "currentVersion": "الإصدار الحالي: \u2068{version}\u2069",
   "@currentVersion": {
     "placeholders": {
       "version": {
@@ -132,7 +132,7 @@
       }
     }
   },
-  "newVersionFound": "تم العثور على إصدار جديد {tagName}، الإصدار الحالي {currentVersion}",
+  "newVersionFound": "تم العثور على إصدار جديد \u2068{tagName}\u2069، الإصدار الحالي \u2068{currentVersion}\u2069",
   "@newVersionFound": {
     "placeholders": {
       "tagName": {
@@ -143,7 +143,7 @@
       }
     }
   },
-  "alreadyLatest": "لديك بالفعل أحدث إصدار {version}",
+  "alreadyLatest": "لديك بالفعل أحدث إصدار \u2068{version}\u2069",
   "@alreadyLatest": {
     "placeholders": {
       "version": {
@@ -172,7 +172,7 @@
   "startupCheckUpdateDesc": "التحقق عند كل تشغيل من توفر إصدار جديد",
   "systemNotifications": "إشعارات النظام",
   "systemNotificationsDescription": "عرض نتيجة التحديث في إشعارات سطح المكتب بعد اكتمال تحديث الكل بضغطة واحدة",
-  "updateBatchAllSucceededTitle": "{count, plural, zero{لم يتم تحديث أي تطبيق} one{تم تحديث تطبيق واحد} two{تم تحديث تطبيقين} few{تم تحديث {count} تطبيقات} many{تم تحديث {count} تطبيقًا} other{تم تحديث {count} تطبيقًا}}",
+  "updateBatchAllSucceededTitle": "{count, plural, zero{لم يتم تحديث أي تطبيق} one{تم تحديث تطبيق واحد} two{تم تحديث تطبيقين} few{تم تحديث \u2066{count}\u2069 تطبيقات} many{تم تحديث \u2066{count}\u2069 تطبيقًا} other{تم تحديث \u2066{count}\u2069 تطبيقًا}}",
   "@updateBatchAllSucceededTitle": {
     "placeholders": {
       "count": {
@@ -182,7 +182,7 @@
   },
   "updateBatchFinishedTitle": "انتهى التحديث الجماعي",
   "updateBatchNoSuccessTitle": "لم يكتمل تحديث التطبيقات",
-  "updateBatchResultSummary": "النتيجة: {summary}",
+  "updateBatchResultSummary": "النتيجة: \u2068{summary}\u2069",
   "@updateBatchResultSummary": {
     "placeholders": {
       "summary": {
@@ -191,7 +191,7 @@
     }
   },
   "updateBatchResultSeparator": "،",
-  "updateBatchSucceededCount": "{count, plural, zero{لم ينجح أي تطبيق} one{نجح تطبيق واحد} two{نجح تطبيقان} few{نجحت {count} تطبيقات} many{نجح {count} تطبيقًا} other{نجح {count} تطبيقًا}}",
+  "updateBatchSucceededCount": "{count, plural, zero{لم ينجح أي تطبيق} one{نجح تطبيق واحد} two{نجح تطبيقان} few{نجحت \u2066{count}\u2069 تطبيقات} many{نجح \u2066{count}\u2069 تطبيقًا} other{نجح \u2066{count}\u2069 تطبيقًا}}",
   "@updateBatchSucceededCount": {
     "placeholders": {
       "count": {
@@ -199,7 +199,7 @@
       }
     }
   },
-  "updateBatchFailedCount": "{count, plural, zero{لم يفشل أي تطبيق} one{فشل تطبيق واحد} two{فشل تطبيقان} few{فشلت {count} تطبيقات} many{فشل {count} تطبيقًا} other{فشل {count} تطبيقًا}}",
+  "updateBatchFailedCount": "{count, plural, zero{لم يفشل أي تطبيق} one{فشل تطبيق واحد} two{فشل تطبيقان} few{فشلت \u2066{count}\u2069 تطبيقات} many{فشل \u2066{count}\u2069 تطبيقًا} other{فشل \u2066{count}\u2069 تطبيقًا}}",
   "@updateBatchFailedCount": {
     "placeholders": {
       "count": {
@@ -207,7 +207,7 @@
       }
     }
   },
-  "updateBatchCancelledCount": "{count, plural, zero{لم يُلغَ أي تطبيق} one{أُلغي تطبيق واحد} two{أُلغي تطبيقان} few{أُلغيت {count} تطبيقات} many{أُلغي {count} تطبيقًا} other{أُلغي {count} تطبيقًا}}",
+  "updateBatchCancelledCount": "{count, plural, zero{لم يُلغَ أي تطبيق} one{أُلغي تطبيق واحد} two{أُلغي تطبيقان} few{أُلغيت \u2066{count}\u2069 تطبيقات} many{أُلغي \u2066{count}\u2069 تطبيقًا} other{أُلغي \u2066{count}\u2069 تطبيقًا}}",
   "@updateBatchCancelledCount": {
     "placeholders": {
       "count": {
@@ -215,7 +215,7 @@
       }
     }
   },
-  "updateBatchInterruptedCount": "{count, plural, zero{لم يتوقف أي تطبيق} one{توقف تطبيق واحد} two{توقف تطبيقان} few{توقفت {count} تطبيقات} many{توقف {count} تطبيقًا} other{توقف {count} تطبيقًا}}",
+  "updateBatchInterruptedCount": "{count, plural, zero{لم يتوقف أي تطبيق} one{توقف تطبيق واحد} two{توقف تطبيقان} few{توقفت \u2066{count}\u2069 تطبيقات} many{توقف \u2066{count}\u2069 تطبيقًا} other{توقف \u2066{count}\u2069 تطبيقًا}}",
   "@updateBatchInterruptedCount": {
     "placeholders": {
       "count": {
@@ -224,7 +224,7 @@
     }
   },
   "updateBatchAppNameSeparator": "،",
-  "updateBatchUpdatedApps": "تم التحديث: {names}",
+  "updateBatchUpdatedApps": "تم التحديث: \u2068{names}\u2069",
   "@updateBatchUpdatedApps": {
     "placeholders": {
       "names": {
@@ -232,7 +232,7 @@
       }
     }
   },
-  "updateBatchUpdatedAppsOverflow": "{remainingCount, plural, zero{تم التحديث: {names}} one{تم التحديث: {names} وتطبيق آخر} two{تم التحديث: {names} وتطبيقان آخران} few{تم التحديث: {names} و{remainingCount} تطبيقات أخرى} many{تم التحديث: {names} و{remainingCount} تطبيقًا آخر} other{تم التحديث: {names} و{remainingCount} تطبيقًا آخر}}",
+  "updateBatchUpdatedAppsOverflow": "{remainingCount, plural, zero{تم التحديث: \u2068{names}\u2069} one{تم التحديث: \u2068{names}\u2069 وتطبيق آخر} two{تم التحديث: \u2068{names}\u2069 وتطبيقان آخران} few{تم التحديث: \u2068{names}\u2069 و\u2066{remainingCount}\u2069 تطبيقات أخرى} many{تم التحديث: \u2068{names}\u2069 و\u2066{remainingCount}\u2069 تطبيقًا آخر} other{تم التحديث: \u2068{names}\u2069 و\u2066{remainingCount}\u2069 تطبيقًا آخر}}",
   "@updateBatchUpdatedAppsOverflow": {
     "placeholders": {
       "names": {
@@ -248,14 +248,14 @@
   "hardwareRenderingEnabled": "العرض عبر الأجهزة",
   "rendererModeDetecting": "جارٍ التحقق من حالة العرض الحالية...",
   "rendererModeDetectFailed": "تعذّر الحصول على حالة العرض الحالية، ومع ذلك يمكنك حفظ طريقة العرض لبدء التشغيل التالي.",
-  "rendererModeCurrentStatus": "يُستخدم حاليًا {mode}. {reason}",
+  "rendererModeCurrentStatus": "يُستخدم حاليًا \u2068{mode}\u2069. \u2068{reason}\u2069",
   "@rendererModeCurrentStatus": {
     "placeholders": {
       "mode": {},
       "reason": {}
     }
   },
-  "rendererModeReasonEnvironment": "يتم التحكم في وضع العرض الحالي بواسطة متغير البيئة {value}.",
+  "rendererModeReasonEnvironment": "يتم التحكم في وضع العرض الحالي بواسطة متغير البيئة \u2068{value}\u2069.",
   "@rendererModeReasonEnvironment": {
     "placeholders": {
       "value": {}
@@ -264,13 +264,13 @@
   "rendererModeReasonUserPreference": "الإعداد المحفوظ مطبّق حاليًا.",
   "rendererModeReasonCpuFallback": "لتحسين التوافق، يستخدم هذا الجهاز العرض البرمجي افتراضيًا.",
   "rendererModeReasonDefault": "يستخدم هذا الجهاز العرض عبر الأجهزة افتراضيًا.",
-  "rendererModeEnvLocked": "تم العثور على متغير البيئة {value}. يتم التحكم في وضع العرض الحالي بواسطة بيئة النظام ولا يمكن تعديله هنا.",
+  "rendererModeEnvLocked": "تم العثور على متغير البيئة \u2068{value}\u2069. يتم التحكم في وضع العرض الحالي بواسطة بيئة النظام ولا يمكن تعديله هنا.",
   "@rendererModeEnvLocked": {
     "placeholders": {
       "value": {}
     }
   },
-  "rendererModeNextLaunchStatus": "سيتم استخدام {mode} عند بدء التشغيل التالي.",
+  "rendererModeNextLaunchStatus": "سيتم استخدام \u2068{mode}\u2069 عند بدء التشغيل التالي.",
   "@rendererModeNextLaunchStatus": {
     "placeholders": {
       "mode": {}
@@ -280,7 +280,7 @@
   "rendererModeHardwareRiskHint": "سيتم استخدام العرض عبر الأجهزة عند بدء التشغيل التالي. إذا تعذّر عرض الواجهة بشكل صحيح، يمكنك الاستعادة باستخدام الأمر أدناه.",
   "rendererModeDisableWarningTitle": "تأكيد إيقاف العرض البرمجي",
   "rendererModeDisableWarningMessage": "قد لا يعرض التطبيق بشكل صحيح بعد إيقاف العرض البرمجي على هذا الجهاز. يُنصح بالاحتفاظ به للحصول على عرض أكثر استقرارًا.",
-  "rendererModeDetectedCpu": "معالج هذا الجهاز: {cpu}",
+  "rendererModeDetectedCpu": "معالج هذا الجهاز: \u2068{cpu}\u2069",
   "@rendererModeDetectedCpu": {
     "placeholders": {
       "cpu": {}
@@ -315,7 +315,7 @@
   "exitBtn": "خروج",
   "downloadManager": "إدارة التنزيلات",
   "downloadWaitingForTask": "في انتظار بدء مهمة التنزيل",
-  "downloadRealtimeSpeed": "السرعة الفعلية {speed}",
+  "downloadRealtimeSpeed": "السرعة الفعلية \u2068{speed}\u2069",
   "@downloadRealtimeSpeed": {
     "placeholders": {
       "speed": {
@@ -323,7 +323,7 @@
       }
     }
   },
-  "downloadHistoryCount": "{count, plural, zero{لا سجلات} one{سجل واحد} two{سجلان} few{{count} سجلات} many{{count} سجلًا} other{{count} سجلًا}}",
+  "downloadHistoryCount": "{count, plural, zero{لا سجلات} one{سجل واحد} two{سجلان} few{\u2066{count}\u2069 سجلات} many{\u2066{count}\u2069 سجلًا} other{\u2066{count}\u2069 سجلًا}}",
   "@downloadHistoryCount": {
     "placeholders": {
       "count": {
@@ -331,7 +331,7 @@
       }
     }
   },
-  "ogInstallRequestReceived": "تم استلام طلب تثبيت من صفحة الويب: {appName}",
+  "ogInstallRequestReceived": "تم استلام طلب تثبيت من صفحة الويب: \u2068{appName}\u2069",
   "@ogInstallRequestReceived": {
     "placeholders": {
       "appName": {
@@ -339,7 +339,7 @@
       }
     }
   },
-  "ogInstallEnqueued": "تمت إضافته إلى إدارة التنزيلات: {appName}",
+  "ogInstallEnqueued": "تمت إضافته إلى إدارة التنزيلات: \u2068{appName}\u2069",
   "@ogInstallEnqueued": {
     "placeholders": {
       "appName": {
@@ -349,7 +349,7 @@
   },
   "ogInstallInvalidLink": "لا يمكن التعرف على رابط التثبيت من صفحة الويب، ويدعم فقط og://appId",
   "ogInstallEnvironmentUnavailable": "بيئة تشغيل Linglong غير متاحة، لا يمكن التثبيت تلقائيًا من صفحة الويب حاليًا",
-  "ogInstallDuplicate": "{appName} موجود بالفعل في إدارة التنزيلات",
+  "ogInstallDuplicate": "\u2068{appName}\u2069 موجود بالفعل في إدارة التنزيلات",
   "@ogInstallDuplicate": {
     "placeholders": {
       "appName": {
@@ -358,7 +358,7 @@
     }
   },
   "ogInstallDetailFailed": "تعذّر الحصول على معلومات التطبيق، لم يبدأ التثبيت",
-  "ogInstallDetailFailedWithError": "تعذّر الحصول على معلومات التطبيق، لم يبدأ التثبيت: {error}",
+  "ogInstallDetailFailedWithError": "تعذّر الحصول على معلومات التطبيق، لم يبدأ التثبيت: \u2068{error}\u2069",
   "@ogInstallDetailFailedWithError": {
     "placeholders": {
       "error": {
@@ -368,7 +368,7 @@
   },
   "clearRecords": "مسح السجلات",
   "noDownloadTasks": "لا توجد مهام تنزيل",
-  "cannotOpenLink": "تعذّر فتح الرابط: {url}",
+  "cannotOpenLink": "تعذّر فتح الرابط: \u2068{url}\u2069",
   "@cannotOpenLink": {
     "placeholders": {
       "url": {
@@ -378,7 +378,7 @@
   },
   "envCheckPassed": "اكتمل التثبيت، وفحص البيئة ناجح",
   "envCheckFailed": "اكتمل التثبيت ولكن البيئة لا تزال غير طبيعية، يرجى التحقق",
-  "launching": "جارٍ تشغيل {appName}...",
+  "launching": "جارٍ تشغيل \u2068{appName}\u2069...",
   "@launching": {
     "placeholders": {
       "appName": {
@@ -386,7 +386,7 @@
       }
     }
   },
-  "launchFailed": "فشل التشغيل: {error}",
+  "launchFailed": "فشل التشغيل: \u2068{error}\u2069",
   "@launchFailed": {
     "placeholders": {
       "error": {
@@ -394,7 +394,7 @@
       }
     }
   },
-  "copied": "تم النسخ: {value}",
+  "copied": "تم النسخ: \u2068{value}\u2069",
   "@copied": {
     "placeholders": {
       "value": {
@@ -403,7 +403,7 @@
     }
   },
   "shareLink": "مشاركة",
-  "shareMessage": "جرّب تطبيق «{name}»",
+  "shareMessage": "جرّب تطبيق «\u2068{name}\u2069»",
   "@shareMessage": {
     "placeholders": {
       "name": {
@@ -419,7 +419,7 @@
   "noVersionHistory": "لا يوجد سجل إصدارات",
   "installedBadge": "مثبت",
   "versionInstallTargetMissing": "لم يتم العثور على الإصدار المثبت المقابل، يرجى التحديث ثم إعادة المحاولة",
-  "uninstallFailed": "فشل إلغاء التثبيت: {result}",
+  "uninstallFailed": "فشل إلغاء التثبيت: \u2068{result}\u2069",
   "@uninstallFailed": {
     "placeholders": {
       "result": {
@@ -427,7 +427,7 @@
       }
     }
   },
-  "uninstallSuccess": "تم إلغاء تثبيت {name}",
+  "uninstallSuccess": "تم إلغاء تثبيت \u2068{name}\u2069",
   "@uninstallSuccess": {
     "placeholders": {
       "name": {
@@ -435,7 +435,7 @@
       }
     }
   },
-  "uninstallError": "خطأ في إلغاء التثبيت: {error}",
+  "uninstallError": "خطأ في إلغاء التثبيت: \u2068{error}\u2069",
   "@uninstallError": {
     "placeholders": {
       "error": {
@@ -461,7 +461,7 @@
   "commentNotHelpful": "غير مفيد",
   "commentAnonymousHint": "تعليق مجهول، يُعرض بترتيب الأحدث أولاً",
   "commentSubmitSuccess": "تم إرسال التعليق",
-  "commentSubmitFailed": "فشل إرسال التعليق: {error}",
+  "commentSubmitFailed": "فشل إرسال التعليق: \u2068{error}\u2069",
   "@commentSubmitFailed": {
     "placeholders": {
       "error": {
@@ -469,7 +469,7 @@
       }
     }
   },
-  "shortcutCreateFailed": "فشل الإنشاء: {error}",
+  "shortcutCreateFailed": "فشل الإنشاء: \u2068{error}\u2069",
   "@shortcutCreateFailed": {
     "placeholders": {
       "error": {
@@ -484,7 +484,7 @@
   "notDetected": "غير مكتشف",
   "errorMessage": "رسالة الخطأ",
   "repoShowFailureTitle": "فشل تنفيذ أمر قراءة المستودع",
-  "repoShowFailureCommand": "فشل تنفيذ {command} لقراءة إعدادات مستودع Linglong.",
+  "repoShowFailureCommand": "فشل تنفيذ \u2068{command}\u2069 لقراءة إعدادات مستودع Linglong.",
   "@repoShowFailureCommand": {
     "placeholders": {
       "command": {
@@ -499,7 +499,7 @@
   "restartingPackageManagerService": "جارٍ إعادة تشغيل org.deepin.linglong.PackageManager.service...",
   "packageManagerServiceRestartPassed": "أعيد تشغيل الخدمة وفحص البيئة ناجح",
   "packageManagerServiceRestartStillFailed": "أعيد تشغيل الخدمة ولكن البيئة لا تزال غير طبيعية، يرجى الاطلاع على رسالة الخطأ",
-  "packageManagerServiceRestartFailed": "فشل إعادة تشغيل الخدمة: {error}",
+  "packageManagerServiceRestartFailed": "فشل إعادة تشغيل الخدمة: \u2068{error}\u2069",
   "@packageManagerServiceRestartFailed": {
     "placeholders": {
       "error": {
@@ -509,7 +509,7 @@
   },
   "installingLinglong": "جارٍ التثبيت...",
   "openInstallLogDirectory": "فتح دليل السجلات",
-  "cannotOpenDirectory": "تعذّر فتح الدليل: {path}",
+  "cannotOpenDirectory": "تعذّر فتح الدليل: \u2068{path}\u2069",
   "@cannotOpenDirectory": {
     "placeholders": {
       "path": {
@@ -533,7 +533,7 @@
   "versionListLoadFailed": "فشل تحميل قائمة الإصدارات، يرجى إعادة المحاولة",
   "versionListUpdateFailed": "فشل تحديث قائمة الإصدارات، يتم عرض آخر نتيجة",
   "uninstallApp": "إلغاء تثبيت التطبيق",
-  "uninstallConfirmMessage": "هل تريد بالتأكيد إلغاء تثبيت {name}؟\nسيتم حذف بيانات التطبيق بعد إلغاء التثبيت ولا يمكن استعادتها.",
+  "uninstallConfirmMessage": "هل تريد بالتأكيد إلغاء تثبيت \u2068{name}\u2069؟\nسيتم حذف بيانات التطبيق بعد إلغاء التثبيت ولا يمكن استعادتها.",
   "@uninstallConfirmMessage": {
     "placeholders": {
       "name": {
@@ -547,7 +547,7 @@
   "searchTryOtherKeywords": "جرّب البحث بكلمات مفتاحية أخرى",
   "searchInputHint": "اكتب الكلمات المفتاحية في مربع البحث أعلى الصفحة",
   "searchPressEnter": "اضغط Enter لبدء البحث في التطبيقات",
-  "searchResultCount": "{count, plural, zero{لا نتائج} one{نتيجة واحدة} two{نتيجتان} few{{count} نتائج} many{{count} نتيجة} other{{count} نتيجة}}",
+  "searchResultCount": "{count, plural, zero{لا نتائج} one{نتيجة واحدة} two{نتيجتان} few{\u2066{count}\u2069 نتائج} many{\u2066{count}\u2069 نتيجة} other{\u2066{count}\u2069 نتيجة}}",
   "@searchResultCount": {
     "placeholders": {
       "count": {
@@ -557,7 +557,7 @@
   },
   "searchInstalledApps": "البحث في التطبيقات المثبتة",
   "noMatchingApp": "لم يتم العثور على تطبيق مطابق",
-  "noMatchingAppHint": "لم يتم العثور على تطبيقات متعلقة بـ \"{query}\"",
+  "noMatchingAppHint": "لم يتم العثور على تطبيقات متعلقة بـ \"\u2068{query}\u2069\"",
   "@noMatchingAppHint": {
     "placeholders": {
       "query": {
@@ -565,7 +565,7 @@
       }
     }
   },
-  "updateCount": "{count, plural, zero{لا توجد تطبيقات قابلة للتحديث} one{تطبيق واحد قابل للتحديث} two{تطبيقان قابلان للتحديث} few{{count} تطبيقات قابلة للتحديث} many{{count} تطبيقًا قابلاً للتحديث} other{{count} تطبيقًا قابلاً للتحديث}}",
+  "updateCount": "{count, plural, zero{لا توجد تطبيقات قابلة للتحديث} one{تطبيق واحد قابل للتحديث} two{تطبيقان قابلان للتحديث} few{\u2066{count}\u2069 تطبيقات قابلة للتحديث} many{\u2066{count}\u2069 تطبيقًا قابلاً للتحديث} other{\u2066{count}\u2069 تطبيقًا قابلاً للتحديث}}",
   "@updateCount": {
     "placeholders": {
       "count": {
@@ -573,7 +573,7 @@
       }
     }
   },
-  "ignoredUpdatesCount": "متجاهل ({count})",
+  "ignoredUpdatesCount": "متجاهل \u2066({count})\u2069",
   "@ignoredUpdatesCount": {
     "placeholders": {
       "count": {
@@ -586,7 +586,7 @@
   "ignoredUpdatesEmptyDescription": "يمكنك تجاهل التطبيقات التي لا تريد ترقيتها باستمرار من قائمة المزيد في التطبيقات القابلة للتحديث.",
   "ignoreAppUpdates": "تجاهل تحديثات هذا التطبيق",
   "restoreUpdateNotifications": "استعادة تنبيهات التحديث",
-  "ignoredVersion": "الإصدار عند التجاهل: {version}",
+  "ignoredVersion": "الإصدار عند التجاهل: \u2068{version}\u2069",
   "@ignoredVersion": {
     "placeholders": {
       "version": {
@@ -594,7 +594,7 @@
       }
     }
   },
-  "ignoreUpdateSuccess": "تم تجاهل التحديثات اللاحقة لـ {appName}، يمكنك استعادتها من \"المتجاهلة\"",
+  "ignoreUpdateSuccess": "تم تجاهل التحديثات اللاحقة لـ \u2068{appName}\u2069، يمكنك استعادتها من \"المتجاهلة\"",
   "@ignoreUpdateSuccess": {
     "placeholders": {
       "appName": {
@@ -602,7 +602,7 @@
       }
     }
   },
-  "ignoreUpdateActiveTask": "{appName} موجود بالفعل في قائمة انتظار التحديث ولا يمكن تجاهله الآن",
+  "ignoreUpdateActiveTask": "\u2068{appName}\u2069 موجود بالفعل في قائمة انتظار التحديث ولا يمكن تجاهله الآن",
   "@ignoreUpdateActiveTask": {
     "placeholders": {
       "appName": {
@@ -612,7 +612,7 @@
   },
   "ignoreUpdateFailed": "فشل حفظ إعدادات تجاهل التحديث، يرجى إعادة المحاولة",
   "ignoreUpdateInvalidApp": "لا يمكن تجاهل هذا التطبيق: معرّف التطبيق غير صالح",
-  "restoreUpdateSuccess": "تمت استعادة تنبيهات التحديث لـ {appName}",
+  "restoreUpdateSuccess": "تمت استعادة تنبيهات التحديث لـ \u2068{appName}\u2069",
   "@restoreUpdateSuccess": {
     "placeholders": {
       "appName": {
@@ -622,7 +622,7 @@
   },
   "restoreUpdateFailed": "فشلت استعادة تنبيهات التحديث، يرجى إعادة المحاولة",
   "restoreUpdateRefreshFailed": "تمت استعادة تنبيهات التحديث ولكن فشل التحقق من التحديثات، يمكنك إعادة المحاولة لاحقًا",
-  "a11yManageIgnoredUpdates": "{count, plural, zero{إدارة التحديثات المتجاهلة: لا تطبيقات} one{إدارة التحديثات المتجاهلة: تطبيق واحد} two{إدارة التحديثات المتجاهلة: تطبيقان} few{إدارة التحديثات المتجاهلة: {count} تطبيقات} many{إدارة التحديثات المتجاهلة: {count} تطبيقًا} other{إدارة التحديثات المتجاهلة: {count} تطبيقًا}}",
+  "a11yManageIgnoredUpdates": "{count, plural, zero{إدارة التحديثات المتجاهلة: لا تطبيقات} one{إدارة التحديثات المتجاهلة: تطبيق واحد} two{إدارة التحديثات المتجاهلة: تطبيقان} few{إدارة التحديثات المتجاهلة: \u2066{count}\u2069 تطبيقات} many{إدارة التحديثات المتجاهلة: \u2066{count}\u2069 تطبيقًا} other{إدارة التحديثات المتجاهلة: \u2066{count}\u2069 تطبيقًا}}",
   "@a11yManageIgnoredUpdates": {
     "placeholders": {
       "count": {
@@ -630,7 +630,7 @@
       }
     }
   },
-  "a11yIgnoreAppUpdates": "تجاهل التحديثات اللاحقة لـ {appName}",
+  "a11yIgnoreAppUpdates": "تجاهل التحديثات اللاحقة لـ \u2068{appName}\u2069",
   "@a11yIgnoreAppUpdates": {
     "placeholders": {
       "appName": {
@@ -638,7 +638,7 @@
       }
     }
   },
-  "a11yUpdateAppMoreActions": "مزيد من إجراءات التحديث لـ {appName}",
+  "a11yUpdateAppMoreActions": "مزيد من إجراءات التحديث لـ \u2068{appName}\u2069",
   "@a11yUpdateAppMoreActions": {
     "placeholders": {
       "appName": {
@@ -646,7 +646,7 @@
       }
     }
   },
-  "a11yRestoreAppUpdates": "استعادة تنبيهات التحديث لـ {appName}",
+  "a11yRestoreAppUpdates": "استعادة تنبيهات التحديث لـ \u2068{appName}\u2069",
   "@a11yRestoreAppUpdates": {
     "placeholders": {
       "appName": {
@@ -654,7 +654,7 @@
       }
     }
   },
-  "a11yIgnoredUpdateItem": "{appName}، معرّف التطبيق {appId}، الإصدار عند التجاهل {version}",
+  "a11yIgnoredUpdateItem": "\u2068{appName}\u2069، معرّف التطبيق \u2068{appId}\u2069، الإصدار عند التجاهل \u2068{version}\u2069",
   "@a11yIgnoredUpdateItem": {
     "placeholders": {
       "appName": {
@@ -683,7 +683,7 @@
   "launchFailedTitle": "فشل التشغيل",
   "skip": "تخطي",
   "cannotGetVersion": "تعذّر الحصول على معلومات الإصدار",
-  "newVersionAvailable": "تم العثور على إصدار جديد {version}!\nالإصدار الحالي: {current}",
+  "newVersionAvailable": "تم العثور على إصدار جديد \u2068{version}\u2069!\nالإصدار الحالي: \u2068{current}\u2069",
   "@newVersionAvailable": {
     "placeholders": {
       "version": {
@@ -714,7 +714,7 @@
   "copyContainerCommand": "نسخ أمر الدخول إلى الحاوية",
   "commandCopiedToClipboard": "تم نسخ الأمر إلى الحافظة",
   "copyAppId": "نسخ معرّف التطبيق",
-  "stopSuccess": "تم إيقاف {name}",
+  "stopSuccess": "تم إيقاف \u2068{name}\u2069",
   "@stopSuccess": {
     "placeholders": {
       "name": {
@@ -754,7 +754,7 @@
   "goRecommend": "تصفح صفحة المقترحات",
   "processRefreshFailedHint": "فشل تحديث قائمة العمليات، يتم عرض البيانات التي تم الحصول عليها بنجاح في المرة السابقة",
   "moreActions": "مزيد من الإجراءات",
-  "appRunningUninstallMessage": "{name} قيد التشغيل حاليًا، يجب إغلاق جميع النسخ قيد التشغيل قبل إلغاء التثبيت.\nهل تريد الإغلاق القسري وإلغاء التثبيت؟",
+  "appRunningUninstallMessage": "\u2068{name}\u2069 قيد التشغيل حاليًا، يجب إغلاق جميع النسخ قيد التشغيل قبل إلغاء التثبيت.\nهل تريد الإغلاق القسري وإلغاء التثبيت؟",
   "@appRunningUninstallMessage": {
     "placeholders": {
       "name": {
@@ -763,7 +763,7 @@
     }
   },
   "forceCloseAndUninstall": "إغلاق قسري وإلغاء التثبيت",
-  "downgradeMessageWithVersion": "لديك حاليًا {appName} v{currentVersion} مثبتًا، وتحاول تثبيت إصدار أقدم v{targetVersion}.\nقد يتسبب تثبيت إصدار أقدم في مشاكل بالوظائف، هل تريد المتابعة؟",
+  "downgradeMessageWithVersion": "لديك حاليًا \u2068{appName}\u2069 \u2066v{currentVersion}\u2069 مثبتًا، وتحاول تثبيت إصدار أقدم \u2066v{targetVersion}\u2069.\nقد يتسبب تثبيت إصدار أقدم في مشاكل بالوظائف، هل تريد المتابعة؟",
   "@downgradeMessageWithVersion": {
     "placeholders": {
       "appName": {
@@ -778,7 +778,7 @@
     }
   },
   "confirmDowngrade": "تأكيد الرجوع لإصدار أقدم",
-  "reinstallMessage": "{appName} v{version} مثبت بالفعل.\nهل تريد إعادة التثبيت (سيتم استبدال التثبيت الحالي)؟",
+  "reinstallMessage": "\u2068{appName}\u2069 \u2066v{version}\u2069 مثبت بالفعل.\nهل تريد إعادة التثبيت (سيتم استبدال التثبيت الحالي)؟",
   "@reinstallMessage": {
     "placeholders": {
       "appName": {
@@ -791,7 +791,7 @@
   },
   "forceReinstall": "إعادة تثبيت قسرية",
   "installingLabel": "جارٍ التثبيت",
-  "waitingCount": "قيد الانتظار ({count})",
+  "waitingCount": "قيد الانتظار \u2066({count})\u2069",
   "@waitingCount": {
     "placeholders": {
       "count": {
@@ -816,7 +816,7 @@
   "clean": "تنظيف",
   "baseServiceCleaned": "تم تنظيف الخدمات الأساسية المهجورة",
   "cleanFailed": "فشل التنظيف، يرجى إعادة المحاولة لاحقًا",
-  "appCountValue": "{count, plural, zero{لا تطبيقات} one{تطبيق واحد} two{تطبيقان} few{{count} تطبيقات} many{{count} تطبيقًا} other{{count} تطبيقًا}}",
+  "appCountValue": "{count, plural, zero{لا تطبيقات} one{تطبيق واحد} two{تطبيقان} few{\u2066{count}\u2069 تطبيقات} many{\u2066{count}\u2069 تطبيقًا} other{\u2066{count}\u2069 تطبيقًا}}",
   "@appCountValue": {
     "placeholders": {
       "count": {
@@ -851,7 +851,7 @@
   "installErrorNetwork": "فشل التثبيت: خطأ في الشبكة",
   "installErrorInvalidRef": "فشل التثبيت: مرجع غير صالح",
   "installErrorUnknownArch": "فشل التثبيت: بنية غير معروفة",
-  "installErrorCode": "فشل التثبيت: رمز الخطأ {code}",
+  "installErrorCode": "فشل التثبيت: رمز الخطأ \u2066{code}\u2069",
   "@installErrorCode": {
     "placeholders": {
       "code": {
@@ -868,7 +868,7 @@
   "installStatusPostProcessing": "معالجة ما بعد التثبيت",
   "installStatusCompleted": "اكتمل التثبيت",
   "installStatusProcessing": "جارٍ المعالجة",
-  "waitingForOperation": "في انتظار {operation}...",
+  "waitingForOperation": "في انتظار \u2068{operation}\u2069...",
   "@waitingForOperation": {
     "placeholders": {
       "operation": {
@@ -878,7 +878,7 @@
   },
   "operationInstall": "تثبيت",
   "operationUpdate": "تحديث",
-  "operationPreparing": "جارٍ التحضير لـ {operation} {appId}...",
+  "operationPreparing": "جارٍ التحضير لـ \u2068{operation}\u2069 \u2068{appId}\u2069...",
   "@operationPreparing": {
     "placeholders": {
       "operation": {
@@ -889,7 +889,7 @@
       }
     }
   },
-  "operationCancelled": "تم إلغاء {operation}",
+  "operationCancelled": "تم إلغاء \u2068{operation}\u2069",
   "@operationCancelled": {
     "placeholders": {
       "operation": {
@@ -897,7 +897,7 @@
       }
     }
   },
-  "operationCompleted": "اكتمل {operation}",
+  "operationCompleted": "اكتمل \u2068{operation}\u2069",
   "@operationCompleted": {
     "placeholders": {
       "operation": {
@@ -905,7 +905,7 @@
       }
     }
   },
-  "operationUnknown": "حالة {operation} غير معروفة",
+  "operationUnknown": "حالة \u2068{operation}\u2069 غير معروفة",
   "@operationUnknown": {
     "placeholders": {
       "operation": {
@@ -913,7 +913,7 @@
       }
     }
   },
-  "operationConfirmFailed": "تعذّر تأكيد نتيجة {operation}",
+  "operationConfirmFailed": "تعذّر تأكيد نتيجة \u2068{operation}\u2069",
   "@operationConfirmFailed": {
     "placeholders": {
       "operation": {
@@ -921,7 +921,7 @@
       }
     }
   },
-  "operationTimeout": "انتهت مهلة {operation}",
+  "operationTimeout": "انتهت مهلة \u2068{operation}\u2069",
   "@operationTimeout": {
     "placeholders": {
       "operation": {
@@ -929,7 +929,7 @@
       }
     }
   },
-  "operationFailed": "فشل {operation}",
+  "operationFailed": "فشل \u2068{operation}\u2069",
   "@operationFailed": {
     "placeholders": {
       "operation": {
@@ -939,7 +939,7 @@
   },
   "taskCrashInterrupted": "تعطل التطبيق وانقطعت المهمة",
   "taskCrashRetryHint": "تعطل التطبيق أثناء التنفيذ، يرجى إعادة المحاولة",
-  "uninstallFailedWithError": "فشل إلغاء التثبيت: {error}",
+  "uninstallFailedWithError": "فشل إلغاء التثبيت: \u2068{error}\u2069",
   "@uninstallFailedWithError": {
     "placeholders": {
       "error": {
@@ -947,7 +947,7 @@
       }
     }
   },
-  "uninstallException": "خطأ في إلغاء التثبيت: {error}",
+  "uninstallException": "خطأ في إلغاء التثبيت: \u2068{error}\u2069",
   "@uninstallException": {
     "placeholders": {
       "error": {
@@ -955,7 +955,7 @@
       }
     }
   },
-  "stopFailedWithError": "فشل الإيقاف: {error}",
+  "stopFailedWithError": "فشل الإيقاف: \u2068{error}\u2069",
   "@stopFailedWithError": {
     "placeholders": {
       "error": {
@@ -963,7 +963,7 @@
       }
     }
   },
-  "stopException": "خطأ في الإيقاف: {error}",
+  "stopException": "خطأ في الإيقاف: \u2068{error}\u2069",
   "@stopException": {
     "placeholders": {
       "error": {
@@ -971,7 +971,7 @@
       }
     }
   },
-  "shortcutCreatedWithPath": "تم إنشاء الاختصار: {path}",
+  "shortcutCreatedWithPath": "تم إنشاء الاختصار: \u2068{path}\u2069",
   "@shortcutCreatedWithPath": {
     "placeholders": {
       "path": {
@@ -979,7 +979,7 @@
       }
     }
   },
-  "shortcutCreateFailedWithError": "فشل الإنشاء: {error}",
+  "shortcutCreateFailedWithError": "فشل الإنشاء: \u2068{error}\u2069",
   "@shortcutCreateFailedWithError": {
     "placeholders": {
       "error": {
@@ -987,7 +987,7 @@
       }
     }
   },
-  "pruneFailedWithError": "فشل التنظيف: {error}",
+  "pruneFailedWithError": "فشل التنظيف: \u2068{error}\u2069",
   "@pruneFailedWithError": {
     "placeholders": {
       "error": {
@@ -995,7 +995,7 @@
       }
     }
   },
-  "pruneException": "خطأ في التنظيف: {error}",
+  "pruneException": "خطأ في التنظيف: \u2068{error}\u2069",
   "@pruneException": {
     "placeholders": {
       "error": {
@@ -1008,7 +1008,7 @@
   "uosEnvInstallHint": "قبل تثبيت بيئة Linglong على نظام UOS، يرجى تفعيل وضع المطور في النظام والتأكد من أن الحساب الحالي يمكنه الحصول على صلاحيات root (الإعدادات - عام - خيارات المطور - الدخول إلى وضع المطور؛ يُنصح بالتشاور مع قسم تكنولوجيا المعلومات قبل التعامل مع أنظمة العمل).",
   "uosAppInstallFailureHint": "إذا كان النظام الحالي UOS، يرجى التأكد من تفعيل وضع المطور في النظام (الإعدادات - عام - خيارات المطور - الدخول إلى وضع المطور؛ يُنصح بالتشاور مع قسم تكنولوجيا المعلومات قبل التعامل مع أنظمة العمل).",
   "appInfoUnavailable": "تعذّر الحصول على معلومات التطبيق",
-  "shortcutCreateException": "فشل إنشاء الاختصار: {error}",
+  "shortcutCreateException": "فشل إنشاء الاختصار: \u2068{error}\u2069",
   "@shortcutCreateException": {
     "placeholders": {
       "error": {
@@ -1019,7 +1019,7 @@
   "waitingForInstall": "في انتظار التثبيت",
   "cancelInstall": "إلغاء التثبيت",
   "uninstallBlockedTitle": "لا يمكن إلغاء التثبيت الآن",
-  "uninstallBlockedMessage": "يتم حاليًا تثبيت/تحديث «{activeTaskName}». لا يدعم Linglong تنفيذ التثبيت وإلغاء التثبيت في الوقت نفسه. يرجى انتظار اكتمال المهمة الحالية أو إلغائها أولاً ثم إلغاء التثبيت.",
+  "uninstallBlockedMessage": "يتم حاليًا تثبيت/تحديث «\u2068{activeTaskName}\u2069». لا يدعم Linglong تنفيذ التثبيت وإلغاء التثبيت في الوقت نفسه. يرجى انتظار اكتمال المهمة الحالية أو إلغائها أولاً ثم إلغاء التثبيت.",
   "@uninstallBlockedMessage": {
     "placeholders": {
       "activeTaskName": {
@@ -1029,37 +1029,37 @@
   },
   "iKnow": "فهمت",
   "viewDownloadManager": "عرض إدارة التنزيلات",
-  "a11ySearchByTag": "البحث حسب الوسم: {tag}",
+  "a11ySearchByTag": "البحث حسب الوسم: \u2068{tag}\u2069",
   "@a11ySearchByTag": {
     "placeholders": {
       "tag": {}
     }
   },
-  "a11yRemoveSearchTag": "إزالة وسم البحث: {tag}",
+  "a11yRemoveSearchTag": "إزالة وسم البحث: \u2068{tag}\u2069",
   "@a11yRemoveSearchTag": {
     "placeholders": {
       "tag": {}
     }
   },
-  "a11yInstallApp": "تثبيت {appName}",
+  "a11yInstallApp": "تثبيت \u2068{appName}\u2069",
   "@a11yInstallApp": {
     "placeholders": {
       "appName": {}
     }
   },
-  "a11yUpdateApp": "تحديث {appName}",
+  "a11yUpdateApp": "تحديث \u2068{appName}\u2069",
   "@a11yUpdateApp": {
     "placeholders": {
       "appName": {}
     }
   },
-  "a11yOpenApp": "فتح {appName}",
+  "a11yOpenApp": "فتح \u2068{appName}\u2069",
   "@a11yOpenApp": {
     "placeholders": {
       "appName": {}
     }
   },
-  "a11yUninstallApp": "إلغاء تثبيت {appName}",
+  "a11yUninstallApp": "إلغاء تثبيت \u2068{appName}\u2069",
   "@a11yUninstallApp": {
     "placeholders": {
       "appName": {}
@@ -1069,7 +1069,7 @@
   "a11ySearchInputHint": "اكتب كلمات مفتاحية للبحث",
   "a11yCommentInputHint": "اكتب محتوى التعليق",
   "a11ySidebarNav": "التنقل في الشريط الجانبي",
-  "a11yAppCard": "{appName}، الإصدار {version}، {status}",
+  "a11yAppCard": "\u2068{appName}\u2069، الإصدار \u2068{version}\u2069، \u2068{status}\u2069",
   "@a11yAppCard": {
     "placeholders": {
       "appName": {},
@@ -1077,21 +1077,21 @@
       "status": {}
     }
   },
-  "a11yRankingItem": "المرتبة {rank}، {appName}",
+  "a11yRankingItem": "المرتبة \u2066{rank}\u2069، \u2068{appName}\u2069",
   "@a11yRankingItem": {
     "placeholders": {
       "rank": {},
       "appName": {}
     }
   },
-  "a11yProcessItem": "عملية {name}، PID {pid}",
+  "a11yProcessItem": "عملية \u2068{name}\u2069، \u2066PID {pid}\u2069",
   "@a11yProcessItem": {
     "placeholders": {
       "name": {},
       "pid": {}
     }
   },
-  "a11yDownloadItem": "تنزيل {appName}، التقدم {percent}%",
+  "a11yDownloadItem": "تنزيل \u2068{appName}\u2069، التقدم \u2066{percent}%\u2069",
   "@a11yDownloadItem": {
     "placeholders": {
       "appName": {},
@@ -1129,7 +1129,7 @@
   "appDescriptionPlaceholder": "وصف التطبيق",
   "rankingTabNewUpload": "الأحدث إضافة",
   "rankingTabDownloadCount": "الأكثر تنزيلاً",
-  "uploadedXHoursAgo": "{count, plural, zero{أُضيف الآن} one{أُضيف قبل ساعة واحدة} two{أُضيف قبل ساعتين} few{أُضيف قبل {count} ساعات} many{أُضيف قبل {count} ساعة} other{أُضيف قبل {count} ساعة}}",
+  "uploadedXHoursAgo": "{count, plural, zero{أُضيف الآن} one{أُضيف قبل ساعة واحدة} two{أُضيف قبل ساعتين} few{أُضيف قبل \u2066{count}\u2069 ساعات} many{أُضيف قبل \u2066{count}\u2069 ساعة} other{أُضيف قبل \u2066{count}\u2069 ساعة}}",
   "@uploadedXHoursAgo": {
     "placeholders": {
       "count": {
@@ -1137,7 +1137,7 @@
       }
     }
   },
-  "uploadedXDaysAgo": "{count, plural, zero{أُضيف اليوم} one{أُضيف قبل يوم واحد} two{أُضيف قبل يومين} few{أُضيف قبل {count} أيام} many{أُضيف قبل {count} يومًا} other{أُضيف قبل {count} يومًا}}",
+  "uploadedXDaysAgo": "{count, plural, zero{أُضيف اليوم} one{أُضيف قبل يوم واحد} two{أُضيف قبل يومين} few{أُضيف قبل \u2066{count}\u2069 أيام} many{أُضيف قبل \u2066{count}\u2069 يومًا} other{أُضيف قبل \u2066{count}\u2069 يومًا}}",
   "@uploadedXDaysAgo": {
     "placeholders": {
       "count": {
@@ -1145,7 +1145,7 @@
       }
     }
   },
-  "uploadedOnDate": "أُضيف في {date}",
+  "uploadedOnDate": "أُضيف في \u2068{date}\u2069",
   "@uploadedOnDate": {
     "placeholders": {
       "date": {
@@ -1153,11 +1153,12 @@
       }
     }
   },
-  "downloadedXTimes": "تم التنزيل {count} مرة",
+  "downloadedXTimes": "{count, plural, zero{لم يتم التنزيل} one{تم التنزيل مرة واحدة} two{تم التنزيل مرتين} few{تم التنزيل \u2066{count}\u2069 مرات} many{تم التنزيل \u2066{count}\u2069 مرة} other{تم التنزيل \u2066{count}\u2069 مرة}}",
   "@downloadedXTimes": {
     "placeholders": {
       "count": {
-        "type": "String"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },
@@ -1180,7 +1181,7 @@
   "envManagementStorageLocation": "موقع التخزين",
   "envManagementNotDetected": "غير مكتشف",
   "envManagementUnknown": "غير معروف",
-  "envManagementUsagePercent": "نسبة الاستخدام {percent}%",
+  "envManagementUsagePercent": "نسبة الاستخدام \u2066{percent}%\u2069",
   "@envManagementUsagePercent": {
     "placeholders": {
       "percent": {
@@ -1205,7 +1206,7 @@
   "envIssueRepositoryNotConfiguredTitle": "لم يتم تكوين مستودع Linglong",
   "envIssueRepositoryNotConfiguredDescription": "لا توجد إعدادات مستودع Linglong متاحة حاليًا، يجب إضافة المستودع أو إصلاحه أولاً.",
   "envIssueDataPermissionTitle": "صلاحيات دليل بيانات Linglong غير طبيعية",
-  "envIssueDataPermissionDescription": "يعمل ll-package-manager بمستخدم {serviceUser}، لكن مالك دليل بيانات Linglong أو ملفات الحالة المهمة غير طبيعي، مما قد يسبب فشل نقل المستودع أو تنزيل الكائنات أو إنشاء الطبقات.",
+  "envIssueDataPermissionDescription": "يعمل ll-package-manager بمستخدم \u2068{serviceUser}\u2069، لكن مالك دليل بيانات Linglong أو ملفات الحالة المهمة غير طبيعي، مما قد يسبب فشل نقل المستودع أو تنزيل الكائنات أو إنشاء الطبقات.",
   "@envIssueDataPermissionDescription": {
     "placeholders": {
       "serviceUser": {
@@ -1218,7 +1219,7 @@
   "envIssueLocalDataUnavailableTitle": "بيانات Linglong المحلية غير متاحة",
   "envIssueLocalDataUnavailableDescription": "تعذّر قراءة بيانات التطبيقات المثبتة وفق مسار تشغيل linyaps، مما قد يؤثر على قائمة التطبيقات أو التثبيت أو التشغيل. يرجى التحقق أولاً من صلاحيات دليل بيانات Linglong وحالة البيئة الأساسية، ثم تنفيذ الإصلاح عند الحاجة.",
   "envIssueStorageSpaceTitle": "مساحة موقع تخزين Linglong غير كافية",
-  "envIssueStorageSpaceDescription": "نسبة استخدام نظام الملفات الذي يوجد به {path} حوالي {percent}%، يُنصح بالتنظيف أو نقل موقع التخزين.",
+  "envIssueStorageSpaceDescription": "نسبة استخدام نظام الملفات الذي يوجد به \u2068{path}\u2069 حوالي \u2066{percent}%\u2069، يُنصح بالتنظيف أو نقل موقع التخزين.",
   "@envIssueStorageSpaceDescription": {
     "placeholders": {
       "path": {
@@ -1230,7 +1231,7 @@
     }
   },
   "envIssueRunningAppsTitle": "توجد تطبيقات Linglong قيد التشغيل",
-  "envIssueRunningAppsDescription": "{count, plural, zero{لا توجد تطبيقات قيد التشغيل} one{لا يزال تطبيق Linglong واحد قيد التشغيل، يجب إغلاقه قبل نقل موقع التخزين.} two{لا يزال تطبيقان قيد التشغيل، يجب إغلاقهما قبل نقل موقع التخزين.} few{لا تزال {count} تطبيقات قيد التشغيل، يجب إغلاقها قبل نقل موقع التخزين.} many{لا يزال {count} تطبيقًا قيد التشغيل، يجب إغلاقها قبل نقل موقع التخزين.} other{لا يزال {count} تطبيقًا قيد التشغيل، يجب إغلاقها قبل نقل موقع التخزين.}}",
+  "envIssueRunningAppsDescription": "{count, plural, zero{لا توجد تطبيقات قيد التشغيل} one{لا يزال تطبيق Linglong واحد قيد التشغيل، يجب إغلاقه قبل نقل موقع التخزين.} two{لا يزال تطبيقان قيد التشغيل، يجب إغلاقهما قبل نقل موقع التخزين.} few{لا تزال \u2066{count}\u2069 تطبيقات قيد التشغيل، يجب إغلاقها قبل نقل موقع التخزين.} many{لا يزال \u2066{count}\u2069 تطبيقًا قيد التشغيل، يجب إغلاقها قبل نقل موقع التخزين.} other{لا يزال \u2066{count}\u2069 تطبيقًا قيد التشغيل، يجب إغلاقها قبل نقل موقع التخزين.}}",
   "@envIssueRunningAppsDescription": {
     "placeholders": {
       "count": {
@@ -1244,7 +1245,7 @@
   "envRepairLocalDataMessage": "سيتم محاولة إصلاح بيانات Linglong المحلية بصلاحيات المسؤول؛ إذا تم اكتشاف بيانات تطبيقات أو بيئة أساسية تحتاج إلى إعادة سحب، فقد يستغرق ذلك وقتًا طويلاً. هل تريد المتابعة؟",
   "envRepairLocalDataConfirm": "تنفيذ الإصلاح",
   "envRepairPermissionTitle": "إصلاح صلاحيات دليل بيانات Linglong",
-  "envRepairPermissionMessage": "سيتم استعادة ملكية الدلائل المهمة وملفات الحالة في {rootPath} إلى {serviceUser} بصلاحيات المسؤول، وإعادة تشغيل package-manager الخاص بـ Linglong. هل تريد المتابعة؟",
+  "envRepairPermissionMessage": "سيتم استعادة ملكية الدلائل المهمة وملفات الحالة في \u2068{rootPath}\u2069 إلى \u2068{serviceUser}\u2069 بصلاحيات المسؤول، وإعادة تشغيل package-manager الخاص بـ Linglong. هل تريد المتابعة؟",
   "@envRepairPermissionMessage": {
     "placeholders": {
       "rootPath": {
@@ -1257,7 +1258,7 @@
   },
   "envRepairPermissionConfirm": "إصلاح الصلاحيات",
   "envMoveStorageTitle": "نقل موقع تخزين Linglong",
-  "envMoveStorageMessage": "سيتم نسخ {rootPath} إلى {targetPath} وإنشاء نقطة تركيب bind عبر systemd. يرجى التأكد من وجود مساحة كافية في القسم الهدف.",
+  "envMoveStorageMessage": "سيتم نسخ \u2068{rootPath}\u2069 إلى \u2068{targetPath}\u2069 وإنشاء نقطة تركيب bind عبر systemd. يرجى التأكد من وجود مساحة كافية في القسم الهدف.",
   "@envMoveStorageMessage": {
     "placeholders": {
       "rootPath": {
@@ -1276,7 +1277,7 @@
   "envAddAction": "إضافة",
   "envSaveAction": "حفظ",
   "envDeleteAction": "حذف",
-  "envUpdateRepositoryTitle": "تعديل عنوان المستودع: {name}",
+  "envUpdateRepositoryTitle": "تعديل عنوان المستودع: \u2068{name}\u2069",
   "@envUpdateRepositoryTitle": {
     "placeholders": {
       "name": {
@@ -1284,7 +1285,7 @@
       }
     }
   },
-  "envSetPriorityTitle": "تعيين الأولوية: {name}",
+  "envSetPriorityTitle": "تعيين الأولوية: \u2068{name}\u2069",
   "@envSetPriorityTitle": {
     "placeholders": {
       "name": {
@@ -1295,7 +1296,7 @@
   "envRepositoryPriority": "الأولوية",
   "envPriorityMustBeNumber": "يجب أن تكون الأولوية رقمًا",
   "envRemoveRepositoryTitle": "حذف المستودع",
-  "envRemoveRepositoryMessage": "هل تريد بالتأكيد حذف المستودع {name}؟",
+  "envRemoveRepositoryMessage": "هل تريد بالتأكيد حذف المستودع \u2068{name}\u2069؟",
   "@envRemoveRepositoryMessage": {
     "placeholders": {
       "name": {
@@ -1304,7 +1305,7 @@
     }
   },
   "envRepositoryAdded": "تمت إضافة المستودع",
-  "envRepositoryAddFailed": "فشل إضافة المستودع: {error}",
+  "envRepositoryAddFailed": "فشل إضافة المستودع: \u2068{error}\u2069",
   "@envRepositoryAddFailed": {
     "placeholders": {
       "error": {
@@ -1313,7 +1314,7 @@
     }
   },
   "envRepositoryUpdated": "تم تحديث المستودع",
-  "envRepositoryUpdateFailed": "فشل تحديث المستودع: {error}",
+  "envRepositoryUpdateFailed": "فشل تحديث المستودع: \u2068{error}\u2069",
   "@envRepositoryUpdateFailed": {
     "placeholders": {
       "error": {
@@ -1322,7 +1323,7 @@
     }
   },
   "envPriorityUpdated": "تم تحديث الأولوية",
-  "envPriorityUpdateFailed": "فشل تعيين الأولوية: {error}",
+  "envPriorityUpdateFailed": "فشل تعيين الأولوية: \u2068{error}\u2069",
   "@envPriorityUpdateFailed": {
     "placeholders": {
       "error": {
@@ -1331,7 +1332,7 @@
     }
   },
   "envRepositoryRemoved": "تم حذف المستودع",
-  "envRepositoryRemoveFailed": "فشل حذف المستودع: {error}",
+  "envRepositoryRemoveFailed": "فشل حذف المستودع: \u2068{error}\u2069",
   "@envRepositoryRemoveFailed": {
     "placeholders": {
       "error": {
@@ -1340,7 +1341,7 @@
     }
   },
   "envDefaultRepositoryUpdated": "تم تحديث المستودع الافتراضي",
-  "envDefaultRepositoryUpdateFailed": "فشل تعيين المستودع الافتراضي: {error}",
+  "envDefaultRepositoryUpdateFailed": "فشل تعيين المستودع الافتراضي: \u2068{error}\u2069",
   "@envDefaultRepositoryUpdateFailed": {
     "placeholders": {
       "error": {
@@ -1350,7 +1351,7 @@
   },
   "envMirrorEnabled": "تم تفعيل المرآة",
   "envMirrorDisabled": "تم تعطيل المرآة",
-  "envMirrorUpdateFailed": "فشل تعديل حالة المرآة: {error}",
+  "envMirrorUpdateFailed": "فشل تعديل حالة المرآة: \u2068{error}\u2069",
   "@envMirrorUpdateFailed": {
     "placeholders": {
       "error": {
@@ -1360,7 +1361,7 @@
   },
   "envOpenLogDirectoryFailed": "فشل فتح دليل السجلات",
   "envRepositoryNotLoaded": "لم يتم تحميل إعدادات المستودع بعد",
-  "envRepositoryDefaultValue": "المستودع الافتراضي: {name}",
+  "envRepositoryDefaultValue": "المستودع الافتراضي: \u2068{name}\u2069",
   "@envRepositoryDefaultValue": {
     "placeholders": {
       "name": {
@@ -1372,7 +1373,7 @@
   "envAddRepository": "إضافة مستودع",
   "envNoRepositories": "لا توجد إعدادات مستودعات",
   "envDefaultBadge": "افتراضي",
-  "envRepositoryDetails": "name={name}  priority={priority}",
+  "envRepositoryDetails": "\u2066name={name}\u2069  \u2066priority={priority}\u2069",
   "@envRepositoryDetails": {
     "placeholders": {
       "name": {
@@ -1391,7 +1392,7 @@
   "envDisableMirror": "تعطيل المرآة",
   "envCurrentStorageLocation": "موقع التخزين الحالي",
   "envStorageNotAnalyzed": "لم يكتمل تحليل موقع التخزين بعد",
-  "envStorageSummary": "{path}  نسبة الاستخدام {percent}%",
+  "envStorageSummary": "\u2068{path}\u2069  نسبة الاستخدام \u2066{percent}%\u2069",
   "@envStorageSummary": {
     "placeholders": {
       "path": {
@@ -1404,7 +1405,7 @@
   },
   "envNewStorageLocation": "موقع التخزين الجديد",
   "envStorageMoveMethod": "طريقة النقل",
-  "envStorageMoveMethodDescription": "لا يدعم Linglong حاليًا تغيير دليل التثبيت مباشرة. سيتم نسخ البيانات ثم إنشاء نقطة تركيب bind عبر systemd لتركيب الدليل الجديد على {rootPath}.",
+  "envStorageMoveMethodDescription": "لا يدعم Linglong حاليًا تغيير دليل التثبيت مباشرة. سيتم نسخ البيانات ثم إنشاء نقطة تركيب bind عبر systemd لتركيب الدليل الجديد على \u2068{rootPath}\u2069.",
   "@envStorageMoveMethodDescription": {
     "placeholders": {
       "rootPath": {
@@ -1414,7 +1415,7 @@
   },
   "envMoveStorageAction": "نقل موقع التخزين",
   "envCloseAppsBeforeMoveTitle": "يلزم إغلاق التطبيقات قبل النقل",
-  "envCloseAppsBeforeMoveMessage": "{count, plural, zero{لا توجد تطبيقات قيد التشغيل.} one{لا يزال تطبيق Linglong واحد قيد التشغيل.} two{لا يزال تطبيقان قيد التشغيل.} few{لا تزال {count} تطبيقات قيد التشغيل.} many{لا يزال {count} تطبيقًا قيد التشغيل.} other{لا يزال {count} تطبيقًا قيد التشغيل.}}",
+  "envCloseAppsBeforeMoveMessage": "{count, plural, zero{لا توجد تطبيقات قيد التشغيل.} one{لا يزال تطبيق Linglong واحد قيد التشغيل.} two{لا يزال تطبيقان قيد التشغيل.} few{لا تزال \u2066{count}\u2069 تطبيقات قيد التشغيل.} many{لا يزال \u2066{count}\u2069 تطبيقًا قيد التشغيل.} other{لا يزال \u2066{count}\u2069 تطبيقًا قيد التشغيل.}}",
   "@envCloseAppsBeforeMoveMessage": {
     "placeholders": {
       "count": {
@@ -1430,7 +1431,7 @@
   "envResultLocalDataFailed": "فشل إصلاح بيانات Linglong المحلية",
   "envResultLocalDataChecksumMismatch": "أظهرت إعادة التحقق من بيانات Linglong المحلية عدم تطابق المجموع الاختباري للكائنات، ولم يكتمل الإصلاح بعد التنظيف التلقائي؛ إذا تكررت المشكلة بعد إعادة السحب، عادة ما تكون هناك حاجة لإصلاح بيانات المستودع العلوي أو توافق التخزين المحلي لـ linyaps.",
   "envPartialCommitsUnknown": "partial commits جزئية",
-  "envPartialCommitsCount": "{count, plural, zero{لا partial commits} one{partial commit واحد} two{partial commitان} few{{count} partial commits} many{{count} partial commit} other{{count} partial commit}}",
+  "envPartialCommitsCount": "{count, plural, zero{لا partial commits} one{partial commit واحد} two{partial commitان} few{\u2066{count}\u2069 partial commits} many{\u2066{count}\u2069 partial commit} other{\u2066{count}\u2069 partial commit}}",
   "@envPartialCommitsCount": {
     "placeholders": {
       "count": {
@@ -1438,7 +1439,7 @@
       }
     }
   },
-  "envResultLocalDataRepullCompleted": "تم تنظيف الكائنات المعطوبة من بيانات Linglong المحلية وإعادة سحب {partialCommits}، واجتازت إعادة التحقق.",
+  "envResultLocalDataRepullCompleted": "تم تنظيف الكائنات المعطوبة من بيانات Linglong المحلية وإعادة سحب \u2068{partialCommits}\u2069، واجتازت إعادة التحقق.",
   "@envResultLocalDataRepullCompleted": {
     "placeholders": {
       "partialCommits": {
@@ -1446,7 +1447,7 @@
       }
     }
   },
-  "envResultLocalDataRepullCompletedLegacy": "تم تنظيف الكائنات المعطوبة من بيانات Linglong المحلية وإعادة سحب {partialCommits}، واجتازت إعادة التحقق (متوافق مع معاملات الأنظمة القديمة).",
+  "envResultLocalDataRepullCompletedLegacy": "تم تنظيف الكائنات المعطوبة من بيانات Linglong المحلية وإعادة سحب \u2068{partialCommits}\u2069، واجتازت إعادة التحقق (متوافق مع معاملات الأنظمة القديمة).",
   "@envResultLocalDataRepullCompletedLegacy": {
     "placeholders": {
       "partialCommits": {
@@ -1454,7 +1455,7 @@
       }
     }
   },
-  "envResultLocalDataRepullFailed": "تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا من بيانات Linglong المحلية ومحاولة إعادة سحب {partialCommits}، لكن إعادة التحقق لم تنجح بعد إعادة السحب. يرجى مراجعة السجلات لتحديد سبب فشل سحب أو التحقق من ref المحدد.",
+  "envResultLocalDataRepullFailed": "تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا من بيانات Linglong المحلية ومحاولة إعادة سحب \u2068{partialCommits}\u2069، لكن إعادة التحقق لم تنجح بعد إعادة السحب. يرجى مراجعة السجلات لتحديد سبب فشل سحب أو التحقق من ref المحدد.",
   "@envResultLocalDataRepullFailed": {
     "placeholders": {
       "partialCommits": {
@@ -1462,7 +1463,7 @@
       }
     }
   },
-  "envResultLocalDataRepullFailedLegacy": "تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا من بيانات Linglong المحلية ومحاولة إعادة سحب {partialCommits}، لكن إعادة التحقق لم تنجح بعد إعادة السحب. يرجى مراجعة السجلات لتحديد سبب فشل سحب أو التحقق من ref المحدد (متوافق مع معاملات الأنظمة القديمة).",
+  "envResultLocalDataRepullFailedLegacy": "تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا من بيانات Linglong المحلية ومحاولة إعادة سحب \u2068{partialCommits}\u2069، لكن إعادة التحقق لم تنجح بعد إعادة السحب. يرجى مراجعة السجلات لتحديد سبب فشل سحب أو التحقق من ref المحدد (متوافق مع معاملات الأنظمة القديمة).",
   "@envResultLocalDataRepullFailedLegacy": {
     "placeholders": {
       "partialCommits": {
@@ -1470,7 +1471,7 @@
       }
     }
   },
-  "envResultLocalDataRepullChecksumMismatch": "تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا ومحاولة إعادة سحب {partialCommits}، لكن إعادة التحقق ما زالت تكشف عدم تطابق المجموع الاختباري، ربما بسبب عدم توافق بيانات المستودع العلوي مع وضع التخزين المحلي لـ linyaps.",
+  "envResultLocalDataRepullChecksumMismatch": "تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا ومحاولة إعادة سحب \u2068{partialCommits}\u2069، لكن إعادة التحقق ما زالت تكشف عدم تطابق المجموع الاختباري، ربما بسبب عدم توافق بيانات المستودع العلوي مع وضع التخزين المحلي لـ linyaps.",
   "@envResultLocalDataRepullChecksumMismatch": {
     "placeholders": {
       "partialCommits": {
@@ -1478,7 +1479,7 @@
       }
     }
   },
-  "envResultLocalDataRepullChecksumMismatchLegacy": "تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا ومحاولة إعادة سحب {partialCommits}، لكن إعادة التحقق ما زالت تكشف عدم تطابق المجموع الاختباري، ربما بسبب عدم توافق بيانات المستودع العلوي مع وضع التخزين المحلي لـ linyaps (متوافق مع معاملات الأنظمة القديمة).",
+  "envResultLocalDataRepullChecksumMismatchLegacy": "تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا ومحاولة إعادة سحب \u2068{partialCommits}\u2069، لكن إعادة التحقق ما زالت تكشف عدم تطابق المجموع الاختباري، ربما بسبب عدم توافق بيانات المستودع العلوي مع وضع التخزين المحلي لـ linyaps (متوافق مع معاملات الأنظمة القديمة).",
   "@envResultLocalDataRepullChecksumMismatchLegacy": {
     "placeholders": {
       "partialCommits": {
@@ -1486,7 +1487,7 @@
       }
     }
   },
-  "envResultStorageBlockedRunningApps": "{count, plural, zero{لا توجد تطبيقات قيد التشغيل.} one{لا يزال تطبيق Linglong واحد قيد التشغيل، يرجى إغلاقه ثم نقل موقع التخزين.} two{لا يزال تطبيقان قيد التشغيل، يرجى إغلاقهما ثم نقل موقع التخزين.} few{لا تزال {count} تطبيقات قيد التشغيل، يرجى إغلاقها ثم نقل موقع التخزين.} many{لا يزال {count} تطبيقًا قيد التشغيل، يرجى إغلاقها ثم نقل موقع التخزين.} other{لا يزال {count} تطبيقًا قيد التشغيل، يرجى إغلاقها ثم نقل موقع التخزين.}}",
+  "envResultStorageBlockedRunningApps": "{count, plural, zero{لا توجد تطبيقات قيد التشغيل.} one{لا يزال تطبيق Linglong واحد قيد التشغيل، يرجى إغلاقه ثم نقل موقع التخزين.} two{لا يزال تطبيقان قيد التشغيل، يرجى إغلاقهما ثم نقل موقع التخزين.} few{لا تزال \u2066{count}\u2069 تطبيقات قيد التشغيل، يرجى إغلاقها ثم نقل موقع التخزين.} many{لا يزال \u2066{count}\u2069 تطبيقًا قيد التشغيل، يرجى إغلاقها ثم نقل موقع التخزين.} other{لا يزال \u2066{count}\u2069 تطبيقًا قيد التشغيل، يرجى إغلاقها ثم نقل موقع التخزين.}}",
   "@envResultStorageBlockedRunningApps": {
     "placeholders": {
       "count": {
@@ -1495,7 +1496,7 @@
     }
   },
   "envResultStorageBlockedActiveTask": "لا تزال هناك مهام تثبيت أو تحديث في إدارة التنزيلات، يرجى انتظار اكتمالها أو إلغائها ثم نقل موقع تخزين Linglong.",
-  "envResultStorageBlockedNamedTask": "يتم حاليًا معالجة «{name}»، يرجى انتظار اكتمال المهمة أو إلغائها ثم نقل موقع تخزين Linglong.",
+  "envResultStorageBlockedNamedTask": "يتم حاليًا معالجة «\u2068{name}\u2069»، يرجى انتظار اكتمال المهمة أو إلغائها ثم نقل موقع تخزين Linglong.",
   "@envResultStorageBlockedNamedTask": {
     "placeholders": {
       "name": {
@@ -1503,7 +1504,7 @@
       }
     }
   },
-  "envResultStorageAlreadyBindMounted": "{path} هو بالفعل نقطة تركيب bind، يرجى التحقق من إعدادات التركيب الحالية قبل النقل.",
+  "envResultStorageAlreadyBindMounted": "\u2068{path}\u2069 هو بالفعل نقطة تركيب bind، يرجى التحقق من إعدادات التركيب الحالية قبل النقل.",
   "@envResultStorageAlreadyBindMounted": {
     "placeholders": {
       "path": {
@@ -1511,7 +1512,7 @@
       }
     }
   },
-  "envResultStorageFilesystemUnavailable": "تعذّر قراءة مساحة نظام الملفات الخاص بالمسار الهدف: {path}",
+  "envResultStorageFilesystemUnavailable": "تعذّر قراءة مساحة نظام الملفات الخاص بالمسار الهدف: \u2068{path}\u2069",
   "@envResultStorageFilesystemUnavailable": {
     "placeholders": {
       "path": {
@@ -1520,7 +1521,7 @@
     }
   },
   "envResultStorageSpaceUnknown": "تعذّر التحقق من مساحة القرص للدليل الحالي أو المسار الهدف، يرجى التحقق ثم إعادة المحاولة.",
-  "envResultStorageInsufficientSpace": "المساحة المتاحة في المسار الهدف غير كافية، يلزم {requiredSpace} على الأقل، والمتاح حاليًا {availableSpace}.",
+  "envResultStorageInsufficientSpace": "المساحة المتاحة في المسار الهدف غير كافية، يلزم \u2068{requiredSpace}\u2069 على الأقل، والمتاح حاليًا \u2068{availableSpace}\u2069.",
   "@envResultStorageInsufficientSpace": {
     "placeholders": {
       "requiredSpace": {
@@ -1537,7 +1538,7 @@
   "envResultStorageTargetInsideCurrentRoot": "لا يمكن أن يقع المسار الهدف داخل دليل Linglong الحالي.",
   "envResultStorageMoveCompleted": "تم نقل موقع تخزين Linglong",
   "envResultStorageMoveFailed": "فشل نقل موقع تخزين Linglong",
-  "envResultUnexpectedFailure": "فشل الإجراء: {error}",
+  "envResultUnexpectedFailure": "فشل الإجراء: \u2068{error}\u2069",
   "@envResultUnexpectedFailure": {
     "placeholders": {
       "error": {
@@ -1563,7 +1564,7 @@
   "repairExecuting": "جارٍ تنفيذ برنامج الإصلاح النصي...",
   "repairOutputTitle": "الإخراج المباشر",
   "repairOutputEmpty": "في انتظار إخراج البرنامج النصي...",
-  "repairOutputTruncated": "{count, plural, zero{لا أسطر محذوفة} one{تم حذف سطر واحد أقدم من الواجهة، راجع السجل للمحتوى الكامل.} two{تم حذف سطرين أقدم من الواجهة، راجع السجل للمحتوى الكامل.} few{تم حذف {count} أسطر أقدم من الواجهة، راجع السجل للمحتوى الكامل.} many{تم حذف {count} سطرًا أقدم من الواجهة، راجع السجل للمحتوى الكامل.} other{تم حذف {count} سطرًا أقدم من الواجهة، راجع السجل للمحتوى الكامل.}}",
+  "repairOutputTruncated": "{count, plural, zero{لا أسطر محذوفة} one{تم حذف سطر واحد أقدم من الواجهة، راجع السجل للمحتوى الكامل.} two{تم حذف سطرين أقدم من الواجهة، راجع السجل للمحتوى الكامل.} few{تم حذف \u2066{count}\u2069 أسطر أقدم من الواجهة، راجع السجل للمحتوى الكامل.} many{تم حذف \u2066{count}\u2069 سطرًا أقدم من الواجهة، راجع السجل للمحتوى الكامل.} other{تم حذف \u2066{count}\u2069 سطرًا أقدم من الواجهة، راجع السجل للمحتوى الكامل.}}",
   "@repairOutputTruncated": {
     "placeholders": {
       "count": {
@@ -1572,7 +1573,7 @@
     }
   },
   "repairCompleteRetry": "اكتمل الإصلاح، يرجى إعادة محاولة التثبيت.",
-  "repairFailedWithExitCode": "فشل تنفيذ برنامج الإصلاح النصي (رمز الخروج {exitCode}).",
+  "repairFailedWithExitCode": "فشل تنفيذ برنامج الإصلاح النصي (رمز الخروج \u2066{exitCode}\u2069).",
   "@repairFailedWithExitCode": {
     "placeholders": {
       "exitCode": {
@@ -1581,7 +1582,7 @@
     }
   },
   "repairTimedOut": "تجاوز تنفيذ برنامج الإصلاح النصي 30 دقيقة وتم إيقاف الانتظار. يرجى مراجعة السجلات للتأكد من حالة النظام.",
-  "repairExecutionError": "تعذّر تنفيذ برنامج الإصلاح النصي: {message}",
+  "repairExecutionError": "تعذّر تنفيذ برنامج الإصلاح النصي: \u2068{message}\u2069",
   "@repairExecutionError": {
     "placeholders": {
       "message": {
@@ -1592,7 +1593,7 @@
   "repairInvalidSignature": "توقيع برنامج الإصلاح النصي غير صالح، تم منع التنفيذ.",
   "openRepairLog": "فتح دليل السجلات",
   "copyRepairOutput": "نسخ الإخراج الحالي",
-  "repairElapsedTime": "مضى {elapsed}",
+  "repairElapsedTime": "مضى \u2068{elapsed}\u2069",
   "@repairElapsedTime": {
     "placeholders": {
       "elapsed": {

@@ -1135,11 +1135,12 @@
       }
     }
   },
-  "downloadedXTimes": "{count} загрузки",
+  "downloadedXTimes": "{count, plural, one{{count} загрузка} few{{count} загрузки} many{{count} загрузок} other{{count} загрузки}}",
   "@downloadedXTimes": {
     "placeholders": {
       "count": {
-        "type": "String"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },

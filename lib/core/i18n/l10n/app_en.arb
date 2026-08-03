@@ -1097,11 +1097,12 @@
       }
     }
   },
-  "downloadedXTimes": "{count} downloads",
+  "downloadedXTimes": "{count, plural, one{{count} download} other{{count} downloads}}",
   "@downloadedXTimes": {
     "placeholders": {
       "count": {
-        "type": "String"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },

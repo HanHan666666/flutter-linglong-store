@@ -1177,11 +1177,12 @@
       }
     }
   },
-  "downloadedXTimes": "Descargado {count} veces",
+  "downloadedXTimes": "{count, plural, one{{count} descarga} other{{count} descargas}}",
   "@downloadedXTimes": {
     "placeholders": {
       "count": {
-        "type": "String"
+        "type": "int",
+        "format": "decimalPattern"
       }
     }
   },

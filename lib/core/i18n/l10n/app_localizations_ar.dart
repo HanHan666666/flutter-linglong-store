@@ -1,3 +1,5 @@
+// ignore_for_file: text_direction_code_point_in_literal, text_direction_code_point_in_comment
+
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
@@ -304,7 +306,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String fontScalePercent(int percent) {
-    return '$percent%';
+    return '⁦$percent%⁩';
   }
 
   @override
@@ -312,17 +314,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String currentVersion(String version) {
-    return 'الإصدار الحالي: $version';
+    return 'الإصدار الحالي: ⁨$version⁩';
   }
 
   @override
   String newVersionFound(String tagName, String currentVersion) {
-    return 'تم العثور على إصدار جديد $tagName، الإصدار الحالي $currentVersion';
+    return 'تم العثور على إصدار جديد ⁨$tagName⁩، الإصدار الحالي ⁨$currentVersion⁩';
   }
 
   @override
   String alreadyLatest(String version) {
-    return 'لديك بالفعل أحدث إصدار $version';
+    return 'لديك بالفعل أحدث إصدار ⁨$version⁩';
   }
 
   @override
@@ -399,9 +401,9 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'تم تحديث $count تطبيقًا',
-      many: 'تم تحديث $count تطبيقًا',
-      few: 'تم تحديث $count تطبيقات',
+      other: 'تم تحديث ⁦$count⁩ تطبيقًا',
+      many: 'تم تحديث ⁦$count⁩ تطبيقًا',
+      few: 'تم تحديث ⁦$count⁩ تطبيقات',
       two: 'تم تحديث تطبيقين',
       one: 'تم تحديث تطبيق واحد',
       zero: 'لم يتم تحديث أي تطبيق',
@@ -417,7 +419,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String updateBatchResultSummary(String summary) {
-    return 'النتيجة: $summary';
+    return 'النتيجة: ⁨$summary⁩';
   }
 
   @override
@@ -428,9 +430,9 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'نجح $count تطبيقًا',
-      many: 'نجح $count تطبيقًا',
-      few: 'نجحت $count تطبيقات',
+      other: 'نجح ⁦$count⁩ تطبيقًا',
+      many: 'نجح ⁦$count⁩ تطبيقًا',
+      few: 'نجحت ⁦$count⁩ تطبيقات',
       two: 'نجح تطبيقان',
       one: 'نجح تطبيق واحد',
       zero: 'لم ينجح أي تطبيق',
@@ -443,9 +445,9 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'فشل $count تطبيقًا',
-      many: 'فشل $count تطبيقًا',
-      few: 'فشلت $count تطبيقات',
+      other: 'فشل ⁦$count⁩ تطبيقًا',
+      many: 'فشل ⁦$count⁩ تطبيقًا',
+      few: 'فشلت ⁦$count⁩ تطبيقات',
       two: 'فشل تطبيقان',
       one: 'فشل تطبيق واحد',
       zero: 'لم يفشل أي تطبيق',
@@ -458,9 +460,9 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'أُلغي $count تطبيقًا',
-      many: 'أُلغي $count تطبيقًا',
-      few: 'أُلغيت $count تطبيقات',
+      other: 'أُلغي ⁦$count⁩ تطبيقًا',
+      many: 'أُلغي ⁦$count⁩ تطبيقًا',
+      few: 'أُلغيت ⁦$count⁩ تطبيقات',
       two: 'أُلغي تطبيقان',
       one: 'أُلغي تطبيق واحد',
       zero: 'لم يُلغَ أي تطبيق',
@@ -473,9 +475,9 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'توقف $count تطبيقًا',
-      many: 'توقف $count تطبيقًا',
-      few: 'توقفت $count تطبيقات',
+      other: 'توقف ⁦$count⁩ تطبيقًا',
+      many: 'توقف ⁦$count⁩ تطبيقًا',
+      few: 'توقفت ⁦$count⁩ تطبيقات',
       two: 'توقف تطبيقان',
       one: 'توقف تطبيق واحد',
       zero: 'لم يتوقف أي تطبيق',
@@ -488,7 +490,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String updateBatchUpdatedApps(String names) {
-    return 'تم التحديث: $names';
+    return 'تم التحديث: ⁨$names⁩';
   }
 
   @override
@@ -496,12 +498,12 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       remainingCount,
       locale: localeName,
-      other: 'تم التحديث: $names و$remainingCount تطبيقًا آخر',
-      many: 'تم التحديث: $names و$remainingCount تطبيقًا آخر',
-      few: 'تم التحديث: $names و$remainingCount تطبيقات أخرى',
-      two: 'تم التحديث: $names وتطبيقان آخران',
-      one: 'تم التحديث: $names وتطبيق آخر',
-      zero: 'تم التحديث: $names',
+      other: 'تم التحديث: ⁨$names⁩ و⁦$remainingCount⁩ تطبيقًا آخر',
+      many: 'تم التحديث: ⁨$names⁩ و⁦$remainingCount⁩ تطبيقًا آخر',
+      few: 'تم التحديث: ⁨$names⁩ و⁦$remainingCount⁩ تطبيقات أخرى',
+      two: 'تم التحديث: ⁨$names⁩ وتطبيقان آخران',
+      one: 'تم التحديث: ⁨$names⁩ وتطبيق آخر',
+      zero: 'تم التحديث: ⁨$names⁩',
     );
     return '$_temp0';
   }
@@ -524,12 +526,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String rendererModeCurrentStatus(Object mode, Object reason) {
-    return 'يُستخدم حاليًا $mode. $reason';
+    return 'يُستخدم حاليًا ⁨$mode⁩. ⁨$reason⁩';
   }
 
   @override
   String rendererModeReasonEnvironment(Object value) {
-    return 'يتم التحكم في وضع العرض الحالي بواسطة متغير البيئة $value.';
+    return 'يتم التحكم في وضع العرض الحالي بواسطة متغير البيئة ⁨$value⁩.';
   }
 
   @override
@@ -546,12 +548,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String rendererModeEnvLocked(Object value) {
-    return 'تم العثور على متغير البيئة $value. يتم التحكم في وضع العرض الحالي بواسطة بيئة النظام ولا يمكن تعديله هنا.';
+    return 'تم العثور على متغير البيئة ⁨$value⁩. يتم التحكم في وضع العرض الحالي بواسطة بيئة النظام ولا يمكن تعديله هنا.';
   }
 
   @override
   String rendererModeNextLaunchStatus(Object mode) {
-    return 'سيتم استخدام $mode عند بدء التشغيل التالي.';
+    return 'سيتم استخدام ⁨$mode⁩ عند بدء التشغيل التالي.';
   }
 
   @override
@@ -571,7 +573,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String rendererModeDetectedCpu(Object cpu) {
-    return 'معالج هذا الجهاز: $cpu';
+    return 'معالج هذا الجهاز: ⁨$cpu⁩';
   }
 
   @override
@@ -672,7 +674,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String downloadRealtimeSpeed(String speed) {
-    return 'السرعة الفعلية $speed';
+    return 'السرعة الفعلية ⁨$speed⁩';
   }
 
   @override
@@ -680,9 +682,9 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count سجلًا',
-      many: '$count سجلًا',
-      few: '$count سجلات',
+      other: '⁦$count⁩ سجلًا',
+      many: '⁦$count⁩ سجلًا',
+      few: '⁦$count⁩ سجلات',
       two: 'سجلان',
       one: 'سجل واحد',
       zero: 'لا سجلات',
@@ -692,12 +694,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String ogInstallRequestReceived(String appName) {
-    return 'تم استلام طلب تثبيت من صفحة الويب: $appName';
+    return 'تم استلام طلب تثبيت من صفحة الويب: ⁨$appName⁩';
   }
 
   @override
   String ogInstallEnqueued(String appName) {
-    return 'تمت إضافته إلى إدارة التنزيلات: $appName';
+    return 'تمت إضافته إلى إدارة التنزيلات: ⁨$appName⁩';
   }
 
   @override
@@ -710,7 +712,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String ogInstallDuplicate(String appName) {
-    return '$appName موجود بالفعل في إدارة التنزيلات';
+    return '⁨$appName⁩ موجود بالفعل في إدارة التنزيلات';
   }
 
   @override
@@ -719,7 +721,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String ogInstallDetailFailedWithError(String error) {
-    return 'تعذّر الحصول على معلومات التطبيق، لم يبدأ التثبيت: $error';
+    return 'تعذّر الحصول على معلومات التطبيق، لم يبدأ التثبيت: ⁨$error⁩';
   }
 
   @override
@@ -730,7 +732,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String cannotOpenLink(String url) {
-    return 'تعذّر فتح الرابط: $url';
+    return 'تعذّر فتح الرابط: ⁨$url⁩';
   }
 
   @override
@@ -742,17 +744,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String launching(String appName) {
-    return 'جارٍ تشغيل $appName...';
+    return 'جارٍ تشغيل ⁨$appName⁩...';
   }
 
   @override
   String launchFailed(String error) {
-    return 'فشل التشغيل: $error';
+    return 'فشل التشغيل: ⁨$error⁩';
   }
 
   @override
   String copied(String value) {
-    return 'تم النسخ: $value';
+    return 'تم النسخ: ⁨$value⁩';
   }
 
   @override
@@ -760,7 +762,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String shareMessage(String name) {
-    return 'جرّب تطبيق «$name»';
+    return 'جرّب تطبيق «⁨$name⁩»';
   }
 
   @override
@@ -790,17 +792,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String uninstallFailed(String result) {
-    return 'فشل إلغاء التثبيت: $result';
+    return 'فشل إلغاء التثبيت: ⁨$result⁩';
   }
 
   @override
   String uninstallSuccess(String name) {
-    return 'تم إلغاء تثبيت $name';
+    return 'تم إلغاء تثبيت ⁨$name⁩';
   }
 
   @override
   String uninstallError(String error) {
-    return 'خطأ في إلغاء التثبيت: $error';
+    return 'خطأ في إلغاء التثبيت: ⁨$error⁩';
   }
 
   @override
@@ -860,12 +862,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String commentSubmitFailed(String error) {
-    return 'فشل إرسال التعليق: $error';
+    return 'فشل إرسال التعليق: ⁨$error⁩';
   }
 
   @override
   String shortcutCreateFailed(String error) {
-    return 'فشل الإنشاء: $error';
+    return 'فشل الإنشاء: ⁨$error⁩';
   }
 
   @override
@@ -891,7 +893,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String repoShowFailureCommand(String command) {
-    return 'فشل تنفيذ $command لقراءة إعدادات مستودع Linglong.';
+    return 'فشل تنفيذ ⁨$command⁩ لقراءة إعدادات مستودع Linglong.';
   }
 
   @override
@@ -924,7 +926,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String packageManagerServiceRestartFailed(String error) {
-    return 'فشل إعادة تشغيل الخدمة: $error';
+    return 'فشل إعادة تشغيل الخدمة: ⁨$error⁩';
   }
 
   @override
@@ -935,7 +937,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String cannotOpenDirectory(String path) {
-    return 'تعذّر فتح الدليل: $path';
+    return 'تعذّر فتح الدليل: ⁨$path⁩';
   }
 
   @override
@@ -990,7 +992,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String uninstallConfirmMessage(String name) {
-    return 'هل تريد بالتأكيد إلغاء تثبيت $name؟\nسيتم حذف بيانات التطبيق بعد إلغاء التثبيت ولا يمكن استعادتها.';
+    return 'هل تريد بالتأكيد إلغاء تثبيت ⁨$name⁩؟\nسيتم حذف بيانات التطبيق بعد إلغاء التثبيت ولا يمكن استعادتها.';
   }
 
   @override
@@ -1017,9 +1019,9 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count نتيجة',
-      many: '$count نتيجة',
-      few: '$count نتائج',
+      other: '⁦$count⁩ نتيجة',
+      many: '⁦$count⁩ نتيجة',
+      few: '⁦$count⁩ نتائج',
       two: 'نتيجتان',
       one: 'نتيجة واحدة',
       zero: 'لا نتائج',
@@ -1035,7 +1037,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String noMatchingAppHint(String query) {
-    return 'لم يتم العثور على تطبيقات متعلقة بـ \"$query\"';
+    return 'لم يتم العثور على تطبيقات متعلقة بـ \"⁨$query⁩\"';
   }
 
   @override
@@ -1043,9 +1045,9 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count تطبيقًا قابلاً للتحديث',
-      many: '$count تطبيقًا قابلاً للتحديث',
-      few: '$count تطبيقات قابلة للتحديث',
+      other: '⁦$count⁩ تطبيقًا قابلاً للتحديث',
+      many: '⁦$count⁩ تطبيقًا قابلاً للتحديث',
+      few: '⁦$count⁩ تطبيقات قابلة للتحديث',
       two: 'تطبيقان قابلان للتحديث',
       one: 'تطبيق واحد قابل للتحديث',
       zero: 'لا توجد تطبيقات قابلة للتحديث',
@@ -1055,7 +1057,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String ignoredUpdatesCount(int count) {
-    return 'متجاهل ($count)';
+    return 'متجاهل ⁦($count)⁩';
   }
 
   @override
@@ -1076,17 +1078,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String ignoredVersion(String version) {
-    return 'الإصدار عند التجاهل: $version';
+    return 'الإصدار عند التجاهل: ⁨$version⁩';
   }
 
   @override
   String ignoreUpdateSuccess(String appName) {
-    return 'تم تجاهل التحديثات اللاحقة لـ $appName، يمكنك استعادتها من \"المتجاهلة\"';
+    return 'تم تجاهل التحديثات اللاحقة لـ ⁨$appName⁩، يمكنك استعادتها من \"المتجاهلة\"';
   }
 
   @override
   String ignoreUpdateActiveTask(String appName) {
-    return '$appName موجود بالفعل في قائمة انتظار التحديث ولا يمكن تجاهله الآن';
+    return '⁨$appName⁩ موجود بالفعل في قائمة انتظار التحديث ولا يمكن تجاهله الآن';
   }
 
   @override
@@ -1099,7 +1101,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String restoreUpdateSuccess(String appName) {
-    return 'تمت استعادة تنبيهات التحديث لـ $appName';
+    return 'تمت استعادة تنبيهات التحديث لـ ⁨$appName⁩';
   }
 
   @override
@@ -1115,9 +1117,9 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'إدارة التحديثات المتجاهلة: $count تطبيقًا',
-      many: 'إدارة التحديثات المتجاهلة: $count تطبيقًا',
-      few: 'إدارة التحديثات المتجاهلة: $count تطبيقات',
+      other: 'إدارة التحديثات المتجاهلة: ⁦$count⁩ تطبيقًا',
+      many: 'إدارة التحديثات المتجاهلة: ⁦$count⁩ تطبيقًا',
+      few: 'إدارة التحديثات المتجاهلة: ⁦$count⁩ تطبيقات',
       two: 'إدارة التحديثات المتجاهلة: تطبيقان',
       one: 'إدارة التحديثات المتجاهلة: تطبيق واحد',
       zero: 'إدارة التحديثات المتجاهلة: لا تطبيقات',
@@ -1127,22 +1129,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String a11yIgnoreAppUpdates(String appName) {
-    return 'تجاهل التحديثات اللاحقة لـ $appName';
+    return 'تجاهل التحديثات اللاحقة لـ ⁨$appName⁩';
   }
 
   @override
   String a11yUpdateAppMoreActions(String appName) {
-    return 'مزيد من إجراءات التحديث لـ $appName';
+    return 'مزيد من إجراءات التحديث لـ ⁨$appName⁩';
   }
 
   @override
   String a11yRestoreAppUpdates(String appName) {
-    return 'استعادة تنبيهات التحديث لـ $appName';
+    return 'استعادة تنبيهات التحديث لـ ⁨$appName⁩';
   }
 
   @override
   String a11yIgnoredUpdateItem(String appName, String appId, String version) {
-    return '$appName، معرّف التطبيق $appId، الإصدار عند التجاهل $version';
+    return '⁨$appName⁩، معرّف التطبيق ⁨$appId⁩، الإصدار عند التجاهل ⁨$version⁩';
   }
 
   @override
@@ -1192,7 +1194,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String newVersionAvailable(String version, String current) {
-    return 'تم العثور على إصدار جديد $version!\nالإصدار الحالي: $current';
+    return 'تم العثور على إصدار جديد ⁨$version⁩!\nالإصدار الحالي: ⁨$current⁩';
   }
 
   @override
@@ -1259,7 +1261,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String stopSuccess(String name) {
-    return 'تم إيقاف $name';
+    return 'تم إيقاف ⁨$name⁩';
   }
 
   @override
@@ -1364,7 +1366,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String appRunningUninstallMessage(String name) {
-    return '$name قيد التشغيل حاليًا، يجب إغلاق جميع النسخ قيد التشغيل قبل إلغاء التثبيت.\nهل تريد الإغلاق القسري وإلغاء التثبيت؟';
+    return '⁨$name⁩ قيد التشغيل حاليًا، يجب إغلاق جميع النسخ قيد التشغيل قبل إلغاء التثبيت.\nهل تريد الإغلاق القسري وإلغاء التثبيت؟';
   }
 
   @override
@@ -1376,7 +1378,7 @@ class AppLocalizationsAr extends AppLocalizations {
     String currentVersion,
     String targetVersion,
   ) {
-    return 'لديك حاليًا $appName v$currentVersion مثبتًا، وتحاول تثبيت إصدار أقدم v$targetVersion.\nقد يتسبب تثبيت إصدار أقدم في مشاكل بالوظائف، هل تريد المتابعة؟';
+    return 'لديك حاليًا ⁨$appName⁩ ⁦v$currentVersion⁩ مثبتًا، وتحاول تثبيت إصدار أقدم ⁦v$targetVersion⁩.\nقد يتسبب تثبيت إصدار أقدم في مشاكل بالوظائف، هل تريد المتابعة؟';
   }
 
   @override
@@ -1384,7 +1386,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String reinstallMessage(String appName, String version) {
-    return '$appName v$version مثبت بالفعل.\nهل تريد إعادة التثبيت (سيتم استبدال التثبيت الحالي)؟';
+    return '⁨$appName⁩ ⁦v$version⁩ مثبت بالفعل.\nهل تريد إعادة التثبيت (سيتم استبدال التثبيت الحالي)؟';
   }
 
   @override
@@ -1395,7 +1397,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String waitingCount(int count) {
-    return 'قيد الانتظار ($count)';
+    return 'قيد الانتظار ⁦($count)⁩';
   }
 
   @override
@@ -1458,9 +1460,9 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count تطبيقًا',
-      many: '$count تطبيقًا',
-      few: '$count تطبيقات',
+      other: '⁦$count⁩ تطبيقًا',
+      many: '⁦$count⁩ تطبيقًا',
+      few: '⁦$count⁩ تطبيقات',
       two: 'تطبيقان',
       one: 'تطبيق واحد',
       zero: 'لا تطبيقات',
@@ -1558,7 +1560,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String installErrorCode(int code) {
-    return 'فشل التثبيت: رمز الخطأ $code';
+    return 'فشل التثبيت: رمز الخطأ ⁦$code⁩';
   }
 
   @override
@@ -1590,7 +1592,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String waitingForOperation(String operation) {
-    return 'في انتظار $operation...';
+    return 'في انتظار ⁨$operation⁩...';
   }
 
   @override
@@ -1601,37 +1603,37 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String operationPreparing(String operation, String appId) {
-    return 'جارٍ التحضير لـ $operation $appId...';
+    return 'جارٍ التحضير لـ ⁨$operation⁩ ⁨$appId⁩...';
   }
 
   @override
   String operationCancelled(String operation) {
-    return 'تم إلغاء $operation';
+    return 'تم إلغاء ⁨$operation⁩';
   }
 
   @override
   String operationCompleted(String operation) {
-    return 'اكتمل $operation';
+    return 'اكتمل ⁨$operation⁩';
   }
 
   @override
   String operationUnknown(String operation) {
-    return 'حالة $operation غير معروفة';
+    return 'حالة ⁨$operation⁩ غير معروفة';
   }
 
   @override
   String operationConfirmFailed(String operation) {
-    return 'تعذّر تأكيد نتيجة $operation';
+    return 'تعذّر تأكيد نتيجة ⁨$operation⁩';
   }
 
   @override
   String operationTimeout(String operation) {
-    return 'انتهت مهلة $operation';
+    return 'انتهت مهلة ⁨$operation⁩';
   }
 
   @override
   String operationFailed(String operation) {
-    return 'فشل $operation';
+    return 'فشل ⁨$operation⁩';
   }
 
   @override
@@ -1643,42 +1645,42 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String uninstallFailedWithError(String error) {
-    return 'فشل إلغاء التثبيت: $error';
+    return 'فشل إلغاء التثبيت: ⁨$error⁩';
   }
 
   @override
   String uninstallException(String error) {
-    return 'خطأ في إلغاء التثبيت: $error';
+    return 'خطأ في إلغاء التثبيت: ⁨$error⁩';
   }
 
   @override
   String stopFailedWithError(String error) {
-    return 'فشل الإيقاف: $error';
+    return 'فشل الإيقاف: ⁨$error⁩';
   }
 
   @override
   String stopException(String error) {
-    return 'خطأ في الإيقاف: $error';
+    return 'خطأ في الإيقاف: ⁨$error⁩';
   }
 
   @override
   String shortcutCreatedWithPath(String path) {
-    return 'تم إنشاء الاختصار: $path';
+    return 'تم إنشاء الاختصار: ⁨$path⁩';
   }
 
   @override
   String shortcutCreateFailedWithError(String error) {
-    return 'فشل الإنشاء: $error';
+    return 'فشل الإنشاء: ⁨$error⁩';
   }
 
   @override
   String pruneFailedWithError(String error) {
-    return 'فشل التنظيف: $error';
+    return 'فشل التنظيف: ⁨$error⁩';
   }
 
   @override
   String pruneException(String error) {
-    return 'خطأ في التنظيف: $error';
+    return 'خطأ في التنظيف: ⁨$error⁩';
   }
 
   @override
@@ -1700,7 +1702,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String shortcutCreateException(String error) {
-    return 'فشل إنشاء الاختصار: $error';
+    return 'فشل إنشاء الاختصار: ⁨$error⁩';
   }
 
   @override
@@ -1714,7 +1716,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String uninstallBlockedMessage(String activeTaskName) {
-    return 'يتم حاليًا تثبيت/تحديث «$activeTaskName». لا يدعم Linglong تنفيذ التثبيت وإلغاء التثبيت في الوقت نفسه. يرجى انتظار اكتمال المهمة الحالية أو إلغائها أولاً ثم إلغاء التثبيت.';
+    return 'يتم حاليًا تثبيت/تحديث «⁨$activeTaskName⁩». لا يدعم Linglong تنفيذ التثبيت وإلغاء التثبيت في الوقت نفسه. يرجى انتظار اكتمال المهمة الحالية أو إلغائها أولاً ثم إلغاء التثبيت.';
   }
 
   @override
@@ -1725,32 +1727,32 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String a11ySearchByTag(Object tag) {
-    return 'البحث حسب الوسم: $tag';
+    return 'البحث حسب الوسم: ⁨$tag⁩';
   }
 
   @override
   String a11yRemoveSearchTag(Object tag) {
-    return 'إزالة وسم البحث: $tag';
+    return 'إزالة وسم البحث: ⁨$tag⁩';
   }
 
   @override
   String a11yInstallApp(Object appName) {
-    return 'تثبيت $appName';
+    return 'تثبيت ⁨$appName⁩';
   }
 
   @override
   String a11yUpdateApp(Object appName) {
-    return 'تحديث $appName';
+    return 'تحديث ⁨$appName⁩';
   }
 
   @override
   String a11yOpenApp(Object appName) {
-    return 'فتح $appName';
+    return 'فتح ⁨$appName⁩';
   }
 
   @override
   String a11yUninstallApp(Object appName) {
-    return 'إلغاء تثبيت $appName';
+    return 'إلغاء تثبيت ⁨$appName⁩';
   }
 
   @override
@@ -1767,22 +1769,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String a11yAppCard(Object appName, Object version, Object status) {
-    return '$appName، الإصدار $version، $status';
+    return '⁨$appName⁩، الإصدار ⁨$version⁩، ⁨$status⁩';
   }
 
   @override
   String a11yRankingItem(Object rank, Object appName) {
-    return 'المرتبة $rank، $appName';
+    return 'المرتبة ⁦$rank⁩، ⁨$appName⁩';
   }
 
   @override
   String a11yProcessItem(Object name, Object pid) {
-    return 'عملية $name، PID $pid';
+    return 'عملية ⁨$name⁩، ⁦PID $pid⁩';
   }
 
   @override
   String a11yDownloadItem(Object appName, Object percent) {
-    return 'تنزيل $appName، التقدم $percent%';
+    return 'تنزيل ⁨$appName⁩، التقدم ⁦$percent%⁩';
   }
 
   @override
@@ -1885,9 +1887,9 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'أُضيف قبل $count ساعة',
-      many: 'أُضيف قبل $count ساعة',
-      few: 'أُضيف قبل $count ساعات',
+      other: 'أُضيف قبل ⁦$count⁩ ساعة',
+      many: 'أُضيف قبل ⁦$count⁩ ساعة',
+      few: 'أُضيف قبل ⁦$count⁩ ساعات',
       two: 'أُضيف قبل ساعتين',
       one: 'أُضيف قبل ساعة واحدة',
       zero: 'أُضيف الآن',
@@ -1900,9 +1902,9 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'أُضيف قبل $count يومًا',
-      many: 'أُضيف قبل $count يومًا',
-      few: 'أُضيف قبل $count أيام',
+      other: 'أُضيف قبل ⁦$count⁩ يومًا',
+      many: 'أُضيف قبل ⁦$count⁩ يومًا',
+      few: 'أُضيف قبل ⁦$count⁩ أيام',
       two: 'أُضيف قبل يومين',
       one: 'أُضيف قبل يوم واحد',
       zero: 'أُضيف اليوم',
@@ -1912,12 +1914,26 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String uploadedOnDate(String date) {
-    return 'أُضيف في $date';
+    return 'أُضيف في ⁨$date⁩';
   }
 
   @override
-  String downloadedXTimes(String count) {
-    return 'تم التنزيل $count مرة';
+  String downloadedXTimes(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تم التنزيل ⁦$countString⁩ مرة',
+      many: 'تم التنزيل ⁦$countString⁩ مرة',
+      few: 'تم التنزيل ⁦$countString⁩ مرات',
+      two: 'تم التنزيل مرتين',
+      one: 'تم التنزيل مرة واحدة',
+      zero: 'لم يتم التنزيل',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1984,7 +2000,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envManagementUsagePercent(int percent) {
-    return 'نسبة الاستخدام $percent%';
+    return 'نسبة الاستخدام ⁦$percent%⁩';
   }
 
   @override
@@ -2045,7 +2061,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envIssueDataPermissionDescription(String serviceUser) {
-    return 'يعمل ll-package-manager بمستخدم $serviceUser، لكن مالك دليل بيانات Linglong أو ملفات الحالة المهمة غير طبيعي، مما قد يسبب فشل نقل المستودع أو تنزيل الكائنات أو إنشاء الطبقات.';
+    return 'يعمل ll-package-manager بمستخدم ⁨$serviceUser⁩، لكن مالك دليل بيانات Linglong أو ملفات الحالة المهمة غير طبيعي، مما قد يسبب فشل نقل المستودع أو تنزيل الكائنات أو إنشاء الطبقات.';
   }
 
   @override
@@ -2069,7 +2085,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envIssueStorageSpaceDescription(String path, int percent) {
-    return 'نسبة استخدام نظام الملفات الذي يوجد به $path حوالي $percent%، يُنصح بالتنظيف أو نقل موقع التخزين.';
+    return 'نسبة استخدام نظام الملفات الذي يوجد به ⁨$path⁩ حوالي ⁦$percent%⁩، يُنصح بالتنظيف أو نقل موقع التخزين.';
   }
 
   @override
@@ -2081,11 +2097,11 @@ class AppLocalizationsAr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'لا يزال $count تطبيقًا قيد التشغيل، يجب إغلاقها قبل نقل موقع التخزين.',
+          'لا يزال ⁦$count⁩ تطبيقًا قيد التشغيل، يجب إغلاقها قبل نقل موقع التخزين.',
       many:
-          'لا يزال $count تطبيقًا قيد التشغيل، يجب إغلاقها قبل نقل موقع التخزين.',
+          'لا يزال ⁦$count⁩ تطبيقًا قيد التشغيل، يجب إغلاقها قبل نقل موقع التخزين.',
       few:
-          'لا تزال $count تطبيقات قيد التشغيل، يجب إغلاقها قبل نقل موقع التخزين.',
+          'لا تزال ⁦$count⁩ تطبيقات قيد التشغيل، يجب إغلاقها قبل نقل موقع التخزين.',
       two: 'لا يزال تطبيقان قيد التشغيل، يجب إغلاقهما قبل نقل موقع التخزين.',
       one:
           'لا يزال تطبيق Linglong واحد قيد التشغيل، يجب إغلاقه قبل نقل موقع التخزين.',
@@ -2115,7 +2131,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envRepairPermissionMessage(String rootPath, String serviceUser) {
-    return 'سيتم استعادة ملكية الدلائل المهمة وملفات الحالة في $rootPath إلى $serviceUser بصلاحيات المسؤول، وإعادة تشغيل package-manager الخاص بـ Linglong. هل تريد المتابعة؟';
+    return 'سيتم استعادة ملكية الدلائل المهمة وملفات الحالة في ⁨$rootPath⁩ إلى ⁨$serviceUser⁩ بصلاحيات المسؤول، وإعادة تشغيل package-manager الخاص بـ Linglong. هل تريد المتابعة؟';
   }
 
   @override
@@ -2126,7 +2142,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envMoveStorageMessage(String rootPath, String targetPath) {
-    return 'سيتم نسخ $rootPath إلى $targetPath وإنشاء نقطة تركيب bind عبر systemd. يرجى التأكد من وجود مساحة كافية في القسم الهدف.';
+    return 'سيتم نسخ ⁨$rootPath⁩ إلى ⁨$targetPath⁩ وإنشاء نقطة تركيب bind عبر systemd. يرجى التأكد من وجود مساحة كافية في القسم الهدف.';
   }
 
   @override
@@ -2155,12 +2171,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envUpdateRepositoryTitle(String name) {
-    return 'تعديل عنوان المستودع: $name';
+    return 'تعديل عنوان المستودع: ⁨$name⁩';
   }
 
   @override
   String envSetPriorityTitle(String name) {
-    return 'تعيين الأولوية: $name';
+    return 'تعيين الأولوية: ⁨$name⁩';
   }
 
   @override
@@ -2174,7 +2190,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envRemoveRepositoryMessage(String name) {
-    return 'هل تريد بالتأكيد حذف المستودع $name؟';
+    return 'هل تريد بالتأكيد حذف المستودع ⁨$name⁩؟';
   }
 
   @override
@@ -2182,7 +2198,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envRepositoryAddFailed(String error) {
-    return 'فشل إضافة المستودع: $error';
+    return 'فشل إضافة المستودع: ⁨$error⁩';
   }
 
   @override
@@ -2190,7 +2206,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envRepositoryUpdateFailed(String error) {
-    return 'فشل تحديث المستودع: $error';
+    return 'فشل تحديث المستودع: ⁨$error⁩';
   }
 
   @override
@@ -2198,7 +2214,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envPriorityUpdateFailed(String error) {
-    return 'فشل تعيين الأولوية: $error';
+    return 'فشل تعيين الأولوية: ⁨$error⁩';
   }
 
   @override
@@ -2206,7 +2222,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envRepositoryRemoveFailed(String error) {
-    return 'فشل حذف المستودع: $error';
+    return 'فشل حذف المستودع: ⁨$error⁩';
   }
 
   @override
@@ -2214,7 +2230,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envDefaultRepositoryUpdateFailed(String error) {
-    return 'فشل تعيين المستودع الافتراضي: $error';
+    return 'فشل تعيين المستودع الافتراضي: ⁨$error⁩';
   }
 
   @override
@@ -2225,7 +2241,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envMirrorUpdateFailed(String error) {
-    return 'فشل تعديل حالة المرآة: $error';
+    return 'فشل تعديل حالة المرآة: ⁨$error⁩';
   }
 
   @override
@@ -2236,7 +2252,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envRepositoryDefaultValue(String name) {
-    return 'المستودع الافتراضي: $name';
+    return 'المستودع الافتراضي: ⁨$name⁩';
   }
 
   @override
@@ -2253,7 +2269,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envRepositoryDetails(String name, String priority) {
-    return 'name=$name  priority=$priority';
+    return '⁦name=$name⁩  ⁦priority=$priority⁩';
   }
 
   @override
@@ -2282,7 +2298,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envStorageSummary(String path, int percent) {
-    return '$path  نسبة الاستخدام $percent%';
+    return '⁨$path⁩  نسبة الاستخدام ⁦$percent%⁩';
   }
 
   @override
@@ -2293,7 +2309,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envStorageMoveMethodDescription(String rootPath) {
-    return 'لا يدعم Linglong حاليًا تغيير دليل التثبيت مباشرة. سيتم نسخ البيانات ثم إنشاء نقطة تركيب bind عبر systemd لتركيب الدليل الجديد على $rootPath.';
+    return 'لا يدعم Linglong حاليًا تغيير دليل التثبيت مباشرة. سيتم نسخ البيانات ثم إنشاء نقطة تركيب bind عبر systemd لتركيب الدليل الجديد على ⁨$rootPath⁩.';
   }
 
   @override
@@ -2307,9 +2323,9 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'لا يزال $count تطبيقًا قيد التشغيل.',
-      many: 'لا يزال $count تطبيقًا قيد التشغيل.',
-      few: 'لا تزال $count تطبيقات قيد التشغيل.',
+      other: 'لا يزال ⁦$count⁩ تطبيقًا قيد التشغيل.',
+      many: 'لا يزال ⁦$count⁩ تطبيقًا قيد التشغيل.',
+      few: 'لا تزال ⁦$count⁩ تطبيقات قيد التشغيل.',
       two: 'لا يزال تطبيقان قيد التشغيل.',
       one: 'لا يزال تطبيق Linglong واحد قيد التشغيل.',
       zero: 'لا توجد تطبيقات قيد التشغيل.',
@@ -2352,9 +2368,9 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count partial commit',
-      many: '$count partial commit',
-      few: '$count partial commits',
+      other: '⁦$count⁩ partial commit',
+      many: '⁦$count⁩ partial commit',
+      few: '⁦$count⁩ partial commits',
       two: 'partial commitان',
       one: 'partial commit واحد',
       zero: 'لا partial commits',
@@ -2364,32 +2380,32 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envResultLocalDataRepullCompleted(String partialCommits) {
-    return 'تم تنظيف الكائنات المعطوبة من بيانات Linglong المحلية وإعادة سحب $partialCommits، واجتازت إعادة التحقق.';
+    return 'تم تنظيف الكائنات المعطوبة من بيانات Linglong المحلية وإعادة سحب ⁨$partialCommits⁩، واجتازت إعادة التحقق.';
   }
 
   @override
   String envResultLocalDataRepullCompletedLegacy(String partialCommits) {
-    return 'تم تنظيف الكائنات المعطوبة من بيانات Linglong المحلية وإعادة سحب $partialCommits، واجتازت إعادة التحقق (متوافق مع معاملات الأنظمة القديمة).';
+    return 'تم تنظيف الكائنات المعطوبة من بيانات Linglong المحلية وإعادة سحب ⁨$partialCommits⁩، واجتازت إعادة التحقق (متوافق مع معاملات الأنظمة القديمة).';
   }
 
   @override
   String envResultLocalDataRepullFailed(String partialCommits) {
-    return 'تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا من بيانات Linglong المحلية ومحاولة إعادة سحب $partialCommits، لكن إعادة التحقق لم تنجح بعد إعادة السحب. يرجى مراجعة السجلات لتحديد سبب فشل سحب أو التحقق من ref المحدد.';
+    return 'تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا من بيانات Linglong المحلية ومحاولة إعادة سحب ⁨$partialCommits⁩، لكن إعادة التحقق لم تنجح بعد إعادة السحب. يرجى مراجعة السجلات لتحديد سبب فشل سحب أو التحقق من ref المحدد.';
   }
 
   @override
   String envResultLocalDataRepullFailedLegacy(String partialCommits) {
-    return 'تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا من بيانات Linglong المحلية ومحاولة إعادة سحب $partialCommits، لكن إعادة التحقق لم تنجح بعد إعادة السحب. يرجى مراجعة السجلات لتحديد سبب فشل سحب أو التحقق من ref المحدد (متوافق مع معاملات الأنظمة القديمة).';
+    return 'تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا من بيانات Linglong المحلية ومحاولة إعادة سحب ⁨$partialCommits⁩، لكن إعادة التحقق لم تنجح بعد إعادة السحب. يرجى مراجعة السجلات لتحديد سبب فشل سحب أو التحقق من ref المحدد (متوافق مع معاملات الأنظمة القديمة).';
   }
 
   @override
   String envResultLocalDataRepullChecksumMismatch(String partialCommits) {
-    return 'تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا ومحاولة إعادة سحب $partialCommits، لكن إعادة التحقق ما زالت تكشف عدم تطابق المجموع الاختباري، ربما بسبب عدم توافق بيانات المستودع العلوي مع وضع التخزين المحلي لـ linyaps.';
+    return 'تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا ومحاولة إعادة سحب ⁨$partialCommits⁩، لكن إعادة التحقق ما زالت تكشف عدم تطابق المجموع الاختباري، ربما بسبب عدم توافق بيانات المستودع العلوي مع وضع التخزين المحلي لـ linyaps.';
   }
 
   @override
   String envResultLocalDataRepullChecksumMismatchLegacy(String partialCommits) {
-    return 'تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا ومحاولة إعادة سحب $partialCommits، لكن إعادة التحقق ما زالت تكشف عدم تطابق المجموع الاختباري، ربما بسبب عدم توافق بيانات المستودع العلوي مع وضع التخزين المحلي لـ linyaps (متوافق مع معاملات الأنظمة القديمة).';
+    return 'تم تنظيف الكائنات المعطوبة القابلة للمعالجة تلقائيًا ومحاولة إعادة سحب ⁨$partialCommits⁩، لكن إعادة التحقق ما زالت تكشف عدم تطابق المجموع الاختباري، ربما بسبب عدم توافق بيانات المستودع العلوي مع وضع التخزين المحلي لـ linyaps (متوافق مع معاملات الأنظمة القديمة).';
   }
 
   @override
@@ -2398,11 +2414,11 @@ class AppLocalizationsAr extends AppLocalizations {
       count,
       locale: localeName,
       other:
-          'لا يزال $count تطبيقًا قيد التشغيل، يرجى إغلاقها ثم نقل موقع التخزين.',
+          'لا يزال ⁦$count⁩ تطبيقًا قيد التشغيل، يرجى إغلاقها ثم نقل موقع التخزين.',
       many:
-          'لا يزال $count تطبيقًا قيد التشغيل، يرجى إغلاقها ثم نقل موقع التخزين.',
+          'لا يزال ⁦$count⁩ تطبيقًا قيد التشغيل، يرجى إغلاقها ثم نقل موقع التخزين.',
       few:
-          'لا تزال $count تطبيقات قيد التشغيل، يرجى إغلاقها ثم نقل موقع التخزين.',
+          'لا تزال ⁦$count⁩ تطبيقات قيد التشغيل، يرجى إغلاقها ثم نقل موقع التخزين.',
       two: 'لا يزال تطبيقان قيد التشغيل، يرجى إغلاقهما ثم نقل موقع التخزين.',
       one:
           'لا يزال تطبيق Linglong واحد قيد التشغيل، يرجى إغلاقه ثم نقل موقع التخزين.',
@@ -2417,17 +2433,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envResultStorageBlockedNamedTask(String name) {
-    return 'يتم حاليًا معالجة «$name»، يرجى انتظار اكتمال المهمة أو إلغائها ثم نقل موقع تخزين Linglong.';
+    return 'يتم حاليًا معالجة «⁨$name⁩»، يرجى انتظار اكتمال المهمة أو إلغائها ثم نقل موقع تخزين Linglong.';
   }
 
   @override
   String envResultStorageAlreadyBindMounted(String path) {
-    return '$path هو بالفعل نقطة تركيب bind، يرجى التحقق من إعدادات التركيب الحالية قبل النقل.';
+    return '⁨$path⁩ هو بالفعل نقطة تركيب bind، يرجى التحقق من إعدادات التركيب الحالية قبل النقل.';
   }
 
   @override
   String envResultStorageFilesystemUnavailable(String path) {
-    return 'تعذّر قراءة مساحة نظام الملفات الخاص بالمسار الهدف: $path';
+    return 'تعذّر قراءة مساحة نظام الملفات الخاص بالمسار الهدف: ⁨$path⁩';
   }
 
   @override
@@ -2439,7 +2455,7 @@ class AppLocalizationsAr extends AppLocalizations {
     String requiredSpace,
     String availableSpace,
   ) {
-    return 'المساحة المتاحة في المسار الهدف غير كافية، يلزم $requiredSpace على الأقل، والمتاح حاليًا $availableSpace.';
+    return 'المساحة المتاحة في المسار الهدف غير كافية، يلزم ⁨$requiredSpace⁩ على الأقل، والمتاح حاليًا ⁨$availableSpace⁩.';
   }
 
   @override
@@ -2466,7 +2482,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String envResultUnexpectedFailure(String error) {
-    return 'فشل الإجراء: $error';
+    return 'فشل الإجراء: ⁨$error⁩';
   }
 
   @override
@@ -2529,9 +2545,10 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'تم حذف $count سطرًا أقدم من الواجهة، راجع السجل للمحتوى الكامل.',
-      many: 'تم حذف $count سطرًا أقدم من الواجهة، راجع السجل للمحتوى الكامل.',
-      few: 'تم حذف $count أسطر أقدم من الواجهة، راجع السجل للمحتوى الكامل.',
+      other:
+          'تم حذف ⁦$count⁩ سطرًا أقدم من الواجهة، راجع السجل للمحتوى الكامل.',
+      many: 'تم حذف ⁦$count⁩ سطرًا أقدم من الواجهة، راجع السجل للمحتوى الكامل.',
+      few: 'تم حذف ⁦$count⁩ أسطر أقدم من الواجهة، راجع السجل للمحتوى الكامل.',
       two: 'تم حذف سطرين أقدم من الواجهة، راجع السجل للمحتوى الكامل.',
       one: 'تم حذف سطر واحد أقدم من الواجهة، راجع السجل للمحتوى الكامل.',
       zero: 'لا أسطر محذوفة',
@@ -2544,7 +2561,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String repairFailedWithExitCode(int exitCode) {
-    return 'فشل تنفيذ برنامج الإصلاح النصي (رمز الخروج $exitCode).';
+    return 'فشل تنفيذ برنامج الإصلاح النصي (رمز الخروج ⁦$exitCode⁩).';
   }
 
   @override
@@ -2553,7 +2570,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String repairExecutionError(String message) {
-    return 'تعذّر تنفيذ برنامج الإصلاح النصي: $message';
+    return 'تعذّر تنفيذ برنامج الإصلاح النصي: ⁨$message⁩';
   }
 
   @override
@@ -2568,6 +2585,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String repairElapsedTime(String elapsed) {
-    return 'مضى $elapsed';
+    return 'مضى ⁨$elapsed⁩';
   }
 }

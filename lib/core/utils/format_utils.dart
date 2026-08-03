@@ -98,16 +98,11 @@ String? formatRelativeTime(String? createTime, AppLocalizations l10n) {
 
 /// 格式化下载量显示
 ///
-/// 格式："下载 XXX次"（使用千位分隔符）
+/// 将原始整数交给 gen-l10n 统一处理本地数字格式与复数规则，避免展示层手工
+/// 插入英文逗号后破坏阿拉伯语数字和俄语等语言的名词变形。
 ///
 /// 返回 null 表示无有效下载量
 String? formatDownloadCountText(int? count, AppLocalizations l10n) {
   if (count == null || count <= 0) return null;
-
-  final formatted = count.toString().replaceAllMapped(
-    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-    (Match m) => '${m[1]},',
-  );
-
-  return l10n.downloadedXTimes(formatted);
+  return l10n.downloadedXTimes(count);
 }

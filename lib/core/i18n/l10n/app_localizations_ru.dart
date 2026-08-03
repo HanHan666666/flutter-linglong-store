@@ -1,3 +1,5 @@
+// ignore_for_file: text_direction_code_point_in_literal, text_direction_code_point_in_comment
+
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
@@ -1850,8 +1852,20 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String downloadedXTimes(String count) {
-    return '$count загрузки';
+  String downloadedXTimes(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString загрузки',
+      many: '$countString загрузок',
+      few: '$countString загрузки',
+      one: '$countString загрузка',
+    );
+    return '$_temp0';
   }
 
   @override

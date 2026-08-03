@@ -1,3 +1,5 @@
+// ignore_for_file: text_direction_code_point_in_literal, text_direction_code_point_in_comment
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -3154,7 +3156,7 @@ abstract class AppLocalizations {
   ///
   /// In zh, this message translates to:
   /// **'下载 {count}次'**
-  String downloadedXTimes(String count);
+  String downloadedXTimes(int count);
 
   /// No description provided for @envManagementWarning.
   ///

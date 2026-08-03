@@ -22,7 +22,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
+            // 搜索页直接读取 AppLocalizations，测试宿主需与真实应用保持相同委托。
+            locale: const Locale('zh'),
             theme: AppTheme.lightTheme,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: const SearchListPage(),
           ),
         ),

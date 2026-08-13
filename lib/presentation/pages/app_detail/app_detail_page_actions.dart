@@ -245,7 +245,7 @@ class AppDetailPageActions {
         'https://store.linyaps.org.cn/apps/${app.appId}?arch=$arch';
 
     try {
-      await Share.shareUri(Uri.parse(shareUrl));
+      await SharePlus.instance.share(ShareParams(uri: Uri.parse(shareUrl)));
       return;
     } catch (_) {
       // Linux 系统分享不可用时继续使用剪贴板回退。

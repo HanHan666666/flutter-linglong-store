@@ -2,7 +2,9 @@ FROM debian:buster
 
 # 不传 DEBIAN_SNAPSHOT_TIMESTAMP，configure-debian10-apt.sh 会直接使用 archive.debian.org（速度更快）
 ARG DEBIAN_SNAPSHOT_TIMESTAMP=
-ARG FLUTTER_VERSION=3.41.4
+# 依赖升级后需要 Dart >=3.12（riverpod_generator 4.0.8 / freezed 4.0.0-dev.3），
+# 对应 Flutter >=3.44；这里与主开发环境保持一致使用 3.47.0（Dart 3.13.0）
+ARG FLUTTER_VERSION=3.47.0
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV FLUTTER_HOME=/opt/flutter

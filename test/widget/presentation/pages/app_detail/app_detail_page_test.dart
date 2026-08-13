@@ -1241,10 +1241,10 @@ class _RecordingUninstallService extends AppUninstallService {
     : super(
         readRunningApps: () => const <RunningApp>[],
         killRunningApp: (_) async => true,
-        uninstallApp: (_, __) async {},
-        removeInstalledApp: (_, __) {},
+        uninstallApp: (_, _) async {},
+        removeInstalledApp: (_, _) {},
         syncAfterUninstall: () async {},
-        reportUninstall: (_, __, {String? appName}) async {},
+        reportUninstall: (_, _, {String? appName}) async {},
       );
 
   final List<InstalledApp> executedApps = <InstalledApp>[];

@@ -937,7 +937,7 @@ class _AnimatedSearchHint extends StatelessWidget {
               alignment: AlignmentDirectional.centerStart,
               children: <Widget>[
                 ...previousChildren,
-                if (currentChild != null) currentChild,
+                ?currentChild,
               ],
             );
           },

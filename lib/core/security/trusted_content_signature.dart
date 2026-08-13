@@ -86,7 +86,7 @@ class Ed25519TrustedContentSignatureVerifier
         purpose: purpose,
         content: content,
       );
-      return _algorithm.verify(
+      return await _algorithm.verify(
         utf8.encode(envelope),
         signature: Signature(signatureBytes, publicKey: _publicKey),
       );

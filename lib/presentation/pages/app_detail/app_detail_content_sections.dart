@@ -98,7 +98,7 @@ class AppDetailScreenshotsSection extends StatelessWidget {
                           cacheHeight:
                               (180 * MediaQuery.devicePixelRatioOf(context))
                                   .toInt(),
-                          errorBuilder: (_, __, ___) => Container(
+                          errorBuilder: (_, _, _) => Container(
                             width: 280,
                             height: 180,
                             color: Colors.grey[300],

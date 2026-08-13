@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'api_dto.dart';
@@ -9,6 +9,7 @@ part of 'api_dto.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -66,7 +67,7 @@ class _$PageParamsCopyWithImpl<$Res>
 /// Create a copy of PageParams
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? pageNo = null,Object? pageSize = null,Object? repoName = null,Object? arch = freezed,Object? lan = freezed,Object? sort = freezed,Object? order = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(PageParams(
 pageNo: null == pageNo ? _self.pageNo : pageNo // ignore: cast_nullable_to_non_nullable
 as int,pageSize: null == pageSize ? _self.pageSize : pageSize // ignore: cast_nullable_to_non_nullable
 as int,repoName: null == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
@@ -341,7 +342,7 @@ class _$AppDetailsBOCopyWithImpl<$Res>
 /// Create a copy of AppDetailsBO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? name = freezed,Object? version = freezed,Object? channel = freezed,Object? module = freezed,Object? repoName = freezed,Object? arch = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppDetailsBO(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,version: freezed == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
@@ -616,7 +617,7 @@ class _$CategoryDTOCopyWithImpl<$Res>
 /// Create a copy of CategoryDTO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? categoryId = null,Object? categoryName = null,Object? categoryIcon = freezed,Object? appCount = freezed,Object? sort = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(CategoryDTO(
 categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
 as String,categoryName: null == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
 as String,categoryIcon: freezed == categoryIcon ? _self.categoryIcon : categoryIcon // ignore: cast_nullable_to_non_nullable
@@ -885,7 +886,7 @@ class _$CategoryListResponseCopyWithImpl<$Res>
 /// Create a copy of CategoryListResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = null,}) {
-  return _then(_self.copyWith(
+  return _then(CategoryListResponse(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -1024,7 +1025,7 @@ return $default(_that.code,_that.message,_that.data);case _:
 @JsonSerializable()
 
 class _CategoryListResponse implements CategoryListResponse {
-  const _CategoryListResponse({required this.code, this.message, required final  List<CategoryDTO> data}): _data = data;
+  const _CategoryListResponse({required this.code, this.message, required  List<CategoryDTO> data}): _data = data;
   factory _CategoryListResponse.fromJson(Map<String, dynamic> json) => _$CategoryListResponseFromJson(json);
 
 @override final  int code;
@@ -1103,8 +1104,7 @@ as List<CategoryDTO>,
 /// @nodoc
 mixin _$AppDetailSearchBO {
 
- String get appId; String get arch;// /app/getAppDetail 会按语言精确过滤截图和标签，必须显式传入 lang。
- String? get lang; String? get module;@JsonKey(name: 'repoName') String? get repoName;
+ String get appId; String get arch; String? get lang; String? get module;@JsonKey(name: 'repoName') String? get repoName;
 /// Create a copy of AppDetailSearchBO
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1155,7 +1155,7 @@ class _$AppDetailSearchBOCopyWithImpl<$Res>
 /// Create a copy of AppDetailSearchBO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? arch = null,Object? lang = freezed,Object? module = freezed,Object? repoName = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppDetailSearchBO(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,arch: null == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
 as String,lang: freezed == lang ? _self.lang : lang // ignore: cast_nullable_to_non_nullable
@@ -1301,7 +1301,6 @@ class _AppDetailSearchBO implements AppDetailSearchBO {
 
 @override final  String appId;
 @override final  String arch;
-// /app/getAppDetail 会按语言精确过滤截图和标签，必须显式传入 lang。
 @override final  String? lang;
 @override final  String? module;
 @override@JsonKey(name: 'repoName') final  String? repoName;
@@ -1425,7 +1424,7 @@ class _$AppCommentSearchBOCopyWithImpl<$Res>
 /// Create a copy of AppCommentSearchBO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appId = null,}) {
-  return _then(_self.copyWith(
+  return _then(AppCommentSearchBO(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,
   ));
@@ -1682,7 +1681,7 @@ class _$AppCommentSaveBOCopyWithImpl<$Res>
 /// Create a copy of AppCommentSaveBO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? remark = null,Object? version = freezed,Object? visit = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppCommentSaveBO(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,remark: null == remark ? _self.remark : remark // ignore: cast_nullable_to_non_nullable
 as String,version: freezed == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
@@ -1948,7 +1947,7 @@ class _$AppCheckVersionBOCopyWithImpl<$Res>
 /// Create a copy of AppCheckVersionBO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? arch = null,Object? version = null,}) {
-  return _then(_self.copyWith(
+  return _then(AppCheckVersionBO(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,arch: null == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
 as String,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
@@ -2211,7 +2210,7 @@ class _$AppScreenshotDTOCopyWithImpl<$Res>
 /// Create a copy of AppScreenshotDTO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? screenshotUrl = null,Object? language = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppScreenshotDTO(
 screenshotUrl: null == screenshotUrl ? _self.screenshotUrl : screenshotUrl // ignore: cast_nullable_to_non_nullable
 as String,language: freezed == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
 as String?,
@@ -2420,8 +2419,7 @@ as String?,
 /// @nodoc
 mixin _$AppTagDTO {
 
-@JsonKey(name: 'name') String get name;// 后端契约保证详情接口每个标签都带 lan，改为 required 以保留标签语言身份
-@JsonKey(name: 'lan') String get language;
+@JsonKey(name: 'name') String get name;@JsonKey(name: 'lan') String get language;
 /// Create a copy of AppTagDTO
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2472,7 +2470,7 @@ class _$AppTagDTOCopyWithImpl<$Res>
 /// Create a copy of AppTagDTO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? language = null,}) {
-  return _then(_self.copyWith(
+  return _then(AppTagDTO(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,language: null == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
 as String,
@@ -2614,7 +2612,6 @@ class _AppTagDTO implements AppTagDTO {
   factory _AppTagDTO.fromJson(Map<String, dynamic> json) => _$AppTagDTOFromJson(json);
 
 @override@JsonKey(name: 'name') final  String name;
-// 后端契约保证详情接口每个标签都带 lan，改为 required 以保留标签语言身份
 @override@JsonKey(name: 'lan') final  String language;
 
 /// Create a copy of AppTagDTO
@@ -2733,7 +2730,7 @@ class _$AppCommentDTOCopyWithImpl<$Res>
 /// Create a copy of AppCommentDTO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? appId = null,Object? version = freezed,Object? remark = null,Object? visit = freezed,Object? clientIp = freezed,Object? agreeNum = null,Object? disagreeNum = null,Object? createTime = freezed,Object? updateTime = freezed,Object? isDelete = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppCommentDTO(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,version: freezed == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
@@ -3020,7 +3017,7 @@ class _$AppDetailDTOCopyWithImpl<$Res>
 /// Create a copy of AppDetailDTO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? appName = null,Object? appVersion = null,Object? appIcon = freezed,Object? appDesc = freezed,Object? appKind = freezed,Object? appRuntime = freezed,Object? appModule = freezed,Object? appBase = freezed,Object? arch = freezed,Object? channel = freezed,Object? developerName = freezed,Object? categoryName = freezed,Object? categoryId = freezed,Object? downloadTimes = freezed,Object? packageSize = freezed,Object? screenshotList = freezed,Object? tagList = freezed,Object? detailDescription = freezed,Object? repoName = freezed,Object? repoUrl = freezed,Object? homePage = freezed,Object? license = freezed,Object? releaseNote = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppDetailDTO(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,appName: null == appName ? _self.appName : appName // ignore: cast_nullable_to_non_nullable
 as String,appVersion: null == appVersion ? _self.appVersion : appVersion // ignore: cast_nullable_to_non_nullable
@@ -3180,7 +3177,7 @@ return $default(_that.appId,_that.appName,_that.appVersion,_that.appIcon,_that.a
 @JsonSerializable()
 
 class _AppDetailDTO implements AppDetailDTO {
-  const _AppDetailDTO({@JsonKey(name: 'appId') required this.appId, @JsonKey(name: 'zhName') required this.appName, @JsonKey(name: 'version') required this.appVersion, @JsonKey(name: 'icon') this.appIcon, @JsonKey(name: 'description') this.appDesc, @JsonKey(name: 'kind') this.appKind, @JsonKey(name: 'runtime') this.appRuntime, @JsonKey(name: 'module') this.appModule, @JsonKey(name: 'base') this.appBase, this.arch, this.channel, @JsonKey(name: 'devName') this.developerName, @JsonKey(name: 'categoryName') this.categoryName, @JsonKey(name: 'categoryId') this.categoryId, @JsonKey(name: 'installCount') this.downloadTimes, @JsonKey(name: 'size') this.packageSize, @JsonKey(name: 'appScreenshotList') final  List<AppScreenshotDTO>? screenshotList, @JsonKey(name: 'appTagList') final  List<AppTagDTO>? tagList, @JsonKey(name: 'descInfo') this.detailDescription, @JsonKey(name: 'repoName') this.repoName, @JsonKey(name: 'repoUrl') this.repoUrl, @JsonKey(name: 'homePage') this.homePage, @JsonKey(name: 'license') this.license, @JsonKey(name: 'releaseNote') this.releaseNote}): _screenshotList = screenshotList,_tagList = tagList;
+  const _AppDetailDTO({@JsonKey(name: 'appId') required this.appId, @JsonKey(name: 'zhName') required this.appName, @JsonKey(name: 'version') required this.appVersion, @JsonKey(name: 'icon') this.appIcon, @JsonKey(name: 'description') this.appDesc, @JsonKey(name: 'kind') this.appKind, @JsonKey(name: 'runtime') this.appRuntime, @JsonKey(name: 'module') this.appModule, @JsonKey(name: 'base') this.appBase, this.arch, this.channel, @JsonKey(name: 'devName') this.developerName, @JsonKey(name: 'categoryName') this.categoryName, @JsonKey(name: 'categoryId') this.categoryId, @JsonKey(name: 'installCount') this.downloadTimes, @JsonKey(name: 'size') this.packageSize, @JsonKey(name: 'appScreenshotList')  List<AppScreenshotDTO>? screenshotList, @JsonKey(name: 'appTagList')  List<AppTagDTO>? tagList, @JsonKey(name: 'descInfo') this.detailDescription, @JsonKey(name: 'repoName') this.repoName, @JsonKey(name: 'repoUrl') this.repoUrl, @JsonKey(name: 'homePage') this.homePage, @JsonKey(name: 'license') this.license, @JsonKey(name: 'releaseNote') this.releaseNote}): _screenshotList = screenshotList,_tagList = tagList;
   factory _AppDetailDTO.fromJson(Map<String, dynamic> json) => _$AppDetailDTOFromJson(json);
 
 @override@JsonKey(name: 'appId') final  String appId;
@@ -3364,7 +3361,7 @@ class _$AppDetailResponseCopyWithImpl<$Res>
 /// Create a copy of AppDetailResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppDetailResponse(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -3503,7 +3500,7 @@ return $default(_that.code,_that.message,_that.data);case _:
 @JsonSerializable()
 
 class _AppDetailResponse implements AppDetailResponse {
-  const _AppDetailResponse({required this.code, this.message, final  Map<String, dynamic>? data}): _data = data;
+  const _AppDetailResponse({required this.code, this.message,  Map<String, dynamic>? data}): _data = data;
   factory _AppDetailResponse.fromJson(Map<String, dynamic> json) => _$AppDetailResponseFromJson(json);
 
 @override final  int code;
@@ -3639,7 +3636,7 @@ class _$AppDetailMapResponseCopyWithImpl<$Res>
 /// Create a copy of AppDetailMapResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppDetailMapResponse(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -3778,7 +3775,7 @@ return $default(_that.code,_that.message,_that.data);case _:
 @JsonSerializable()
 
 class _AppDetailMapResponse implements AppDetailMapResponse {
-  const _AppDetailMapResponse({required this.code, this.message, final  Map<String, List<AppDetailDTO>>? data}): _data = data;
+  const _AppDetailMapResponse({required this.code, this.message,  Map<String, List<AppDetailDTO>>? data}): _data = data;
   factory _AppDetailMapResponse.fromJson(Map<String, dynamic> json) => _$AppDetailMapResponseFromJson(json);
 
 @override final  int code;
@@ -3910,7 +3907,7 @@ class _$AppDetailListResponseCopyWithImpl<$Res>
 /// Create a copy of AppDetailListResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = null,}) {
-  return _then(_self.copyWith(
+  return _then(AppDetailListResponse(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -4049,7 +4046,7 @@ return $default(_that.code,_that.message,_that.data);case _:
 @JsonSerializable()
 
 class _AppDetailListResponse implements AppDetailListResponse {
-  const _AppDetailListResponse({required this.code, this.message, final  List<AppDetailDTO> data = const []}): _data = data;
+  const _AppDetailListResponse({required this.code, this.message,  List<AppDetailDTO> data = const []}): _data = data;
   factory _AppDetailListResponse.fromJson(Map<String, dynamic> json) => _$AppDetailListResponseFromJson(json);
 
 @override final  int code;
@@ -4179,7 +4176,7 @@ class _$AppCommentListResponseCopyWithImpl<$Res>
 /// Create a copy of AppCommentListResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = null,}) {
-  return _then(_self.copyWith(
+  return _then(AppCommentListResponse(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -4318,7 +4315,7 @@ return $default(_that.code,_that.message,_that.data);case _:
 @JsonSerializable()
 
 class _AppCommentListResponse implements AppCommentListResponse {
-  const _AppCommentListResponse({required this.code, this.message, final  List<AppCommentDTO> data = const []}): _data = data;
+  const _AppCommentListResponse({required this.code, this.message,  List<AppCommentDTO> data = const []}): _data = data;
   factory _AppCommentListResponse.fromJson(Map<String, dynamic> json) => _$AppCommentListResponseFromJson(json);
 
 @override final  int code;
@@ -4448,7 +4445,7 @@ class _$BooleanResponseCopyWithImpl<$Res>
 /// Create a copy of BooleanResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(BooleanResponse(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -4711,7 +4708,7 @@ class _$StringResponseCopyWithImpl<$Res>
 /// Create a copy of StringResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(StringResponse(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -4923,8 +4920,7 @@ as String?,
 /// @nodoc
 mixin _$AppListItemDTO {
 
-@JsonKey(name: 'appId') String get appId;@JsonKey(readValue: _readAppName) String get appName;@JsonKey(readValue: _readAppVersion) String? get appVersion;@JsonKey(readValue: _readAppIcon) String? get appIcon;@JsonKey(readValue: _readAppDescription) String? get appDesc;@JsonKey(readValue: _readAppKind) String? get appKind;@JsonKey(readValue: _readDeveloperName) String? get developerName;@JsonKey(name: 'categoryName') String? get categoryName;@JsonKey(readValue: _readDownloadCount) int? get downloadTimes;@JsonKey(readValue: _readPackageSize) String? get packageSize; String? get arch; String? get module;@JsonKey(name: 'repoName') String? get repoName;@JsonKey(name: 'createTime') String? get createTime;// 上架时间
-@JsonKey(name: 'last30DownloadCount') int? get last30DownloadCount;
+@JsonKey(name: 'appId') String get appId;@JsonKey(readValue: _readAppName) String get appName;@JsonKey(readValue: _readAppVersion) String? get appVersion;@JsonKey(readValue: _readAppIcon) String? get appIcon;@JsonKey(readValue: _readAppDescription) String? get appDesc;@JsonKey(readValue: _readAppKind) String? get appKind;@JsonKey(readValue: _readDeveloperName) String? get developerName;@JsonKey(name: 'categoryName') String? get categoryName;@JsonKey(readValue: _readDownloadCount) int? get downloadTimes;@JsonKey(readValue: _readPackageSize) String? get packageSize; String? get arch; String? get module;@JsonKey(name: 'repoName') String? get repoName;@JsonKey(name: 'createTime') String? get createTime;@JsonKey(name: 'last30DownloadCount') int? get last30DownloadCount;
 /// Create a copy of AppListItemDTO
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4975,7 +4971,7 @@ class _$AppListItemDTOCopyWithImpl<$Res>
 /// Create a copy of AppListItemDTO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? appName = null,Object? appVersion = freezed,Object? appIcon = freezed,Object? appDesc = freezed,Object? appKind = freezed,Object? developerName = freezed,Object? categoryName = freezed,Object? downloadTimes = freezed,Object? packageSize = freezed,Object? arch = freezed,Object? module = freezed,Object? repoName = freezed,Object? createTime = freezed,Object? last30DownloadCount = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppListItemDTO(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,appName: null == appName ? _self.appName : appName // ignore: cast_nullable_to_non_nullable
 as String,appVersion: freezed == appVersion ? _self.appVersion : appVersion // ignore: cast_nullable_to_non_nullable
@@ -5143,7 +5139,6 @@ class _AppListItemDTO implements AppListItemDTO {
 @override final  String? module;
 @override@JsonKey(name: 'repoName') final  String? repoName;
 @override@JsonKey(name: 'createTime') final  String? createTime;
-// 上架时间
 @override@JsonKey(name: 'last30DownloadCount') final  int? last30DownloadCount;
 
 /// Create a copy of AppListItemDTO
@@ -5275,7 +5270,7 @@ class _$AppListPagedDataCopyWithImpl<$Res>
 /// Create a copy of AppListPagedData
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? records = null,Object? total = null,Object? size = null,Object? current = null,Object? pages = null,}) {
-  return _then(_self.copyWith(
+  return _then(AppListPagedData(
 records: null == records ? _self.records : records // ignore: cast_nullable_to_non_nullable
 as List<AppListItemDTO>,total: null == total ? _self.total : total // ignore: cast_nullable_to_non_nullable
 as int,size: null == size ? _self.size : size // ignore: cast_nullable_to_non_nullable
@@ -5416,7 +5411,7 @@ return $default(_that.records,_that.total,_that.size,_that.current,_that.pages);
 @JsonSerializable()
 
 class _AppListPagedData implements AppListPagedData {
-  const _AppListPagedData({required final  List<AppListItemDTO> records, required this.total, @JsonKey(name: 'size') required this.size, @JsonKey(name: 'current') required this.current, required this.pages}): _records = records;
+  const _AppListPagedData({required  List<AppListItemDTO> records, required this.total, @JsonKey(name: 'size') required this.size, @JsonKey(name: 'current') required this.current, required this.pages}): _records = records;
   factory _AppListPagedData.fromJson(Map<String, dynamic> json) => _$AppListPagedDataFromJson(json);
 
  final  List<AppListItemDTO> _records;
@@ -5550,7 +5545,7 @@ class _$AppListResponseCopyWithImpl<$Res>
 /// Create a copy of AppListResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppListResponse(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -5837,7 +5832,7 @@ class _$AppListArrayResponseCopyWithImpl<$Res>
 /// Create a copy of AppListArrayResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = null,}) {
-  return _then(_self.copyWith(
+  return _then(AppListArrayResponse(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -5976,7 +5971,7 @@ return $default(_that.code,_that.message,_that.data);case _:
 @JsonSerializable()
 
 class _AppListArrayResponse implements AppListArrayResponse {
-  const _AppListArrayResponse({required this.code, this.message, final  List<AppListItemDTO> data = const []}): _data = data;
+  const _AppListArrayResponse({required this.code, this.message,  List<AppListItemDTO> data = const []}): _data = data;
   factory _AppListArrayResponse.fromJson(Map<String, dynamic> json) => _$AppListArrayResponseFromJson(json);
 
 @override final  int code;
@@ -6112,7 +6107,7 @@ class _$SearchAppListRequestCopyWithImpl<$Res>
 /// Create a copy of SearchAppListRequest
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? keyword = null,Object? categoryId = freezed,Object? tagName = freezed,Object? tagLan = freezed,Object? pageNo = null,Object? pageSize = null,Object? repoName = null,Object? arch = freezed,Object? lan = freezed,Object? sort = freezed,Object? order = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(SearchAppListRequest(
 keyword: null == keyword ? _self.keyword : keyword // ignore: cast_nullable_to_non_nullable
 as String,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
 as String?,tagName: freezed == tagName ? _self.tagName : tagName // ignore: cast_nullable_to_non_nullable
@@ -6405,7 +6400,7 @@ class _$AppWelcomeSearchRequestCopyWithImpl<$Res>
 /// Create a copy of AppWelcomeSearchRequest
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appId = freezed,Object? name = freezed,Object? repoName = null,Object? arch = freezed,Object? lan = freezed,Object? categoryId = freezed,Object? pageNo = freezed,Object? pageSize = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppWelcomeSearchRequest(
 appId: freezed == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String?,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,repoName: null == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
@@ -6683,7 +6678,7 @@ class _$CarouselDTOCopyWithImpl<$Res>
 /// Create a copy of CarouselDTO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? carouselId = null,Object? carouselTitle = null,Object? carouselUrl = freezed,Object? carouselImage = null,Object? carouselDesc = freezed,Object? sort = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(CarouselDTO(
 carouselId: null == carouselId ? _self.carouselId : carouselId // ignore: cast_nullable_to_non_nullable
 as String,carouselTitle: null == carouselTitle ? _self.carouselTitle : carouselTitle // ignore: cast_nullable_to_non_nullable
 as String,carouselUrl: freezed == carouselUrl ? _self.carouselUrl : carouselUrl // ignore: cast_nullable_to_non_nullable
@@ -6955,7 +6950,7 @@ class _$CarouselListResponseCopyWithImpl<$Res>
 /// Create a copy of CarouselListResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = null,}) {
-  return _then(_self.copyWith(
+  return _then(CarouselListResponse(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -7094,7 +7089,7 @@ return $default(_that.code,_that.message,_that.data);case _:
 @JsonSerializable()
 
 class _CarouselListResponse implements CarouselListResponse {
-  const _CarouselListResponse({required this.code, this.message, required final  List<CarouselDTO> data}): _data = data;
+  const _CarouselListResponse({required this.code, this.message, required  List<CarouselDTO> data}): _data = data;
   factory _CarouselListResponse.fromJson(Map<String, dynamic> json) => _$CarouselListResponseFromJson(json);
 
 @override final  int code;
@@ -7224,7 +7219,7 @@ class _$AppVersionListRequestCopyWithImpl<$Res>
 /// Create a copy of AppVersionListRequest
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? repoName = null,Object? arch = freezed,Object? pageNo = null,Object? pageSize = null,Object? lan = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppVersionListRequest(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,repoName: null == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
 as String,arch: freezed == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
@@ -7496,7 +7491,7 @@ class _$AppVersionDTOCopyWithImpl<$Res>
 /// Create a copy of AppVersionDTO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? versionId = freezed,Object? versionNo = null,Object? versionName = freezed,Object? description = freezed,Object? releaseTime = freezed,Object? packageSize = freezed,Object? appId = freezed,Object? icon = freezed,Object? kind = freezed,Object? module = freezed,Object? channel = freezed,Object? arch = freezed,Object? repoName = freezed,Object? installCount = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppVersionDTO(
 versionId: freezed == versionId ? _self.versionId : versionId // ignore: cast_nullable_to_non_nullable
 as String?,versionNo: null == versionNo ? _self.versionNo : versionNo // ignore: cast_nullable_to_non_nullable
 as String,versionName: freezed == versionName ? _self.versionName : versionName // ignore: cast_nullable_to_non_nullable
@@ -7792,7 +7787,7 @@ class _$VersionListResponseCopyWithImpl<$Res>
 /// Create a copy of VersionListResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = null,}) {
-  return _then(_self.copyWith(
+  return _then(VersionListResponse(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -7931,7 +7926,7 @@ return $default(_that.code,_that.message,_that.data);case _:
 @JsonSerializable()
 
 class _VersionListResponse implements VersionListResponse {
-  const _VersionListResponse({required this.code, this.message, final  List<AppVersionDTO> data = const []}): _data = data;
+  const _VersionListResponse({required this.code, this.message,  List<AppVersionDTO> data = const []}): _data = data;
   factory _VersionListResponse.fromJson(Map<String, dynamic> json) => _$VersionListResponseFromJson(json);
 
 @override final  int code;
@@ -8061,7 +8056,7 @@ class _$CheckUpdateResponseCopyWithImpl<$Res>
 /// Create a copy of CheckUpdateResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(CheckUpdateResponse(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -8348,7 +8343,7 @@ class _$BatchCheckUpdateResponseCopyWithImpl<$Res>
 /// Create a copy of BatchCheckUpdateResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = null,}) {
-  return _then(_self.copyWith(
+  return _then(BatchCheckUpdateResponse(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -8487,7 +8482,7 @@ return $default(_that.code,_that.message,_that.data);case _:
 @JsonSerializable()
 
 class _BatchCheckUpdateResponse implements BatchCheckUpdateResponse {
-  const _BatchCheckUpdateResponse({required this.code, this.message, final  List<AppUpdateInfoDTO> data = const []}): _data = data;
+  const _BatchCheckUpdateResponse({required this.code, this.message,  List<AppUpdateInfoDTO> data = const []}): _data = data;
   factory _BatchCheckUpdateResponse.fromJson(Map<String, dynamic> json) => _$BatchCheckUpdateResponseFromJson(json);
 
 @override final  int code;
@@ -8617,7 +8612,7 @@ class _$AppUpdateInfoDTOCopyWithImpl<$Res>
 /// Create a copy of AppUpdateInfoDTO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? appName = null,Object? latestVersion = null,Object? currentVersion = freezed,Object? releaseNote = freezed,Object? releaseTime = freezed,Object? packageSize = freezed,Object? needUpdate = null,Object? forceUpdate = null,}) {
-  return _then(_self.copyWith(
+  return _then(AppUpdateInfoDTO(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,appName: null == appName ? _self.appName : appName // ignore: cast_nullable_to_non_nullable
 as String,latestVersion: null == latestVersion ? _self.latestVersion : latestVersion // ignore: cast_nullable_to_non_nullable
@@ -8898,7 +8893,7 @@ class _$SidebarMenuRuleDTOCopyWithImpl<$Res>
 /// Create a copy of SidebarMenuRuleDTO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? sortBy = freezed,Object? sortOrder = freezed,Object? filterMinScore = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(SidebarMenuRuleDTO(
 sortBy: freezed == sortBy ? _self.sortBy : sortBy // ignore: cast_nullable_to_non_nullable
 as String?,sortOrder: freezed == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
 as String?,filterMinScore: freezed == filterMinScore ? _self.filterMinScore : filterMinScore // ignore: cast_nullable_to_non_nullable
@@ -9161,7 +9156,7 @@ class _$SidebarMenuDTOCopyWithImpl<$Res>
 /// Create a copy of SidebarMenuDTO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? menuCode = null,Object? menuName = null,Object? menuIcon = freezed,Object? activeMenuIcon = freezed,Object? sortOrder = freezed,Object? enabled = null,Object? categoryIds = null,Object? rule = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(SidebarMenuDTO(
 menuCode: null == menuCode ? _self.menuCode : menuCode // ignore: cast_nullable_to_non_nullable
 as String,menuName: null == menuName ? _self.menuName : menuName // ignore: cast_nullable_to_non_nullable
 as String,menuIcon: freezed == menuIcon ? _self.menuIcon : menuIcon // ignore: cast_nullable_to_non_nullable
@@ -9317,7 +9312,7 @@ return $default(_that.menuCode,_that.menuName,_that.menuIcon,_that.activeMenuIco
 @JsonSerializable()
 
 class _SidebarMenuDTO implements SidebarMenuDTO {
-  const _SidebarMenuDTO({@JsonKey(name: 'code') required this.menuCode, @JsonKey(name: 'name') required this.menuName, @JsonKey(name: 'icon') this.menuIcon, @JsonKey(name: 'activeIcon') this.activeMenuIcon, @JsonKey(name: 'sortNo') this.sortOrder, @JsonKey(name: 'enabled') this.enabled = true, @JsonKey(name: 'categoryIds') final  List<String> categoryIds = const [], @JsonKey(name: 'rule') this.rule}): _categoryIds = categoryIds;
+  const _SidebarMenuDTO({@JsonKey(name: 'code') required this.menuCode, @JsonKey(name: 'name') required this.menuName, @JsonKey(name: 'icon') this.menuIcon, @JsonKey(name: 'activeIcon') this.activeMenuIcon, @JsonKey(name: 'sortNo') this.sortOrder, @JsonKey(name: 'enabled') this.enabled = true, @JsonKey(name: 'categoryIds')  List<String> categoryIds = const [], @JsonKey(name: 'rule') this.rule}): _categoryIds = categoryIds;
   factory _SidebarMenuDTO.fromJson(Map<String, dynamic> json) => _$SidebarMenuDTOFromJson(json);
 
 @override@JsonKey(name: 'code') final  String menuCode;
@@ -9469,7 +9464,7 @@ class _$SidebarConfigResponseCopyWithImpl<$Res>
 /// Create a copy of SidebarConfigResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = freezed,Object? data = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(SidebarConfigResponse(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as int,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -9756,7 +9751,7 @@ class _$SidebarConfigDTOCopyWithImpl<$Res>
 /// Create a copy of SidebarConfigDTO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? menus = null,}) {
-  return _then(_self.copyWith(
+  return _then(SidebarConfigDTO(
 menus: null == menus ? _self.menus : menus // ignore: cast_nullable_to_non_nullable
 as List<SidebarMenuDTO>,
   ));
@@ -9893,7 +9888,7 @@ return $default(_that.menus);case _:
 @JsonSerializable()
 
 class _SidebarConfigDTO implements SidebarConfigDTO {
-  const _SidebarConfigDTO({@JsonKey(name: 'menus') final  List<SidebarMenuDTO> menus = const []}): _menus = menus;
+  const _SidebarConfigDTO({@JsonKey(name: 'menus')  List<SidebarMenuDTO> menus = const []}): _menus = menus;
   factory _SidebarConfigDTO.fromJson(Map<String, dynamic> json) => _$SidebarConfigDTOFromJson(json);
 
  final  List<SidebarMenuDTO> _menus;
@@ -10019,7 +10014,7 @@ class _$SidebarAppsRequestCopyWithImpl<$Res>
 /// Create a copy of SidebarAppsRequest
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? menuCode = null,Object? pageNo = null,Object? pageSize = null,Object? repoName = null,Object? arch = freezed,Object? lan = freezed,Object? sortType = freezed,Object? filter = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(SidebarAppsRequest(
 menuCode: null == menuCode ? _self.menuCode : menuCode // ignore: cast_nullable_to_non_nullable
 as String,pageNo: null == pageNo ? _self.pageNo : pageNo // ignore: cast_nullable_to_non_nullable
 as int,pageSize: null == pageSize ? _self.pageSize : pageSize // ignore: cast_nullable_to_non_nullable
@@ -10297,7 +10292,7 @@ class _$AppsByCategoryRequestCopyWithImpl<$Res>
 /// Create a copy of AppsByCategoryRequest
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? categoryIds = null,Object? pageNo = null,Object? pageSize = null,Object? repoName = null,Object? arch = freezed,Object? lan = freezed,Object? sort = freezed,Object? order = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppsByCategoryRequest(
 categoryIds: null == categoryIds ? _self.categoryIds : categoryIds // ignore: cast_nullable_to_non_nullable
 as List<String>,pageNo: null == pageNo ? _self.pageNo : pageNo // ignore: cast_nullable_to_non_nullable
 as int,pageSize: null == pageSize ? _self.pageSize : pageSize // ignore: cast_nullable_to_non_nullable
@@ -10441,7 +10436,7 @@ return $default(_that.categoryIds,_that.pageNo,_that.pageSize,_that.repoName,_th
 @JsonSerializable()
 
 class _AppsByCategoryRequest implements AppsByCategoryRequest {
-  const _AppsByCategoryRequest({@JsonKey(name: 'categoryIds') required final  List<String> categoryIds, @JsonKey(name: 'pageNo') this.pageNo = 1, @JsonKey(name: 'pageSize') this.pageSize = 20, @JsonKey(name: 'repoName') this.repoName = AppConfig.defaultStoreRepoName, this.arch, this.lan, this.sort, this.order}): _categoryIds = categoryIds;
+  const _AppsByCategoryRequest({@JsonKey(name: 'categoryIds') required  List<String> categoryIds, @JsonKey(name: 'pageNo') this.pageNo = 1, @JsonKey(name: 'pageSize') this.pageSize = 20, @JsonKey(name: 'repoName') this.repoName = AppConfig.defaultStoreRepoName, this.arch, this.lan, this.sort, this.order}): _categoryIds = categoryIds;
   factory _AppsByCategoryRequest.fromJson(Map<String, dynamic> json) => _$AppsByCategoryRequestFromJson(json);
 
  final  List<String> _categoryIds;
@@ -10581,7 +10576,7 @@ class _$SaveVisitRecordRequestCopyWithImpl<$Res>
 /// Create a copy of SaveVisitRecordRequest
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? visitorId = freezed,Object? clientIp = freezed,Object? arch = freezed,Object? llVersion = freezed,Object? llBinVersion = freezed,Object? detailMsg = freezed,Object? osVersion = freezed,Object? repoName = freezed,Object? appVersion = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(SaveVisitRecordRequest(
 visitorId: freezed == visitorId ? _self.visitorId : visitorId // ignore: cast_nullable_to_non_nullable
 as String?,clientIp: freezed == clientIp ? _self.clientIp : clientIp // ignore: cast_nullable_to_non_nullable
 as String?,arch: freezed == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
@@ -10862,7 +10857,7 @@ class _$InstalledRecordItemDTOCopyWithImpl<$Res>
 /// Create a copy of InstalledRecordItemDTO
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appId = freezed,Object? name = freezed,Object? version = freezed,Object? arch = freezed,Object? module = freezed,Object? channel = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(InstalledRecordItemDTO(
 appId: freezed == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String?,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,version: freezed == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
@@ -11134,7 +11129,7 @@ class _$SaveInstalledRecordRequestCopyWithImpl<$Res>
 /// Create a copy of SaveInstalledRecordRequest
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? visitorId = freezed,Object? clientIp = freezed,Object? addedItems = null,Object? removedItems = null,}) {
-  return _then(_self.copyWith(
+  return _then(SaveInstalledRecordRequest(
 visitorId: freezed == visitorId ? _self.visitorId : visitorId // ignore: cast_nullable_to_non_nullable
 as String?,clientIp: freezed == clientIp ? _self.clientIp : clientIp // ignore: cast_nullable_to_non_nullable
 as String?,addedItems: null == addedItems ? _self.addedItems : addedItems // ignore: cast_nullable_to_non_nullable
@@ -11274,7 +11269,7 @@ return $default(_that.visitorId,_that.clientIp,_that.addedItems,_that.removedIte
 @JsonSerializable()
 
 class _SaveInstalledRecordRequest implements SaveInstalledRecordRequest {
-  const _SaveInstalledRecordRequest({@JsonKey(name: 'visitorId') this.visitorId, @JsonKey(name: 'clientIp') this.clientIp, @JsonKey(name: 'addedItems') final  List<InstalledRecordItemDTO> addedItems = const [], @JsonKey(name: 'removedItems') final  List<InstalledRecordItemDTO> removedItems = const []}): _addedItems = addedItems,_removedItems = removedItems;
+  const _SaveInstalledRecordRequest({@JsonKey(name: 'visitorId') this.visitorId, @JsonKey(name: 'clientIp') this.clientIp, @JsonKey(name: 'addedItems')  List<InstalledRecordItemDTO> addedItems = const [], @JsonKey(name: 'removedItems')  List<InstalledRecordItemDTO> removedItems = const []}): _addedItems = addedItems,_removedItems = removedItems;
   factory _SaveInstalledRecordRequest.fromJson(Map<String, dynamic> json) => _$SaveInstalledRecordRequestFromJson(json);
 
 @override@JsonKey(name: 'visitorId') final  String? visitorId;

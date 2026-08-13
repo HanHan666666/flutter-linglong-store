@@ -112,7 +112,7 @@ final class InstallQueueProvider
   }
 }
 
-String _$installQueueHash() => r'898c8c83e0e91594629dc2d76dc0290e5fa49ed2';
+String _$installQueueHash() => r'687d87144600e43fadd0e35142d402ef88eaec8f';
 
 /// 安装队列状态机 Provider
 ///
@@ -127,7 +127,7 @@ abstract class _$InstallQueue extends $Notifier<InstallQueueState> {
   InstallQueueState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<InstallQueueState, InstallQueueState>;
     final element =
         ref.element
@@ -137,7 +137,7 @@ abstract class _$InstallQueue extends $Notifier<InstallQueueState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

@@ -33,7 +33,7 @@ void main() {
               isLoading: isLoading,
               canSubmitComment: canSubmitComment,
               errorMessage: errorMessage,
-              onSubmit: onSubmit ?? (_, __) async => true,
+              onSubmit: onSubmit ?? (_, _) async => true,
               onRetry: onRetry ?? () {},
               onVersionChanged: onVersionChanged,
             ),
@@ -181,7 +181,7 @@ void main() {
       onVersionChanged: (value) {
         selectedVersion = value;
       },
-      onSubmit: (_, __) async => true,
+      onSubmit: (_, _) async => true,
     );
 
     await tester.tap(find.byKey(const ValueKey('app-detail-comment-launcher')));

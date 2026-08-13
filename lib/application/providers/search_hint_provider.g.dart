@@ -88,7 +88,7 @@ abstract class _$SearchHintApps extends $Notifier<List<SearchHintApp>> {
   List<SearchHintApp> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<List<SearchHintApp>, List<SearchHintApp>>;
     final element =
         ref.element
@@ -98,6 +98,6 @@ abstract class _$SearchHintApps extends $Notifier<List<SearchHintApp>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

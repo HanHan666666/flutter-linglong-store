@@ -274,7 +274,7 @@ class _MyAppsPageState extends ConsumerState<MyAppsPage>
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           itemCount: filteredApps.length,
           // 为卡片 hover 阴影和圆角留出稳定呼吸感，避免视觉上像上下粘连。
-          separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
           itemBuilder: (context, index) {
             final app = filteredApps[index];
             final cardState = cardStateIndex.resolve(appId: app.appId);

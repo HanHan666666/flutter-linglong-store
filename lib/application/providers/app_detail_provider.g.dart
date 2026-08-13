@@ -101,7 +101,7 @@ abstract class _$AppDetail extends $Notifier<AppDetailState> {
   AppDetailState build(String appId);
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AppDetailState, AppDetailState>;
     final element =
         ref.element
@@ -111,6 +111,6 @@ abstract class _$AppDetail extends $Notifier<AppDetailState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, () => build(_$args));
+    return element.handleCreate(ref, () => build(_$args));
   }
 }

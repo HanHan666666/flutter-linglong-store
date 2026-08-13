@@ -98,7 +98,7 @@ class _AppDetailCommentSectionState extends State<AppDetailCommentSection> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: widget.comments.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final comment = widget.comments[index];
               final metaItems = <String>[

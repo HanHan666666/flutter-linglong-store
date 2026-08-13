@@ -138,7 +138,7 @@ class CategoryFilterHeaderBox extends StatelessWidget {
               vertical: AppSpacing.sm,
             ),
             itemCount: categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+            separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
             itemBuilder: (context, index) {
               final category = categories[index];
               return Tooltip(

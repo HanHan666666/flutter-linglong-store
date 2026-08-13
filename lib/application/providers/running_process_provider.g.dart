@@ -80,7 +80,7 @@ abstract class _$RunningProcess extends $Notifier<RunningProcessState> {
   RunningProcessState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<RunningProcessState, RunningProcessState>;
     final element =
         ref.element
@@ -90,7 +90,7 @@ abstract class _$RunningProcess extends $Notifier<RunningProcessState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

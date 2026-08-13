@@ -138,7 +138,7 @@ class _RecommendBannerBackgroundState extends State<RecommendBannerBackground> {
                           // 限制内存解码尺寸，原图可能远大于 196px
                           memCacheWidth: 196 * 2,
                           memCacheHeight: 196 * 2,
-                          errorWidget: (_, __, ___) =>
+                          errorWidget: (_, _, _) =>
                               _FallbackBrandShape(palette: palette),
                         ),
                       ),

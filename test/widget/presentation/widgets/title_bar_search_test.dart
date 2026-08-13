@@ -464,7 +464,7 @@ Widget _buildRouterApp({
           );
         },
         routes: [
-          GoRoute(path: '/', builder: (_, __) => const SizedBox.shrink()),
+          GoRoute(path: '/', builder: (_, _) => const SizedBox.shrink()),
           GoRoute(
             path: AppRoutes.searchList,
             builder: (_, state) => Text(

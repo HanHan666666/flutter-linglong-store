@@ -197,13 +197,13 @@ class _DirectionalLayoutVisitor extends RecursiveAstVisitor<void> {
   void _verifyConstructorLikeInvocation({
     required String typeName,
     required String? constructorName,
-    required NodeList<Expression> arguments,
+    required NodeList<Argument> arguments,
     required AstNode invocationNode,
   }) {
     final invocationIgnored = _isIgnored(invocationNode);
     if (typeName == 'EdgeInsets' && constructorName == 'only') {
-      for (final argument in arguments.whereType<NamedExpression>()) {
-        final name = argument.name.label.name;
+      for (final argument in arguments.whereType<NamedArgument>()) {
+        final name = argument.name.lexeme;
         if ((name == 'left' || name == 'right') &&
             !invocationIgnored &&
             !_isIgnored(argument)) {
@@ -227,8 +227,8 @@ class _DirectionalLayoutVisitor extends RecursiveAstVisitor<void> {
     }
 
     if (typeName == 'Positioned') {
-      for (final argument in arguments.whereType<NamedExpression>()) {
-        final name = argument.name.label.name;
+      for (final argument in arguments.whereType<NamedArgument>()) {
+        final name = argument.name.lexeme;
         if ((name == 'left' || name == 'right') &&
             !invocationIgnored &&
             !_isIgnored(argument)) {
@@ -239,16 +239,16 @@ class _DirectionalLayoutVisitor extends RecursiveAstVisitor<void> {
   }
 
   @override
-  void visitNamedExpression(NamedExpression node) {
-    if (node.name.label.name == 'alignment' &&
-        _isPhysicalAlignment(node.expression) &&
+  void visitNamedArgument(NamedArgument node) {
+    if (node.name.lexeme == 'alignment' &&
+        _isPhysicalAlignment(node.argumentExpression) &&
         !_isIgnored(node)) {
       _addViolation(
         node,
         '布局对齐应使用 AlignmentDirectional（如 centerStart/centerEnd）',
       );
     }
-    super.visitNamedExpression(node);
+    super.visitNamedArgument(node);
   }
 
   @override

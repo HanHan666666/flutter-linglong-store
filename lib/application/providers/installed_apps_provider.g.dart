@@ -60,7 +60,7 @@ abstract class _$InstalledApps extends $Notifier<InstalledAppsState> {
   InstalledAppsState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<InstalledAppsState, InstalledAppsState>;
     final element =
         ref.element
@@ -70,7 +70,7 @@ abstract class _$InstalledApps extends $Notifier<InstalledAppsState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

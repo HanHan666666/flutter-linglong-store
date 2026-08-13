@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'global_provider.dart';
@@ -9,6 +9,7 @@ part of 'global_provider.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -77,7 +78,7 @@ class _$UserPreferencesCopyWithImpl<$Res>
 /// Create a copy of UserPreferences
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? autoCheckUpdate = null,Object? showBetaApps = null,Object? showSystemApps = null,Object? enableNotifications = null,Object? autoCreateShortcut = null,Object? downloadConcurrency = null,Object? autoRunAfterInstall = null,Object? compactMode = null,Object? fontScaleFactor = null,Object? fontWeightAdjustment = null,Object? customCategories = null,}) {
-  return _then(_self.copyWith(
+  return _then(UserPreferences(
 autoCheckUpdate: null == autoCheckUpdate ? _self.autoCheckUpdate : autoCheckUpdate // ignore: cast_nullable_to_non_nullable
 as bool,showBetaApps: null == showBetaApps ? _self.showBetaApps : showBetaApps // ignore: cast_nullable_to_non_nullable
 as bool,showSystemApps: null == showSystemApps ? _self.showSystemApps : showSystemApps // ignore: cast_nullable_to_non_nullable
@@ -224,7 +225,7 @@ return $default(_that.autoCheckUpdate,_that.showBetaApps,_that.showSystemApps,_t
 @JsonSerializable()
 
 class _UserPreferences implements UserPreferences {
-  const _UserPreferences({this.autoCheckUpdate = true, this.showBetaApps = false, this.showSystemApps = false, this.enableNotifications = true, this.autoCreateShortcut = true, this.downloadConcurrency = 3, this.autoRunAfterInstall = false, this.compactMode = false, this.fontScaleFactor = kDefaultUserFontScaleFactor, this.fontWeightAdjustment = AppFontWeightAdjustment.normal, final  List<String> customCategories = const []}): _customCategories = customCategories;
+  const _UserPreferences({this.autoCheckUpdate = true, this.showBetaApps = false, this.showSystemApps = false, this.enableNotifications = true, this.autoCreateShortcut = true, this.downloadConcurrency = 3, this.autoRunAfterInstall = false, this.compactMode = false, this.fontScaleFactor = kDefaultUserFontScaleFactor, this.fontWeightAdjustment = AppFontWeightAdjustment.normal,  List<String> customCategories = const []}): _customCategories = customCategories;
   factory _UserPreferences.fromJson(Map<String, dynamic> json) => _$UserPreferencesFromJson(json);
 
 /// 是否自动检查更新

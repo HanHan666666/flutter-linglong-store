@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'install_task.dart';
@@ -9,6 +9,7 @@ part of 'install_task.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -91,7 +92,7 @@ class _$InstallTaskCopyWithImpl<$Res>
 /// Create a copy of InstallTask
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? appId = null,Object? appName = null,Object? icon = freezed,Object? kind = null,Object? batchId = freezed,Object? target = freezed,Object? version = freezed,Object? force = null,Object? status = null,Object? progress = null,Object? message = freezed,Object? messageCode = freezed,Object? rawMessage = freezed,Object? commandOutput = null,Object? errorMessage = freezed,Object? errorCode = freezed,Object? errorDetail = freezed,Object? failure = freezed,Object? createdAt = null,Object? startedAt = freezed,Object? finishedAt = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(InstallTask(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,appName: null == appName ? _self.appName : appName // ignore: cast_nullable_to_non_nullable

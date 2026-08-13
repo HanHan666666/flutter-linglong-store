@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'linglong_env_check_result.dart';
@@ -9,6 +9,7 @@ part of 'linglong_env_check_result.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -100,7 +101,7 @@ class _$LinglongEnvCheckResultCopyWithImpl<$Res>
 /// Create a copy of LinglongEnvCheckResult
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? isOk = null,Object? warningMessage = freezed,Object? llCliVersion = freezed,Object? llBinVersion = freezed,Object? arch = freezed,Object? osVersion = freezed,Object? glibcVersion = freezed,Object? kernelInfo = freezed,Object? detailMsg = freezed,Object? repoName = freezed,Object? repos = null,Object? isContainer = null,Object? distribution = null,Object? repoStatus = null,Object? failedCommand = freezed,Object? failedCommandExitCode = freezed,Object? recoveryAction = freezed,Object? errorMessage = freezed,Object? errorDetail = freezed,Object? checkedAt = null,}) {
-  return _then(_self.copyWith(
+  return _then(LinglongEnvCheckResult(
 isOk: null == isOk ? _self.isOk : isOk // ignore: cast_nullable_to_non_nullable
 as bool,warningMessage: freezed == warningMessage ? _self.warningMessage : warningMessage // ignore: cast_nullable_to_non_nullable
 as String?,llCliVersion: freezed == llCliVersion ? _self.llCliVersion : llCliVersion // ignore: cast_nullable_to_non_nullable
@@ -265,7 +266,7 @@ return $default(_that.isOk,_that.warningMessage,_that.llCliVersion,_that.llBinVe
 @JsonSerializable()
 
 class _LinglongEnvCheckResult implements LinglongEnvCheckResult {
-  const _LinglongEnvCheckResult({required this.isOk, this.warningMessage, this.llCliVersion, this.llBinVersion, this.arch, this.osVersion, this.glibcVersion, this.kernelInfo, this.detailMsg, this.repoName, final  List<LinglongRepoInfo> repos = const <LinglongRepoInfo>[], this.isContainer = false, this.distribution = const LinuxDistribution(), this.repoStatus = RepoStatus.unknown, this.failedCommand, this.failedCommandExitCode, this.recoveryAction, this.errorMessage, this.errorDetail, required this.checkedAt}): _repos = repos;
+  const _LinglongEnvCheckResult({required this.isOk, this.warningMessage, this.llCliVersion, this.llBinVersion, this.arch, this.osVersion, this.glibcVersion, this.kernelInfo, this.detailMsg, this.repoName,  List<LinglongRepoInfo> repos = const <LinglongRepoInfo>[], this.isContainer = false, this.distribution = const LinuxDistribution(), this.repoStatus = RepoStatus.unknown, this.failedCommand, this.failedCommandExitCode, this.recoveryAction, this.errorMessage, this.errorDetail, required this.checkedAt}): _repos = repos;
   factory _LinglongEnvCheckResult.fromJson(Map<String, dynamic> json) => _$LinglongEnvCheckResultFromJson(json);
 
 /// 是否通过检测
@@ -473,7 +474,7 @@ class _$LinglongRepoInfoCopyWithImpl<$Res>
 /// Create a copy of LinglongRepoInfo
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? url = null,Object? alias = freezed,Object? priority = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(LinglongRepoInfo(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
 as String,alias: freezed == alias ? _self.alias : alias // ignore: cast_nullable_to_non_nullable

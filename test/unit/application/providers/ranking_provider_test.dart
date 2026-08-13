@@ -240,7 +240,7 @@ void main() {
         );
         addTearDown(container.dispose);
 
-        container.listen<RankingState>(rankingProvider, (_, __) {});
+        container.listen<RankingState>(rankingProvider, (_, _) {});
         await _flushAsyncWork();
 
         final risingCaptured = verify(mockApiService.getNewAppList(captureAny))

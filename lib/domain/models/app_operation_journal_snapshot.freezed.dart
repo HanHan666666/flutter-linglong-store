@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'app_operation_journal_snapshot.dart';
@@ -9,6 +9,7 @@ part of 'app_operation_journal_snapshot.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -72,7 +73,7 @@ class _$AppOperationJournalSnapshotCopyWithImpl<$Res>
 /// Create a copy of AppOperationJournalSnapshot
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? schemaVersion = null,Object? pendingTasks = null,Object? currentTask = freezed,Object? history = null,Object? batches = null,Object? outbox = null,}) {
-  return _then(_self.copyWith(
+  return _then(AppOperationJournalSnapshot(
 schemaVersion: null == schemaVersion ? _self.schemaVersion : schemaVersion // ignore: cast_nullable_to_non_nullable
 as int,pendingTasks: null == pendingTasks ? _self.pendingTasks : pendingTasks // ignore: cast_nullable_to_non_nullable
 as List<InstallTask>,currentTask: freezed == currentTask ? _self.currentTask : currentTask // ignore: cast_nullable_to_non_nullable
@@ -226,7 +227,7 @@ return $default(_that.schemaVersion,_that.pendingTasks,_that.currentTask,_that.h
 @JsonSerializable()
 
 class _AppOperationJournalSnapshot implements AppOperationJournalSnapshot {
-  const _AppOperationJournalSnapshot({this.schemaVersion = currentAppOperationJournalSchemaVersion, final  List<InstallTask> pendingTasks = const <InstallTask>[], this.currentTask, final  List<InstallTask> history = const <InstallTask>[], final  List<AppOperationBatch> batches = const <AppOperationBatch>[], final  List<AppOperationEffect> outbox = const <AppOperationEffect>[]}): _pendingTasks = pendingTasks,_history = history,_batches = batches,_outbox = outbox;
+  const _AppOperationJournalSnapshot({this.schemaVersion = currentAppOperationJournalSchemaVersion,  List<InstallTask> pendingTasks = const <InstallTask>[], this.currentTask,  List<InstallTask> history = const <InstallTask>[],  List<AppOperationBatch> batches = const <AppOperationBatch>[],  List<AppOperationEffect> outbox = const <AppOperationEffect>[]}): _pendingTasks = pendingTasks,_history = history,_batches = batches,_outbox = outbox;
   factory _AppOperationJournalSnapshot.fromJson(Map<String, dynamic> json) => _$AppOperationJournalSnapshotFromJson(json);
 
 /// 持久化结构版本。

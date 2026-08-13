@@ -94,7 +94,8 @@
 - 自动 `workflow_run` 路径如果找不到与 `workflow_run.head_sha` 匹配的 nightly prerelease，必须直接 skip；不要回退去补丁最新一版无关 nightly
 - `nightly-loong64.yml` 只允许构建 `bundle + deb`；当前禁止擅自扩到 `rpm` / `AppImage` / `AUR`
 - Loong64 构建统一走 `build/scripts/build-loong64-in-container.sh`，使用外部 `Flutter-Dart-loong64/flutter-loong64-releases` SDK；不要复用 Debian 10 release image 试图硬做全格式 parity
-- 默认 Loong64 Flutter SDK 当前固定为 `v2026.05.20.1`（`flutter-sdk-linux-loong64-20260520.1-9b43981fc5d6-dartae9f14de3805-enginea7a98649a2c8-fontconfig.tar.xz`）；上游 release note 明确记录了用这套产物重建 `linglong-store_3.3.6_loong64.deb` 并在 UOS 25 上实际跑通
+- 默认 Loong64 Flutter SDK 当前固定为 `v3.46.0-1.0.pre-327`（`flutter-sdk-linux-loong64-3.46.0-1.0.pre-327-69c87127a40b.tar.xz`，native UOS 25 构建，Dart `3.13.0-edge.2ea45c8966a8`，Flutter/Engine revision `69c87127a40b5c0d735611f9026c3b16a2c02369`，release 2026-06-29）
+- 2026-08-13 将默认锁定从 `v3.45.0-1.0.pre-198+debian13` 升级到 `v3.46.0-1.0.pre-327`（配合官方 Flutter 3.47.0 依赖整体升级）；**注意该锁定尚未经过真实 nightly/release workflow 验证**——本地 host 缺少 `qemu-user-static`（需 root 安装并注册 binfmt）无法模拟验证。若 3.46 在 `flutter pub get` 阶段出现类似 3.45 的 `native.git` 缺 `pkgs/data_assets` 问题，需回退到 `v3.45.0-1.0.pre-198+debian13`
 - 2026-05-24 已验证 `v3.45.0-1.0.pre-198` 会在 `flutter pub get` 阶段因 `Flutter-Dart-loong64/native.git` 缺少 `pkgs/data_assets` 失败；在没有真实 workflow 验证前，不要仅因为它是 latest 就直接升级默认 SDK tag
 - 2026-05-24 还确认 `v2026.05.20.1` 的 SDK tarball 本身不带可用 `.git` 仓库；`build/scripts/build-loong64-in-container.sh` 需要在容器里为解压后的 SDK 补一个最小本地 Git 仓库，否则 Flutter 启动脚本会在 `git rev-parse HEAD` 处报 `The Flutter directory is not a clone of the GitHub project`。注意 SDK 解压路径位于主仓库工作区内部，探测时必须校验 `git rev-parse --show-toplevel` 等于 `FLUTTER_ROOT`，不能只看 `git rev-parse HEAD`，否则会误命中父仓库 `.git`
 - 2026-05-24 还确认给 SDK 补本地 git repo 后，需要同步把 `bin/cache/flutter_tools.stamp` 重写为当前本地 revision（外加 `FLUTTER_TOOL_ARGS`）；否则 Flutter 会把内置 snapshot 判成过期并尝试下载并不存在的上游 `Linux loong64 Dart SDK zip`

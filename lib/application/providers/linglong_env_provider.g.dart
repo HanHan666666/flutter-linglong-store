@@ -60,7 +60,7 @@ abstract class _$LinglongEnv extends $Notifier<LinglongEnvState> {
   LinglongEnvState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<LinglongEnvState, LinglongEnvState>;
     final element =
         ref.element
@@ -70,7 +70,7 @@ abstract class _$LinglongEnv extends $Notifier<LinglongEnvState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

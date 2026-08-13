@@ -52,7 +52,7 @@ abstract class _$Recommend extends $Notifier<RecommendState> {
   RecommendState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<RecommendState, RecommendState>;
     final element =
         ref.element
@@ -62,6 +62,6 @@ abstract class _$Recommend extends $Notifier<RecommendState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

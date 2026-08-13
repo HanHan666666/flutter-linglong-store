@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'app_detail.dart';
@@ -9,6 +9,7 @@ part of 'app_detail.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -87,7 +88,7 @@ class _$AppDetailCopyWithImpl<$Res>
 /// Create a copy of AppDetail
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? name = null,Object? version = null,Object? icon = freezed,Object? description = freezed,Object? detailDescription = freezed,Object? kind = freezed,Object? runtime = freezed,Object? module = freezed,Object? base = freezed,Object? arch = freezed,Object? channel = freezed,Object? developerName = freezed,Object? categoryName = freezed,Object? categoryId = freezed,Object? downloadTimes = freezed,Object? packageSize = freezed,Object? screenshots = null,Object? tags = null,Object? repoName = freezed,Object? repoUrl = freezed,Object? homePage = freezed,Object? license = freezed,Object? releaseNote = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppDetail(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
@@ -247,7 +248,7 @@ return $default(_that.appId,_that.name,_that.version,_that.icon,_that.descriptio
 
 
 class _AppDetail implements AppDetail {
-  const _AppDetail({required this.appId, required this.name, required this.version, this.icon, this.description, this.detailDescription, this.kind, this.runtime, this.module, this.base, this.arch, this.channel, this.developerName, this.categoryName, this.categoryId, this.downloadTimes, this.packageSize, final  List<AppScreenshot> screenshots = const [], final  List<AppTag> tags = const [], this.repoName, this.repoUrl, this.homePage, this.license, this.releaseNote}): _screenshots = screenshots,_tags = tags;
+  const _AppDetail({required this.appId, required this.name, required this.version, this.icon, this.description, this.detailDescription, this.kind, this.runtime, this.module, this.base, this.arch, this.channel, this.developerName, this.categoryName, this.categoryId, this.downloadTimes, this.packageSize,  List<AppScreenshot> screenshots = const [],  List<AppTag> tags = const [], this.repoName, this.repoUrl, this.homePage, this.license, this.releaseNote}): _screenshots = screenshots,_tags = tags;
   
 
 /// 应用 ID
@@ -447,7 +448,7 @@ class _$AppScreenshotCopyWithImpl<$Res>
 /// Create a copy of AppScreenshot
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? url = null,Object? description = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppScreenshot(
 url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,
@@ -708,7 +709,7 @@ class _$AppTagCopyWithImpl<$Res>
 /// Create a copy of AppTag
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? language = null,}) {
-  return _then(_self.copyWith(
+  return _then(AppTag(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,language: null == language ? _self.language : language // ignore: cast_nullable_to_non_nullable
 as String,

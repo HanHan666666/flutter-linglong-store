@@ -85,8 +85,8 @@ class CategoryFilterSkeleton extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             itemCount: itemCount,
-            separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-            itemBuilder: (_, __) {
+            separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
+            itemBuilder: (_, _) {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                 child: Container(

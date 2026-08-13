@@ -237,7 +237,7 @@ class AppGridShimmer extends StatelessWidget {
               childAspectRatio: 3.5,
             ),
             itemCount: itemCount,
-            itemBuilder: (_, __) {
+            itemBuilder: (_, _) {
               return Container(
                 decoration: BoxDecoration(
                   color: Colors.white,

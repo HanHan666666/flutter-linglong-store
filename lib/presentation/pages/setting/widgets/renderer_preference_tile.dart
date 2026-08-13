@@ -232,7 +232,7 @@ class _RendererPreferenceSubtitle extends StatelessWidget {
 
     return rendererRuntime.when(
       loading: () => Text(l10n.rendererModeDetecting, style: helperStyle),
-      error: (_, __) => Text(l10n.rendererModeDetectFailed, style: helperStyle),
+      error: (_, _) => Text(l10n.rendererModeDetectFailed, style: helperStyle),
       data: (runtimeState) {
         final currentModeLabel = runtimeState.isSoftware
             ? l10n.softwareRenderingEnabled

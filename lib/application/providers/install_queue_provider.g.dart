@@ -127,7 +127,7 @@ abstract class _$InstallQueue extends $Notifier<InstallQueueState> {
   InstallQueueState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<InstallQueueState, InstallQueueState>;
     final element =
         ref.element
@@ -137,7 +137,7 @@ abstract class _$InstallQueue extends $Notifier<InstallQueueState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

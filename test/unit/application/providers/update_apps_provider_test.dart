@@ -227,7 +227,7 @@ void main() {
 
       final subscription = container.listen<UpdateAppsState>(
         updateAppsProvider,
-        (_, __) {},
+        (_, _) {},
         fireImmediately: true,
       );
 

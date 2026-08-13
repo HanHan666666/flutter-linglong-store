@@ -60,7 +60,7 @@ abstract class _$UpdateApps extends $Notifier<UpdateAppsState> {
   UpdateAppsState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<UpdateAppsState, UpdateAppsState>;
     final element =
         ref.element
@@ -70,7 +70,7 @@ abstract class _$UpdateApps extends $Notifier<UpdateAppsState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

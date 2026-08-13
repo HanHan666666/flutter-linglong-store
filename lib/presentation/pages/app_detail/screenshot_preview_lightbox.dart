@@ -20,7 +20,7 @@ Future<void> showScreenshotPreviewLightbox(
     barrierColor: Colors.black.withValues(alpha: 0.72),
     // 零动画模式：灯箱瞬切
     transitionDuration: Duration.zero,
-    pageBuilder: (ctx, _, __) {
+    pageBuilder: (ctx, _, _) {
       return ScreenshotPreviewLightbox(
         screenshots: screenshots,
         initialIndex: initialIndex,
@@ -310,7 +310,7 @@ class _ImageStage extends StatelessWidget {
                                 MediaQuery.devicePixelRatioOf(context) *
                                 0.84)
                             .toInt(),
-                    errorBuilder: (_, __, ___) => Center(
+                    errorBuilder: (_, _, _) => Center(
                       child: ExcludeSemantics(
                         child: Icon(
                           Icons.broken_image_outlined,
@@ -424,7 +424,7 @@ class _ThumbnailBar extends StatelessWidget {
                     fit: BoxFit.cover,
                     cacheWidth: 164,
                     cacheHeight: 120,
-                    errorBuilder: (_, __, ___) => Container(
+                    errorBuilder: (_, _, _) => Container(
                       width: 82,
                       height: 60,
                       color: placeholderColor,

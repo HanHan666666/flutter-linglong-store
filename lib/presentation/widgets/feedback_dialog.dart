@@ -192,7 +192,7 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
         'llVersion': globalState.llVersion ?? '',
         'appVersion': settingState.appVersion ?? AppConfig.appVersion,
         'arch': globalState.arch ?? '',
-        if (logFileUrl != null) 'logFileUrl': logFileUrl,
+        'logFileUrl': ?logFileUrl,
       };
 
       await ApiClient.instance.post('/visit/suggest', data: body);

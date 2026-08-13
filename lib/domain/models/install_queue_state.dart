@@ -95,7 +95,7 @@ class InstallQueueState {
   ///
   /// 任务 ID 在三个集合中互斥；该顺序仅用于按 ID 建索引，不参与 UI 排序。
   List<InstallTask> get allTasks => [
-    if (currentTask case final task?) task,
+    ?currentTask,
     ...queue,
     ...history,
   ];

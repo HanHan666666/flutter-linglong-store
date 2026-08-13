@@ -128,7 +128,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.listen<RecommendState>(recommendProvider, (_, __) {});
+      container.listen<RecommendState>(recommendProvider, (_, _) {});
       await _flushAsyncWork();
 
       final hydratedState = container.read(recommendProvider);
@@ -218,7 +218,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.listen<RecommendState>(recommendProvider, (_, __) {});
+      container.listen<RecommendState>(recommendProvider, (_, _) {});
       await _flushAsyncWork();
 
       await container.read(recommendProvider.notifier).loadMore();
@@ -265,7 +265,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.listen<RecommendState>(recommendProvider, (_, __) {});
+      container.listen<RecommendState>(recommendProvider, (_, _) {});
       await _flushAsyncWork();
 
       final state = container.read(recommendProvider);
@@ -306,7 +306,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.listen<RecommendState>(recommendProvider, (_, __) {});
+      container.listen<RecommendState>(recommendProvider, (_, _) {});
       await _flushAsyncWork();
 
       final carouselCaptured =
@@ -356,7 +356,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.listen<RecommendState>(recommendProvider, (_, __) {});
+      container.listen<RecommendState>(recommendProvider, (_, _) {});
       await _flushAsyncWork();
 
       final banner = container.read(recommendProvider).data?.banners.single;

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'app_operation_batch.dart';
@@ -9,6 +9,7 @@ part of 'app_operation_batch.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -74,7 +75,7 @@ class _$AppOperationBatchCopyWithImpl<$Res>
 /// Create a copy of AppOperationBatch
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? kind = null,Object? taskIds = null,Object? targets = null,Object? createdAt = null,Object? finishedAt = freezed,Object? status = null,Object? notificationState = null,}) {
-  return _then(_self.copyWith(
+  return _then(AppOperationBatch(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as AppOperationBatchKind,taskIds: null == taskIds ? _self.taskIds : taskIds // ignore: cast_nullable_to_non_nullable
@@ -218,7 +219,7 @@ return $default(_that.id,_that.kind,_that.taskIds,_that.targets,_that.createdAt,
 @JsonSerializable()
 
 class _AppOperationBatch implements AppOperationBatch {
-  const _AppOperationBatch({required this.id, this.kind = AppOperationBatchKind.updateAll, required final  List<String> taskIds, required final  List<AppOperationTargetSnapshot> targets, required this.createdAt, this.finishedAt, this.status = AppOperationBatchStatus.active, this.notificationState = AppOperationNotificationState.notRequested}): _taskIds = taskIds,_targets = targets;
+  const _AppOperationBatch({required this.id, this.kind = AppOperationBatchKind.updateAll, required  List<String> taskIds, required  List<AppOperationTargetSnapshot> targets, required this.createdAt, this.finishedAt, this.status = AppOperationBatchStatus.active, this.notificationState = AppOperationNotificationState.notRequested}): _taskIds = taskIds,_targets = targets;
   factory _AppOperationBatch.fromJson(Map<String, dynamic> json) => _$AppOperationBatchFromJson(json);
 
 /// 稳定批次 ID，同时作为通知替换 ID 的组成部分。
@@ -380,7 +381,7 @@ class _$AppOperationEffectCopyWithImpl<$Res>
 /// Create a copy of AppOperationEffect
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? aggregateId = null,Object? createdAt = null,Object? attemptCount = null,Object? lastAttemptAt = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AppOperationEffect(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as AppOperationEffectType,aggregateId: null == aggregateId ? _self.aggregateId : aggregateId // ignore: cast_nullable_to_non_nullable

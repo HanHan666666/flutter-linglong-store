@@ -56,7 +56,7 @@ Widget _buildTestApp(MockAppApiService mockApiService) {
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => const ShellBranchVisibilityScope(
+        builder: (_, _) => const ShellBranchVisibilityScope(
           activeRoute: ShellPrimaryRoute.allApps,
           currentRoute: ShellPrimaryRoute.allApps,
           child: Scaffold(body: AllAppsPage()),
@@ -64,7 +64,7 @@ Widget _buildTestApp(MockAppApiService mockApiService) {
       ),
       GoRoute(
         path: '/app/:appId',
-        builder: (_, __) => const Scaffold(body: Text('Detail')),
+        builder: (_, _) => const Scaffold(body: Text('Detail')),
       ),
     ],
   );

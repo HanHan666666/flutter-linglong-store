@@ -82,7 +82,7 @@ void main() {
       addTearDown(container.dispose);
 
       // 触发 provider 构建与 microtask 加载。
-      container.listen(searchHintAppsProvider, (_, __) {});
+      container.listen(searchHintAppsProvider, (_, _) {});
       await _flushAsyncWork();
 
       final result = container.read(searchHintAppsProvider);
@@ -128,7 +128,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.listen(searchHintAppsProvider, (_, __) {});
+      container.listen(searchHintAppsProvider, (_, _) {});
       await _flushAsyncWork();
 
       // 失败属锦上添花功能，应静默回退到空列表。
@@ -154,7 +154,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      container.listen(searchHintAppsProvider, (_, __) {});
+      container.listen(searchHintAppsProvider, (_, _) {});
       await _flushAsyncWork();
 
       expect(container.read(searchHintAppsProvider), isEmpty);

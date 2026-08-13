@@ -86,11 +86,11 @@ void main() {
 
       container.listen<CustomCategoryState>(
         customCategoryProvider('office'),
-        (_, __) {},
+        (_, _) {},
       );
       container.listen<CustomCategoryState>(
         customCategoryProvider('system'),
-        (_, __) {},
+        (_, _) {},
       );
 
       await _flushAsyncWork();
@@ -159,7 +159,7 @@ void main() {
 
       container.listen<CustomCategoryState>(
         customCategoryProvider('office'),
-        (_, __) {},
+        (_, _) {},
       );
       await _flushAsyncWork();
 

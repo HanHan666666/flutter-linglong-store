@@ -13,8 +13,8 @@ dependencies:
     sdk: flutter
 
   # 状态管理
-  flutter_riverpod: ^3.3.1
-  riverpod_annotation: ^4.0.2
+  flutter_riverpod: ^3.4.2
+  riverpod_annotation: ^4.0.6
 
   # 路由
   go_router: ^14.6.2
@@ -26,9 +26,7 @@ dependencies:
 
   # 序列化
   freezed_annotation: ^3.0.0
-  # json_annotation 4.12 需配套 json_serializable 6.14（依赖 analyzer>=10），
-  # 随阶段3 analyzer 大版本一起升级
-  json_annotation: ^4.11.0
+  json_annotation: ^4.12.0
 
   # 窗口管理
   window_manager: ^0.4.3
@@ -70,17 +68,18 @@ dev_dependencies:
     sdk: flutter
   integration_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
   # 方向感知布局门禁需要解析 Dart AST，避免正则漏检多行构造参数。
-  analyzer: ^9.0.0
-  build_runner: ^2.4.13
-  freezed: ^3.2.5
-  # json_serializable 6.14.x 依赖 analyzer >=13，随阶段3 analyzer 大版本升级
-  json_serializable: ^6.8.0
+  # analyzer 14 与 riverpod_generator 不兼容（其上限为 ^13），故锁定 13.x
+  analyzer: ^13.3.0
+  build_runner: ^2.16.0
+  # freezed stable(3.2.5) 仅支持 analyzer<11；4.0.0-dev 为支持 analyzer 13 的
+  # 唯一版本（riverpod 生态官方组合），以 Flutter/Dart 3.13 优先
+  freezed: ^4.0.0-dev.3
+  json_serializable: ^6.14.1
   retrofit_generator: ^10.2.8
-  riverpod_generator: ^4.0.3
-  # mockito 5.8.x 依赖 analyzer >=13.3，随阶段3 analyzer 大版本升级
-  mockito: ^5.4.4
+  riverpod_generator: ^4.0.8
+  mockito: ^5.8.1
   # build_verify: ^3.1.0  # 暂时禁用 - 与 freezed/flutter_test 冲突
   alchemist: ^0.10.0
   pub_semver: ^2.1.5

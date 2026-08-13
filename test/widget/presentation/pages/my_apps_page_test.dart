@@ -152,7 +152,7 @@ Widget _buildNavigationTestApp({required List<Override> overrides}) {
     routes: [
       GoRoute(
         path: '/',
-        builder: (_, __) => const Scaffold(body: MyAppsPage()),
+        builder: (_, _) => const Scaffold(body: MyAppsPage()),
       ),
       GoRoute(
         path: '/app/:appId',
@@ -205,10 +205,10 @@ class _NoopAppUninstallService extends AppUninstallService {
     : super(
         readRunningApps: () => const <RunningApp>[],
         killRunningApp: (_) async => true,
-        uninstallApp: (_, __) async {},
-        removeInstalledApp: (_, __) {},
+        uninstallApp: (_, _) async {},
+        removeInstalledApp: (_, _) {},
         syncAfterUninstall: () async {},
-        reportUninstall: (_, __, {String? appName}) async {},
+        reportUninstall: (_, _, {String? appName}) async {},
       );
 
   @override

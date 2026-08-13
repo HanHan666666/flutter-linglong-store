@@ -65,7 +65,7 @@ abstract class _$NetworkSpeedNotifier extends $Notifier<NetworkSpeed> {
   NetworkSpeed build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<NetworkSpeed, NetworkSpeed>;
     final element =
         ref.element
@@ -75,6 +75,6 @@ abstract class _$NetworkSpeedNotifier extends $Notifier<NetworkSpeed> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

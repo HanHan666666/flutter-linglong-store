@@ -138,7 +138,7 @@ class InstallQueue extends _$InstallQueue {
     final persistence = _persistState(nextState);
     _persistenceBarrier.track(persistence);
     // 普通进度更新不阻塞 UI；错误由 persistState 记录，关键动作还会通过屏障感知。
-    unawaited(persistence.catchError((Object _, StackTrace __) {}));
+    unawaited(persistence.catchError((Object _, StackTrace _) {}));
     return persistence;
   }
 

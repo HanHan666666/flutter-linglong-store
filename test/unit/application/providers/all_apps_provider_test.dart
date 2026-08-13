@@ -166,7 +166,7 @@ void main() {
         'loads all apps via getSearchAppList instead of welcome/sidebar endpoints',
         () async {
           // 订阅以触发初始加载
-          container.listen(allAppsProvider, (_, __) {});
+          container.listen(allAppsProvider, (_, _) {});
           await _flushAsyncWork();
 
           // 必须调用 getSearchAppList
@@ -180,7 +180,7 @@ void main() {
       test(
         'selectCategory sends real categoryId and uses rust page size 30',
         () async {
-          container.listen(allAppsProvider, (_, __) {});
+          container.listen(allAppsProvider, (_, _) {});
           await _flushAsyncWork();
 
           // 重置计数，只跟踪切换分类后的调用
@@ -230,7 +230,7 @@ void main() {
             ),
           );
 
-          container.listen(allAppsProvider, (_, __) {});
+          container.listen(allAppsProvider, (_, _) {});
           await _flushAsyncWork();
 
           // 切换分类

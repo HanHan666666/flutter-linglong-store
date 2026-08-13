@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'search_provider.dart';
@@ -9,6 +9,7 @@ part of 'search_provider.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -72,7 +73,7 @@ class _$SearchStateCopyWithImpl<$Res>
 /// Create a copy of SearchState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? query = null,Object? tag = freezed,Object? results = null,Object? isLoading = null,Object? isLoadingMore = null,Object? error = freezed,Object? currentPage = null,Object? hasMore = null,Object? total = null,}) {
-  return _then(_self.copyWith(
+  return _then(SearchState(
 query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
 as String,tag: freezed == tag ? _self.tag : tag // ignore: cast_nullable_to_non_nullable
 as AppTag?,results: null == results ? _self.results : results // ignore: cast_nullable_to_non_nullable
@@ -229,7 +230,7 @@ return $default(_that.query,_that.tag,_that.results,_that.isLoading,_that.isLoad
 
 
 class _SearchState extends SearchState {
-  const _SearchState({required this.query, this.tag, required final  List<RecommendAppInfo> results, this.isLoading = false, this.isLoadingMore = false, this.error, this.currentPage = 1, this.hasMore = true, this.total = 0}): _results = results,super._();
+  const _SearchState({required this.query, this.tag, required  List<RecommendAppInfo> results, this.isLoading = false, this.isLoadingMore = false, this.error, this.currentPage = 1, this.hasMore = true, this.total = 0}): _results = results,super._();
   
 
 /// 搜索关键词（普通文本搜索模式使用）

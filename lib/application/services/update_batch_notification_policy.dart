@@ -53,7 +53,7 @@ class UpdateBatchNotificationPolicy {
               interruptedCount: interruptedCount,
               l10n: l10n,
             ),
-            if (updatedApps != null) updatedApps,
+            ?updatedApps,
           ].join('\n');
 
     return SystemNotificationMessage(

@@ -101,7 +101,7 @@ abstract class _$CustomCategory extends $Notifier<CustomCategoryState> {
   CustomCategoryState build(String code);
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<CustomCategoryState, CustomCategoryState>;
     final element =
         ref.element
@@ -111,6 +111,6 @@ abstract class _$CustomCategory extends $Notifier<CustomCategoryState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, () => build(_$args));
+    return element.handleCreate(ref, () => build(_$args));
   }
 }

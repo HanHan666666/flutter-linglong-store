@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'recommend_models.dart';
@@ -9,6 +9,7 @@ part of 'recommend_models.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -63,7 +64,7 @@ class _$BannerInfoCopyWithImpl<$Res>
 /// Create a copy of BannerInfo
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? imageUrl = null,Object? version = null,Object? arch = freezed,Object? targetAppId = freezed,Object? targetUrl = freezed,Object? description = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(BannerInfo(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,imageUrl: null == imageUrl ? _self.imageUrl : imageUrl // ignore: cast_nullable_to_non_nullable
@@ -335,7 +336,7 @@ class _$CategoryInfoCopyWithImpl<$Res>
 /// Create a copy of CategoryInfo
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? name = null,Object? icon = freezed,Object? appCount = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(CategoryInfo(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,icon: freezed == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
@@ -546,9 +547,7 @@ as int?,
 /// @nodoc
 mixin _$RecommendAppInfo {
 
- String get appId; String get name; String get version; String? get description; String? get icon; String? get developer; String? get category; String? get size; String? get arch;// 详情页需要沿用列表入口的精确身份字段，避免回退匹配到错误条目。
- String? get module;// 详情页需要沿用列表入口的精确身份字段，避免回退匹配到错误条目。
- String? get repoName; double? get rating; int? get downloadCount; bool get isInstalled; bool get hasUpdate;
+ String get appId; String get name; String get version; String? get description; String? get icon; String? get developer; String? get category; String? get size; String? get arch; String? get module; String? get repoName; double? get rating; int? get downloadCount; bool get isInstalled; bool get hasUpdate;
 /// Create a copy of RecommendAppInfo
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -597,7 +596,7 @@ class _$RecommendAppInfoCopyWithImpl<$Res>
 /// Create a copy of RecommendAppInfo
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? name = null,Object? version = null,Object? description = freezed,Object? icon = freezed,Object? developer = freezed,Object? category = freezed,Object? size = freezed,Object? arch = freezed,Object? module = freezed,Object? repoName = freezed,Object? rating = freezed,Object? downloadCount = freezed,Object? isInstalled = null,Object? hasUpdate = null,}) {
-  return _then(_self.copyWith(
+  return _then(RecommendAppInfo(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
@@ -760,9 +759,7 @@ class _RecommendAppInfo implements RecommendAppInfo {
 @override final  String? category;
 @override final  String? size;
 @override final  String? arch;
-// 详情页需要沿用列表入口的精确身份字段，避免回退匹配到错误条目。
 @override final  String? module;
-// 详情页需要沿用列表入口的精确身份字段，避免回退匹配到错误条目。
 @override final  String? repoName;
 @override final  double? rating;
 @override final  int? downloadCount;
@@ -892,7 +889,7 @@ class _$RecommendStateCopyWithImpl<$Res>
 /// Create a copy of RecommendState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? isLoading = null,Object? isLoadingMore = null,Object? hasHydratedFromCache = null,Object? error = freezed,Object? data = freezed,Object? currentPage = null,}) {
-  return _then(_self.copyWith(
+  return _then(RecommendState(
 isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
 as bool,isLoadingMore: null == isLoadingMore ? _self.isLoadingMore : isLoadingMore // ignore: cast_nullable_to_non_nullable
 as bool,hasHydratedFromCache: null == hasHydratedFromCache ? _self.hasHydratedFromCache : hasHydratedFromCache // ignore: cast_nullable_to_non_nullable

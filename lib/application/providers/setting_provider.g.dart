@@ -51,7 +51,7 @@ abstract class _$Setting extends $Notifier<SettingState> {
   SettingState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<SettingState, SettingState>;
     final element =
         ref.element
@@ -61,6 +61,6 @@ abstract class _$Setting extends $Notifier<SettingState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

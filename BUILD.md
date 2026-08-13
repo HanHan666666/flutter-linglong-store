@@ -75,12 +75,12 @@ lib/
 
 ## 技术栈
 
-- Flutter 3.41.4
-- Dart 3.11.1
-- flutter_riverpod ^3.3.1 (状态管理)
-- go_router ^14.6.2 (路由)
-- freezed ^3.2.5 (不可变数据模型)
-- window_manager ^0.4.3 (窗口管理)
+- Flutter 3.47.0
+- Dart 3.13.0
+- flutter_riverpod ^3.4.2 (状态管理)
+- go_router ^17.5.0 (路由)
+- freezed ^4.0.0-dev.3 (不可变数据模型)
+- window_manager ^0.5.2 (窗口管理)
 
 ## 注意事项
 

@@ -20,8 +20,7 @@ class FileDownloadException implements Exception {
 /// 单独类型让 XDG 工作区把 Dio 取消转换为领域取消事件，普通网络错误仍保持原样。
 class FileDownloadCancelledException extends FileDownloadException {
   /// 创建下载取消异常。
-  const FileDownloadCancelledException({Object? cause})
-    : super('下载已取消', cause: cause);
+  const FileDownloadCancelledException({super.cause}) : super('下载已取消');
 }
 
 /// 通用文件下载器。

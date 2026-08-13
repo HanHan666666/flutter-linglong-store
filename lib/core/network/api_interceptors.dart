@@ -104,6 +104,7 @@ class ApiInterceptors extends Interceptor {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
         return NetworkException(
           '请求超时',
           err.response?.statusCode,

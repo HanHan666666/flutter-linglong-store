@@ -7,10 +7,10 @@ release_version=""
 package_channel="stable"
 container_image="${LOONG64_QEMU_IMAGE:-ghcr.io/loong64/debian:trixie}"
 flutter_release_repo="${LOONG64_FLUTTER_RELEASE_REPO:-Flutter-Dart-loong64/flutter-loong64-releases}"
-# Keep the GitHub Actions Loong64 package build aligned with the SDK that was
-# produced in the same Debian 13/QEMU environment.
-flutter_release_tag="${LOONG64_FLUTTER_RELEASE_TAG:-v3.45.0-1.0.pre-198+debian13}"
-flutter_sdk_archive="${LOONG64_FLUTTER_SDK_ARCHIVE:-flutter-sdk-linux-loong64-3.45.0-1.0.pre-198-80696cf07439.tar.xz}"
+# Keep the GitHub Actions Loong64 package build aligned with the latest
+# Loong64 SDK release (native UOS 25 build, Dart 3.13.0-edge).
+flutter_release_tag="${LOONG64_FLUTTER_RELEASE_TAG:-v3.46.0-1.0.pre-327}"
+flutter_sdk_archive="${LOONG64_FLUTTER_SDK_ARCHIVE:-flutter-sdk-linux-loong64-3.46.0-1.0.pre-327-69c87127a40b.tar.xz}"
 
 usage() {
   cat >&2 <<'EOF'
@@ -103,7 +103,7 @@ docker run --rm \
     fi
 
     export FLUTTER_ROOT="$extract_root/flutter"
-    engine_version="80696cf07439b4c4d6ed178b49df5065b9f69e6e"
+    engine_version="69c87127a40b5c0d735611f9026c3b16a2c02369"
     export FLUTTER_PREBUILT_ENGINE_VERSION="$engine_version"
     export PATH="$FLUTTER_ROOT/bin:$FLUTTER_ROOT/bin/cache/dart-sdk/bin:$PATH"
 
@@ -149,7 +149,7 @@ engine_version = sys.argv[2]
 stamp = {
     "build_time_ms": int(time.time() * 1000),
     "git_revision": engine_version,
-    "git_revision_date": "2026-05-20T00:00:00+00:00",
+    "git_revision_date": "2026-06-28T00:00:00+00:00",
     "content_hash": engine_version,
 }
 path.write_text(json.dumps(stamp, separators=(",", ":")) + "\n")

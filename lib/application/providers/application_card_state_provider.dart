@@ -62,6 +62,10 @@ class ApplicationCardStateIndex {
 }
 
 /// 卡片解析后的轻量状态。
+///
+/// 实现值相等：网格单元格用 `provider.select((i) => i.resolve(appId))`
+/// 订阅时，只有该卡片自己的状态真实变化才会触发重建，
+/// 安装队列的高频进度事件不会波及无关卡片。
 class ResolvedApplicationCardState {
   const ResolvedApplicationCardState({
     required this.buttonState,
@@ -76,6 +80,20 @@ class ResolvedApplicationCardState {
   final bool hasUpdate;
   final bool isInstalling;
   final double progress;
+
+  @override
+  bool operator ==(Object other) {
+    return other is ResolvedApplicationCardState &&
+        other.buttonState == buttonState &&
+        other.isInstalled == isInstalled &&
+        other.hasUpdate == hasUpdate &&
+        other.isInstalling == isInstalling &&
+        other.progress == progress;
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(buttonState, isInstalled, hasUpdate, isInstalling, progress);
 }
 
 final applicationCardStateIndexProvider = Provider<ApplicationCardStateIndex>((

@@ -115,16 +115,8 @@ class ResponsiveAppGrid<T> extends ConsumerWidget {
       );
     }
 
-    final cardStateIndex = ref.watch(applicationCardStateIndexProvider);
-
-    // 预先计算所有卡片状态，避免 builder 循环中重复调用。
-    final resolvedStates = items
-        .map(
-          (item) =>
-              cardStateIndex.resolve(appId: (item as dynamic).appId as String),
-        )
-        .toList(growable: false);
-
+    // 卡片状态按单元格粒度订阅（见 _ResponsiveGridCell）：安装队列的
+    // 高频进度事件只重建状态真实变化的卡片，网格本身不再全量重算。
     return SliverLayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = calculateCrossAxisCount(
@@ -145,11 +137,42 @@ class ResponsiveAppGrid<T> extends ConsumerWidget {
             childAspectRatio: aspectRatio,
           ),
           delegate: SliverChildBuilderDelegate((context, index) {
-            return itemBuilder(ref, index, items[index], resolvedStates[index]);
+            return _ResponsiveGridCell<T>(
+              item: items[index],
+              index: index,
+              itemBuilder: itemBuilder,
+            );
           }, childCount: items.length),
         );
       },
     );
+  }
+}
+
+/// 网格单元格：以卡片粒度订阅自己的卡片状态。
+///
+/// 通过 `select` + [ResolvedApplicationCardState] 的值相等实现：
+/// 安装进度等高频事件只重建进度变化的那张卡片，其余卡片与网格容器
+/// 均不重建，避免整个网格 O(n) 重算（IndexedStack 下是多页面同时重算）。
+class _ResponsiveGridCell<T> extends ConsumerWidget {
+  const _ResponsiveGridCell({
+    required this.item,
+    required this.index,
+    required this.itemBuilder,
+  });
+
+  final T item;
+  final int index;
+  final ResponsiveGridItemBuilder<T> itemBuilder;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cardState = ref.watch(
+      applicationCardStateIndexProvider.select(
+        (state) => state.resolve(appId: (item as dynamic).appId as String),
+      ),
+    );
+    return itemBuilder(ref, index, item, cardState);
   }
 }
 

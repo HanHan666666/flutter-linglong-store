@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:convert';
 
 import '../logging/app_logger.dart';
+import 'bounded_output_buffer.dart';
 import '../network/api_exceptions.dart';
 
 /// ll-cli 命令路径
@@ -166,9 +167,14 @@ class CliExecutor {
         _cancelSignals[processId] = Completer<void>();
       }
 
-      // 收集输出
+      // 收集输出。
+      //
+      // stdout 必须完整累积：list/search 的输出随后要作为整体 JSON 解析，
+      // 封顶会破坏解析（完整内容同时按行写入日志，见 docs/15）。
+      // stderr 只用于失败文案与诊断，保留 64KB 尾部即可，防止异常刷屏
+      // 场景下无界累积拖高内存。
       final stdoutBuffer = StringBuffer();
-      final stderrBuffer = StringBuffer();
+      final stderrBuffer = BoundedOutputBuffer(maxBytes: 64 * 1024);
 
       final stdoutFuture = process.stdout
           .transform(utf8.decoder)
@@ -182,7 +188,7 @@ class CliExecutor {
           .transform(utf8.decoder)
           .transform(const LineSplitter())
           .forEach((line) {
-            stderrBuffer.writeln(line);
+            stderrBuffer.addLine(line);
             _logCommandStderr(commandStr, line);
           });
 
@@ -197,7 +203,7 @@ class CliExecutor {
 
       final output = CliOutput(
         stdout: stdoutBuffer.toString(),
-        stderr: stderrBuffer.toString(),
+        stderr: stderrBuffer.text,
         exitCode: exitCode,
       );
 

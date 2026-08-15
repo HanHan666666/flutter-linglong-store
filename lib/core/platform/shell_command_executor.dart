@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
 import '../logging/app_logger.dart';
+import 'bounded_output_buffer.dart';
 
 /// shell 命令日志记录选项。
 class ShellCommandLogOptions {
@@ -179,8 +179,8 @@ class ProcessShellCommandRunner
       final captureLimit = onOutput == null
           ? null
           : _maxStreamingCaptureBytesPerChannel;
-      final stdoutBuffer = _ShellOutputBuffer(maxBytes: captureLimit);
-      final stderrBuffer = _ShellOutputBuffer(maxBytes: captureLimit);
+      final stdoutBuffer = BoundedOutputBuffer(maxBytes: captureLimit);
+      final stderrBuffer = BoundedOutputBuffer(maxBytes: captureLimit);
 
       final stdoutCapture = _captureStream(
         stream: process.stdout,
@@ -257,7 +257,7 @@ class ProcessShellCommandRunner
 
   _ShellStreamCapture _captureStream({
     required Stream<List<int>> stream,
-    required _ShellOutputBuffer buffer,
+    required BoundedOutputBuffer buffer,
     required String commandLine,
     required String logPrefix,
     required void Function(
@@ -367,64 +367,8 @@ class _ShellCommandLogWriter {
 
 /// Shell 最终结果使用的输出缓冲。
 ///
-/// 普通命令保持完整结果；流式命令只保留固定字节数的尾部。每次按完整行淘汰，
-/// 不会在 UTF-8 字符中间截断。
-class _ShellOutputBuffer {
-  /// 创建可选上限的输出缓冲。
-  _ShellOutputBuffer({required this.maxBytes});
-
-  /// `null` 表示普通命令需要保留完整输出。
-  final int? maxBytes;
-
-  final StringBuffer _unbounded = StringBuffer();
-  final ListQueue<_CapturedOutputLine> _bounded =
-      ListQueue<_CapturedOutputLine>();
-  int _boundedBytes = 0;
-
-  /// 追加一行输出。
-  void addLine(String line) {
-    final limit = maxBytes;
-    if (limit == null) {
-      _unbounded.writeln(line);
-      return;
-    }
-
-    final byteLength = utf8.encode(line).length + 1;
-    if (byteLength > limit) {
-      // 单行超过上限时不保留该行，完整内容仍然存在专用日志中。
-      _bounded.clear();
-      _boundedBytes = 0;
-      return;
-    }
-
-    _bounded.add(_CapturedOutputLine(line: line, byteLength: byteLength));
-    _boundedBytes += byteLength;
-    while (_boundedBytes > limit && _bounded.isNotEmpty) {
-      _boundedBytes -= _bounded.removeFirst().byteLength;
-    }
-  }
-
-  /// 当前保留的文本。
-  String get text {
-    if (maxBytes == null) {
-      return _unbounded.toString();
-    }
-    return _bounded.map((item) => item.line).join('\n') +
-        (_bounded.isEmpty ? '' : '\n');
-  }
-}
-
-/// 有界输出缓冲中的单行及其 UTF-8 占用。
-class _CapturedOutputLine {
-  /// 创建缓冲行。
-  const _CapturedOutputLine({required this.line, required this.byteLength});
-
-  /// 不含换行符的原始行。
-  final String line;
-
-  /// 包含单个换行符的 UTF-8 字节数。
-  final int byteLength;
-}
+/// 普通命令保持完整结果；流式命令只保留固定字节数的尾部。实现提取到
+/// [BoundedOutputBuffer] 供其它执行器（如 CliExecutor 的 stderr）复用。
 
 /// 可取消的单路输出读取。
 class _ShellStreamCapture {

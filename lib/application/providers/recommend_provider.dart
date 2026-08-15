@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_exceptions.dart';
@@ -95,6 +96,24 @@ class Recommend extends _$Recommend {
       return;
     }
 
+    // 达到列表内存上限：置 hasMore=false 终止自动补页（页面常驻 IndexedStack，
+    // 无限累积会让多份全量列表同时驻留内存），更深的检索应走搜索/分类。
+    if (state.data!.apps.items.length >= AppConfig.maxListItems) {
+      final apps = state.data!.apps;
+      state = state.copyWith(
+        data: state.data!.copyWith(
+          apps: PaginatedResponse<RecommendAppInfo>(
+            items: apps.items,
+            total: apps.total,
+            page: apps.page,
+            pageSize: apps.pageSize,
+            hasMore: false,
+          ),
+        ),
+      );
+      return;
+    }
+
     state = state.copyWith(isLoadingMore: true);
 
     try {
@@ -127,7 +146,8 @@ class Recommend extends _$Recommend {
         currentPage: nextPage,
         data: mergedData,
       );
-      await _persistSnapshot(data: mergedData, currentPage: nextPage);
+      // 快照只服务于下次启动的首屏水合，仅由 loadData 写入第一页；
+      // 翻页合并结果若反复整表落盘，写入量会随翻页深度呈 O(n²) 增长。
     } catch (e, s) {
       AppLogger.error('加载更多推荐应用失败', e, s);
       state = state.copyWith(isLoadingMore: false);

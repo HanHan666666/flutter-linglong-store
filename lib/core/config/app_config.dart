@@ -32,6 +32,13 @@ class AppConfig {
   /// 超限后优先淘汰已过期与带 TTL 的可再生条目，永久条目（推荐页快照）不受影响。
   static const int cacheMaxLogicalEntries = 300;
 
+  /// 列表页内存条目数上限
+  ///
+  /// 推荐页/全部应用/搜索/分类页都是 IndexedStack 常驻页面，loadMore 若无上限，
+  /// 深度翻页后多份全量列表会同时驻留内存。触顶后置 hasMore=false 终止自动补页；
+  /// 更深的应用检索应走搜索/分类过滤，而不是无限滚动。
+  static const int maxListItems = 300;
+
   /// 最大保活页面数
   static const int maxKeepAlivePages = 10;
 

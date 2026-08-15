@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/config/app_config.dart';
 import '../../data/mappers/app_list_mapper.dart';
 import '../../domain/models/app_detail.dart';
 import '../../domain/models/recommend_models.dart';
@@ -160,6 +161,13 @@ class Search extends _$Search {
   Future<void> loadMore() async {
     // 文本与标签模式都允许分页，只在没有有效条件时阻断
     if (state.isLoadingMore || !state.hasMore || !state.hasCriteria) {
+      return;
+    }
+
+    // 达到列表内存上限：置 hasMore=false 终止自动补页，防止搜索结果
+    // 无上限累积驻留内存；更深的检索应细化关键词。
+    if (state.results.length >= AppConfig.maxListItems) {
+      state = state.copyWith(hasMore: false);
       return;
     }
 

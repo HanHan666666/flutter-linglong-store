@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/config/local_sidebar_menu_catalog.dart';
 import '../../core/i18n/app_locale.dart';
 import '../../core/logging/app_logger.dart';
@@ -123,6 +124,25 @@ class CustomCategory extends _$CustomCategory {
     if (state.isLoading ||
         state.isLoadingMore ||
         state.data?.apps.hasMore == false) {
+      return;
+    }
+
+    // 达到列表内存上限：置 hasMore=false 终止自动补页，防止 family 缓存的
+    // 多个分类页在常驻期间无上限累积列表。
+    final currentItems = state.data?.apps.items;
+    if (currentItems != null && currentItems.length >= AppConfig.maxListItems) {
+      final apps = state.data!.apps;
+      state = state.copyWith(
+        data: state.data?.copyWith(
+          apps: PaginatedResponse<RecommendAppInfo>(
+            items: apps.items,
+            total: apps.total,
+            page: apps.page,
+            pageSize: apps.pageSize,
+            hasMore: false,
+          ),
+        ),
+      );
       return;
     }
 

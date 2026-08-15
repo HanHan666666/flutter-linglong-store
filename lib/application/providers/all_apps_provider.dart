@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/config/app_config.dart';
 import '../../core/logging/app_logger.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_exceptions.dart';
@@ -110,6 +111,25 @@ class AllApps extends _$AllApps {
   /// 加载更多应用
   Future<void> loadMore() async {
     if (state.isLoadingMore || state.data?.apps.hasMore == false) {
+      return;
+    }
+
+    // 达到列表内存上限：置 hasMore=false 终止自动补页（页面常驻 IndexedStack，
+    // 无限累积会让多份全量列表同时驻留内存），更深的检索应走搜索/分类。
+    final currentItems = state.data?.apps.items;
+    if (currentItems != null && currentItems.length >= AppConfig.maxListItems) {
+      final apps = state.data!.apps;
+      state = state.copyWith(
+        data: state.data?.copyWith(
+          apps: PaginatedResponse<RecommendAppInfo>(
+            items: apps.items,
+            total: apps.total,
+            page: apps.page,
+            pageSize: apps.pageSize,
+            hasMore: false,
+          ),
+        ),
+      );
       return;
     }
 

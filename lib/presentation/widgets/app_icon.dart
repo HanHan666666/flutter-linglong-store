@@ -69,10 +69,17 @@ class AppIcon extends StatelessWidget {
   /// SVG 加载时使用的 HTTP client，仅用于测试和受控网络场景。
   final http.Client? svgHttpClient;
 
-  /// 内存缓存最大宽度（像素），默认为 size * 3
+  /// 内存缓存解码宽度（物理像素）。
+  ///
+  /// 未显式指定时按 显示尺寸 × DPR 计算，并封顶 2 倍：DPR=1 的 Linux 桌面
+  /// （主流场景）按逻辑尺寸解码即可清晰，固定倍率过解码会浪费 4 倍面积；
+  /// 高倍屏也无需超过 2x，图标是全应用数量最多的位图类型。
   final int? memCacheWidth;
 
-  /// 磁盘缓存最大宽度（像素），默认为 size * 4
+  /// 磁盘缓存解码宽度（物理像素）。
+  ///
+  /// 未显式指定时按 显示尺寸 × DPR 计算并封顶 3 倍，磁盘端可适当冗余
+  /// 以便不同尺寸场景复用同一份缩量图。
   final int? maxDiskCacheWidth;
 
   const AppIcon({
@@ -104,10 +111,12 @@ class AppIcon extends StatelessWidget {
 
     final normalizedIconUrl = iconUrl!.trim();
 
-    // 缓存策略：内存缓存约为显示尺寸的2倍，磁盘缓存约为显示尺寸的3倍
-    // 这样可以在保证清晰度的同时节省内存
-    final effectiveMemCacheWidth = memCacheWidth ?? (size * 2).toInt();
-    final effectiveDiskCacheWidth = maxDiskCacheWidth ?? (size * 3).toInt();
+    // 解码尺寸随 DPR 缩放并封顶：见 memCacheWidth / maxDiskCacheWidth 字段注释
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final effectiveMemCacheWidth =
+        memCacheWidth ?? (size * dpr.clamp(1.0, 2.0)).toInt();
+    final effectiveDiskCacheWidth =
+        maxDiskCacheWidth ?? (size * dpr.clamp(1.0, 3.0)).toInt();
     final loadStrategy = _resolveAppIconLoadStrategy(normalizedIconUrl);
 
     if (loadStrategy == _AppIconLoadStrategy.svg) {

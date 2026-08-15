@@ -449,8 +449,6 @@ class _InstallFlightWidgetState extends State<_InstallFlightWidget>
                         appName: widget.entry.appName,
                         size: iconSize,
                         borderRadius: iconRadius,
-                        memCacheWidth: math.max(64, (iconSize * 2).round()),
-                        maxDiskCacheWidth: math.max(96, (iconSize * 3).round()),
                       ),
                     ],
                   ),

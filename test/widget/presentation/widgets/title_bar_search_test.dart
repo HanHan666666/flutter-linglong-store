@@ -68,6 +68,33 @@ void main() {
     expect(find.text('浏览器'), findsOneWidget);
   });
 
+  testWidgets('窗口隐藏时暂停搜索防抖，恢复后继续查询', (tester) async {
+    await tester.pumpWidget(_buildRouterApp());
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, '浏览');
+    // 100ms 防抖尚未触发时窗口隐藏，候选请求必须被取消而不是后台执行。
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+
+    expect(find.text('浏览器'), findsNothing);
+
+    // 恢复可见后用当前输入重新排队，候选面板随后出现。
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pumpAndSettle();
+
+    expect(find.text('浏览器'), findsOneWidget);
+
+    addTearDown(
+      () => tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.resumed,
+      ),
+    );
+  });
+
   testWidgets('RTL 下展开箭头复用 Flutter 内建方向镜像', (tester) async {
     await tester.pumpWidget(_buildRouterApp(locale: const Locale('ar')));
     await tester.pumpAndSettle();

@@ -163,7 +163,8 @@ class _TitleSearchBox extends ConsumerStatefulWidget {
   ConsumerState<_TitleSearchBox> createState() => _TitleSearchBoxState();
 }
 
-class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
+class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox>
+    with WidgetsBindingObserver {
   bool _isFocused = false;
   int _selectedIndex = -1;
   final FocusNode _focusNode = FocusNode();
@@ -195,9 +196,16 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
   /// 洗牌后的轮播序列，由 [_resetHintRotation] 在数据到位时生成。
   List<SearchHintApp> _hintSequence = const <SearchHintApp>[];
 
+  /// 应用生命周期当前是否允许运行轮播与防抖 Timer。
+  ///
+  /// Linux 桌面窗口最小化时会进入 inactive/hidden，此时 placeholder 轮播
+  /// 与搜索防抖产生的 setState 用户不可见；暂停这些 Timer 可避免后台空转。
+  bool _isLifecycleVisible = true;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _controller = TextEditingController(text: widget.currentQuery);
     _controller.addListener(_onTextChanged);
     _focusNode.addListener(_onFocusChange);
@@ -234,6 +242,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _debounceTimer?.cancel();
     _hintTimer?.cancel();
     _removeSuggestionsOverlay();
@@ -245,6 +254,41 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
     _tagFocusNode.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final visible = state == AppLifecycleState.resumed;
+    if (_isLifecycleVisible == visible) {
+      return;
+    }
+    _isLifecycleVisible = visible;
+    if (visible) {
+      _resumeLifecycleTimers();
+    } else {
+      _pauseLifecycleTimers();
+    }
+  }
+
+  /// 窗口不可见时取消两个 Timer，但保留轮播序列与当前 placeholder。
+  ///
+  /// 恢复可见后重新调度即可继续轮播；已输入文本的防抖查询会在恢复时
+  /// 重新排队，避免“隐藏前最后一次击键”的请求被静默吞掉。
+  void _pauseLifecycleTimers() {
+    _debounceTimer?.cancel();
+    _debounceTimer = null;
+    _hintTimer?.cancel();
+    _hintTimer = null;
+  }
+
+  /// 窗口恢复可见后重新调度被暂停的 Timer。
+  void _resumeLifecycleTimers() {
+    if (_hintSequence.isNotEmpty) {
+      _startHintRotation();
+    }
+    if (widget.currentTag == null && _controller.text.trim().isNotEmpty) {
+      _queueSuggestionsFetch();
+    }
   }
 
   void _onTextChanged() {
@@ -349,6 +393,17 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
     _currentHintApp = next;
     if (changed && mounted) setState(() {});
 
+    // 数据到位但窗口不可见时只更新状态，Timer 等待生命周期恢复后再启动。
+    if (_isLifecycleVisible) {
+      _startHintRotation();
+    }
+  }
+
+  /// 启动 placeholder 轮播 Timer。
+  ///
+  /// 轮播序列在调用前必须非空；这里只负责周期推进索引并刷新当前文案。
+  void _startHintRotation() {
+    _hintTimer?.cancel();
     _hintTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!mounted) {
         _hintTimer?.cancel();
@@ -368,6 +423,12 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox> {
       ref.read(titleSearchSuggestionsProvider.notifier).clear();
       _selectedIndex = -1;
       _syncSuggestionsOverlay();
+      return;
+    }
+
+    // 窗口不可见时没有可见的候选需要更新，暂停本次防抖；恢复可见后
+    // _resumeLifecycleTimers 会用当前输入重新排队。
+    if (!_isLifecycleVisible) {
       return;
     }
 
@@ -935,10 +996,7 @@ class _AnimatedSearchHint extends StatelessWidget {
             return Stack(
               // 堆叠基准随文本方向镜像，保证动画文案起点与输入方向一致
               alignment: AlignmentDirectional.centerStart,
-              children: <Widget>[
-                ...previousChildren,
-                ?currentChild,
-              ],
+              children: <Widget>[...previousChildren, ?currentChild],
             );
           },
           child: Text(

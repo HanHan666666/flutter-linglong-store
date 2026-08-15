@@ -66,9 +66,37 @@ void main() {
     expect(second, isNotNull);
     // 样本只有 3 个，洗牌循环下相邻两项大概率不同；
     // 这里不绑定具体值，只校验轮播 Timer 生效、文案是榜单应用之一。
-    expect(
-      ['应用一', '应用二', '应用三'].contains(second),
-      isTrue,
+    expect(['应用一', '应用二', '应用三'].contains(second), isTrue);
+  });
+
+  testWidgets('窗口隐藏时暂停 placeholder 轮播，恢复后继续', (tester) async {
+    await tester.pumpWidget(_buildApp());
+    await tester.pumpAndSettle();
+
+    final first = _currentHintText(tester);
+    expect(first, isNotNull);
+
+    // 模拟 Linux 桌面最小化：隐藏期间 5 秒轮播不应推进。
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
+    expect(_currentHintText(tester), equals(first));
+
+    // 恢复可见后重新调度 Timer，下一个 5 秒周期应继续轮播。
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
+    expect(_currentHintText(tester), isNot(equals(first)));
+
+    // 避免生命周期状态泄漏到后续用例。
+    addTearDown(
+      () => tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.resumed,
+      ),
     );
   });
 
@@ -128,10 +156,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 静态兜底文案应可见。
-    expect(
-      find.text('在这里搜索你想搜索的应用'),
-      findsOneWidget,
-    );
+    expect(find.text('在这里搜索你想搜索的应用'), findsOneWidget);
 
     await tester.tap(find.byType(TextField).first);
     await tester.pumpAndSettle();
@@ -166,10 +191,12 @@ void main() {
 
     // 进一步验证：动画关闭时 placeholder 容器内不应残留正在淡出的旧 Text。
     final visibleHintTexts = tester
-        .widgetList<Text>(find.descendant(
-          of: find.byKey(const Key('title-search-placeholder')),
-          matching: find.byType(Text),
-        ))
+        .widgetList<Text>(
+          find.descendant(
+            of: find.byKey(const Key('title-search-placeholder')),
+            matching: find.byType(Text),
+          ),
+        )
         .map((t) => t.data)
         .where((d) => d != null && d.isNotEmpty)
         .toList();
@@ -261,10 +288,7 @@ String? _currentHintText(WidgetTester tester) {
   return tester.widget<Text>(hintTextFinder.first).data;
 }
 
-Widget _buildApp({
-  List<SearchHintApp>? hints,
-  bool disableAnimations = false,
-}) {
+Widget _buildApp({List<SearchHintApp>? hints, bool disableAnimations = false}) {
   final router = GoRouter(
     routes: [
       GoRoute(
@@ -298,9 +322,7 @@ Widget _buildApp({
               children: [
                 Text('detail:${state.pathParameters['id']}'),
                 if (appInfo != null) ...[
-                  Text(
-                    'detail-name:${appInfo.name}',
-                  ),
+                  Text('detail-name:${appInfo.name}'),
                   Text(
                     'detail-extra:${appInfo.arch}|${appInfo.repoName}|${appInfo.module}',
                   ),

@@ -4,6 +4,13 @@ import 'package:flutter/services.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 
+/// 灯箱主图解码宽度物理像素上限。
+///
+/// cacheWidth 跟随窗口宽度 × DPR 计算，4K/HiDPI 下不封顶会把单张截图
+/// 解码成 ~25MB 级位图进 ImageCache；2560px 已不低于常见 1080p 截图的
+/// 原始分辨率，超出部分对显示无收益（InteractiveViewer 放大的是已解码位图）。
+const int _kLightboxMaxDecodeWidth = 2560;
+
 Future<void> showScreenshotPreviewLightbox(
   BuildContext context, {
   required List<String> screenshots,
@@ -305,10 +312,13 @@ class _ImageStage extends StatelessWidget {
                   child: Image.network(
                     screenshots[index],
                     fit: BoxFit.contain,
+                    // 按窗口宽度 × DPR 估算解码宽度，但设置绝对上限防止
+                    // 4K/HiDPI 场景单张位图占据数十 MB 内存。
                     cacheWidth:
                         (MediaQuery.sizeOf(context).width *
                                 MediaQuery.devicePixelRatioOf(context) *
                                 0.84)
+                            .clamp(0, _kLightboxMaxDecodeWidth)
                             .toInt(),
                     errorBuilder: (_, _, _) => Center(
                       child: ExcludeSemantics(
@@ -422,8 +432,18 @@ class _ThumbnailBar extends StatelessWidget {
                     width: 82,
                     height: 60,
                     fit: BoxFit.cover,
-                    cacheWidth: 164,
-                    cacheHeight: 120,
+                    // 缩略条逻辑尺寸 82×60，按 DPR 解码保证 HiDPI 下清晰；
+                    // 封顶 2x 防止高倍缩放屏过量解码（缩略图无需更高精度）。
+                    cacheWidth:
+                        (82 *
+                                MediaQuery.devicePixelRatioOf(context)
+                                    .clamp(1.0, 2.0))
+                            .toInt(),
+                    cacheHeight:
+                        (60 *
+                                MediaQuery.devicePixelRatioOf(context)
+                                    .clamp(1.0, 2.0))
+                            .toInt(),
                     errorBuilder: (_, _, _) => Container(
                       width: 82,
                       height: 60,

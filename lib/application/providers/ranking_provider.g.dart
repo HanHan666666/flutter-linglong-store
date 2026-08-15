@@ -43,7 +43,7 @@ final class RankingProvider extends $NotifierProvider<Ranking, RankingState> {
   }
 }
 
-String _$rankingHash() => r'd837afd02d5eb52000ce1ec82ee72f6fc2db2ed8';
+String _$rankingHash() => r'ee9472e4b474a9485267a1b31ea7513099188b03';
 
 /// 排行榜状态 Provider
 

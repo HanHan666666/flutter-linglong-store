@@ -43,7 +43,7 @@ final class AllAppsProvider extends $NotifierProvider<AllApps, AllAppsState> {
   }
 }
 
-String _$allAppsHash() => r'4546514af1bf1db867765db8d3b348fffe30381c';
+String _$allAppsHash() => r'66454a91903dd0ab7755cfdf5135fdd6968a9d0b';
 
 /// 全部应用页状态 Provider
 

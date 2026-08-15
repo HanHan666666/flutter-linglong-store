@@ -44,7 +44,7 @@ final class RecommendProvider
   }
 }
 
-String _$recommendHash() => r'395d53798f1e2d7e40f6e918bb18bdfa2d8e5312';
+String _$recommendHash() => r'00f30a0e5af6e21f1efd72365c632262575055e9';
 
 /// 推荐页状态 Provider
 

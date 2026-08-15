@@ -10,8 +10,9 @@ part of 'app_search_index_provider.dart';
 // ignore_for_file: type=lint, type=warning
 /// 应用搜索索引 Provider。
 ///
-/// 启动时优先从 Hive 本地缓存读取（毫秒级），再后台执行 `ll-cli search . --json`
-/// 刷新缓存。下次启动直接命中缓存，无需等待 ll-cli。
+/// 启动时优先从 Hive 本地缓存读取精简索引（毫秒级）；新鲜期（24h）内命中
+/// 则直接使用，不再重跑 ll-cli，过期或未命中才执行 `ll-cli search . --json`
+/// 刷新。落盘只存候选所需的最小字段，避免原始 JSON 整串常驻。
 ///
 /// keepAlive: true — 搜索索引是应用级全局数据，不应被 auto-dispose 回收。
 
@@ -20,8 +21,9 @@ final appSearchIndexProvider = AppSearchIndexProvider._();
 
 /// 应用搜索索引 Provider。
 ///
-/// 启动时优先从 Hive 本地缓存读取（毫秒级），再后台执行 `ll-cli search . --json`
-/// 刷新缓存。下次启动直接命中缓存，无需等待 ll-cli。
+/// 启动时优先从 Hive 本地缓存读取精简索引（毫秒级）；新鲜期（24h）内命中
+/// 则直接使用，不再重跑 ll-cli，过期或未命中才执行 `ll-cli search . --json`
+/// 刷新。落盘只存候选所需的最小字段，避免原始 JSON 整串常驻。
 ///
 /// keepAlive: true — 搜索索引是应用级全局数据，不应被 auto-dispose 回收。
 final class AppSearchIndexProvider
@@ -32,8 +34,9 @@ final class AppSearchIndexProvider
         > {
   /// 应用搜索索引 Provider。
   ///
-  /// 启动时优先从 Hive 本地缓存读取（毫秒级），再后台执行 `ll-cli search . --json`
-  /// 刷新缓存。下次启动直接命中缓存，无需等待 ll-cli。
+  /// 启动时优先从 Hive 本地缓存读取精简索引（毫秒级）；新鲜期（24h）内命中
+  /// 则直接使用，不再重跑 ll-cli，过期或未命中才执行 `ll-cli search . --json`
+  /// 刷新。落盘只存候选所需的最小字段，避免原始 JSON 整串常驻。
   ///
   /// keepAlive: true — 搜索索引是应用级全局数据，不应被 auto-dispose 回收。
   AppSearchIndexProvider._()
@@ -64,12 +67,13 @@ final class AppSearchIndexProvider
   }
 }
 
-String _$appSearchIndexHash() => r'46f4cd55667f084cccadcdeada7f495b569f9a7d';
+String _$appSearchIndexHash() => r'dee5d4d0916b0090cf56bd279ca07e48aa7aea24';
 
 /// 应用搜索索引 Provider。
 ///
-/// 启动时优先从 Hive 本地缓存读取（毫秒级），再后台执行 `ll-cli search . --json`
-/// 刷新缓存。下次启动直接命中缓存，无需等待 ll-cli。
+/// 启动时优先从 Hive 本地缓存读取精简索引（毫秒级）；新鲜期（24h）内命中
+/// 则直接使用，不再重跑 ll-cli，过期或未命中才执行 `ll-cli search . --json`
+/// 刷新。落盘只存候选所需的最小字段，避免原始 JSON 整串常驻。
 ///
 /// keepAlive: true — 搜索索引是应用级全局数据，不应被 auto-dispose 回收。
 

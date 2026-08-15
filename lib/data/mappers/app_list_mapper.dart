@@ -1,3 +1,4 @@
+import '../../core/utils/brief_text.dart';
 import '../../data/models/api_dto.dart';
 import '../../domain/models/recommend_models.dart';
 
@@ -24,7 +25,8 @@ PaginatedResponse<RecommendAppInfo> mapAppListToRecommendApps(
           appId: dto.appId,
           name: dto.appName,
           version: dto.appVersion ?? '',
-          description: dto.appDesc,
+          // 简要描述超长时截断，避免列表常驻整串长文本（卡片仅展示单行）
+          description: truncateBriefDescription(dto.appDesc),
           icon: dto.appIcon,
           developer: dto.developerName,
           category: dto.categoryName,

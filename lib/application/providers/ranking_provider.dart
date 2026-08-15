@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../domain/models/ranking_models.dart';
 import '../../core/logging/app_logger.dart';
+import '../../core/utils/brief_text.dart';
 import '../../core/network/api_exceptions.dart';
 import '../../data/models/api_dto.dart';
 import 'api_provider.dart';
@@ -154,7 +155,8 @@ class Ranking extends _$Ranking {
         appId: dto.appId,
         name: dto.appName,
         version: dto.appVersion ?? '',
-        description: dto.appDesc,
+        // 简要描述超长时截断，避免排行榜常驻整串长文本（卡片仅展示单行）
+        description: truncateBriefDescription(dto.appDesc),
         icon: dto.appIcon,
         developer: dto.developerName,
         category: dto.categoryName,

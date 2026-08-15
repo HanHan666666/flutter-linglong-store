@@ -4,6 +4,7 @@ import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/core/network/api_client.dart';
 import 'package:linglong_store/core/platform/system_arch_resolver.dart';
 import 'package:linglong_store/core/storage/cache_service.dart';
+import 'package:linglong_store/core/utils/brief_text.dart';
 import 'package:linglong_store/core/utils/locale_utils.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
 
@@ -330,7 +331,8 @@ class AppRepositoryImpl implements AppRepository {
       // 列表返回的是服务端真实架构，不能再被本机架构覆盖。
       arch: dto.arch ?? _currentArch,
       channel: 'stable',
-      description: dto.appDesc,
+      // 简要描述超长时截断，避免已装列表常驻整串长文本
+      description: truncateBriefDescription(dto.appDesc),
       icon: dto.appIcon,
       kind: dto.appKind,
       module: dto.module,
@@ -347,7 +349,8 @@ class AppRepositoryImpl implements AppRepository {
       version: dto.appVersion,
       arch: dto.arch ?? _currentArch,
       channel: dto.channel ?? 'stable',
-      description: dto.appDesc,
+      // 简要描述超长时截断，避免已装列表常驻整串长文本
+      description: truncateBriefDescription(dto.appDesc),
       icon: dto.appIcon,
       kind: dto.appKind,
       module: dto.appModule,
@@ -443,7 +446,10 @@ class AppRepositoryImpl implements AppRepository {
       // 优先使用 API 返回的图标，其次保留原值
       icon: detail.appIcon ?? app.icon,
       name: detail.appName.isNotEmpty ? detail.appName : app.name,
-      description: detail.appDesc ?? app.description,
+      // 富化合并的描述同样按列表场景截断
+      description: truncateBriefDescription(
+        detail.appDesc ?? app.description,
+      ),
       kind: detail.appKind ?? app.kind,
       size: detail.packageSize ?? app.size,
     );

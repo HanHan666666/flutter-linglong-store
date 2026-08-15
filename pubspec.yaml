@@ -38,6 +38,8 @@ dependencies:
 
   # UI
   cached_network_image: ^3.4.1
+  # Banner 调色板解析复用 cached_network_image 的磁盘缓存，需直接依赖
+  flutter_cache_manager: ^3.4.2
   flutter_svg: ^2.3.0
   shimmer: ^3.0.0
 

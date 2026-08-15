@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 /// 推荐页轮播背景调色板。
 class RecommendBannerPalette {
@@ -159,14 +160,23 @@ class RecommendBannerPaletteResolver {
         targetWidth: 24,
         targetHeight: 24,
       );
-      final frame = await codec.getNextFrame();
-      final byteData = await frame.image.toByteData(
-        format: ui.ImageByteFormat.rawRgba,
-      );
-      if (byteData == null) {
-        return null;
+      try {
+        final frame = await codec.getNextFrame();
+        // ui.Image 持有引擎侧位图，必须显式 dispose，否则每个 banner 泄漏一张解码图。
+        try {
+          final byteData = await frame.image.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          );
+          if (byteData == null) {
+            return null;
+          }
+          return extractDominantColorFromRgba(byteData.buffer.asUint8List());
+        } finally {
+          frame.image.dispose();
+        }
+      } finally {
+        codec.dispose();
       }
-      return extractDominantColorFromRgba(byteData.buffer.asUint8List());
     } catch (_) {
       return null;
     }
@@ -196,12 +206,15 @@ class RecommendBannerPaletteResolver {
 
   static Future<Uint8List?> _loadBytes(String path) async {
     if (_isRemote(path)) {
-      final response = await _dio.get<List<int>>(
-        path,
-        options: Options(responseType: ResponseType.bytes),
-      );
-      final data = response.data;
-      return data == null ? null : Uint8List.fromList(data);
+      // 复用 flutter_cache_manager 的磁盘缓存（CachedNetworkImage 默认同一实例），
+      // 避免同一张 banner 被"背景展示 + 调色板解析"各下载一次；
+      // 首次访问时由 cache manager 下载，随后组件展示直接命中磁盘缓存。
+      try {
+        final file = await DefaultCacheManager().getSingleFile(path);
+        return await file.readAsBytes();
+      } catch (_) {
+        return null;
+      }
     }
     if (_isAssetPath(path)) {
       final byteData = await rootBundle.load(path);

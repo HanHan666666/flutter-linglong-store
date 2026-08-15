@@ -18,11 +18,13 @@ void main() {
     );
     hiveTestPath = tempDir.path;
     Hive.init(hiveTestPath);
-    await Hive.openBox('cache');
+    // CacheService 使用 LazyBox，测试也必须以 LazyBox 打开同名 box，
+    // 否则 Hive 会因 lazy 设置不一致抛错。
+    await Hive.openLazyBox('cache');
   });
 
   tearDown(() async {
-    await Hive.box('cache').clear();
+    await Hive.lazyBox('cache').clear();
   });
 
   tearDownAll(() async {
@@ -133,7 +135,7 @@ void main() {
   });
 
   group('AppSearchIndex', () {
-    test('returns cached index synchronously on first read', () async {
+    test('hydrates cached index from LazyBox on first read', () async {
       final cachedJson = jsonEncode({
         'stable': [
           {
@@ -145,9 +147,13 @@ void main() {
           },
         ],
       });
-      await Hive.box('cache').put('search_index_json', cachedJson);
+      await Hive.lazyBox('cache').put('search_index_json', cachedJson);
       final container = ProviderContainer();
       addTearDown(container.dispose);
+
+      // 缓存读取是异步磁盘 IO，需要等事件队列跑完再断言水合结果。
+      container.listen(appSearchIndexProvider, (_, _) {});
+      await pumpEventQueue();
 
       final state = container.read(appSearchIndexProvider);
 

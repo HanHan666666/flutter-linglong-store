@@ -150,18 +150,25 @@ const _kCacheKey = 'search_index_json';
 class AppSearchIndex extends _$AppSearchIndex {
   @override
   AsyncValue<List<SearchSuggestionEntry>> build() {
-    final cachedEntries = _readCachedEntries();
-    if (cachedEntries != null) {
-      _refreshInBackground();
-      return AsyncData(cachedEntries);
-    }
-
-    _fetchFromCli();
+    // CacheService 为 LazyBox，缓存读取是异步磁盘 IO：先返回 loading，
+    // 水合完成后命中则立即回填并后台刷新，未命中则直接拉取 ll-cli。
+    _hydrateFromCache();
     return const AsyncLoading();
   }
 
-  List<SearchSuggestionEntry>? _readCachedEntries() {
-    final cached = CacheService.get<String>(_kCacheKey);
+  Future<void> _hydrateFromCache() async {
+    final cachedEntries = await _readCachedEntries();
+    if (!ref.mounted) return;
+    if (cachedEntries != null) {
+      state = AsyncData(cachedEntries);
+      _refreshInBackground();
+    } else {
+      await _fetchFromCli();
+    }
+  }
+
+  Future<List<SearchSuggestionEntry>?> _readCachedEntries() async {
+    final cached = await CacheService.get<String>(_kCacheKey);
     if (cached == null || cached.isEmpty) {
       return null;
     }

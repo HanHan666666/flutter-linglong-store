@@ -28,7 +28,8 @@ void main() {
     );
     hiveTestPath = tempDir.path;
     Hive.init(hiveTestPath);
-    await Hive.openBox('cache');
+    // CacheService 使用 LazyBox，测试必须以相同方式打开同名 box。
+    await Hive.openLazyBox('cache');
   });
 
   setUp(() {
@@ -38,7 +39,7 @@ void main() {
 
   tearDown(() async {
     if (Hive.isBoxOpen('cache')) {
-      await Hive.box('cache').clear();
+      await Hive.lazyBox('cache').clear();
     }
   });
 

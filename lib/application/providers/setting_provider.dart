@@ -104,8 +104,8 @@ class Setting extends _$Setting {
     try {
       int totalSize = 0;
 
-      // 计算 Hive 缓存大小
-      final cacheBox = await Hive.openBox('cache');
+      // 计算 Hive 缓存大小（cache box 统一为 LazyBox，必须用一致的打开方式）
+      final cacheBox = await Hive.openLazyBox('cache');
       totalSize += _estimateHiveBoxSize(cacheBox);
 
       // 计算临时目录缓存
@@ -122,7 +122,9 @@ class Setting extends _$Setting {
   }
 
   /// 估算 Hive Box 大小
-  int _estimateHiveBoxSize(Box box) {
+  ///
+  /// 接受 [BoxBase] 以兼容 LazyBox：key 索引常驻内存，length 读取无 IO。
+  int _estimateHiveBoxSize(BoxBase box) {
     // 简单估算：每个键值对平均 1KB
     return box.length * 1024;
   }
@@ -213,8 +215,8 @@ class Setting extends _$Setting {
     state = state.copyWith(isClearingCache: true);
 
     try {
-      // 清除 Hive 缓存
-      final cacheBox = await Hive.openBox('cache');
+      // 清除 Hive 缓存（cache box 统一为 LazyBox，必须用一致的打开方式）
+      final cacheBox = await Hive.openLazyBox('cache');
       await cacheBox.clear();
 
       // 清除临时目录中的应用缓存

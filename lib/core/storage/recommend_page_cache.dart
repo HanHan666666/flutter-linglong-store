@@ -42,7 +42,8 @@ class HiveRecommendPageCacheStore implements RecommendPageCacheStore {
   @override
   Future<RecommendPageCacheSnapshot?> read(String locale) async {
     final cacheKey = _buildCacheKey(locale);
-    final raw = CacheService.get<Map>(cacheKey);
+    // CacheService 已改为 LazyBox，读取是异步磁盘 IO。
+    final raw = await CacheService.get<Map>(cacheKey);
     if (raw == null) {
       return null;
     }

@@ -367,9 +367,15 @@ class AppRepositoryImpl implements AppRepository {
     final detailsMap = <String, AppListItemDTO>{};
     final missingApps = <InstalledApp>[];
 
-    for (final app in apps) {
-      final cacheKey = _buildDetailsCacheKey(app, locale);
-      final cachedDetail = _readCachedAppDetail(cacheKey);
+    // LazyBox 每次读取对应一次磁盘 IO，数百个已装应用逐条串行 await 会放大延迟，
+    // 这里并发读取后按命中/未命中分流。
+    final cachedResults = await Future.wait(
+      apps.map((app) async {
+        final cacheKey = _buildDetailsCacheKey(app, locale);
+        return (app, cacheKey, await _readCachedAppDetail(cacheKey));
+      }),
+    );
+    for (final (app, cacheKey, cachedDetail) in cachedResults) {
       if (cachedDetail != null) {
         detailsMap[cacheKey] = cachedDetail;
       } else {
@@ -459,8 +465,9 @@ class AppRepositoryImpl implements AppRepository {
     ].join('|');
   }
 
-  AppListItemDTO? _readCachedAppDetail(String cacheKey) {
-    final cached = CacheService.get<Map>(cacheKey);
+  /// 读取详情缓存。CacheService 为 LazyBox，读取是异步磁盘 IO。
+  Future<AppListItemDTO?> _readCachedAppDetail(String cacheKey) async {
+    final cached = await CacheService.get<Map>(cacheKey);
     if (cached == null) {
       return null;
     }

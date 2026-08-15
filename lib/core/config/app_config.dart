@@ -26,6 +26,12 @@ class AppConfig {
   /// 缓存过期时间（分钟）
   static const int cacheExpirationMinutes = 5;
 
+  /// 缓存 box 逻辑条目数上限
+  ///
+  /// 应用详情缓存按 应用×版本×语言 组合膨胀，长期运行若无上限会单调增长。
+  /// 超限后优先淘汰已过期与带 TTL 的可再生条目，永久条目（推荐页快照）不受影响。
+  static const int cacheMaxLogicalEntries = 300;
+
   /// 最大保活页面数
   static const int maxKeepAlivePages = 10;
 

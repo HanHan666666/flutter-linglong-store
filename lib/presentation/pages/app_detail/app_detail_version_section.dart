@@ -11,7 +11,6 @@ import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/utils/format_utils.dart';
 import '../../../domain/models/app_version.dart';
 import '../../../domain/models/install_progress.dart';
-import '../../../domain/models/install_queue_state.dart';
 import '../../../domain/models/install_task.dart';
 import '../../../domain/models/installed_app.dart';
 import 'app_detail_page_logic.dart';
@@ -25,7 +24,7 @@ class AppDetailVersionSection extends StatelessWidget {
     required this.isLoading,
     required this.errorMessage,
     required this.isExpanded,
-    required this.installState,
+    required this.activeTasksForApp,
     required this.installedVersions,
     required this.onToggleExpanded,
     required this.onRetry,
@@ -49,8 +48,10 @@ class AppDetailVersionSection extends StatelessWidget {
   /// 是否展开完整版本列表。
   final bool isExpanded;
 
-  /// 当前安装队列状态，用于匹配版本行活跃任务。
-  final InstallQueueState installState;
+  /// 当前应用在安装队列中的活跃任务（当前任务 + 排队任务）。
+  ///
+  /// 由页面容器按 appId select 后传入；组件保持纯展示，不直接订阅 Provider。
+  final List<InstallTask> activeTasksForApp;
 
   /// 本机已安装的版本集合。
   final Set<String> installedVersions;
@@ -145,8 +146,7 @@ class AppDetailVersionSection extends StatelessWidget {
                   version.versionNo,
                 );
                 final activeTask = AppDetailPageLogic.versionInstallTask(
-                  installState: installState,
-                  appId: app.appId,
+                  activeTasksForApp: activeTasksForApp,
                   versions: versions,
                   currentVersion: app.version,
                   version: version.versionNo,

@@ -121,16 +121,23 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(updateAppsProvider);
-    final installState = ref.watch(installQueueProvider);
+    // 页面级只订阅“是否存在活跃任务”这一布尔事实；进度 tick 不会改变它。
+    // 每行的任务与入队状态由 _UpdatableAppItem 自行 select，安装进度
+    // 因此只重建状态真实变化的那一行，不再让整页随队列高频更新重算。
+    final hasActiveTasks = ref.watch(
+      installQueueProvider.select(
+        (installState) => installState.hasActiveTasks(),
+      ),
+    );
     final ignoredUpdatesCount = ref.watch(ignoredUpdatesCountProvider);
 
     return Column(
       children: [
         // 头部区域：更新按钮
-        _buildHeader(context, state, installState, ignoredUpdatesCount),
+        _buildHeader(context, state, hasActiveTasks, ignoredUpdatesCount),
 
         // 内容区域
-        Expanded(child: _buildContent(context, state, installState)),
+        Expanded(child: _buildContent(context, state, hasActiveTasks)),
       ],
     );
   }
@@ -139,10 +146,10 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
   Widget _buildHeader(
     BuildContext context,
     UpdateAppsState state,
-    InstallQueueState installState,
+    bool hasActiveTasks,
     int ignoredUpdatesCount,
   ) {
-    final isUpdating = installState.hasActiveTasks();
+    final isUpdating = hasActiveTasks;
     final isChecking = state.isLoading;
     final l10n = AppLocalizations.of(context)!;
     final ignoredUpdatesL10n = AppLocalizations.of(context)!;
@@ -246,7 +253,7 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
   Widget _buildContent(
     BuildContext context,
     UpdateAppsState state,
-    InstallQueueState installState,
+    bool hasActiveTasks,
   ) {
     final l10n = AppLocalizations.of(context)!;
 
@@ -293,22 +300,14 @@ class _UpdateAppPageState extends ConsumerState<UpdateAppPage> {
           itemCount: state.apps.length,
           itemBuilder: (context, index) {
             final app = state.apps[index];
-            final installTask = installState.getAppInstallStatus(app.appId);
             return _UpdatableAppItem(
               key: ValueKey(app.appId),
               app: app,
-              installTask: installTask,
-              isUpdateDisabled: _shouldDisableUpdateAction(
-                installState,
-                installTask,
-              ),
+              hasActiveTasks: hasActiveTasks,
               onTap: () =>
                   context.goToAppDetail(app.appId, appInfo: app.installedApp),
               onUpdate: () => _updateApp(app),
-              onCancel: installTask != null
-                  ? () => _cancelAppInstall(app.appId)
-                  : null,
-              canIgnore: !installState.isAppInQueue(app.appId),
+              onCancel: () => _cancelAppInstall(app.appId),
               onIgnore: () => _ignoreAppUpdates(app),
             );
           },
@@ -359,24 +358,24 @@ class _UpdatableAppItem extends ConsumerStatefulWidget {
   const _UpdatableAppItem({
     super.key,
     required this.app,
-    required this.installTask,
-    required this.isUpdateDisabled,
+    required this.hasActiveTasks,
     required this.onTap,
     required this.onUpdate,
     required this.onCancel,
-    required this.canIgnore,
     required this.onIgnore,
   });
 
   final UpdatableApp app;
-  final InstallTask? installTask;
-  final bool isUpdateDisabled;
+
+  /// 队列当前是否存在活跃任务。
+  ///
+  /// 该布尔值只随队列结构变化；行内还需要结合自己的任务终态判断
+  /// 是否禁止重复入队（见 [_UpdatableAppItemState.build]）。
+  final bool hasActiveTasks;
+
   final VoidCallback onTap;
   final String Function() onUpdate;
-  final VoidCallback? onCancel;
-
-  /// 当前应用是否允许执行忽略；活跃更新任务期间必须为 false。
-  final bool canIgnore;
+  final VoidCallback onCancel;
 
   /// 触发统一忽略更新服务的回调。
   final Future<void> Function() onIgnore;
@@ -391,6 +390,19 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
 
   @override
   Widget build(BuildContext context) {
+    // 行级订阅：只有本应用的任务状态（含进度）或入队占用发生变化时，
+    // 这一行才重建；其他任务的进度 tick 返回相等值，不会触发本行 build。
+    final installTask = ref.watch(
+      installQueueProvider.select(
+        (state) => state.getAppInstallStatus(widget.app.appId),
+      ),
+    );
+    final canIgnore = !ref.watch(
+      installQueueProvider.select(
+        (state) => state.isAppInQueue(widget.app.appId),
+      ),
+    );
+
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final itemRadius = AppRadius.mdRadius;
@@ -399,8 +411,10 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
         : context.appColors.cardBorder;
 
     // 确定按钮状态：仅处理活跃任务，其余均显示"更新"
-    final buttonState = _getButtonState();
-    final progress = widget.installTask?.progress ?? 0.0;
+    final buttonState = _getButtonState(installTask);
+    final progress = installTask?.progress ?? 0.0;
+    final isUpdateDisabled =
+        widget.hasActiveTasks && (installTask?.isSuccess ?? false);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -487,17 +501,17 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
                       // 优先使用 CLI 返回的精确下载速度，回退到系统级网速
                       downloadSpeed:
                           buttonState == InstallButtonState.installing
-                          ? (widget.installTask?.cliSpeed ??
+                          ? (installTask?.cliSpeed ??
                                 ref.watch(networkSpeedProvider).formatted)
                           : null,
-                      onPressed: widget.isUpdateDisabled
+                      onPressed: isUpdateDisabled
                           ? () {}
                           : _handleUpdatePressed,
-                      onCancel: widget.onCancel,
+                      onCancel: installTask != null ? widget.onCancel : null,
                       size: ButtonSize.small,
                     ),
                     const SizedBox(width: AppSpacing.xs),
-                    _buildOverflowMenu(context),
+                    _buildOverflowMenu(context, canIgnore: canIgnore),
                   ],
                 ),
               ),
@@ -512,7 +526,7 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
   ///
   /// 菜单按钮保持可发现；当前应用有活跃任务时只禁用忽略菜单项，
   /// 让用户仍能理解该能力存在但此刻不可用。
-  Widget _buildOverflowMenu(BuildContext context) {
+  Widget _buildOverflowMenu(BuildContext context, {required bool canIgnore}) {
     final l10n = AppLocalizations.of(context)!;
     return AppAnchoredMenuButton<_UpdateAppMenuAction>(
       buttonKey: ValueKey('update-app-more-${widget.app.appId}'),
@@ -532,7 +546,7 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
           label: l10n.ignoreAppUpdates,
           semanticsLabel: l10n.a11yIgnoreAppUpdates(widget.app.name),
           icon: Icons.notifications_off_outlined,
-          enabled: widget.canIgnore,
+          enabled: canIgnore,
         ),
       ],
     );
@@ -542,8 +556,8 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
   ///
   /// 仅处理活跃任务状态（pending/installing），其余情况均显示"更新"。
   /// 已完成的任务会通过乐观移除从列表中清除，不会走到这里。
-  InstallButtonState _getButtonState() {
-    final status = widget.installTask?.status;
+  InstallButtonState _getButtonState(InstallTask? installTask) {
+    final status = installTask?.status;
     if (status == InstallStatus.pending) {
       return InstallButtonState.pending;
     }

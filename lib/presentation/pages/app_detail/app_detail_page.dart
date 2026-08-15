@@ -4,6 +4,7 @@
 /// 纯派生规则、异步动作以及头部、内容、评论和版本区域位于独立文件。
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,7 +17,6 @@ import '../../../application/providers/update_apps_provider.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../domain/models/install_button_state.dart';
-import '../../../domain/models/install_queue_state.dart';
 import '../../../domain/models/install_task.dart';
 import '../../../domain/models/installed_app.dart';
 import '../../../domain/models/linux_distribution.dart';
@@ -67,30 +67,50 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   @override
   Widget build(BuildContext context) {
     final detailState = ref.watch(appDetailProvider(widget.appId));
-    final installState = ref.watch(installQueueProvider);
-    final installedApps = ref
-        .watch(installedAppsProvider)
-        .apps
-        .where((app) => app.appId == widget.appId)
-        .toList(growable: false);
-    final installedVersions = installedApps.map((app) => app.version).toSet();
-    final hasInstalledInstance = installedVersions.isNotEmpty;
-    final updateAppIds = hasInstalledInstance
-        ? ref.watch(updateAppsProvider).apps.map((app) => app.appId).toSet()
-        : const <String>{};
-    final distribution = ref.watch(
-      linglongEnvProvider.select(
-        (state) => state.result?.distribution ?? LinuxDistribution.unknown,
+
+    // 已安装版本按当前应用 select：Set 需要值相等包装，避免 installedApps
+    // 每次刷新都因新建集合而触发重建。
+    final installedVersions = ref.watch(
+      installedAppsProvider.select(
+        (state) => _InstalledVersions(
+          state.apps
+              .where((app) => app.appId == widget.appId)
+              .map((app) => app.version)
+              .toSet(),
+        ),
       ),
     );
-    final installTask = installState.getAppInstallStatus(widget.appId);
+
+    // 队列只取本应用的“头部任务 + 版本行活跃任务”切片。进度 tick 会使
+    // 切片内容变化（仅本应用安装时），详情页需要重建以刷新头部进度；
+    // 其他应用的高频队列事件则因值相等被 select 抑制。
+    final installView = ref.watch(
+      installQueueProvider.select(
+        (state) => _AppDetailInstallView(
+          statusTask: state.getAppInstallStatus(widget.appId),
+          activeTasks: state.getActiveTasksForApp(widget.appId),
+        ),
+      ),
+    );
+
+    // 更新列表只订阅“本应用是否在列表内”这一布尔事实，列表加载/顺序变化
+    // 不会重建详情页。
+    final hasUpdateInList = ref.watch(
+      updateAppsProvider.select(
+        (state) => state.apps.any((app) => app.appId == widget.appId),
+      ),
+    );
+
+    final installedVersionsSnapshot = installedVersions.values;
+    final hasInstalledInstance = installedVersionsSnapshot.isNotEmpty;
+    final installTask = installView.statusTask;
     final hasUpdate = AppDetailPageLogic.hasAvailableUpdate(
       appId: widget.appId,
       hasInstalledInstance: hasInstalledInstance,
-      updateAppIds: updateAppIds,
+      updateAppIds: hasUpdateInList ? {widget.appId} : const <String>{},
       remoteVersion: detailState.appDetail?.version ?? detailState.app?.version,
       highestInstalledVersion: AppDetailPageLogic.highestInstalledVersion(
-        installedVersions,
+        installedVersionsSnapshot,
       ),
     );
     final buttonState = AppDetailPageLogic.installButtonState(
@@ -98,11 +118,21 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       hasInstalledInstance: hasInstalledInstance,
       hasUpdate: hasUpdate,
     );
+    final distribution = ref.watch(
+      linglongEnvProvider.select(
+        (state) => state.result?.distribution ?? LinuxDistribution.unknown,
+      ),
+    );
     final statusMessage = installTask == null
         ? null
-        : ref
-              .watch(installMessagesProvider)
-              .messageForTask(installTask, distribution: distribution);
+        : ref.watch(
+            installMessagesProvider.select(
+              (messages) => messages.messageForTask(
+                installTask,
+                distribution: distribution,
+              ),
+            ),
+          );
     final downloadSpeed = buttonState == InstallButtonState.installing
         ? (installTask?.cliSpeed ?? ref.watch(networkSpeedProvider).formatted)
         : '';
@@ -118,9 +148,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       body: _buildBody(
         context,
         detailState: detailState,
-        installState: installState,
         installTask: installTask,
-        installedVersions: installedVersions,
+        activeTasksForApp: installView.activeTasks,
+        installedVersions: installedVersionsSnapshot,
         installTaskStatusMessage: statusMessage,
         buttonState: buttonState,
         downloadSpeed: downloadSpeed,
@@ -133,8 +163,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   Widget _buildBody(
     BuildContext context, {
     required AppDetailState detailState,
-    required InstallQueueState installState,
     required InstallTask? installTask,
+    required List<InstallTask> activeTasksForApp,
     required Set<String> installedVersions,
     required String? installTaskStatusMessage,
     required InstallButtonState buttonState,
@@ -255,7 +285,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             isLoading: detailState.isLoadingVersions,
             errorMessage: detailState.versionsError,
             isExpanded: detailState.isVersionListExpanded,
-            installState: installState,
+            activeTasksForApp: activeTasksForApp,
             installedVersions: installedVersions,
             onToggleExpanded: () {
               ref
@@ -289,4 +319,50 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       ),
     );
   }
+}
+
+/// 已安装版本集合的值相等包装。
+///
+/// Riverpod `select` 用 `==` 判断选中值是否变化；普通 `Set` 的相等性是
+/// 引用相等，每次新建集合都会误判为变化。这里显式实现集合内容相等，
+/// 让 `installedAppsProvider` 的刷新只有在本应用版本集合真正变化时重建页面。
+class _InstalledVersions {
+  const _InstalledVersions(this.values);
+
+  final Set<String> values;
+
+  @override
+  bool operator ==(Object other) {
+    return other is _InstalledVersions && setEquals(values, other.values);
+  }
+
+  @override
+  int get hashCode => Object.hashAllUnordered(values);
+}
+
+/// 详情页从安装队列 select 出的本应用任务切片。
+///
+/// 任务列表每次状态变更都会重新生成，必须实现值相等；否则 `select`
+/// 无法抑制与本应用无关的队列进度事件。
+class _AppDetailInstallView {
+  const _AppDetailInstallView({
+    required this.statusTask,
+    required this.activeTasks,
+  });
+
+  /// 头部状态区使用的任务（含历史失败记录）。
+  final InstallTask? statusTask;
+
+  /// 版本行使用的活跃任务（当前 + 排队中）。
+  final List<InstallTask> activeTasks;
+
+  @override
+  bool operator ==(Object other) {
+    return other is _AppDetailInstallView &&
+        other.statusTask == statusTask &&
+        listEquals(other.activeTasks, activeTasks);
+  }
+
+  @override
+  int get hashCode => Object.hash(statusTask, Object.hashAll(activeTasks));
 }

@@ -8,7 +8,6 @@ import '../../../core/utils/version_compare.dart';
 import '../../../domain/models/app_version.dart';
 import '../../../domain/models/install_button_state.dart';
 import '../../../domain/models/install_progress.dart';
-import '../../../domain/models/install_queue_state.dart';
 import '../../../domain/models/install_task.dart';
 import '../../../domain/models/installed_app.dart';
 
@@ -146,20 +145,19 @@ abstract final class AppDetailPageLogic {
   }
 
   /// 解析与指定版本行对应的活跃安装或更新任务。
+  ///
+  /// [activeTasksForApp] 必须已按当前应用过滤，调用方负责从安装队列中
+  /// select 该切片，避免纯规则层重新依赖队列状态。
   static InstallTask? versionInstallTask({
-    required InstallQueueState installState,
-    required String appId,
+    required List<InstallTask> activeTasksForApp,
     required List<AppVersion> versions,
     required String? currentVersion,
     required String version,
   }) {
-    if (appId.isEmpty) {
-      return null;
-    }
     final latestVersion = versions.isNotEmpty
         ? versions.first.versionNo
         : currentVersion;
-    for (final task in installState.getActiveTasksForApp(appId)) {
+    for (final task in activeTasksForApp) {
       if (versionTaskMatchesRow(task, version, latestVersion: latestVersion)) {
         return task;
       }

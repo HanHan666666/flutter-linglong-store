@@ -134,20 +134,54 @@ void main() {
     });
   });
 
+  group('compact index codec', () {
+    test('encode/decode round trip preserves fields', () {
+      const entries = [
+        SearchSuggestionEntry(
+          appId: 'org.example.camera',
+          name: '相机',
+          version: '1.0.0',
+          arch: 'x86_64',
+          repoName: 'stable',
+          module: 'binary',
+        ),
+        SearchSuggestionEntry(appId: 'org.example.minimal', name: '最小条目'),
+      ];
+
+      final decoded = decodeCompactIndex(encodeCompactIndex(entries));
+
+      expect(decoded.length, 2);
+      expect(decoded[0].appId, 'org.example.camera');
+      expect(decoded[0].version, '1.0.0');
+      expect(decoded[0].arch, 'x86_64');
+      expect(decoded[0].repoName, 'stable');
+      expect(decoded[0].module, 'binary');
+      // 空字符串字段应还原为 null
+      expect(decoded[1].version, isNull);
+      expect(decoded[1].repoName, isNull);
+    });
+
+    test('decode malformed payload returns empty list', () {
+      expect(decodeCompactIndex('not valid json'), isEmpty);
+      expect(decodeCompactIndex('{"unexpected":"shape"}'), isEmpty);
+    });
+  });
+
   group('AppSearchIndex', () {
-    test('hydrates cached index from LazyBox on first read', () async {
-      final cachedJson = jsonEncode({
-        'stable': [
-          {
-            'id': 'org.example.camera',
-            'name': '相机',
-            'version': '1.0.0',
-            'arch': ['x86_64'],
-            'module': 'binary',
-          },
-        ],
-      });
-      await Hive.lazyBox('cache').put('search_index_json', cachedJson);
+    test('hydrates fresh compact cache without rerunning ll-cli', () async {
+      final compactJson = encodeCompactIndex(const [
+        SearchSuggestionEntry(
+          appId: 'org.example.camera',
+          name: '相机',
+          version: '1.0.0',
+          arch: 'x86_64',
+          module: 'binary',
+        ),
+      ]);
+      // 带 TTL 写入模拟真实路径：新鲜期内 get 不会过期
+      await Hive.lazyBox('cache').put('search_index_compact_v1', compactJson);
+      await Hive.lazyBox('cache').put('search_index_compact_v1_ttl',
+          DateTime.now().millisecondsSinceEpoch + 3600 * 1000);
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
@@ -160,6 +194,34 @@ void main() {
       expect(state, isA<AsyncData<List<SearchSuggestionEntry>>>());
       final entries = (state as AsyncData<List<SearchSuggestionEntry>>).value;
       expect(entries.single.appId, 'org.example.camera');
+    });
+
+    test('migrates legacy raw json cache and drops the legacy key', () async {
+      final legacyJson = jsonEncode({
+        'stable': [
+          {
+            'id': 'org.example.camera',
+            'name': '相机',
+            'version': '1.0.0',
+            'arch': ['x86_64'],
+            'module': 'binary',
+          },
+        ],
+      });
+      await Hive.lazyBox('cache').put('search_index_json', legacyJson);
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      container.listen(appSearchIndexProvider, (_, _) {});
+      await pumpEventQueue();
+
+      final state = container.read(appSearchIndexProvider);
+      expect(state, isA<AsyncData<List<SearchSuggestionEntry>>>());
+      final entries = (state as AsyncData<List<SearchSuggestionEntry>>).value;
+      expect(entries.single.appId, 'org.example.camera');
+
+      // 旧 key 在兜底读取后必须被删除，释放 Hive 中的整串原始 JSON
+      expect(await Hive.lazyBox('cache').get('search_index_json'), isNull);
     });
   });
 }

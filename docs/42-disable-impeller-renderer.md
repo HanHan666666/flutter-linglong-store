@@ -61,6 +61,30 @@ OpenGL/GLES 路径，而该回退路径正是上游问题最集中的地方：
 - 龙芯 3.46 引擎默认就是 Skia 路径，行为不受影响；
 - 已用 3.46 头文件对 `my_application.cc` 做过 `-fsyntax-only` 编译验证。
 
+## 为什么禁用几乎没有代价：Impeller 的收益边界
+
+**Impeller 的核心收益是「帧时序可预测」，不是更高的 FPS 或更低的内存，**
+而前者对本应用的价值很小。具体依据：
+
+1. **官方不量化收益**：docs.flutter.dev/perf/impeller 对 Impeller 的表述全部是
+   定性的（离线预编译全部 shader、提前创建管线状态对象、显式缓存控制），
+   没有给出任何 FPS、卡顿率或内存的量化数字。它的目标是稳态帧率与 Skia
+   持平（parity），消除的是 Skia「首次用到某效果时运行时编译 shader」造成的
+   首次动画/首次滚动掉帧。
+2. **内存无一致收益**：官方文档对内存只字未提。社区实测结论混合——Impeller
+   预先创建管线状态对象，部分场景 GPU 内存反而略高。网传「省约 100 MB」
+   出自 Avalonia（.NET 框架）接入 Impeller 的对比，**不是 Flutter 应用的数据，
+   不要引用**。本应用的内存大头在 Dart 堆的图片缓存与 KeepAlive 页面缓存
+   （见 `docs/memory-optimization/`），与渲染后端基本无关。
+3. **本应用 shader 复杂度低**：商店 UI 以列表滚动 + 图片卡片 + 少量圆角/阴影
+   为主，属于 shader 编译卡顿的低发场景；且 Skia 会把运行时编译结果写入磁盘
+   SkSL 缓存，二次启动后首次卡顿也基本无感。
+4. **交换是单向划算的**：用理论上「首帧动画更稳」换「所有显卡驱动栈上画面
+   正确」，在 Impeller Linux GL 回退路径能画对像素之前没有讨论余地——
+   渲染错误的渲染器没有性能可言。
+
+因此该决策不视为性能取舍，而是兼容性修复。
+
 ## 风险与后续复查点
 
 1. **Impeller opt-out 将被移除**：3.47 引擎已对显式关闭 Impeller 打印弃用警告
@@ -68,8 +92,11 @@ OpenGL/GLES 路径，而该回退路径正是上游问题最集中的地方：
    升级 Flutter 必须重新评估：要么留在移除前的最后一个版本，要么依赖上游
    修复后的 Impeller。
 2. **何时可以重新开启**：待上游 Linux Impeller（尤其 GL 回退路径与虚拟机/
-   小众显卡场景）成熟后，可在真机 + 虚拟机矩阵上回归验证再考虑恢复默认。
-   恢复方式：删除 runner 中的禁用调用与 CMake 检测即可。
+   小众显卡场景）成熟后，在**正常硬件（物理机）**上把
+   `FLUTTER_SDK_HAS_IMPELLER_SWITCH` 宏开/关各编一版，用 `flutter run --profile`
+   对比帧时序与 jank 率，再对比 RSS / GPU 内存，得到本应用自己的量化结论后再
+   考虑恢复默认。注意：VMware 等虚拟机环境开启 Impeller 即花屏，无法作为
+   对比实验环境。恢复方式：删除 runner 中的禁用调用与 CMake 检测即可。
 3. **性能预期**：Skia + OpenGL 是 3.46 及之前一直在用的路径，无性能回退；
    禁用 Impeller 不影响 `FLUTTER_LINUX_RENDERER=software` 软件渲染回退体系
    （软件渲染模式下引擎强制非 Impeller）。

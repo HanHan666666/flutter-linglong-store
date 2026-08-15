@@ -82,7 +82,9 @@ ImageCache 现已生效 64MB / 200 张限制。
 - `custom_category_page.dart` — 补 `VisibilityAwareMixin`，`_onScroll` 加可见性守卫
 - `search_list_page.dart` — 移除 `AutomaticKeepAliveClientMixin`（不在 `keepAliveRoutes` 白名单中）
 
-### 🟡 热点 4：排行榜一次加载 100 条（预估 10~20MB）
+### ✅ 热点 4：排行榜一次加载 100 条（预估 10~20MB）— **已修复**
+
+> **修复提交：** `2326185` — 2026-08-15，两榜改为 30 条/页 + 触底自动加载
 
 **问题文件：** `lib/application/providers/ranking_provider.dart` L57-66
 
@@ -96,7 +98,9 @@ const PageParams(pageNo: 1, pageSize: 100)
 - 但 100 条卡片的 Widget 对象 + 100 个 AppIcon 图片 = 显著内存占用
 - 且 KeepAlive 保活 + 无可见性暂停，切走后图片仍在缓存
 
-### 🟢 热点 5：Hive Box 全量加载（预估 10~30MB）
+### ✅ 热点 5：Hive Box 全量加载（预估 10~30MB）— **已修复**
+
+> **修复提交：** `126423e` — 2026-08-15，`CacheService` 改 `openLazyBox`，增加过期清理与 300 条容量上限
 
 **问题文件：** `lib/core/storage/cache_service.dart`
 
@@ -110,7 +114,9 @@ final box = await Hive.openBox('cache');
 - 无 Box 大小/条目上限
 - 长期运行后可能累积大量过期但未清理的缓存数据
 
-### 🟢 热点 6：installedAppsProvider 全量持有（预估 5~15MB）
+### ✅ 热点 6：installedAppsProvider 全量持有（预估 5~15MB）— **已缓解**
+
+> **缓解提交：** `3c6cf6c`（列表描述截断）、`57fe919`（详情页/更新页按应用粒度 select）。`InstalledApp` 模型本身保持轻量，不再存放完整详情。
 
 **问题文件：** `lib/application/providers/installed_apps_provider.dart` L44
 
@@ -140,8 +146,13 @@ class InstalledApps extends _$InstalledApps { ... }
 | 热点 1 | 图片解码未限尺寸 | ✅ 已修复 | ~70 MB |
 | 热点 2 | ImageCache 限额未生效 | ✅ 已修复 | ~36 MB |
 | 热点 3 | KeepAlive 页面无可见性暂停 | ✅ 已修复 | ~30-60 MB |
-| 热点 4 | 排行榜一次加载 100 条 | 🟡 待优化 | ~10-20 MB |
-| 热点 5 | Hive Box 全量加载 | 🟡 待优化 | ~10-30 MB |
-| 热点 6 | installedAppsProvider 全量持有 | 🟡 待优化 | ~5-15 MB |
+| 热点 4 | 排行榜一次加载 100 条 | ✅ 已修复（`2326185`） | ~10-20 MB |
+| 热点 5 | Hive Box 全量加载 | ✅ 已修复（`126423e`） | ~10-30 MB |
+| 热点 6 | installedAppsProvider 全量持有 | ✅ 已缓解（`3c6cf6c`/`57fe919`） | ~5-15 MB |
+| 追加 1 | 搜索索引原始 JSON 数 MB 双份驻留 | ✅ 已修复（`4d7c0ff`） | 数 MB~数十 MB |
+| 追加 2 | 安装进度事件导致整网格/整页重建 | ✅ 已修复（`b2dd754`/`57fe919`） | UI 响应 |
+| 追加 3 | 标题栏后台 Timer 空转 | ✅ 已修复（`99fb21c`） | CPU/UI |
+| 追加 4 | seed/演示截图等死资源 | ✅ 已清理（`6ce924c`） | 包体/维护 |
 
-**已修复三项预计节省：141~181 MB**，可将内存从 700MB 降至 **520~560MB** 区间。
+**静态门禁（2026-08-15）**：`flutter analyze` 0 issue，全量测试 949 通过 / 11 跳过。
+最终 RSS 以 `flutter run -d linux --profile` 人工验收为准；完整实施清单与剩余项收尾见 `09-handoff-2026-08.md`。

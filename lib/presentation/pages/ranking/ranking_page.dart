@@ -256,20 +256,84 @@ const _kInactiveRankingState = RankingState();
 /// 排行榜 Tab 内容
 ///
 /// 每个 Tab 独立 watch 自己类型的数据，避免整个 RankingState 变化导致其他 Tab 重建。
-class _RankingTabContent extends ConsumerWidget {
+/// 接入 [AutoLoadWhenNotScrollable] 实现 30 条/页的触底自动加载。
+class _RankingTabContent extends ConsumerStatefulWidget {
   const _RankingTabContent({required this.type});
 
   final RankingType type;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_RankingTabContent> createState() => _RankingTabContentState();
+}
+
+class _RankingTabContentState extends ConsumerState<_RankingTabContent>
+    with AutoLoadWhenNotScrollable {
+  final ScrollController _scrollController = ScrollController();
+
+  /// 所在主页面（排行榜页）当前是否激活，由 Shell 可见性作用域下发。
+  bool _isBranchActive = true;
+
+  // ==================== AutoLoadWhenNotScrollable 实现 ====================
+
+  @override
+  ScrollController get scrollController => _scrollController;
+
+  /// 页面可见 = 排行榜主页面激活且当前 Tab 被选中
+  /// （TabBarView 常驻两个 Tab，未选中的 Tab 不应触发补页）。
+  @override
+  bool get isPageVisible =>
+      _isBranchActive &&
+      ref.read(rankingProvider).selectedType == widget.type;
+
+  @override
+  bool get isLoading => ref.read(rankingProvider).isLoading;
+
+  @override
+  bool get isLoadingMore => ref.read(rankingProvider).isLoadingMore;
+
+  @override
+  bool get hasMore => ref.read(rankingProvider).hasMore;
+
+  @override
+  VoidCallback get onLoadMore =>
+      () => ref.read(rankingProvider.notifier).loadMore();
+
+  @override
+  void initState() {
+    super.initState();
+    initAutoLoad();
+    _scrollController.addListener(onScroll);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 跟随 Shell 主路由可见性，隐藏时暂停自动补页副作用
+    final active =
+        ShellBranchVisibilityScope.maybeOf(context)?.isActive ?? false;
+    if (_isBranchActive != active) {
+      _isBranchActive = active;
+      onVisibilityChanged(active);
+    }
+  }
+
+  @override
+  void dispose() {
+    disposeAutoLoad();
+    _scrollController.removeListener(onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
     // 只 watch 当前 Tab 对应的类型数据
     // 非活跃 Tab 返回常量引用，避免 copyWith 创建新对象误触发重建
     final state = ref.watch(
       rankingProvider.select(
-        (s) => s.selectedType == type ? s : _kInactiveRankingState,
+        (s) => s.selectedType == widget.type ? s : _kInactiveRankingState,
       ),
     );
 
@@ -294,24 +358,31 @@ class _RankingTabContent extends ConsumerWidget {
       );
     }
 
+    // 数据渲染完成后安排"内容不足一屏自动补页"检查
+    scheduleAutoLoadCheckAfterLayout();
+
     // 正常显示
     return RefreshIndicator(
       onRefresh: () => ref.read(rankingProvider.notifier).refresh(),
       child: Semantics(
         label: l10n.a11yAppListArea,
-        child: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              sliver: _AppsGrid(apps: state.data!.apps, type: type),
-            ),
-            // 排行榜固定展示前 100 条，footer 始终以整行形式提示列表结束。
-            PaginationFooterSliver(
-              isLoadingMore: false,
-              hasMore: false,
-              hasItems: state.data!.apps.isNotEmpty,
-            ),
-          ],
+        child: NotificationListener<ScrollMetricsNotification>(
+          onNotification: onScrollMetricsNotification,
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                sliver: _AppsGrid(apps: state.data!.apps, type: widget.type),
+              ),
+              // 30 条/页触底加载；没有更多时 footer 以整行形式提示列表结束。
+              PaginationFooterSliver(
+                isLoadingMore: state.isLoadingMore,
+                hasMore: state.hasMore,
+                hasItems: state.data!.apps.isNotEmpty,
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -266,6 +266,107 @@ void main() {
         );
       });
     });
+
+    group('pagination', () {
+      late MockAppApiService mockApiService;
+
+      setUp(() {
+        mockApiService = MockAppApiService();
+      });
+
+      AppListItemDTO dtoOf(String appId, String name) =>
+          AppListItemDTO.fromJson({
+            'appId': appId,
+            'zhName': name,
+            'version': '1.0.0',
+          });
+
+      test('首页 30 条，触底加载合并且名次跨页连续，无更多后停止请求', () async {
+        final page1 =
+            List.generate(30, (i) => dtoOf('app.$i', 'App $i'));
+        final page2 =
+            List.generate(10, (i) => dtoOf('more.$i', 'More $i'));
+        // mockito 的 verify 会消费调用记录，这里在应答内自行记录请求参数
+        final sentRequests = <PageParams>[];
+
+        when(mockApiService.getNewAppList(any)).thenAnswer((invocation) async {
+          final request = invocation.positionalArguments.single as PageParams;
+          sentRequests.add(request);
+          return _buildRankingResponse(
+            request.pageNo == 2 ? page2 : page1,
+            path: '/visit/getNewAppList',
+            currentPage: request.pageNo,
+            pageSize: request.pageSize,
+            pages: 2,
+          );
+        });
+
+        final container = ProviderContainer(
+          overrides: [
+            appApiServiceProvider.overrideWithValue(mockApiService),
+          ],
+        );
+        addTearDown(container.dispose);
+        container.listen<RankingState>(rankingProvider, (_, _) {});
+        await _flushAsyncWork();
+
+        // 首页请求应使用 30 条分页
+        expect(sentRequests.single.pageSize, 30);
+        expect(sentRequests.single.pageNo, 1);
+
+        var state = container.read(rankingProvider);
+        expect(state.data!.apps.length, 30);
+        expect(state.hasMore, isTrue);
+        expect(state.data!.apps.first.rank, 1);
+        expect(state.data!.apps.last.rank, 30);
+
+        await container.read(rankingProvider.notifier).loadMore();
+        await _flushAsyncWork();
+
+        state = container.read(rankingProvider);
+        expect(state.data!.apps.length, 40);
+        // 第二页从已加载条数继续编号
+        expect(state.data!.apps[30].rank, 31);
+        // 第 2 页为最后一页（current=2, pages=2）
+        expect(state.hasMore, isFalse);
+
+        // hasMore=false 后 loadMore 不再发起新请求
+        await container.read(rankingProvider.notifier).loadMore();
+        expect(sentRequests.length, 2);
+      });
+
+      test('无更多数据时 loadMore 直接短路，不再发请求', () async {
+        final sentRequests = <PageParams>[];
+        when(mockApiService.getNewAppList(any)).thenAnswer((invocation) async {
+          final request = invocation.positionalArguments.single as PageParams;
+          sentRequests.add(request);
+          return _buildRankingResponse(
+            const [],
+            path: '/visit/getNewAppList',
+            currentPage: request.pageNo,
+            pageSize: request.pageSize,
+            pages: 1,
+          );
+        });
+
+        final container = ProviderContainer(
+          overrides: [
+            appApiServiceProvider.overrideWithValue(mockApiService),
+          ],
+        );
+        addTearDown(container.dispose);
+        container.listen<RankingState>(rankingProvider, (_, _) {});
+        await _flushAsyncWork();
+
+        // 空榜单：无数据且 hasMore=false
+        expect(container.read(rankingProvider).hasMore, isFalse);
+        expect(sentRequests.length, 1);
+
+        // loadMore 应直接短路，不产生第二个请求
+        await container.read(rankingProvider.notifier).loadMore();
+        expect(sentRequests.length, 1);
+      });
+    });
   });
 }
 
@@ -280,6 +381,7 @@ HttpResponse<AppListResponse> _buildRankingResponse(
   required String path,
   required int currentPage,
   required int pageSize,
+  int pages = 1,
 }) {
   return HttpResponse(
     AppListResponse(
@@ -289,7 +391,7 @@ HttpResponse<AppListResponse> _buildRankingResponse(
         total: records.length,
         size: pageSize,
         current: currentPage,
-        pages: 1,
+        pages: pages,
       ),
     ),
     Response(requestOptions: RequestOptions(path: path)),

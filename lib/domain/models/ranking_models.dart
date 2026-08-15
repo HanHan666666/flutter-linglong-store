@@ -70,8 +70,11 @@ class RankingData {
 sealed class RankingState with _$RankingState {
   const factory RankingState({
     @Default(false) bool isLoading,
+    @Default(false) bool isLoadingMore,
     String? error,
     RankingData? data,
+    @Default(false) bool hasMore,
+    @Default(1) int currentPage,
     @Default(RankingType.rising) RankingType selectedType, // 默认进入最新上架榜
   }) = _RankingState;
 }

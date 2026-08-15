@@ -308,7 +308,7 @@ as bool,
 /// @nodoc
 mixin _$RankingState {
 
- bool get isLoading; String? get error; RankingData? get data; RankingType get selectedType;
+ bool get isLoading; bool get isLoadingMore; String? get error; RankingData? get data; bool get hasMore; int get currentPage; RankingType get selectedType;
 /// Create a copy of RankingState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -319,16 +319,16 @@ $RankingStateCopyWith<RankingState> get copyWith => _$RankingStateCopyWithImpl<R
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RankingState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.error, error) || other.error == error)&&(identical(other.data, data) || other.data == data)&&(identical(other.selectedType, selectedType) || other.selectedType == selectedType));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RankingState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.error, error) || other.error == error)&&(identical(other.data, data) || other.data == data)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.currentPage, currentPage) || other.currentPage == currentPage)&&(identical(other.selectedType, selectedType) || other.selectedType == selectedType));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isLoading,error,data,selectedType);
+int get hashCode => Object.hash(runtimeType,isLoading,isLoadingMore,error,data,hasMore,currentPage,selectedType);
 
 @override
 String toString() {
-  return 'RankingState(isLoading: $isLoading, error: $error, data: $data, selectedType: $selectedType)';
+  return 'RankingState(isLoading: $isLoading, isLoadingMore: $isLoadingMore, error: $error, data: $data, hasMore: $hasMore, currentPage: $currentPage, selectedType: $selectedType)';
 }
 
 
@@ -339,7 +339,7 @@ abstract mixin class $RankingStateCopyWith<$Res>  {
   factory $RankingStateCopyWith(RankingState value, $Res Function(RankingState) _then) = _$RankingStateCopyWithImpl;
 @useResult
 $Res call({
- bool isLoading, String? error, RankingData? data, RankingType selectedType
+ bool isLoading, bool isLoadingMore, String? error, RankingData? data, bool hasMore, int currentPage, RankingType selectedType
 });
 
 
@@ -356,12 +356,15 @@ class _$RankingStateCopyWithImpl<$Res>
 
 /// Create a copy of RankingState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? isLoading = null,Object? error = freezed,Object? data = freezed,Object? selectedType = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? isLoading = null,Object? isLoadingMore = null,Object? error = freezed,Object? data = freezed,Object? hasMore = null,Object? currentPage = null,Object? selectedType = null,}) {
   return _then(RankingState(
 isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
+as bool,isLoadingMore: null == isLoadingMore ? _self.isLoadingMore : isLoadingMore // ignore: cast_nullable_to_non_nullable
 as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as RankingData?,selectedType: null == selectedType ? _self.selectedType : selectedType // ignore: cast_nullable_to_non_nullable
+as RankingData?,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
+as bool,currentPage: null == currentPage ? _self.currentPage : currentPage // ignore: cast_nullable_to_non_nullable
+as int,selectedType: null == selectedType ? _self.selectedType : selectedType // ignore: cast_nullable_to_non_nullable
 as RankingType,
   ));
 }
@@ -444,10 +447,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isLoading,  String? error,  RankingData? data,  RankingType selectedType)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isLoading,  bool isLoadingMore,  String? error,  RankingData? data,  bool hasMore,  int currentPage,  RankingType selectedType)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RankingState() when $default != null:
-return $default(_that.isLoading,_that.error,_that.data,_that.selectedType);case _:
+return $default(_that.isLoading,_that.isLoadingMore,_that.error,_that.data,_that.hasMore,_that.currentPage,_that.selectedType);case _:
   return orElse();
 
 }
@@ -465,10 +468,10 @@ return $default(_that.isLoading,_that.error,_that.data,_that.selectedType);case 
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isLoading,  String? error,  RankingData? data,  RankingType selectedType)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isLoading,  bool isLoadingMore,  String? error,  RankingData? data,  bool hasMore,  int currentPage,  RankingType selectedType)  $default,) {final _that = this;
 switch (_that) {
 case _RankingState():
-return $default(_that.isLoading,_that.error,_that.data,_that.selectedType);}
+return $default(_that.isLoading,_that.isLoadingMore,_that.error,_that.data,_that.hasMore,_that.currentPage,_that.selectedType);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -482,10 +485,10 @@ return $default(_that.isLoading,_that.error,_that.data,_that.selectedType);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isLoading,  String? error,  RankingData? data,  RankingType selectedType)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isLoading,  bool isLoadingMore,  String? error,  RankingData? data,  bool hasMore,  int currentPage,  RankingType selectedType)?  $default,) {final _that = this;
 switch (_that) {
 case _RankingState() when $default != null:
-return $default(_that.isLoading,_that.error,_that.data,_that.selectedType);case _:
+return $default(_that.isLoading,_that.isLoadingMore,_that.error,_that.data,_that.hasMore,_that.currentPage,_that.selectedType);case _:
   return null;
 
 }
@@ -497,12 +500,15 @@ return $default(_that.isLoading,_that.error,_that.data,_that.selectedType);case 
 
 
 class _RankingState implements RankingState {
-  const _RankingState({this.isLoading = false, this.error, this.data, this.selectedType = RankingType.rising});
+  const _RankingState({this.isLoading = false, this.isLoadingMore = false, this.error, this.data, this.hasMore = false, this.currentPage = 1, this.selectedType = RankingType.rising});
   
 
 @override@JsonKey() final  bool isLoading;
+@override@JsonKey() final  bool isLoadingMore;
 @override final  String? error;
 @override final  RankingData? data;
+@override@JsonKey() final  bool hasMore;
+@override@JsonKey() final  int currentPage;
 @override@JsonKey() final  RankingType selectedType;
 
 /// Create a copy of RankingState
@@ -515,16 +521,16 @@ _$RankingStateCopyWith<_RankingState> get copyWith => __$RankingStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RankingState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.error, error) || other.error == error)&&(identical(other.data, data) || other.data == data)&&(identical(other.selectedType, selectedType) || other.selectedType == selectedType));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RankingState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.error, error) || other.error == error)&&(identical(other.data, data) || other.data == data)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.currentPage, currentPage) || other.currentPage == currentPage)&&(identical(other.selectedType, selectedType) || other.selectedType == selectedType));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isLoading,error,data,selectedType);
+int get hashCode => Object.hash(runtimeType,isLoading,isLoadingMore,error,data,hasMore,currentPage,selectedType);
 
 @override
 String toString() {
-  return 'RankingState(isLoading: $isLoading, error: $error, data: $data, selectedType: $selectedType)';
+  return 'RankingState(isLoading: $isLoading, isLoadingMore: $isLoadingMore, error: $error, data: $data, hasMore: $hasMore, currentPage: $currentPage, selectedType: $selectedType)';
 }
 
 
@@ -535,7 +541,7 @@ abstract mixin class _$RankingStateCopyWith<$Res> implements $RankingStateCopyWi
   factory _$RankingStateCopyWith(_RankingState value, $Res Function(_RankingState) _then) = __$RankingStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool isLoading, String? error, RankingData? data, RankingType selectedType
+ bool isLoading, bool isLoadingMore, String? error, RankingData? data, bool hasMore, int currentPage, RankingType selectedType
 });
 
 
@@ -552,12 +558,15 @@ class __$RankingStateCopyWithImpl<$Res>
 
 /// Create a copy of RankingState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? isLoading = null,Object? error = freezed,Object? data = freezed,Object? selectedType = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isLoading = null,Object? isLoadingMore = null,Object? error = freezed,Object? data = freezed,Object? hasMore = null,Object? currentPage = null,Object? selectedType = null,}) {
   return _then(_RankingState(
 isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
+as bool,isLoadingMore: null == isLoadingMore ? _self.isLoadingMore : isLoadingMore // ignore: cast_nullable_to_non_nullable
 as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as RankingData?,selectedType: null == selectedType ? _self.selectedType : selectedType // ignore: cast_nullable_to_non_nullable
+as RankingData?,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
+as bool,currentPage: null == currentPage ? _self.currentPage : currentPage // ignore: cast_nullable_to_non_nullable
+as int,selectedType: null == selectedType ? _self.selectedType : selectedType // ignore: cast_nullable_to_non_nullable
 as RankingType,
   ));
 }

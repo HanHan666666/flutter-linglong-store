@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import '../../domain/models/app_operation_failure.dart';
 import '../../domain/models/installed_app.dart';
@@ -11,6 +12,18 @@ import '../../domain/models/running_app.dart';
 /// 影响列表、搜索、进程和安装状态判断的稳定性。
 class CliOutputParser {
   CliOutputParser._();
+
+  /// 在后台 isolate 解析已安装应用列表。
+  ///
+  /// `ll-cli list --json --type=all`（含基础服务）是 CLI 输出里最大的单体 JSON，
+  /// 且运行进程页每 3 秒轮询一次；在主 isolate 解析会造成轮询期可感知的卡顿与
+  /// 分配峰值。解析是纯字符串进、纯模型出的函数，适合整体移出 UI isolate；
+  /// 解析失败抛出的 [FormatException] 会原样透传，调用方错误处理不变。
+  static Future<List<InstalledApp>> parseInstalledAppsInBackground(
+    String output,
+  ) {
+    return Isolate.run(() => parseInstalledApps(output));
+  }
 
   /// 解析已安装应用列表。
   ///

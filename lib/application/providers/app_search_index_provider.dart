@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -239,7 +240,8 @@ class AppSearchIndex extends _$AppSearchIndex {
       final legacy = await CacheService.get<String>(_kLegacyCacheKey);
       if (legacy == null || legacy.isEmpty) return null;
       await CacheService.delete(_kLegacyCacheKey);
-      final entries = parseSearchIndexJson(legacy);
+      // 旧缓存是数 MB 级原始 JSON，解析同样移入后台 isolate
+      final entries = await Isolate.run(() => parseSearchIndexJson(legacy));
       return entries.isEmpty ? null : entries;
     } catch (_) {
       return null;
@@ -261,7 +263,9 @@ class AppSearchIndex extends _$AppSearchIndex {
         }
         return;
       }
-      final entries = parseSearchIndexJson(output.stdout);
+      // 全仓库索引是应用内最大的单体 JSON，解析移入后台 isolate，
+      // 避免启动/刷新期间主 isolate 卡顿与分配峰值。
+      final entries = await Isolate.run(() => parseSearchIndexJson(output.stdout));
       AppLogger.info('[SearchIndex] ll-cli 加载完成: ${entries.length} 条应用');
       if (!ref.mounted) return;
       state = AsyncData(entries);

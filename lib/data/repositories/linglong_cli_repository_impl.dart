@@ -683,7 +683,11 @@ class LinglongCliRepositoryImpl
         throw _commandOutputException('list', output);
       }
 
-      final apps = CliOutputParser.parseInstalledApps(output.stdout);
+      // list 全量输出是 CLI 最大的单体 JSON，且被运行进程页高频轮询；
+      // 解析移入后台 isolate，避免主 isolate 周期性卡顿。
+      final apps = await CliOutputParser.parseInstalledAppsInBackground(
+        output.stdout,
+      );
 
       // 过滤基础服务
       if (!includeBaseService) {

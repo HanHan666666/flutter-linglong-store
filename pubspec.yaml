@@ -95,6 +95,5 @@ flutter:
 
   assets:
     - assets/icons/
-    - assets/seeds/
 
   generate: true  # 启用 flutter_localizations 代码生成

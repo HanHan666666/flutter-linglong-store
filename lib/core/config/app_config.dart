@@ -39,9 +39,6 @@ class AppConfig {
   /// 更深的应用检索应走搜索/分类过滤，而不是无限滚动。
   static const int maxListItems = 300;
 
-  /// 最大保活页面数
-  static const int maxKeepAlivePages = 10;
-
   /// 默认超时时间（秒）
   static const int defaultTimeoutSeconds = 30;
 

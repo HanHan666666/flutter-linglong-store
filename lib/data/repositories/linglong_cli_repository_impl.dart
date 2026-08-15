@@ -61,6 +61,43 @@ class LinglongCliRepositoryImpl
   /// 取消标志
   final Map<String, bool> _cancelFlags = {};
 
+  /// 运行进程面板专用的已装列表快照（含基础服务），配合 [_runningPanelSnapshotAt] 做 TTL 复用。
+  ///
+  /// 运行进程页每 3 秒轮询一次 `getRunningApps`，而它内部为了补齐进程元数据
+  /// 每次都全量执行 `ll-cli list --json --type=all`（数百条大 JSON + 子进程），
+  /// 是稳态下最大的周期性开销。已装列表在轮询窗口内几乎不变，这里按短 TTL
+  /// 复用快照；卸载成功后主动失效，安装/更新场景的元数据最迟在 TTL 后自然收敛。
+  /// 仅进程面板读取该缓存，installedAppsProvider 的刷新路径始终全量拉取。
+  List<InstalledApp>? _runningPanelInstalledSnapshot;
+
+  /// 快照生成时间；远超 TTL 视为无缓存。
+  DateTime? _runningPanelSnapshotAt;
+
+  /// 进程面板已装列表快照的复用时长。
+  static const Duration _runningPanelSnapshotTtl = Duration(seconds: 15);
+
+  /// 失效进程面板已装列表快照（卸载等确定改变已装集合的操作后调用）。
+  void _invalidateRunningPanelSnapshot() {
+    _runningPanelInstalledSnapshot = null;
+    _runningPanelSnapshotAt = null;
+  }
+
+  /// 读取（或按 TTL 复用）进程面板所需的已装列表快照。
+  Future<List<InstalledApp>> _installedAppsForRunningPanel() async {
+    final snapshot = _runningPanelInstalledSnapshot;
+    final snapshotAt = _runningPanelSnapshotAt;
+    if (snapshot != null &&
+        snapshotAt != null &&
+        DateTime.now().difference(snapshotAt) < _runningPanelSnapshotTtl) {
+      return snapshot;
+    }
+
+    final apps = await getInstalledApps(includeBaseService: true);
+    _runningPanelInstalledSnapshot = apps;
+    _runningPanelSnapshotAt = DateTime.now();
+    return apps;
+  }
+
   /// 把非零退出结果转换为稳定领域失败。
   LinglongCliException _commandOutputException(
     String command,
@@ -263,7 +300,11 @@ class LinglongCliRepositoryImpl
         }
 
         final jsonEvent = CliOutputParser.parseJsonLine(event.line);
-        final progressInfo = CliOutputParser.parseInstallProgressEx(event.line);
+        // 复用上面已解析的 JSON 事件，安装输出行高频到达，避免逐行二次 jsonDecode
+        final progressInfo = CliOutputParser.parseInstallProgressFromEvent(
+          jsonEvent,
+          event.line,
+        );
         final rawMessage = _extractRawMessage(event.line, jsonEvent: jsonEvent);
 
         if (progressInfo.phase == InstallPhase.downloading) {
@@ -716,7 +757,8 @@ class LinglongCliRepositoryImpl
 
       // 与 Rust 版本保持一致：使用 list --json --type=all 的批量详情补齐
       // 版本、架构、渠道和来源，避免为每个进程额外执行一次外部命令。
-      final installedApps = await getInstalledApps(includeBaseService: true);
+      // 快照按短 TTL 复用，避免 3 秒轮询反复全量执行 list。
+      final installedApps = await _installedAppsForRunningPanel();
       final installedByAppId = {
         for (final app in installedApps) app.appId: app,
       };
@@ -822,6 +864,8 @@ class LinglongCliRepositoryImpl
 
       if (output.success) {
         AppLogger.info('[LinglongCli] 卸载成功: $appId');
+        // 卸载确定改变已装集合，立即失效进程面板快照
+        _invalidateRunningPanelSnapshot();
         return;
       }
 
@@ -1118,6 +1162,8 @@ class LinglongCliRepositoryImpl
       ], timeout: const Duration(minutes: 5));
 
       if (output.success) {
+        // 清理废弃服务同样改变已装集合，失效进程面板快照
+        _invalidateRunningPanelSnapshot();
         return;
       }
 

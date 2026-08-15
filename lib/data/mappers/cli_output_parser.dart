@@ -354,12 +354,22 @@ class CliOutputParser {
   /// 仅使用 JSON 事件驱动状态机；非 JSON 输出作为原始日志保留，但不会再
   /// 推断下载、安装、完成或失败状态，避免普通日志误触发业务状态迁移。
   static InstallProgressInfo parseInstallProgressEx(String line) {
-    final jsonEvent = parseJsonLine(line);
+    return parseInstallProgressFromEvent(parseJsonLine(line), line);
+  }
+
+  /// 基于调用方已解析的 JSON 事件综合解析安装进度。
+  ///
+  /// 安装输出行高频到达且调用方通常已经解析过一次 [parseJsonLine]，
+  /// 复用事件可避免同一行输出被 jsonDecode 两次。
+  static InstallProgressInfo parseInstallProgressFromEvent(
+    ParsedJsonEvent? jsonEvent,
+    String rawLine,
+  ) {
     if (jsonEvent != null) {
-      return _convertJsonEventToProgressInfo(jsonEvent, line);
+      return _convertJsonEventToProgressInfo(jsonEvent, rawLine);
     }
 
-    return InstallProgressInfo(rawLine: line);
+    return InstallProgressInfo(rawLine: rawLine);
   }
 
   /// 将 JSON 事件转换为进度信息

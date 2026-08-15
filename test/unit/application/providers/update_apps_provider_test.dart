@@ -39,7 +39,6 @@ void main() {
       const updatableApp = UpdatableApp(
         installedApp: installedApp,
         latestVersion: '2.0.0',
-        latestVersionDescription: 'Bug fixes and improvements',
         latestVersionSize: '20 MB',
       );
 
@@ -47,10 +46,6 @@ void main() {
       expect(updatableApp.name, equals('Test App'));
       expect(updatableApp.currentVersion, equals('1.0.0'));
       expect(updatableApp.latestVersion, equals('2.0.0'));
-      expect(
-        updatableApp.latestVersionDescription,
-        equals('Bug fixes and improvements'),
-      );
       expect(updatableApp.latestVersionSize, equals('20 MB'));
       expect(updatableApp.icon, equals('https://example.com/icon.png'));
     });
@@ -67,7 +62,6 @@ void main() {
         latestVersion: '2.0.0',
       );
 
-      expect(updatableApp.latestVersionDescription, isNull);
       expect(updatableApp.latestVersionSize, isNull);
       expect(updatableApp.icon, isNull);
     });

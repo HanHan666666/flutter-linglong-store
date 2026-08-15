@@ -775,7 +775,6 @@ class TestUpdateApps extends UpdateApps {
             version: '1.0.0',
           ),
           latestVersion: '1.1.0',
-          latestVersionDescription: 'Bug fixes',
         ),
       ],
     );

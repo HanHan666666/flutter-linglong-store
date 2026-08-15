@@ -14,7 +14,6 @@ class UpdatableApp {
   const UpdatableApp({
     required this.installedApp,
     required this.latestVersion,
-    this.latestVersionDescription,
     this.latestVersionSize,
   });
 
@@ -23,9 +22,6 @@ class UpdatableApp {
 
   /// 最新版本号
   final String latestVersion;
-
-  /// 最新版本更新说明
-  final String? latestVersionDescription;
 
   /// 最新版本大小
   final String? latestVersionSize;
@@ -183,8 +179,6 @@ class UpdateApps extends _$UpdateApps {
         final candidate = UpdatableApp(
           installedApp: installedApp,
           latestVersion: appDetail.version,
-          latestVersionDescription:
-              appDetail.releaseNote ?? appDetail.detailDescription,
           latestVersionSize: appDetail.packageSize,
         );
         final existing = updatableAppsById[appDetail.appId];

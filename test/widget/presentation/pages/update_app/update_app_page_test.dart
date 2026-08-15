@@ -51,7 +51,6 @@ void main() {
                 version: '1.0.0',
               ),
               latestVersion: '1.1.0',
-              latestVersionDescription: 'Bug fixes',
             ),
           ],
         );
@@ -125,7 +124,6 @@ void main() {
                 version: '1.0.0',
               ),
               latestVersion: '1.1.0',
-              latestVersionDescription: 'Bug fixes',
             ),
           ],
         );
@@ -179,7 +177,6 @@ void main() {
                 version: '1.0.0',
               ),
               latestVersion: '1.1.0',
-              latestVersionDescription: 'Bug fixes',
             ),
           ],
         );
@@ -733,7 +730,6 @@ void main() {
               version: '1.0.0',
             ),
             latestVersion: '1.1.0',
-            latestVersionDescription: 'Bug fixes',
           ),
         ],
       );
@@ -774,7 +770,6 @@ void main() {
               version: '1.0.0',
             ),
             latestVersion: '1.1.0',
-            latestVersionDescription: 'Bug fixes',
           ),
         ],
       );
@@ -820,7 +815,6 @@ void main() {
               version: '1.0.0',
             ),
             latestVersion: '1.1.0',
-            latestVersionDescription: 'Bug fixes',
           ),
         ],
       );
@@ -866,7 +860,6 @@ void main() {
               version: '1.0.0',
             ),
             latestVersion: '1.1.0',
-            latestVersionDescription: 'Bug fixes',
           ),
         ],
       );

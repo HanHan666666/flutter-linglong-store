@@ -418,6 +418,17 @@ static void my_application_activate(GApplication* application) {
   gtk_window_set_default_size(window, 1280, 720);
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
+#ifdef FLUTTER_SDK_HAS_IMPELLER_SWITCH
+  // Flutter 3.47 起 Impeller 成为 Linux 桌面默认渲染器，但在部分显卡驱动栈上
+  // 存在整窗黑屏、画面撕裂与白色三角形花屏的兼容性问题（典型复现环境：
+  // VMware SVGA II 虚拟显卡，Vulkan 不可用时回落到尚不成熟的 GL 路径），
+  // 上游问题见 flutter/flutter#124040、#130619。这里显式关闭 Impeller，
+  // 恢复并保持 3.46 及之前长期使用的 Skia+OpenGL 渲染路径。
+  // 注意：release 引擎不解析 FLUTTER_ENGINE_SWITCHES 环境变量，
+  // 因此必须在 runner 中调用本 API 关闭；命令行/环境变量方式对发布包无效。
+  // 龙芯锁定的 3.46 SDK 无此 API 且引擎无 Impeller，编译期由宏直接跳过。
+  fl_dart_project_set_enable_impeller(project, FALSE);
+#endif
   fl_dart_project_set_dart_entrypoint_arguments(
       project, self->dart_entrypoint_arguments);
 

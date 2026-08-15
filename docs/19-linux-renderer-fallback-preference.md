@@ -101,3 +101,10 @@ Linux runner 内以集中常量表定义白名单，默认仅包含：
 - 不和用户环境变量打架：外部显式配置优先，UI 只做解释，不自作主张覆盖。
 - 不把用户逼进死角：关闭软件渲染前把回退命令直接摆出来，并支持复制。
 - 不制造额外维护成本：CPU 白名单与命令生成都必须集中封装。
+
+## 相关文档
+
+- `docs/42-disable-impeller-renderer.md`：Flutter 3.47 起 Impeller 成为 Linux
+  默认渲染器后在部分显卡驱动栈上花屏，runner 中已显式禁用并回退 Skia+OpenGL。
+  本文档的 software/hardware 模式体系不受该改动影响（Impeller 与
+  `FLUTTER_LINUX_RENDERER` 是两个独立维度）。

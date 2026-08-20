@@ -5,15 +5,19 @@ import 'package:linglong_store/application/providers/application_dependency_prov
 import 'package:linglong_store/application/providers/app_search_index_provider.dart';
 import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
+import 'package:linglong_store/application/providers/installed_app_diff_report_provider.dart';
 import 'package:linglong_store/application/providers/installed_apps_provider.dart';
 import 'package:linglong_store/application/providers/launch_provider.dart';
 import 'package:linglong_store/application/providers/linglong_env_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
+import 'package:linglong_store/application/services/installed_app_diff_report_service.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
 import 'package:linglong_store/domain/models/linglong_env_check_result.dart';
 import 'package:linglong_store/domain/repositories/analytics_repository.dart';
+
+import '../../../mocks/mock_classes.mocks.dart';
 
 void main() {
   setUpAll(() async {
@@ -345,6 +349,9 @@ void main() {
       () async {
         final container = ProviderContainer(
           overrides: [
+            installedAppDiffReportServiceProvider.overrideWithValue(
+              _RecordingDiffReportService(),
+            ),
             globalAppProvider.overrideWith(
               () => _TestGlobalApp(
                 const GlobalAppState(
@@ -399,6 +406,9 @@ void main() {
       var searchIndexBuilds = 0;
       final container = ProviderContainer(
         overrides: [
+          installedAppDiffReportServiceProvider.overrideWithValue(
+            _RecordingDiffReportService(),
+          ),
           globalAppProvider.overrideWith(
             () => _TestGlobalApp(
               const GlobalAppState(
@@ -441,6 +451,9 @@ void main() {
       () async {
         final container = ProviderContainer(
           overrides: [
+            installedAppDiffReportServiceProvider.overrideWithValue(
+              _RecordingDiffReportService(),
+            ),
             globalAppProvider.overrideWith(
               () => _TestGlobalApp(
                 const GlobalAppState(
@@ -494,6 +507,9 @@ void main() {
         final analytics = _RecordingAnalyticsRepository();
         final container = ProviderContainer(
           overrides: [
+            installedAppDiffReportServiceProvider.overrideWithValue(
+              _RecordingDiffReportService(),
+            ),
             launchAppVersionResolverProvider.overrideWithValue(
               () async => '3.2.1',
             ),
@@ -555,8 +571,12 @@ void main() {
       'initializes analytics session and resolves app version before visit report',
       () async {
         final analytics = _RecordingAnalyticsRepository();
+        final diffService = _RecordingDiffReportService();
         final container = ProviderContainer(
           overrides: [
+            installedAppDiffReportServiceProvider.overrideWithValue(
+              diffService,
+            ),
             launchAppVersionResolverProvider.overrideWithValue(
               () async => '3.2.1',
             ),
@@ -602,6 +622,8 @@ void main() {
 
         expect(analytics.initializeSessionCalls, equals(1));
         expect(analytics.visitReports, hasLength(1));
+        // 启动完成后挂载差量检测服务，首轮即为旧版对齐的全量基线上报。
+        expect(diffService.startCalls, equals(1));
         expect(analytics.visitReports.single.appVersion, equals('3.2.1'));
         expect(
           analytics.visitReports.single.osVersion,
@@ -647,6 +669,12 @@ class _RecordingAnalyticsRepository implements AnalyticsRepository {
     String appId,
     String version, {
     String? appName,
+  }) async {}
+
+  @override
+  Future<void> reportInstalledAppsDiff({
+    required List<InstalledApp> addedItems,
+    required List<InstalledApp> removedItems,
   }) async {}
 
   @override
@@ -765,6 +793,12 @@ class _NoopAnalyticsRepository implements AnalyticsRepository {
   }) async {}
 
   @override
+  Future<void> reportInstalledAppsDiff({
+    required List<InstalledApp> addedItems,
+    required List<InstalledApp> removedItems,
+  }) async {}
+
+  @override
   Future<void> reportUninstall(
     String appId,
     String version, {
@@ -781,4 +815,26 @@ class _NoopAnalyticsRepository implements AnalyticsRepository {
     String? repoName,
     String? appVersion,
   }) async {}
+}
+
+/// 记录挂载调用的差量服务替身。
+///
+/// 覆写 [InstalledAppDiffReportService.start] 与立即检测入口，避免测试容器
+/// 真实启动轮询或依赖 ll-cli；仅验证启动完成阶段的挂载行为。
+class _RecordingDiffReportService extends InstalledAppDiffReportService {
+  _RecordingDiffReportService()
+    : super(
+        cliRepository: MockLinglongCliRepository(),
+        analyticsRepository: const _NoopAnalyticsRepository(),
+      );
+
+  int startCalls = 0;
+
+  @override
+  void start() {
+    startCalls += 1;
+  }
+
+  @override
+  void scheduleImmediateCheck() {}
 }

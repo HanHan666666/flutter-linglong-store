@@ -9,6 +9,7 @@ import 'application_dependency_providers.dart';
 import 'app_operation_lifecycle_coordinator.dart';
 import 'app_search_index_provider.dart';
 import 'global_provider.dart';
+import 'installed_app_diff_report_provider.dart';
 import 'installed_apps_provider.dart';
 import 'install_queue_provider.dart';
 import 'linglong_env_provider.dart';
@@ -533,6 +534,10 @@ class LaunchSequence extends _$LaunchSequence {
     // 本地任务、批次和 Outbox 恢复完成后再启动全局副作用协调器，
     // 避免系统通知或列表刷新抢在启动事实核验之前执行。
     ref.read(appOperationLifecycleCoordinatorProvider);
+
+    // 启动已安装列表差量检测：首轮检测即旧版对齐的启动全量基线上报。
+    // 放在统计上下文预热完成之后，确保上报时 visitorId/clientIp 已就绪。
+    ref.read(installedAppDiffReportServiceProvider).start();
 
     // 异步上报启动访问记录（fire-and-forget，失败不影响应用）
     _reportStartupVisit();

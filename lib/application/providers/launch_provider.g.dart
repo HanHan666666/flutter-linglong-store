@@ -65,7 +65,7 @@ final class LaunchSequenceProvider
   }
 }
 
-String _$launchSequenceHash() => r'3c5c3de656311665e0ba46f05d0f2d29cecb7e19';
+String _$launchSequenceHash() => r'9a0ecbebfcc04894cc3af452d8a1e3edafb8e564';
 
 /// 启动序列 Provider
 ///

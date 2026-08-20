@@ -16,7 +16,6 @@ AppUninstallService appUninstallService(Ref ref) {
   final runningProcess = ref.read(runningProcessProvider.notifier);
   final installedApps = ref.read(installedAppsProvider.notifier);
   final cliRepository = ref.read(linglongCliRepositoryProvider);
-  final analyticsRepository = ref.read(analyticsRepositoryProvider);
   final collectionSyncService = ref.read(appCollectionSyncServiceProvider);
 
   return AppUninstallService(
@@ -25,7 +24,6 @@ AppUninstallService appUninstallService(Ref ref) {
     uninstallApp: cliRepository.uninstallApp,
     removeInstalledApp: installedApps.removeApp,
     syncAfterUninstall: collectionSyncService.syncAfterSuccessfulOperation,
-    reportUninstall: analyticsRepository.reportUninstall,
     // 读取当前正在执行（非排队等待）的安装/更新任务
     readActiveInstallTask: () {
       final currentTask = ref.read(installQueueProvider).currentTask;

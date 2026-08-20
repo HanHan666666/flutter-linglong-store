@@ -417,40 +417,6 @@ class MockAnalyticsRepository extends _i1.Mock
           as _i5.Future<void>);
 
   @override
-  _i5.Future<void> reportInstall(
-    String? appId,
-    String? version, {
-    String? appName,
-  }) =>
-      (super.noSuchMethod(
-            Invocation.method(
-              #reportInstall,
-              [appId, version],
-              {#appName: appName},
-            ),
-            returnValue: _i5.Future<void>.value(),
-            returnValueForMissingStub: _i5.Future<void>.value(),
-          )
-          as _i5.Future<void>);
-
-  @override
-  _i5.Future<void> reportUninstall(
-    String? appId,
-    String? version, {
-    String? appName,
-  }) =>
-      (super.noSuchMethod(
-            Invocation.method(
-              #reportUninstall,
-              [appId, version],
-              {#appName: appName},
-            ),
-            returnValue: _i5.Future<void>.value(),
-            returnValueForMissingStub: _i5.Future<void>.value(),
-          )
-          as _i5.Future<void>);
-
-  @override
   _i5.Future<void> reportInstalledAppsDiff({
     required List<_i6.InstalledApp>? addedItems,
     required List<_i6.InstalledApp>? removedItems,

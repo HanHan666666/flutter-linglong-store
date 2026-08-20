@@ -3,15 +3,19 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:linglong_store/application/providers/ignored_updates_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
+import 'package:linglong_store/application/providers/installed_app_diff_report_provider.dart';
 import 'package:linglong_store/application/providers/installed_apps_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
 import 'package:linglong_store/application/services/ignored_update_service.dart';
+import 'package:linglong_store/application/services/installed_app_diff_report_service.dart';
 import 'package:linglong_store/core/storage/ignored_update_storage.dart';
 import 'package:linglong_store/domain/models/ignored_update.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
+import 'package:linglong_store/domain/repositories/analytics_repository.dart';
+import 'package:linglong_store/domain/repositories/linglong_cli_repository.dart';
 
 void main() {
   group('IgnoredUpdateService', () {
@@ -171,8 +175,53 @@ ProviderContainer _createContainer({
         () => installedApps ?? _TrackingInstalledApps(),
       ),
       updateAppsProvider.overrideWith(() => updateApps),
+      // 同步链路会触发差量检测，测试用空实现避免依赖 ll-cli 与真实轮询。
+      installedAppDiffReportServiceProvider.overrideWithValue(
+        _NoopDiffReportService(),
+      ),
     ],
   );
+}
+
+/// 差量检测空实现：同步触发仅作占位，不启动任何 Timer。
+class _NoopDiffReportService extends InstalledAppDiffReportService {
+  _NoopDiffReportService()
+    : super(
+        cliRepository: _PlaceholderCliRepository(),
+        analyticsRepository: _NoopAnalyticsRepository(),
+      );
+
+  @override
+  void scheduleImmediateCheck() {}
+}
+
+/// 仅供构造占位的空统计仓储；差量逻辑被覆写，不会真正调用任何方法。
+class _NoopAnalyticsRepository implements AnalyticsRepository {
+  @override
+  Future<void> initializeSession() async {}
+
+  @override
+  Future<void> reportVisit({
+    String? arch,
+    String? llVersion,
+    String? llBinVersion,
+    String? detailMsg,
+    String? osVersion,
+    String? repoName,
+    String? appVersion,
+  }) async {}
+
+  @override
+  Future<void> reportInstalledAppsDiff({
+    required List<InstalledApp> addedItems,
+    required List<InstalledApp> removedItems,
+  }) async {}
+}
+
+/// 仅供构造占位的 CLI 仓储；差量逻辑被覆写，不会真正调用任何方法。
+class _PlaceholderCliRepository implements LinglongCliRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _StaticInstallQueue extends InstallQueue {

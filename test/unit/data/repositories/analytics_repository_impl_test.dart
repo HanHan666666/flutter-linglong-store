@@ -82,60 +82,6 @@ void main() {
       expect(clientIpResolverCalls, equals(1));
     });
 
-    test(
-      'reportInstall and reportUninstall include cached client ip',
-      () async {
-        var clientIpResolverCalls = 0;
-        when(mockApiService.saveInstalledRecord(any)).thenAnswer(
-          (_) async => HttpResponse<dynamic>(
-            <String, dynamic>{'code': 200},
-            Response<dynamic>(
-              requestOptions: RequestOptions(path: '/app/saveInstalledRecord'),
-            ),
-          ),
-        );
-
-        final repository = AnalyticsRepositoryImpl(
-          apiService: mockApiService,
-          clientIpResolver: () async {
-            clientIpResolverCalls += 1;
-            return '5.6.7.8';
-          },
-        );
-
-        await repository.reportInstall(
-          'org.example.demo',
-          '1.0.0',
-          appName: 'Demo App',
-        );
-        await repository.reportUninstall(
-          'org.example.demo',
-          '1.0.0',
-          appName: 'Demo App',
-        );
-
-        final captured = verify(
-          mockApiService.saveInstalledRecord(captureAny),
-        ).captured.cast<SaveInstalledRecordRequest>();
-
-        expect(captured, hasLength(2));
-        expect(captured.first.clientIp, equals('5.6.7.8'));
-        expect(captured.first.addedItems, hasLength(1));
-        expect(
-          captured.first.addedItems.single.appId,
-          equals('org.example.demo'),
-        );
-        expect(captured.first.addedItems.single.name, equals('Demo App'));
-        expect(captured.last.clientIp, equals('5.6.7.8'));
-        expect(captured.last.removedItems, hasLength(1));
-        expect(
-          captured.last.removedItems.single.appId,
-          equals('org.example.demo'),
-        );
-        expect(clientIpResolverCalls, equals(1));
-      },
-    );
-
     test('reportInstalledAppsDiff 映射差量并补齐仓库与类型字段', () async {
       when(mockApiService.saveInstalledRecord(any)).thenAnswer(
         (_) async => HttpResponse<dynamic>(

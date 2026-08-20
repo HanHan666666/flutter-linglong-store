@@ -1,7 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'installed_app_diff_report_provider.dart';
 import 'installed_apps_provider.dart';
 import 'update_apps_provider.dart';
 
@@ -20,6 +19,11 @@ class AppCollectionSyncService {
     // 避免更新列表继续读取到成功前的旧版本。
     await _ref.read(installedAppsProvider.notifier).refresh();
     await _ref.read(updateAppsProvider.notifier).checkUpdates();
+    // 同步完成后触发差量检测上报（对齐旧版 reflushInstalledItemsImmediate），
+    // 防抖合并且不阻塞操作链路：安装/卸载统计由差量结果统一产生。
+    _ref
+        .read(installedAppDiffReportServiceProvider)
+        .scheduleImmediateCheck();
   }
 }
 

@@ -1244,7 +1244,6 @@ class _RecordingUninstallService extends AppUninstallService {
         uninstallApp: (_, _) async {},
         removeInstalledApp: (_, _) {},
         syncAfterUninstall: () async {},
-        reportUninstall: (_, _, {String? appName}) async {},
       );
 
   final List<InstalledApp> executedApps = <InstalledApp>[];

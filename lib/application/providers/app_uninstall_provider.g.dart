@@ -59,4 +59,4 @@ final class AppUninstallServiceProvider
 }
 
 String _$appUninstallServiceHash() =>
-    r'd6a12cbef538acb84bf8461e5388cc5e660d63c1';
+    r'95dc512d639956de77d923449161d185b35a2c22';

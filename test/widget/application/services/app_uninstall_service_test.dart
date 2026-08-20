@@ -18,7 +18,6 @@ void main() {
         uninstallApp: (appId, version) async {},
         removeInstalledApp: (appId, version) {},
         syncAfterUninstall: () async {},
-        reportUninstall: (appId, version, {appName}) async {},
         readActiveInstallTask: () => null,
       );
 
@@ -32,7 +31,6 @@ void main() {
         uninstallApp: (appId, version) async {},
         removeInstalledApp: (appId, version) {},
         syncAfterUninstall: () async {},
-        reportUninstall: (appId, version, {appName}) async {},
         readActiveInstallTask: () => ('My App', 'org.active.app'),
       );
 
@@ -85,7 +83,6 @@ void main() {
         uninstallApp: (appId, version) async {},
         removeInstalledApp: (appId, version) {},
         syncAfterUninstall: () async {},
-        reportUninstall: (appId, version, {appName}) async {},
       );
 
       final instances = service.getRunningInstances('org.foo');
@@ -108,9 +105,6 @@ void main() {
         syncAfterUninstall: () async {
           events.add('sync');
         },
-        reportUninstall: (appId, version, {appName}) async {
-          events.add('report:$appId@$version:$appName');
-        },
       );
 
       const app = InstalledApp(
@@ -126,7 +120,6 @@ void main() {
         'uninstall:org.example.demo@1.0.0',
         'remove:org.example.demo@1.0.0',
         'sync',
-        'report:org.example.demo@1.0.0:Demo',
       ]);
     });
 
@@ -146,9 +139,6 @@ void main() {
           },
           syncAfterUninstall: () async {
             events.add('sync');
-          },
-          reportUninstall: (appId, version, {appName}) async {
-            events.add('report:$appId@$version:$appName');
           },
         );
 
@@ -170,7 +160,6 @@ void main() {
           'uninstall:org.example.demo@null',
           'remove:org.example.demo@1.0.0',
           'sync',
-          'report:org.example.demo@1.0.0:Demo',
         ]);
       },
     );
@@ -205,7 +194,6 @@ void main() {
         syncAfterUninstall: () async {
           events.add('sync');
         },
-        reportUninstall: (appId, version, {appName}) async {},
       );
 
       const app = InstalledApp(
@@ -244,7 +232,6 @@ void main() {
         uninstallApp: (appId, version) async {},
         removeInstalledApp: (appId, version) {},
         syncAfterUninstall: () async {},
-        reportUninstall: (appId, version, {appName}) async {},
       );
 
       const app = InstalledApp(
@@ -270,8 +257,7 @@ void main() {
           },
           removeInstalledApp: (appId, version) {},
           syncAfterUninstall: () async {},
-          reportUninstall: (appId, version, {appName}) async {},
-        );
+          );
 
         const app = InstalledApp(
           appId: 'org.example.demo',

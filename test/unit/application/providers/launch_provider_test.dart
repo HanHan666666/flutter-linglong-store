@@ -665,23 +665,9 @@ class _RecordingAnalyticsRepository implements AnalyticsRepository {
   }
 
   @override
-  Future<void> reportInstall(
-    String appId,
-    String version, {
-    String? appName,
-  }) async {}
-
-  @override
   Future<void> reportInstalledAppsDiff({
     required List<InstalledApp> addedItems,
     required List<InstalledApp> removedItems,
-  }) async {}
-
-  @override
-  Future<void> reportUninstall(
-    String appId,
-    String version, {
-    String? appName,
   }) async {}
 
   @override
@@ -786,23 +772,9 @@ class _NoopAnalyticsRepository implements AnalyticsRepository {
   Future<void> initializeSession() async {}
 
   @override
-  Future<void> reportInstall(
-    String appId,
-    String version, {
-    String? appName,
-  }) async {}
-
-  @override
   Future<void> reportInstalledAppsDiff({
     required List<InstalledApp> addedItems,
     required List<InstalledApp> removedItems,
-  }) async {}
-
-  @override
-  Future<void> reportUninstall(
-    String appId,
-    String version, {
-    String? appName,
   }) async {}
 
   @override

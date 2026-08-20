@@ -126,52 +126,6 @@ class AnalyticsRepositoryImpl implements AnalyticsRepository {
   }
 
   @override
-  Future<void> reportInstall(
-    String appId,
-    String version, {
-    String? appName,
-  }) async {
-    try {
-      final visitorId = _visitorIdentityService.getOrCreateVisitorId();
-      final clientIp = await _getOrCreateClientIp();
-      final request = SaveInstalledRecordRequest(
-        visitorId: visitorId,
-        clientIp: clientIp,
-        addedItems: [
-          InstalledRecordItemDTO(appId: appId, name: appName, version: version),
-        ],
-      );
-      await _apiService.saveInstalledRecord(request);
-      AppLogger.info('[analytics] Install record sent: $appId $version');
-    } catch (e) {
-      AppLogger.warning('[analytics] Failed to send install record: $e');
-    }
-  }
-
-  @override
-  Future<void> reportUninstall(
-    String appId,
-    String version, {
-    String? appName,
-  }) async {
-    try {
-      final visitorId = _visitorIdentityService.getOrCreateVisitorId();
-      final clientIp = await _getOrCreateClientIp();
-      final request = SaveInstalledRecordRequest(
-        visitorId: visitorId,
-        clientIp: clientIp,
-        removedItems: [
-          InstalledRecordItemDTO(appId: appId, name: appName, version: version),
-        ],
-      );
-      await _apiService.saveInstalledRecord(request);
-      AppLogger.info('[analytics] Uninstall record sent: $appId $version');
-    } catch (e) {
-      AppLogger.warning('[analytics] Failed to send uninstall record: $e');
-    }
-  }
-
-  @override
   Future<void> reportInstalledAppsDiff({
     required List<InstalledApp> addedItems,
     required List<InstalledApp> removedItems,

@@ -238,17 +238,9 @@ class _FakeAnalyticsRepository implements AnalyticsRepository {
   Future<void> initializeSession() async {}
 
   @override
-  Future<void> reportInstall(
-    String appId,
-    String version, {
-    String? appName,
-  }) async {}
-
-  @override
-  Future<void> reportUninstall(
-    String appId,
-    String version, {
-    String? appName,
+  Future<void> reportInstalledAppsDiff({
+    required List<InstalledApp> addedItems,
+    required List<InstalledApp> removedItems,
   }) async {}
 
   @override

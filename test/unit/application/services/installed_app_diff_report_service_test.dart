@@ -28,16 +28,6 @@ class _RecordingAnalyticsRepository implements AnalyticsRepository {
   }) async {}
 
   @override
-  Future<void> reportInstall(String appId, String version, {String? appName}) {
-    return Future.value();
-  }
-
-  @override
-  Future<void> reportUninstall(String appId, String version, {String? appName}) {
-    return Future.value();
-  }
-
-  @override
   Future<void> reportInstalledAppsDiff({
     required List<InstalledApp> addedItems,
     required List<InstalledApp> removedItems,

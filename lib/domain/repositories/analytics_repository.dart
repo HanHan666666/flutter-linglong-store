@@ -21,12 +21,6 @@ abstract class AnalyticsRepository {
     String? appVersion,
   });
 
-  /// 上报应用安装事件
-  Future<void> reportInstall(String appId, String version, {String? appName});
-
-  /// 上报应用卸载事件
-  Future<void> reportUninstall(String appId, String version, {String? appName});
-
   /// 上报已安装列表差量（对齐旧版 Electron 的差量统计模型）。
   ///
   /// [addedItems] 相对上次快照新增安装的应用，启动首轮快照为空时即为

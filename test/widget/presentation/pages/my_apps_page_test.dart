@@ -208,7 +208,6 @@ class _NoopAppUninstallService extends AppUninstallService {
         uninstallApp: (_, _) async {},
         removeInstalledApp: (_, _) {},
         syncAfterUninstall: () async {},
-        reportUninstall: (_, _, {String? appName}) async {},
       );
 
   @override

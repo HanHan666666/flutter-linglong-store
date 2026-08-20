@@ -104,8 +104,9 @@ class AppOperationLifecycleCoordinator {
 
   /// 消费单任务成功事件。
   ///
-  /// 各副作用相互隔离：刷新失败不能吞掉统计或自动运行，任一失败也不能让同一
+  /// 各副作用相互隔离：刷新失败不能吞掉自动运行，任一失败也不能让同一
   /// 事件永久占据 Outbox。任务事实已经成功，外围副作用只做尽力执行。
+  /// 安装/更新统计不再在此直接上报，统一由差量检测链路在同步完成后触发。
   Future<void> _consumeTaskSucceeded(String effectId, String taskId) async {
     final task = _ref
         .read(installQueueProvider)
@@ -124,16 +125,6 @@ class AppOperationLifecycleCoordinator {
     if (task.batchId == null) {
       await _syncAppCollections('同步应用集合失败: ${task.appId}');
     }
-    await _runBestEffort(
-      '上报安装或更新统计失败: ${task.appId}',
-      () => _ref
-          .read(analyticsRepositoryProvider)
-          .reportInstall(
-            task.appId,
-            task.version ?? task.target?.expectedVersion ?? 'unknown',
-            appName: task.appName,
-          ),
-    );
 
     final preferences = _ref.read(globalAppProvider).userPreferences;
     if (preferences.autoRunAfterInstall &&

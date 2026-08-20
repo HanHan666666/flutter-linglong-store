@@ -397,6 +397,41 @@ class AppLocalizationsAr extends AppLocalizations {
       'عرض نتيجة التحديث في إشعارات سطح المكتب بعد اكتمال تحديث الكل بضغطة واحدة';
 
   @override
+  String get userExperienceProgram => 'برنامج تحسين تجربة المستخدم';
+
+  @override
+  String get userExperienceProgramDesc =>
+      'إرسال إحصائيات استخدام مجهولة للمساعدة في تحسين المتجر';
+
+  @override
+  String get userExperienceProgramDialogIntro =>
+      'من خلال الانضمام إلى برنامج تحسين تجربة المستخدم، أنت تساعد في جعل متجر لينغ لونغ أفضل. نجمع فقط قدرًا صغيرًا من المعلومات المجهولة لتحسين توصيات التطبيقات وتجربة التنزيل:';
+
+  @override
+  String get userExperienceProgramDialogItemIdentity =>
+      'معرّف جهاز مجهول (سلسلة عشوائية لا يمكنها التعرف عليك)';
+
+  @override
+  String get userExperienceProgramDialogItemSystem =>
+      'بنية النظام وإصدار نظام التشغيل ومعلومات النواة واسم المضيف وإصدار بيئة لينغ لونغ';
+
+  @override
+  String get userExperienceProgramDialogItemApps =>
+      'سجلات تثبيت التطبيقات وتحديثها وإزالتها';
+
+  @override
+  String get userExperienceProgramDialogItemNetwork =>
+      'عنوان الشبكة (للإحصاءات الإقليمية فقط)';
+
+  @override
+  String get userExperienceProgramDialogFooter =>
+      'لا تحتوي هذه المعلومات على أي بيانات شخصية ولا تُستخدم للتعرف على هويتك. يمكنك إيقاف تشغيل المفتاح في أي وقت؛ وبعد الإيقاف لن يتم إرسال أي بيانات.';
+
+  @override
+  String get a11yUserExperienceProgramInfo =>
+      'عرض المعلومات التي يجمعها برنامج تحسين تجربة المستخدم';
+
+  @override
   String updateBatchAllSucceededTitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

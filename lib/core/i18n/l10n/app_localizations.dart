@@ -832,6 +832,60 @@ abstract class AppLocalizations {
   /// **'一键更新完成后，在桌面通知中显示更新结果'**
   String get systemNotificationsDescription;
 
+  /// No description provided for @userExperienceProgram.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户体验计划'**
+  String get userExperienceProgram;
+
+  /// No description provided for @userExperienceProgramDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'发送匿名使用统计，帮助我们改进商店'**
+  String get userExperienceProgramDesc;
+
+  /// No description provided for @userExperienceProgramDialogIntro.
+  ///
+  /// In zh, this message translates to:
+  /// **'加入用户体验计划，你正在帮助玲珑商店变得更好。我们只收集少量匿名信息，用于改进应用推荐与下载体验：'**
+  String get userExperienceProgramDialogIntro;
+
+  /// No description provided for @userExperienceProgramDialogItemIdentity.
+  ///
+  /// In zh, this message translates to:
+  /// **'匿名设备标识（一串随机字符，无法识别你）'**
+  String get userExperienceProgramDialogItemIdentity;
+
+  /// No description provided for @userExperienceProgramDialogItemSystem.
+  ///
+  /// In zh, this message translates to:
+  /// **'系统架构、系统版本与内核信息、主机名、玲珑环境版本'**
+  String get userExperienceProgramDialogItemSystem;
+
+  /// No description provided for @userExperienceProgramDialogItemApps.
+  ///
+  /// In zh, this message translates to:
+  /// **'应用的安装、更新与卸载记录'**
+  String get userExperienceProgramDialogItemApps;
+
+  /// No description provided for @userExperienceProgramDialogItemNetwork.
+  ///
+  /// In zh, this message translates to:
+  /// **'网络地址（仅用于地区统计）'**
+  String get userExperienceProgramDialogItemNetwork;
+
+  /// No description provided for @userExperienceProgramDialogFooter.
+  ///
+  /// In zh, this message translates to:
+  /// **'这些信息不包含个人隐私，也不会用于识别你的身份。你可以随时关闭开关，关闭后不会再上报任何数据。'**
+  String get userExperienceProgramDialogFooter;
+
+  /// No description provided for @a11yUserExperienceProgramInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看用户体验计划采集的信息说明'**
+  String get a11yUserExperienceProgramInfo;
+
   /// No description provided for @updateBatchAllSucceededTitle.
   ///
   /// In zh, this message translates to:

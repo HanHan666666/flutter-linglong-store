@@ -12,6 +12,8 @@ _UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>
       showBetaApps: json['showBetaApps'] as bool? ?? false,
       showSystemApps: json['showSystemApps'] as bool? ?? false,
       enableNotifications: json['enableNotifications'] as bool? ?? true,
+      joinUserExperienceProgram:
+          json['joinUserExperienceProgram'] as bool? ?? true,
       autoCreateShortcut: json['autoCreateShortcut'] as bool? ?? true,
       downloadConcurrency: (json['downloadConcurrency'] as num?)?.toInt() ?? 3,
       autoRunAfterInstall: json['autoRunAfterInstall'] as bool? ?? false,
@@ -38,6 +40,7 @@ Map<String, dynamic> _$UserPreferencesToJson(_UserPreferences instance) =>
       'showBetaApps': instance.showBetaApps,
       'showSystemApps': instance.showSystemApps,
       'enableNotifications': instance.enableNotifications,
+      'joinUserExperienceProgram': instance.joinUserExperienceProgram,
       'autoCreateShortcut': instance.autoCreateShortcut,
       'downloadConcurrency': instance.downloadConcurrency,
       'autoRunAfterInstall': instance.autoRunAfterInstall,

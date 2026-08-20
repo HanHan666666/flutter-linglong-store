@@ -55,6 +55,12 @@ sealed class UserPreferences with _$UserPreferences {
     /// 是否启用通知
     @Default(true) bool enableNotifications,
 
+    /// 是否加入用户体验计划（匿名统计上报）。
+    ///
+    /// 关闭后启动访问记录、已安装差量统计与客户端 IP 预热全部停止；
+    /// 默认开启以保持与旧版一致的统计口径，用户可随时在设置页退出。
+    @Default(true) bool joinUserExperienceProgram,
+
     /// 是否启用桌面快捷方式创建
     @Default(true) bool autoCreateShortcut,
 
@@ -383,6 +389,13 @@ class GlobalApp extends Notifier<GlobalAppState> {
   Future<void> setAutoCreateShortcut(bool value) async {
     await updateUserPreferences(
       state.userPreferences.copyWith(autoCreateShortcut: value),
+    );
+  }
+
+  /// 设置是否加入用户体验计划（匿名统计上报）
+  Future<void> setJoinUserExperienceProgram(bool value) async {
+    await updateUserPreferences(
+      state.userPreferences.copyWith(joinUserExperienceProgram: value),
     );
   }
 

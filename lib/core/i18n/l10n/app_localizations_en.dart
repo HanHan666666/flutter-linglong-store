@@ -399,6 +399,41 @@ class AppLocalizationsEn extends AppLocalizations {
       'Show the update result in a desktop notification after Update All finishes';
 
   @override
+  String get userExperienceProgram => 'User Experience Program';
+
+  @override
+  String get userExperienceProgramDesc =>
+      'Send anonymous usage statistics to help us improve the store';
+
+  @override
+  String get userExperienceProgramDialogIntro =>
+      'By joining the User Experience Program, you are helping make the Linglong store better. We only collect a small amount of anonymous information to improve app recommendations and the download experience:';
+
+  @override
+  String get userExperienceProgramDialogItemIdentity =>
+      'An anonymous device identifier (a random string that cannot identify you)';
+
+  @override
+  String get userExperienceProgramDialogItemSystem =>
+      'System architecture, OS and kernel information, host name, and Linglong environment version';
+
+  @override
+  String get userExperienceProgramDialogItemApps =>
+      'Records of app installs, updates, and uninstalls';
+
+  @override
+  String get userExperienceProgramDialogItemNetwork =>
+      'Network address (used only for regional statistics)';
+
+  @override
+  String get userExperienceProgramDialogFooter =>
+      'This information contains no personal data and is never used to identify you. You can turn the switch off at any time; once it is off, no data will be sent.';
+
+  @override
+  String get a11yUserExperienceProgramInfo =>
+      'View what information the User Experience Program collects';
+
+  @override
   String updateBatchAllSucceededTitle(int count) {
     return '$count applications updated';
   }

@@ -283,4 +283,100 @@ void main() {
       expect(icon.color, AppTheme.lightTheme.colorScheme.onSurfaceVariant);
     },
   );
+
+  testWidgets(
+    'user experience program switch toggles the preference',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: SettingPage()),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // 默认开启：开关行存在且处于选中状态。
+      final switchFinder = find.widgetWithText(SwitchListTile, '用户体验计划');
+      expect(switchFinder, findsOneWidget);
+      expect(tester.widget<SwitchListTile>(switchFinder).value, isTrue);
+
+      // 直接点击开关本体，偏好必须落到 UserPreferences。
+      // 开关位于页面下方，先滚动到可见区域再点击。
+      await tester.ensureVisible(switchFinder);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(of: switchFinder, matching: find.byType(Switch)),
+      );
+      // 偏好写入含异步持久化，等待状态与重建都完成。
+      await tester.pumpAndSettle();
+
+      expect(
+        container.read(globalAppProvider).userPreferences.joinUserExperienceProgram,
+        isFalse,
+      );
+      expect(tester.widget<SwitchListTile>(switchFinder).value, isFalse);
+    },
+  );
+
+  testWidgets(
+    'user experience program info button opens the collection dialog',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: SettingPage()),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // 感叹号按钮带无障碍语义，点开后展示采集项说明弹窗。
+      // 语义标签验证无障碍可用；点击用图标本体定位更稳定。
+      final infoIcon = find.byIcon(Icons.info_outline_rounded);
+      expect(
+        find.bySemanticsLabel('查看用户体验计划采集的信息说明'),
+        findsOneWidget,
+      );
+
+      // 按钮位于页面下方，先滚动到可见区域再点击。
+      await tester.ensureVisible(infoIcon);
+      await tester.pumpAndSettle();
+      await tester.tap(infoIcon);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.textContaining('只收集少量匿名信息'), findsOneWidget);
+      expect(find.text('系统架构、系统版本与内核信息、主机名、玲珑环境版本'), findsOneWidget);
+      expect(find.textContaining('随时关闭开关'), findsOneWidget);
+
+      await tester.tap(find.text('关闭'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+    },
+  );
 }

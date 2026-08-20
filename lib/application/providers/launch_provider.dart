@@ -371,12 +371,18 @@ class LaunchSequence extends _$LaunchSequence {
   ///
   /// 参考 Rust 版本：在启动完成前先准备匿名统计会话与商店版本信息，
   /// 确保真正发送启动访问记录时字段已经齐全。
+  /// 用户体验计划关闭时不预热统计会话：不生成访问标识、不请求公网 IP；
+  /// 商店版本解析与统计无关，仍照常执行。
   Future<void> _prepareStartupAnalyticsContext() async {
     try {
-      await Future.wait<Object?>([
-        _resolveAppVersion(),
-        ref.read(analyticsRepositoryProvider).initializeSession(),
-      ]);
+      final futures = <Future<Object?>>[_resolveAppVersion()];
+      if (ref
+          .read(globalAppProvider)
+          .userPreferences
+          .joinUserExperienceProgram) {
+        futures.add(ref.read(analyticsRepositoryProvider).initializeSession());
+      }
+      await Future.wait<Object?>(futures);
     } catch (e) {
       AppLogger.warning('Failed to prepare startup analytics context: $e');
     }
@@ -545,6 +551,14 @@ class LaunchSequence extends _$LaunchSequence {
 
   /// 上报启动访问记录（携带设备/环境信息）
   void _reportStartupVisit() {
+    // 用户体验计划关闭时不发送任何统计上报。
+    if (!ref
+        .read(globalAppProvider)
+        .userPreferences
+        .joinUserExperienceProgram) {
+      AppLogger.info('Launch visit report skipped: program disabled');
+      return;
+    }
     final globalApp = ref.read(globalAppProvider);
     final envResult = ref.read(linglongEnvProvider).result ?? _lastEnvResult;
     ref

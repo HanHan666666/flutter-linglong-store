@@ -154,6 +154,15 @@
   "startupCheckUpdateDesc": "Проверяйте, доступна ли новая версия при каждом запуске",
   "systemNotifications": "Системные уведомления",
   "systemNotificationsDescription": "Показывать результат обновления в уведомлении на рабочем столе после завершения обновления всех.",
+  "userExperienceProgram": "Программа улучшения пользовательского опыта",
+  "userExperienceProgramDesc": "Отправлять анонимную статистику использования, чтобы помочь нам улучшать магазин",
+  "userExperienceProgramDialogIntro": "Присоединяясь к программе улучшения пользовательского опыта, вы помогаете делать магазин Linglong лучше. Мы собираем лишь небольшой объём анонимной информации, чтобы улучшать рекомендации приложений и опыт загрузки:",
+  "userExperienceProgramDialogItemIdentity": "Анонимный идентификатор устройства (случайная строка, которая не может вас идентифицировать)",
+  "userExperienceProgramDialogItemSystem": "Архитектура системы, версия ОС и сведения о ядре, имя хоста и версия окружения Linglong",
+  "userExperienceProgramDialogItemApps": "Сведения об установке, обновлении и удалении приложений",
+  "userExperienceProgramDialogItemNetwork": "Сетевой адрес (только для региональной статистики)",
+  "userExperienceProgramDialogFooter": "Эти сведения не содержат персональных данных и не используются для вашей идентификации. Вы можете в любой момент выключить переключатель — после этого никакие данные отправляться не будут.",
+  "a11yUserExperienceProgramInfo": "Посмотреть, какую информацию собирает программа улучшения пользовательского опыта",
   "updateBatchAllSucceededTitle": "{count, plural, one{Обновлено {count} приложение} few{Обновлено {count} приложения} many{Обновлено {count} приложений} other{Обновлено {count} приложения}}",
   "@updateBatchAllSucceededTitle": {
     "placeholders": {

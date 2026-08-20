@@ -6,18 +6,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/application/providers/app_operation_queue_provider.dart';
 import 'package:linglong_store/application/providers/ignored_updates_provider.dart';
+import 'package:linglong_store/application/providers/installed_app_diff_report_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/application/providers/installed_apps_provider.dart';
 import 'package:linglong_store/application/providers/network_speed_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
 import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
+import 'package:linglong_store/application/services/installed_app_diff_report_service.dart';
 import 'package:linglong_store/core/storage/ignored_update_storage.dart';
 import 'package:linglong_store/domain/models/ignored_update.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
+import 'package:linglong_store/domain/repositories/analytics_repository.dart';
+import 'package:linglong_store/domain/repositories/linglong_cli_repository.dart';
 import 'package:linglong_store/presentation/pages/update_app/update_app_page.dart';
 import 'package:linglong_store/presentation/widgets/install_to_download_flyout.dart';
 import 'package:linglong_store/presentation/widgets/install_button.dart';
@@ -58,6 +62,9 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
+              installedAppDiffReportServiceProvider.overrideWithValue(
+                _NoopDiffReportService(),
+              ),
               installQueueProvider.overrideWith(() => installQueue),
               installedAppsProvider.overrideWith(() => TestInstalledApps()),
               updateAppsProvider.overrideWith(() => updateApps),
@@ -132,6 +139,9 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
+              installedAppDiffReportServiceProvider.overrideWithValue(
+                _NoopDiffReportService(),
+              ),
               installQueueProvider.overrideWith(() => installQueue),
               installedAppsProvider.overrideWith(() => TestInstalledApps()),
               updateAppsProvider.overrideWith(() => updateApps),
@@ -184,6 +194,9 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
+              installedAppDiffReportServiceProvider.overrideWithValue(
+                _NoopDiffReportService(),
+              ),
               installQueueProvider.overrideWith(() => installQueue),
               installedAppsProvider.overrideWith(() => TestInstalledApps()),
               updateAppsProvider.overrideWith(() => updateApps),
@@ -274,6 +287,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            installedAppDiffReportServiceProvider.overrideWithValue(
+              _NoopDiffReportService(),
+            ),
             installQueueProvider.overrideWith(() => installQueue),
             installedAppsProvider.overrideWith(() => TestInstalledApps()),
             updateAppsProvider.overrideWith(() => updateApps),
@@ -322,6 +338,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            installedAppDiffReportServiceProvider.overrideWithValue(
+              _NoopDiffReportService(),
+            ),
             installQueueProvider.overrideWith(() => installQueue),
             installedAppsProvider.overrideWith(() => TestInstalledApps()),
             updateAppsProvider.overrideWith(() => updateApps),
@@ -362,6 +381,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            installedAppDiffReportServiceProvider.overrideWithValue(
+              _NoopDiffReportService(),
+            ),
             installQueueProvider.overrideWith(() => installQueue),
             installedAppsProvider.overrideWith(() => TestInstalledApps()),
             updateAppsProvider.overrideWith(() => updateApps),
@@ -399,6 +421,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            installedAppDiffReportServiceProvider.overrideWithValue(
+              _NoopDiffReportService(),
+            ),
             installQueueProvider.overrideWith(() => installQueue),
             installedAppsProvider.overrideWith(() => TestInstalledApps()),
             updateAppsProvider.overrideWith(() => updateApps),
@@ -441,6 +466,9 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
+              installedAppDiffReportServiceProvider.overrideWithValue(
+                _NoopDiffReportService(),
+              ),
               installQueueProvider.overrideWith(() => installQueue),
               installedAppsProvider.overrideWith(() => installedApps),
               updateAppsProvider.overrideWith(() => updateApps),
@@ -521,6 +549,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            installedAppDiffReportServiceProvider.overrideWithValue(
+              _NoopDiffReportService(),
+            ),
             installQueueProvider.overrideWith(() => installQueue),
             installedAppsProvider.overrideWith(() => TestInstalledApps()),
             updateAppsProvider.overrideWith(() => updateApps),
@@ -898,6 +929,9 @@ Widget _buildIgnoredUpdateFeatureHost({
 }) {
   return ProviderScope(
     overrides: [
+      installedAppDiffReportServiceProvider.overrideWithValue(
+        _NoopDiffReportService(),
+      ),
       ignoredUpdateStorageProvider.overrideWithValue(storage),
       installQueueProvider.overrideWith(() => installQueue),
       installedAppsProvider.overrideWith(() => TestInstalledApps()),
@@ -926,6 +960,9 @@ Widget _buildFlyoutHost({
 }) {
   return ProviderScope(
     overrides: [
+      installedAppDiffReportServiceProvider.overrideWithValue(
+        _NoopDiffReportService(),
+      ),
       installQueueProvider.overrideWith(() => installQueue),
       installedAppsProvider.overrideWith(() => TestInstalledApps()),
       updateAppsProvider.overrideWith(() => updateApps),
@@ -1072,4 +1109,47 @@ class _MemoryIgnoredUpdateStorage implements IgnoredUpdateStorage {
     _records = List<IgnoredUpdate>.from(records);
     return true;
   }
+}
+
+
+/// 差量检测空实现：更新页 initState 走同步链路会触发差量检测，
+/// 测试用空占位避免依赖 ll-cli 与真实轮询。
+class _NoopDiffReportService extends InstalledAppDiffReportService {
+  _NoopDiffReportService()
+    : super(
+        cliRepository: _PlaceholderCliRepository(),
+        analyticsRepository: _NoopAnalyticsRepository(),
+      );
+
+  @override
+  void scheduleImmediateCheck() {}
+}
+
+/// 仅供构造占位的空统计仓储；差量逻辑被覆写，不会真正调用任何方法。
+class _NoopAnalyticsRepository implements AnalyticsRepository {
+  @override
+  Future<void> initializeSession() async {}
+
+  @override
+  Future<void> reportVisit({
+    String? arch,
+    String? llVersion,
+    String? llBinVersion,
+    String? detailMsg,
+    String? osVersion,
+    String? repoName,
+    String? appVersion,
+  }) async {}
+
+  @override
+  Future<void> reportInstalledAppsDiff({
+    required List<InstalledApp> addedItems,
+    required List<InstalledApp> removedItems,
+  }) async {}
+}
+
+/// 仅供构造占位的 CLI 仓储；差量逻辑被覆写，不会真正调用任何方法。
+class _PlaceholderCliRepository implements LinglongCliRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

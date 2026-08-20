@@ -155,6 +155,15 @@
   "startupCheckUpdateDesc": "Check if a new version is available on each startup",
   "systemNotifications": "System notifications",
   "systemNotificationsDescription": "Show the update result in a desktop notification after Update All finishes",
+  "userExperienceProgram": "User Experience Program",
+  "userExperienceProgramDesc": "Send anonymous usage statistics to help us improve the store",
+  "userExperienceProgramDialogIntro": "By joining the User Experience Program, you are helping make the Linglong store better. We only collect a small amount of anonymous information to improve app recommendations and the download experience:",
+  "userExperienceProgramDialogItemIdentity": "An anonymous device identifier (a random string that cannot identify you)",
+  "userExperienceProgramDialogItemSystem": "System architecture, OS and kernel information, host name, and Linglong environment version",
+  "userExperienceProgramDialogItemApps": "Records of app installs, updates, and uninstalls",
+  "userExperienceProgramDialogItemNetwork": "Network address (used only for regional statistics)",
+  "userExperienceProgramDialogFooter": "This information contains no personal data and is never used to identify you. You can turn the switch off at any time; once it is off, no data will be sent.",
+  "a11yUserExperienceProgramInfo": "View what information the User Experience Program collects",
   "updateBatchAllSucceededTitle": "{count} applications updated",
   "@updateBatchAllSucceededTitle": {
     "placeholders": {

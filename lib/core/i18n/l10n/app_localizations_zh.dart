@@ -382,6 +382,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get systemNotificationsDescription => '一键更新完成后，在桌面通知中显示更新结果';
 
   @override
+  String get userExperienceProgram => '用户体验计划';
+
+  @override
+  String get userExperienceProgramDesc => '发送匿名使用统计，帮助我们改进商店';
+
+  @override
+  String get userExperienceProgramDialogIntro =>
+      '加入用户体验计划，你正在帮助玲珑商店变得更好。我们只收集少量匿名信息，用于改进应用推荐与下载体验：';
+
+  @override
+  String get userExperienceProgramDialogItemIdentity => '匿名设备标识（一串随机字符，无法识别你）';
+
+  @override
+  String get userExperienceProgramDialogItemSystem =>
+      '系统架构、系统版本与内核信息、主机名、玲珑环境版本';
+
+  @override
+  String get userExperienceProgramDialogItemApps => '应用的安装、更新与卸载记录';
+
+  @override
+  String get userExperienceProgramDialogItemNetwork => '网络地址（仅用于地区统计）';
+
+  @override
+  String get userExperienceProgramDialogFooter =>
+      '这些信息不包含个人隐私，也不会用于识别你的身份。你可以随时关闭开关，关闭后不会再上报任何数据。';
+
+  @override
+  String get a11yUserExperienceProgramInfo => '查看用户体验计划采集的信息说明';
+
+  @override
   String updateBatchAllSucceededTitle(int count) {
     return '$count 个应用已更新';
   }

@@ -207,4 +207,44 @@ void main() {
 
     expect(analyticsRepository.reports, hasLength(1));
   });
+
+  test('用户体验计划关闭时暂停检测与轮询，重开后恢复并补全基线', () async {
+    stubInstalled([_app('org.a', '1.0.0')]);
+    final service = buildService(pollInterval: const Duration(milliseconds: 20));
+
+    // 启动后立即关闭计划：首轮基线检测被防抖取消。
+    service.start();
+    service.setReportingEnabled(false);
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    expect(analyticsRepository.reports, isEmpty);
+
+    // 关闭期间轮询也不执行：窗口恢复可见同样不应触发检测。
+    service.didChangeAppLifecycleState(AppLifecycleState.hidden);
+    service.didChangeAppLifecycleState(AppLifecycleState.resumed);
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    expect(analyticsRepository.reports, isEmpty);
+
+    // 重新开启后立即补检，快照仍为空 → 全量基线上报。
+    stubInstalled([_app('org.a', '1.0.0'), _app('org.f', '1.0.0')]);
+    service.setReportingEnabled(true);
+    await pumpChecks();
+    service.dispose();
+
+    expect(analyticsRepository.reports, hasLength(1));
+    final (added, removed) = analyticsRepository.reports.single;
+    expect(added.map((a) => a.appId), unorderedEquals(['org.a', 'org.f']));
+    expect(removed, isEmpty);
+  });
+
+  test('start 前已关闭计划时不执行首轮检测', () async {
+    stubInstalled([_app('org.a', '1.0.0')]);
+    final service = buildService();
+
+    service.setReportingEnabled(false);
+    service.start();
+    await pumpChecks();
+    service.dispose();
+
+    expect(analyticsRepository.reports, isEmpty);
+  });
 }

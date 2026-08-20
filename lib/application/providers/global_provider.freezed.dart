@@ -20,7 +20,11 @@ mixin _$UserPreferences {
  bool get autoCheckUpdate;/// 是否显示Beta版本应用
  bool get showBetaApps;/// 是否显示系统应用
  bool get showSystemApps;/// 是否启用通知
- bool get enableNotifications;/// 是否启用桌面快捷方式创建
+ bool get enableNotifications;/// 是否加入用户体验计划（匿名统计上报）。
+///
+/// 关闭后启动访问记录、已安装差量统计与客户端 IP 预热全部停止；
+/// 默认开启以保持与旧版一致的统计口径，用户可随时在设置页退出。
+ bool get joinUserExperienceProgram;/// 是否启用桌面快捷方式创建
  bool get autoCreateShortcut;/// 下载并发数
  int get downloadConcurrency;/// 安装后自动运行
  bool get autoRunAfterInstall;/// 是否精简模式
@@ -40,16 +44,16 @@ $UserPreferencesCopyWith<UserPreferences> get copyWith => _$UserPreferencesCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserPreferences&&(identical(other.autoCheckUpdate, autoCheckUpdate) || other.autoCheckUpdate == autoCheckUpdate)&&(identical(other.showBetaApps, showBetaApps) || other.showBetaApps == showBetaApps)&&(identical(other.showSystemApps, showSystemApps) || other.showSystemApps == showSystemApps)&&(identical(other.enableNotifications, enableNotifications) || other.enableNotifications == enableNotifications)&&(identical(other.autoCreateShortcut, autoCreateShortcut) || other.autoCreateShortcut == autoCreateShortcut)&&(identical(other.downloadConcurrency, downloadConcurrency) || other.downloadConcurrency == downloadConcurrency)&&(identical(other.autoRunAfterInstall, autoRunAfterInstall) || other.autoRunAfterInstall == autoRunAfterInstall)&&(identical(other.compactMode, compactMode) || other.compactMode == compactMode)&&(identical(other.fontScaleFactor, fontScaleFactor) || other.fontScaleFactor == fontScaleFactor)&&(identical(other.fontWeightAdjustment, fontWeightAdjustment) || other.fontWeightAdjustment == fontWeightAdjustment)&&const DeepCollectionEquality().equals(other.customCategories, customCategories));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserPreferences&&(identical(other.autoCheckUpdate, autoCheckUpdate) || other.autoCheckUpdate == autoCheckUpdate)&&(identical(other.showBetaApps, showBetaApps) || other.showBetaApps == showBetaApps)&&(identical(other.showSystemApps, showSystemApps) || other.showSystemApps == showSystemApps)&&(identical(other.enableNotifications, enableNotifications) || other.enableNotifications == enableNotifications)&&(identical(other.joinUserExperienceProgram, joinUserExperienceProgram) || other.joinUserExperienceProgram == joinUserExperienceProgram)&&(identical(other.autoCreateShortcut, autoCreateShortcut) || other.autoCreateShortcut == autoCreateShortcut)&&(identical(other.downloadConcurrency, downloadConcurrency) || other.downloadConcurrency == downloadConcurrency)&&(identical(other.autoRunAfterInstall, autoRunAfterInstall) || other.autoRunAfterInstall == autoRunAfterInstall)&&(identical(other.compactMode, compactMode) || other.compactMode == compactMode)&&(identical(other.fontScaleFactor, fontScaleFactor) || other.fontScaleFactor == fontScaleFactor)&&(identical(other.fontWeightAdjustment, fontWeightAdjustment) || other.fontWeightAdjustment == fontWeightAdjustment)&&const DeepCollectionEquality().equals(other.customCategories, customCategories));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,autoCheckUpdate,showBetaApps,showSystemApps,enableNotifications,autoCreateShortcut,downloadConcurrency,autoRunAfterInstall,compactMode,fontScaleFactor,fontWeightAdjustment,const DeepCollectionEquality().hash(customCategories));
+int get hashCode => Object.hash(runtimeType,autoCheckUpdate,showBetaApps,showSystemApps,enableNotifications,joinUserExperienceProgram,autoCreateShortcut,downloadConcurrency,autoRunAfterInstall,compactMode,fontScaleFactor,fontWeightAdjustment,const DeepCollectionEquality().hash(customCategories));
 
 @override
 String toString() {
-  return 'UserPreferences(autoCheckUpdate: $autoCheckUpdate, showBetaApps: $showBetaApps, showSystemApps: $showSystemApps, enableNotifications: $enableNotifications, autoCreateShortcut: $autoCreateShortcut, downloadConcurrency: $downloadConcurrency, autoRunAfterInstall: $autoRunAfterInstall, compactMode: $compactMode, fontScaleFactor: $fontScaleFactor, fontWeightAdjustment: $fontWeightAdjustment, customCategories: $customCategories)';
+  return 'UserPreferences(autoCheckUpdate: $autoCheckUpdate, showBetaApps: $showBetaApps, showSystemApps: $showSystemApps, enableNotifications: $enableNotifications, joinUserExperienceProgram: $joinUserExperienceProgram, autoCreateShortcut: $autoCreateShortcut, downloadConcurrency: $downloadConcurrency, autoRunAfterInstall: $autoRunAfterInstall, compactMode: $compactMode, fontScaleFactor: $fontScaleFactor, fontWeightAdjustment: $fontWeightAdjustment, customCategories: $customCategories)';
 }
 
 
@@ -60,7 +64,7 @@ abstract mixin class $UserPreferencesCopyWith<$Res>  {
   factory $UserPreferencesCopyWith(UserPreferences value, $Res Function(UserPreferences) _then) = _$UserPreferencesCopyWithImpl;
 @useResult
 $Res call({
- bool autoCheckUpdate, bool showBetaApps, bool showSystemApps, bool enableNotifications, bool autoCreateShortcut, int downloadConcurrency, bool autoRunAfterInstall, bool compactMode, double fontScaleFactor, AppFontWeightAdjustment fontWeightAdjustment, List<String> customCategories
+ bool autoCheckUpdate, bool showBetaApps, bool showSystemApps, bool enableNotifications, bool joinUserExperienceProgram, bool autoCreateShortcut, int downloadConcurrency, bool autoRunAfterInstall, bool compactMode, double fontScaleFactor, AppFontWeightAdjustment fontWeightAdjustment, List<String> customCategories
 });
 
 
@@ -77,12 +81,13 @@ class _$UserPreferencesCopyWithImpl<$Res>
 
 /// Create a copy of UserPreferences
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? autoCheckUpdate = null,Object? showBetaApps = null,Object? showSystemApps = null,Object? enableNotifications = null,Object? autoCreateShortcut = null,Object? downloadConcurrency = null,Object? autoRunAfterInstall = null,Object? compactMode = null,Object? fontScaleFactor = null,Object? fontWeightAdjustment = null,Object? customCategories = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? autoCheckUpdate = null,Object? showBetaApps = null,Object? showSystemApps = null,Object? enableNotifications = null,Object? joinUserExperienceProgram = null,Object? autoCreateShortcut = null,Object? downloadConcurrency = null,Object? autoRunAfterInstall = null,Object? compactMode = null,Object? fontScaleFactor = null,Object? fontWeightAdjustment = null,Object? customCategories = null,}) {
   return _then(UserPreferences(
 autoCheckUpdate: null == autoCheckUpdate ? _self.autoCheckUpdate : autoCheckUpdate // ignore: cast_nullable_to_non_nullable
 as bool,showBetaApps: null == showBetaApps ? _self.showBetaApps : showBetaApps // ignore: cast_nullable_to_non_nullable
 as bool,showSystemApps: null == showSystemApps ? _self.showSystemApps : showSystemApps // ignore: cast_nullable_to_non_nullable
 as bool,enableNotifications: null == enableNotifications ? _self.enableNotifications : enableNotifications // ignore: cast_nullable_to_non_nullable
+as bool,joinUserExperienceProgram: null == joinUserExperienceProgram ? _self.joinUserExperienceProgram : joinUserExperienceProgram // ignore: cast_nullable_to_non_nullable
 as bool,autoCreateShortcut: null == autoCreateShortcut ? _self.autoCreateShortcut : autoCreateShortcut // ignore: cast_nullable_to_non_nullable
 as bool,downloadConcurrency: null == downloadConcurrency ? _self.downloadConcurrency : downloadConcurrency // ignore: cast_nullable_to_non_nullable
 as int,autoRunAfterInstall: null == autoRunAfterInstall ? _self.autoRunAfterInstall : autoRunAfterInstall // ignore: cast_nullable_to_non_nullable
@@ -172,10 +177,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool autoCheckUpdate,  bool showBetaApps,  bool showSystemApps,  bool enableNotifications,  bool autoCreateShortcut,  int downloadConcurrency,  bool autoRunAfterInstall,  bool compactMode,  double fontScaleFactor,  AppFontWeightAdjustment fontWeightAdjustment,  List<String> customCategories)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool autoCheckUpdate,  bool showBetaApps,  bool showSystemApps,  bool enableNotifications,  bool joinUserExperienceProgram,  bool autoCreateShortcut,  int downloadConcurrency,  bool autoRunAfterInstall,  bool compactMode,  double fontScaleFactor,  AppFontWeightAdjustment fontWeightAdjustment,  List<String> customCategories)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserPreferences() when $default != null:
-return $default(_that.autoCheckUpdate,_that.showBetaApps,_that.showSystemApps,_that.enableNotifications,_that.autoCreateShortcut,_that.downloadConcurrency,_that.autoRunAfterInstall,_that.compactMode,_that.fontScaleFactor,_that.fontWeightAdjustment,_that.customCategories);case _:
+return $default(_that.autoCheckUpdate,_that.showBetaApps,_that.showSystemApps,_that.enableNotifications,_that.joinUserExperienceProgram,_that.autoCreateShortcut,_that.downloadConcurrency,_that.autoRunAfterInstall,_that.compactMode,_that.fontScaleFactor,_that.fontWeightAdjustment,_that.customCategories);case _:
   return orElse();
 
 }
@@ -193,10 +198,10 @@ return $default(_that.autoCheckUpdate,_that.showBetaApps,_that.showSystemApps,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool autoCheckUpdate,  bool showBetaApps,  bool showSystemApps,  bool enableNotifications,  bool autoCreateShortcut,  int downloadConcurrency,  bool autoRunAfterInstall,  bool compactMode,  double fontScaleFactor,  AppFontWeightAdjustment fontWeightAdjustment,  List<String> customCategories)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool autoCheckUpdate,  bool showBetaApps,  bool showSystemApps,  bool enableNotifications,  bool joinUserExperienceProgram,  bool autoCreateShortcut,  int downloadConcurrency,  bool autoRunAfterInstall,  bool compactMode,  double fontScaleFactor,  AppFontWeightAdjustment fontWeightAdjustment,  List<String> customCategories)  $default,) {final _that = this;
 switch (_that) {
 case _UserPreferences():
-return $default(_that.autoCheckUpdate,_that.showBetaApps,_that.showSystemApps,_that.enableNotifications,_that.autoCreateShortcut,_that.downloadConcurrency,_that.autoRunAfterInstall,_that.compactMode,_that.fontScaleFactor,_that.fontWeightAdjustment,_that.customCategories);}
+return $default(_that.autoCheckUpdate,_that.showBetaApps,_that.showSystemApps,_that.enableNotifications,_that.joinUserExperienceProgram,_that.autoCreateShortcut,_that.downloadConcurrency,_that.autoRunAfterInstall,_that.compactMode,_that.fontScaleFactor,_that.fontWeightAdjustment,_that.customCategories);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -210,10 +215,10 @@ return $default(_that.autoCheckUpdate,_that.showBetaApps,_that.showSystemApps,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool autoCheckUpdate,  bool showBetaApps,  bool showSystemApps,  bool enableNotifications,  bool autoCreateShortcut,  int downloadConcurrency,  bool autoRunAfterInstall,  bool compactMode,  double fontScaleFactor,  AppFontWeightAdjustment fontWeightAdjustment,  List<String> customCategories)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool autoCheckUpdate,  bool showBetaApps,  bool showSystemApps,  bool enableNotifications,  bool joinUserExperienceProgram,  bool autoCreateShortcut,  int downloadConcurrency,  bool autoRunAfterInstall,  bool compactMode,  double fontScaleFactor,  AppFontWeightAdjustment fontWeightAdjustment,  List<String> customCategories)?  $default,) {final _that = this;
 switch (_that) {
 case _UserPreferences() when $default != null:
-return $default(_that.autoCheckUpdate,_that.showBetaApps,_that.showSystemApps,_that.enableNotifications,_that.autoCreateShortcut,_that.downloadConcurrency,_that.autoRunAfterInstall,_that.compactMode,_that.fontScaleFactor,_that.fontWeightAdjustment,_that.customCategories);case _:
+return $default(_that.autoCheckUpdate,_that.showBetaApps,_that.showSystemApps,_that.enableNotifications,_that.joinUserExperienceProgram,_that.autoCreateShortcut,_that.downloadConcurrency,_that.autoRunAfterInstall,_that.compactMode,_that.fontScaleFactor,_that.fontWeightAdjustment,_that.customCategories);case _:
   return null;
 
 }
@@ -225,7 +230,7 @@ return $default(_that.autoCheckUpdate,_that.showBetaApps,_that.showSystemApps,_t
 @JsonSerializable()
 
 class _UserPreferences implements UserPreferences {
-  const _UserPreferences({this.autoCheckUpdate = true, this.showBetaApps = false, this.showSystemApps = false, this.enableNotifications = true, this.autoCreateShortcut = true, this.downloadConcurrency = 3, this.autoRunAfterInstall = false, this.compactMode = false, this.fontScaleFactor = kDefaultUserFontScaleFactor, this.fontWeightAdjustment = AppFontWeightAdjustment.normal,  List<String> customCategories = const []}): _customCategories = customCategories;
+  const _UserPreferences({this.autoCheckUpdate = true, this.showBetaApps = false, this.showSystemApps = false, this.enableNotifications = true, this.joinUserExperienceProgram = true, this.autoCreateShortcut = true, this.downloadConcurrency = 3, this.autoRunAfterInstall = false, this.compactMode = false, this.fontScaleFactor = kDefaultUserFontScaleFactor, this.fontWeightAdjustment = AppFontWeightAdjustment.normal,  List<String> customCategories = const []}): _customCategories = customCategories;
   factory _UserPreferences.fromJson(Map<String, dynamic> json) => _$UserPreferencesFromJson(json);
 
 /// 是否自动检查更新
@@ -236,6 +241,11 @@ class _UserPreferences implements UserPreferences {
 @override@JsonKey() final  bool showSystemApps;
 /// 是否启用通知
 @override@JsonKey() final  bool enableNotifications;
+/// 是否加入用户体验计划（匿名统计上报）。
+///
+/// 关闭后启动访问记录、已安装差量统计与客户端 IP 预热全部停止；
+/// 默认开启以保持与旧版一致的统计口径，用户可随时在设置页退出。
+@override@JsonKey() final  bool joinUserExperienceProgram;
 /// 是否启用桌面快捷方式创建
 @override@JsonKey() final  bool autoCreateShortcut;
 /// 下载并发数
@@ -271,16 +281,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserPreferences&&(identical(other.autoCheckUpdate, autoCheckUpdate) || other.autoCheckUpdate == autoCheckUpdate)&&(identical(other.showBetaApps, showBetaApps) || other.showBetaApps == showBetaApps)&&(identical(other.showSystemApps, showSystemApps) || other.showSystemApps == showSystemApps)&&(identical(other.enableNotifications, enableNotifications) || other.enableNotifications == enableNotifications)&&(identical(other.autoCreateShortcut, autoCreateShortcut) || other.autoCreateShortcut == autoCreateShortcut)&&(identical(other.downloadConcurrency, downloadConcurrency) || other.downloadConcurrency == downloadConcurrency)&&(identical(other.autoRunAfterInstall, autoRunAfterInstall) || other.autoRunAfterInstall == autoRunAfterInstall)&&(identical(other.compactMode, compactMode) || other.compactMode == compactMode)&&(identical(other.fontScaleFactor, fontScaleFactor) || other.fontScaleFactor == fontScaleFactor)&&(identical(other.fontWeightAdjustment, fontWeightAdjustment) || other.fontWeightAdjustment == fontWeightAdjustment)&&const DeepCollectionEquality().equals(other._customCategories, _customCategories));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserPreferences&&(identical(other.autoCheckUpdate, autoCheckUpdate) || other.autoCheckUpdate == autoCheckUpdate)&&(identical(other.showBetaApps, showBetaApps) || other.showBetaApps == showBetaApps)&&(identical(other.showSystemApps, showSystemApps) || other.showSystemApps == showSystemApps)&&(identical(other.enableNotifications, enableNotifications) || other.enableNotifications == enableNotifications)&&(identical(other.joinUserExperienceProgram, joinUserExperienceProgram) || other.joinUserExperienceProgram == joinUserExperienceProgram)&&(identical(other.autoCreateShortcut, autoCreateShortcut) || other.autoCreateShortcut == autoCreateShortcut)&&(identical(other.downloadConcurrency, downloadConcurrency) || other.downloadConcurrency == downloadConcurrency)&&(identical(other.autoRunAfterInstall, autoRunAfterInstall) || other.autoRunAfterInstall == autoRunAfterInstall)&&(identical(other.compactMode, compactMode) || other.compactMode == compactMode)&&(identical(other.fontScaleFactor, fontScaleFactor) || other.fontScaleFactor == fontScaleFactor)&&(identical(other.fontWeightAdjustment, fontWeightAdjustment) || other.fontWeightAdjustment == fontWeightAdjustment)&&const DeepCollectionEquality().equals(other._customCategories, _customCategories));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,autoCheckUpdate,showBetaApps,showSystemApps,enableNotifications,autoCreateShortcut,downloadConcurrency,autoRunAfterInstall,compactMode,fontScaleFactor,fontWeightAdjustment,const DeepCollectionEquality().hash(_customCategories));
+int get hashCode => Object.hash(runtimeType,autoCheckUpdate,showBetaApps,showSystemApps,enableNotifications,joinUserExperienceProgram,autoCreateShortcut,downloadConcurrency,autoRunAfterInstall,compactMode,fontScaleFactor,fontWeightAdjustment,const DeepCollectionEquality().hash(_customCategories));
 
 @override
 String toString() {
-  return 'UserPreferences(autoCheckUpdate: $autoCheckUpdate, showBetaApps: $showBetaApps, showSystemApps: $showSystemApps, enableNotifications: $enableNotifications, autoCreateShortcut: $autoCreateShortcut, downloadConcurrency: $downloadConcurrency, autoRunAfterInstall: $autoRunAfterInstall, compactMode: $compactMode, fontScaleFactor: $fontScaleFactor, fontWeightAdjustment: $fontWeightAdjustment, customCategories: $customCategories)';
+  return 'UserPreferences(autoCheckUpdate: $autoCheckUpdate, showBetaApps: $showBetaApps, showSystemApps: $showSystemApps, enableNotifications: $enableNotifications, joinUserExperienceProgram: $joinUserExperienceProgram, autoCreateShortcut: $autoCreateShortcut, downloadConcurrency: $downloadConcurrency, autoRunAfterInstall: $autoRunAfterInstall, compactMode: $compactMode, fontScaleFactor: $fontScaleFactor, fontWeightAdjustment: $fontWeightAdjustment, customCategories: $customCategories)';
 }
 
 
@@ -291,7 +301,7 @@ abstract mixin class _$UserPreferencesCopyWith<$Res> implements $UserPreferences
   factory _$UserPreferencesCopyWith(_UserPreferences value, $Res Function(_UserPreferences) _then) = __$UserPreferencesCopyWithImpl;
 @override @useResult
 $Res call({
- bool autoCheckUpdate, bool showBetaApps, bool showSystemApps, bool enableNotifications, bool autoCreateShortcut, int downloadConcurrency, bool autoRunAfterInstall, bool compactMode, double fontScaleFactor, AppFontWeightAdjustment fontWeightAdjustment, List<String> customCategories
+ bool autoCheckUpdate, bool showBetaApps, bool showSystemApps, bool enableNotifications, bool joinUserExperienceProgram, bool autoCreateShortcut, int downloadConcurrency, bool autoRunAfterInstall, bool compactMode, double fontScaleFactor, AppFontWeightAdjustment fontWeightAdjustment, List<String> customCategories
 });
 
 
@@ -308,12 +318,13 @@ class __$UserPreferencesCopyWithImpl<$Res>
 
 /// Create a copy of UserPreferences
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? autoCheckUpdate = null,Object? showBetaApps = null,Object? showSystemApps = null,Object? enableNotifications = null,Object? autoCreateShortcut = null,Object? downloadConcurrency = null,Object? autoRunAfterInstall = null,Object? compactMode = null,Object? fontScaleFactor = null,Object? fontWeightAdjustment = null,Object? customCategories = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? autoCheckUpdate = null,Object? showBetaApps = null,Object? showSystemApps = null,Object? enableNotifications = null,Object? joinUserExperienceProgram = null,Object? autoCreateShortcut = null,Object? downloadConcurrency = null,Object? autoRunAfterInstall = null,Object? compactMode = null,Object? fontScaleFactor = null,Object? fontWeightAdjustment = null,Object? customCategories = null,}) {
   return _then(_UserPreferences(
 autoCheckUpdate: null == autoCheckUpdate ? _self.autoCheckUpdate : autoCheckUpdate // ignore: cast_nullable_to_non_nullable
 as bool,showBetaApps: null == showBetaApps ? _self.showBetaApps : showBetaApps // ignore: cast_nullable_to_non_nullable
 as bool,showSystemApps: null == showSystemApps ? _self.showSystemApps : showSystemApps // ignore: cast_nullable_to_non_nullable
 as bool,enableNotifications: null == enableNotifications ? _self.enableNotifications : enableNotifications // ignore: cast_nullable_to_non_nullable
+as bool,joinUserExperienceProgram: null == joinUserExperienceProgram ? _self.joinUserExperienceProgram : joinUserExperienceProgram // ignore: cast_nullable_to_non_nullable
 as bool,autoCreateShortcut: null == autoCreateShortcut ? _self.autoCreateShortcut : autoCreateShortcut // ignore: cast_nullable_to_non_nullable
 as bool,downloadConcurrency: null == downloadConcurrency ? _self.downloadConcurrency : downloadConcurrency // ignore: cast_nullable_to_non_nullable
 as int,autoRunAfterInstall: null == autoRunAfterInstall ? _self.autoRunAfterInstall : autoRunAfterInstall // ignore: cast_nullable_to_non_nullable

@@ -399,6 +399,42 @@ class AppLocalizationsRu extends AppLocalizations {
       'Показывать результат обновления в уведомлении на рабочем столе после завершения обновления всех.';
 
   @override
+  String get userExperienceProgram =>
+      'Программа улучшения пользовательского опыта';
+
+  @override
+  String get userExperienceProgramDesc =>
+      'Отправлять анонимную статистику использования, чтобы помочь нам улучшать магазин';
+
+  @override
+  String get userExperienceProgramDialogIntro =>
+      'Присоединяясь к программе улучшения пользовательского опыта, вы помогаете делать магазин Linglong лучше. Мы собираем лишь небольшой объём анонимной информации, чтобы улучшать рекомендации приложений и опыт загрузки:';
+
+  @override
+  String get userExperienceProgramDialogItemIdentity =>
+      'Анонимный идентификатор устройства (случайная строка, которая не может вас идентифицировать)';
+
+  @override
+  String get userExperienceProgramDialogItemSystem =>
+      'Архитектура системы, версия ОС и сведения о ядре, имя хоста и версия окружения Linglong';
+
+  @override
+  String get userExperienceProgramDialogItemApps =>
+      'Сведения об установке, обновлении и удалении приложений';
+
+  @override
+  String get userExperienceProgramDialogItemNetwork =>
+      'Сетевой адрес (только для региональной статистики)';
+
+  @override
+  String get userExperienceProgramDialogFooter =>
+      'Эти сведения не содержат персональных данных и не используются для вашей идентификации. Вы можете в любой момент выключить переключатель — после этого никакие данные отправляться не будут.';
+
+  @override
+  String get a11yUserExperienceProgramInfo =>
+      'Посмотреть, какую информацию собирает программа улучшения пользовательского опыта';
+
+  @override
   String updateBatchAllSucceededTitle(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

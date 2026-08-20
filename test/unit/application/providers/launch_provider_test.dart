@@ -568,6 +568,61 @@ void main() {
     );
 
     test(
+      'skips all analytics when user experience program is disabled',
+      () async {
+        final analytics = _RecordingAnalyticsRepository();
+        final container = ProviderContainer(
+          overrides: [
+            installedAppDiffReportServiceProvider.overrideWithValue(
+              _RecordingDiffReportService(),
+            ),
+            launchAppVersionResolverProvider.overrideWithValue(
+              () async => '3.2.1',
+            ),
+            globalAppProvider.overrideWith(
+              () => _TestGlobalApp(
+                const GlobalAppState(
+                  userPreferences: UserPreferences(
+                    autoCheckUpdate: true,
+                    joinUserExperienceProgram: false,
+                  ),
+                ),
+              ),
+            ),
+            linglongEnvProvider.overrideWith(
+              () => _TestLinglongEnv(
+                const LinglongEnvCheckResult(
+                  isOk: true,
+                  llCliVersion: '1.9.0',
+                  repoStatus: RepoStatus.ok,
+                  checkedAt: 1,
+                ),
+              ),
+            ),
+            installedAppsProvider.overrideWith(
+              () => _TestInstalledApps(apps: const []),
+            ),
+            appSearchIndexProvider.overrideWith(
+              () => _RecordingSearchIndex(() {}),
+            ),
+            updateAppsProvider.overrideWith(() => _TestUpdateApps()),
+            installQueueProvider.overrideWith(() => _TestInstallQueue()),
+            analyticsRepositoryProvider.overrideWithValue(analytics),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await container.read(launchSequenceProvider.notifier).runSequence();
+
+        // 关闭计划：既不预热统计会话，也不发送启动访问记录。
+        expect(analytics.initializeSessionCalls, equals(0));
+        expect(analytics.visitReports, isEmpty);
+        // 商店版本解析与统计无关，仍正常完成。
+        expect(container.read(globalAppProvider).appVersion, equals('3.2.1'));
+      },
+    );
+
+    test(
       'initializes analytics session and resolves app version before visit report',
       () async {
         final analytics = _RecordingAnalyticsRepository();

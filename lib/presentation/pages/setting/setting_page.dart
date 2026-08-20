@@ -11,6 +11,7 @@ import '../../../application/providers/global_provider.dart';
 import '../../../application/providers/linux_renderer_provider.dart';
 import '../../../application/providers/setting_provider.dart';
 import '../../../application/services/version_check_service.dart';
+import '../../../core/accessibility/a11y_semantics.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/i18n/app_locale.dart';
@@ -25,6 +26,7 @@ import '../../widgets/feedback_dialog.dart';
 import '../../widgets/linglong_environment_management_dialog.dart';
 import '../../widgets/app_update_flow.dart';
 import '../../widgets/update_available_dialog.dart';
+import '../../widgets/user_experience_program_dialog.dart';
 import 'widgets/app_language_selector.dart';
 import 'widgets/renderer_preference_tile.dart';
 
@@ -603,6 +605,33 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               ref
                   .read(globalAppProvider.notifier)
                   .setEnableNotifications(value);
+            },
+          ),
+          _buildDivider(context),
+          // 用户体验计划是全部匿名统计的总开关：关闭后启动访问记录、
+          // 安装差量统计与客户端 IP 预热全部停止；感叹号入口弹窗说明
+          // 计划会采集哪些信息，帮助用户放心地保持开启。
+          SwitchListTile(
+            secondary: const ExcludeSemantics(
+              child: Icon(Icons.privacy_tip_outlined),
+            ),
+            title: Row(
+              children: [
+                Expanded(child: Text(l10n.userExperienceProgram)),
+                A11yIconButton(
+                  icon: const Icon(Icons.info_outline_rounded),
+                  semanticsLabel: l10n.a11yUserExperienceProgramInfo,
+                  tooltip: l10n.userExperienceProgram,
+                  onTap: () => UserExperienceProgramDialog.show(context),
+                ),
+              ],
+            ),
+            subtitle: Text(l10n.userExperienceProgramDesc),
+            value: userPreferences.joinUserExperienceProgram,
+            onChanged: (value) {
+              ref
+                  .read(globalAppProvider.notifier)
+                  .setJoinUserExperienceProgram(value);
             },
           ),
           _buildDivider(context),

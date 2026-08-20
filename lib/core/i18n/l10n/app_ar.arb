@@ -172,6 +172,15 @@
   "startupCheckUpdateDesc": "التحقق عند كل تشغيل من توفر إصدار جديد",
   "systemNotifications": "إشعارات النظام",
   "systemNotificationsDescription": "عرض نتيجة التحديث في إشعارات سطح المكتب بعد اكتمال تحديث الكل بضغطة واحدة",
+  "userExperienceProgram": "برنامج تحسين تجربة المستخدم",
+  "userExperienceProgramDesc": "إرسال إحصائيات استخدام مجهولة للمساعدة في تحسين المتجر",
+  "userExperienceProgramDialogIntro": "من خلال الانضمام إلى برنامج تحسين تجربة المستخدم، أنت تساعد في جعل متجر لينغ لونغ أفضل. نجمع فقط قدرًا صغيرًا من المعلومات المجهولة لتحسين توصيات التطبيقات وتجربة التنزيل:",
+  "userExperienceProgramDialogItemIdentity": "معرّف جهاز مجهول (سلسلة عشوائية لا يمكنها التعرف عليك)",
+  "userExperienceProgramDialogItemSystem": "بنية النظام وإصدار نظام التشغيل ومعلومات النواة واسم المضيف وإصدار بيئة لينغ لونغ",
+  "userExperienceProgramDialogItemApps": "سجلات تثبيت التطبيقات وتحديثها وإزالتها",
+  "userExperienceProgramDialogItemNetwork": "عنوان الشبكة (للإحصاءات الإقليمية فقط)",
+  "userExperienceProgramDialogFooter": "لا تحتوي هذه المعلومات على أي بيانات شخصية ولا تُستخدم للتعرف على هويتك. يمكنك إيقاف تشغيل المفتاح في أي وقت؛ وبعد الإيقاف لن يتم إرسال أي بيانات.",
+  "a11yUserExperienceProgramInfo": "عرض المعلومات التي يجمعها برنامج تحسين تجربة المستخدم",
   "updateBatchAllSucceededTitle": "{count, plural, zero{لم يتم تحديث أي تطبيق} one{تم تحديث تطبيق واحد} two{تم تحديث تطبيقين} few{تم تحديث \u2066{count}\u2069 تطبيقات} many{تم تحديث \u2066{count}\u2069 تطبيقًا} other{تم تحديث \u2066{count}\u2069 تطبيقًا}}",
   "@updateBatchAllSucceededTitle": {
     "placeholders": {

@@ -402,6 +402,41 @@ class AppLocalizationsEs extends AppLocalizations {
       'Mostrar el resultado en una notificación de escritorio cuando finalice Actualizar Todo';
 
   @override
+  String get userExperienceProgram => 'Programa de experiencia de usuario';
+
+  @override
+  String get userExperienceProgramDesc =>
+      'Enviar estadísticas anónimas de uso para ayudarnos a mejorar la tienda';
+
+  @override
+  String get userExperienceProgramDialogIntro =>
+      'Al unirte al programa de experiencia de usuario, ayudas a mejorar la tienda Linglong. Solo recopilamos una pequeña cantidad de información anónima para mejorar las recomendaciones y la experiencia de descarga:';
+
+  @override
+  String get userExperienceProgramDialogItemIdentity =>
+      'Un identificador anónimo del dispositivo (una cadena aleatoria que no puede identificarte)';
+
+  @override
+  String get userExperienceProgramDialogItemSystem =>
+      'Arquitectura del sistema, versión del sistema e información del kernel, nombre del host y versión del entorno Linglong';
+
+  @override
+  String get userExperienceProgramDialogItemApps =>
+      'Registros de instalación, actualización y desinstalación de aplicaciones';
+
+  @override
+  String get userExperienceProgramDialogItemNetwork =>
+      'Dirección de red (solo para estadísticas regionales)';
+
+  @override
+  String get userExperienceProgramDialogFooter =>
+      'Esta información no contiene datos personales ni se usa para identificarte. Puedes desactivar el interruptor en cualquier momento; una vez desactivado, no se enviará ningún dato.';
+
+  @override
+  String get a11yUserExperienceProgramInfo =>
+      'Ver qué información recopila el programa de experiencia de usuario';
+
+  @override
   String updateBatchAllSucceededTitle(int count) {
     return '$count aplicaciones actualizadas';
   }

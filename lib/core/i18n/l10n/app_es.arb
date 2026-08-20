@@ -154,6 +154,15 @@
   "startupCheckUpdateDesc": "Verificar si hay nuevas versiones disponibles cada vez que se inicia",
   "systemNotifications": "Notificaciones del sistema",
   "systemNotificationsDescription": "Mostrar el resultado en una notificación de escritorio cuando finalice Actualizar Todo",
+  "userExperienceProgram": "Programa de experiencia de usuario",
+  "userExperienceProgramDesc": "Enviar estadísticas anónimas de uso para ayudarnos a mejorar la tienda",
+  "userExperienceProgramDialogIntro": "Al unirte al programa de experiencia de usuario, ayudas a mejorar la tienda Linglong. Solo recopilamos una pequeña cantidad de información anónima para mejorar las recomendaciones y la experiencia de descarga:",
+  "userExperienceProgramDialogItemIdentity": "Un identificador anónimo del dispositivo (una cadena aleatoria que no puede identificarte)",
+  "userExperienceProgramDialogItemSystem": "Arquitectura del sistema, versión del sistema e información del kernel, nombre del host y versión del entorno Linglong",
+  "userExperienceProgramDialogItemApps": "Registros de instalación, actualización y desinstalación de aplicaciones",
+  "userExperienceProgramDialogItemNetwork": "Dirección de red (solo para estadísticas regionales)",
+  "userExperienceProgramDialogFooter": "Esta información no contiene datos personales ni se usa para identificarte. Puedes desactivar el interruptor en cualquier momento; una vez desactivado, no se enviará ningún dato.",
+  "a11yUserExperienceProgramInfo": "Ver qué información recopila el programa de experiencia de usuario",
   "updateBatchAllSucceededTitle": "{count} aplicaciones actualizadas",
   "@updateBatchAllSucceededTitle": {
     "placeholders": {

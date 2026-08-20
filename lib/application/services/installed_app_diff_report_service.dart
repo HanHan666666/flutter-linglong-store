@@ -48,6 +48,10 @@ class InstalledAppDiffReportService with WidgetsBindingObserver {
   bool _started = false;
   bool _isChecking = false;
 
+  /// 用户体验计划开关：关闭时暂停一切检测（本地 ll-cli 调用也不执行），
+  /// 重新开启后下一轮检测自然产生全量基线上报，不丢状态。
+  bool _reportingAllowed = true;
+
   /// Linux 桌面最小化进入 inactive/hidden，resumed 即窗口恢复可见。
   bool _isLifecycleVisible = true;
 
@@ -60,8 +64,10 @@ class InstalledAppDiffReportService with WidgetsBindingObserver {
     }
     _started = true;
     WidgetsBinding.instance.addObserver(this);
-    scheduleImmediateCheck();
-    _scheduleNextPoll();
+    if (_reportingAllowed) {
+      scheduleImmediateCheck();
+      _scheduleNextPoll();
+    }
   }
 
   /// 停止检测并释放资源；服务与进程同生命周期，正常情况下无需调用。
@@ -72,6 +78,23 @@ class InstalledAppDiffReportService with WidgetsBindingObserver {
     _cancelTimers();
   }
 
+  /// 响应「用户体验计划」开关变化。
+  ///
+  /// 关闭：取消全部待执行检测，本地轮询命令也不执行；
+  /// 重新开启：立即补检并恢复正常轮询节奏。
+  void setReportingEnabled(bool enabled) {
+    if (_reportingAllowed == enabled) {
+      return;
+    }
+    _reportingAllowed = enabled;
+    if (!enabled) {
+      _cancelTimers();
+    } else if (_started && _isLifecycleVisible) {
+      scheduleImmediateCheck();
+      _scheduleNextPoll();
+    }
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final visible = state == AppLifecycleState.resumed;
@@ -79,12 +102,12 @@ class InstalledAppDiffReportService with WidgetsBindingObserver {
       return;
     }
     _isLifecycleVisible = visible;
-    if (visible) {
+    if (visible && _reportingAllowed) {
       // 恢复可见时立即补检一次，捕获最小化期间通过外部途径发生的变化，
       // 随后恢复正常轮询节奏。
       scheduleImmediateCheck();
       _scheduleNextPoll();
-    } else {
+    } else if (!visible) {
       // 窗口隐藏期间暂停一切检测，本地 ll-cli 调用也不执行。
       _cancelTimers();
     }
@@ -100,7 +123,7 @@ class InstalledAppDiffReportService with WidgetsBindingObserver {
 
   void _scheduleNextPoll() {
     _pollTimer?.cancel();
-    if (!_started || !_isLifecycleVisible) {
+    if (!_started || !_isLifecycleVisible || !_reportingAllowed) {
       return;
     }
     // 自续期单发 Timer：上一轮检测彻底结束后才排定下一轮，天然避免重叠。
@@ -120,8 +143,9 @@ class InstalledAppDiffReportService with WidgetsBindingObserver {
   }
 
   Future<void> _check() async {
-    // 上一轮未结束时跳过本轮，下一轮轮询或下次立即触发会重新对比。
-    if (!_started || _isChecking) {
+    // 上一轮未结束时跳过本轮，下一轮轮询或下次立即触发会重新对比；
+    // 用户体验计划已关闭时同样跳过（正在排队的防抖检测作废）。
+    if (!_started || _isChecking || !_reportingAllowed) {
       return;
     }
     _isChecking = true;

@@ -845,6 +845,8 @@ _InstalledRecordItemDTO _$InstalledRecordItemDTOFromJson(
   arch: json['arch'] as String?,
   module: json['module'] as String?,
   channel: json['channel'] as String?,
+  repoName: json['repoName'] as String?,
+  kind: json['kind'] as String?,
 );
 
 Map<String, dynamic> _$InstalledRecordItemDTOToJson(
@@ -856,6 +858,8 @@ Map<String, dynamic> _$InstalledRecordItemDTOToJson(
   'arch': instance.arch,
   'module': instance.module,
   'channel': instance.channel,
+  'repoName': instance.repoName,
+  'kind': instance.kind,
 };
 
 _SaveInstalledRecordRequest _$SaveInstalledRecordRequestFromJson(

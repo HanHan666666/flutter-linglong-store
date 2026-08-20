@@ -767,6 +767,9 @@ sealed class SaveVisitRecordRequest with _$SaveVisitRecordRequest {
 }
 
 /// 安装/卸载记录中的单条应用信息
+///
+/// [repoName]/[kind] 为差量统计新增字段：服务端按非空字段精确匹配应用主表，
+/// 携带仓库与类型可避免同名应用跨仓库误匹配（对齐旧版 Electron 上报内容）。
 @freezed
 sealed class InstalledRecordItemDTO with _$InstalledRecordItemDTO {
   const factory InstalledRecordItemDTO({
@@ -776,6 +779,8 @@ sealed class InstalledRecordItemDTO with _$InstalledRecordItemDTO {
     @JsonKey(name: 'arch') String? arch,
     @JsonKey(name: 'module') String? module,
     @JsonKey(name: 'channel') String? channel,
+    @JsonKey(name: 'repoName') String? repoName,
+    @JsonKey(name: 'kind') String? kind,
   }) = _InstalledRecordItemDTO;
 
   factory InstalledRecordItemDTO.fromJson(Map<String, dynamic> json) =>

@@ -1,11 +1,13 @@
 import 'package:dio/dio.dart';
 
+import 'package:linglong_store/core/config/app_config.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/core/network/api_client.dart';
 import 'package:linglong_store/core/storage/preferences_service.dart';
 import 'package:linglong_store/core/storage/visitor_identity_service.dart';
 import 'package:linglong_store/data/datasources/remote/app_api_service.dart';
 import 'package:linglong_store/data/models/api_dto.dart';
+import 'package:linglong_store/domain/models/installed_app.dart';
 
 import '../../domain/repositories/analytics_repository.dart';
 
@@ -167,5 +169,51 @@ class AnalyticsRepositoryImpl implements AnalyticsRepository {
     } catch (e) {
       AppLogger.warning('[analytics] Failed to send uninstall record: $e');
     }
+  }
+
+  @override
+  Future<void> reportInstalledAppsDiff({
+    required List<InstalledApp> addedItems,
+    required List<InstalledApp> removedItems,
+  }) async {
+    // 双向都为空时无需请求，避免无效网络调用（首轮基线也可能为空列表）。
+    if (addedItems.isEmpty && removedItems.isEmpty) {
+      return;
+    }
+    try {
+      final visitorId = _visitorIdentityService.getOrCreateVisitorId();
+      final clientIp = await _getOrCreateClientIp();
+      final request = SaveInstalledRecordRequest(
+        visitorId: visitorId,
+        clientIp: clientIp,
+        addedItems: addedItems.map(_toRecordItem).toList(),
+        removedItems: removedItems.map(_toRecordItem).toList(),
+      );
+      await _apiService.saveInstalledRecord(request);
+      AppLogger.info(
+        '[analytics] Installed diff sent: '
+        '+${addedItems.length} -${removedItems.length}',
+      );
+    } catch (e) {
+      // 上报失败不影响应用正常使用
+      AppLogger.warning('[analytics] Failed to send installed diff: $e');
+    }
+  }
+
+  /// 领域模型转服务端记录项。
+  ///
+  /// repoName 统一填默认仓库名：旧版 Electron 上报时无条件用 defaultRepoName
+  /// 覆盖列表项，服务端按非空字段匹配主表，保持同口径可避免跨仓库误匹配。
+  InstalledRecordItemDTO _toRecordItem(InstalledApp app) {
+    return InstalledRecordItemDTO(
+      appId: app.appId,
+      name: app.name,
+      version: app.version,
+      arch: app.arch,
+      module: app.module,
+      channel: app.channel,
+      repoName: AppConfig.defaultStoreRepoName,
+      kind: app.kind,
+    );
   }
 }

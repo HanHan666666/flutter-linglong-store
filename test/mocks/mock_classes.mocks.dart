@@ -449,6 +449,21 @@ class MockAnalyticsRepository extends _i1.Mock
             returnValueForMissingStub: _i5.Future<void>.value(),
           )
           as _i5.Future<void>);
+
+  @override
+  _i5.Future<void> reportInstalledAppsDiff({
+    required List<_i6.InstalledApp>? addedItems,
+    required List<_i6.InstalledApp>? removedItems,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#reportInstalledAppsDiff, [], {
+              #addedItems: addedItems,
+              #removedItems: removedItems,
+            }),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
+          )
+          as _i5.Future<void>);
 }
 
 /// A class which mocks [ApiClient].

@@ -10806,7 +10806,7 @@ as String?,
 /// @nodoc
 mixin _$InstalledRecordItemDTO {
 
-@JsonKey(name: 'appId') String? get appId;@JsonKey(name: 'name') String? get name;@JsonKey(name: 'version') String? get version;@JsonKey(name: 'arch') String? get arch;@JsonKey(name: 'module') String? get module;@JsonKey(name: 'channel') String? get channel;
+@JsonKey(name: 'appId') String? get appId;@JsonKey(name: 'name') String? get name;@JsonKey(name: 'version') String? get version;@JsonKey(name: 'arch') String? get arch;@JsonKey(name: 'module') String? get module;@JsonKey(name: 'channel') String? get channel;@JsonKey(name: 'repoName') String? get repoName;@JsonKey(name: 'kind') String? get kind;
 /// Create a copy of InstalledRecordItemDTO
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -10819,16 +10819,16 @@ $InstalledRecordItemDTOCopyWith<InstalledRecordItemDTO> get copyWith => _$Instal
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InstalledRecordItemDTO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.name, name) || other.name == name)&&(identical(other.version, version) || other.version == version)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.module, module) || other.module == module)&&(identical(other.channel, channel) || other.channel == channel));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InstalledRecordItemDTO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.name, name) || other.name == name)&&(identical(other.version, version) || other.version == version)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.module, module) || other.module == module)&&(identical(other.channel, channel) || other.channel == channel)&&(identical(other.repoName, repoName) || other.repoName == repoName)&&(identical(other.kind, kind) || other.kind == kind));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appId,name,version,arch,module,channel);
+int get hashCode => Object.hash(runtimeType,appId,name,version,arch,module,channel,repoName,kind);
 
 @override
 String toString() {
-  return 'InstalledRecordItemDTO(appId: $appId, name: $name, version: $version, arch: $arch, module: $module, channel: $channel)';
+  return 'InstalledRecordItemDTO(appId: $appId, name: $name, version: $version, arch: $arch, module: $module, channel: $channel, repoName: $repoName, kind: $kind)';
 }
 
 
@@ -10839,7 +10839,7 @@ abstract mixin class $InstalledRecordItemDTOCopyWith<$Res>  {
   factory $InstalledRecordItemDTOCopyWith(InstalledRecordItemDTO value, $Res Function(InstalledRecordItemDTO) _then) = _$InstalledRecordItemDTOCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'appId') String? appId,@JsonKey(name: 'name') String? name,@JsonKey(name: 'version') String? version,@JsonKey(name: 'arch') String? arch,@JsonKey(name: 'module') String? module,@JsonKey(name: 'channel') String? channel
+@JsonKey(name: 'appId') String? appId,@JsonKey(name: 'name') String? name,@JsonKey(name: 'version') String? version,@JsonKey(name: 'arch') String? arch,@JsonKey(name: 'module') String? module,@JsonKey(name: 'channel') String? channel,@JsonKey(name: 'repoName') String? repoName,@JsonKey(name: 'kind') String? kind
 });
 
 
@@ -10856,7 +10856,7 @@ class _$InstalledRecordItemDTOCopyWithImpl<$Res>
 
 /// Create a copy of InstalledRecordItemDTO
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? appId = freezed,Object? name = freezed,Object? version = freezed,Object? arch = freezed,Object? module = freezed,Object? channel = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? appId = freezed,Object? name = freezed,Object? version = freezed,Object? arch = freezed,Object? module = freezed,Object? channel = freezed,Object? repoName = freezed,Object? kind = freezed,}) {
   return _then(InstalledRecordItemDTO(
 appId: freezed == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String?,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -10864,6 +10864,8 @@ as String?,version: freezed == version ? _self.version : version // ignore: cast
 as String?,arch: freezed == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
 as String?,module: freezed == module ? _self.module : module // ignore: cast_nullable_to_non_nullable
 as String?,channel: freezed == channel ? _self.channel : channel // ignore: cast_nullable_to_non_nullable
+as String?,repoName: freezed == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
+as String?,kind: freezed == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -10946,10 +10948,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String? appId, @JsonKey(name: 'name')  String? name, @JsonKey(name: 'version')  String? version, @JsonKey(name: 'arch')  String? arch, @JsonKey(name: 'module')  String? module, @JsonKey(name: 'channel')  String? channel)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String? appId, @JsonKey(name: 'name')  String? name, @JsonKey(name: 'version')  String? version, @JsonKey(name: 'arch')  String? arch, @JsonKey(name: 'module')  String? module, @JsonKey(name: 'channel')  String? channel, @JsonKey(name: 'repoName')  String? repoName, @JsonKey(name: 'kind')  String? kind)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _InstalledRecordItemDTO() when $default != null:
-return $default(_that.appId,_that.name,_that.version,_that.arch,_that.module,_that.channel);case _:
+return $default(_that.appId,_that.name,_that.version,_that.arch,_that.module,_that.channel,_that.repoName,_that.kind);case _:
   return orElse();
 
 }
@@ -10967,10 +10969,10 @@ return $default(_that.appId,_that.name,_that.version,_that.arch,_that.module,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String? appId, @JsonKey(name: 'name')  String? name, @JsonKey(name: 'version')  String? version, @JsonKey(name: 'arch')  String? arch, @JsonKey(name: 'module')  String? module, @JsonKey(name: 'channel')  String? channel)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'appId')  String? appId, @JsonKey(name: 'name')  String? name, @JsonKey(name: 'version')  String? version, @JsonKey(name: 'arch')  String? arch, @JsonKey(name: 'module')  String? module, @JsonKey(name: 'channel')  String? channel, @JsonKey(name: 'repoName')  String? repoName, @JsonKey(name: 'kind')  String? kind)  $default,) {final _that = this;
 switch (_that) {
 case _InstalledRecordItemDTO():
-return $default(_that.appId,_that.name,_that.version,_that.arch,_that.module,_that.channel);}
+return $default(_that.appId,_that.name,_that.version,_that.arch,_that.module,_that.channel,_that.repoName,_that.kind);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -10984,10 +10986,10 @@ return $default(_that.appId,_that.name,_that.version,_that.arch,_that.module,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'appId')  String? appId, @JsonKey(name: 'name')  String? name, @JsonKey(name: 'version')  String? version, @JsonKey(name: 'arch')  String? arch, @JsonKey(name: 'module')  String? module, @JsonKey(name: 'channel')  String? channel)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'appId')  String? appId, @JsonKey(name: 'name')  String? name, @JsonKey(name: 'version')  String? version, @JsonKey(name: 'arch')  String? arch, @JsonKey(name: 'module')  String? module, @JsonKey(name: 'channel')  String? channel, @JsonKey(name: 'repoName')  String? repoName, @JsonKey(name: 'kind')  String? kind)?  $default,) {final _that = this;
 switch (_that) {
 case _InstalledRecordItemDTO() when $default != null:
-return $default(_that.appId,_that.name,_that.version,_that.arch,_that.module,_that.channel);case _:
+return $default(_that.appId,_that.name,_that.version,_that.arch,_that.module,_that.channel,_that.repoName,_that.kind);case _:
   return null;
 
 }
@@ -10999,7 +11001,7 @@ return $default(_that.appId,_that.name,_that.version,_that.arch,_that.module,_th
 @JsonSerializable()
 
 class _InstalledRecordItemDTO implements InstalledRecordItemDTO {
-  const _InstalledRecordItemDTO({@JsonKey(name: 'appId') this.appId, @JsonKey(name: 'name') this.name, @JsonKey(name: 'version') this.version, @JsonKey(name: 'arch') this.arch, @JsonKey(name: 'module') this.module, @JsonKey(name: 'channel') this.channel});
+  const _InstalledRecordItemDTO({@JsonKey(name: 'appId') this.appId, @JsonKey(name: 'name') this.name, @JsonKey(name: 'version') this.version, @JsonKey(name: 'arch') this.arch, @JsonKey(name: 'module') this.module, @JsonKey(name: 'channel') this.channel, @JsonKey(name: 'repoName') this.repoName, @JsonKey(name: 'kind') this.kind});
   factory _InstalledRecordItemDTO.fromJson(Map<String, dynamic> json) => _$InstalledRecordItemDTOFromJson(json);
 
 @override@JsonKey(name: 'appId') final  String? appId;
@@ -11008,6 +11010,8 @@ class _InstalledRecordItemDTO implements InstalledRecordItemDTO {
 @override@JsonKey(name: 'arch') final  String? arch;
 @override@JsonKey(name: 'module') final  String? module;
 @override@JsonKey(name: 'channel') final  String? channel;
+@override@JsonKey(name: 'repoName') final  String? repoName;
+@override@JsonKey(name: 'kind') final  String? kind;
 
 /// Create a copy of InstalledRecordItemDTO
 /// with the given fields replaced by the non-null parameter values.
@@ -11022,16 +11026,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InstalledRecordItemDTO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.name, name) || other.name == name)&&(identical(other.version, version) || other.version == version)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.module, module) || other.module == module)&&(identical(other.channel, channel) || other.channel == channel));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InstalledRecordItemDTO&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.name, name) || other.name == name)&&(identical(other.version, version) || other.version == version)&&(identical(other.arch, arch) || other.arch == arch)&&(identical(other.module, module) || other.module == module)&&(identical(other.channel, channel) || other.channel == channel)&&(identical(other.repoName, repoName) || other.repoName == repoName)&&(identical(other.kind, kind) || other.kind == kind));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appId,name,version,arch,module,channel);
+int get hashCode => Object.hash(runtimeType,appId,name,version,arch,module,channel,repoName,kind);
 
 @override
 String toString() {
-  return 'InstalledRecordItemDTO(appId: $appId, name: $name, version: $version, arch: $arch, module: $module, channel: $channel)';
+  return 'InstalledRecordItemDTO(appId: $appId, name: $name, version: $version, arch: $arch, module: $module, channel: $channel, repoName: $repoName, kind: $kind)';
 }
 
 
@@ -11042,7 +11046,7 @@ abstract mixin class _$InstalledRecordItemDTOCopyWith<$Res> implements $Installe
   factory _$InstalledRecordItemDTOCopyWith(_InstalledRecordItemDTO value, $Res Function(_InstalledRecordItemDTO) _then) = __$InstalledRecordItemDTOCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'appId') String? appId,@JsonKey(name: 'name') String? name,@JsonKey(name: 'version') String? version,@JsonKey(name: 'arch') String? arch,@JsonKey(name: 'module') String? module,@JsonKey(name: 'channel') String? channel
+@JsonKey(name: 'appId') String? appId,@JsonKey(name: 'name') String? name,@JsonKey(name: 'version') String? version,@JsonKey(name: 'arch') String? arch,@JsonKey(name: 'module') String? module,@JsonKey(name: 'channel') String? channel,@JsonKey(name: 'repoName') String? repoName,@JsonKey(name: 'kind') String? kind
 });
 
 
@@ -11059,7 +11063,7 @@ class __$InstalledRecordItemDTOCopyWithImpl<$Res>
 
 /// Create a copy of InstalledRecordItemDTO
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? appId = freezed,Object? name = freezed,Object? version = freezed,Object? arch = freezed,Object? module = freezed,Object? channel = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? appId = freezed,Object? name = freezed,Object? version = freezed,Object? arch = freezed,Object? module = freezed,Object? channel = freezed,Object? repoName = freezed,Object? kind = freezed,}) {
   return _then(_InstalledRecordItemDTO(
 appId: freezed == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String?,name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -11067,6 +11071,8 @@ as String?,version: freezed == version ? _self.version : version // ignore: cast
 as String?,arch: freezed == arch ? _self.arch : arch // ignore: cast_nullable_to_non_nullable
 as String?,module: freezed == module ? _self.module : module // ignore: cast_nullable_to_non_nullable
 as String?,channel: freezed == channel ? _self.channel : channel // ignore: cast_nullable_to_non_nullable
+as String?,repoName: freezed == repoName ? _self.repoName : repoName // ignore: cast_nullable_to_non_nullable
+as String?,kind: freezed == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

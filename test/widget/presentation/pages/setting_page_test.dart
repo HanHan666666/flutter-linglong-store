@@ -310,18 +310,22 @@ void main() {
       );
       await tester.pump();
 
-      // 默认开启：开关行存在且处于选中状态。
-      final switchFinder = find.widgetWithText(SwitchListTile, '用户体验计划');
+      // 默认开启：该行为普通 ListTile（说明按钮在 trailing 与开关并排），
+      // 开关处于选中状态。
+      final tileFinder = find.widgetWithText(ListTile, '用户体验计划');
+      final switchFinder = find.descendant(
+        of: tileFinder,
+        matching: find.byType(Switch),
+      );
+      expect(tileFinder, findsOneWidget);
       expect(switchFinder, findsOneWidget);
-      expect(tester.widget<SwitchListTile>(switchFinder).value, isTrue);
+      expect(tester.widget<Switch>(switchFinder).value, isTrue);
 
       // 直接点击开关本体，偏好必须落到 UserPreferences。
       // 开关位于页面下方，先滚动到可见区域再点击。
       await tester.ensureVisible(switchFinder);
       await tester.pumpAndSettle();
-      await tester.tap(
-        find.descendant(of: switchFinder, matching: find.byType(Switch)),
-      );
+      await tester.tap(switchFinder);
       // 偏好写入含异步持久化，等待状态与重建都完成。
       await tester.pumpAndSettle();
 
@@ -329,7 +333,44 @@ void main() {
         container.read(globalAppProvider).userPreferences.joinUserExperienceProgram,
         isFalse,
       );
-      expect(tester.widget<SwitchListTile>(switchFinder).value, isFalse);
+      expect(tester.widget<Switch>(switchFinder).value, isFalse);
+    },
+  );
+
+  // 该行说明按钮固定 48x48，必须放在 trailing 而非 title 行，
+  // 否则会把整行撑高、与相邻设置行高度不一致（回归守卫）。
+  testWidgets(
+    'user experience program row height matches sibling switch rows',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1280, 900));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: SettingPage()),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // 与同区的「系统通知」两行开关行（SwitchListTile 内部同为 ListTile）
+      // 高度必须一致：两行 tile 的高度由标题/副标题决定，48px 尾件不应撑高。
+      final uepTile = find.widgetWithText(ListTile, '用户体验计划');
+      final notifyTile = find.widgetWithText(ListTile, '系统通知');
+      expect(uepTile, findsOneWidget);
+      expect(notifyTile, findsOneWidget);
+      expect(
+        tester.getSize(uepTile).height,
+        tester.getSize(notifyTile).height,
+      );
     },
   );
 

@@ -611,27 +611,42 @@ class _SettingPageState extends ConsumerState<SettingPage> {
           // 用户体验计划是全部匿名统计的总开关：关闭后启动访问记录、
           // 安装差量统计与客户端 IP 预热全部停止；感叹号入口弹窗说明
           // 计划会采集哪些信息，帮助用户放心地保持开启。
-          SwitchListTile(
-            secondary: const ExcludeSemantics(
+          //
+          // 布局约束：A11yIconButton 固定 48x48 交互尺寸，不能塞进 title 行
+          // （会把整行撑高约 28px，与相邻设置行高度不一致）；放在 trailing
+          // 与开关并排，两行 tile 的高度由标题副标题决定，48px 尾件不会
+          // 撑高行高。同时按钮脱离 SwitchListTile 的 MergeSemantics，
+          // 屏幕阅读器可将「查看说明」作为独立按钮聚焦。
+          ListTile(
+            leading: const ExcludeSemantics(
               child: Icon(Icons.privacy_tip_outlined),
             ),
-            title: Row(
+            title: Text(l10n.userExperienceProgram),
+            subtitle: Text(l10n.userExperienceProgramDesc),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(child: Text(l10n.userExperienceProgram)),
                 A11yIconButton(
                   icon: const Icon(Icons.info_outline_rounded),
                   semanticsLabel: l10n.a11yUserExperienceProgramInfo,
                   tooltip: l10n.userExperienceProgram,
                   onTap: () => UserExperienceProgramDialog.show(context),
                 ),
+                const SizedBox(width: 4),
+                Switch(
+                  value: userPreferences.joinUserExperienceProgram,
+                  onChanged: (value) {
+                    ref
+                        .read(globalAppProvider.notifier)
+                        .setJoinUserExperienceProgram(value);
+                  },
+                ),
               ],
             ),
-            subtitle: Text(l10n.userExperienceProgramDesc),
-            value: userPreferences.joinUserExperienceProgram,
-            onChanged: (value) {
-              ref
-                  .read(globalAppProvider.notifier)
-                  .setJoinUserExperienceProgram(value);
+            onTap: () {
+              ref.read(globalAppProvider.notifier).setJoinUserExperienceProgram(
+                !userPreferences.joinUserExperienceProgram,
+              );
             },
           ),
           _buildDivider(context),

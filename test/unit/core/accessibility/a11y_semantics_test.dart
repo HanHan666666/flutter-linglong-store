@@ -81,6 +81,30 @@ void main() {
       expect(size.height, greaterThanOrEqualTo(48.0));
     });
 
+    testWidgets('悬浮与水波高亮为圆形（48x48 内切圆）', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Material(
+            child: A11yIconButton(
+              icon: const Icon(Icons.close),
+              semanticsLabel: '关闭',
+              onTap: () {},
+            ),
+          ),
+        ),
+      );
+
+      // InkWell 默认渲染直角方形高亮；这里必须显式裁剪为内切圆，
+      // 否则桌面端 hover 反馈呈方形，视觉上与 IconButton 不一致。
+      final inkWell = tester.widget<InkWell>(
+        find.descendant(
+          of: find.byType(A11yIconButton),
+          matching: find.byType(InkWell),
+        ),
+      );
+      expect(inkWell.borderRadius, BorderRadius.circular(24));
+    });
+
     testWidgets('具有 button: true 语义', (tester) async {
       await tester.pumpWidget(
         MaterialApp(

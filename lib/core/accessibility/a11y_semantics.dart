@@ -49,6 +49,7 @@ class A11yButton extends StatelessWidget {
 /// - 最小 48x48 交互尺寸（固定 48x48 容器，图标居中）
 /// - 装饰性图标用 ExcludeSemantics 包裹
 /// - 可选 Tooltip 提示
+/// - 悬浮/水波高亮为圆形（48x48 内切圆），对齐 IconButton 的 Material 视觉
 ///
 /// 用法：
 /// ```dart
@@ -95,6 +96,9 @@ class A11yIconButton extends StatelessWidget {
       child: InkWell(
         focusNode: focusNode,
         onTap: enabled ? onTap : null,
+        // 悬浮/水波高亮裁剪为 48×48 内切圆（半径 24），对齐标准 IconButton
+        // 的圆形反馈视觉；否则默认 InkWell 会渲染成直角方形高亮。
+        borderRadius: BorderRadius.circular(24),
         child: SizedBox(
           width: 48,
           height: 48,

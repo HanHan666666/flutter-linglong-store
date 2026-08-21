@@ -35,7 +35,7 @@
 
 - 公共入口继续是 `showLinglongEnvironmentManagementDialog(context)`；
 - 公共 Widget 名称继续是 `LinglongEnvironmentManagementDialog`；
-- 对话框保持 760×560、三个 Tab、现有警示横幅和操作按钮；
+- 对话框保持 760×560、三个 Tab 和操作按钮（顶部稳定性警示横幅已随功能稳定移除）；
 - 打开时继续在首帧后调用 Provider `load()`；
 - `TextEditingController` 继续由 StatefulWidget 创建和释放；
 - 所有系统变更继续只通过 `linglongEnvironmentManagementProvider`；
@@ -158,7 +158,6 @@ Controller，也不进入 Domain/Data 层。
 - `EnvironmentManagementRepairResultPanel`；
 - `EnvironmentManagementEmptyState`；
 - `EnvironmentManagementBlockingOverlay`；
-- `EnvironmentManagementWarningBanner`；
 - `EnvironmentManagementSegmentedTabBar`。
 
 这些组件只接收展示属性和回调，不读取 Riverpod，不执行导航或业务命令。

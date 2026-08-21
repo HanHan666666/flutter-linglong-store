@@ -86,10 +86,6 @@ class _LinglongEnvironmentManagementDialogState
           height: 560,
           child: Column(
             children: [
-              EnvironmentManagementWarningBanner(
-                text: l10n.envManagementWarning,
-              ),
-              const SizedBox(height: 12),
               EnvironmentManagementSegmentedTabBar(
                 isBusy: state.isBusy,
                 onRefresh: () => ref

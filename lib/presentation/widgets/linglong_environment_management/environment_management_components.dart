@@ -225,66 +225,6 @@ class EnvironmentManagementBlockingOverlay extends StatelessWidget {
   }
 }
 
-/// 在环境管理弹窗顶部展示高风险操作警示。
-///
-/// 本功能涉及玲珑本地数据修复和保存位置迁移，警示需要跨三个 Tab 始终可见。
-class EnvironmentManagementWarningBanner extends StatelessWidget {
-  /// 创建警示横幅。
-  const EnvironmentManagementWarningBanner({required this.text, super.key});
-
-  /// 已本地化的警示文案。
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = AppColors.error.withValues(
-      alpha: isDark ? 0.18 : 0.10,
-    );
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: AppColors.error.withValues(alpha: 0.5),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const ExcludeSemantics(
-            child: Padding(
-              // 错误图标与文本间距随文本方向镜像
-              padding: EdgeInsetsDirectional.only(end: 8, top: 1),
-              child: Icon(
-                Icons.error_outline,
-                size: 18,
-                color: AppColors.error,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Semantics(
-              label: text,
-              child: Text(
-                text,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  height: 1.4,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// 与 [DefaultTabController] 联动的环境管理分段式 TabBar。
 class EnvironmentManagementSegmentedTabBar extends StatelessWidget {
   /// 创建分段式 TabBar。

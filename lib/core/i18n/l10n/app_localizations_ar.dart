@@ -1972,10 +1972,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get envManagementWarning =>
-      'هذه الميزة لا تزال قيد التطوير وثباتها محدود، وهي مخصصة لأجهزة الاختبار فقط. لا تستخدمها في بيئات العمل الرسمية؛ إذا ظهرت مشاكل بعد الاستخدام، لا تكرر المحاولة ويفضل توثيق الظاهرة أولاً ثم طلب المساعدة.';
-
-  @override
   String get repoManagementHintTitle => 'يوفر إدارة المستودعات فقط';
 
   @override

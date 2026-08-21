@@ -52,11 +52,8 @@ void main() {
     expect(find.text('OSTree'), findsNothing);
     expect(find.text('OSTree 对象完整性风险'), findsNothing);
 
-    // 警示横幅：提示功能尚不稳定，三个 Tab 共享，位于标题与 TabBar 之间。
-    // 采用红色强烈警告（AppColors.error），图标为 error_outline。
+    // 警示横幅已随功能稳定移除，不再有全局红色警告。
     final l10n = await AppLocalizations.delegate.load(const Locale('zh'));
-    expect(find.text(l10n.envManagementWarning), findsOneWidget);
-    expect(find.byIcon(Icons.error_outline), findsWidgets);
 
     // 分段式 TabBar：默认选中第一个 Tab「环境分析」，其文字应为白色（主题色填充态）
     final analysisTabStyle = tester.widget<Text>(find.text('环境分析')).style!;
@@ -84,8 +81,8 @@ void main() {
     expect(find.text('移动保存位置'), findsOneWidget);
   });
 
-  // 警示横幅文案需随 locale 切换为英文，验证 l10n key 正确接入
-  testWidgets('dialog renders localized warning banner in English', (
+  // 仓库管理区域文案需随 locale 切换为英文，验证 l10n key 正确接入
+  testWidgets('dialog renders localized repository hints in English', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(1000, 800));
@@ -116,7 +113,6 @@ void main() {
     await tester.pumpAndSettle();
 
     final l10n = await AppLocalizations.delegate.load(const Locale('en'));
-    expect(find.text(l10n.envManagementWarning), findsOneWidget);
 
     // 使用本地化标签切换页面，防止测试绕过实际语言资源契约。
     await tester.tap(find.text(l10n.envManagementRepositoryTab));

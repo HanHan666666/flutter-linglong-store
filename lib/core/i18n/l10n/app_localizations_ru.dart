@@ -1905,10 +1905,6 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get envManagementWarning =>
-      'Эта функция всё ещё дорабатывается и предназначена только для тестовых компьютеров. Не используйте её в рабочей среде. Если после операции возникнет проблема, не повторяйте действие: запишите симптомы и обратитесь за помощью.';
-
-  @override
   String get repoManagementHintTitle => 'Только управление репозиторием';
 
   @override

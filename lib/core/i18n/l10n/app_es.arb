@@ -1195,7 +1195,6 @@
       }
     }
   },
-  "envManagementWarning": "Esta función aún está en desarrollo y tiene estabilidad limitada. Solo se recomienda para equipos de prueba. No la utilice en entornos corporativos de producción. Si presenta problemas después de usarla, no intente repetidamente. Le recomendamos registrar los síntomas y buscar ayuda.",
   "repoManagementHintTitle": "Solo se ofrece gestión de repositorios",
   "repoManagementHintMessage": "Esta tienda solo puede obtener datos de aplicaciones del repositorio oficial stable. No elimine el repositorio stable, ya que esto impedirá la instalación de aplicaciones.",
   "envManagementTitle": "Gestión del Entorno de Linyaps",

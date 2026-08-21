@@ -3212,12 +3212,6 @@ abstract class AppLocalizations {
   /// **'下载 {count}次'**
   String downloadedXTimes(int count);
 
-  /// No description provided for @envManagementWarning.
-  ///
-  /// In zh, this message translates to:
-  /// **'该功能目前仍在完善中，稳定性有限，仅用于测试机。正式办公环境下请勿使用；若操作后出现异常，请勿反复尝试，建议先记录现象再寻求帮助。'**
-  String get envManagementWarning;
-
   /// No description provided for @repoManagementHintTitle.
   ///
   /// In zh, this message translates to:

@@ -1867,10 +1867,6 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get envManagementWarning =>
-      'Esta función aún está en desarrollo y tiene estabilidad limitada. Solo se recomienda para equipos de prueba. No la utilice en entornos corporativos de producción. Si presenta problemas después de usarla, no intente repetidamente. Le recomendamos registrar los síntomas y buscar ayuda.';
-
-  @override
   String get repoManagementHintTitle =>
       'Solo se ofrece gestión de repositorios';
 

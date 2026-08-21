@@ -101,11 +101,15 @@
 
 - `UserPreferences.joinUserExperienceProgram`（默认 `true`，保持旧版始终上报的统计
   口径），`GlobalApp.setUserExperienceProgram` 写入；
-- 设置页「商店选项」区新增 SwitchListTile：标题「用户体验计划」，副标题「发送匿名
-  使用统计，帮助我们改进商店」；
-- 标题尾部感叹号按钮（`A11yIconButton` + `Icons.info_outline_rounded`，48×48 触点、
+- 设置页「商店选项」区新增 ListTile：标题「用户体验计划」，副标题「发送匿名
+  使用统计，帮助我们改进商店」；整行 `onTap` 切换偏好；
+- 尾部（trailing）说明按钮与开关并排（`A11yIconButton` +
+  `Icons.info_outline_rounded`，48×48 触点、圆形悬浮高亮、
   `a11yUserExperienceProgramInfo` 语义）打开
   `lib/presentation/widgets/user_experience_program_dialog.dart` 说明弹窗。
+  布局约束：按钮固定 48×48 交互尺寸，必须放 trailing 而非 title 行，否则会把
+  整行撑高、与相邻设置行高度不一致；两行 tile 高度由标题/副标题决定，48px
+  尾件不会撑高行高（有 widget 测试守卫行高一致）。
 
 ### 4.2 门控范围（关闭后全部停止）
 
@@ -125,7 +129,7 @@
 > 加入用户体验计划，你正在帮助玲珑商店变得更好。我们只收集少量匿名信息，用于改进应用推荐与下载体验：
 > - 匿名设备标识（一串随机字符，无法识别你）
 > - 系统架构、系统版本与内核信息、主机名、玲珑环境版本
-> - 应用的安装、更新与卸载记录
+> - 已安装的玲珑应用列表，以及安装、更新与卸载记录
 > - 网络地址（仅用于地区统计）
 >
 > 这些信息不包含个人隐私，也不会用于识别你的身份。你可以随时关闭开关，关闭后不会再上报任何数据。

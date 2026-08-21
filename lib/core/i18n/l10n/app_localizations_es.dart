@@ -430,7 +430,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get userExperienceProgramDialogFooter =>
-      'Esta información no contiene datos personales ni se usa para identificarte. Puedes desactivar el interruptor en cualquier momento; una vez desactivado, no se enviará ningún dato.';
+      'Esta información no se vincula con tu identidad real ni se usa para identificarte. Puedes desactivar el interruptor en cualquier momento; una vez desactivado, no se enviará ningún dato.';
 
   @override
   String get a11yUserExperienceProgramInfo =>

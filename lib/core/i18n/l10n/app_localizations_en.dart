@@ -427,7 +427,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get userExperienceProgramDialogFooter =>
-      'This information contains no personal data and is never used to identify you. You can turn the switch off at any time; once it is off, no data will be sent.';
+      'This information is not linked to your real identity and is never used to identify you. You can turn the switch off at any time; once it is off, no data will be sent.';
 
   @override
   String get a11yUserExperienceProgramInfo =>

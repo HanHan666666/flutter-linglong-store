@@ -161,7 +161,7 @@
   "userExperienceProgramDialogItemSystem": "Arquitectura del sistema, versión del sistema e información del kernel, nombre del host y versión del entorno Linglong",
   "userExperienceProgramDialogItemApps": "La lista de aplicaciones Linglong instaladas y los registros de instalación, actualización y desinstalación",
   "userExperienceProgramDialogItemNetwork": "Dirección de red (solo para estadísticas regionales)",
-  "userExperienceProgramDialogFooter": "Esta información no contiene datos personales ni se usa para identificarte. Puedes desactivar el interruptor en cualquier momento; una vez desactivado, no se enviará ningún dato.",
+  "userExperienceProgramDialogFooter": "Esta información no se vincula con tu identidad real ni se usa para identificarte. Puedes desactivar el interruptor en cualquier momento; una vez desactivado, no se enviará ningún dato.",
   "a11yUserExperienceProgramInfo": "Ver qué información recopila el programa de experiencia de usuario",
   "updateBatchAllSucceededTitle": "{count} aplicaciones actualizadas",
   "@updateBatchAllSucceededTitle": {

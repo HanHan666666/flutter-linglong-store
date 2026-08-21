@@ -865,7 +865,7 @@ abstract class AppLocalizations {
   /// No description provided for @userExperienceProgramDialogItemApps.
   ///
   /// In zh, this message translates to:
-  /// **'已安装的玲珑应用列表，以及安装、更新与卸载记录'**
+  /// **'已安装的玲珑应用列表，以及应用的安装、更新与卸载记录'**
   String get userExperienceProgramDialogItemApps;
 
   /// No description provided for @userExperienceProgramDialogItemNetwork.
@@ -877,7 +877,7 @@ abstract class AppLocalizations {
   /// No description provided for @userExperienceProgramDialogFooter.
   ///
   /// In zh, this message translates to:
-  /// **'这些信息不包含个人隐私，也不会用于识别你的身份。你可以随时关闭开关，关闭后不会再上报任何数据。'**
+  /// **'这些信息不会与你的真实身份关联，也不会用于识别你。你可以随时关闭开关，关闭后不会再上报任何数据。'**
   String get userExperienceProgramDialogFooter;
 
   /// No description provided for @a11yUserExperienceProgramInfo.

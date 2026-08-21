@@ -425,7 +425,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get userExperienceProgramDialogFooter =>
-      'لا تحتوي هذه المعلومات على أي بيانات شخصية ولا تُستخدم للتعرف على هويتك. يمكنك إيقاف تشغيل المفتاح في أي وقت؛ وبعد الإيقاف لن يتم إرسال أي بيانات.';
+      'لا ترتبط هذه المعلومات بهويتك الحقيقية ولا تُستخدم للتعرف عليك. يمكنك إيقاف تشغيل المفتاح في أي وقت؛ وبعد الإيقاف لن يتم إرسال أي بيانات.';
 
   @override
   String get a11yUserExperienceProgramInfo =>

@@ -179,7 +179,7 @@
   "userExperienceProgramDialogItemSystem": "بنية النظام وإصدار نظام التشغيل ومعلومات النواة واسم المضيف وإصدار بيئة لينغ لونغ",
   "userExperienceProgramDialogItemApps": "قائمة تطبيقات لينغ لونغ المثبتة لديك، وسجلات التثبيت والتحديث والإزالة",
   "userExperienceProgramDialogItemNetwork": "عنوان الشبكة (للإحصاءات الإقليمية فقط)",
-  "userExperienceProgramDialogFooter": "لا تحتوي هذه المعلومات على أي بيانات شخصية ولا تُستخدم للتعرف على هويتك. يمكنك إيقاف تشغيل المفتاح في أي وقت؛ وبعد الإيقاف لن يتم إرسال أي بيانات.",
+  "userExperienceProgramDialogFooter": "لا ترتبط هذه المعلومات بهويتك الحقيقية ولا تُستخدم للتعرف عليك. يمكنك إيقاف تشغيل المفتاح في أي وقت؛ وبعد الإيقاف لن يتم إرسال أي بيانات.",
   "a11yUserExperienceProgramInfo": "عرض المعلومات التي يجمعها برنامج تحسين تجربة المستخدم",
   "updateBatchAllSucceededTitle": "{count, plural, zero{لم يتم تحديث أي تطبيق} one{تم تحديث تطبيق واحد} two{تم تحديث تطبيقين} few{تم تحديث \u2066{count}\u2069 تطبيقات} many{تم تحديث \u2066{count}\u2069 تطبيقًا} other{تم تحديث \u2066{count}\u2069 تطبيقًا}}",
   "@updateBatchAllSucceededTitle": {

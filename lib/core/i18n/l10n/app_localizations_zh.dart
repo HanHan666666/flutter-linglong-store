@@ -399,14 +399,15 @@ class AppLocalizationsZh extends AppLocalizations {
       '系统架构、系统版本与内核信息、主机名、玲珑环境版本';
 
   @override
-  String get userExperienceProgramDialogItemApps => '已安装的玲珑应用列表，以及安装、更新与卸载记录';
+  String get userExperienceProgramDialogItemApps =>
+      '已安装的玲珑应用列表，以及应用的安装、更新与卸载记录';
 
   @override
   String get userExperienceProgramDialogItemNetwork => '网络地址（仅用于地区统计）';
 
   @override
   String get userExperienceProgramDialogFooter =>
-      '这些信息不包含个人隐私，也不会用于识别你的身份。你可以随时关闭开关，关闭后不会再上报任何数据。';
+      '这些信息不会与你的真实身份关联，也不会用于识别你。你可以随时关闭开关，关闭后不会再上报任何数据。';
 
   @override
   String get a11yUserExperienceProgramInfo => '查看用户体验计划采集的信息说明';

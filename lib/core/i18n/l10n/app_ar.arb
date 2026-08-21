@@ -177,7 +177,7 @@
   "userExperienceProgramDialogIntro": "من خلال الانضمام إلى برنامج تحسين تجربة المستخدم، أنت تساعد في جعل متجر لينغ لونغ أفضل. نجمع فقط قدرًا صغيرًا من المعلومات المجهولة لتحسين توصيات التطبيقات وتجربة التنزيل:",
   "userExperienceProgramDialogItemIdentity": "معرّف جهاز مجهول (سلسلة عشوائية لا يمكنها التعرف عليك)",
   "userExperienceProgramDialogItemSystem": "بنية النظام وإصدار نظام التشغيل ومعلومات النواة واسم المضيف وإصدار بيئة لينغ لونغ",
-  "userExperienceProgramDialogItemApps": "سجلات تثبيت التطبيقات وتحديثها وإزالتها",
+  "userExperienceProgramDialogItemApps": "قائمة تطبيقات لينغ لونغ المثبتة لديك، وسجلات التثبيت والتحديث والإزالة",
   "userExperienceProgramDialogItemNetwork": "عنوان الشبكة (للإحصاءات الإقليمية فقط)",
   "userExperienceProgramDialogFooter": "لا تحتوي هذه المعلومات على أي بيانات شخصية ولا تُستخدم للتعرف على هويتك. يمكنك إيقاف تشغيل المفتاح في أي وقت؛ وبعد الإيقاف لن يتم إرسال أي بيانات.",
   "a11yUserExperienceProgramInfo": "عرض المعلومات التي يجمعها برنامج تحسين تجربة المستخدم",

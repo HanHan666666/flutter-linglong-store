@@ -419,7 +419,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get userExperienceProgramDialogItemApps =>
-      'Records of app installs, updates, and uninstalls';
+      'Your installed Linglong apps, and records of installs, updates, and uninstalls';
 
   @override
   String get userExperienceProgramDialogItemNetwork =>

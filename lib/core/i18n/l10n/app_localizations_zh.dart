@@ -399,7 +399,7 @@ class AppLocalizationsZh extends AppLocalizations {
       '系统架构、系统版本与内核信息、主机名、玲珑环境版本';
 
   @override
-  String get userExperienceProgramDialogItemApps => '应用的安装、更新与卸载记录';
+  String get userExperienceProgramDialogItemApps => '已安装的玲珑应用列表，以及安装、更新与卸载记录';
 
   @override
   String get userExperienceProgramDialogItemNetwork => '网络地址（仅用于地区统计）';

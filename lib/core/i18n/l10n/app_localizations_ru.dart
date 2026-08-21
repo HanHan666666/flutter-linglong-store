@@ -420,7 +420,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get userExperienceProgramDialogItemApps =>
-      'Сведения об установке, обновлении и удалении приложений';
+      'Список установленных приложений Linglong, а также сведения об установке, обновлении и удалении';
 
   @override
   String get userExperienceProgramDialogItemNetwork =>

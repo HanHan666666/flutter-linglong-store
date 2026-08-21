@@ -865,7 +865,7 @@ abstract class AppLocalizations {
   /// No description provided for @userExperienceProgramDialogItemApps.
   ///
   /// In zh, this message translates to:
-  /// **'应用的安装、更新与卸载记录'**
+  /// **'已安装的玲珑应用列表，以及安装、更新与卸载记录'**
   String get userExperienceProgramDialogItemApps;
 
   /// No description provided for @userExperienceProgramDialogItemNetwork.

@@ -417,7 +417,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get userExperienceProgramDialogItemApps =>
-      'سجلات تثبيت التطبيقات وتحديثها وإزالتها';
+      'قائمة تطبيقات لينغ لونغ المثبتة لديك، وسجلات التثبيت والتحديث والإزالة';
 
   @override
   String get userExperienceProgramDialogItemNetwork =>

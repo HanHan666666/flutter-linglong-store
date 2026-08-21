@@ -12,7 +12,7 @@ class AppConfig {
   );
 
   /// 应用版本
-  static const String appVersion = '3.5.0';
+  static const String appVersion = '3.6.0';
 
   /// 默认语言
   static const String defaultLocale = 'zh';

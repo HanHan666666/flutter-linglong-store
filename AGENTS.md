@@ -331,6 +331,15 @@ Semantics(
 
 ## 变更记录
 
+- 2026-08-27：新增日/韩/德/法/繁中五种发布语言（`app_ja/app_ko/app_de/app_fr/
+  app_zh_Hant.arb`，各 678 键完整翻译，AR流程见 `docs/45-multi-language-expansion-design.md`）。
+  伴随三处基础设施升级：①`tryResolveSupportedAppLocale` 升级为打分消歧，zh 与
+  zh-Hant 并存时按 language+script+region 择优（TW/HK/MO→繁体，CN/SG/裸 zh→简体）；
+  ②语言持久化改存完整 BCP 47 标签（`toLanguageTag()`），旧纯语言码值天然兼容；
+  ③主题新增 `AppCjkGlyphVariant` locale 感知 CJK 字形变体（繁中 TC/日 JP/韩 KR
+  字库打头），语言选择器菜单最大高度按条目数自适应。新增语言仍遵循
+  `docs/38` §9 零代码改动流程；繁体后继维护必须走 OpenCC twp + 校订流程，
+  禁止直接手写简体字。
 - 2026-08-27：新增 Fedora Copr 源码构建支持：RPM 打包拆分为「二进制重打包」与
   「Copr 源码构建」双轨，发版随 release 附件发布 `linglong-store-<version>.copr.spec`
   与自包含源码归档（版本号与 Source0 已渲染好，Copr 维护者直接提交附件 URL 即可）；

@@ -64,6 +64,21 @@ jobs:
           cp linux/pubspec.yaml "$stage_dir/linux/pubspec.yaml"
           cp lib/core/config/app_config.dart "$stage_dir/lib/core/config/app_config.dart"
 
+      # Copr 源码归档必须在版本文件写入工作区之后制作：归档会以 git HEAD
+      # 树为基底并覆盖这三个版本文件，与最终发版 tag 树保持一致。
+      - name: Build source archive for Copr
+        run: |
+          sudo apt-get update && sudo apt-get install -y librsvg2-bin
+          bash build/scripts/package-source-archive.sh \
+            --version "${{ steps.release-version.outputs.version }}"
+
+      - name: Upload source archive assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-source
+          path: build/out/linux/${{ steps.release-version.outputs.version }}/source
+          if-no-files-found: error
+
       - name: Upload versioned release files
         uses: actions/upload-artifact@v4
         with:
@@ -86,6 +101,8 @@ jobs:
           - amd64: bundle / deb / rpm / AppImage
           - arm64: bundle / deb / rpm / AppImage
           - loong64: bundle / deb
+          - Fedora Copr 源码构建：下载本页 `*.copr.spec` 提交到你的 Copr 项目即可，
+            详见仓库 docs/44-copr-source-build-design.md
           - Arch Linux (AUR):
 
             `paru -S linglong-store-bin`
@@ -407,12 +424,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: signed-release-assets
+          # *.copr.spec 不参与 GPG 签名，仅随同一产物集透传到发布阶段，
+          # 完整性由 release 附件 hashes.sha256 覆盖。
           path: |
             artifacts/*.tar.gz
             artifacts/*.tar.gz.asc
             artifacts/*.deb
             artifacts/*.rpm
             artifacts/*.AppImage
+            artifacts/*.copr.spec
           if-no-files-found: error
 
   finalize-release-state:

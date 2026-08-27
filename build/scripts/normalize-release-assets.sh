@@ -45,6 +45,9 @@ while IFS= read -r -d '' asset_path; do
   case "$asset_name" in
     *.tar.gz|*.tar.gz.asc|*.deb|*.rpm|*.AppImage)
       ;;
+    # Copr 源码构建 spec：不签名，随附件发布供 Copr 维护者直接提交。
+    *.copr.spec)
+      ;;
     *)
       continue
       ;;

@@ -84,6 +84,9 @@ while IFS= read -r -d '' asset_path; do
       ;;
     *.tar.gz|*.tar.gz.asc|*.deb|*.rpm|*.AppImage)
       ;;
+    # Copr 源码构建 spec 与源码归档同样纳入哈希清单，完整性核对口径一致。
+    *.copr.spec)
+      ;;
     *)
       continue
       ;;

@@ -108,6 +108,18 @@ time ./build/package-deb.sh
 ./build/package-appimage.sh
 ```
 
+### Fedora Copr 源码构建
+
+发版时会随 Release 附件发布 `linglong-store-<version>.copr.spec` 与自包含
+源码归档，Fedora 用户可据此在自己的 Copr 项目从源码构建 RPM，操作指南见
+[docs/44-copr-source-build-design.md](docs/44-copr-source-build-design.md)。
+
+本地制作源码归档（需先运行 `update-version-files.sh` 写入目标版本）：
+
+```bash
+bash build/scripts/package-source-archive.sh --version <version>
+```
+
 ## 项目架构
 
 整体为分层架构（依赖方向：Presentation → Application → Domain ← Data ← Platform）：

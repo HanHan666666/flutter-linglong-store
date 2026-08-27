@@ -313,8 +313,31 @@ Semantics(
 - DEB、RPM、AppImage 必须保持三个独立 `AppUpdateInstaller`；AppImage 替换后必须设置 `0755`，避免下载文件权限导致应用无法再次启动。
 - 安装成功后不自动退出、不拉起新进程、不引入 PID 重启协调器；只提示用户手动关闭并重新打开应用。
 
+## RPM 打包双轨约定
+
+- RPM spec 存在两条独立轨道，禁止互相混用模式：
+  - 二进制重打包：`build/packaging/linux/rpm/linglong-store.spec.in`（`%build` 为空，
+    仅复制 `@PAYLOAD_DIR@` 预编译产物，服务官方 Debian 10 容器链路）；
+  - Copr 源码构建：`build/packaging/linux/copr/linglong-store.spec.in`（stable 渠道
+    专用，在 mock/Copr 内完成 Flutter SDK 引导与 Release 编译，禁止引入本地
+    payload 依赖）。
+- Copr spec 的 `flutter_version`/`flutter_commit`/`flutter_sha256` 必须与
+  `build/docker/debian10-release.Dockerfile` 的 `FLUTTER_VERSION` 同步升级；
+  aarch64 分支必须保留 commit 锚点校验。
+- 源码归档由 `build/scripts/package-source-archive.sh` 制作（git HEAD 树 +
+  版本文件覆盖 + 预渲染 `packaging-dist/`），Copr 构建端禁止新增渲染依赖
+  （dart 脚本、rsvg 等）；元数据变更时同步维护该脚本与两份 spec 模板。
+- 完整设计决策与 Copr 维护者操作指南见 `docs/44-copr-source-build-design.md`。
+
 ## 变更记录
 
+- 2026-08-27：新增 Fedora Copr 源码构建支持（响应用户「源码添加 rpmspec，以便于
+  从 Fedora Copr 构建」）：RPM 打包拆分为「二进制重打包」与「Copr 源码构建」双轨，
+  发版随 release 附件发布 `linglong-store-<version>.copr.spec` 与自包含源码归档
+  （模式 B，Copr 维护者无需自行维护版本号）；Flutter SDK 按架构双路引导
+  （x86_64 官方 tarball + sha256，aarch64 git clone + commit 锚点），版本锚点与
+  发布容器 `FLUTTER_VERSION` 同步维护。设计决策、流水线接入与维护者指南见
+  `docs/44-copr-source-build-design.md`。
 - 2026-08-01：新增阿拉伯语（ar）支持后，项目强制方向感知布局约定：新代码禁止
   硬编码物理方向（`Alignment.centerLeft` 等、`EdgeInsets.only(left:/right:)`、
   `TextAlign.left/right`、`Positioned(left:/right:)`），统一使用

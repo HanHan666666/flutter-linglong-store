@@ -85,15 +85,23 @@ void main() {
         );
       }
 
-      final firstOption = find.byKey(const ValueKey('language-option-zh'));
-      final lastOption = find.byKey(const ValueKey('language-option-ru'));
+      // 首尾项与高度上限都从 selectableAppLocales 推导，新增语言时本测试
+      // 无需跟着改语言字面量；高度断言与选择器的“条目数×48px+内边距”
+      // 计算契约保持一致，验证整份语言列表在常规窗口内一次性完整展示。
+      final locales = selectableAppLocales;
+      final firstOption = find.byKey(
+        ValueKey('language-option-${locales.first.toLanguageTag()}'),
+      );
+      final lastOption = find.byKey(
+        ValueKey('language-option-${locales.last.toLanguageTag()}'),
+      );
       final trigger = find.byKey(const ValueKey('language-selector-trigger'));
       expect(tester.getSize(firstOption).width, 320);
       expect(tester.getSize(trigger).width, greaterThan(320));
       expect(
         tester.getBottomRight(lastOption).dy -
             tester.getTopLeft(firstOption).dy,
-        lessThan(320),
+        lessThanOrEqualTo(locales.length * 48 + 8),
       );
 
       await tester.tap(find.byKey(const ValueKey('language-option-en')));

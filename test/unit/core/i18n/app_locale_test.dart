@@ -83,6 +83,21 @@ void main() {
       expect(l10n.updateBatchAllSucceededTitle(5), '5 件のアプリを更新しました');
     });
 
+    test('韩语区域 Locale 归一为韩语资源', () {
+      expect(
+        resolveInitialAppLocale(
+          persistedLanguageCode: null,
+          platformLocales: const [Locale('ko', 'KR')],
+        ),
+        const Locale('ko'),
+      );
+      final l10n = appLocalizationsForLocale('ko_KR');
+      expect(l10n.languageSelfName, '한국어');
+      // 韩语无名词复数屈折，计数消息使用直接插值即可。
+      expect(l10n.updateBatchAllSucceededTitle(1), '1개 앱이 업데이트되었습니다');
+      expect(l10n.updateBatchAllSucceededTitle(5), '5개 앱이 업데이트되었습니다');
+    });
+
     test('没有受支持语言时回退产品默认语言', () {
       expect(
         resolveInitialAppLocale(

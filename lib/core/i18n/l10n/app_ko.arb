@@ -1,0 +1,1339 @@
+{
+  "@@locale": "ko",
+  "@@linuxDesktopLocale": "ko",
+  "@@appStreamLocale": "ko",
+  "appTitle": "Linyaps 스토어 커뮤니티 에디션",
+  "linuxDesktopNameNightly": "Linyaps 스토어 커뮤니티 에디션 Nightly",
+  "linuxDesktopGenericName": "앱 스토어",
+  "linuxDesktopComment": "Linyaps 앱 탐색, 설치 및 관리",
+  "linuxDesktopCommentNightly": "Linyaps 앱을 탐색, 설치, 관리하기 위한 Nightly 빌드",
+  "linuxDesktopKeywords": "linyaps;스토어;앱;패키지;",
+  "linuxAppStreamDescription": "Linyaps 앱을 탐색, 설치, 관리하는 데스크톱 앱 스토어입니다.",
+  "recommend": "추천",
+  "allApps": "전체 앱",
+  "ranking": "순위",
+  "myApps": "내 앱",
+  "update": "업데이트",
+  "settings": "설정",
+  "category": "카테고리",
+  "office": "오피스",
+  "system": "시스템",
+  "develop": "개발",
+  "entertainment": "엔터테인먼트",
+  "searchPlaceholder": "여기에 검색할 앱을 입력하세요",
+  "search": "검색",
+  "refresh": "새로 고침",
+  "linglongRecommend": "Linyaps 추천",
+  "loading": "불러오는 중...",
+  "installing": "설치 중...",
+  "success": "성공",
+  "failed": "실패",
+  "cancel": "취소",
+  "noMoreData": "더 이상 데이터가 없습니다",
+  "install": "설치",
+  "uninstall": "제거",
+  "open": "열기",
+  "update_action": "업데이트",
+  "run": "실행",
+  "confirm": "확인",
+  "viewDetail": "상세 보기",
+  "screenShots": "스크린샷",
+  "versionSelect": "버전 선택",
+  "versionNumber": "버전 번호",
+  "appType": "앱 유형",
+  "channel": "채널",
+  "mode": "모드",
+  "repoSource": "저장소 소스",
+  "fileSize": "파일 크기",
+  "downloadCount": "다운로드 수",
+  "operation": "작업",
+  "linglongProcess": "Linyaps 프로세스",
+  "baseSetting": "기본 설정",
+  "about": "정보",
+  "envMissing": "현재 시스템에 Linyaps 환경이 없습니다",
+  "envMissingDetail": "시스템에 Linyaps 구성 요소가 없거나 버전이 낮아, 먼저 설치해야 스토어를 사용할 수 있습니다.",
+  "autoInstall": "자동 설치",
+  "manualInstall": "수동 설치",
+  "recheck": "다시 검사",
+  "exitStore": "스토어 종료",
+  "errorNetwork": "네트워크 연결에 실패했습니다",
+  "errorNetworkDetail": "네트워크 연결을 확인한 후 다시 시도하세요",
+  "errorInstallFailed": "설치 실패",
+  "errorUninstallFailed": "제거 실패",
+  "errorUpdateFailed": "업데이트 실패",
+  "errorUnknown": "알 수 없는 오류",
+  "retry": "재시도",
+  "downloading": "다운로드 중...",
+  "downloadComplete": "다운로드 완료",
+  "installComplete": "설치 완료",
+  "uninstallComplete": "제거 완료",
+  "updateComplete": "업데이트 완료",
+  "noApps": "앱이 없습니다",
+  "noInstalledApps": "설치된 앱이 없습니다",
+  "noInstalledAppsHint": "아직 Linyaps 앱을 설치하지 않았습니다. 추천 페이지를 둘러보세요",
+  "noUpdateApps": "사용 가능한 업데이트가 없습니다",
+  "version": "버전",
+  "size": "크기",
+  "description": "소개",
+  "developer": "개발자",
+  "confirmDelete": "삭제 확인",
+  "confirmDeleteMessage": "이 항목을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+  "confirmUninstall": "제거 확인",
+  "confirmUninstallMessage": "이 앱을 제거하시겠습니까?",
+  "noData": "데이터가 없습니다",
+  "noDataDescription": "아직 표시할 내용이 없습니다",
+  "pageNotFound": "페이지를 찾을 수 없음",
+  "pageNotFoundDescription": "죄송합니다. 페이지를 찾을 수 없습니다",
+  "backToHome": "홈으로 돌아가기",
+  "searchApps": "앱 검색...",
+  "languageSettings": "언어 설정",
+  "themeSettings": "테마 설정",
+  "fontSettings": "글꼴 설정",
+  "cacheManagement": "캐시 관리",
+  "storeOptions": "스토어 옵션",
+  "fontSettingsHint": "시스템 글꼴 설정이 기본값이며, 아래 조정은 그 위에 더해집니다.",
+  "fontSizeAdjustment": "글꼴 크기",
+  "fontWeightAdjustmentLabel": "글꼴 굵기",
+  "fontWeightLighter": "가늘게",
+  "fontWeightNormal": "표준",
+  "fontWeightBolder": "굵게",
+  "fontScalePercent": "{percent}%",
+  "@fontScalePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "checkUpdate": "업데이트 확인",
+  "currentVersion": "현재 버전: {version}",
+  "@currentVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "newVersionFound": "새 버전 {tagName} 발견, 현재 버전 {currentVersion}",
+  "@newVersionFound": {
+    "placeholders": {
+      "tagName": {
+        "type": "String"
+      },
+      "currentVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadyLatest": "현재 {version} (은)는 최신 버전입니다",
+  "@alreadyLatest": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "checkingUpdate": "업데이트 확인 중...",
+  "goDownload": "다운로드로 이동",
+  "updateNow": "지금 업데이트",
+  "updateDetectingInstallation": "설치 방식을 감지하는 중...",
+  "updateResolvingAsset": "설치 패키지를 선택하는 중...",
+  "updateDownloading": "업데이트 패키지를 다운로드하는 중...",
+  "updateVerifying": "업데이트 패키지를 검증하는 중...",
+  "updateInstalling": "업데이트를 설치하는 중...",
+  "updateSucceeded": "업데이트가 설치되었습니다. 새 버전을 사용하려면 앱을 닫았다가 다시 열어 주세요",
+  "updateFailed": "업데이트 실패",
+  "updateCancelled": "업데이트가 취소되었습니다",
+  "updateRetry": "재시도",
+  "updateManualInstallHint": "자동 업데이트가 불가능합니다. 다운로드 페이지에서 수동으로 설치해 주세요",
+  "updateUnsupportedArch": "현재 아키텍처는 자동 설치를 지원하지 않습니다",
+  "updateChecksumMissing": "업데이트 패키지의 체크섬 정보가 없어 설치를 중단했습니다",
+  "updateChecksumFailed": "업데이트 패키지 검증에 실패하여 설치를 중단했습니다",
+  "cacheSize": "캐시 크기",
+  "startupCheckUpdate": "시작 시 스토어 업데이트 확인",
+  "startupCheckUpdateDesc": "시작할 때마다 새 버전 여부를 확인합니다",
+  "systemNotifications": "시스템 알림",
+  "systemNotificationsDescription": "일괄 업데이트 완료 후 데스크톱 알림으로 결과를 표시합니다",
+  "userExperienceProgram": "사용자 경험 개선 프로그램",
+  "userExperienceProgramDesc": "익명 사용 통계를 보내 스토어 개선에 도움을 주세요",
+  "userExperienceProgramDialogIntro": "사용자 경험 개선 프로그램에 참여하면 Linyaps 스토어가 더 나아지는 데 도움이 됩니다. 수집하는 정보는 소량의 익명 정보뿐이며, 앱 추천과 다운로드 경험 개선에 사용됩니다:",
+  "userExperienceProgramDialogItemIdentity": "익명 기기 식별자(무작위 문자열로 신원을 식별할 수 없음)",
+  "userExperienceProgramDialogItemSystem": "시스템 아키텍처, 시스템 버전과 커널 정보, 호스트명, Linyaps 환경 버전",
+  "userExperienceProgramDialogItemApps": "설치된 Linyaps 앱 목록과 앱의 설치·업데이트·제거 기록",
+  "userExperienceProgramDialogItemNetwork": "네트워크 주소(지역 통계에만 사용)",
+  "userExperienceProgramDialogFooter": "이 정보는 실제 신원과 연결되지 않으며 신원 확인에도 사용되지 않습니다. 스위치는 언제든 끌 수 있으며, 끄면 어떠한 데이터도 전송되지 않습니다.",
+  "a11yUserExperienceProgramInfo": "사용자 경험 개선 프로그램의 수집 정보 설명 보기",
+  "updateBatchAllSucceededTitle": "{count}개 앱이 업데이트되었습니다",
+  "@updateBatchAllSucceededTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchFinishedTitle": "일괄 업데이트가 종료되었습니다",
+  "updateBatchNoSuccessTitle": "앱 업데이트가 완료되지 않았습니다",
+  "updateBatchResultSummary": "결과: {summary}",
+  "@updateBatchResultSummary": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchResultSeparator": ", ",
+  "updateBatchSucceededCount": "성공 {count}개",
+  "@updateBatchSucceededCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchFailedCount": "실패 {count}개",
+  "@updateBatchFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchCancelledCount": "취소 {count}개",
+  "@updateBatchCancelledCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchInterruptedCount": "중단 {count}개",
+  "@updateBatchInterruptedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchAppNameSeparator": ", ",
+  "updateBatchUpdatedApps": "업데이트됨: {names}",
+  "@updateBatchUpdatedApps": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchUpdatedAppsOverflow": "업데이트됨: {names} 외 {remainingCount}개",
+  "@updateBatchUpdatedAppsOverflow": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "remainingCount": {
+        "type": "int"
+      }
+    }
+  },
+  "softwareRendering": "소프트웨어 렌더링",
+  "softwareRenderingEnabled": "소프트웨어 렌더링",
+  "hardwareRenderingEnabled": "하드웨어 렌더링",
+  "rendererModeDetecting": "현재 렌더링 상태를 감지하는 중…",
+  "rendererModeDetectFailed": "현재 렌더링 상태를 가져올 수 없지만, 다음 시작에 사용할 렌더링 방식은 저장할 수 있습니다.",
+  "rendererModeCurrentStatus": "현재 {mode} 사용 중. {reason}",
+  "@rendererModeCurrentStatus": {
+    "placeholders": {
+      "mode": {},
+      "reason": {}
+    }
+  },
+  "rendererModeReasonEnvironment": "현재 렌더링 모드는 환경 변수 {value} 에 의해 제어됩니다.",
+  "@rendererModeReasonEnvironment": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "rendererModeReasonUserPreference": "저장된 설정에 따라 적용되었습니다.",
+  "rendererModeReasonCpuFallback": "호환성을 높이기 위해 이 기기에서는 기본적으로 소프트웨어 렌더링을 사용합니다.",
+  "rendererModeReasonDefault": "이 기기에서는 기본적으로 하드웨어 렌더링을 사용합니다.",
+  "rendererModeEnvLocked": "환경 변수 {value} 이(가) 감지되었습니다. 현재 렌더링 모드는 시스템 환경이 제어하므로 여기서 변경할 수 없습니다.",
+  "@rendererModeEnvLocked": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "rendererModeNextLaunchStatus": "다음 시작부터 {mode}을(를) 사용합니다.",
+  "@rendererModeNextLaunchStatus": {
+    "placeholders": {
+      "mode": {}
+    }
+  },
+  "rendererModeWhitelistHint": "보다 안정적인 화면 표시를 위해 이 기기에서는 소프트웨어 렌더링을 유지하는 것이 좋습니다.",
+  "rendererModeHardwareRiskHint": "다음 시작부터 하드웨어 렌더링을 사용합니다. 화면이 정상적으로 표시되지 않으면 아래 명령으로 복구할 수 있습니다.",
+  "rendererModeDisableWarningTitle": "소프트웨어 렌더링 해제 확인",
+  "rendererModeDisableWarningMessage": "이 기기에서 소프트웨어 렌더링을 해제하면 앱이 정상적으로 표시되지 않을 수 있습니다. 보다 안정적인 화면 표시를 위해 소프트웨어 렌더링을 유지하는 것이 좋습니다.",
+  "rendererModeDetectedCpu": "이 기기의 프로세서: {cpu}",
+  "@rendererModeDetectedCpu": {
+    "placeholders": {
+      "cpu": {}
+    }
+  },
+  "rendererModeDisableBlackScreenHint": "다음 시작 후 앱이 정상적으로 표시되지 않으면 터미널에서 아래 명령을 실행한 후 앱을 다시 열어 주세요.",
+  "rendererModeDataDirectoryLabel": "데이터 디렉터리",
+  "rendererModeDeleteCommandLabel": "삭제 명령",
+  "rendererModeSaveCommandHint": "앱이 정상적으로 표시되지 않을 경우에 대비해 이 명령을 복사해 두는 것이 좋습니다.",
+  "rendererModeDisableConfirm": "계속 해제",
+  "rendererModeSavedSoftware": "소프트웨어 렌더링으로 전환되었습니다. 다음 시작 시 적용됩니다.",
+  "rendererModeSavedHardware": "하드웨어 렌더링으로 전환되었습니다. 다음 시작 시 적용됩니다.",
+  "rendererModeSaveFailed": "렌더링 설정 저장에 실패했습니다. 잠시 후 다시 시도하세요.",
+  "showBaseServices": "기반 런타임 서비스 표시",
+  "showBaseServicesDesc": "설치된 목록에 기반 런타임 서비스를 표시합니다",
+  "cleanDeprecatedServices": "폐기된 기반 서비스 정리",
+  "cleanDeprecatedServicesDesc": "더 이상 사용되지 않는 기반 런타임 서비스를 제거하여 디스크 공간을 확보합니다",
+  "checkNewVersion": "새 버전 확인",
+  "feedbackMenu": "피드백",
+  "officialWebsite": "공식 웹사이트",
+  "communityExchange": "커뮤니티",
+  "aboutDevelopers": "개발자 정보",
+  "feedbackTitle": "피드백",
+  "uploadLog": "로그 파일 함께 전송",
+  "noPrivacyInfo": "로그에는 개인정보가 포함되어 있지 않습니다",
+  "submitFeedback": "제출",
+  "feedbackHint": "문제 개요 또는 설명을 입력해 주세요",
+  "feedbackSuccess": "피드백 감사합니다!",
+  "feedbackFailed": "피드백 제출에 실패했습니다. 잠시 후 다시 시도하세요",
+  "confirmExit": "종료 확인",
+  "exitWithInstalling": "진행 중인 설치 작업이 있습니다. 종료하시겠습니까?",
+  "exitBtn": "종료",
+  "downloadManager": "다운로드 관리",
+  "downloadWaitingForTask": "다운로드 작업 시작 대기 중",
+  "downloadRealtimeSpeed": "실시간 속도 {speed}",
+  "@downloadRealtimeSpeed": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadHistoryCount": "기록 {count}건",
+  "@downloadHistoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ogInstallRequestReceived": "웹에서 온 설치 요청을 받았습니다: {appName}",
+  "@ogInstallRequestReceived": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallEnqueued": "다운로드 관리에 추가되었습니다: {appName}",
+  "@ogInstallEnqueued": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallInvalidLink": "웹 설치 링크를 인식할 수 없습니다. og://appId 만 지원합니다",
+  "ogInstallEnvironmentUnavailable": "Linyaps 실행 환경을 사용할 수 없어 웹 자동 설치가 현재 불가능합니다",
+  "ogInstallDuplicate": "{appName} 은(는) 이미 다운로드 관리에 있습니다",
+  "@ogInstallDuplicate": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallDetailFailed": "앱 정보를 가져올 수 없어 설치를 시작하지 않았습니다",
+  "ogInstallDetailFailedWithError": "앱 정보를 가져올 수 없어 설치를 시작하지 않았습니다: {error}",
+  "@ogInstallDetailFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearRecords": "기록 비우기",
+  "noDownloadTasks": "다운로드 작업이 없습니다",
+  "cannotOpenLink": "링크를 열 수 없습니다: {url}",
+  "@cannotOpenLink": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "envCheckPassed": "설치 완료, 환경 검사 통과",
+  "envCheckFailed": "설치는 완료되었지만 환경에 여전히 문제가 있습니다. 확인해 주세요",
+  "launching": "{appName} 실행 중...",
+  "@launching": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "launchFailed": "실행 실패: {error}",
+  "@launchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "copied": "복사됨: {value}",
+  "@copied": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "shareLink": "공유",
+  "shareMessage": "\"{name}\" 앱을 한번 보세요",
+  "@shareMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linkCopied": "링크가 복사되었습니다. 공유해 보세요",
+  "shareFailed": "공유 실패",
+  "createDesktopShortcut": "바탕화면 바로 가기 만들기",
+  "appDetailTitle": "앱 상세",
+  "appNotFound": "앱 정보를 찾을 수 없습니다",
+  "noVersionHistory": "버전 기록이 없습니다",
+  "installedBadge": "설치됨",
+  "versionInstallTargetMissing": "해당 설치 버전을 찾을 수 없습니다. 새로 고친 후 다시 시도하세요",
+  "uninstallFailed": "제거 실패: {result}",
+  "@uninstallFailed": {
+    "placeholders": {
+      "result": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallSuccess": "{name} 제거됨",
+  "@uninstallSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallError": "제거 이상: {error}",
+  "@uninstallError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "commandCopied": "명령이 클립보드에 복사되었습니다. 터미널에 붙여넣어 실행하세요",
+  "copy": "복사",
+  "copyLog": "로그 복사",
+  "copySucceeded": "복사 성공",
+  "copyErrorMessage": "오류 메시지 복사",
+  "skipCheck": "검사 건너뛰기",
+  "loadFailed": "불러오기 실패",
+  "shortcutCreated": "바로 가기가 생성되었습니다",
+  "appComments": "댓글",
+  "appCommentsEmpty": "아직 댓글이 없습니다. 첫 댓글을 남겨 보세요",
+  "commentInputHint": "이 앱의 사용 경험을 이야기해 보세요",
+  "submitComment": "댓글 달기",
+  "commentVersionLabel": "관련 버전",
+  "anonymousComment": "익명 방문자",
+  "commentHelpful": "도움돼요",
+  "commentNotHelpful": "도움 안 돼요",
+  "commentAnonymousHint": "익명 댓글이며 최신 순으로 표시됩니다",
+  "commentSubmitSuccess": "댓글이 제출되었습니다",
+  "commentSubmitFailed": "댓글 제출 실패: {error}",
+  "@commentSubmitFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreateFailed": "생성 실패: {error}",
+  "@shortcutCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "envCheckTitle": "환경 검사",
+  "checkingLinglongEnv": "Linyaps 환경을 검사하는 중...",
+  "unknownStatus": "알 수 없는 상태",
+  "llCliVersion": "ll-cli 버전",
+  "notDetected": "감지되지 않음",
+  "errorMessage": "오류 메시지",
+  "repoShowFailureTitle": "저장소 읽기 명령 실행 실패",
+  "repoShowFailureCommand": "{command} 을(를) 실행해 Linyaps 저장소 설정을 읽는 데 실패했습니다.",
+  "@repoShowFailureCommand": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "repoShowFailureReason": "이 명령은 시스템 서비스 org.deepin.linglong.PackageManager.service 를 통해 저장소 설정을 읽습니다. 서비스가 실행 중이 아니면 실패를 반환합니다.",
+  "repoShowFailureInstalledQuestion": "앱 환경을 이미 설치하셨나요?",
+  "repoShowFailureRestartHint": "ll-cli 와 앱 환경이 설치되어 있다면 해당 시스템 서비스를 재시작한 후 다시 검사해 보세요.",
+  "restartPackageManagerService": "org.deepin.linglong.PackageManager.service 재시작 시도",
+  "restartingPackageManagerService": "org.deepin.linglong.PackageManager.service 재시작 중...",
+  "packageManagerServiceRestartPassed": "서비스가 재시작되었으며 환경 검사를 통과했습니다",
+  "packageManagerServiceRestartStillFailed": "서비스는 재시작되었지만 환경에 여전히 문제가 있습니다. 오류 메시지를 확인하세요",
+  "packageManagerServiceRestartFailed": "서비스 재시작 실패: {error}",
+  "@packageManagerServiceRestartFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "installingLinglong": "설치 중...",
+  "openInstallLogDirectory": "로그 디렉터리 열기",
+  "cannotOpenDirectory": "디렉터리를 열 수 없습니다: {path}",
+  "@cannotOpenDirectory": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "appIntroduction": "앱 소개",
+  "collapse": "접기",
+  "expandAll": "모두 펼치기",
+  "collapseCategories": "카테고리 접기",
+  "expandCategories": "카테고리 펼치기",
+  "packageName": "패키지 이름",
+  "architecture": "아키텍처",
+  "channelLabel": "채널",
+  "runtime": "런타임",
+  "license": "라이선스",
+  "homepage": "홈페이지",
+  "appInfo": "앱 정보",
+  "versionHistory": "버전 기록",
+  "versionListLoadFailed": "버전 목록을 불러오지 못했습니다. 다시 시도하세요",
+  "versionListUpdateFailed": "버전 목록 갱신에 실패하여 마지막 결과를 표시합니다",
+  "uninstallApp": "앱 제거",
+  "uninstallConfirmMessage": "{name} 을(를) 제거하시겠습니까?\n제거 후 앱 데이터가 삭제되며 이 작업은 되돌릴 수 없습니다.",
+  "@uninstallConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noDescription": "설명 없음",
+  "categoryLabel": "카테고리",
+  "searchNotFound": "관련 앱을 찾을 수 없습니다",
+  "searchTryOtherKeywords": "다른 키워드로 검색해 보세요",
+  "searchInputHint": "상단 검색창에 키워드 입력",
+  "searchPressEnter": "Enter 키로 앱 검색 시작",
+  "searchResultCount": "{count}개의 결과를 찾았습니다",
+  "@searchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchInstalledApps": "설치된 앱 검색",
+  "noMatchingApp": "일치하는 앱을 찾을 수 없습니다",
+  "noMatchingAppHint": "\"{query}\" 관련 앱을 찾지 못했습니다",
+  "@noMatchingAppHint": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "updateCount": "총 {count}개의 앱을 업데이트할 수 있습니다",
+  "@updateCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ignoredUpdatesCount": "제외됨 ({count})",
+  "@ignoredUpdatesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ignoredUpdatesTitle": "제외된 업데이트",
+  "ignoredUpdatesEmptyTitle": "제외된 앱이 없습니다",
+  "ignoredUpdatesEmptyDescription": "업데이트 가능한 앱의 더보기 메뉴에서 업그레이드를 원하지 않는 앱을 계속 제외할 수 있습니다.",
+  "ignoreAppUpdates": "이 앱의 업데이트 제외",
+  "restoreUpdateNotifications": "업데이트 알림 복원",
+  "ignoredVersion": "제외 시 버전: {version}",
+  "@ignoredVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateSuccess": "{appName} 의 이후 업데이트를 제외했습니다. '제외됨'에서 복원할 수 있습니다",
+  "@ignoreUpdateSuccess": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateActiveTask": "{appName} 이(가) 업데이트 대기열에 있어 지금은 제외할 수 없습니다",
+  "@ignoreUpdateActiveTask": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateFailed": "업데이트 제외 설정 저장에 실패했습니다. 다시 시도하세요",
+  "ignoreUpdateInvalidApp": "이 앱은 제외할 수 없습니다: 앱 식별자가 잘못되었습니다",
+  "restoreUpdateSuccess": "{appName} 의 업데이트 알림을 복원했습니다",
+  "@restoreUpdateSuccess": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreUpdateFailed": "업데이트 알림 복원에 실패했습니다. 다시 시도하세요",
+  "restoreUpdateRefreshFailed": "업데이트 알림은 복원되었지만 업데이트 확인에 실패했습니다. 나중에 다시 시도할 수 있습니다",
+  "a11yManageIgnoredUpdates": "제외된 업데이트 관리, 총 {count}개 앱",
+  "@a11yManageIgnoredUpdates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "a11yIgnoreAppUpdates": "{appName} 의 이후 업데이트 제외",
+  "@a11yIgnoreAppUpdates": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yUpdateAppMoreActions": "{appName} 의 기타 업데이트 작업",
+  "@a11yUpdateAppMoreActions": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yRestoreAppUpdates": "{appName} 의 업데이트 알림 복원",
+  "@a11yRestoreAppUpdates": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yIgnoredUpdateItem": "{appName}, 앱 ID {appId}, 제외 시 버전 {version}",
+  "@a11yIgnoredUpdateItem": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "appId": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updating": "업데이트 중...",
+  "updateAll": "모두 업데이트",
+  "updateCheckFailed": "업데이트 확인 실패",
+  "noUpdate": "업데이트 없음",
+  "allAppsUpToDate": "모든 앱이 최신 버전입니다",
+  "noMore": "더 이상 없습니다",
+  "appTitleShort": "Linyaps 스토어",
+  "detectingEnv": "Linyaps 환경을 감지하는 중...",
+  "stepEnvCheck": "환경 검사",
+  "stepAppLoad": "앱 불러오기",
+  "stepUpdateCheck": "업데이트 확인",
+  "stepQueueRecovery": "대기열 복구",
+  "launchFailedTitle": "실행 실패",
+  "skip": "건너뛰기",
+  "cannotGetVersion": "버전 정보를 가져올 수 없습니다",
+  "newVersionAvailable": "새 버전 {version} 발견!\n현재 버전: {current}",
+  "@newVersionAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      }
+    }
+  },
+  "languageZh": "中文",
+  "languageSelfName": "한국어",
+  "themeFollowSystem": "시스템 따르기",
+  "themeLight": "라이트 모드",
+  "themeDark": "다크 모드",
+  "clearingCache": "지우는 중...",
+  "clearCache": "캐시 지우기",
+  "clearCacheDesc": "캐시를 지우면 저장 공간을 확보할 수 있지만, 앱 아이콘과 일부 데이터를 다시 다운로드하게 됩니다.",
+  "clearCacheConfirm": "캐시 지우기 확인",
+  "clearCacheMessage": "모든 캐시를 지우시겠습니까?",
+  "cacheCleared": "캐시가 지워졌습니다",
+  "clearCacheFailed": "캐시 지우기 실패",
+  "appVersion": "앱 버전",
+  "appCount": "수록된 앱 수",
+  "systemArch": "시스템 아키텍처",
+  "linglongVersion": "Linyaps 버전",
+  "checkNetwork": "네트워크 연결을 확인한 후 다시 시도하세요",
+  "copyContainerCommand": "컨테이너 진입 명령 복사",
+  "commandCopiedToClipboard": "명령이 클립보드에 복사되었습니다",
+  "copyAppId": "앱 ID 복사",
+  "stopSuccess": "{name} 이(가) 중지되었습니다",
+  "@stopSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stopFailed": "중지 실패",
+  "processRefreshFailed": "프로세스 목록 새로 고침 실패...",
+  "noRunningApps": "현재 실행 중인 Linyaps 앱이 없습니다",
+  "notRefreshed": "아직 새로 고치지 않음",
+  "lastRefresh": "마지막 새로 고침",
+  "refreshing": "새로 고치는 중",
+  "appName": "앱 이름",
+  "versionNo": "버전 번호",
+  "source": "출처",
+  "containerId": "컨테이너 ID",
+  "appRunningTitle": "앱이 실행 중입니다",
+  "appRunningMessage": "이 앱이 실행 중이므로 제거하려면 먼저 종료해야 합니다",
+  "downgradeConfirm": "다운그레이드 확인",
+  "downgradeMessage": "대상 버전이 현재 버전보다 낮습니다. 다운그레이드하시겠습니까?",
+  "alreadyInstalledVersion": "이 버전은 이미 설치되어 있습니다",
+  "waiting": "대기 중",
+  "completed": "완료",
+  "remove": "삭제",
+  "feedbackCategories": "스토어 결함,앱 업데이트,앱 장애",
+  "feedbackCategory": "문제 분류",
+  "overview": "개요",
+  "overviewHint": "문제를 간략히 설명해 주세요",
+  "detailDescription": "상세 설명",
+  "none": "없음",
+  "clearSearch": "검색어 지우기",
+  "minimize": "최소화",
+  "restore": "복원",
+  "maximize": "최대화",
+  "close": "닫기",
+  "goRecommend": "추천 페이지를 둘러보세요",
+  "processRefreshFailedHint": "프로세스 목록 새로 고침에 실패했습니다. 현재 표시된 것은 마지막 성공 시점의 데이터입니다",
+  "moreActions": "더보기",
+  "appRunningUninstallMessage": "{name} 이(가) 현재 실행 중이므로 제거 전에 실행 중인 모든 인스턴스를 강제 종료해야 합니다.\n강제 종료 후 제거하시겠습니까?",
+  "@appRunningUninstallMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "forceCloseAndUninstall": "강제 종료 후 제거",
+  "downgradeMessageWithVersion": "현재 {appName} v{currentVersion} 이(가) 설치되어 있으며, 더 낮은 버전 v{targetVersion} 을(를) 설치하려 합니다.\n다운그레이드 시 기능 이상이 발생할 수 있습니다. 계속하시겠습니까?",
+  "@downgradeMessageWithVersion": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "currentVersion": {
+        "type": "String"
+      },
+      "targetVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmDowngrade": "다운그레이드 확인",
+  "reinstallMessage": "{appName} v{version} 이(가) 이미 설치되어 있습니다.\n다시 설치하시겠습니까(기존 설치를 덮어씁니다)?",
+  "@reinstallMessage": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "forceReinstall": "강제 재설치",
+  "installingLabel": "설치 중",
+  "waitingCount": "대기 중 ({count})",
+  "@waitingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "detailDescriptionHint": "겪은 문제를 자세히 설명해 주세요",
+  "linglongCommunity": "Linyaps 커뮤니티",
+  "unknown": "알 수 없음",
+  "copyPid": "PID 복사",
+  "copyContainerId": "컨테이너 ID 복사",
+  "refreshProcessList": "프로세스 목록 새로 고침",
+  "stopProcess": "프로세스 중지",
+  "checkUpdateNetworkError": "업데이트 확인에 실패했습니다. 네트워크 연결을 확인하세요",
+  "pruneServiceTitle": "폐기된 기반 서비스 정리",
+  "pruneServiceMessage": "ll-cli prune 명령을 실행하여 어떤 앱에도 더 이상 의존되지 않는 기반 런타임 서비스를 모두 제거합니다.\n\n정리 후 디스크 공간을 절약할 수 있지만, 다른 작업이 진행 중이면 다시 다운로드해야 할 수 있습니다.",
+  "pruneServiceSuccess": "폐기된 기반 서비스가 정리되었습니다",
+  "pruneServiceFailed": "정리에 실패했습니다. 잠시 후 다시 시도하세요",
+  "clearCacheHint": "캐시를 지우면 저장 공간을 확보할 수 있지만 앱이 데이터를 다시 불러와야 할 수 있습니다.",
+  "pruneBaseServiceMessage": "ll-cli prune 명령을 실행하여 어떤 앱에도 더 이상 의존되지 않는 기반 런타임 서비스를 모두 제거합니다.\n\n정리 후 디스크 공간을 절약할 수 있지만, 다른 작업이 진행 중이면 다시 다운로드해야 할 수 있습니다.",
+  "clean": "정리",
+  "baseServiceCleaned": "폐기된 기반 서비스가 정리되었습니다",
+  "cleanFailed": "정리에 실패했습니다. 잠시 후 다시 시도하세요",
+  "appCountValue": "{count}개",
+  "@appCountValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "llCliVersionLabel": "ll-cli 버전",
+  "rankingTabDownload": "다운로드 순위",
+  "rankingTabRising": "신인 순위",
+  "rankingTabUpdate": "업데이트 순위",
+  "rankingTabHot": "인기 순위",
+  "sidebarAllApps": "전체",
+  "sidebarRanking": "순위",
+
+  "installErrorGeneric": "설치 실패",
+  "installErrorTimeout": "설치 실패: 진행률 시간 초과",
+  "installCancelled": "설치가 취소되었습니다",
+  "installErrorUnknown": "설치 실패: 알 수 없는 오류",
+  "installErrorAppNotFoundRemote": "설치 실패: 원격 저장소에서 앱을 찾을 수 없습니다",
+  "installErrorAppNotFoundLocal": "설치 실패: 로컬에서 앱을 찾을 수 없습니다",
+  "installFailed": "설치 실패",
+  "installErrorAppNotInRemote": "설치 실패: 원격에 해당 앱이 없습니다",
+  "installErrorSameVersion": "설치 실패: 같은 버전이 이미 설치되어 있습니다",
+  "installErrorDowngrade": "설치 실패: 다운그레이드가 필요합니다",
+  "installErrorModuleVersionNotAllowed": "설치 실패: 모듈 설치 시 버전을 지정할 수 없습니다",
+  "installErrorModuleRequiresApp": "설치 실패: 모듈 설치에는 먼저 앱 설치가 필요합니다",
+  "installErrorModuleExists": "설치 실패: 모듈이 이미 존재합니다",
+  "installErrorArchMismatch": "설치 실패: 아키텍처가 일치하지 않습니다",
+  "installErrorModuleNotInRemote": "설치 실패: 원격에 해당 모듈이 없습니다",
+  "installErrorMissingErofs": "설치 실패: erofs 해제 명령이 없습니다",
+  "installErrorUnsupportedFormat": "설치 실패: 지원하지 않는 파일 형식입니다",
+  "installErrorNetwork": "설치 실패: 네트워크 오류",
+  "installErrorInvalidRef": "설치 실패: 잘못된 참조입니다",
+  "installErrorUnknownArch": "설치 실패: 알 수 없는 아키텍처입니다",
+  "installErrorCode": "설치 실패: 오류 코드 {code}",
+  "@installErrorCode": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+
+  "installStatusStarting": "설치 시작",
+  "installStatusInstallingApp": "앱 설치 중",
+  "installStatusInstallingRuntime": "런타임 설치 중",
+  "installStatusInstallingBase": "베이스 패키지 설치 중",
+  "installStatusDownloadingMeta": "메타데이터 다운로드 중",
+  "installStatusDownloadingFiles": "파일 다운로드 중",
+  "installStatusPostProcessing": "설치 후 처리",
+  "installStatusCompleted": "설치 완료",
+  "installStatusProcessing": "처리 중",
+
+  "waitingForOperation": "{operation} 대기 중...",
+  "@waitingForOperation": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationInstall": "설치",
+  "operationUpdate": "업데이트",
+  "operationPreparing": "{operation} 준비 중 {appId}...",
+  "@operationPreparing": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      },
+      "appId": {
+        "type": "String"
+      }
+    }
+  },
+  "operationCancelled": "{operation} 취소됨",
+  "@operationCancelled": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationCompleted": "{operation} 완료",
+  "@operationCompleted": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationUnknown": "{operation} 상태 알 수 없음",
+  "@operationUnknown": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationConfirmFailed": "{operation} 결과를 확인할 수 없습니다",
+  "@operationConfirmFailed": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationTimeout": "{operation} 시간 초과",
+  "@operationTimeout": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationFailed": "{operation} 실패",
+  "@operationFailed": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+
+  "taskCrashInterrupted": "앱 크래시로 작업이 중단되었습니다",
+  "taskCrashRetryHint": "실행 중 앱이 크래시했습니다. 다시 시도하세요",
+
+  "uninstallFailedWithError": "제거 실패: {error}",
+  "@uninstallFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallException": "제거 이상: {error}",
+  "@uninstallException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "stopFailedWithError": "종료 실패: {error}",
+  "@stopFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "stopException": "종료 이상: {error}",
+  "@stopException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreated": "바로 가기가 생성되었습니다",
+  "shortcutCreatedWithPath": "바로 가기 생성됨: {path}",
+  "@shortcutCreatedWithPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreateFailedWithError": "생성 실패: {error}",
+  "@shortcutCreateFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pruneFailedWithError": "정리 실패: {error}",
+  "@pruneFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pruneException": "정리 이상: {error}",
+  "@pruneException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "getVersionFailed": "버전 가져오기 실패",
+  "llCliNotInstalled": "ll-cli 가 설치되어 있지 않습니다",
+  "uosEnvInstallHint": "UOS 시스템에 Linyaps 환경을 설치하기 전에 먼저 시스템의 개발자 모드를 켜고, 현재 계정이 root 권한을 얻을 수 있는지 확인하세요(설정-일반-개발자 옵션-개발자 모드로 이동. 업무용 시스템은 IT 부서에 문의하여 신중히 진행하는 것을 권장).",
+  "uosAppInstallFailureHint": "UOS 시스템이라면 시스템의 개발자 모드가 켜져 있는지 확인하세요(설정-일반-개발자 옵션-개발자 모드로 이동. 업무용 시스템은 IT 부서에 문의하여 신중히 진행하는 것을 권장).",
+  "appInfoUnavailable": "앱 정보를 가져올 수 없습니다",
+  "shortcutCreateException": "바로 가기 생성 실패: {error}",
+  "@shortcutCreateException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingForInstall": "설치 대기 중",
+  "cancelInstall": "설치 취소",
+  "uninstallBlockedTitle": "지금은 제거할 수 없습니다",
+  "uninstallBlockedMessage": "현재 \"{activeTaskName}\" 의 설치/업데이트가 진행 중입니다. Linyaps 는 설치와 제거의 동시 실행을 지원하지 않습니다. 현재 작업이 완료되기를 기다리거나 먼저 현재 작업을 취소한 후 제거하세요.",
+  "@uninstallBlockedMessage": {
+    "placeholders": {
+      "activeTaskName": {
+        "type": "String"
+      }
+    }
+  },
+  "iKnow": "확인",
+  "viewDownloadManager": "다운로드 관리 보기",
+  "a11ySearchByTag": "태그로 검색: {tag}",
+  "@a11ySearchByTag": { "placeholders": { "tag": {} } },
+  "a11yRemoveSearchTag": "검색 태그 제거: {tag}",
+  "@a11yRemoveSearchTag": { "placeholders": { "tag": {} } },
+  "a11yInstallApp": "{appName} 설치",
+  "@a11yInstallApp": { "placeholders": { "appName": {} } },
+  "a11yUpdateApp": "{appName} 업데이트",
+  "@a11yUpdateApp": { "placeholders": { "appName": {} } },
+  "a11yOpenApp": "{appName} 열기",
+  "@a11yOpenApp": { "placeholders": { "appName": {} } },
+  "a11yUninstallApp": "{appName} 제거",
+  "@a11yUninstallApp": { "placeholders": { "appName": {} } },
+  "a11ySearchBox": "앱 검색",
+  "a11ySearchInputHint": "키워드를 입력해 검색",
+  "a11yCommentInputHint": "댓글 내용 입력",
+  "a11ySidebarNav": "사이드바 내비게이션",
+  "a11yAppCard": "{appName}, 버전 {version}, {status}",
+  "@a11yAppCard": { "placeholders": { "appName": {}, "version": {}, "status": {} } },
+  "a11yRankingItem": "{rank}위, {appName}",
+  "@a11yRankingItem": { "placeholders": { "rank": {}, "appName": {} } },
+  "a11yProcessItem": "프로세스 {name}, PID {pid}",
+  "@a11yProcessItem": { "placeholders": { "name": {}, "pid": {} } },
+  "a11yDownloadItem": "{appName} 다운로드, 진행률 {percent}%",
+  "@a11yDownloadItem": { "placeholders": { "appName": {}, "percent": {} } },
+  "a11yRecommendPage": "추천",
+  "a11yAllAppsPage": "전체 앱",
+  "a11yRankingPage": "순위",
+  "a11yMyAppsPage": "내 앱",
+  "a11ySettingsPage": "설정",
+  "a11yAppDetailPage": "앱 상세",
+  "a11yScreenshotArea": "스크린샷 영역",
+  "a11yCommentSection": "댓글 영역",
+  "a11yCarouselArea": "캐러셀 영역",
+  "a11yAppListArea": "앱 목록",
+  "a11ySidebarArea": "사이드바",
+  "a11yMinimize": "최소화",
+  "a11yMaximize": "최대화",
+  "a11yRestore": "복원",
+  "a11yClose": "닫기",
+  "a11yPrevious": "이전",
+  "a11yNext": "다음",
+  "a11yTabSelected": "선택됨",
+  "a11yTabNotSelected": "선택 안 됨",
+  "a11yStatusInstalled": "설치됨",
+  "a11yStatusUpdatable": "업데이트 가능",
+  "a11yStatusNotInstalled": "설치 안 됨",
+  "noAppsInCategory": "이 카테고리에는 앱이 없습니다",
+  "noRanking": "순위가 없습니다",
+  "noRecommend": "추천이 없습니다",
+  "installTimeout": "설치 시간 초과: 오랫동안 진행률 갱신이 없었습니다",
+  "downloadManagerSlowInstallHint": "진행률이 느려 보이면 소프트웨어에 필요한 의존성을 설치하고 있을 수 있습니다. 조금만 더 기다려 주세요……",
+  "loadingInstalledApps": "설치된 앱을 불러오는 중...",
+  "appDescriptionPlaceholder": "앱 설명",
+  "rankingTabNewUpload": "최신 등록 순위",
+  "rankingTabDownloadCount": "다운로드 수 순위",
+  "uploadedXHoursAgo": "{count}시간 전 등록",
+  "@uploadedXHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadedXDaysAgo": "{count}일 전 등록",
+  "@uploadedXDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadedOnDate": "{date} 등록",
+  "@uploadedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedXTimes": "다운로드 {count}회",
+  "@downloadedXTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "repoManagementHintTitle": "저장소 관리 기능만 제공",
+  "repoManagementHintMessage": "이 스토어는 공식 stable 저장소의 앱 데이터만 가져올 수 있습니다. stable 저장소는 삭제하지 마세요. 삭제하면 앱을 설치할 수 없게 됩니다.",
+  "envManagementTitle": "Linyaps 환경 관리",
+  "envManagementDescription": "환경 분석, 저장소 관리, 기반 환경 복구 및 저장 위치 이동",
+  "envManagementAnalysisTab": "환경 분석",
+  "envManagementRepositoryTab": "저장소 관리",
+  "envManagementStorageTab": "저장 위치",
+  "envManagementAnalyzing": "Linyaps 환경을 분석하는 중...",
+  "envManagementApplying": "작업을 실행하는 중...",
+  "envManagementNotAnalyzed": "환경 분석이 아직 완료되지 않았습니다",
+  "envManagementHealthyTitle": "처리가 필요한 문제를 찾지 못했습니다",
+  "envManagementHealthyMessage": "Linyaps 기반 환경, 저장소, 로컬 데이터 모두 현재 정상 상태입니다.",
+  "envManagementBaseEnvironment": "기반 환경",
+  "envManagementRepositoryMetric": "저장소",
+  "envManagementLocalData": "로컬 데이터",
+  "envManagementStorageLocation": "저장 위치",
+  "envManagementNotDetected": "감지되지 않음",
+  "envManagementUnknown": "알 수 없음",
+  "envManagementUsagePercent": "사용률 {percent}%",
+  "@envManagementUsagePercent": {"placeholders": {"percent": {"type": "int"}}},
+  "envManagementEnvironmentHealthyUpgrade": "환경 정상(업그레이드 권장)",
+  "envManagementEnvironmentHealthy": "환경 정상",
+  "envManagementRepositoryReadFailed": "저장소 설정 읽기 실패",
+  "envManagementEnvironmentAbnormal": "환경 이상",
+  "envRepoStatusNormal": "정상",
+  "envRepoStatusNotConfigured": "미설정",
+  "envRepoStatusMisconfigured": "설정 이상",
+  "envRepoStatusUnavailable": "사용 불가",
+  "envRepoStatusUnknown": "알 수 없음",
+  "envLocalDataDetectionFailed": "감지 실패",
+  "envLocalDataUnavailable": "사용 불가",
+  "envLocalDataNormal": "정상",
+  "envIssueLlCliUnavailableTitle": "ll-cli 사용 불가",
+  "envIssueLlCliUnavailableDescription": "사용 가능한 Linyaps 명령줄 환경이 감지되지 않았습니다.",
+  "envIssueRepositoryNotConfiguredTitle": "Linyaps 저장소 미설정",
+  "envIssueRepositoryNotConfiguredDescription": "현재 사용 가능한 Linyaps 저장소 설정이 없습니다. 먼저 저장소를 추가하거나 복구해야 합니다.",
+  "envIssueDataPermissionTitle": "Linyaps 데이터 디렉터리 권한 이상",
+  "envIssueDataPermissionDescription": "ll-package-manager 는 {serviceUser} 사용자로 실행되지만, Linyaps 데이터 디렉터리 또는 핵심 상태 파일의 소유자가 비정상이어서 저장소 마이그레이션, 다운로드 객체 또는 layer 생성이 실패할 수 있습니다.",
+  "@envIssueDataPermissionDescription": {"placeholders": {"serviceUser": {"type": "String"}}},
+  "envIssueLocalDataDetectionTitle": "Linyaps 로컬 데이터 감지 실패",
+  "envIssueLocalDataDetectionDescription": "linyaps 로컬 데이터 읽기 검사를 실행할 수 없습니다. ll-cli 와 package-manager 서비스 상태를 확인하세요.",
+  "envIssueLocalDataUnavailableTitle": "Linyaps 로컬 데이터 사용 불가",
+  "envIssueLocalDataUnavailableDescription": "linyaps 실행 경로에 따라 설치된 앱 데이터를 읽을 수 없습니다. 앱 목록, 설치 또는 실행에 영향을 줄 수 있습니다. 먼저 Linyaps 데이터 디렉터리 권한과 기반 환경 상태를 확인한 후 필요에 따라 복구를 진행하세요.",
+  "envIssueStorageSpaceTitle": "Linyaps 저장 위치 공간 부족",
+  "envIssueStorageSpaceDescription": "현재 {path} 가 있는 파일 시스템 사용률이 약 {percent}% 입니다. 정리하거나 저장 위치를 이동하는 것이 좋습니다.",
+  "@envIssueStorageSpaceDescription": {"placeholders": {"path": {"type": "String"}, "percent": {"type": "int"}}},
+  "envIssueRunningAppsTitle": "실행 중인 Linyaps 앱이 있습니다",
+  "envIssueRunningAppsDescription": "현재 {count}개의 Linyaps 앱이 실행 중입니다. 저장 위치를 이동하기 전에 반드시 종료하세요.",
+  "@envIssueRunningAppsDescription": {"placeholders": {"count": {"type": "int"}}},
+  "envRepairAction": "복구",
+  "envHandleAction": "처리",
+  "envRepairLocalDataTitle": "Linyaps 로컬 데이터 복구",
+  "envRepairLocalDataMessage": "관리자 권한으로 Linyaps 로컬 데이터 복구를 시도합니다. 다시 가져와야 하는 앱이나 기반 환경 데이터가 감지되면 다운로드가 발생하고 시간이 오래 걸릴 수 있습니다. 계속하시겠습니까?",
+  "envRepairLocalDataConfirm": "복구 실행",
+  "envRepairPermissionTitle": "Linyaps 데이터 디렉터리 권한 복구",
+  "envRepairPermissionMessage": "관리자 권한으로 {rootPath} 의 핵심 디렉터리와 상태 파일 소유자를 {serviceUser} 로 되돌리고, Linyaps package-manager 를 재시작합니다. 계속하시겠습니까?",
+  "@envRepairPermissionMessage": {"placeholders": {"rootPath": {"type": "String"}, "serviceUser": {"type": "String"}}},
+  "envRepairPermissionConfirm": "권한 복구",
+  "envMoveStorageTitle": "Linyaps 저장 위치 이동",
+  "envMoveStorageMessage": "{rootPath} 을(를) {targetPath} 로 복사하고 systemd bind mount 를 생성합니다. 대상 파티션의 여유 공간이 충분한지 확인하세요.",
+  "@envMoveStorageMessage": {"placeholders": {"rootPath": {"type": "String"}, "targetPath": {"type": "String"}}},
+  "envMoveStorageConfirm": "이동 시작",
+  "envAddRepositoryTitle": "Linyaps 저장소 추가",
+  "envRepositoryName": "저장소 이름",
+  "envRepositoryAddress": "저장소 주소",
+  "envRepositoryAliasOptional": "별칭(선택)",
+  "envAddAction": "추가",
+  "envSaveAction": "저장",
+  "envDeleteAction": "삭제",
+  "envUpdateRepositoryTitle": "저장소 주소 변경: {name}",
+  "@envUpdateRepositoryTitle": {"placeholders": {"name": {"type": "String"}}},
+  "envSetPriorityTitle": "우선순위 설정: {name}",
+  "@envSetPriorityTitle": {"placeholders": {"name": {"type": "String"}}},
+  "envRepositoryPriority": "우선순위",
+  "envPriorityMustBeNumber": "우선순위는 숫자여야 합니다",
+  "envRemoveRepositoryTitle": "저장소 삭제",
+  "envRemoveRepositoryMessage": "저장소 {name} 을(를) 삭제하시겠습니까?",
+  "@envRemoveRepositoryMessage": {"placeholders": {"name": {"type": "String"}}},
+  "envRepositoryAdded": "저장소가 추가되었습니다",
+  "envRepositoryAddFailed": "저장소 추가 실패: {error}",
+  "@envRepositoryAddFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envRepositoryUpdated": "저장소가 업데이트되었습니다",
+  "envRepositoryUpdateFailed": "저장소 업데이트 실패: {error}",
+  "@envRepositoryUpdateFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envPriorityUpdated": "우선순위가 업데이트되었습니다",
+  "envPriorityUpdateFailed": "우선순위 설정 실패: {error}",
+  "@envPriorityUpdateFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envRepositoryRemoved": "저장소가 삭제되었습니다",
+  "envRepositoryRemoveFailed": "저장소 삭제 실패: {error}",
+  "@envRepositoryRemoveFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envDefaultRepositoryUpdated": "기본 저장소가 업데이트되었습니다",
+  "envDefaultRepositoryUpdateFailed": "기본 저장소 설정 실패: {error}",
+  "@envDefaultRepositoryUpdateFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envMirrorEnabled": "미러가 활성화되었습니다",
+  "envMirrorDisabled": "미러가 비활성화되었습니다",
+  "envMirrorUpdateFailed": "미러 상태 변경 실패: {error}",
+  "@envMirrorUpdateFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envOpenLogDirectoryFailed": "로그 디렉터리 열기 실패",
+  "envRepositoryNotLoaded": "저장소 설정이 아직 불러와지지 않았습니다",
+  "envRepositoryDefaultValue": "기본 저장소: {name}",
+  "@envRepositoryDefaultValue": {"placeholders": {"name": {"type": "String"}}},
+  "envNotSet": "미설정",
+  "envAddRepository": "저장소 추가",
+  "envNoRepositories": "저장소 설정이 없습니다",
+  "envDefaultBadge": "기본",
+  "envRepositoryDetails": "name={name}  priority={priority}",
+  "@envRepositoryDetails": {"placeholders": {"name": {"type": "String"}, "priority": {"type": "String"}}},
+  "envRepositoryActions": "저장소 작업",
+  "envEditAddress": "주소 변경",
+  "envSetDefault": "기본으로 설정",
+  "envSetPriority": "우선순위 설정",
+  "envEnableMirror": "미러 활성화",
+  "envDisableMirror": "미러 비활성화",
+  "envCurrentStorageLocation": "현재 저장 위치",
+  "envStorageNotAnalyzed": "저장 위치 분석이 아직 완료되지 않았습니다",
+  "envStorageSummary": "{path}  사용률 {percent}%",
+  "@envStorageSummary": {"placeholders": {"path": {"type": "String"}, "percent": {"type": "int"}}},
+  "envNewStorageLocation": "새 저장 위치",
+  "envStorageMoveMethod": "이동 방식",
+  "envStorageMoveMethodDescription": "Linyaps 는 현재 설치 디렉터리 직접 변경을 지원하지 않습니다. 여기서는 데이터를 복사한 후 systemd bind mount 를 생성하여 새 디렉터리를 {rootPath} 에 마운트합니다.",
+  "@envStorageMoveMethodDescription": {"placeholders": {"rootPath": {"type": "String"}}},
+  "envMoveStorageAction": "저장 위치 이동",
+  "envCloseAppsBeforeMoveTitle": "이동 전에 앱을 종료해야 합니다",
+  "envCloseAppsBeforeMoveMessage": "현재 {count}개의 Linyaps 앱이 실행 중입니다.",
+  "@envCloseAppsBeforeMoveMessage": {"placeholders": {"count": {"type": "int"}}},
+  "envResultDataPermissionCompleted": "Linyaps 데이터 디렉터리 권한이 복구되었습니다",
+  "envResultDataPermissionFailed": "Linyaps 데이터 디렉터리 권한 복구 실패",
+  "envResultLocalDataUnsupported": "현재 시스템 구성 요소는 문제 객체 자동 정리를 지원하지 않아 Linyaps 로컬 데이터를 자동 복구할 수 없습니다. 시스템 관련 구성 요소를 업그레이드하거나 배포판 도구로 처리하세요.",
+  "envResultLocalDataCompleted": "Linyaps 로컬 데이터 복구가 실행되었습니다",
+  "envResultLocalDataCompletedLegacy": "Linyaps 로컬 데이터 복구가 실행되었습니다(구버전 시스템 파라미터 호환)",
+  "envResultLocalDataFailed": "Linyaps 로컬 데이터 복구 실패",
+  "envResultLocalDataChecksumMismatch": "Linyaps 로컬 데이터 재검증에서 객체 checksum 불일치가 발견되었고 자동 정리 후에도 복구가 완료되지 않았습니다. 다시 가져온 후에도 재현되면 보통 상위 저장소 데이터 또는 linyaps 로컬 스토리지 호환성 수정이 필요합니다.",
+  "envPartialCommitsUnknown": "일부 partial commits",
+  "envPartialCommitsCount": "partial commits {count}개",
+  "@envPartialCommitsCount": {"placeholders": {"count": {"type": "int"}}},
+  "envResultLocalDataRepullCompleted": "Linyaps 로컬 데이터의 문제 객체를 정리하고 {partialCommits} 을(를) 다시 가져와 재검증을 통과했습니다.",
+  "@envResultLocalDataRepullCompleted": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultLocalDataRepullCompletedLegacy": "Linyaps 로컬 데이터의 문제 객체를 정리하고 {partialCommits} 을(를) 다시 가져와 재검증을 통과했습니다(구버전 시스템 파라미터 호환).",
+  "@envResultLocalDataRepullCompletedLegacy": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultLocalDataRepullFailed": "Linyaps 로컬 데이터에서 자동 처리 가능한 문제 객체를 정리하고 {partialCommits} 재가져오기를 시도했지만, 재가져온 후에도 재검증을 통과하지 못했습니다. 로그에서 각 ref 의 가져오기 또는 재검증 실패 원인을 확인하세요.",
+  "@envResultLocalDataRepullFailed": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultLocalDataRepullFailedLegacy": "Linyaps 로컬 데이터에서 자동 처리 가능한 문제 객체를 정리하고 {partialCommits} 재가져오기를 시도했지만, 재가져온 후에도 재검증을 통과하지 못했습니다. 로그에서 각 ref 의 가져오기 또는 재검증 실패 원인을 확인하세요.(구버전 시스템 파라미터 호환)",
+  "@envResultLocalDataRepullFailedLegacy": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultLocalDataRepullChecksumMismatch": "Linyaps 로컬 데이터에서 자동 처리 가능한 문제 객체를 정리하고 {partialCommits} 재가져오기를 시도했지만, 재검증에서 여전히 checksum 불일치가 발견되었습니다. 상위 저장소 데이터와 linyaps 로컬 스토리지 모드의 비호환 가능성이 있습니다.",
+  "@envResultLocalDataRepullChecksumMismatch": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultLocalDataRepullChecksumMismatchLegacy": "Linyaps 로컬 데이터에서 자동 처리 가능한 문제 객체를 정리하고 {partialCommits} 재가져오기를 시도했지만, 재검증에서 여전히 checksum 불일치가 발견되었습니다. 상위 저장소 데이터와 linyaps 로컬 스토리지 모드의 비호환 가능성이 있습니다.(구버전 시스템 파라미터 호환)",
+  "@envResultLocalDataRepullChecksumMismatchLegacy": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultStorageBlockedRunningApps": "아직 {count}개의 Linyaps 앱이 실행 중입니다. 종료한 후 저장 위치를 이동하세요.",
+  "@envResultStorageBlockedRunningApps": {"placeholders": {"count": {"type": "int"}}},
+  "envResultStorageBlockedActiveTask": "다운로드 관리에 아직 설치 또는 업데이트 작업이 있습니다. 완료를 기다리거나 작업을 취소한 후 Linyaps 저장 위치를 이동하세요.",
+  "envResultStorageBlockedNamedTask": "현재 \"{name}\" 처리 중입니다. 완료를 기다리거나 작업을 취소한 후 Linyaps 저장 위치를 이동하세요.",
+  "@envResultStorageBlockedNamedTask": {"placeholders": {"name": {"type": "String"}}},
+  "envResultStorageAlreadyBindMounted": "{path} 은(는) 이미 bind mount 되어 있습니다. 기존 마운트 설정을 먼저 확인한 후 마이그레이션하세요.",
+  "@envResultStorageAlreadyBindMounted": {"placeholders": {"path": {"type": "String"}}},
+  "envResultStorageFilesystemUnavailable": "대상 경로가 있는 파일 시스템 공간을 읽을 수 없습니다: {path}",
+  "@envResultStorageFilesystemUnavailable": {"placeholders": {"path": {"type": "String"}}},
+  "envResultStorageSpaceUnknown": "현재 디렉터리 또는 대상 경로의 디스크 공간을 확인할 수 없습니다. 확인 후 다시 시도하세요.",
+  "envResultStorageInsufficientSpace": "대상 경로의 사용 가능 공간이 부족합니다. 최소 {requiredSpace} 이 필요하며, 현재 사용 가능한 공간은 {availableSpace} 입니다.",
+  "@envResultStorageInsufficientSpace": {"placeholders": {"requiredSpace": {"type": "String"}, "availableSpace": {"type": "String"}}},
+  "envResultStorageTargetNotAbsolute": "대상 경로는 절대 경로여야 합니다.",
+  "envResultStorageTargetContainsLineBreak": "대상 경로에 줄바꿈 문자를 포함할 수 없습니다.",
+  "envResultStorageTargetUnsafeSystemPath": "대상 경로는 시스템 루트 디렉터리나 현재 Linyaps 디렉터리일 수 없습니다.",
+  "envResultStorageTargetInsideCurrentRoot": "대상 경로는 현재 Linyaps 디렉터리 내부에 있을 수 없습니다.",
+  "envResultStorageMoveCompleted": "Linyaps 저장 위치가 이동되었습니다",
+  "envResultStorageMoveFailed": "Linyaps 저장 위치 이동 실패",
+  "envResultUnexpectedFailure": "작업 실패: {error}",
+  "@envResultUnexpectedFailure": {"placeholders": {"error": {"type": "String"}}},
+  "errorSolutionHelpTooltip": "해결 방법 보기",
+  "a11yErrorSolutionHelp": "이 설치 오류의 해결 방법 조회",
+  "errorSolutionNoSolution": "해결 방법이 아직 없습니다",
+  "errorSolutionQueryFailed": "조회 실패. 다시 시도하세요",
+  "errorSolutionRetry": "다시 조회",
+  "errorSolutionCommunityPost": "커뮤니티에 글쓰기",
+  "errorSolutionRepair": "원클릭 복구",
+  "errorSolutionClose": "해결 방법 닫기",
+  "errorSolutionRemoteImage": "해결 방법 원격 이미지",
+  "errorSolutionImageBlocked": "비네트워크 이미지를 차단했습니다",
+  "errorSolutionImageLoadFailed": "원격 이미지 불러오기 실패",
+  "scriptReviewTitle": "스크립트 내용 미리 보기",
+  "scriptReviewSemanticLabel": "곧 실행될 복구 스크립트 전문",
+  "executeRepairScript": "확인 및 실행",
+  "repairExecutionTitle": "원클릭 복구",
+  "repairExecuting": "복구 스크립트 실행 중…",
+  "repairOutputTitle": "실시간 출력",
+  "repairOutputEmpty": "스크립트 출력 대기 중…",
+  "repairOutputTruncated": "화면에서 앞의 {count}줄은 생략했습니다. 전체 내용은 로그를 확인하세요.",
+  "@repairOutputTruncated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repairCompleteRetry": "복구가 완료되었습니다. 설치를 다시 시도하세요.",
+  "repairFailedWithExitCode": "복구 스크립트 실행 실패(종료 코드 {exitCode}).",
+  "@repairFailedWithExitCode": {
+    "placeholders": {
+      "exitCode": {
+        "type": "int"
+      }
+    }
+  },
+  "repairTimedOut": "복구 스크립트 실행이 30분을 초과하여 대기를 중지했습니다. 로그에서 시스템 상태를 확인하세요.",
+  "repairExecutionError": "복구 스크립트를 실행할 수 없습니다: {message}",
+  "@repairExecutionError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "repairInvalidSignature": "복구 스크립트 서명이 유효하지 않아 실행을 차단했습니다.",
+  "openRepairLog": "로그 디렉터리 열기",
+  "copyRepairOutput": "현재 출력 복사",
+  "repairElapsedTime": "실행 시간 {elapsed}",
+  "@repairElapsedTime": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      }
+    }
+  }
+}

@@ -23,7 +23,9 @@ void main() {
       expect(
         resolveInitialAppLocale(
           persistedLanguageCode: 'unsupported',
-          platformLocales: const [Locale('fr'), Locale('en', 'GB')],
+          // fr 已是正式发布语言；用始终不支持的 it 验证“跳过不支持语言、
+          // 命中第一个受支持系统语言”的顺序逻辑。
+          platformLocales: const [Locale('it'), Locale('en', 'GB')],
         ),
         const Locale('en'),
       );
@@ -113,6 +115,28 @@ void main() {
       expect(l10n.updateBatchAllSucceededTitle(5), '5 Anwendungen aktualisiert');
       expect(l10n.searchResultCount(1), '1 Ergebnis gefunden');
       expect(l10n.searchResultCount(3), '3 Ergebnisse gefunden');
+    });
+
+    test('法语区域 Locale 归一为法语资源并使用 one/many/other 复数', () {
+      expect(
+        resolveInitialAppLocale(
+          persistedLanguageCode: null,
+          platformLocales: const [Locale('fr', 'FR')],
+        ),
+        const Locale('fr'),
+      );
+      final l10n = appLocalizationsForLocale('fr_FR');
+      expect(l10n.languageSelfName, 'Français');
+      // 法语按 CLDR 规则使用三类：one（含 0 与 1）、many（百万级）、other。
+      expect(l10n.updateBatchAllSucceededTitle(1), '1 application mise à jour');
+      expect(
+        l10n.updateBatchAllSucceededTitle(5),
+        '5 applications mises à jour',
+      );
+      expect(
+        l10n.updateBatchAllSucceededTitle(1000000),
+        '1000000 d\'applications mises à jour',
+      );
     });
 
     test('没有受支持语言时回退产品默认语言', () {

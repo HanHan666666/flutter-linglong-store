@@ -1,0 +1,1339 @@
+{
+  "@@locale": "fr",
+  "@@linuxDesktopLocale": "fr",
+  "@@appStreamLocale": "fr",
+  "appTitle": "Linyaps Store Édition Communautaire",
+  "linuxDesktopNameNightly": "Linyaps Store Édition Communautaire Nightly",
+  "linuxDesktopGenericName": "Magasin d'applications",
+  "linuxDesktopComment": "Parcourir, installer et gérer les applications Linyaps",
+  "linuxDesktopCommentNightly": "Build Nightly pour parcourir, installer et gérer les applications Linyaps",
+  "linuxDesktopKeywords": "linyaps;magasin;applications;paquets;",
+  "linuxAppStreamDescription": "Un magasin d'applications de bureau pour parcourir, installer et gérer les applications Linyaps.",
+  "recommend": "Recommandés",
+  "allApps": "Toutes les applications",
+  "ranking": "Classement",
+  "myApps": "Mes applications",
+  "update": "Mettre à jour",
+  "settings": "Paramètres",
+  "category": "Catégorie",
+  "office": "Bureautique",
+  "system": "Système",
+  "develop": "Développement",
+  "entertainment": "Divertissement",
+  "searchPlaceholder": "Rechercher une application ici",
+  "search": "Rechercher",
+  "refresh": "Actualiser",
+  "linglongRecommend": "Recommandations Linyaps",
+  "loading": "Chargement...",
+  "installing": "Installation...",
+  "success": "Réussi",
+  "failed": "Échec",
+  "cancel": "Annuler",
+  "noMoreData": "Aucune autre donnée",
+  "install": "Installer",
+  "uninstall": "Désinstaller",
+  "open": "Ouvrir",
+  "update_action": "Mettre à jour",
+  "run": "Lancer",
+  "confirm": "Confirmer",
+  "viewDetail": "Voir les détails",
+  "screenShots": "Captures d'écran",
+  "versionSelect": "Choix de la version",
+  "versionNumber": "Numéro de version",
+  "appType": "Type d'application",
+  "channel": "Canal",
+  "mode": "Mode",
+  "repoSource": "Source du dépôt",
+  "fileSize": "Taille du fichier",
+  "downloadCount": "Téléchargements",
+  "operation": "Opération",
+  "linglongProcess": "Processus Linyaps",
+  "baseSetting": "Réglages de base",
+  "about": "À propos",
+  "envMissing": "L'environnement Linyaps est absent de ce système",
+  "envMissingDetail": "Aucun composant Linyaps n'a été détecté ou la version est trop ancienne. Une installation préalable est requise pour utiliser le magasin.",
+  "autoInstall": "Installation automatique",
+  "manualInstall": "Installation manuelle",
+  "recheck": "Revérifier",
+  "exitStore": "Quitter le magasin",
+  "errorNetwork": "Échec de la connexion réseau",
+  "errorNetworkDetail": "Vérifiez la connexion réseau puis réessayez",
+  "errorInstallFailed": "Échec de l'installation",
+  "errorUninstallFailed": "Échec de la désinstallation",
+  "errorUpdateFailed": "Échec de la mise à jour",
+  "errorUnknown": "Erreur inconnue",
+  "retry": "Réessayer",
+  "downloading": "Téléchargement...",
+  "downloadComplete": "Téléchargement terminé",
+  "installComplete": "Installation terminée",
+  "uninstallComplete": "Désinstallation terminée",
+  "updateComplete": "Mise à jour terminée",
+  "noApps": "Aucune application",
+  "noInstalledApps": "Aucune application installée",
+  "noInstalledAppsHint": "Vous n'avez encore installé aucune application Linyaps. Jetez un œil à la page des recommandations",
+  "noUpdateApps": "Aucune mise à jour disponible",
+  "version": "Version",
+  "size": "Taille",
+  "description": "Description",
+  "developer": "Développeur",
+  "confirmDelete": "Confirmer la suppression",
+  "confirmDeleteMessage": "Voulez-vous vraiment supprimer cet élément ? Cette action est irréversible.",
+  "confirmUninstall": "Confirmer la désinstallation",
+  "confirmUninstallMessage": "Voulez-vous vraiment désinstaller cette application ?",
+  "noData": "Aucune donnée",
+  "noDataDescription": "Il n'y a encore rien ici",
+  "pageNotFound": "Page introuvable",
+  "pageNotFoundDescription": "Désolé, la page est introuvable",
+  "backToHome": "Retour à l'accueil",
+  "searchApps": "Rechercher des applications...",
+  "languageSettings": "Paramètres de langue",
+  "themeSettings": "Paramètres de thème",
+  "fontSettings": "Paramètres de police",
+  "cacheManagement": "Gestion du cache",
+  "storeOptions": "Options du magasin",
+  "fontSettingsHint": "Le réglage système de la police sert de valeur de base ; les ajustements ci-dessous s'y ajoutent.",
+  "fontSizeAdjustment": "Taille de la police",
+  "fontWeightAdjustmentLabel": "Épaisseur de la police",
+  "fontWeightLighter": "Plus fin",
+  "fontWeightNormal": "Standard",
+  "fontWeightBolder": "Plus gras",
+  "fontScalePercent": "{percent}%",
+  "@fontScalePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "checkUpdate": "Rechercher des mises à jour",
+  "currentVersion": "Version actuelle : {version}",
+  "@currentVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "newVersionFound": "Nouvelle version {tagName} détectée, version actuelle {currentVersion}",
+  "@newVersionFound": {
+    "placeholders": {
+      "tagName": {
+        "type": "String"
+      },
+      "currentVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadyLatest": "{version} est déjà la dernière version",
+  "@alreadyLatest": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "checkingUpdate": "Recherche de mises à jour...",
+  "goDownload": "Aller au téléchargement",
+  "updateNow": "Mettre à jour maintenant",
+  "updateDetectingInstallation": "Détection du mode d'installation...",
+  "updateResolvingAsset": "Sélection du paquet d'installation...",
+  "updateDownloading": "Téléchargement du paquet de mise à jour...",
+  "updateVerifying": "Vérification du paquet de mise à jour...",
+  "updateInstalling": "Installation de la mise à jour...",
+  "updateSucceeded": "Mise à jour installée. Veuillez fermer puis rouvrir l'application pour utiliser la nouvelle version",
+  "updateFailed": "Échec de la mise à jour",
+  "updateCancelled": "Mise à jour annulée",
+  "updateRetry": "Réessayer",
+  "updateManualInstallHint": "Mise à jour automatique impossible. Veuillez installer manuellement depuis la page de téléchargement",
+  "updateUnsupportedArch": "L'architecture actuelle ne prend pas en charge l'installation automatique",
+  "updateChecksumMissing": "Informations de somme de contrôle du paquet manquantes ; installation interrompue",
+  "updateChecksumFailed": "Échec de la vérification du paquet de mise à jour ; installation interrompue",
+  "cacheSize": "Taille du cache",
+  "startupCheckUpdate": "Rechercher les mises à jour du magasin au démarrage",
+  "startupCheckUpdateDesc": "Vérifie à chaque démarrage si une nouvelle version est disponible",
+  "systemNotifications": "Notifications système",
+  "systemNotificationsDescription": "Affiche le résultat de la mise à jour groupée dans une notification de bureau",
+  "userExperienceProgram": "Programme d'expérience utilisateur",
+  "userExperienceProgramDesc": "Envoyer des statistiques d'utilisation anonymes pour aider à améliorer le magasin",
+  "userExperienceProgramDialogIntro": "En rejoignant le programme d'expérience utilisateur, vous aidez à améliorer le magasin Linyaps. Seules quelques informations anonymes sont collectées, pour améliorer les recommandations d'applications et le téléchargement :",
+  "userExperienceProgramDialogItemIdentity": "Identifiant d'appareil anonyme (une chaîne aléatoire qui ne permet pas de vous identifier)",
+  "userExperienceProgramDialogItemSystem": "Architecture système, version du système et du noyau, nom d'hôte, version de l'environnement Linyaps",
+  "userExperienceProgramDialogItemApps": "Liste des applications Linyaps installées, ainsi que les enregistrements d'installation, de mise à jour et de désinstallation",
+  "userExperienceProgramDialogItemNetwork": "Adresse réseau (uniquement pour les statistiques régionales)",
+  "userExperienceProgramDialogFooter": "Ces informations ne sont pas associées à votre identité réelle et ne servent pas à vous identifier. Vous pouvez désactiver l'interrupteur à tout moment ; plus aucune donnée ne sera alors envoyée.",
+  "a11yUserExperienceProgramInfo": "Consulter la description des informations collectées par le programme d'expérience utilisateur",
+  "updateBatchAllSucceededTitle": "{count, plural, one{{count} application mise à jour} many{{count} d'applications mises à jour} other{{count} applications mises à jour}}",
+  "@updateBatchAllSucceededTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchFinishedTitle": "Mise à jour groupée terminée",
+  "updateBatchNoSuccessTitle": "Mise à jour des applications non terminée",
+  "updateBatchResultSummary": "Résultat : {summary}",
+  "@updateBatchResultSummary": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchResultSeparator": ", ",
+  "updateBatchSucceededCount": "Réussies : {count}",
+  "@updateBatchSucceededCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchFailedCount": "Échecs : {count}",
+  "@updateBatchFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchCancelledCount": "Annulées : {count}",
+  "@updateBatchCancelledCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchInterruptedCount": "Interrompues : {count}",
+  "@updateBatchInterruptedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchAppNameSeparator": ", ",
+  "updateBatchUpdatedApps": "Mises à jour : {names}",
+  "@updateBatchUpdatedApps": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchUpdatedAppsOverflow": "Mises à jour : {names} et {remainingCount} autres applications",
+  "@updateBatchUpdatedAppsOverflow": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "remainingCount": {
+        "type": "int"
+      }
+    }
+  },
+  "softwareRendering": "Rendu logiciel",
+  "softwareRenderingEnabled": "Rendu logiciel",
+  "hardwareRenderingEnabled": "Rendu matériel",
+  "rendererModeDetecting": "Détection de l'état de rendu actuel…",
+  "rendererModeDetectFailed": "Impossible de déterminer l'état de rendu actuel, mais le mode de rendu utilisé au prochain démarrage reste enregistrable.",
+  "rendererModeCurrentStatus": "Le {mode} est actuellement utilisé. {reason}",
+  "@rendererModeCurrentStatus": {
+    "placeholders": {
+      "mode": {},
+      "reason": {}
+    }
+  },
+  "rendererModeReasonEnvironment": "Le mode de rendu actuel est contrôlé par la variable d'environnement {value}.",
+  "@rendererModeReasonEnvironment": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "rendererModeReasonUserPreference": "Le réglage enregistré est appliqué.",
+  "rendererModeReasonCpuFallback": "Pour améliorer la compatibilité, cet appareil utilise le rendu logiciel par défaut.",
+  "rendererModeReasonDefault": "Cet appareil utilise le rendu matériel par défaut.",
+  "rendererModeEnvLocked": "Variable d'environnement {value} détectée. Le mode de rendu actuel est contrôlé par l'environnement système et ne peut pas être modifié ici.",
+  "@rendererModeEnvLocked": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "rendererModeNextLaunchStatus": "Le {mode} sera utilisé au prochain démarrage.",
+  "@rendererModeNextLaunchStatus": {
+    "placeholders": {
+      "mode": {}
+    }
+  },
+  "rendererModeWhitelistHint": "Pour un affichage plus stable, il est recommandé de conserver le rendu logiciel sur cet appareil.",
+  "rendererModeHardwareRiskHint": "Le rendu matériel sera utilisé au prochain démarrage. En cas d'affichage anormal, vous pouvez restaurer avec la commande ci-dessous.",
+  "rendererModeDisableWarningTitle": "Confirmer la désactivation du rendu logiciel",
+  "rendererModeDisableWarningMessage": "Si le rendu logiciel est désactivé sur cet appareil, l'application risque de ne pas s'afficher correctement. Pour un affichage plus stable, il est recommandé de conserver le rendu logiciel.",
+  "rendererModeDetectedCpu": "Processeur de cet appareil : {cpu}",
+  "@rendererModeDetectedCpu": {
+    "placeholders": {
+      "cpu": {}
+    }
+  },
+  "rendererModeDisableBlackScreenHint": "Si l'application ne s'affiche pas correctement après le prochain démarrage, exécutez la commande suivante dans un terminal, puis rouvrez l'application.",
+  "rendererModeDataDirectoryLabel": "Répertoire de données",
+  "rendererModeDeleteCommandLabel": "Commande de suppression",
+  "rendererModeSaveCommandHint": "Il est conseillé de copier et de conserver cette commande afin de pouvoir restaurer en cas de problème d'affichage.",
+  "rendererModeDisableConfirm": "Continuer la désactivation",
+  "rendererModeSavedSoftware": "Passage au rendu logiciel effectué. Prendra effet au prochain démarrage.",
+  "rendererModeSavedHardware": "Passage au rendu matériel effectué. Prendra effet au prochain démarrage.",
+  "rendererModeSaveFailed": "Échec de l'enregistrement du réglage de rendu. Veuillez réessayer plus tard.",
+  "showBaseServices": "Afficher les services d'exécution de base",
+  "showBaseServicesDesc": "Affiche les services d'exécution de base dans la liste des applications installées",
+  "cleanDeprecatedServices": "Nettoyer les services de base obsolètes",
+  "cleanDeprecatedServicesDesc": "Supprime les services d'exécution de base devenus inutilisés afin de libérer de l'espace disque",
+  "checkNewVersion": "Vérifier les nouvelles versions",
+  "feedbackMenu": "Commentaires",
+  "officialWebsite": "Site officiel",
+  "communityExchange": "Communauté",
+  "aboutDevelopers": "À propos des développeurs",
+  "feedbackTitle": "Commentaires",
+  "uploadLog": "Joindre également les fichiers journaux",
+  "noPrivacyInfo": "Les journaux ne contiennent aucune donnée personnelle",
+  "submitFeedback": "Envoyer",
+  "feedbackHint": "Veuillez décrire brièvement le problème",
+  "feedbackSuccess": "Merci pour votre retour !",
+  "feedbackFailed": "Échec de l'envoi du commentaire. Veuillez réessayer plus tard",
+  "confirmExit": "Confirmer la fermeture",
+  "exitWithInstalling": "Des installations sont en cours. Voulez-vous vraiment quitter ?",
+  "exitBtn": "Quitter",
+  "downloadManager": "Gestionnaire de téléchargements",
+  "downloadWaitingForTask": "En attente du démarrage du téléchargement",
+  "downloadRealtimeSpeed": "Vitesse actuelle {speed}",
+  "@downloadRealtimeSpeed": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadHistoryCount": "{count, plural, one{{count} entrée} many{{count} d'entrées} other{{count} entrées}}",
+  "@downloadHistoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ogInstallRequestReceived": "Demande d'installation reçue depuis le web : {appName}",
+  "@ogInstallRequestReceived": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallEnqueued": "Ajouté au gestionnaire de téléchargements : {appName}",
+  "@ogInstallEnqueued": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallInvalidLink": "Lien d'installation web non reconnu ; seul og://appId est pris en charge",
+  "ogInstallEnvironmentUnavailable": "L'environnement d'exécution Linyaps est indisponible ; l'installation automatique depuis le web est actuellement impossible",
+  "ogInstallDuplicate": "{appName} est déjà dans le gestionnaire de téléchargements",
+  "@ogInstallDuplicate": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallDetailFailed": "Impossible d'obtenir les informations de l'application ; installation non démarrée",
+  "ogInstallDetailFailedWithError": "Impossible d'obtenir les informations de l'application ; installation non démarrée : {error}",
+  "@ogInstallDetailFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearRecords": "Effacer l'historique",
+  "noDownloadTasks": "Aucun téléchargement en cours",
+  "cannotOpenLink": "Impossible d'ouvrir le lien : {url}",
+  "@cannotOpenLink": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "envCheckPassed": "Installation terminée, test de l'environnement réussi",
+  "envCheckFailed": "Installation terminée, mais l'environnement présente toujours des anomalies. Veuillez vérifier",
+  "launching": "Lancement de {appName}...",
+  "@launching": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "launchFailed": "Échec du lancement : {error}",
+  "@launchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "copied": "Copié : {value}",
+  "@copied": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "shareLink": "Partager",
+  "shareMessage": "Venez découvrir l'application « {name} »",
+  "@shareMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linkCopied": "Lien copié, partagez-le !",
+  "shareFailed": "Échec du partage",
+  "createDesktopShortcut": "Créer un raccourci sur le bureau",
+  "appDetailTitle": "Détails de l'application",
+  "appNotFound": "Informations sur l'application introuvables",
+  "noVersionHistory": "Aucun historique de versions",
+  "installedBadge": "Installée",
+  "versionInstallTargetMissing": "Version installée correspondante introuvable. Veuillez actualiser puis réessayer",
+  "uninstallFailed": "Échec de la désinstallation : {result}",
+  "@uninstallFailed": {
+    "placeholders": {
+      "result": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallSuccess": "{name} a été désinstallée",
+  "@uninstallSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallError": "Anomalie de désinstallation : {error}",
+  "@uninstallError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "commandCopied": "Commande copiée dans le presse-papiers. Collez-la dans un terminal pour l'exécuter",
+  "copy": "Copier",
+  "copyLog": "Copier le journal",
+  "copySucceeded": "Copie réussie",
+  "copyErrorMessage": "Copier le message d'erreur",
+  "skipCheck": "Ignorer la vérification",
+  "loadFailed": "Échec du chargement",
+  "shortcutCreated": "Raccourci créé",
+  "appComments": "Commentaires",
+  "appCommentsEmpty": "Aucun commentaire pour l'instant. Écrivez le premier !",
+  "commentInputHint": "Partagez votre expérience de cette application",
+  "submitComment": "Publier le commentaire",
+  "commentVersionLabel": "Version associée",
+  "anonymousComment": "Visiteur anonyme",
+  "commentHelpful": "Utile",
+  "commentNotHelpful": "Pas utile",
+  "commentAnonymousHint": "Commentaires anonymes, affichés du plus récent au plus ancien",
+  "commentSubmitSuccess": "Commentaire envoyé",
+  "commentSubmitFailed": "Échec de l'envoi du commentaire : {error}",
+  "@commentSubmitFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreateFailed": "Échec de la création : {error}",
+  "@shortcutCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "envCheckTitle": "Test de l'environnement",
+  "checkingLinglongEnv": "Vérification de l'environnement Linyaps...",
+  "unknownStatus": "État inconnu",
+  "llCliVersion": "Version de ll-cli",
+  "notDetected": "Non détecté",
+  "errorMessage": "Message d'erreur",
+  "repoShowFailureTitle": "Échec d'exécution de la commande de lecture du dépôt",
+  "repoShowFailureCommand": "Échec de l'exécution de {command} pour lire la configuration du dépôt Linyaps.",
+  "@repoShowFailureCommand": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "repoShowFailureReason": "Cette commande lit la configuration du dépôt via le service système org.deepin.linglong.PackageManager.service ; elle échoue si le service n'est pas en cours d'exécution.",
+  "repoShowFailureInstalledQuestion": "L'environnement applicatif est-il déjà installé ?",
+  "repoShowFailureRestartHint": "Si ll-cli et l'environnement applicatif sont déjà installés, essayez de redémarrer ce service système puis de revérifier.",
+  "restartPackageManagerService": "Essayer de redémarrer org.deepin.linglong.PackageManager.service",
+  "restartingPackageManagerService": "Redémarrage de org.deepin.linglong.PackageManager.service...",
+  "packageManagerServiceRestartPassed": "Service redémarré, test de l'environnement réussi",
+  "packageManagerServiceRestartStillFailed": "Le service a redémarré, mais l'environnement présente toujours des anomalies. Consultez le message d'erreur",
+  "packageManagerServiceRestartFailed": "Échec du redémarrage du service : {error}",
+  "@packageManagerServiceRestartFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "installingLinglong": "Installation...",
+  "openInstallLogDirectory": "Ouvrir le répertoire des journaux",
+  "cannotOpenDirectory": "Impossible d'ouvrir le répertoire : {path}",
+  "@cannotOpenDirectory": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "appIntroduction": "Présentation de l'application",
+  "collapse": "Réduire",
+  "expandAll": "Tout déplier",
+  "collapseCategories": "Réduire les catégories",
+  "expandCategories": "Déplier les catégories",
+  "packageName": "Nom du paquet",
+  "architecture": "Architecture",
+  "channelLabel": "Canal",
+  "runtime": "Environnement d'exécution",
+  "license": "Licence",
+  "homepage": "Page d'accueil",
+  "appInfo": "Informations sur l'application",
+  "versionHistory": "Historique des versions",
+  "versionListLoadFailed": "Échec du chargement de la liste des versions. Veuillez réessayer",
+  "versionListUpdateFailed": "Échec de la mise à jour de la liste des versions ; le dernier résultat est affiché",
+  "uninstallApp": "Désinstaller l'application",
+  "uninstallConfirmMessage": "Voulez-vous vraiment désinstaller {name} ?\nAprès la désinstallation, les données de l'application seront supprimées ; cette action est irréversible.",
+  "@uninstallConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noDescription": "Aucune description",
+  "categoryLabel": "Catégorie",
+  "searchNotFound": "Aucune application correspondante",
+  "searchTryOtherKeywords": "Essayez de rechercher avec d'autres mots-clés",
+  "searchInputHint": "Saisissez un mot-clé dans le champ de recherche en haut",
+  "searchPressEnter": "Appuyez sur Entrée pour lancer la recherche",
+  "searchResultCount": "{count, plural, one{{count} résultat trouvé} many{{count} de résultats trouvés} other{{count} résultats trouvés}}",
+  "@searchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchInstalledApps": "Rechercher parmi les applications installées",
+  "noMatchingApp": "Aucune application correspondante trouvée",
+  "noMatchingAppHint": "Aucune application liée à « {query} » n'a été trouvée",
+  "@noMatchingAppHint": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "updateCount": "{count, plural, one{{count} application peut être mise à jour} many{{count} d'applications peuvent être mises à jour} other{{count} applications peuvent être mises à jour}}",
+  "@updateCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ignoredUpdatesCount": "Ignorées ({count})",
+  "@ignoredUpdatesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ignoredUpdatesTitle": "Mises à jour ignorées",
+  "ignoredUpdatesEmptyTitle": "Aucune application ignorée",
+  "ignoredUpdatesEmptyDescription": "Depuis le menu « Plus » des applications pouvant être mises à jour, vous pouvez ignorer durablement celles que vous ne souhaitez pas mettre à niveau.",
+  "ignoreAppUpdates": "Ignorer les mises à jour de cette application",
+  "restoreUpdateNotifications": "Réactiver les notifications de mise à jour",
+  "ignoredVersion": "Version au moment de l'ignoraison : {version}",
+  "@ignoredVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateSuccess": "Les prochaines mises à jour de {appName} sont ignorées ; réactivables dans « Ignorées »",
+  "@ignoreUpdateSuccess": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateActiveTask": "{appName} est déjà dans la file de mise à jour et ne peut pas être ignorée pour le moment",
+  "@ignoreUpdateActiveTask": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateFailed": "Échec de l'enregistrement du réglage d'ignoraison. Veuillez réessayer",
+  "ignoreUpdateInvalidApp": "Impossible d'ignorer cette application : identifiant d'application invalide",
+  "restoreUpdateSuccess": "Notifications de mise à jour réactivées pour {appName}",
+  "@restoreUpdateSuccess": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreUpdateFailed": "Échec de la réactivation des notifications de mise à jour. Veuillez réessayer",
+  "restoreUpdateRefreshFailed": "Les notifications ont été réactivées, mais la recherche de mises à jour a échoué. Réessayez plus tard",
+  "a11yManageIgnoredUpdates": "Gérer les mises à jour ignorées, soit {count} applications au total",
+  "@a11yManageIgnoredUpdates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "a11yIgnoreAppUpdates": "Ignorer les prochaines mises à jour de {appName}",
+  "@a11yIgnoreAppUpdates": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yUpdateAppMoreActions": "Autres actions de mise à jour pour {appName}",
+  "@a11yUpdateAppMoreActions": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yRestoreAppUpdates": "Réactiver les notifications de mise à jour pour {appName}",
+  "@a11yRestoreAppUpdates": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yIgnoredUpdateItem": "{appName}, ID d'application {appId}, version au moment de l'ignoraison {version}",
+  "@a11yIgnoredUpdateItem": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "appId": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updating": "Mise à jour...",
+  "updateAll": "Tout mettre à jour",
+  "updateCheckFailed": "Échec de la recherche de mises à jour",
+  "noUpdate": "Aucune mise à jour",
+  "allAppsUpToDate": "Toutes vos applications sont à jour",
+  "noMore": "Rien de plus",
+  "appTitleShort": "Magasin Linyaps",
+  "detectingEnv": "Détection de l'environnement Linyaps...",
+  "stepEnvCheck": "Test de l'environnement",
+  "stepAppLoad": "Chargement des applications",
+  "stepUpdateCheck": "Recherche de mises à jour",
+  "stepQueueRecovery": "Restauration de la file",
+  "launchFailedTitle": "Échec du lancement",
+  "skip": "Ignorer",
+  "cannotGetVersion": "Impossible d'obtenir les informations de version",
+  "newVersionAvailable": "Nouvelle version {version} disponible !\nVersion actuelle : {current}",
+  "@newVersionAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      }
+    }
+  },
+  "languageZh": "中文",
+  "languageSelfName": "Français",
+  "themeFollowSystem": "Suivre le système",
+  "themeLight": "Mode clair",
+  "themeDark": "Mode sombre",
+  "clearingCache": "Nettoyage...",
+  "clearCache": "Vider le cache",
+  "clearCacheDesc": "Vider le cache libère de l'espace de stockage, mais les icônes et certaines données des applications seront retéléchargées.",
+  "clearCacheConfirm": "Confirmer le vidage du cache",
+  "clearCacheMessage": "Voulez-vous vraiment vider tout le cache ?",
+  "cacheCleared": "Cache vidé",
+  "clearCacheFailed": "Échec du vidage du cache",
+  "appVersion": "Version de l'application",
+  "appCount": "Nombre d'applications référencées",
+  "systemArch": "Architecture système",
+  "linglongVersion": "Version de Linyaps",
+  "checkNetwork": "Vérifiez la connexion réseau puis réessayez",
+  "copyContainerCommand": "Copier la commande d'accès au conteneur",
+  "commandCopiedToClipboard": "Commande copiée dans le presse-papiers",
+  "copyAppId": "Copier l'ID de l'application",
+  "stopSuccess": "{name} a été arrêtée",
+  "@stopSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stopFailed": "Échec de l'arrêt",
+  "processRefreshFailed": "Échec de l'actualisation de la liste des processus...",
+  "noRunningApps": "Aucune application Linyaps en cours d'exécution",
+  "notRefreshed": "Pas encore actualisé",
+  "lastRefresh": "Dernière actualisation",
+  "refreshing": "Actualisation",
+  "appName": "Nom de l'application",
+  "versionNo": "Numéro de version",
+  "source": "Source",
+  "containerId": "ID du conteneur",
+  "appRunningTitle": "Application en cours d'exécution",
+  "appRunningMessage": "Cette application est en cours d'exécution ; elle doit d'abord être fermée avant désinstallation",
+  "downgradeConfirm": "Confirmer le retour à une version antérieure",
+  "downgradeMessage": "La version cible est inférieure à la version actuelle. Voulez-vous vraiment effectuer ce retour arrière ?",
+  "alreadyInstalledVersion": "Cette version est déjà installée",
+  "waiting": "En attente",
+  "completed": "Terminé",
+  "remove": "Retirer",
+  "feedbackCategories": "Défaut du magasin,Mise à jour d'application,Panne d'application",
+  "feedbackCategory": "Catégorie du problème",
+  "overview": "Résumé",
+  "overviewHint": "Décrivez brièvement le problème",
+  "detailDescription": "Description détaillée",
+  "none": "Aucun",
+  "clearSearch": "Effacer le terme recherché",
+  "minimize": "Réduire",
+  "restore": "Restaurer",
+  "maximize": "Agrandir",
+  "close": "Fermer",
+  "goRecommend": "Jetez un œil à la page des recommandations",
+  "processRefreshFailedHint": "Échec de l'actualisation de la liste des processus ; les données affichées datent du dernier rafraîchissement réussi",
+  "moreActions": "Autres actions",
+  "appRunningUninstallMessage": "{name} est actuellement en cours d'exécution ; toutes les instances en cours doivent être fermées de force avant la désinstallation.\nForcer la fermeture et désinstaller ?",
+  "@appRunningUninstallMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "forceCloseAndUninstall": "Forcer la fermeture et désinstaller",
+  "downgradeMessageWithVersion": "{appName} v{currentVersion} est actuellement installée. Vous tentez d'installer la version inférieure v{targetVersion}.\nUn retour à une version antérieure peut provoquer des dysfonctionnements. Continuer ?",
+  "@downgradeMessageWithVersion": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "currentVersion": {
+        "type": "String"
+      },
+      "targetVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmDowngrade": "Confirmer le retour arrière",
+  "reinstallMessage": "{appName} v{version} est déjà installée.\nRéinstaller (l'installation existante sera écrasée) ?",
+  "@reinstallMessage": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "forceReinstall": "Forcer la réinstallation",
+  "installingLabel": "Installation en cours",
+  "waitingCount": "En attente ({count})",
+  "@waitingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "detailDescriptionHint": "Décrivez en détail le problème rencontré",
+  "linglongCommunity": "Communauté Linyaps",
+  "unknown": "Inconnu",
+  "copyPid": "Copier le PID",
+  "copyContainerId": "Copier l'ID du conteneur",
+  "refreshProcessList": "Actualiser la liste des processus",
+  "stopProcess": "Arrêter le processus",
+  "checkUpdateNetworkError": "Échec de la recherche de mises à jour. Vérifiez la connexion réseau",
+  "pruneServiceTitle": "Nettoyer les services de base obsolètes",
+  "pruneServiceMessage": "La commande ll-cli prune sera exécutée pour supprimer tous les services d'exécution de base dont aucune application ne dépend plus.\n\nLe nettoyage libère de l'espace disque, mais si d'autres opérations sont en cours, un retéléchargement peut être nécessaire.",
+  "pruneServiceSuccess": "Services de base obsolètes nettoyés",
+  "pruneServiceFailed": "Échec du nettoyage. Veuillez réessayer plus tard",
+  "clearCacheHint": "Vider le cache libère de l'espace de stockage, mais peut obliger les applications à recharger des données.",
+  "pruneBaseServiceMessage": "La commande ll-cli prune sera exécutée pour supprimer tous les services d'exécution de base dont aucune application ne dépend plus.\n\nLe nettoyage libère de l'espace disque, mais si d'autres opérations sont en cours, un retéléchargement peut être nécessaire.",
+  "clean": "Nettoyer",
+  "baseServiceCleaned": "Services de base obsolètes nettoyés",
+  "cleanFailed": "Échec du nettoyage. Veuillez réessayer plus tard",
+  "appCountValue": "{count}",
+  "@appCountValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "llCliVersionLabel": "Version de ll-cli",
+  "rankingTabDownload": "Top téléchargements",
+  "rankingTabRising": "Révélations",
+  "rankingTabUpdate": "Top mises à jour",
+  "rankingTabHot": "Top popularité",
+  "sidebarAllApps": "Tout",
+  "sidebarRanking": "Classement",
+
+  "installErrorGeneric": "Échec de l'installation",
+  "installErrorTimeout": "Échec de l'installation : délai d'attente de la progression dépassé",
+  "installCancelled": "Installation annulée",
+  "installErrorUnknown": "Échec de l'installation : erreur inconnue",
+  "installErrorAppNotFoundRemote": "Échec de l'installation : application introuvable dans le dépôt distant",
+  "installErrorAppNotFoundLocal": "Échec de l'installation : application introuvable en local",
+  "installFailed": "Échec de l'installation",
+  "installErrorAppNotInRemote": "Échec de l'installation : application absente du dépôt distant",
+  "installErrorSameVersion": "Échec de l'installation : même version déjà installée",
+  "installErrorDowngrade": "Échec de l'installation : un retour à une version antérieure est nécessaire",
+  "installErrorModuleVersionNotAllowed": "Échec de l'installation : la version ne peut pas être spécifiée lors de l'installation d'un module",
+  "installErrorModuleRequiresApp": "Échec de l'installation : l'application doit d'abord être installée avant son module",
+  "installErrorModuleExists": "Échec de l'installation : le module existe déjà",
+  "installErrorArchMismatch": "Échec de l'installation : architecture incompatible",
+  "installErrorModuleNotInRemote": "Échec de l'installation : module absent du dépôt distant",
+  "installErrorMissingErofs": "Échec de l'installation : commande de décompression erofs manquante",
+  "installErrorUnsupportedFormat": "Échec de l'installation : format de fichier non pris en charge",
+  "installErrorNetwork": "Échec de l'installation : erreur réseau",
+  "installErrorInvalidRef": "Échec de l'installation : référence invalide",
+  "installErrorUnknownArch": "Échec de l'installation : architecture inconnue",
+  "installErrorCode": "Échec de l'installation : code d'erreur {code}",
+  "@installErrorCode": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+
+  "installStatusStarting": "Début de l'installation",
+  "installStatusInstallingApp": "Installation de l'application",
+  "installStatusInstallingRuntime": "Installation de l'environnement d'exécution",
+  "installStatusInstallingBase": "Installation du paquet de base",
+  "installStatusDownloadingMeta": "Téléchargement des métadonnées",
+  "installStatusDownloadingFiles": "Téléchargement des fichiers",
+  "installStatusPostProcessing": "Post-traitement de l'installation",
+  "installStatusCompleted": "Installation terminée",
+  "installStatusProcessing": "Traitement en cours",
+
+  "waitingForOperation": "{operation} en attente...",
+  "@waitingForOperation": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationInstall": "installation",
+  "operationUpdate": "mise à jour",
+  "operationPreparing": "Préparation de l'opération {operation} pour {appId}...",
+  "@operationPreparing": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      },
+      "appId": {
+        "type": "String"
+      }
+    }
+  },
+  "operationCancelled": "{operation} annulée",
+  "@operationCancelled": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationCompleted": "{operation} terminée",
+  "@operationCompleted": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationUnknown": "État de {operation} inconnu",
+  "@operationUnknown": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationConfirmFailed": "Impossible de confirmer le résultat de l'opération ({operation})",
+  "@operationConfirmFailed": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationTimeout": "{operation} a dépassé le délai d'attente",
+  "@operationTimeout": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationFailed": "{operation} échouée",
+  "@operationFailed": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+
+  "taskCrashInterrupted": "L'application a planté, tâche interrompue",
+  "taskCrashRetryHint": "L'application a planté pendant l'exécution. Veuillez réessayer",
+
+  "uninstallFailedWithError": "Échec de la désinstallation : {error}",
+  "@uninstallFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallException": "Anomalie de désinstallation : {error}",
+  "@uninstallException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "stopFailedWithError": "Échec de l'arrêt : {error}",
+  "@stopFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "stopException": "Anomalie lors de l'arrêt : {error}",
+  "@stopException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreated": "Raccourci créé",
+  "shortcutCreatedWithPath": "Raccourci créé : {path}",
+  "@shortcutCreatedWithPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreateFailedWithError": "Échec de la création : {error}",
+  "@shortcutCreateFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pruneFailedWithError": "Échec du nettoyage : {error}",
+  "@pruneFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pruneException": "Anomalie lors du nettoyage : {error}",
+  "@pruneException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "getVersionFailed": "Impossible d'obtenir la version",
+  "llCliNotInstalled": "ll-cli n'est pas installé",
+  "uosEnvInstallHint": "Avant d'installer l'environnement Linyaps sur un système UOS, activez d'abord le mode développeur du système et assurez-vous que le compte actuel peut obtenir les droits root (Paramètres – Général – Options développeur – Passer en mode développeur ; sur un système professionnel, il est conseillé de consulter le service informatique).",
+  "uosAppInstallFailureHint": "S'il s'agit d'un système UOS, vérifiez que le mode développeur est bien activé (Paramètres – Général – Options développeur – Passer en mode développeur ; sur un système professionnel, il est conseillé de consulter le service informatique).",
+  "appInfoUnavailable": "Impossible d'obtenir les informations de l'application",
+  "shortcutCreateException": "Échec de la création du raccourci : {error}",
+  "@shortcutCreateException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingForInstall": "En attente d'installation",
+  "cancelInstall": "Annuler l'installation",
+  "uninstallBlockedTitle": "Désinstallation impossible pour le moment",
+  "uninstallBlockedMessage": "L'installation ou la mise à jour de « {activeTaskName} » est en cours. Linyaps ne prend pas en charge l'exécution simultanée d'une installation et d'une désinstallation. Attendez la fin de la tâche en cours, ou annulez-la d'abord avant de désinstaller.",
+  "@uninstallBlockedMessage": {
+    "placeholders": {
+      "activeTaskName": {
+        "type": "String"
+      }
+    }
+  },
+  "iKnow": "J'ai compris",
+  "viewDownloadManager": "Ouvrir le gestionnaire de téléchargements",
+  "a11ySearchByTag": "Rechercher par étiquette : {tag}",
+  "@a11ySearchByTag": { "placeholders": { "tag": {} } },
+  "a11yRemoveSearchTag": "Retirer l'étiquette de recherche : {tag}",
+  "@a11yRemoveSearchTag": { "placeholders": { "tag": {} } },
+  "a11yInstallApp": "Installer {appName}",
+  "@a11yInstallApp": { "placeholders": { "appName": {} } },
+  "a11yUpdateApp": "Mettre à jour {appName}",
+  "@a11yUpdateApp": { "placeholders": { "appName": {} } },
+  "a11yOpenApp": "Ouvrir {appName}",
+  "@a11yOpenApp": { "placeholders": { "appName": {} } },
+  "a11yUninstallApp": "Désinstaller {appName}",
+  "@a11yUninstallApp": { "placeholders": { "appName": {} } },
+  "a11ySearchBox": "Rechercher des applications",
+  "a11ySearchInputHint": "Saisissez un mot-clé pour rechercher",
+  "a11yCommentInputHint": "Saisissez le contenu du commentaire",
+  "a11ySidebarNav": "Navigation latérale",
+  "a11yAppCard": "{appName}, version {version}, {status}",
+  "@a11yAppCard": { "placeholders": { "appName": {}, "version": {}, "status": {} } },
+  "a11yRankingItem": "N° {rank}, {appName}",
+  "@a11yRankingItem": { "placeholders": { "rank": {}, "appName": {} } },
+  "a11yProcessItem": "Processus {name}, PID {pid}",
+  "@a11yProcessItem": { "placeholders": { "name": {}, "pid": {} } },
+  "a11yDownloadItem": "Téléchargement de {appName}, progression {percent}%",
+  "@a11yDownloadItem": { "placeholders": { "appName": {}, "percent": {} } },
+  "a11yRecommendPage": "Recommandés",
+  "a11yAllAppsPage": "Toutes les applications",
+  "a11yRankingPage": "Classement",
+  "a11yMyAppsPage": "Mes applications",
+  "a11ySettingsPage": "Paramètres",
+  "a11yAppDetailPage": "Détails de l'application",
+  "a11yScreenshotArea": "Zone des captures d'écran",
+  "a11yCommentSection": "Zone des commentaires",
+  "a11yCarouselArea": "Zone du carrousel",
+  "a11yAppListArea": "Liste des applications",
+  "a11ySidebarArea": "Barre latérale",
+  "a11yMinimize": "Réduire",
+  "a11yMaximize": "Agrandir",
+  "a11yRestore": "Restaurer",
+  "a11yClose": "Fermer",
+  "a11yPrevious": "Précédent",
+  "a11yNext": "Suivant",
+  "a11yTabSelected": "Sélectionné",
+  "a11yTabNotSelected": "Non sélectionné",
+  "a11yStatusInstalled": "Installée",
+  "a11yStatusUpdatable": "Peut être mise à jour",
+  "a11yStatusNotInstalled": "Non installée",
+  "noAppsInCategory": "Aucune application dans cette catégorie",
+  "noRanking": "Aucun classement",
+  "noRecommend": "Aucune recommandation",
+  "installTimeout": "Délai d'installation dépassé : aucune mise à jour de progression reçue depuis longtemps",
+  "downloadManagerSlowInstallHint": "Si la progression semble lente, des dépendances nécessaires au logiciel sont peut-être en cours d'installation. Veuillez patienter encore un peu……",
+  "loadingInstalledApps": "Chargement des applications installées...",
+  "appDescriptionPlaceholder": "Description de l'application",
+  "rankingTabNewUpload": "Nouveautés",
+  "rankingTabDownloadCount": "Téléchargements",
+  "uploadedXHoursAgo": "Publié il y a {count, plural, one{{count} heure} many{{count} d'heures} other{{count} heures}}",
+  "@uploadedXHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadedXDaysAgo": "Publié il y a {count, plural, one{{count} jour} many{{count} de jours} other{{count} jours}}",
+  "@uploadedXDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadedOnDate": "Publié le {date}",
+  "@uploadedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedXTimes": "{count, plural, one{{count} téléchargement} many{{count} de téléchargements} other{{count} téléchargements}}",
+  "@downloadedXTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "repoManagementHintTitle": "Gestion du dépôt uniquement",
+  "repoManagementHintMessage": "Ce magasin ne peut récupérer les données d'applications que du dépôt stable officiel. Ne supprimez pas le dépôt stable, sinon l'installation d'applications deviendra impossible.",
+  "envManagementTitle": "Gestion de l'environnement Linyaps",
+  "envManagementDescription": "Analyser l'environnement, gérer les dépôts, réparer l'environnement de base et déplacer l'emplacement de stockage",
+  "envManagementAnalysisTab": "Analyse de l'environnement",
+  "envManagementRepositoryTab": "Gestion des dépôts",
+  "envManagementStorageTab": "Emplacement de stockage",
+  "envManagementAnalyzing": "Analyse de l'environnement Linyaps...",
+  "envManagementApplying": "Exécution de l'opération...",
+  "envManagementNotAnalyzed": "L'analyse de l'environnement n'est pas encore terminée",
+  "envManagementHealthyTitle": "Aucun problème à traiter détecté",
+  "envManagementHealthyMessage": "L'environnement de base Linyaps, les dépôts et les données locales sont actuellement en bon état.",
+  "envManagementBaseEnvironment": "Environnement de base",
+  "envManagementRepositoryMetric": "Dépôts",
+  "envManagementLocalData": "Données locales",
+  "envManagementStorageLocation": "Emplacement de stockage",
+  "envManagementNotDetected": "Non détecté",
+  "envManagementUnknown": "Inconnu",
+  "envManagementUsagePercent": "Utilisation {percent}%",
+  "@envManagementUsagePercent": {"placeholders": {"percent": {"type": "int"}}},
+  "envManagementEnvironmentHealthyUpgrade": "Environnement sain (mise à niveau recommandée)",
+  "envManagementEnvironmentHealthy": "Environnement sain",
+  "envManagementRepositoryReadFailed": "Échec de la lecture de la configuration des dépôts",
+  "envManagementEnvironmentAbnormal": "Environnement anormal",
+  "envRepoStatusNormal": "Normal",
+  "envRepoStatusNotConfigured": "Non configuré",
+  "envRepoStatusMisconfigured": "Configuration incorrecte",
+  "envRepoStatusUnavailable": "Indisponible",
+  "envRepoStatusUnknown": "Inconnu",
+  "envLocalDataDetectionFailed": "Échec de la détection",
+  "envLocalDataUnavailable": "Indisponible",
+  "envLocalDataNormal": "Normal",
+  "envIssueLlCliUnavailableTitle": "ll-cli indisponible",
+  "envIssueLlCliUnavailableDescription": "Aucun environnement en ligne de commande Linyaps utilisable n'a été détecté.",
+  "envIssueRepositoryNotConfiguredTitle": "Aucun dépôt Linyaps configuré",
+  "envIssueRepositoryNotConfiguredDescription": "Il n'existe actuellement aucune configuration de dépôt Linyaps utilisable. Vous devez d'abord ajouter ou réparer un dépôt.",
+  "envIssueDataPermissionTitle": "Anomalie de permissions du répertoire de données Linyaps",
+  "envIssueDataPermissionDescription": "ll-package-manager s'exécute sous l'utilisateur {serviceUser}, mais le propriétaire du répertoire de données Linyaps ou de fichiers d'état essentiels est anormal, ce qui peut faire échouer la migration des dépôts, les objets téléchargés ou la création de layers.",
+  "@envIssueDataPermissionDescription": {"placeholders": {"serviceUser": {"type": "String"}}},
+  "envIssueLocalDataDetectionTitle": "Échec de la détection des données locales Linyaps",
+  "envIssueLocalDataDetectionDescription": "La vérification de lecture des données locales linyaps n'a pas pu être exécutée. Veuillez vérifier l'état de ll-cli et du service package-manager.",
+  "envIssueLocalDataUnavailableTitle": "Données locales Linyaps indisponibles",
+  "envIssueLocalDataUnavailableDescription": "Les données des applications installées n'ont pas pu être lues via le chemin d'exécution linyaps, ce qui peut affecter la liste des applications, l'installation ou l'exécution. Vérifiez d'abord les permissions du répertoire de données Linyaps et l'état de l'environnement de base, puis procédez à la réparation si nécessaire.",
+  "envIssueStorageSpaceTitle": "Espace insuffisant à l'emplacement de stockage Linyaps",
+  "envIssueStorageSpaceDescription": "Le système de fichiers contenant {path} est actuellement utilisé à environ {percent} %. Un nettoyage ou un déplacement de l'emplacement de stockage est recommandé.",
+  "@envIssueStorageSpaceDescription": {"placeholders": {"path": {"type": "String"}, "percent": {"type": "int"}}},
+  "envIssueRunningAppsTitle": "Des applications Linyaps sont en cours d'exécution",
+  "envIssueRunningAppsDescription": "{count, plural, one{{count} application Linyaps est encore en cours d'exécution.} many{{count} d'applications Linyaps sont encore en cours d'exécution.} other{{count} applications Linyaps sont encore en cours d'exécution.}} Elles doivent être fermées avant de déplacer l'emplacement de stockage.",
+  "@envIssueRunningAppsDescription": {"placeholders": {"count": {"type": "int"}}},
+  "envRepairAction": "Réparer",
+  "envHandleAction": "Traiter",
+  "envRepairLocalDataTitle": "Réparer les données locales Linyaps",
+  "envRepairLocalDataMessage": "Une tentative de réparation des données locales Linyaps sera effectuée avec les droits administrateur. Si des applications ou des données de l'environnement de base doivent être récupérées à nouveau, des téléchargements peuvent être déclenchés et l'opération peut être longue. Continuer ?",
+  "envRepairLocalDataConfirm": "Lancer la réparation",
+  "envRepairPermissionTitle": "Réparer les permissions du répertoire de données Linyaps",
+  "envRepairPermissionMessage": "Avec les droits administrateur, le propriétaire des répertoires essentiels et fichiers d'état de {rootPath} sera restauré sur {serviceUser}, et le package-manager Linyaps sera redémarré. Continuer ?",
+  "@envRepairPermissionMessage": {"placeholders": {"rootPath": {"type": "String"}, "serviceUser": {"type": "String"}}},
+  "envRepairPermissionConfirm": "Réparer les permissions",
+  "envMoveStorageTitle": "Déplacer l'emplacement de stockage Linyaps",
+  "envMoveStorageMessage": "{rootPath} sera copié vers {targetPath} et un bind mount systemd sera créé. Veuillez vérifier que la partition cible dispose de suffisamment d'espace libre.",
+  "@envMoveStorageMessage": {"placeholders": {"rootPath": {"type": "String"}, "targetPath": {"type": "String"}}},
+  "envMoveStorageConfirm": "Commencer le déplacement",
+  "envAddRepositoryTitle": "Ajouter un dépôt Linyaps",
+  "envRepositoryName": "Nom du dépôt",
+  "envRepositoryAddress": "Adresse du dépôt",
+  "envRepositoryAliasOptional": "Alias (facultatif)",
+  "envAddAction": "Ajouter",
+  "envSaveAction": "Enregistrer",
+  "envDeleteAction": "Supprimer",
+  "envUpdateRepositoryTitle": "Modifier l'adresse du dépôt : {name}",
+  "@envUpdateRepositoryTitle": {"placeholders": {"name": {"type": "String"}}},
+  "envSetPriorityTitle": "Définir la priorité : {name}",
+  "@envSetPriorityTitle": {"placeholders": {"name": {"type": "String"}}},
+  "envRepositoryPriority": "Priorité",
+  "envPriorityMustBeNumber": "La priorité doit être un nombre",
+  "envRemoveRepositoryTitle": "Supprimer le dépôt",
+  "envRemoveRepositoryMessage": "Voulez-vous vraiment supprimer le dépôt {name} ?",
+  "@envRemoveRepositoryMessage": {"placeholders": {"name": {"type": "String"}}},
+  "envRepositoryAdded": "Dépôt ajouté",
+  "envRepositoryAddFailed": "Échec de l'ajout du dépôt : {error}",
+  "@envRepositoryAddFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envRepositoryUpdated": "Dépôt mis à jour",
+  "envRepositoryUpdateFailed": "Échec de la mise à jour du dépôt : {error}",
+  "@envRepositoryUpdateFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envPriorityUpdated": "Priorité mise à jour",
+  "envPriorityUpdateFailed": "Échec de la définition de la priorité : {error}",
+  "@envPriorityUpdateFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envRepositoryRemoved": "Dépôt supprimé",
+  "envRepositoryRemoveFailed": "Échec de la suppression du dépôt : {error}",
+  "@envRepositoryRemoveFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envDefaultRepositoryUpdated": "Dépôt par défaut mis à jour",
+  "envDefaultRepositoryUpdateFailed": "Échec de la définition du dépôt par défaut : {error}",
+  "@envDefaultRepositoryUpdateFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envMirrorEnabled": "Miroir activé",
+  "envMirrorDisabled": "Miroir désactivé",
+  "envMirrorUpdateFailed": "Échec de la modification de l'état du miroir : {error}",
+  "@envMirrorUpdateFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envOpenLogDirectoryFailed": "Échec de l'ouverture du répertoire des journaux",
+  "envRepositoryNotLoaded": "Configuration des dépôts pas encore chargée",
+  "envRepositoryDefaultValue": "Dépôt par défaut : {name}",
+  "@envRepositoryDefaultValue": {"placeholders": {"name": {"type": "String"}}},
+  "envNotSet": "Non défini",
+  "envAddRepository": "Ajouter un dépôt",
+  "envNoRepositories": "Aucune configuration de dépôt",
+  "envDefaultBadge": "Par défaut",
+  "envRepositoryDetails": "name={name}  priority={priority}",
+  "@envRepositoryDetails": {"placeholders": {"name": {"type": "String"}, "priority": {"type": "String"}}},
+  "envRepositoryActions": "Actions sur le dépôt",
+  "envEditAddress": "Modifier l'adresse",
+  "envSetDefault": "Définir par défaut",
+  "envSetPriority": "Définir la priorité",
+  "envEnableMirror": "Activer le miroir",
+  "envDisableMirror": "Désactiver le miroir",
+  "envCurrentStorageLocation": "Emplacement de stockage actuel",
+  "envStorageNotAnalyzed": "L'analyse de l'emplacement de stockage n'est pas encore terminée",
+  "envStorageSummary": "{path}  Utilisation {percent}%",
+  "@envStorageSummary": {"placeholders": {"path": {"type": "String"}, "percent": {"type": "int"}}},
+  "envNewStorageLocation": "Nouvel emplacement de stockage",
+  "envStorageMoveMethod": "Mode de déplacement",
+  "envStorageMoveMethodDescription": "Linyaps ne prend pas encore en charge la modification directe du répertoire d'installation. Ici, les données sont copiées puis un bind mount systemd est créé pour monter le nouveau répertoire sur {rootPath}.",
+  "@envStorageMoveMethodDescription": {"placeholders": {"rootPath": {"type": "String"}}},
+  "envMoveStorageAction": "Déplacer l'emplacement de stockage",
+  "envCloseAppsBeforeMoveTitle": "Les applications doivent être fermées avant le déplacement",
+  "envCloseAppsBeforeMoveMessage": "{count, plural, one{{count} application Linyaps est encore en cours d'exécution.} many{{count} d'applications Linyaps sont encore en cours d'exécution.} other{{count} applications Linyaps sont encore en cours d'exécution.}}",
+  "@envCloseAppsBeforeMoveMessage": {"placeholders": {"count": {"type": "int"}}},
+  "envResultDataPermissionCompleted": "Permissions du répertoire de données Linyaps réparées",
+  "envResultDataPermissionFailed": "Échec de la réparation des permissions du répertoire de données Linyaps",
+  "envResultLocalDataUnsupported": "Les composants système actuels ne prennent pas en charge le nettoyage automatique des objets problématiques ; les données locales Linyaps ne peuvent pas être réparées automatiquement. Veuillez mettre à niveau les composants système concernés ou utiliser les outils de votre distribution.",
+  "envResultLocalDataCompleted": "Réparation des données locales Linyaps exécutée",
+  "envResultLocalDataCompletedLegacy": "Réparation des données locales Linyaps exécutée (compatible avec les paramètres des anciennes versions du système)",
+  "envResultLocalDataFailed": "Échec de la réparation des données locales Linyaps",
+  "envResultLocalDataChecksumMismatch": "La revérification des données locales Linyaps a révélé une somme de contrôle d'objet incohérente ; la réparation n'est pas terminée après le nettoyage automatique. Si le problème persiste après un nouveau retrait, une correction des données du dépôt amont ou de la compatibilité du stockage local linyaps est généralement nécessaire.",
+  "envPartialCommitsUnknown": "Partial commits partiels",
+  "envPartialCommitsCount": "{count, plural, one{{count} partial commit} many{{count} de partial commits} other{{count} partial commits}}",
+  "@envPartialCommitsCount": {"placeholders": {"count": {"type": "int"}}},
+  "envResultLocalDataRepullCompleted": "Les objets problématiques des données locales Linyaps ont été nettoyés et {partialCommits} a été récupéré à nouveau ; la revérification est réussie.",
+  "@envResultLocalDataRepullCompleted": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultLocalDataRepullCompletedLegacy": "Les objets problématiques des données locales Linyaps ont été nettoyés et {partialCommits} a été récupéré à nouveau ; la revérification est réussie (compatible avec les paramètres des anciennes versions du système).",
+  "@envResultLocalDataRepullCompletedLegacy": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultLocalDataRepullFailed": "Les objets problématiques traitables automatiquement des données locales Linyaps ont été nettoyés et une nouvelle récupération de {partialCommits} a été tentée, mais la revérification échoue toujours. Consultez les journaux pour connaître la cause exacte de l'échec de récupération ou de revérification de chaque ref.",
+  "@envResultLocalDataRepullFailed": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultLocalDataRepullFailedLegacy": "Les objets problématiques traitables automatiquement des données locales Linyaps ont été nettoyés et une nouvelle récupération de {partialCommits} a été tentée, mais la revérification échoue toujours. Consultez les journaux pour connaître la cause exacte de l'échec de récupération ou de revérification de chaque ref (compatible avec les paramètres des anciennes versions du système).",
+  "@envResultLocalDataRepullFailedLegacy": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultLocalDataRepullChecksumMismatch": "Les objets problématiques traitables automatiquement des données locales Linyaps ont été nettoyés et une nouvelle récupération de {partialCommits} a été tentée, mais la revérification détecte toujours des sommes de contrôle incohérentes. Les données du dépôt amont sont peut-être incompatibles avec le mode de stockage local de linyaps.",
+  "@envResultLocalDataRepullChecksumMismatch": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultLocalDataRepullChecksumMismatchLegacy": "Les objets problématiques traitables automatiquement des données locales Linyaps ont été nettoyés et une nouvelle récupération de {partialCommits} a été tentée, mais la revérification détecte toujours des sommes de contrôle incohérentes. Les données du dépôt amont sont peut-être incompatibles avec le mode de stockage local de linyaps (compatible avec les paramètres des anciennes versions du système).",
+  "@envResultLocalDataRepullChecksumMismatchLegacy": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultStorageBlockedRunningApps": "{count, plural, one{{count} application Linyaps est encore en cours d'exécution.} many{{count} d'applications Linyaps sont encore en cours d'exécution.} other{{count} applications Linyaps sont encore en cours d'exécution.}} Veuillez les fermer avant de déplacer l'emplacement de stockage.",
+  "@envResultStorageBlockedRunningApps": {"placeholders": {"count": {"type": "int"}}},
+  "envResultStorageBlockedActiveTask": "Des tâches d'installation ou de mise à jour sont encore en cours dans le gestionnaire de téléchargements. Attendez leur achèvement ou annulez-les avant de déplacer l'emplacement de stockage Linyaps.",
+  "envResultStorageBlockedNamedTask": "« {name} » est en cours de traitement. Attendez la fin ou annulez la tâche avant de déplacer l'emplacement de stockage Linyaps.",
+  "@envResultStorageBlockedNamedTask": {"placeholders": {"name": {"type": "String"}}},
+  "envResultStorageAlreadyBindMounted": "{path} est déjà un bind mount. Vérifiez d'abord la configuration de montage existante avant de migrer.",
+  "@envResultStorageAlreadyBindMounted": {"placeholders": {"path": {"type": "String"}}},
+  "envResultStorageFilesystemUnavailable": "Impossible de lire l'espace du système de fichiers du chemin cible : {path}",
+  "@envResultStorageFilesystemUnavailable": {"placeholders": {"path": {"type": "String"}}},
+  "envResultStorageSpaceUnknown": "Impossible de déterminer l'espace disque du répertoire actuel ou du chemin cible. Veuillez vérifier puis réessayer.",
+  "envResultStorageInsufficientSpace": "Espace libre insuffisant sur le chemin cible : au moins {requiredSpace} sont nécessaires, alors que {availableSpace} sont disponibles.",
+  "@envResultStorageInsufficientSpace": {"placeholders": {"requiredSpace": {"type": "String"}, "availableSpace": {"type": "String"}}},
+  "envResultStorageTargetNotAbsolute": "Le chemin cible doit être un chemin absolu.",
+  "envResultStorageTargetContainsLineBreak": "Le chemin cible ne doit pas contenir de retour à la ligne.",
+  "envResultStorageTargetUnsafeSystemPath": "Le chemin cible ne peut être ni la racine du système ni le répertoire Linyaps actuel.",
+  "envResultStorageTargetInsideCurrentRoot": "Le chemin cible ne peut pas se trouver à l'intérieur du répertoire Linyaps actuel.",
+  "envResultStorageMoveCompleted": "Emplacement de stockage Linyaps déplacé",
+  "envResultStorageMoveFailed": "Échec du déplacement de l'emplacement de stockage Linyaps",
+  "envResultUnexpectedFailure": "Échec de l'opération : {error}",
+  "@envResultUnexpectedFailure": {"placeholders": {"error": {"type": "String"}}},
+  "errorSolutionHelpTooltip": "Voir la solution",
+  "a11yErrorSolutionHelp": "Consulter la solution de cette erreur d'installation",
+  "errorSolutionNoSolution": "Aucune solution pour le moment",
+  "errorSolutionQueryFailed": "Échec de la consultation. Veuillez réessayer",
+  "errorSolutionRetry": "Consulter à nouveau",
+  "errorSolutionCommunityPost": "Poster dans la communauté",
+  "errorSolutionRepair": "Réparation en un clic",
+  "errorSolutionClose": "Fermer la solution",
+  "errorSolutionRemoteImage": "Image distante de la solution",
+  "errorSolutionImageBlocked": "Image hors réseau bloquée",
+  "errorSolutionImageLoadFailed": "Échec du chargement de l'image distante",
+  "scriptReviewTitle": "Aperçu du contenu du script",
+  "scriptReviewSemanticLabel": "Script de réparation complet sur le point d'être exécuté",
+  "executeRepairScript": "Confirmer et exécuter",
+  "repairExecutionTitle": "Réparation en un clic",
+  "repairExecuting": "Exécution du script de réparation…",
+  "repairOutputTitle": "Sortie en temps réel",
+  "repairOutputEmpty": "En attente de la sortie du script…",
+  "repairOutputTruncated": "L'interface omet les {count, plural, one{{count} première ligne} many{{count} premières lignes} other{{count} premières lignes}}. Consultez le journal pour le contenu complet.",
+  "@repairOutputTruncated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repairCompleteRetry": "Réparation terminée. Veuillez retenter l'installation.",
+  "repairFailedWithExitCode": "Échec d'exécution du script de réparation (code de sortie {exitCode}).",
+  "@repairFailedWithExitCode": {
+    "placeholders": {
+      "exitCode": {
+        "type": "int"
+      }
+    }
+  },
+  "repairTimedOut": "L'exécution du script de réparation a dépassé 30 minutes ; l'attente a été interrompue. Consultez les journaux pour vérifier l'état du système.",
+  "repairExecutionError": "Le script de réparation n'a pas pu être exécuté : {message}",
+  "@repairExecutionError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "repairInvalidSignature": "La signature du script de réparation est invalide ; son exécution a été bloquée.",
+  "openRepairLog": "Ouvrir le répertoire des journaux",
+  "copyRepairOutput": "Copier la sortie actuelle",
+  "repairElapsedTime": "Temps d'exécution {elapsed}",
+  "@repairElapsedTime": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      }
+    }
+  }
+}

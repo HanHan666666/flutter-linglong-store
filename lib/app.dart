@@ -41,6 +41,8 @@ class LinglongStoreApp extends ConsumerWidget {
         .accessibilityFeatures
         .boldText;
 
+    // 语言变化会重建 MaterialApp，这里闭包捕获当前 locale，
+    // 让 CJK 字形变体（简/繁/日/韩）跟随界面语言一起切换。
     ThemeData buildTypographyTheme({
       required bool isDark,
       required bool systemBoldText,
@@ -49,10 +51,12 @@ class LinglongStoreApp extends ConsumerWidget {
           ? AppTheme.buildDarkTheme(
               fontWeightAdjustment: fontWeightAdjustment,
               systemBoldText: systemBoldText,
+              appLocale: locale,
             )
           : AppTheme.buildLightTheme(
               fontWeightAdjustment: fontWeightAdjustment,
               systemBoldText: systemBoldText,
+              appLocale: locale,
             );
     }
 

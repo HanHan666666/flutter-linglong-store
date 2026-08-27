@@ -291,10 +291,14 @@ class GlobalApp extends Notifier<GlobalAppState> {
     final supportedLocale = resolveSupportedAppLocale(locale);
     state = state.copyWith(locale: supportedLocale);
     final prefs = _prefs;
+    // 必须持久化完整 BCP 47 标签（如 zh-Hant）：只存 languageCode 会把
+    // 简体与繁体折叠成同一个 zh 值，重启后无法还原用户选择的文字变体。
+    // 纯语言码语言的 tag 即 languageCode，历史值天然兼容无需迁移。
+    final languageTag = supportedLocale.toLanguageTag();
     if (prefs != null) {
-      await prefs.setString(_kLanguageKey, supportedLocale.languageCode);
+      await prefs.setString(_kLanguageKey, languageTag);
     }
-    AppLogger.info('Locale changed to: ${supportedLocale.languageCode}');
+    AppLogger.info('Locale changed to: $languageTag');
 
     // 刷新所有依赖语言的数据 Provider
     _invalidateLocaleDependentProviders();

@@ -15,6 +15,15 @@ class AppLanguageSelector extends StatelessWidget {
   /// 桌面语言列表保持紧凑可扫读，窄窗口下再由父约束缩小。
   static const double _preferredMenuWidth = 320;
 
+  /// 与 `AppAnchoredMenu` 菜单项样式一致的最小高度（px）。
+  ///
+  /// 用于按语言数量计算菜单最大高度，避免默认 320px 上限在 10 种语言时
+  /// 触发内部滚动；超过屏幕可用空间时仍由 SDK 自动钳制并回退滚动。
+  static const double _menuItemHeight = 48;
+
+  /// 菜单上下内边距合计（`AppSpacing.xs` × 2）。
+  static const double _menuVerticalPadding = 8;
+
   /// 创建由 ARB 支持列表驱动的语言选择器。
   const AppLanguageSelector({
     required this.currentLocale,
@@ -56,6 +65,10 @@ class AppLanguageSelector extends StatelessWidget {
           return AppAnchoredMenu<Locale>(
             key: const ValueKey('language-selector-menu'),
             menuWidth: menuWidth,
+            // 全量语言列表一次性展示完整菜单，是设置页可扫读性的前提；
+            // 仅当可用空间不足（极小屏或超长语言列表）时才允许滚动兜底。
+            maximumMenuHeight:
+                locales.length * _menuItemHeight + _menuVerticalPadding,
             alignment: AlignmentDirectional.topStart,
             entries: [
               for (final locale in locales)

@@ -4,6 +4,25 @@ import 'app_text_styles.dart';
 import 'app_spacing.dart';
 import 'app_typography.dart';
 
+/// 应用界面语言对应的 CJK 字形变体。
+///
+/// Noto/思源各地区 CJK 字库覆盖同一批汉字但笔形不同：简体字形给日文汉字和
+/// 繁体用户阅读时观感明显错误。按应用 locale 把最贴近的地区字库排到字体
+/// 回退栈首位，其余地区字库继续保留兜底缺字；纯西文语言维持原简体顺序。
+enum AppCjkGlyphVariant {
+  /// 简体中文与未识别语言的默认笔形。
+  hans,
+
+  /// 繁体中文（zh-Hant 或台/港/澳地区）笔形。
+  hant,
+
+  /// 日文假名与日式汉字笔形。
+  ja,
+
+  /// 韩文谚文与韩式汉字笔形。
+  ko,
+}
+
 /// 应用主题
 class AppTheme {
   AppTheme._();
@@ -12,16 +31,84 @@ class AppTheme {
     waitDuration: Duration(milliseconds: 800),
   );
 
+  /// 解析应用 Locale 对应的 CJK 字形变体。
+  ///
+  /// script 子标签优先（Hant→繁体、Hans→简体）；中文无 script 时按
+  /// 台/港/澳地区惯例归繁体；日韩按 language code 判定；其余语言沿用
+  /// 产品默认的简体字形，保持历史渲染不变。
+  static AppCjkGlyphVariant cjkGlyphVariantOf(Locale? locale) {
+    if (locale == null) {
+      return AppCjkGlyphVariant.hans;
+    }
+    switch (locale.scriptCode) {
+      case 'Hant':
+        return AppCjkGlyphVariant.hant;
+      case 'Hans':
+        return AppCjkGlyphVariant.hans;
+    }
+    switch (locale.languageCode) {
+      case 'ja':
+        return AppCjkGlyphVariant.ja;
+      case 'ko':
+        return AppCjkGlyphVariant.ko;
+      case 'zh':
+        return switch (locale.countryCode) {
+          'TW' || 'HK' || 'MO' => AppCjkGlyphVariant.hant,
+          _ => AppCjkGlyphVariant.hans,
+        };
+      default:
+        return AppCjkGlyphVariant.hans;
+    }
+  }
+
   // Explicit Linux CJK/Arabic fallbacks avoid relying on distro-specific
   // defaults. Noto Sans Arabic 保证阿拉伯语（RTL）正文有确定性字体回退。
-  static const _linuxFontFamilyFallback = <String>[
-    'Noto Sans CJK SC',
-    'Source Han Sans SC',
-    'WenQuanYi Micro Hei',
-    'WenQuanYi Zen Hei',
-    'Noto Sans Arabic',
-    'Noto Color Emoji',
-  ];
+  //
+  // 各字形变体的回退栈把目标地区字库排在首位，其余 CJK 字库继续兜底个别
+  // 缺字；阿拉伯语与 Emoji 字库在所有变体中固定位于末尾。
+  static List<String> _linuxFontFamilyFallback(AppCjkGlyphVariant variant) {
+    return switch (variant) {
+      AppCjkGlyphVariant.hant => <String>[
+        'Noto Sans CJK TC',
+        'Source Han Sans TC',
+        // 繁体字库偶发缺字时退化到覆盖面最大的简体字库。
+        'Noto Sans CJK SC',
+        'Source Han Sans SC',
+        'WenQuanYi Micro Hei',
+        'WenQuanYi Zen Hei',
+        'Noto Sans Arabic',
+        'Noto Color Emoji',
+      ],
+      AppCjkGlyphVariant.ja => <String>[
+        'Noto Sans CJK JP',
+        'Source Han Sans JP',
+        'Noto Sans CJK SC',
+        'Source Han Sans SC',
+        'WenQuanYi Micro Hei',
+        'WenQuanYi Zen Hei',
+        'Noto Sans Arabic',
+        'Noto Color Emoji',
+      ],
+      AppCjkGlyphVariant.ko => <String>[
+        'Noto Sans CJK KR',
+        'Source Han Sans KR',
+        'Noto Sans CJK SC',
+        'Source Han Sans SC',
+        'WenQuanYi Micro Hei',
+        'WenQuanYi Zen Hei',
+        'Noto Sans Arabic',
+        'Noto Color Emoji',
+      ],
+      AppCjkGlyphVariant.hans => <String>[
+        'Noto Sans CJK SC',
+        'Source Han Sans SC',
+        'WenQuanYi Micro Hei',
+        'WenQuanYi Zen Hei',
+        'Noto Sans Arabic',
+        'Noto Color Emoji',
+      ],
+    };
+  }
 
   /// 零动画页面转场构建器
   static const _noTransitionTheme = PageTransitionsTheme(
@@ -37,8 +124,11 @@ class AppTheme {
 
   static AppTypographyStyles _withLinuxTypographyFallbacks(
     AppTypographyStyles typography,
+    AppCjkGlyphVariant glyphVariant,
   ) {
-    return typography.withFontFamilyFallback(_linuxFontFamilyFallback);
+    return typography.withFontFamilyFallback(
+      _linuxFontFamilyFallback(glyphVariant),
+    );
   }
 
   /// 构建浅色 ColorScheme。
@@ -89,16 +179,19 @@ class AppTheme {
   /// 浅色主题
   static ThemeData get lightTheme => buildLightTheme();
 
+  /// [appLocale] 决定 CJK 字形变体首选的地区字库；传 null 保持简体形态。
   static ThemeData buildLightTheme({
     AppFontWeightAdjustment fontWeightAdjustment =
         AppFontWeightAdjustment.normal,
     bool systemBoldText = false,
+    Locale? appLocale,
   }) {
     final typography = _withLinuxTypographyFallbacks(
       AppTextStyles.resolveTypography(
         fontWeightAdjustment: fontWeightAdjustment,
         systemBoldText: systemBoldText,
       ),
+      cjkGlyphVariantOf(appLocale),
     );
 
     return ThemeData(
@@ -296,10 +389,12 @@ class AppTheme {
   /// 深色主题
   static ThemeData get darkTheme => buildDarkTheme();
 
+  /// [appLocale] 决定 CJK 字形变体首选的地区字库；传 null 保持简体形态。
   static ThemeData buildDarkTheme({
     AppFontWeightAdjustment fontWeightAdjustment =
         AppFontWeightAdjustment.normal,
     bool systemBoldText = false,
+    Locale? appLocale,
   }) {
     const palette = AppColorPalette.dark;
     final typography = _withLinuxTypographyFallbacks(
@@ -307,6 +402,7 @@ class AppTheme {
         fontWeightAdjustment: fontWeightAdjustment,
         systemBoldText: systemBoldText,
       ),
+      cjkGlyphVariantOf(appLocale),
     );
 
     return ThemeData(

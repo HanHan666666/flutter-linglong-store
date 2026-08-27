@@ -126,6 +126,14 @@ aur_source_tag_root="v${release_version}"
 aur_source_aarch64_block=$'source_aarch64=(\n  "linglong-store-@AUR_SOURCE_VERSION@-linux-arm64.tar.gz::@RELEASE_URL_BASE@/@AUR_SOURCE_TAG_ROOT@/linglong-store-@AUR_SOURCE_VERSION@-linux-arm64.tar.gz"\n  "linglong-store-@AUR_SOURCE_VERSION@-linux-arm64.tar.gz.asc::@RELEASE_URL_BASE@/@AUR_SOURCE_TAG_ROOT@/linglong-store-@AUR_SOURCE_VERSION@-linux-arm64.tar.gz.asc"\n)'
 aur_sha256sums_aarch64_block=$'sha256sums_aarch64=(\n  \'@SHA256_ARM64@\'\n  \'@SHA256_SIG_ARM64@\'\n)'
 should_render_aur="false"
+# Copr 源码构建 spec 仅服务 stable 渠道：nightly 版本号含 "+<sha>" 且
+# Source0 指向 nightly tag 结构，RPM Version 语义不兼容，直接跳过渲染。
+should_render_copr="false"
+source0_url=""
+if [[ "$channel" == "stable" ]]; then
+  should_render_copr="true"
+  source0_url="${release_url_base}/v${release_version}/linglong-store-${release_version}.tar.gz"
+fi
 
 has_any_aur_inputs="false"
 if [[ -n "$sha256_amd64" || -n "$sha256_arm64" || -n "$sha256_sig_amd64" || -n "$sha256_sig_arm64" || -n "$gpg_key_id" ]]; then
@@ -235,6 +243,7 @@ render_file() {
   content="${content//@INSTALLED_SIZE_KB@/$installed_size_kb}"
   content="${content//@RELEASE@/$release_number}"
   content="${content//@PAYLOAD_DIR@/$payload_dir}"
+  content="${content//@SOURCE0_URL@/$source0_url}"
   content="${content//@APP_ID@/$app_id}"
   content="${content//@PROJECT_URL@/$project_url}"
   content="${content//@MAINTAINER@/$maintainer}"
@@ -242,7 +251,7 @@ render_file() {
 }
 
 rm -rf "$output_dir"
-mkdir -p "$output_dir/deb" "$output_dir/rpm" "$output_dir/appimage" "$output_dir/aur"
+mkdir -p "$output_dir/deb" "$output_dir/rpm" "$output_dir/copr" "$output_dir/appimage" "$output_dir/aur"
 
 render_file \
   "$ROOT_DIR/build/packaging/linux/linglong-store.desktop.in" \
@@ -261,6 +270,14 @@ render_file \
 render_file \
   "$ROOT_DIR/build/packaging/linux/rpm/linglong-store.spec.in" \
   "$output_dir/rpm/linglong-store.spec"
+
+# Copr 源码构建 spec（stable 专用）：Source0 指向随 release 发布的自包含
+# 源码归档，产物将被上传为 linglong-store-<version>.copr.spec 附件。
+if [[ "$should_render_copr" == "true" ]]; then
+  render_file \
+    "$ROOT_DIR/build/packaging/linux/copr/linglong-store.spec.in" \
+    "$output_dir/copr/linglong-store.spec"
+fi
 
 cp "$ROOT_DIR/build/packaging/linux/appimage/AppRun" "$output_dir/appimage/AppRun"
 render_file \

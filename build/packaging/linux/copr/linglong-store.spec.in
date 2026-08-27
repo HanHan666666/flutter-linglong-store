@@ -1,0 +1,132 @@
+# 本文件是 Fedora Copr 源码构建 spec 模板（渠道仅 stable）。
+# 与 build/packaging/linux/rpm/linglong-store.spec.in 的分工：
+#   - rpm/linglong-store.spec.in：二进制重打包模板，%build 为空，仅复制官方
+#     CI 已编译产物，供本地/发布容器快速出包；
+#   - copr/linglong-store.spec.in（本文件）：从源码独立构建，可在 Fedora
+#     Copr 的 mock chroot 内完成 Flutter SDK 引导、依赖拉取和 Release 编译，
+#     供社区维护者在 Copr 上自建仓库。
+# 模板由 build/scripts/render-packaging-templates.sh 渲染，随 release 附件
+# 发布为 linglong-store-<version>.copr.spec，Copr 维护者直接提交该文件 URL
+# 即可构建，无需自行维护版本号（模式 B）。
+
+# ---- Flutter SDK 版本锚点（必须与官方发布容器 debian10-release.Dockerfile 的
+# FLUTTER_VERSION 保持一致，升级 SDK 时两处同步修改） ----
+%global flutter_version 3.47.0
+# releases_linux.json 中 3.47.0 的 git commit，用于 aarch64 分支校验
+# git clone 得到的 tag 与 x86_64 归档严格同源。
+%global flutter_commit 4cf24164269a5ebf0c16a028a00727d0e77bbb05
+# x86_64 官方 stable 归档的 sha256；Flutter 官方不发布 linux-arm64 stable
+# 归档，因此 aarch64 走 git clone + commit 校验，两个架构锁同一版本。
+%global flutter_sha256 26cd99d3d94b1367e6b50535a18aeef0282c10a535bbe3ec493534dcdab75296
+%global flutter_archive flutter_linux_%{flutter_version}-stable.tar.xz
+%global flutter_url https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/%{flutter_archive}
+
+Name: @PACKAGE_NAME@
+Version: @VERSION@
+# Copr 构建遵循 Fedora 惯例携带 %{?dist}，便于同仓库多发行版并存。
+Release: 1%{?dist}
+Summary: @SUMMARY@
+License: MIT
+URL: @PROJECT_URL@
+# Source0 指向本仓库 release 发布的自包含源码归档（含预渲染元数据），
+# 由渲染器按本次发版号填充具体 URL。
+Source0: @SOURCE0_URL@
+# Source1 仅在 x86_64 声明：rpmbuild 制作 srpm 时自动下载官方 SDK 归档；
+# aarch64 分支不引用该源，避免下载无法使用的 x86_64 归档。
+%ifarch x86_64
+Source1: %{flutter_url}
+%endif
+
+# 产物布局与官方二进制 RPM 保持一致：/opt 主目录 + wrapper，因此沿用
+# AutoReqProv: no + 手写运行时依赖，避免对 /opt 内捆绑 .so 自动生成噪声依赖。
+AutoReqProv: no
+Requires: gtk3, xz-libs, libstdc++, hicolor-icon-theme
+
+# Copr 仅面向 x86_64 与 aarch64；loong64 由官方发布链路单独覆盖。
+ExclusiveArch: x86_64 aarch64
+
+# /opt 捆绑二进制的调试符号对 Copr 使用场景无价值，禁用 debuginfo 子包
+# 以缩短构建时间并避免符号提取工具处理 Flutter engine 产物。
+%global debug_package %{nil}
+
+# Flutter Linux 桌面工具链的系统依赖（官方发布容器内已内置同等能力）。
+BuildRequires: gtk3-devel, clang, cmake, ninja-build, pkgconf-pkg-config
+BuildRequires: git, tar, xz, unzip
+
+%description
+@DESCRIPTION@
+
+%prep
+%setup -q
+
+# SDK 引导按架构分流，统一安装到 %{_builddir}/flutter-sdk：
+#   x86_64  —— 校验 sha256 后解压官方 stable 归档；
+#   aarch64 —— shallow clone 官方仓库 tag，并以 commit 锚点防 tag 漂移，
+#              首次执行 bin/flutter 时会按宿主架构自行下载 dart-sdk。
+%ifarch x86_64
+echo "%{flutter_sha256}  %{SOURCE1}" | sha256sum -c -
+mkdir -p "%{_builddir}/flutter-sdk"
+tar -xJf "%{SOURCE1}" -C "%{_builddir}/flutter-sdk" --strip-components=1
+%else
+git clone --depth 1 --branch "%{flutter_version}" \
+  https://github.com/flutter/flutter.git "%{_builddir}/flutter-sdk"
+# 脚本段由 rpmbuild 以 /bin/sh 执行，保持 POSIX 写法避免依赖 bash。
+cloned_commit="$(git -C "%{_builddir}/flutter-sdk" rev-parse HEAD)"
+if [ "$cloned_commit" != "%{flutter_commit}" ]; then
+  echo "Flutter %{flutter_version} tag moved: $cloned_commit != %{flutter_commit}" >&2
+  exit 1
+fi
+%endif
+
+%build
+# 编译参数与 build/scripts/build-linux-bundle.sh 对齐：
+#   --obfuscate + --split-debug-info 与官方发行产物等价（符号不入包）。
+# 版本文件无需重写：源码归档从发版 tag 树导出，pubspec/app_config 已带
+# 本次版本号；生成源码（*.g.dart 等）按 docs/36 已全部入库，跳过 build_runner。
+export PATH="%{_builddir}/flutter-sdk/bin:$PATH"
+export PUB_CACHE="%{_builddir}/pub-cache"
+flutter --disable-analytics
+flutter config --enable-linux-desktop
+flutter pub get
+flutter build linux --release \
+  --obfuscate \
+  --split-debug-info="%{_builddir}/symbols"
+
+%install
+rm -rf "%{buildroot}"
+install -d -m 755 \
+  "%{buildroot}/opt/%{name}" \
+  "%{buildroot}/usr/bin" \
+  "%{buildroot}/usr/share/applications" \
+  "%{buildroot}/usr/share/icons/hicolor/256x256/apps" \
+  "%{buildroot}/usr/share/metainfo"
+
+cp -a build/linux/*/release/bundle/. "%{buildroot}/opt/%{name}/"
+
+cat > "%{buildroot}/usr/bin/%{name}" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+exec /opt/%{name}/linglong_store "$@"
+EOF
+chmod 755 "%{buildroot}/usr/bin/%{name}"
+
+# 桌面入口、图标与 AppStream 元数据均来自源码归档内 packaging-dist/
+# 的预渲染产物（多语言由 ARB 渲染器在发版时生成），构建阶段零渲染依赖。
+install -m 644 packaging-dist/@DESKTOP_FILENAME@ \
+  "%{buildroot}/usr/share/applications/@DESKTOP_FILENAME@"
+for compat_desktop in packaging-dist/compat/*.desktop; do
+  install -m 644 "$compat_desktop" "%{buildroot}/usr/share/applications/"
+done
+install -m 644 packaging-dist/icons/linglong-store-256.png \
+  "%{buildroot}/usr/share/icons/hicolor/256x256/apps/%{name}.png"
+install -m 644 packaging-dist/metainfo/linglong-store.appdata.xml \
+  "%{buildroot}/usr/share/metainfo/%{name}.appdata.xml"
+
+%files
+%license LICENSE
+/opt/%{name}
+/usr/bin/%{name}
+/usr/share/applications/@DESKTOP_FILENAME@
+@COMPAT_DESKTOP_FILE_ENTRIES@
+/usr/share/icons/hicolor/256x256/apps/%{name}.png
+/usr/share/metainfo/%{name}.appdata.xml

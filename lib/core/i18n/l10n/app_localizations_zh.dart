@@ -2332,3 +2332,2331 @@ class AppLocalizationsZh extends AppLocalizations {
     return '已运行 $elapsed';
   }
 }
+
+/// The translations for Chinese, using the Han script (`zh_Hant`).
+class AppLocalizationsZhHant extends AppLocalizationsZh {
+  AppLocalizationsZhHant() : super('zh_Hant');
+
+  @override
+  String get appTitle => '玲瓏應用商店社群版';
+
+  @override
+  String get linuxDesktopNameNightly => '玲瓏應用商店社群版 Nightly';
+
+  @override
+  String get linuxDesktopGenericName => '應用商店';
+
+  @override
+  String get linuxDesktopComment => '瀏覽、安裝與管理玲瓏應用';
+
+  @override
+  String get linuxDesktopCommentNightly => '用於瀏覽、安裝與管理玲瓏應用的 Nightly 構建';
+
+  @override
+  String get linuxDesktopKeywords => '玲瓏;應用商店;應用;軟體套件;';
+
+  @override
+  String get linuxAppStreamDescription => '用於瀏覽、安裝與管理玲瓏應用的桌面應用商店。';
+
+  @override
+  String get recommend => '推 薦';
+
+  @override
+  String get allApps => '全部應用';
+
+  @override
+  String get ranking => '排行榜';
+
+  @override
+  String get myApps => '我的應用';
+
+  @override
+  String get update => '更 新';
+
+  @override
+  String get settings => '設定';
+
+  @override
+  String get category => '分 類';
+
+  @override
+  String get office => '辦 公';
+
+  @override
+  String get system => '系 統';
+
+  @override
+  String get develop => '開 發';
+
+  @override
+  String get entertainment => '娛 樂';
+
+  @override
+  String get searchPlaceholder => '在這裡搜尋你想搜尋的應用';
+
+  @override
+  String get search => '搜尋';
+
+  @override
+  String get refresh => '重新整理';
+
+  @override
+  String get linglongRecommend => '玲瓏推薦';
+
+  @override
+  String get loading => '載入中...';
+
+  @override
+  String get installing => '安裝中...';
+
+  @override
+  String get success => '成功';
+
+  @override
+  String get failed => '失敗';
+
+  @override
+  String get cancel => '取消';
+
+  @override
+  String get noMoreData => '沒有更多資料了';
+
+  @override
+  String get install => '安 裝';
+
+  @override
+  String get uninstall => '卸 載';
+
+  @override
+  String get open => '打 開';
+
+  @override
+  String get update_action => '更 新';
+
+  @override
+  String get run => '啟 動';
+
+  @override
+  String get confirm => '確認';
+
+  @override
+  String get viewDetail => '檢視詳情';
+
+  @override
+  String get screenShots => '螢幕截圖';
+
+  @override
+  String get versionSelect => '版本選擇';
+
+  @override
+  String get versionNumber => '版本號';
+
+  @override
+  String get appType => '應用型別';
+
+  @override
+  String get channel => '頻道';
+
+  @override
+  String get mode => '模式';
+
+  @override
+  String get repoSource => '儲存庫來源';
+
+  @override
+  String get fileSize => '檔案大小';
+
+  @override
+  String get downloadCount => '下載量';
+
+  @override
+  String get operation => '操作';
+
+  @override
+  String get linglongProcess => '玲瓏處理程序';
+
+  @override
+  String get baseSetting => '基本設定';
+
+  @override
+  String get about => '關於';
+
+  @override
+  String get envMissing => '檢測到目前系統缺少玲瓏環境';
+
+  @override
+  String get envMissingDetail => '檢測到系統中不存在或版本過低的玲瓏元件，需先安裝後才能使用商店。';
+
+  @override
+  String get autoInstall => '自動安裝';
+
+  @override
+  String get manualInstall => '手動安裝';
+
+  @override
+  String get recheck => '重新檢測';
+
+  @override
+  String get exitStore => '退出商店';
+
+  @override
+  String get errorNetwork => '網路連線失敗';
+
+  @override
+  String get errorNetworkDetail => '請檢查網路連線後重試';
+
+  @override
+  String get errorInstallFailed => '安裝失敗';
+
+  @override
+  String get errorUninstallFailed => '解除安裝失敗';
+
+  @override
+  String get errorUpdateFailed => '更新失敗';
+
+  @override
+  String get errorUnknown => '未知錯誤';
+
+  @override
+  String get retry => '重試';
+
+  @override
+  String get downloading => '下載中...';
+
+  @override
+  String get downloadComplete => '下載完成';
+
+  @override
+  String get installComplete => '安裝完成';
+
+  @override
+  String get uninstallComplete => '解除安裝完成';
+
+  @override
+  String get updateComplete => '更新完成';
+
+  @override
+  String get noApps => '暫無應用';
+
+  @override
+  String get noInstalledApps => '暫無已安裝應用';
+
+  @override
+  String get noInstalledAppsHint => '您還沒有安裝任何玲瓏應用，去推薦頁看看吧';
+
+  @override
+  String get noUpdateApps => '暫無可用更新';
+
+  @override
+  String get version => '版本';
+
+  @override
+  String get size => '大小';
+
+  @override
+  String get description => '簡介';
+
+  @override
+  String get developer => '開發者';
+
+  @override
+  String get confirmDelete => '確認刪除';
+
+  @override
+  String get confirmDeleteMessage => '確定要刪除此項嗎？此操作無法撤銷。';
+
+  @override
+  String get confirmUninstall => '確認解除安裝';
+
+  @override
+  String get confirmUninstallMessage => '確定要解除安裝此應用嗎？';
+
+  @override
+  String get noData => '暫無資料';
+
+  @override
+  String get noDataDescription => '這裡還沒有任何內容';
+
+  @override
+  String get pageNotFound => '頁面未找到';
+
+  @override
+  String get pageNotFoundDescription => '抱歉，頁面未找到';
+
+  @override
+  String get backToHome => '返回首頁';
+
+  @override
+  String get searchApps => '搜尋應用...';
+
+  @override
+  String get languageSettings => '語言設定';
+
+  @override
+  String get themeSettings => '主題設定';
+
+  @override
+  String get fontSettings => '字型設定';
+
+  @override
+  String get cacheManagement => '快取管理';
+
+  @override
+  String get storeOptions => '商店選項';
+
+  @override
+  String get fontSettingsHint => '系統字型設定會作為基礎值，下面的調整會在其基礎上疊加。';
+
+  @override
+  String get fontSizeAdjustment => '字型大小';
+
+  @override
+  String get fontWeightAdjustmentLabel => '字型粗細';
+
+  @override
+  String get fontWeightLighter => '更細';
+
+  @override
+  String get fontWeightNormal => '標準';
+
+  @override
+  String get fontWeightBolder => '更粗';
+
+  @override
+  String fontScalePercent(int percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get checkUpdate => '檢查更新';
+
+  @override
+  String currentVersion(String version) {
+    return '目前版本: $version';
+  }
+
+  @override
+  String newVersionFound(String tagName, String currentVersion) {
+    return '發現新版本 $tagName，目前版本 $currentVersion';
+  }
+
+  @override
+  String alreadyLatest(String version) {
+    return '目前已是最新版本 $version';
+  }
+
+  @override
+  String get checkingUpdate => '檢查更新中...';
+
+  @override
+  String get goDownload => '前往下載';
+
+  @override
+  String get updateNow => '立即更新';
+
+  @override
+  String get updateDetectingInstallation => '正在檢測安裝方式...';
+
+  @override
+  String get updateResolvingAsset => '正在選擇安裝套件...';
+
+  @override
+  String get updateDownloading => '正在下載更新套件...';
+
+  @override
+  String get updateVerifying => '正在校驗更新套件...';
+
+  @override
+  String get updateInstalling => '正在安裝更新...';
+
+  @override
+  String get updateSucceeded => '更新已安裝，請關閉應用後重新開啟以使用新版本';
+
+  @override
+  String get updateFailed => '更新失敗';
+
+  @override
+  String get updateCancelled => '更新已取消';
+
+  @override
+  String get updateRetry => '重試';
+
+  @override
+  String get updateManualInstallHint => '無法自動更新，請前往下載頁手動安裝';
+
+  @override
+  String get updateUnsupportedArch => '目前架構暫不支援自動安裝';
+
+  @override
+  String get updateChecksumMissing => '更新套件校驗資訊缺失，已中止安裝';
+
+  @override
+  String get updateChecksumFailed => '更新套件校驗失敗，已中止安裝';
+
+  @override
+  String get cacheSize => '快取大小';
+
+  @override
+  String get startupCheckUpdate => '啟動時檢查商店版本更新';
+
+  @override
+  String get startupCheckUpdateDesc => '每次啟動時檢測是否有新版本可用';
+
+  @override
+  String get systemNotifications => '系統通知';
+
+  @override
+  String get systemNotificationsDescription => '一鍵更新完成後，在桌面通知中顯示更新結果';
+
+  @override
+  String get userExperienceProgram => '使用者體驗計畫';
+
+  @override
+  String get userExperienceProgramDesc => '傳送匿名使用統計，幫助我們改進商店';
+
+  @override
+  String get userExperienceProgramDialogIntro =>
+      '加入使用者體驗計畫，你正在幫助玲瓏商店變得更好。我們只收集少量匿名資訊，用於改進應用推薦與下載體驗：';
+
+  @override
+  String get userExperienceProgramDialogItemIdentity => '匿名裝置識別碼（一串隨機字元，無法識別你）';
+
+  @override
+  String get userExperienceProgramDialogItemSystem =>
+      '系統架構、系統版本與核心資訊、主機名稱、玲瓏環境版本';
+
+  @override
+  String get userExperienceProgramDialogItemApps =>
+      '已安裝的玲瓏應用清單，以及應用的安裝、更新與解除安裝記錄';
+
+  @override
+  String get userExperienceProgramDialogItemNetwork => '網路地址（僅用於地區統計）';
+
+  @override
+  String get userExperienceProgramDialogFooter =>
+      '這些資訊不會與你的真實身份關聯，也不會用於識別你。你可以隨時關閉開關，關閉後不會再回傳任何資料。';
+
+  @override
+  String get a11yUserExperienceProgramInfo => '檢視使用者體驗計畫採集的資訊說明';
+
+  @override
+  String updateBatchAllSucceededTitle(int count) {
+    return '$count 個應用已更新';
+  }
+
+  @override
+  String get updateBatchFinishedTitle => '批次更新已結束';
+
+  @override
+  String get updateBatchNoSuccessTitle => '應用更新未完成';
+
+  @override
+  String updateBatchResultSummary(String summary) {
+    return '結果：$summary';
+  }
+
+  @override
+  String get updateBatchResultSeparator => '，';
+
+  @override
+  String updateBatchSucceededCount(int count) {
+    return '成功 $count 個';
+  }
+
+  @override
+  String updateBatchFailedCount(int count) {
+    return '失敗 $count 個';
+  }
+
+  @override
+  String updateBatchCancelledCount(int count) {
+    return '取消 $count 個';
+  }
+
+  @override
+  String updateBatchInterruptedCount(int count) {
+    return '中斷 $count 個';
+  }
+
+  @override
+  String get updateBatchAppNameSeparator => '、';
+
+  @override
+  String updateBatchUpdatedApps(String names) {
+    return '已更新：$names';
+  }
+
+  @override
+  String updateBatchUpdatedAppsOverflow(String names, int remainingCount) {
+    return '已更新：$names 等 $remainingCount 個應用';
+  }
+
+  @override
+  String get softwareRendering => '軟體渲染';
+
+  @override
+  String get softwareRenderingEnabled => '軟體渲染';
+
+  @override
+  String get hardwareRenderingEnabled => '硬體渲染';
+
+  @override
+  String get rendererModeDetecting => '正在檢測目前渲染狀態…';
+
+  @override
+  String get rendererModeDetectFailed => '無法取得目前渲染狀態，但仍可儲存下次啟動時使用的渲染方式。';
+
+  @override
+  String rendererModeCurrentStatus(Object mode, Object reason) {
+    return '目前使用$mode。$reason';
+  }
+
+  @override
+  String rendererModeReasonEnvironment(Object value) {
+    return '目前渲染模式由環境變數 $value 控制。';
+  }
+
+  @override
+  String get rendererModeReasonUserPreference => '目前已按儲存的設定生效。';
+
+  @override
+  String get rendererModeReasonCpuFallback => '為提高相容性，目前裝置預設使用軟體渲染。';
+
+  @override
+  String get rendererModeReasonDefault => '目前裝置預設使用硬體渲染。';
+
+  @override
+  String rendererModeEnvLocked(Object value) {
+    return '檢測到環境變數 $value。目前渲染模式由系統環境控制，無法在這裡修改。';
+  }
+
+  @override
+  String rendererModeNextLaunchStatus(Object mode) {
+    return '下次啟動時將使用$mode。';
+  }
+
+  @override
+  String get rendererModeWhitelistHint => '目前裝置建議保留軟體渲染，以取得更穩定的顯示效果。';
+
+  @override
+  String get rendererModeHardwareRiskHint =>
+      '下次啟動將使用硬體渲染。如遇介面無法正常顯示，可使用下面的命令恢復。';
+
+  @override
+  String get rendererModeDisableWarningTitle => '確認關閉軟體渲染';
+
+  @override
+  String get rendererModeDisableWarningMessage =>
+      '目前裝置關閉軟體渲染後，應用可能無法正常顯示。建議保留軟體渲染，以取得更穩定的顯示效果。';
+
+  @override
+  String rendererModeDetectedCpu(Object cpu) {
+    return '目前裝置處理器：$cpu';
+  }
+
+  @override
+  String get rendererModeDisableBlackScreenHint =>
+      '如果應用下次啟動後無法正常顯示，請在終端機執行下面的命令，然後重新開啟應用。';
+
+  @override
+  String get rendererModeDataDirectoryLabel => '資料目錄';
+
+  @override
+  String get rendererModeDeleteCommandLabel => '刪除命令';
+
+  @override
+  String get rendererModeSaveCommandHint => '建議先複製並儲存此命令，以便應用無法正常顯示時進行恢復。';
+
+  @override
+  String get rendererModeDisableConfirm => '繼續關閉';
+
+  @override
+  String get rendererModeSavedSoftware => '已切換為軟體渲染，將在下次啟動時生效。';
+
+  @override
+  String get rendererModeSavedHardware => '已切換為硬體渲染，將在下次啟動時生效。';
+
+  @override
+  String get rendererModeSaveFailed => '儲存渲染設定失敗，請稍後重試。';
+
+  @override
+  String get showBaseServices => '顯示基礎執行服務';
+
+  @override
+  String get showBaseServicesDesc => '在已安裝清單中顯示底層基礎執行服務';
+
+  @override
+  String get cleanDeprecatedServices => '清理廢棄基礎服務';
+
+  @override
+  String get cleanDeprecatedServicesDesc => '移除已不再使用的基礎執行服務，釋放磁碟空間';
+
+  @override
+  String get checkNewVersion => '檢查新版本';
+
+  @override
+  String get feedbackMenu => '意見回饋';
+
+  @override
+  String get officialWebsite => '官網';
+
+  @override
+  String get communityExchange => '社群交流';
+
+  @override
+  String get aboutDevelopers => '關於開發者';
+
+  @override
+  String get feedbackTitle => '意見回饋';
+
+  @override
+  String get uploadLog => '同時上傳日誌檔案';
+
+  @override
+  String get noPrivacyInfo => '日誌中不包含個人隱私資訊';
+
+  @override
+  String get submitFeedback => '提交';
+
+  @override
+  String get feedbackHint => '請填寫問題概述或描述';
+
+  @override
+  String get feedbackSuccess => '感謝您的回饋！';
+
+  @override
+  String get feedbackFailed => '回饋提交失敗，請稍後重試';
+
+  @override
+  String get confirmExit => '確認退出';
+
+  @override
+  String get exitWithInstalling => '有正在進行的安裝任務，確定要退出嗎？';
+
+  @override
+  String get exitBtn => '退出';
+
+  @override
+  String get downloadManager => '下載管理';
+
+  @override
+  String get downloadWaitingForTask => '等待下載任務開始';
+
+  @override
+  String downloadRealtimeSpeed(String speed) {
+    return '即時速度 $speed';
+  }
+
+  @override
+  String downloadHistoryCount(int count) {
+    return '$count 條記錄';
+  }
+
+  @override
+  String ogInstallRequestReceived(String appName) {
+    return '已收到來自網頁的安裝請求：$appName';
+  }
+
+  @override
+  String ogInstallEnqueued(String appName) {
+    return '已加入下載管理：$appName';
+  }
+
+  @override
+  String get ogInstallInvalidLink => '無法識別網頁安裝連結，僅支援 og://appId';
+
+  @override
+  String get ogInstallEnvironmentUnavailable => '玲瓏執行環境不可用，暫不能從網頁自動安裝';
+
+  @override
+  String ogInstallDuplicate(String appName) {
+    return '$appName 已在下載管理中';
+  }
+
+  @override
+  String get ogInstallDetailFailed => '無法取得應用資訊，安裝未開始';
+
+  @override
+  String ogInstallDetailFailedWithError(String error) {
+    return '無法取得應用資訊，安裝未開始：$error';
+  }
+
+  @override
+  String get clearRecords => '清空記錄';
+
+  @override
+  String get noDownloadTasks => '暫無下載任務';
+
+  @override
+  String cannotOpenLink(String url) {
+    return '無法開啟連結: $url';
+  }
+
+  @override
+  String get envCheckPassed => '安裝完成，環境檢測透過';
+
+  @override
+  String get envCheckFailed => '安裝完成，但環境仍異常，請檢查';
+
+  @override
+  String launching(String appName) {
+    return '正在啟動 $appName...';
+  }
+
+  @override
+  String launchFailed(String error) {
+    return '啟動失敗: $error';
+  }
+
+  @override
+  String copied(String value) {
+    return '已複製：$value';
+  }
+
+  @override
+  String get shareLink => '分享';
+
+  @override
+  String shareMessage(String name) {
+    return '來看看「$name」這個應用';
+  }
+
+  @override
+  String get linkCopied => '連結已複製，快去分享吧';
+
+  @override
+  String get shareFailed => '分享失敗';
+
+  @override
+  String get createDesktopShortcut => '建立桌面快捷方式';
+
+  @override
+  String get appDetailTitle => '應用詳情';
+
+  @override
+  String get appNotFound => '未找到應用資訊';
+
+  @override
+  String get noVersionHistory => '暫無版本歷史';
+
+  @override
+  String get installedBadge => '已安裝';
+
+  @override
+  String get versionInstallTargetMissing => '未找到對應已安裝版本，請重新整理後重試';
+
+  @override
+  String uninstallFailed(String result) {
+    return '解除安裝失敗: $result';
+  }
+
+  @override
+  String uninstallSuccess(String name) {
+    return '$name 已解除安裝';
+  }
+
+  @override
+  String uninstallError(String error) {
+    return '解除安裝異常: $error';
+  }
+
+  @override
+  String get commandCopied => '命令已複製到剪貼簿，請貼上到終端機中執行';
+
+  @override
+  String get copy => '複製';
+
+  @override
+  String get copyLog => '複製日誌';
+
+  @override
+  String get copySucceeded => '複製成功';
+
+  @override
+  String get copyErrorMessage => '複製錯誤資訊';
+
+  @override
+  String get skipCheck => '跳過檢測';
+
+  @override
+  String get loadFailed => '載入失敗';
+
+  @override
+  String get shortcutCreated => '快捷方式已建立';
+
+  @override
+  String get appComments => '留言區';
+
+  @override
+  String get appCommentsEmpty => '還沒有留言，來寫第一條吧';
+
+  @override
+  String get commentInputHint => '說說這個應用的使用體驗';
+
+  @override
+  String get submitComment => '發表留言';
+
+  @override
+  String get commentVersionLabel => '關聯版本';
+
+  @override
+  String get anonymousComment => '匿名訪客';
+
+  @override
+  String get commentHelpful => '有幫助';
+
+  @override
+  String get commentNotHelpful => '沒幫助';
+
+  @override
+  String get commentAnonymousHint => '匿名留言，按最新時間排序展示';
+
+  @override
+  String get commentSubmitSuccess => '留言已提交';
+
+  @override
+  String commentSubmitFailed(String error) {
+    return '留言提交失敗: $error';
+  }
+
+  @override
+  String shortcutCreateFailed(String error) {
+    return '建立失敗: $error';
+  }
+
+  @override
+  String get envCheckTitle => '環境檢測';
+
+  @override
+  String get checkingLinglongEnv => '正在檢測玲瓏環境...';
+
+  @override
+  String get unknownStatus => '未知狀態';
+
+  @override
+  String get llCliVersion => 'll-cli 版本';
+
+  @override
+  String get notDetected => '未檢測到';
+
+  @override
+  String get errorMessage => '錯誤資訊';
+
+  @override
+  String get repoShowFailureTitle => '儲存庫讀取命令執行失敗';
+
+  @override
+  String repoShowFailureCommand(String command) {
+    return '執行 $command 讀取玲瓏儲存庫配置失敗。';
+  }
+
+  @override
+  String get repoShowFailureReason =>
+      '該命令需要透過系統服務 org.deepin.linglong.PackageManager.service 讀取儲存庫配置；服務未執行時會返回失敗。';
+
+  @override
+  String get repoShowFailureInstalledQuestion => '已經安裝好了應用環境？';
+
+  @override
+  String get repoShowFailureRestartHint =>
+      '如果已經安裝 ll-cli 和應用環境，可以嘗試重新啟動該系統服務後重新檢測。';
+
+  @override
+  String get restartPackageManagerService =>
+      '嘗試重新啟動 org.deepin.linglong.PackageManager.service';
+
+  @override
+  String get restartingPackageManagerService =>
+      '正在重新啟動 org.deepin.linglong.PackageManager.service...';
+
+  @override
+  String get packageManagerServiceRestartPassed => '服務已重新啟動，環境檢測透過';
+
+  @override
+  String get packageManagerServiceRestartStillFailed =>
+      '服務已重新啟動，但環境仍異常，請檢視錯誤資訊';
+
+  @override
+  String packageManagerServiceRestartFailed(String error) {
+    return '服務重新啟動失敗: $error';
+  }
+
+  @override
+  String get installingLinglong => '正在安裝...';
+
+  @override
+  String get openInstallLogDirectory => '開啟日誌目錄';
+
+  @override
+  String cannotOpenDirectory(String path) {
+    return '無法開啟目錄: $path';
+  }
+
+  @override
+  String get appIntroduction => '應用介紹';
+
+  @override
+  String get collapse => '收起';
+
+  @override
+  String get expandAll => '展開全部';
+
+  @override
+  String get collapseCategories => '收起分類';
+
+  @override
+  String get expandCategories => '展開分類';
+
+  @override
+  String get packageName => '套件名稱';
+
+  @override
+  String get architecture => '架構';
+
+  @override
+  String get channelLabel => '頻道';
+
+  @override
+  String get runtime => '執行時';
+
+  @override
+  String get license => '許可證';
+
+  @override
+  String get homepage => '主頁';
+
+  @override
+  String get appInfo => '應用資訊';
+
+  @override
+  String get versionHistory => '版本歷史';
+
+  @override
+  String get versionListLoadFailed => '版本清單載入失敗，請重試';
+
+  @override
+  String get versionListUpdateFailed => '版本清單更新失敗，顯示最近一次結果';
+
+  @override
+  String get uninstallApp => '解除安裝應用';
+
+  @override
+  String uninstallConfirmMessage(String name) {
+    return '確定要解除安裝 $name 嗎？\n解除安裝後應用資料將被刪除，此操作不可恢復。';
+  }
+
+  @override
+  String get noDescription => '暫無描述';
+
+  @override
+  String get categoryLabel => '分類';
+
+  @override
+  String get searchNotFound => '未找到相關應用';
+
+  @override
+  String get searchTryOtherKeywords => '嘗試使用其他關鍵字搜尋';
+
+  @override
+  String get searchInputHint => '在頂部搜尋框輸入關鍵字';
+
+  @override
+  String get searchPressEnter => '按 Enter 開始搜尋應用';
+
+  @override
+  String searchResultCount(int count) {
+    return '找到 $count 個結果';
+  }
+
+  @override
+  String get searchInstalledApps => '搜尋已安裝的應用';
+
+  @override
+  String get noMatchingApp => '未找到相符的應用';
+
+  @override
+  String noMatchingAppHint(String query) {
+    return '沒有找到「$query」相關的應用';
+  }
+
+  @override
+  String updateCount(int count) {
+    return '共 $count 個應用可更新';
+  }
+
+  @override
+  String ignoredUpdatesCount(int count) {
+    return '已忽略（$count）';
+  }
+
+  @override
+  String get ignoredUpdatesTitle => '已忽略的更新';
+
+  @override
+  String get ignoredUpdatesEmptyTitle => '暫無已忽略的應用';
+
+  @override
+  String get ignoredUpdatesEmptyDescription => '從可更新應用的更多選單中，可以持續忽略不想升級的應用。';
+
+  @override
+  String get ignoreAppUpdates => '忽略此應用更新';
+
+  @override
+  String get restoreUpdateNotifications => '恢復更新提醒';
+
+  @override
+  String ignoredVersion(String version) {
+    return '忽略時版本：$version';
+  }
+
+  @override
+  String ignoreUpdateSuccess(String appName) {
+    return '已忽略 $appName 的後續更新，可在「已忽略」中恢復';
+  }
+
+  @override
+  String ignoreUpdateActiveTask(String appName) {
+    return '$appName 已在更新佇列中，暫時不能忽略';
+  }
+
+  @override
+  String get ignoreUpdateFailed => '儲存忽略更新設定失敗，請重試';
+
+  @override
+  String get ignoreUpdateInvalidApp => '無法忽略此應用：應用識別碼無效';
+
+  @override
+  String restoreUpdateSuccess(String appName) {
+    return '已恢復 $appName 的更新提醒';
+  }
+
+  @override
+  String get restoreUpdateFailed => '恢復更新提醒失敗，請重試';
+
+  @override
+  String get restoreUpdateRefreshFailed => '已恢復更新提醒，但檢查更新失敗，可稍後重試';
+
+  @override
+  String a11yManageIgnoredUpdates(int count) {
+    return '管理已忽略的更新，共 $count 個應用';
+  }
+
+  @override
+  String a11yIgnoreAppUpdates(String appName) {
+    return '忽略 $appName 的後續更新';
+  }
+
+  @override
+  String a11yUpdateAppMoreActions(String appName) {
+    return '$appName 的更多更新操作';
+  }
+
+  @override
+  String a11yRestoreAppUpdates(String appName) {
+    return '恢復 $appName 的更新提醒';
+  }
+
+  @override
+  String a11yIgnoredUpdateItem(String appName, String appId, String version) {
+    return '$appName，應用 ID $appId，忽略時版本 $version';
+  }
+
+  @override
+  String get updating => '正在更新...';
+
+  @override
+  String get updateAll => '全部更新';
+
+  @override
+  String get updateCheckFailed => '檢查更新失敗';
+
+  @override
+  String get noUpdate => '暫無更新';
+
+  @override
+  String get allAppsUpToDate => '您的所有應用都是最新版本';
+
+  @override
+  String get noMore => '沒有更多了';
+
+  @override
+  String get appTitleShort => '玲瓏應用商店';
+
+  @override
+  String get detectingEnv => '正在檢測玲瓏環境...';
+
+  @override
+  String get stepEnvCheck => '環境檢測';
+
+  @override
+  String get stepAppLoad => '應用載入';
+
+  @override
+  String get stepUpdateCheck => '更新檢查';
+
+  @override
+  String get stepQueueRecovery => '佇列恢復';
+
+  @override
+  String get launchFailedTitle => '啟動失敗';
+
+  @override
+  String get skip => '跳過';
+
+  @override
+  String get cannotGetVersion => '無法取得版本資訊';
+
+  @override
+  String newVersionAvailable(String version, String current) {
+    return '發現新版本 $version！\n目前版本：$current';
+  }
+
+  @override
+  String get languageZh => '中文';
+
+  @override
+  String get languageSelfName => '繁體中文';
+
+  @override
+  String get themeFollowSystem => '跟隨系統';
+
+  @override
+  String get themeLight => '淺色模式';
+
+  @override
+  String get themeDark => '深色模式';
+
+  @override
+  String get clearingCache => '清除中...';
+
+  @override
+  String get clearCache => '清除快取';
+
+  @override
+  String get clearCacheDesc => '清除快取可以釋放儲存空間，但會重新下載應用圖示和部分資料。';
+
+  @override
+  String get clearCacheConfirm => '確認清除快取';
+
+  @override
+  String get clearCacheMessage => '確定要清除所有快取嗎？';
+
+  @override
+  String get cacheCleared => '快取已清除';
+
+  @override
+  String get clearCacheFailed => '清除快取失敗';
+
+  @override
+  String get appVersion => '應用版本';
+
+  @override
+  String get appCount => '已收錄應用數量';
+
+  @override
+  String get systemArch => '系統架構';
+
+  @override
+  String get linglongVersion => '玲瓏版本';
+
+  @override
+  String get checkNetwork => '請檢查網路連線後重試';
+
+  @override
+  String get copyContainerCommand => '複製進入容器命令';
+
+  @override
+  String get commandCopiedToClipboard => '命令已複製到剪貼簿';
+
+  @override
+  String get copyAppId => '複製應用 ID';
+
+  @override
+  String stopSuccess(String name) {
+    return '$name 已停止';
+  }
+
+  @override
+  String get stopFailed => '停止失敗';
+
+  @override
+  String get processRefreshFailed => '處理程序清單重新整理失敗...';
+
+  @override
+  String get noRunningApps => '目前沒有執行中的玲瓏應用';
+
+  @override
+  String get notRefreshed => '尚未重新整理';
+
+  @override
+  String get lastRefresh => '上次重新整理';
+
+  @override
+  String get refreshing => '重新整理中';
+
+  @override
+  String get appName => '應用名稱';
+
+  @override
+  String get versionNo => '版本號';
+
+  @override
+  String get source => '來源';
+
+  @override
+  String get containerId => '容器 ID';
+
+  @override
+  String get appRunningTitle => '應用正在執行';
+
+  @override
+  String get appRunningMessage => '該應用正在執行，需要先關閉才能解除安裝';
+
+  @override
+  String get downgradeConfirm => '確認降級';
+
+  @override
+  String get downgradeMessage => '目標版本低於目前版本，確定要降級嗎？';
+
+  @override
+  String get alreadyInstalledVersion => '已安裝此版本';
+
+  @override
+  String get waiting => '等待中';
+
+  @override
+  String get completed => '已完成';
+
+  @override
+  String get remove => '移除';
+
+  @override
+  String get feedbackCategories => '商店缺陷,應用更新,應用故障';
+
+  @override
+  String get feedbackCategory => '問題分類';
+
+  @override
+  String get overview => '概述';
+
+  @override
+  String get overviewHint => '請簡要描述問題';
+
+  @override
+  String get detailDescription => '詳細描述';
+
+  @override
+  String get none => '無';
+
+  @override
+  String get clearSearch => '清除搜尋詞';
+
+  @override
+  String get minimize => '最小化';
+
+  @override
+  String get restore => '還原';
+
+  @override
+  String get maximize => '最大化';
+
+  @override
+  String get close => '關閉';
+
+  @override
+  String get goRecommend => '去推薦頁看看吧';
+
+  @override
+  String get processRefreshFailedHint => '處理程序清單重新整理失敗，目前顯示的是上次成功取得的資料';
+
+  @override
+  String get moreActions => '更多操作';
+
+  @override
+  String appRunningUninstallMessage(String name) {
+    return '$name 目前正在執行中，解除安裝前需要強制關閉所有執行例項。\n是否強制關閉並解除安裝？';
+  }
+
+  @override
+  String get forceCloseAndUninstall => '強制關閉並解除安裝';
+
+  @override
+  String downgradeMessageWithVersion(
+    String appName,
+    String currentVersion,
+    String targetVersion,
+  ) {
+    return '目前已安裝 $appName v$currentVersion，您嘗試安裝較低的版本 v$targetVersion。\n降級安裝可能導致功能異常，是否繼續？';
+  }
+
+  @override
+  String get confirmDowngrade => '確認降級';
+
+  @override
+  String reinstallMessage(String appName, String version) {
+    return '$appName v$version 已安裝。\n是否重新安裝（將覆蓋現有安裝）？';
+  }
+
+  @override
+  String get forceReinstall => '強制重新安裝';
+
+  @override
+  String get installingLabel => '正在安裝';
+
+  @override
+  String waitingCount(int count) {
+    return '等待中 ($count)';
+  }
+
+  @override
+  String get detailDescriptionHint => '請詳細描述您遇到的問題';
+
+  @override
+  String get linglongCommunity => '玲瓏社群';
+
+  @override
+  String get unknown => '未知';
+
+  @override
+  String get copyPid => '複製 PID';
+
+  @override
+  String get copyContainerId => '複製容器 ID';
+
+  @override
+  String get refreshProcessList => '重新整理處理程序清單';
+
+  @override
+  String get stopProcess => '停止處理程序';
+
+  @override
+  String get checkUpdateNetworkError => '檢查更新失敗，請檢查網路連線';
+
+  @override
+  String get pruneServiceTitle => '清理廢棄基礎服務';
+
+  @override
+  String get pruneServiceMessage =>
+      '將執行 ll-cli prune 命令，移除所有已不再被任何應用依賴的基礎執行服務。\n\n清理後可節省磁碟空間，但如進行中有其他操作可能需要重新下載。';
+
+  @override
+  String get pruneServiceSuccess => '廢棄基礎服務已清理';
+
+  @override
+  String get pruneServiceFailed => '清理失敗，請稍後重試';
+
+  @override
+  String get clearCacheHint => '清除快取可以釋放儲存空間，但可能會導致應用需要重新載入資料。';
+
+  @override
+  String get pruneBaseServiceMessage =>
+      '將執行 ll-cli prune 命令，移除所有已不再被任何應用依賴的基礎執行服務。\n\n清理後可節省磁碟空間，但如進行中有其他操作可能需要重新下載。';
+
+  @override
+  String get clean => '清理';
+
+  @override
+  String get baseServiceCleaned => '廢棄基礎服務已清理';
+
+  @override
+  String get cleanFailed => '清理失敗，請稍後重試';
+
+  @override
+  String appCountValue(int count) {
+    return '$count 個';
+  }
+
+  @override
+  String get llCliVersionLabel => 'll-cli 版本';
+
+  @override
+  String get rankingTabDownload => '下載榜';
+
+  @override
+  String get rankingTabRising => '新秀榜';
+
+  @override
+  String get rankingTabUpdate => '更新榜';
+
+  @override
+  String get rankingTabHot => '熱門榜';
+
+  @override
+  String get sidebarAllApps => '全 部';
+
+  @override
+  String get sidebarRanking => '排 行';
+
+  @override
+  String get installErrorGeneric => '安裝失敗';
+
+  @override
+  String get installErrorTimeout => '安裝失敗: 進度逾時';
+
+  @override
+  String get installCancelled => '安裝已取消';
+
+  @override
+  String get installErrorUnknown => '安裝失敗: 未知錯誤';
+
+  @override
+  String get installErrorAppNotFoundRemote => '安裝失敗: 遠端儲存庫找不到應用';
+
+  @override
+  String get installErrorAppNotFoundLocal => '安裝失敗: 本地找不到應用';
+
+  @override
+  String get installFailed => '安裝失敗';
+
+  @override
+  String get installErrorAppNotInRemote => '安裝失敗: 遠端無該應用';
+
+  @override
+  String get installErrorSameVersion => '安裝失敗: 已安裝同版本';
+
+  @override
+  String get installErrorDowngrade => '安裝失敗: 需要降級安裝';
+
+  @override
+  String get installErrorModuleVersionNotAllowed => '安裝失敗: 安裝模組時不允許指定版本';
+
+  @override
+  String get installErrorModuleRequiresApp => '安裝失敗: 安裝模組需先安裝應用';
+
+  @override
+  String get installErrorModuleExists => '安裝失敗: 模組已存在';
+
+  @override
+  String get installErrorArchMismatch => '安裝失敗: 架構不相符';
+
+  @override
+  String get installErrorModuleNotInRemote => '安裝失敗: 遠端無該模組';
+
+  @override
+  String get installErrorMissingErofs => '安裝失敗: 缺少 erofs 解壓縮命令';
+
+  @override
+  String get installErrorUnsupportedFormat => '安裝失敗: 不支援的檔案格式';
+
+  @override
+  String get installErrorNetwork => '安裝失敗: 網路錯誤';
+
+  @override
+  String get installErrorInvalidRef => '安裝失敗: 無效引用';
+
+  @override
+  String get installErrorUnknownArch => '安裝失敗: 未知架構';
+
+  @override
+  String installErrorCode(int code) {
+    return '安裝失敗: 錯誤碼 $code';
+  }
+
+  @override
+  String get installStatusStarting => '開始安裝';
+
+  @override
+  String get installStatusInstallingApp => '正在安裝應用';
+
+  @override
+  String get installStatusInstallingRuntime => '正在安裝執行時';
+
+  @override
+  String get installStatusInstallingBase => '正在安裝基礎套件';
+
+  @override
+  String get installStatusDownloadingMeta => '正在下載中繼資料';
+
+  @override
+  String get installStatusDownloadingFiles => '正在下載檔案';
+
+  @override
+  String get installStatusPostProcessing => '安裝後處理';
+
+  @override
+  String get installStatusCompleted => '安裝完成';
+
+  @override
+  String get installStatusProcessing => '正在處理';
+
+  @override
+  String waitingForOperation(String operation) {
+    return '等待$operation...';
+  }
+
+  @override
+  String get operationInstall => '安裝';
+
+  @override
+  String get operationUpdate => '更新';
+
+  @override
+  String operationPreparing(String operation, String appId) {
+    return '準備$operation $appId...';
+  }
+
+  @override
+  String operationCancelled(String operation) {
+    return '$operation已取消';
+  }
+
+  @override
+  String operationCompleted(String operation) {
+    return '$operation完成';
+  }
+
+  @override
+  String operationUnknown(String operation) {
+    return '$operation狀態未知';
+  }
+
+  @override
+  String operationConfirmFailed(String operation) {
+    return '無法確認$operation結果';
+  }
+
+  @override
+  String operationTimeout(String operation) {
+    return '$operation逾時';
+  }
+
+  @override
+  String operationFailed(String operation) {
+    return '$operation失敗';
+  }
+
+  @override
+  String get taskCrashInterrupted => '應用崩潰，任務中斷';
+
+  @override
+  String get taskCrashRetryHint => '應用在執行過程中崩潰，請重試';
+
+  @override
+  String uninstallFailedWithError(String error) {
+    return '解除安裝失敗: $error';
+  }
+
+  @override
+  String uninstallException(String error) {
+    return '解除安裝異常: $error';
+  }
+
+  @override
+  String stopFailedWithError(String error) {
+    return '終止失敗: $error';
+  }
+
+  @override
+  String stopException(String error) {
+    return '終止異常: $error';
+  }
+
+  @override
+  String shortcutCreatedWithPath(String path) {
+    return '快捷方式已建立: $path';
+  }
+
+  @override
+  String shortcutCreateFailedWithError(String error) {
+    return '建立失敗: $error';
+  }
+
+  @override
+  String pruneFailedWithError(String error) {
+    return '清理失敗: $error';
+  }
+
+  @override
+  String pruneException(String error) {
+    return '清理異常: $error';
+  }
+
+  @override
+  String get getVersionFailed => '取得版本失敗';
+
+  @override
+  String get llCliNotInstalled => 'll-cli 未安裝';
+
+  @override
+  String get uosEnvInstallHint =>
+      'UOS 系統安裝玲瓏環境前，請先開啟系統的開發者模式，並確保目前帳號可取得 root 權限（設定-通用-開發者選項-進入開發者模式，辦公系統建議諮詢 IT 謹慎操作）。';
+
+  @override
+  String get uosAppInstallFailureHint =>
+      '若目前為 UOS 系統，請確認是否已開啟系統的開發者模式（設定-通用-開發者選項-進入開發者模式，辦公系統建議諮詢 IT 謹慎操作）。';
+
+  @override
+  String get appInfoUnavailable => '無法取得應用資訊';
+
+  @override
+  String shortcutCreateException(String error) {
+    return '建立快捷方式失敗: $error';
+  }
+
+  @override
+  String get waitingForInstall => '等待安裝';
+
+  @override
+  String get cancelInstall => '取消安裝';
+
+  @override
+  String get uninstallBlockedTitle => '暫時無法解除安裝';
+
+  @override
+  String uninstallBlockedMessage(String activeTaskName) {
+    return '目前正在安裝/更新「$activeTaskName」。玲瓏暫不支援同時執行安裝和解除安裝。請等待目前任務完成，或先取消目前任務後再解除安裝。';
+  }
+
+  @override
+  String get iKnow => '我知道了';
+
+  @override
+  String get viewDownloadManager => '檢視下載管理';
+
+  @override
+  String a11ySearchByTag(Object tag) {
+    return '按標籤搜尋：$tag';
+  }
+
+  @override
+  String a11yRemoveSearchTag(Object tag) {
+    return '移除搜尋標籤：$tag';
+  }
+
+  @override
+  String a11yInstallApp(Object appName) {
+    return '安裝 $appName';
+  }
+
+  @override
+  String a11yUpdateApp(Object appName) {
+    return '更新 $appName';
+  }
+
+  @override
+  String a11yOpenApp(Object appName) {
+    return '開啟 $appName';
+  }
+
+  @override
+  String a11yUninstallApp(Object appName) {
+    return '解除安裝 $appName';
+  }
+
+  @override
+  String get a11ySearchBox => '搜尋應用';
+
+  @override
+  String get a11ySearchInputHint => '輸入關鍵字搜尋';
+
+  @override
+  String get a11yCommentInputHint => '輸入留言內容';
+
+  @override
+  String get a11ySidebarNav => '側邊欄導航';
+
+  @override
+  String a11yAppCard(Object appName, Object version, Object status) {
+    return '$appName，版本 $version，$status';
+  }
+
+  @override
+  String a11yRankingItem(Object rank, Object appName) {
+    return '排名第 $rank，$appName';
+  }
+
+  @override
+  String a11yProcessItem(Object name, Object pid) {
+    return '處理程序 $name，PID $pid';
+  }
+
+  @override
+  String a11yDownloadItem(Object appName, Object percent) {
+    return '下載 $appName，進度 $percent%';
+  }
+
+  @override
+  String get a11yRecommendPage => '推薦';
+
+  @override
+  String get a11yAllAppsPage => '全部應用';
+
+  @override
+  String get a11yRankingPage => '排行榜';
+
+  @override
+  String get a11yMyAppsPage => '我的應用';
+
+  @override
+  String get a11ySettingsPage => '設定';
+
+  @override
+  String get a11yAppDetailPage => '應用詳情';
+
+  @override
+  String get a11yScreenshotArea => '截圖區域';
+
+  @override
+  String get a11yCommentSection => '留言區';
+
+  @override
+  String get a11yCarouselArea => '輪播區域';
+
+  @override
+  String get a11yAppListArea => '應用清單';
+
+  @override
+  String get a11ySidebarArea => '側邊欄';
+
+  @override
+  String get a11yMinimize => '最小化';
+
+  @override
+  String get a11yMaximize => '最大化';
+
+  @override
+  String get a11yRestore => '還原';
+
+  @override
+  String get a11yClose => '關閉';
+
+  @override
+  String get a11yPrevious => '上一個';
+
+  @override
+  String get a11yNext => '下一個';
+
+  @override
+  String get a11yTabSelected => '已選中';
+
+  @override
+  String get a11yTabNotSelected => '未選中';
+
+  @override
+  String get a11yStatusInstalled => '已安裝';
+
+  @override
+  String get a11yStatusUpdatable => '可更新';
+
+  @override
+  String get a11yStatusNotInstalled => '未安裝';
+
+  @override
+  String get noAppsInCategory => '該分類下暫無應用';
+
+  @override
+  String get noRanking => '暫無排行';
+
+  @override
+  String get noRecommend => '暫無推薦';
+
+  @override
+  String get installTimeout => '安裝逾時：長時間未收到進度更新';
+
+  @override
+  String get downloadManagerSlowInstallHint => '如果進度看起來較慢，可能正在安裝軟體必備依賴，請再等等……';
+
+  @override
+  String get loadingInstalledApps => '正在載入已安裝應用...';
+
+  @override
+  String get appDescriptionPlaceholder => '應用描述';
+
+  @override
+  String get rankingTabNewUpload => '最新上架榜';
+
+  @override
+  String get rankingTabDownloadCount => '下載量榜';
+
+  @override
+  String uploadedXHoursAgo(int count) {
+    return '$count小時前上架';
+  }
+
+  @override
+  String uploadedXDaysAgo(int count) {
+    return '$count天前上架';
+  }
+
+  @override
+  String uploadedOnDate(String date) {
+    return '$date上架';
+  }
+
+  @override
+  String downloadedXTimes(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '下載 $countString次';
+  }
+
+  @override
+  String get repoManagementHintTitle => '僅提供儲存庫管理功能';
+
+  @override
+  String get repoManagementHintMessage =>
+      '本商店僅能取得官方 stable 儲存庫的應用資料，請勿刪除 stable 儲存庫，否則將導致無法安裝應用。';
+
+  @override
+  String get envManagementTitle => '玲瓏環境管理';
+
+  @override
+  String get envManagementDescription => '分析環境、管理儲存庫、修復基礎環境和移動儲存位置';
+
+  @override
+  String get envManagementAnalysisTab => '環境分析';
+
+  @override
+  String get envManagementRepositoryTab => '儲存庫管理';
+
+  @override
+  String get envManagementStorageTab => '儲存位置';
+
+  @override
+  String get envManagementAnalyzing => '正在分析玲瓏環境...';
+
+  @override
+  String get envManagementApplying => '正在執行操作...';
+
+  @override
+  String get envManagementNotAnalyzed => '尚未完成環境分析';
+
+  @override
+  String get envManagementHealthyTitle => '未發現需要處理的問題';
+
+  @override
+  String get envManagementHealthyMessage => '玲瓏基礎環境、儲存庫與本地資料目前狀態正常。';
+
+  @override
+  String get envManagementBaseEnvironment => '基礎環境';
+
+  @override
+  String get envManagementRepositoryMetric => '儲存庫';
+
+  @override
+  String get envManagementLocalData => '本地資料';
+
+  @override
+  String get envManagementStorageLocation => '儲存位置';
+
+  @override
+  String get envManagementNotDetected => '未檢測到';
+
+  @override
+  String get envManagementUnknown => '未知';
+
+  @override
+  String envManagementUsagePercent(int percent) {
+    return '使用率 $percent%';
+  }
+
+  @override
+  String get envManagementEnvironmentHealthyUpgrade => '環境正常（建議升級）';
+
+  @override
+  String get envManagementEnvironmentHealthy => '環境正常';
+
+  @override
+  String get envManagementRepositoryReadFailed => '儲存庫配置讀取失敗';
+
+  @override
+  String get envManagementEnvironmentAbnormal => '環境異常';
+
+  @override
+  String get envRepoStatusNormal => '正常';
+
+  @override
+  String get envRepoStatusNotConfigured => '未配置';
+
+  @override
+  String get envRepoStatusMisconfigured => '配置異常';
+
+  @override
+  String get envRepoStatusUnavailable => '不可用';
+
+  @override
+  String get envRepoStatusUnknown => '未知';
+
+  @override
+  String get envLocalDataDetectionFailed => '檢測失敗';
+
+  @override
+  String get envLocalDataUnavailable => '不可用';
+
+  @override
+  String get envLocalDataNormal => '正常';
+
+  @override
+  String get envIssueLlCliUnavailableTitle => 'll-cli 不可用';
+
+  @override
+  String get envIssueLlCliUnavailableDescription => '未檢測到可用的玲瓏命令列環境。';
+
+  @override
+  String get envIssueRepositoryNotConfiguredTitle => '未配置玲瓏儲存庫';
+
+  @override
+  String get envIssueRepositoryNotConfiguredDescription =>
+      '目前沒有可用的玲瓏儲存庫配置，需要先新增或修復儲存庫。';
+
+  @override
+  String get envIssueDataPermissionTitle => '玲瓏資料目錄權限異常';
+
+  @override
+  String envIssueDataPermissionDescription(String serviceUser) {
+    return 'll-package-manager 以 $serviceUser 使用者執行，但玲瓏資料目錄或關鍵狀態檔案擁有者異常，可能導致儲存庫遷移、下載物件或建立 layer 失敗。';
+  }
+
+  @override
+  String get envIssueLocalDataDetectionTitle => '玲瓏本地資料檢測失敗';
+
+  @override
+  String get envIssueLocalDataDetectionDescription =>
+      '無法執行 linyaps 本地資料讀取檢查，請確認 ll-cli 和 package-manager 服務狀態。';
+
+  @override
+  String get envIssueLocalDataUnavailableTitle => '玲瓏本地資料不可用';
+
+  @override
+  String get envIssueLocalDataUnavailableDescription =>
+      '無法按 linyaps 執行路徑讀取已安裝應用資料，可能影響應用清單、安裝或執行。請先確認玲瓏資料目錄權限和基礎環境狀態，再按需執行修復。';
+
+  @override
+  String get envIssueStorageSpaceTitle => '玲瓏儲存位置空間不足';
+
+  @override
+  String envIssueStorageSpaceDescription(String path, int percent) {
+    return '目前 $path 所在檔案系統使用率約 $percent%，建議清理或移動儲存位置。';
+  }
+
+  @override
+  String get envIssueRunningAppsTitle => '有玲瓏應用正在執行';
+
+  @override
+  String envIssueRunningAppsDescription(int count) {
+    return '目前仍有 $count 個玲瓏應用正在執行，移動儲存位置前必須先關閉。';
+  }
+
+  @override
+  String get envRepairAction => '修復';
+
+  @override
+  String get envHandleAction => '處理';
+
+  @override
+  String get envRepairLocalDataTitle => '修復玲瓏本地資料';
+
+  @override
+  String get envRepairLocalDataMessage =>
+      '將以管理員權限嘗試修復玲瓏本地資料；如果檢測到需要重新拉取的應用或基礎環境資料，可能產生下載並耗時較長。是否繼續？';
+
+  @override
+  String get envRepairLocalDataConfirm => '執行修復';
+
+  @override
+  String get envRepairPermissionTitle => '修復玲瓏資料目錄權限';
+
+  @override
+  String envRepairPermissionMessage(String rootPath, String serviceUser) {
+    return '將以管理員權限把 $rootPath 的關鍵目錄和狀態檔案擁有者恢復為 $serviceUser，並重新啟動玲瓏 package-manager。是否繼續？';
+  }
+
+  @override
+  String get envRepairPermissionConfirm => '修復權限';
+
+  @override
+  String get envMoveStorageTitle => '移動玲瓏儲存位置';
+
+  @override
+  String envMoveStorageMessage(String rootPath, String targetPath) {
+    return '將複製 $rootPath 到 $targetPath，並建立 systemd bind mount。請確認目標分割槽空間充足。';
+  }
+
+  @override
+  String get envMoveStorageConfirm => '開始移動';
+
+  @override
+  String get envAddRepositoryTitle => '新增玲瓏儲存庫';
+
+  @override
+  String get envRepositoryName => '儲存庫名稱';
+
+  @override
+  String get envRepositoryAddress => '儲存庫地址';
+
+  @override
+  String get envRepositoryAliasOptional => '別名（可選）';
+
+  @override
+  String get envAddAction => '新增';
+
+  @override
+  String get envSaveAction => '儲存';
+
+  @override
+  String get envDeleteAction => '刪除';
+
+  @override
+  String envUpdateRepositoryTitle(String name) {
+    return '修改儲存庫地址：$name';
+  }
+
+  @override
+  String envSetPriorityTitle(String name) {
+    return '設定優先順序：$name';
+  }
+
+  @override
+  String get envRepositoryPriority => '優先順序';
+
+  @override
+  String get envPriorityMustBeNumber => '優先順序必須是數字';
+
+  @override
+  String get envRemoveRepositoryTitle => '刪除儲存庫';
+
+  @override
+  String envRemoveRepositoryMessage(String name) {
+    return '確定刪除儲存庫 $name 嗎？';
+  }
+
+  @override
+  String get envRepositoryAdded => '儲存庫已新增';
+
+  @override
+  String envRepositoryAddFailed(String error) {
+    return '新增儲存庫失敗：$error';
+  }
+
+  @override
+  String get envRepositoryUpdated => '儲存庫已更新';
+
+  @override
+  String envRepositoryUpdateFailed(String error) {
+    return '更新儲存庫失敗：$error';
+  }
+
+  @override
+  String get envPriorityUpdated => '優先順序已更新';
+
+  @override
+  String envPriorityUpdateFailed(String error) {
+    return '設定優先順序失敗：$error';
+  }
+
+  @override
+  String get envRepositoryRemoved => '儲存庫已刪除';
+
+  @override
+  String envRepositoryRemoveFailed(String error) {
+    return '刪除儲存庫失敗：$error';
+  }
+
+  @override
+  String get envDefaultRepositoryUpdated => '預設儲存庫已更新';
+
+  @override
+  String envDefaultRepositoryUpdateFailed(String error) {
+    return '設定預設儲存庫失敗：$error';
+  }
+
+  @override
+  String get envMirrorEnabled => '映象已啟用';
+
+  @override
+  String get envMirrorDisabled => '映象已停用';
+
+  @override
+  String envMirrorUpdateFailed(String error) {
+    return '修改映象狀態失敗：$error';
+  }
+
+  @override
+  String get envOpenLogDirectoryFailed => '開啟日誌目錄失敗';
+
+  @override
+  String get envRepositoryNotLoaded => '尚未載入儲存庫配置';
+
+  @override
+  String envRepositoryDefaultValue(String name) {
+    return '預設儲存庫：$name';
+  }
+
+  @override
+  String get envNotSet => '未設定';
+
+  @override
+  String get envAddRepository => '新增儲存庫';
+
+  @override
+  String get envNoRepositories => '暫無儲存庫配置';
+
+  @override
+  String get envDefaultBadge => '預設';
+
+  @override
+  String envRepositoryDetails(String name, String priority) {
+    return 'name=$name  priority=$priority';
+  }
+
+  @override
+  String get envRepositoryActions => '儲存庫操作';
+
+  @override
+  String get envEditAddress => '修改地址';
+
+  @override
+  String get envSetDefault => '設為預設';
+
+  @override
+  String get envSetPriority => '設定優先順序';
+
+  @override
+  String get envEnableMirror => '啟用映象';
+
+  @override
+  String get envDisableMirror => '停用映象';
+
+  @override
+  String get envCurrentStorageLocation => '目前儲存位置';
+
+  @override
+  String get envStorageNotAnalyzed => '尚未完成儲存位置分析';
+
+  @override
+  String envStorageSummary(String path, int percent) {
+    return '$path  使用率 $percent%';
+  }
+
+  @override
+  String get envNewStorageLocation => '新的儲存位置';
+
+  @override
+  String get envStorageMoveMethod => '移動方式';
+
+  @override
+  String envStorageMoveMethodDescription(String rootPath) {
+    return '玲瓏目前不支援直接改安裝目錄。這裡會複製資料後建立 systemd bind mount，將新目錄掛載到 $rootPath。';
+  }
+
+  @override
+  String get envMoveStorageAction => '移動儲存位置';
+
+  @override
+  String get envCloseAppsBeforeMoveTitle => '移動前需要關閉應用';
+
+  @override
+  String envCloseAppsBeforeMoveMessage(int count) {
+    return '目前仍有 $count 個玲瓏應用正在執行。';
+  }
+
+  @override
+  String get envResultDataPermissionCompleted => '玲瓏資料目錄權限已修復';
+
+  @override
+  String get envResultDataPermissionFailed => '玲瓏資料目錄權限修復失敗';
+
+  @override
+  String get envResultLocalDataUnsupported =>
+      '目前系統元件不支援自動清理問題物件，無法自動修復玲瓏本地資料，請升級系統相關元件或使用發行版工具處理。';
+
+  @override
+  String get envResultLocalDataCompleted => '玲瓏本地資料修復已執行';
+
+  @override
+  String get envResultLocalDataCompletedLegacy => '玲瓏本地資料修復已執行（已相容舊版系統引數）';
+
+  @override
+  String get envResultLocalDataFailed => '玲瓏本地資料修復失敗';
+
+  @override
+  String get envResultLocalDataChecksumMismatch =>
+      '玲瓏本地資料複驗發現物件 checksum 不一致，自動清理後仍未完成修復；若重新拉取後仍復現，通常需要上游儲存庫資料或 linyaps 本地儲存相容性修復。';
+
+  @override
+  String get envPartialCommitsUnknown => '部分 partial commits';
+
+  @override
+  String envPartialCommitsCount(int count) {
+    return '$count 個 partial commits';
+  }
+
+  @override
+  String envResultLocalDataRepullCompleted(String partialCommits) {
+    return '玲瓏本地資料已清理問題物件，並重新拉取 $partialCommits，複驗透過。';
+  }
+
+  @override
+  String envResultLocalDataRepullCompletedLegacy(String partialCommits) {
+    return '玲瓏本地資料已清理問題物件，並重新拉取 $partialCommits，複驗透過（已相容舊版系統引數）。';
+  }
+
+  @override
+  String envResultLocalDataRepullFailed(String partialCommits) {
+    return '玲瓏本地資料已清理可自動處理的問題物件，並嘗試重新拉取 $partialCommits，但重新拉取後複驗仍未透過。請檢視日誌確認具體 ref 的拉取或複驗失敗原因。';
+  }
+
+  @override
+  String envResultLocalDataRepullFailedLegacy(String partialCommits) {
+    return '玲瓏本地資料已清理可自動處理的問題物件，並嘗試重新拉取 $partialCommits，但重新拉取後複驗仍未透過。請檢視日誌確認具體 ref 的拉取或複驗失敗原因。（已相容舊版系統引數）';
+  }
+
+  @override
+  String envResultLocalDataRepullChecksumMismatch(String partialCommits) {
+    return '玲瓏本地資料已清理可自動處理的問題物件，並嘗試重新拉取 $partialCommits，但複驗仍發現 checksum 不一致，可能是上游儲存庫資料與 linyaps 本地儲存模式不相容。';
+  }
+
+  @override
+  String envResultLocalDataRepullChecksumMismatchLegacy(String partialCommits) {
+    return '玲瓏本地資料已清理可自動處理的問題物件，並嘗試重新拉取 $partialCommits，但複驗仍發現 checksum 不一致，可能是上游儲存庫資料與 linyaps 本地儲存模式不相容。（已相容舊版系統引數）';
+  }
+
+  @override
+  String envResultStorageBlockedRunningApps(int count) {
+    return '仍有 $count 個玲瓏應用正在執行，請關閉後再移動儲存位置。';
+  }
+
+  @override
+  String get envResultStorageBlockedActiveTask =>
+      '下載管理中仍有安裝或更新任務，請等待完成或取消任務後再移動玲瓏儲存位置。';
+
+  @override
+  String envResultStorageBlockedNamedTask(String name) {
+    return '目前正在處理「$name」，請等待完成或取消任務後再移動玲瓏儲存位置。';
+  }
+
+  @override
+  String envResultStorageAlreadyBindMounted(String path) {
+    return '$path 目前已經是 bind mount，請先確認現有掛載配置後再遷移。';
+  }
+
+  @override
+  String envResultStorageFilesystemUnavailable(String path) {
+    return '無法讀取目標路徑所在檔案系統空間：$path';
+  }
+
+  @override
+  String get envResultStorageSpaceUnknown => '無法確認目前目錄或目標路徑的磁碟空間，請檢查後重試。';
+
+  @override
+  String envResultStorageInsufficientSpace(
+    String requiredSpace,
+    String availableSpace,
+  ) {
+    return '目標路徑可用空間不足，需要至少 $requiredSpace，目前可用 $availableSpace。';
+  }
+
+  @override
+  String get envResultStorageTargetNotAbsolute => '目標路徑必須是絕對路徑。';
+
+  @override
+  String get envResultStorageTargetContainsLineBreak => '目標路徑不能包含換行符。';
+
+  @override
+  String get envResultStorageTargetUnsafeSystemPath => '目標路徑不能是系統根目錄或目前玲瓏目錄。';
+
+  @override
+  String get envResultStorageTargetInsideCurrentRoot => '目標路徑不能位於目前玲瓏目錄內部。';
+
+  @override
+  String get envResultStorageMoveCompleted => '玲瓏儲存位置已移動';
+
+  @override
+  String get envResultStorageMoveFailed => '移動玲瓏儲存位置失敗';
+
+  @override
+  String envResultUnexpectedFailure(String error) {
+    return '操作失敗：$error';
+  }
+
+  @override
+  String get errorSolutionHelpTooltip => '檢視解決方案';
+
+  @override
+  String get a11yErrorSolutionHelp => '查詢該安裝錯誤的解決方案';
+
+  @override
+  String get errorSolutionNoSolution => '暫無解決方案';
+
+  @override
+  String get errorSolutionQueryFailed => '查詢失敗，請重試';
+
+  @override
+  String get errorSolutionRetry => '重新查詢';
+
+  @override
+  String get errorSolutionCommunityPost => '社群發帖';
+
+  @override
+  String get errorSolutionRepair => '一鍵修復';
+
+  @override
+  String get errorSolutionClose => '關閉解決方案';
+
+  @override
+  String get errorSolutionRemoteImage => '解決方案遠端圖片';
+
+  @override
+  String get errorSolutionImageBlocked => '已封鎖非網路圖片';
+
+  @override
+  String get errorSolutionImageLoadFailed => '遠端圖片載入失敗';
+
+  @override
+  String get scriptReviewTitle => '指令碼內容預覽';
+
+  @override
+  String get scriptReviewSemanticLabel => '即將執行的完整修復指令碼';
+
+  @override
+  String get executeRepairScript => '確認並執行';
+
+  @override
+  String get repairExecutionTitle => '一鍵修復';
+
+  @override
+  String get repairExecuting => '正在執行修復指令碼…';
+
+  @override
+  String get repairOutputTitle => '即時輸出';
+
+  @override
+  String get repairOutputEmpty => '等待指令碼輸出…';
+
+  @override
+  String repairOutputTruncated(int count) {
+    return '介面已省略較早的 $count 行，完整內容請檢視日誌。';
+  }
+
+  @override
+  String get repairCompleteRetry => '修復完成，請重新嘗試安裝。';
+
+  @override
+  String repairFailedWithExitCode(int exitCode) {
+    return '修復指令碼執行失敗（退出碼 $exitCode）。';
+  }
+
+  @override
+  String get repairTimedOut => '修復指令碼執行超過 30 分鐘，已停止等待。請檢視日誌確認系統狀態。';
+
+  @override
+  String repairExecutionError(String message) {
+    return '修復指令碼無法執行：$message';
+  }
+
+  @override
+  String get repairInvalidSignature => '修復指令碼簽章無效，已封鎖執行。';
+
+  @override
+  String get openRepairLog => '開啟日誌目錄';
+
+  @override
+  String get copyRepairOutput => '複製目前輸出';
+
+  @override
+  String repairElapsedTime(String elapsed) {
+    return '已執行 $elapsed';
+  }
+}

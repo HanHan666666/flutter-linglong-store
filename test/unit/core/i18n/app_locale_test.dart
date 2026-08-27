@@ -153,10 +153,53 @@ void main() {
 
     test('语言选择顺序只把产品默认语言置顶且不产生重复项', () {
       expect(selectableAppLocales.first, defaultAppLocale);
+      // 必须用完整语言标签判重：zh 与 zh-Hant 共享 languageCode，
+      // 按 languageCode 判重会把繁体误当重复项剔除。
       expect(
-        selectableAppLocales.map((locale) => locale.languageCode).toSet(),
+        selectableAppLocales.map((locale) => locale.toLanguageTag()).toSet(),
         hasLength(selectableAppLocales.length),
       );
+    });
+
+    group('zh 与 zh-Hant 并存时的文字消歧', () {
+      test('持久化的完整标签 zh-Hant 命中繁体资源', () {
+        expect(
+          tryResolveSupportedAppLocale('zh-Hant'),
+          const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
+        );
+        expect(
+          appLocalizationsForLocale('zh-Hant').languageSelfName,
+          '繁體中文',
+        );
+      });
+
+      test('台/港/澳系统语言按 CLDR 惯例归繁体', () {
+        for (final region in const ['TW', 'HK', 'MO']) {
+          expect(
+            tryResolveSupportedAppLocale(Locale('zh', region)),
+            const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
+            reason: 'zh_$region 应归繁体',
+          );
+        }
+      });
+
+      test('大陆/新加坡与裸 zh 保持简体基础资源', () {
+        expect(tryResolveSupportedAppLocale('zh'), const Locale('zh'));
+        expect(
+          tryResolveSupportedAppLocale(const Locale('zh', 'CN')),
+          const Locale('zh'),
+        );
+        expect(
+          tryResolveSupportedAppLocale(const Locale('zh', 'SG')),
+          const Locale('zh'),
+        );
+      });
+
+      test('未受支持的纯语言输入返回 null 而非首个候选', () {
+        expect(tryResolveSupportedAppLocale('xx'), isNull);
+        expect(tryResolveSupportedAppLocale(''), isNull);
+        expect(tryResolveSupportedAppLocale(null), isNull);
+      });
     });
   });
 }

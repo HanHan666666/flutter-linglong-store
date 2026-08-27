@@ -347,6 +347,34 @@ void main() {
       expect(formatDownloadCountText(2, ru), '2 загрузки');
       expect(formatDownloadCountText(5, ru), '5 загрузок');
     });
+
+    test('日韩繁中直接插值，德语 Mal 不变，法语按三类复数', () {
+      final ja = lookupAppLocalizations(const Locale('ja'));
+      final ko = lookupAppLocalizations(const Locale('ko'));
+      final hant = lookupAppLocalizations(
+        const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
+      );
+      final de = lookupAppLocalizations(const Locale('de'));
+      final fr = lookupAppLocalizations(const Locale('fr'));
+
+      // 日/韩/繁中无名词复数屈折，直接插值即可。
+      expect(formatDownloadCountText(1, ja), 'ダウンロード 1回');
+      expect(formatDownloadCountText(1234, ja), 'ダウンロード 1,234回');
+      expect(formatDownloadCountText(1, ko), '다운로드 1회');
+      expect(formatDownloadCountText(1, hant), '下載 1次');
+      // 德语 Mal 无屈折，但数字按本地千位分组。
+      expect(formatDownloadCountText(1, de), '1-mal heruntergeladen');
+      expect(formatDownloadCountText(1234, de), '1.234-mal heruntergeladen');
+      // 法语 one 覆盖 0 与 1，many 覆盖百万级，other 覆盖其余；
+      // 数字经 decimalPattern 本地化，千位分隔符为不换行窄空格。
+      final frNumber = NumberFormat.decimalPattern('fr');
+      expect(formatDownloadCountText(1, fr), '1 téléchargement');
+      expect(formatDownloadCountText(5, fr), '5 téléchargements');
+      expect(
+        formatDownloadCountText(1000000, fr),
+        '${frNumber.format(1000000)} de téléchargements',
+      );
+    });
   });
 }
 

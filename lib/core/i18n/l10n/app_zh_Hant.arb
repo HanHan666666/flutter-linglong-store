@@ -1,0 +1,1594 @@
+{
+  "@@locale": "zh_Hant",
+  "@@linuxDesktopLocale": "zh_TW",
+  "@@appStreamLocale": "zh-Hant",
+  "appTitle": "玲瓏應用商店社群版",
+  "linuxDesktopNameNightly": "玲瓏應用商店社群版 Nightly",
+  "linuxDesktopGenericName": "應用商店",
+  "linuxDesktopComment": "瀏覽、安裝與管理玲瓏應用",
+  "linuxDesktopCommentNightly": "用於瀏覽、安裝與管理玲瓏應用的 Nightly 構建",
+  "linuxDesktopKeywords": "玲瓏;應用商店;應用;軟體套件;",
+  "linuxAppStreamDescription": "用於瀏覽、安裝與管理玲瓏應用的桌面應用商店。",
+  "recommend": "推 薦",
+  "allApps": "全部應用",
+  "ranking": "排行榜",
+  "myApps": "我的應用",
+  "update": "更 新",
+  "settings": "設定",
+  "category": "分 類",
+  "office": "辦 公",
+  "system": "系 統",
+  "develop": "開 發",
+  "entertainment": "娛 樂",
+  "searchPlaceholder": "在這裡搜尋你想搜尋的應用",
+  "search": "搜尋",
+  "refresh": "重新整理",
+  "linglongRecommend": "玲瓏推薦",
+  "loading": "載入中...",
+  "installing": "安裝中...",
+  "success": "成功",
+  "failed": "失敗",
+  "cancel": "取消",
+  "noMoreData": "沒有更多資料了",
+  "install": "安 裝",
+  "uninstall": "卸 載",
+  "open": "打 開",
+  "update_action": "更 新",
+  "run": "啟 動",
+  "confirm": "確認",
+  "viewDetail": "檢視詳情",
+  "screenShots": "螢幕截圖",
+  "versionSelect": "版本選擇",
+  "versionNumber": "版本號",
+  "appType": "應用型別",
+  "channel": "頻道",
+  "mode": "模式",
+  "repoSource": "儲存庫來源",
+  "fileSize": "檔案大小",
+  "downloadCount": "下載量",
+  "operation": "操作",
+  "linglongProcess": "玲瓏處理程序",
+  "baseSetting": "基本設定",
+  "about": "關於",
+  "envMissing": "檢測到目前系統缺少玲瓏環境",
+  "envMissingDetail": "檢測到系統中不存在或版本過低的玲瓏元件，需先安裝後才能使用商店。",
+  "autoInstall": "自動安裝",
+  "manualInstall": "手動安裝",
+  "recheck": "重新檢測",
+  "exitStore": "退出商店",
+  "errorNetwork": "網路連線失敗",
+  "errorNetworkDetail": "請檢查網路連線後重試",
+  "errorInstallFailed": "安裝失敗",
+  "errorUninstallFailed": "解除安裝失敗",
+  "errorUpdateFailed": "更新失敗",
+  "errorUnknown": "未知錯誤",
+  "retry": "重試",
+  "downloading": "下載中...",
+  "downloadComplete": "下載完成",
+  "installComplete": "安裝完成",
+  "uninstallComplete": "解除安裝完成",
+  "updateComplete": "更新完成",
+  "noApps": "暫無應用",
+  "noInstalledApps": "暫無已安裝應用",
+  "noInstalledAppsHint": "您還沒有安裝任何玲瓏應用，去推薦頁看看吧",
+  "noUpdateApps": "暫無可用更新",
+  "version": "版本",
+  "size": "大小",
+  "description": "簡介",
+  "developer": "開發者",
+  "confirmDelete": "確認刪除",
+  "confirmDeleteMessage": "確定要刪除此項嗎？此操作無法撤銷。",
+  "confirmUninstall": "確認解除安裝",
+  "confirmUninstallMessage": "確定要解除安裝此應用嗎？",
+  "noData": "暫無資料",
+  "noDataDescription": "這裡還沒有任何內容",
+  "pageNotFound": "頁面未找到",
+  "pageNotFoundDescription": "抱歉，頁面未找到",
+  "backToHome": "返回首頁",
+  "searchApps": "搜尋應用...",
+  "languageSettings": "語言設定",
+  "themeSettings": "主題設定",
+  "fontSettings": "字型設定",
+  "cacheManagement": "快取管理",
+  "storeOptions": "商店選項",
+  "fontSettingsHint": "系統字型設定會作為基礎值，下面的調整會在其基礎上疊加。",
+  "fontSizeAdjustment": "字型大小",
+  "fontWeightAdjustmentLabel": "字型粗細",
+  "fontWeightLighter": "更細",
+  "fontWeightNormal": "標準",
+  "fontWeightBolder": "更粗",
+  "fontScalePercent": "{percent}%",
+  "@fontScalePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "checkUpdate": "檢查更新",
+  "currentVersion": "目前版本: {version}",
+  "@currentVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "newVersionFound": "發現新版本 {tagName}，目前版本 {currentVersion}",
+  "@newVersionFound": {
+    "placeholders": {
+      "tagName": {
+        "type": "String"
+      },
+      "currentVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadyLatest": "目前已是最新版本 {version}",
+  "@alreadyLatest": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "checkingUpdate": "檢查更新中...",
+  "goDownload": "前往下載",
+  "updateNow": "立即更新",
+  "updateDetectingInstallation": "正在檢測安裝方式...",
+  "updateResolvingAsset": "正在選擇安裝套件...",
+  "updateDownloading": "正在下載更新套件...",
+  "updateVerifying": "正在校驗更新套件...",
+  "updateInstalling": "正在安裝更新...",
+  "updateSucceeded": "更新已安裝，請關閉應用後重新開啟以使用新版本",
+  "updateFailed": "更新失敗",
+  "updateCancelled": "更新已取消",
+  "updateRetry": "重試",
+  "updateManualInstallHint": "無法自動更新，請前往下載頁手動安裝",
+  "updateUnsupportedArch": "目前架構暫不支援自動安裝",
+  "updateChecksumMissing": "更新套件校驗資訊缺失，已中止安裝",
+  "updateChecksumFailed": "更新套件校驗失敗，已中止安裝",
+  "cacheSize": "快取大小",
+  "startupCheckUpdate": "啟動時檢查商店版本更新",
+  "startupCheckUpdateDesc": "每次啟動時檢測是否有新版本可用",
+  "systemNotifications": "系統通知",
+  "systemNotificationsDescription": "一鍵更新完成後，在桌面通知中顯示更新結果",
+  "userExperienceProgram": "使用者體驗計畫",
+  "userExperienceProgramDesc": "傳送匿名使用統計，幫助我們改進商店",
+  "userExperienceProgramDialogIntro": "加入使用者體驗計畫，你正在幫助玲瓏商店變得更好。我們只收集少量匿名資訊，用於改進應用推薦與下載體驗：",
+  "userExperienceProgramDialogItemIdentity": "匿名裝置識別碼（一串隨機字元，無法識別你）",
+  "userExperienceProgramDialogItemSystem": "系統架構、系統版本與核心資訊、主機名稱、玲瓏環境版本",
+  "userExperienceProgramDialogItemApps": "已安裝的玲瓏應用清單，以及應用的安裝、更新與解除安裝記錄",
+  "userExperienceProgramDialogItemNetwork": "網路地址（僅用於地區統計）",
+  "userExperienceProgramDialogFooter": "這些資訊不會與你的真實身份關聯，也不會用於識別你。你可以隨時關閉開關，關閉後不會再回傳任何資料。",
+  "a11yUserExperienceProgramInfo": "檢視使用者體驗計畫採集的資訊說明",
+  "updateBatchAllSucceededTitle": "{count} 個應用已更新",
+  "@updateBatchAllSucceededTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchFinishedTitle": "批次更新已結束",
+  "updateBatchNoSuccessTitle": "應用更新未完成",
+  "updateBatchResultSummary": "結果：{summary}",
+  "@updateBatchResultSummary": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchResultSeparator": "，",
+  "updateBatchSucceededCount": "成功 {count} 個",
+  "@updateBatchSucceededCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchFailedCount": "失敗 {count} 個",
+  "@updateBatchFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchCancelledCount": "取消 {count} 個",
+  "@updateBatchCancelledCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchInterruptedCount": "中斷 {count} 個",
+  "@updateBatchInterruptedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchAppNameSeparator": "、",
+  "updateBatchUpdatedApps": "已更新：{names}",
+  "@updateBatchUpdatedApps": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchUpdatedAppsOverflow": "已更新：{names} 等 {remainingCount} 個應用",
+  "@updateBatchUpdatedAppsOverflow": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "remainingCount": {
+        "type": "int"
+      }
+    }
+  },
+  "softwareRendering": "軟體渲染",
+  "softwareRenderingEnabled": "軟體渲染",
+  "hardwareRenderingEnabled": "硬體渲染",
+  "rendererModeDetecting": "正在檢測目前渲染狀態…",
+  "rendererModeDetectFailed": "無法取得目前渲染狀態，但仍可儲存下次啟動時使用的渲染方式。",
+  "rendererModeCurrentStatus": "目前使用{mode}。{reason}",
+  "@rendererModeCurrentStatus": {
+    "placeholders": {
+      "mode": {},
+      "reason": {}
+    }
+  },
+  "rendererModeReasonEnvironment": "目前渲染模式由環境變數 {value} 控制。",
+  "@rendererModeReasonEnvironment": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "rendererModeReasonUserPreference": "目前已按儲存的設定生效。",
+  "rendererModeReasonCpuFallback": "為提高相容性，目前裝置預設使用軟體渲染。",
+  "rendererModeReasonDefault": "目前裝置預設使用硬體渲染。",
+  "rendererModeEnvLocked": "檢測到環境變數 {value}。目前渲染模式由系統環境控制，無法在這裡修改。",
+  "@rendererModeEnvLocked": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "rendererModeNextLaunchStatus": "下次啟動時將使用{mode}。",
+  "@rendererModeNextLaunchStatus": {
+    "placeholders": {
+      "mode": {}
+    }
+  },
+  "rendererModeWhitelistHint": "目前裝置建議保留軟體渲染，以取得更穩定的顯示效果。",
+  "rendererModeHardwareRiskHint": "下次啟動將使用硬體渲染。如遇介面無法正常顯示，可使用下面的命令恢復。",
+  "rendererModeDisableWarningTitle": "確認關閉軟體渲染",
+  "rendererModeDisableWarningMessage": "目前裝置關閉軟體渲染後，應用可能無法正常顯示。建議保留軟體渲染，以取得更穩定的顯示效果。",
+  "rendererModeDetectedCpu": "目前裝置處理器：{cpu}",
+  "@rendererModeDetectedCpu": {
+    "placeholders": {
+      "cpu": {}
+    }
+  },
+  "rendererModeDisableBlackScreenHint": "如果應用下次啟動後無法正常顯示，請在終端機執行下面的命令，然後重新開啟應用。",
+  "rendererModeDataDirectoryLabel": "資料目錄",
+  "rendererModeDeleteCommandLabel": "刪除命令",
+  "rendererModeSaveCommandHint": "建議先複製並儲存此命令，以便應用無法正常顯示時進行恢復。",
+  "rendererModeDisableConfirm": "繼續關閉",
+  "rendererModeSavedSoftware": "已切換為軟體渲染，將在下次啟動時生效。",
+  "rendererModeSavedHardware": "已切換為硬體渲染，將在下次啟動時生效。",
+  "rendererModeSaveFailed": "儲存渲染設定失敗，請稍後重試。",
+  "showBaseServices": "顯示基礎執行服務",
+  "showBaseServicesDesc": "在已安裝清單中顯示底層基礎執行服務",
+  "cleanDeprecatedServices": "清理廢棄基礎服務",
+  "cleanDeprecatedServicesDesc": "移除已不再使用的基礎執行服務，釋放磁碟空間",
+  "checkNewVersion": "檢查新版本",
+  "feedbackMenu": "意見回饋",
+  "officialWebsite": "官網",
+  "communityExchange": "社群交流",
+  "aboutDevelopers": "關於開發者",
+  "feedbackTitle": "意見回饋",
+  "uploadLog": "同時上傳日誌檔案",
+  "noPrivacyInfo": "日誌中不包含個人隱私資訊",
+  "submitFeedback": "提交",
+  "feedbackHint": "請填寫問題概述或描述",
+  "feedbackSuccess": "感謝您的回饋！",
+  "feedbackFailed": "回饋提交失敗，請稍後重試",
+  "confirmExit": "確認退出",
+  "exitWithInstalling": "有正在進行的安裝任務，確定要退出嗎？",
+  "exitBtn": "退出",
+  "downloadManager": "下載管理",
+  "downloadWaitingForTask": "等待下載任務開始",
+  "downloadRealtimeSpeed": "即時速度 {speed}",
+  "@downloadRealtimeSpeed": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadHistoryCount": "{count} 條記錄",
+  "@downloadHistoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ogInstallRequestReceived": "已收到來自網頁的安裝請求：{appName}",
+  "@ogInstallRequestReceived": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallEnqueued": "已加入下載管理：{appName}",
+  "@ogInstallEnqueued": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallInvalidLink": "無法識別網頁安裝連結，僅支援 og://appId",
+  "ogInstallEnvironmentUnavailable": "玲瓏執行環境不可用，暫不能從網頁自動安裝",
+  "ogInstallDuplicate": "{appName} 已在下載管理中",
+  "@ogInstallDuplicate": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallDetailFailed": "無法取得應用資訊，安裝未開始",
+  "ogInstallDetailFailedWithError": "無法取得應用資訊，安裝未開始：{error}",
+  "@ogInstallDetailFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearRecords": "清空記錄",
+  "noDownloadTasks": "暫無下載任務",
+  "cannotOpenLink": "無法開啟連結: {url}",
+  "@cannotOpenLink": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "envCheckPassed": "安裝完成，環境檢測透過",
+  "envCheckFailed": "安裝完成，但環境仍異常，請檢查",
+  "launching": "正在啟動 {appName}...",
+  "@launching": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "launchFailed": "啟動失敗: {error}",
+  "@launchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "copied": "已複製：{value}",
+  "@copied": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "shareLink": "分享",
+  "shareMessage": "來看看「{name}」這個應用",
+  "@shareMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linkCopied": "連結已複製，快去分享吧",
+  "shareFailed": "分享失敗",
+  "createDesktopShortcut": "建立桌面快捷方式",
+  "appDetailTitle": "應用詳情",
+  "appNotFound": "未找到應用資訊",
+  "noVersionHistory": "暫無版本歷史",
+  "installedBadge": "已安裝",
+  "versionInstallTargetMissing": "未找到對應已安裝版本，請重新整理後重試",
+  "uninstallFailed": "解除安裝失敗: {result}",
+  "@uninstallFailed": {
+    "placeholders": {
+      "result": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallSuccess": "{name} 已解除安裝",
+  "@uninstallSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallError": "解除安裝異常: {error}",
+  "@uninstallError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "commandCopied": "命令已複製到剪貼簿，請貼上到終端機中執行",
+  "copy": "複製",
+  "copyLog": "複製日誌",
+  "copySucceeded": "複製成功",
+  "copyErrorMessage": "複製錯誤資訊",
+  "skipCheck": "跳過檢測",
+  "loadFailed": "載入失敗",
+  "shortcutCreated": "快捷方式已建立",
+  "appComments": "留言區",
+  "appCommentsEmpty": "還沒有留言，來寫第一條吧",
+  "commentInputHint": "說說這個應用的使用體驗",
+  "submitComment": "發表留言",
+  "commentVersionLabel": "關聯版本",
+  "anonymousComment": "匿名訪客",
+  "commentHelpful": "有幫助",
+  "commentNotHelpful": "沒幫助",
+  "commentAnonymousHint": "匿名留言，按最新時間排序展示",
+  "commentSubmitSuccess": "留言已提交",
+  "commentSubmitFailed": "留言提交失敗: {error}",
+  "@commentSubmitFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreateFailed": "建立失敗: {error}",
+  "@shortcutCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "envCheckTitle": "環境檢測",
+  "checkingLinglongEnv": "正在檢測玲瓏環境...",
+  "unknownStatus": "未知狀態",
+  "llCliVersion": "ll-cli 版本",
+  "notDetected": "未檢測到",
+  "errorMessage": "錯誤資訊",
+  "repoShowFailureTitle": "儲存庫讀取命令執行失敗",
+  "repoShowFailureCommand": "執行 {command} 讀取玲瓏儲存庫配置失敗。",
+  "@repoShowFailureCommand": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "repoShowFailureReason": "該命令需要透過系統服務 org.deepin.linglong.PackageManager.service 讀取儲存庫配置；服務未執行時會返回失敗。",
+  "repoShowFailureInstalledQuestion": "已經安裝好了應用環境？",
+  "repoShowFailureRestartHint": "如果已經安裝 ll-cli 和應用環境，可以嘗試重新啟動該系統服務後重新檢測。",
+  "restartPackageManagerService": "嘗試重新啟動 org.deepin.linglong.PackageManager.service",
+  "restartingPackageManagerService": "正在重新啟動 org.deepin.linglong.PackageManager.service...",
+  "packageManagerServiceRestartPassed": "服務已重新啟動，環境檢測透過",
+  "packageManagerServiceRestartStillFailed": "服務已重新啟動，但環境仍異常，請檢視錯誤資訊",
+  "packageManagerServiceRestartFailed": "服務重新啟動失敗: {error}",
+  "@packageManagerServiceRestartFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "installingLinglong": "正在安裝...",
+  "openInstallLogDirectory": "開啟日誌目錄",
+  "cannotOpenDirectory": "無法開啟目錄: {path}",
+  "@cannotOpenDirectory": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "appIntroduction": "應用介紹",
+  "collapse": "收起",
+  "expandAll": "展開全部",
+  "collapseCategories": "收起分類",
+  "expandCategories": "展開分類",
+  "packageName": "套件名稱",
+  "architecture": "架構",
+  "channelLabel": "頻道",
+  "runtime": "執行時",
+  "license": "許可證",
+  "homepage": "主頁",
+  "appInfo": "應用資訊",
+  "versionHistory": "版本歷史",
+  "versionListLoadFailed": "版本清單載入失敗，請重試",
+  "versionListUpdateFailed": "版本清單更新失敗，顯示最近一次結果",
+  "uninstallApp": "解除安裝應用",
+  "uninstallConfirmMessage": "確定要解除安裝 {name} 嗎？\n解除安裝後應用資料將被刪除，此操作不可恢復。",
+  "@uninstallConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noDescription": "暫無描述",
+  "categoryLabel": "分類",
+  "searchNotFound": "未找到相關應用",
+  "searchTryOtherKeywords": "嘗試使用其他關鍵字搜尋",
+  "searchInputHint": "在頂部搜尋框輸入關鍵字",
+  "searchPressEnter": "按 Enter 開始搜尋應用",
+  "searchResultCount": "找到 {count} 個結果",
+  "@searchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchInstalledApps": "搜尋已安裝的應用",
+  "noMatchingApp": "未找到相符的應用",
+  "noMatchingAppHint": "沒有找到「{query}」相關的應用",
+  "@noMatchingAppHint": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "updateCount": "共 {count} 個應用可更新",
+  "@updateCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ignoredUpdatesCount": "已忽略（{count}）",
+  "@ignoredUpdatesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ignoredUpdatesTitle": "已忽略的更新",
+  "ignoredUpdatesEmptyTitle": "暫無已忽略的應用",
+  "ignoredUpdatesEmptyDescription": "從可更新應用的更多選單中，可以持續忽略不想升級的應用。",
+  "ignoreAppUpdates": "忽略此應用更新",
+  "restoreUpdateNotifications": "恢復更新提醒",
+  "ignoredVersion": "忽略時版本：{version}",
+  "@ignoredVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateSuccess": "已忽略 {appName} 的後續更新，可在「已忽略」中恢復",
+  "@ignoreUpdateSuccess": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateActiveTask": "{appName} 已在更新佇列中，暫時不能忽略",
+  "@ignoreUpdateActiveTask": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateFailed": "儲存忽略更新設定失敗，請重試",
+  "ignoreUpdateInvalidApp": "無法忽略此應用：應用識別碼無效",
+  "restoreUpdateSuccess": "已恢復 {appName} 的更新提醒",
+  "@restoreUpdateSuccess": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreUpdateFailed": "恢復更新提醒失敗，請重試",
+  "restoreUpdateRefreshFailed": "已恢復更新提醒，但檢查更新失敗，可稍後重試",
+  "a11yManageIgnoredUpdates": "管理已忽略的更新，共 {count} 個應用",
+  "@a11yManageIgnoredUpdates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "a11yIgnoreAppUpdates": "忽略 {appName} 的後續更新",
+  "@a11yIgnoreAppUpdates": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yUpdateAppMoreActions": "{appName} 的更多更新操作",
+  "@a11yUpdateAppMoreActions": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yRestoreAppUpdates": "恢復 {appName} 的更新提醒",
+  "@a11yRestoreAppUpdates": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yIgnoredUpdateItem": "{appName}，應用 ID {appId}，忽略時版本 {version}",
+  "@a11yIgnoredUpdateItem": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "appId": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updating": "正在更新...",
+  "updateAll": "全部更新",
+  "updateCheckFailed": "檢查更新失敗",
+  "noUpdate": "暫無更新",
+  "allAppsUpToDate": "您的所有應用都是最新版本",
+  "noMore": "沒有更多了",
+  "appTitleShort": "玲瓏應用商店",
+  "detectingEnv": "正在檢測玲瓏環境...",
+  "stepEnvCheck": "環境檢測",
+  "stepAppLoad": "應用載入",
+  "stepUpdateCheck": "更新檢查",
+  "stepQueueRecovery": "佇列恢復",
+  "launchFailedTitle": "啟動失敗",
+  "skip": "跳過",
+  "cannotGetVersion": "無法取得版本資訊",
+  "newVersionAvailable": "發現新版本 {version}！\n目前版本：{current}",
+  "@newVersionAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      }
+    }
+  },
+  "languageZh": "中文",
+  "languageSelfName": "繁體中文",
+  "themeFollowSystem": "跟隨系統",
+  "themeLight": "淺色模式",
+  "themeDark": "深色模式",
+  "clearingCache": "清除中...",
+  "clearCache": "清除快取",
+  "clearCacheDesc": "清除快取可以釋放儲存空間，但會重新下載應用圖示和部分資料。",
+  "clearCacheConfirm": "確認清除快取",
+  "clearCacheMessage": "確定要清除所有快取嗎？",
+  "cacheCleared": "快取已清除",
+  "clearCacheFailed": "清除快取失敗",
+  "appVersion": "應用版本",
+  "appCount": "已收錄應用數量",
+  "systemArch": "系統架構",
+  "linglongVersion": "玲瓏版本",
+  "checkNetwork": "請檢查網路連線後重試",
+  "copyContainerCommand": "複製進入容器命令",
+  "commandCopiedToClipboard": "命令已複製到剪貼簿",
+  "copyAppId": "複製應用 ID",
+  "stopSuccess": "{name} 已停止",
+  "@stopSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stopFailed": "停止失敗",
+  "processRefreshFailed": "處理程序清單重新整理失敗...",
+  "noRunningApps": "目前沒有執行中的玲瓏應用",
+  "notRefreshed": "尚未重新整理",
+  "lastRefresh": "上次重新整理",
+  "refreshing": "重新整理中",
+  "appName": "應用名稱",
+  "versionNo": "版本號",
+  "source": "來源",
+  "containerId": "容器 ID",
+  "appRunningTitle": "應用正在執行",
+  "appRunningMessage": "該應用正在執行，需要先關閉才能解除安裝",
+  "downgradeConfirm": "確認降級",
+  "downgradeMessage": "目標版本低於目前版本，確定要降級嗎？",
+  "alreadyInstalledVersion": "已安裝此版本",
+  "waiting": "等待中",
+  "completed": "已完成",
+  "remove": "移除",
+  "feedbackCategories": "商店缺陷,應用更新,應用故障",
+  "feedbackCategory": "問題分類",
+  "overview": "概述",
+  "overviewHint": "請簡要描述問題",
+  "detailDescription": "詳細描述",
+  "none": "無",
+  "clearSearch": "清除搜尋詞",
+  "minimize": "最小化",
+  "restore": "還原",
+  "maximize": "最大化",
+  "close": "關閉",
+  "goRecommend": "去推薦頁看看吧",
+  "processRefreshFailedHint": "處理程序清單重新整理失敗，目前顯示的是上次成功取得的資料",
+  "moreActions": "更多操作",
+  "appRunningUninstallMessage": "{name} 目前正在執行中，解除安裝前需要強制關閉所有執行例項。\n是否強制關閉並解除安裝？",
+  "@appRunningUninstallMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "forceCloseAndUninstall": "強制關閉並解除安裝",
+  "downgradeMessageWithVersion": "目前已安裝 {appName} v{currentVersion}，您嘗試安裝較低的版本 v{targetVersion}。\n降級安裝可能導致功能異常，是否繼續？",
+  "@downgradeMessageWithVersion": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "currentVersion": {
+        "type": "String"
+      },
+      "targetVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmDowngrade": "確認降級",
+  "reinstallMessage": "{appName} v{version} 已安裝。\n是否重新安裝（將覆蓋現有安裝）？",
+  "@reinstallMessage": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "forceReinstall": "強制重新安裝",
+  "installingLabel": "正在安裝",
+  "waitingCount": "等待中 ({count})",
+  "@waitingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "detailDescriptionHint": "請詳細描述您遇到的問題",
+  "linglongCommunity": "玲瓏社群",
+  "unknown": "未知",
+  "copyPid": "複製 PID",
+  "copyContainerId": "複製容器 ID",
+  "refreshProcessList": "重新整理處理程序清單",
+  "stopProcess": "停止處理程序",
+  "checkUpdateNetworkError": "檢查更新失敗，請檢查網路連線",
+  "pruneServiceTitle": "清理廢棄基礎服務",
+  "pruneServiceMessage": "將執行 ll-cli prune 命令，移除所有已不再被任何應用依賴的基礎執行服務。\n\n清理後可節省磁碟空間，但如進行中有其他操作可能需要重新下載。",
+  "pruneServiceSuccess": "廢棄基礎服務已清理",
+  "pruneServiceFailed": "清理失敗，請稍後重試",
+  "clearCacheHint": "清除快取可以釋放儲存空間，但可能會導致應用需要重新載入資料。",
+  "pruneBaseServiceMessage": "將執行 ll-cli prune 命令，移除所有已不再被任何應用依賴的基礎執行服務。\n\n清理後可節省磁碟空間，但如進行中有其他操作可能需要重新下載。",
+  "clean": "清理",
+  "baseServiceCleaned": "廢棄基礎服務已清理",
+  "cleanFailed": "清理失敗，請稍後重試",
+  "appCountValue": "{count} 個",
+  "@appCountValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "llCliVersionLabel": "ll-cli 版本",
+  "rankingTabDownload": "下載榜",
+  "rankingTabRising": "新秀榜",
+  "rankingTabUpdate": "更新榜",
+  "rankingTabHot": "熱門榜",
+  "sidebarAllApps": "全 部",
+  "sidebarRanking": "排 行",
+  "installErrorGeneric": "安裝失敗",
+  "installErrorTimeout": "安裝失敗: 進度逾時",
+  "installCancelled": "安裝已取消",
+  "installErrorUnknown": "安裝失敗: 未知錯誤",
+  "installErrorAppNotFoundRemote": "安裝失敗: 遠端儲存庫找不到應用",
+  "installErrorAppNotFoundLocal": "安裝失敗: 本地找不到應用",
+  "installFailed": "安裝失敗",
+  "installErrorAppNotInRemote": "安裝失敗: 遠端無該應用",
+  "installErrorSameVersion": "安裝失敗: 已安裝同版本",
+  "installErrorDowngrade": "安裝失敗: 需要降級安裝",
+  "installErrorModuleVersionNotAllowed": "安裝失敗: 安裝模組時不允許指定版本",
+  "installErrorModuleRequiresApp": "安裝失敗: 安裝模組需先安裝應用",
+  "installErrorModuleExists": "安裝失敗: 模組已存在",
+  "installErrorArchMismatch": "安裝失敗: 架構不相符",
+  "installErrorModuleNotInRemote": "安裝失敗: 遠端無該模組",
+  "installErrorMissingErofs": "安裝失敗: 缺少 erofs 解壓縮命令",
+  "installErrorUnsupportedFormat": "安裝失敗: 不支援的檔案格式",
+  "installErrorNetwork": "安裝失敗: 網路錯誤",
+  "installErrorInvalidRef": "安裝失敗: 無效引用",
+  "installErrorUnknownArch": "安裝失敗: 未知架構",
+  "installErrorCode": "安裝失敗: 錯誤碼 {code}",
+  "@installErrorCode": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "installStatusStarting": "開始安裝",
+  "installStatusInstallingApp": "正在安裝應用",
+  "installStatusInstallingRuntime": "正在安裝執行時",
+  "installStatusInstallingBase": "正在安裝基礎套件",
+  "installStatusDownloadingMeta": "正在下載中繼資料",
+  "installStatusDownloadingFiles": "正在下載檔案",
+  "installStatusPostProcessing": "安裝後處理",
+  "installStatusCompleted": "安裝完成",
+  "installStatusProcessing": "正在處理",
+  "waitingForOperation": "等待{operation}...",
+  "@waitingForOperation": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationInstall": "安裝",
+  "operationUpdate": "更新",
+  "operationPreparing": "準備{operation} {appId}...",
+  "@operationPreparing": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      },
+      "appId": {
+        "type": "String"
+      }
+    }
+  },
+  "operationCancelled": "{operation}已取消",
+  "@operationCancelled": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationCompleted": "{operation}完成",
+  "@operationCompleted": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationUnknown": "{operation}狀態未知",
+  "@operationUnknown": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationConfirmFailed": "無法確認{operation}結果",
+  "@operationConfirmFailed": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationTimeout": "{operation}逾時",
+  "@operationTimeout": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationFailed": "{operation}失敗",
+  "@operationFailed": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "taskCrashInterrupted": "應用崩潰，任務中斷",
+  "taskCrashRetryHint": "應用在執行過程中崩潰，請重試",
+  "uninstallFailedWithError": "解除安裝失敗: {error}",
+  "@uninstallFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallException": "解除安裝異常: {error}",
+  "@uninstallException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "stopFailedWithError": "終止失敗: {error}",
+  "@stopFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "stopException": "終止異常: {error}",
+  "@stopException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreatedWithPath": "快捷方式已建立: {path}",
+  "@shortcutCreatedWithPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreateFailedWithError": "建立失敗: {error}",
+  "@shortcutCreateFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pruneFailedWithError": "清理失敗: {error}",
+  "@pruneFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pruneException": "清理異常: {error}",
+  "@pruneException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "getVersionFailed": "取得版本失敗",
+  "llCliNotInstalled": "ll-cli 未安裝",
+  "uosEnvInstallHint": "UOS 系統安裝玲瓏環境前，請先開啟系統的開發者模式，並確保目前帳號可取得 root 權限（設定-通用-開發者選項-進入開發者模式，辦公系統建議諮詢 IT 謹慎操作）。",
+  "uosAppInstallFailureHint": "若目前為 UOS 系統，請確認是否已開啟系統的開發者模式（設定-通用-開發者選項-進入開發者模式，辦公系統建議諮詢 IT 謹慎操作）。",
+  "appInfoUnavailable": "無法取得應用資訊",
+  "shortcutCreateException": "建立快捷方式失敗: {error}",
+  "@shortcutCreateException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingForInstall": "等待安裝",
+  "cancelInstall": "取消安裝",
+  "uninstallBlockedTitle": "暫時無法解除安裝",
+  "uninstallBlockedMessage": "目前正在安裝/更新「{activeTaskName}」。玲瓏暫不支援同時執行安裝和解除安裝。請等待目前任務完成，或先取消目前任務後再解除安裝。",
+  "@uninstallBlockedMessage": {
+    "placeholders": {
+      "activeTaskName": {
+        "type": "String"
+      }
+    }
+  },
+  "iKnow": "我知道了",
+  "viewDownloadManager": "檢視下載管理",
+  "a11ySearchByTag": "按標籤搜尋：{tag}",
+  "@a11ySearchByTag": {
+    "placeholders": {
+      "tag": {}
+    }
+  },
+  "a11yRemoveSearchTag": "移除搜尋標籤：{tag}",
+  "@a11yRemoveSearchTag": {
+    "placeholders": {
+      "tag": {}
+    }
+  },
+  "a11yInstallApp": "安裝 {appName}",
+  "@a11yInstallApp": {
+    "placeholders": {
+      "appName": {}
+    }
+  },
+  "a11yUpdateApp": "更新 {appName}",
+  "@a11yUpdateApp": {
+    "placeholders": {
+      "appName": {}
+    }
+  },
+  "a11yOpenApp": "開啟 {appName}",
+  "@a11yOpenApp": {
+    "placeholders": {
+      "appName": {}
+    }
+  },
+  "a11yUninstallApp": "解除安裝 {appName}",
+  "@a11yUninstallApp": {
+    "placeholders": {
+      "appName": {}
+    }
+  },
+  "a11ySearchBox": "搜尋應用",
+  "a11ySearchInputHint": "輸入關鍵字搜尋",
+  "a11yCommentInputHint": "輸入留言內容",
+  "a11ySidebarNav": "側邊欄導航",
+  "a11yAppCard": "{appName}，版本 {version}，{status}",
+  "@a11yAppCard": {
+    "placeholders": {
+      "appName": {},
+      "version": {},
+      "status": {}
+    }
+  },
+  "a11yRankingItem": "排名第 {rank}，{appName}",
+  "@a11yRankingItem": {
+    "placeholders": {
+      "rank": {},
+      "appName": {}
+    }
+  },
+  "a11yProcessItem": "處理程序 {name}，PID {pid}",
+  "@a11yProcessItem": {
+    "placeholders": {
+      "name": {},
+      "pid": {}
+    }
+  },
+  "a11yDownloadItem": "下載 {appName}，進度 {percent}%",
+  "@a11yDownloadItem": {
+    "placeholders": {
+      "appName": {},
+      "percent": {}
+    }
+  },
+  "a11yRecommendPage": "推薦",
+  "a11yAllAppsPage": "全部應用",
+  "a11yRankingPage": "排行榜",
+  "a11yMyAppsPage": "我的應用",
+  "a11ySettingsPage": "設定",
+  "a11yAppDetailPage": "應用詳情",
+  "a11yScreenshotArea": "截圖區域",
+  "a11yCommentSection": "留言區",
+  "a11yCarouselArea": "輪播區域",
+  "a11yAppListArea": "應用清單",
+  "a11ySidebarArea": "側邊欄",
+  "a11yMinimize": "最小化",
+  "a11yMaximize": "最大化",
+  "a11yRestore": "還原",
+  "a11yClose": "關閉",
+  "a11yPrevious": "上一個",
+  "a11yNext": "下一個",
+  "a11yTabSelected": "已選中",
+  "a11yTabNotSelected": "未選中",
+  "a11yStatusInstalled": "已安裝",
+  "a11yStatusUpdatable": "可更新",
+  "a11yStatusNotInstalled": "未安裝",
+  "noAppsInCategory": "該分類下暫無應用",
+  "noRanking": "暫無排行",
+  "noRecommend": "暫無推薦",
+  "installTimeout": "安裝逾時：長時間未收到進度更新",
+  "downloadManagerSlowInstallHint": "如果進度看起來較慢，可能正在安裝軟體必備依賴，請再等等……",
+  "loadingInstalledApps": "正在載入已安裝應用...",
+  "appDescriptionPlaceholder": "應用描述",
+  "rankingTabNewUpload": "最新上架榜",
+  "rankingTabDownloadCount": "下載量榜",
+  "uploadedXHoursAgo": "{count}小時前上架",
+  "@uploadedXHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadedXDaysAgo": "{count}天前上架",
+  "@uploadedXDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadedOnDate": "{date}上架",
+  "@uploadedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedXTimes": "下載 {count}次",
+  "@downloadedXTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "repoManagementHintTitle": "僅提供儲存庫管理功能",
+  "repoManagementHintMessage": "本商店僅能取得官方 stable 儲存庫的應用資料，請勿刪除 stable 儲存庫，否則將導致無法安裝應用。",
+  "envManagementTitle": "玲瓏環境管理",
+  "envManagementDescription": "分析環境、管理儲存庫、修復基礎環境和移動儲存位置",
+  "envManagementAnalysisTab": "環境分析",
+  "envManagementRepositoryTab": "儲存庫管理",
+  "envManagementStorageTab": "儲存位置",
+  "envManagementAnalyzing": "正在分析玲瓏環境...",
+  "envManagementApplying": "正在執行操作...",
+  "envManagementNotAnalyzed": "尚未完成環境分析",
+  "envManagementHealthyTitle": "未發現需要處理的問題",
+  "envManagementHealthyMessage": "玲瓏基礎環境、儲存庫與本地資料目前狀態正常。",
+  "envManagementBaseEnvironment": "基礎環境",
+  "envManagementRepositoryMetric": "儲存庫",
+  "envManagementLocalData": "本地資料",
+  "envManagementStorageLocation": "儲存位置",
+  "envManagementNotDetected": "未檢測到",
+  "envManagementUnknown": "未知",
+  "envManagementUsagePercent": "使用率 {percent}%",
+  "@envManagementUsagePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "envManagementEnvironmentHealthyUpgrade": "環境正常（建議升級）",
+  "envManagementEnvironmentHealthy": "環境正常",
+  "envManagementRepositoryReadFailed": "儲存庫配置讀取失敗",
+  "envManagementEnvironmentAbnormal": "環境異常",
+  "envRepoStatusNormal": "正常",
+  "envRepoStatusNotConfigured": "未配置",
+  "envRepoStatusMisconfigured": "配置異常",
+  "envRepoStatusUnavailable": "不可用",
+  "envRepoStatusUnknown": "未知",
+  "envLocalDataDetectionFailed": "檢測失敗",
+  "envLocalDataUnavailable": "不可用",
+  "envLocalDataNormal": "正常",
+  "envIssueLlCliUnavailableTitle": "ll-cli 不可用",
+  "envIssueLlCliUnavailableDescription": "未檢測到可用的玲瓏命令列環境。",
+  "envIssueRepositoryNotConfiguredTitle": "未配置玲瓏儲存庫",
+  "envIssueRepositoryNotConfiguredDescription": "目前沒有可用的玲瓏儲存庫配置，需要先新增或修復儲存庫。",
+  "envIssueDataPermissionTitle": "玲瓏資料目錄權限異常",
+  "envIssueDataPermissionDescription": "ll-package-manager 以 {serviceUser} 使用者執行，但玲瓏資料目錄或關鍵狀態檔案擁有者異常，可能導致儲存庫遷移、下載物件或建立 layer 失敗。",
+  "@envIssueDataPermissionDescription": {
+    "placeholders": {
+      "serviceUser": {
+        "type": "String"
+      }
+    }
+  },
+  "envIssueLocalDataDetectionTitle": "玲瓏本地資料檢測失敗",
+  "envIssueLocalDataDetectionDescription": "無法執行 linyaps 本地資料讀取檢查，請確認 ll-cli 和 package-manager 服務狀態。",
+  "envIssueLocalDataUnavailableTitle": "玲瓏本地資料不可用",
+  "envIssueLocalDataUnavailableDescription": "無法按 linyaps 執行路徑讀取已安裝應用資料，可能影響應用清單、安裝或執行。請先確認玲瓏資料目錄權限和基礎環境狀態，再按需執行修復。",
+  "envIssueStorageSpaceTitle": "玲瓏儲存位置空間不足",
+  "envIssueStorageSpaceDescription": "目前 {path} 所在檔案系統使用率約 {percent}%，建議清理或移動儲存位置。",
+  "@envIssueStorageSpaceDescription": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "envIssueRunningAppsTitle": "有玲瓏應用正在執行",
+  "envIssueRunningAppsDescription": "目前仍有 {count} 個玲瓏應用正在執行，移動儲存位置前必須先關閉。",
+  "@envIssueRunningAppsDescription": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "envRepairAction": "修復",
+  "envHandleAction": "處理",
+  "envRepairLocalDataTitle": "修復玲瓏本地資料",
+  "envRepairLocalDataMessage": "將以管理員權限嘗試修復玲瓏本地資料；如果檢測到需要重新拉取的應用或基礎環境資料，可能產生下載並耗時較長。是否繼續？",
+  "envRepairLocalDataConfirm": "執行修復",
+  "envRepairPermissionTitle": "修復玲瓏資料目錄權限",
+  "envRepairPermissionMessage": "將以管理員權限把 {rootPath} 的關鍵目錄和狀態檔案擁有者恢復為 {serviceUser}，並重新啟動玲瓏 package-manager。是否繼續？",
+  "@envRepairPermissionMessage": {
+    "placeholders": {
+      "rootPath": {
+        "type": "String"
+      },
+      "serviceUser": {
+        "type": "String"
+      }
+    }
+  },
+  "envRepairPermissionConfirm": "修復權限",
+  "envMoveStorageTitle": "移動玲瓏儲存位置",
+  "envMoveStorageMessage": "將複製 {rootPath} 到 {targetPath}，並建立 systemd bind mount。請確認目標分割槽空間充足。",
+  "@envMoveStorageMessage": {
+    "placeholders": {
+      "rootPath": {
+        "type": "String"
+      },
+      "targetPath": {
+        "type": "String"
+      }
+    }
+  },
+  "envMoveStorageConfirm": "開始移動",
+  "envAddRepositoryTitle": "新增玲瓏儲存庫",
+  "envRepositoryName": "儲存庫名稱",
+  "envRepositoryAddress": "儲存庫地址",
+  "envRepositoryAliasOptional": "別名（可選）",
+  "envAddAction": "新增",
+  "envSaveAction": "儲存",
+  "envDeleteAction": "刪除",
+  "envUpdateRepositoryTitle": "修改儲存庫地址：{name}",
+  "@envUpdateRepositoryTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "envSetPriorityTitle": "設定優先順序：{name}",
+  "@envSetPriorityTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "envRepositoryPriority": "優先順序",
+  "envPriorityMustBeNumber": "優先順序必須是數字",
+  "envRemoveRepositoryTitle": "刪除儲存庫",
+  "envRemoveRepositoryMessage": "確定刪除儲存庫 {name} 嗎？",
+  "@envRemoveRepositoryMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "envRepositoryAdded": "儲存庫已新增",
+  "envRepositoryAddFailed": "新增儲存庫失敗：{error}",
+  "@envRepositoryAddFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "envRepositoryUpdated": "儲存庫已更新",
+  "envRepositoryUpdateFailed": "更新儲存庫失敗：{error}",
+  "@envRepositoryUpdateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "envPriorityUpdated": "優先順序已更新",
+  "envPriorityUpdateFailed": "設定優先順序失敗：{error}",
+  "@envPriorityUpdateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "envRepositoryRemoved": "儲存庫已刪除",
+  "envRepositoryRemoveFailed": "刪除儲存庫失敗：{error}",
+  "@envRepositoryRemoveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "envDefaultRepositoryUpdated": "預設儲存庫已更新",
+  "envDefaultRepositoryUpdateFailed": "設定預設儲存庫失敗：{error}",
+  "@envDefaultRepositoryUpdateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "envMirrorEnabled": "映象已啟用",
+  "envMirrorDisabled": "映象已停用",
+  "envMirrorUpdateFailed": "修改映象狀態失敗：{error}",
+  "@envMirrorUpdateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "envOpenLogDirectoryFailed": "開啟日誌目錄失敗",
+  "envRepositoryNotLoaded": "尚未載入儲存庫配置",
+  "envRepositoryDefaultValue": "預設儲存庫：{name}",
+  "@envRepositoryDefaultValue": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "envNotSet": "未設定",
+  "envAddRepository": "新增儲存庫",
+  "envNoRepositories": "暫無儲存庫配置",
+  "envDefaultBadge": "預設",
+  "envRepositoryDetails": "name={name}  priority={priority}",
+  "@envRepositoryDetails": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "priority": {
+        "type": "String"
+      }
+    }
+  },
+  "envRepositoryActions": "儲存庫操作",
+  "envEditAddress": "修改地址",
+  "envSetDefault": "設為預設",
+  "envSetPriority": "設定優先順序",
+  "envEnableMirror": "啟用映象",
+  "envDisableMirror": "停用映象",
+  "envCurrentStorageLocation": "目前儲存位置",
+  "envStorageNotAnalyzed": "尚未完成儲存位置分析",
+  "envStorageSummary": "{path}  使用率 {percent}%",
+  "@envStorageSummary": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "envNewStorageLocation": "新的儲存位置",
+  "envStorageMoveMethod": "移動方式",
+  "envStorageMoveMethodDescription": "玲瓏目前不支援直接改安裝目錄。這裡會複製資料後建立 systemd bind mount，將新目錄掛載到 {rootPath}。",
+  "@envStorageMoveMethodDescription": {
+    "placeholders": {
+      "rootPath": {
+        "type": "String"
+      }
+    }
+  },
+  "envMoveStorageAction": "移動儲存位置",
+  "envCloseAppsBeforeMoveTitle": "移動前需要關閉應用",
+  "envCloseAppsBeforeMoveMessage": "目前仍有 {count} 個玲瓏應用正在執行。",
+  "@envCloseAppsBeforeMoveMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "envResultDataPermissionCompleted": "玲瓏資料目錄權限已修復",
+  "envResultDataPermissionFailed": "玲瓏資料目錄權限修復失敗",
+  "envResultLocalDataUnsupported": "目前系統元件不支援自動清理問題物件，無法自動修復玲瓏本地資料，請升級系統相關元件或使用發行版工具處理。",
+  "envResultLocalDataCompleted": "玲瓏本地資料修復已執行",
+  "envResultLocalDataCompletedLegacy": "玲瓏本地資料修復已執行（已相容舊版系統引數）",
+  "envResultLocalDataFailed": "玲瓏本地資料修復失敗",
+  "envResultLocalDataChecksumMismatch": "玲瓏本地資料複驗發現物件 checksum 不一致，自動清理後仍未完成修復；若重新拉取後仍復現，通常需要上游儲存庫資料或 linyaps 本地儲存相容性修復。",
+  "envPartialCommitsUnknown": "部分 partial commits",
+  "envPartialCommitsCount": "{count} 個 partial commits",
+  "@envPartialCommitsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "envResultLocalDataRepullCompleted": "玲瓏本地資料已清理問題物件，並重新拉取 {partialCommits}，複驗透過。",
+  "@envResultLocalDataRepullCompleted": {
+    "placeholders": {
+      "partialCommits": {
+        "type": "String"
+      }
+    }
+  },
+  "envResultLocalDataRepullCompletedLegacy": "玲瓏本地資料已清理問題物件，並重新拉取 {partialCommits}，複驗透過（已相容舊版系統引數）。",
+  "@envResultLocalDataRepullCompletedLegacy": {
+    "placeholders": {
+      "partialCommits": {
+        "type": "String"
+      }
+    }
+  },
+  "envResultLocalDataRepullFailed": "玲瓏本地資料已清理可自動處理的問題物件，並嘗試重新拉取 {partialCommits}，但重新拉取後複驗仍未透過。請檢視日誌確認具體 ref 的拉取或複驗失敗原因。",
+  "@envResultLocalDataRepullFailed": {
+    "placeholders": {
+      "partialCommits": {
+        "type": "String"
+      }
+    }
+  },
+  "envResultLocalDataRepullFailedLegacy": "玲瓏本地資料已清理可自動處理的問題物件，並嘗試重新拉取 {partialCommits}，但重新拉取後複驗仍未透過。請檢視日誌確認具體 ref 的拉取或複驗失敗原因。（已相容舊版系統引數）",
+  "@envResultLocalDataRepullFailedLegacy": {
+    "placeholders": {
+      "partialCommits": {
+        "type": "String"
+      }
+    }
+  },
+  "envResultLocalDataRepullChecksumMismatch": "玲瓏本地資料已清理可自動處理的問題物件，並嘗試重新拉取 {partialCommits}，但複驗仍發現 checksum 不一致，可能是上游儲存庫資料與 linyaps 本地儲存模式不相容。",
+  "@envResultLocalDataRepullChecksumMismatch": {
+    "placeholders": {
+      "partialCommits": {
+        "type": "String"
+      }
+    }
+  },
+  "envResultLocalDataRepullChecksumMismatchLegacy": "玲瓏本地資料已清理可自動處理的問題物件，並嘗試重新拉取 {partialCommits}，但複驗仍發現 checksum 不一致，可能是上游儲存庫資料與 linyaps 本地儲存模式不相容。（已相容舊版系統引數）",
+  "@envResultLocalDataRepullChecksumMismatchLegacy": {
+    "placeholders": {
+      "partialCommits": {
+        "type": "String"
+      }
+    }
+  },
+  "envResultStorageBlockedRunningApps": "仍有 {count} 個玲瓏應用正在執行，請關閉後再移動儲存位置。",
+  "@envResultStorageBlockedRunningApps": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "envResultStorageBlockedActiveTask": "下載管理中仍有安裝或更新任務，請等待完成或取消任務後再移動玲瓏儲存位置。",
+  "envResultStorageBlockedNamedTask": "目前正在處理「{name}」，請等待完成或取消任務後再移動玲瓏儲存位置。",
+  "@envResultStorageBlockedNamedTask": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "envResultStorageAlreadyBindMounted": "{path} 目前已經是 bind mount，請先確認現有掛載配置後再遷移。",
+  "@envResultStorageAlreadyBindMounted": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "envResultStorageFilesystemUnavailable": "無法讀取目標路徑所在檔案系統空間：{path}",
+  "@envResultStorageFilesystemUnavailable": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "envResultStorageSpaceUnknown": "無法確認目前目錄或目標路徑的磁碟空間，請檢查後重試。",
+  "envResultStorageInsufficientSpace": "目標路徑可用空間不足，需要至少 {requiredSpace}，目前可用 {availableSpace}。",
+  "@envResultStorageInsufficientSpace": {
+    "placeholders": {
+      "requiredSpace": {
+        "type": "String"
+      },
+      "availableSpace": {
+        "type": "String"
+      }
+    }
+  },
+  "envResultStorageTargetNotAbsolute": "目標路徑必須是絕對路徑。",
+  "envResultStorageTargetContainsLineBreak": "目標路徑不能包含換行符。",
+  "envResultStorageTargetUnsafeSystemPath": "目標路徑不能是系統根目錄或目前玲瓏目錄。",
+  "envResultStorageTargetInsideCurrentRoot": "目標路徑不能位於目前玲瓏目錄內部。",
+  "envResultStorageMoveCompleted": "玲瓏儲存位置已移動",
+  "envResultStorageMoveFailed": "移動玲瓏儲存位置失敗",
+  "envResultUnexpectedFailure": "操作失敗：{error}",
+  "@envResultUnexpectedFailure": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorSolutionHelpTooltip": "檢視解決方案",
+  "a11yErrorSolutionHelp": "查詢該安裝錯誤的解決方案",
+  "errorSolutionNoSolution": "暫無解決方案",
+  "errorSolutionQueryFailed": "查詢失敗，請重試",
+  "errorSolutionRetry": "重新查詢",
+  "errorSolutionCommunityPost": "社群發帖",
+  "errorSolutionRepair": "一鍵修復",
+  "errorSolutionClose": "關閉解決方案",
+  "errorSolutionRemoteImage": "解決方案遠端圖片",
+  "errorSolutionImageBlocked": "已封鎖非網路圖片",
+  "errorSolutionImageLoadFailed": "遠端圖片載入失敗",
+  "scriptReviewTitle": "指令碼內容預覽",
+  "scriptReviewSemanticLabel": "即將執行的完整修復指令碼",
+  "executeRepairScript": "確認並執行",
+  "repairExecutionTitle": "一鍵修復",
+  "repairExecuting": "正在執行修復指令碼…",
+  "repairOutputTitle": "即時輸出",
+  "repairOutputEmpty": "等待指令碼輸出…",
+  "repairOutputTruncated": "介面已省略較早的 {count} 行，完整內容請檢視日誌。",
+  "@repairOutputTruncated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repairCompleteRetry": "修復完成，請重新嘗試安裝。",
+  "repairFailedWithExitCode": "修復指令碼執行失敗（退出碼 {exitCode}）。",
+  "@repairFailedWithExitCode": {
+    "placeholders": {
+      "exitCode": {
+        "type": "int"
+      }
+    }
+  },
+  "repairTimedOut": "修復指令碼執行超過 30 分鐘，已停止等待。請檢視日誌確認系統狀態。",
+  "repairExecutionError": "修復指令碼無法執行：{message}",
+  "@repairExecutionError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "repairInvalidSignature": "修復指令碼簽章無效，已封鎖執行。",
+  "openRepairLog": "開啟日誌目錄",
+  "copyRepairOutput": "複製目前輸出",
+  "repairElapsedTime": "已執行 {elapsed}",
+  "@repairElapsedTime": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      }
+    }
+  }
+}

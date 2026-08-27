@@ -68,6 +68,21 @@ void main() {
       );
     });
 
+    test('日语区域 Locale 归一为日语资源', () {
+      expect(
+        resolveInitialAppLocale(
+          persistedLanguageCode: null,
+          platformLocales: const [Locale('ja', 'JP')],
+        ),
+        const Locale('ja'),
+      );
+      final l10n = appLocalizationsForLocale('ja_JP');
+      expect(l10n.languageSelfName, '日本語');
+      // 日语无名词复数屈折，计数消息使用直接插值即可。
+      expect(l10n.updateBatchAllSucceededTitle(1), '1 件のアプリを更新しました');
+      expect(l10n.updateBatchAllSucceededTitle(5), '5 件のアプリを更新しました');
+    });
+
     test('没有受支持语言时回退产品默认语言', () {
       expect(
         resolveInitialAppLocale(

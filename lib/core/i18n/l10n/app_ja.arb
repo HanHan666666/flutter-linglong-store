@@ -1,0 +1,1339 @@
+{
+  "@@locale": "ja",
+  "@@linuxDesktopLocale": "ja",
+  "@@appStreamLocale": "ja",
+  "appTitle": "Linyaps ストアコミュニティ版",
+  "linuxDesktopNameNightly": "Linyaps ストアコミュニティ版 Nightly",
+  "linuxDesktopGenericName": "アプリストア",
+  "linuxDesktopComment": "Linyaps アプリの閲覧・インストール・管理",
+  "linuxDesktopCommentNightly": "Linyaps アプリの閲覧・インストール・管理を行う Nightly ビルド",
+  "linuxDesktopKeywords": "linyaps;ストア;アプリ;パッケージ;",
+  "linuxAppStreamDescription": "Linyaps アプリを閲覧・インストール・管理するためのデスクトップアプリストア。",
+  "recommend": "おすすめ",
+  "allApps": "すべてのアプリ",
+  "ranking": "ランキング",
+  "myApps": "マイアプリ",
+  "update": "更新",
+  "settings": "設定",
+  "category": "カテゴリ",
+  "office": "オフィス",
+  "system": "システム",
+  "develop": "開発",
+  "entertainment": "エンターテイメント",
+  "searchPlaceholder": "ここにアプリ名を入力して検索",
+  "search": "検索",
+  "refresh": "更新",
+  "linglongRecommend": "Linyaps おすすめ",
+  "loading": "読み込み中...",
+  "installing": "インストール中...",
+  "success": "成功",
+  "failed": "失敗",
+  "cancel": "キャンセル",
+  "noMoreData": "これ以上のデータはありません",
+  "install": "インストール",
+  "uninstall": "アンインストール",
+  "open": "開く",
+  "update_action": "更新",
+  "run": "起動",
+  "confirm": "確認",
+  "viewDetail": "詳細を見る",
+  "screenShots": "スクリーンショット",
+  "versionSelect": "バージョン選択",
+  "versionNumber": "バージョン番号",
+  "appType": "アプリ種別",
+  "channel": "チャンネル",
+  "mode": "モード",
+  "repoSource": "リポジトリソース",
+  "fileSize": "ファイルサイズ",
+  "downloadCount": "ダウンロード数",
+  "operation": "操作",
+  "linglongProcess": "Linyaps プロセス",
+  "baseSetting": "基本設定",
+  "about": "情報",
+  "envMissing": "Linyaps 環境がこのシステムに見つかりません",
+  "envMissingDetail": "システムに Linyaps コンポーネントが存在しないかバージョンが低いため、先にインストールする必要があります。",
+  "autoInstall": "自動インストール",
+  "manualInstall": "手動インストール",
+  "recheck": "再チェック",
+  "exitStore": "ストアを終了",
+  "errorNetwork": "ネットワーク接続に失敗しました",
+  "errorNetworkDetail": "ネットワーク接続を確認してから再試行してください",
+  "errorInstallFailed": "インストールに失敗しました",
+  "errorUninstallFailed": "アンインストールに失敗しました",
+  "errorUpdateFailed": "更新に失敗しました",
+  "errorUnknown": "不明なエラー",
+  "retry": "再試行",
+  "downloading": "ダウンロード中...",
+  "downloadComplete": "ダウンロード完了",
+  "installComplete": "インストール完了",
+  "uninstallComplete": "アンインストール完了",
+  "updateComplete": "更新完了",
+  "noApps": "アプリがありません",
+  "noInstalledApps": "インストール済みのアプリはありません",
+  "noInstalledAppsHint": "まだ Linyaps アプリをインストールしていません。おすすめページを見てみましょう",
+  "noUpdateApps": "利用可能な更新はありません",
+  "version": "バージョン",
+  "size": "サイズ",
+  "description": "概要",
+  "developer": "開発元",
+  "confirmDelete": "削除の確認",
+  "confirmDeleteMessage": "この項目を削除しますか？この操作は取り消せません。",
+  "confirmUninstall": "アンインストールの確認",
+  "confirmUninstallMessage": "このアプリをアンインストールしますか？",
+  "noData": "データがありません",
+  "noDataDescription": "まだ何も表示する内容がありません",
+  "pageNotFound": "ページが見つかりません",
+  "pageNotFoundDescription": "申し訳ありません。ページが見つかりません",
+  "backToHome": "ホームに戻る",
+  "searchApps": "アプリを検索...",
+  "languageSettings": "言語設定",
+  "themeSettings": "テーマ設定",
+  "fontSettings": "フォント設定",
+  "cacheManagement": "キャッシュ管理",
+  "storeOptions": "ストア設定",
+  "fontSettingsHint": "システムのフォント設定が基本値となり、以下の調整はその上に加算されます。",
+  "fontSizeAdjustment": "フォントサイズ",
+  "fontWeightAdjustmentLabel": "フォントの太さ",
+  "fontWeightLighter": "細め",
+  "fontWeightNormal": "標準",
+  "fontWeightBolder": "太め",
+  "fontScalePercent": "{percent}%",
+  "@fontScalePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "checkUpdate": "更新をチェック",
+  "currentVersion": "現在のバージョン: {version}",
+  "@currentVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "newVersionFound": "新バージョン {tagName} が見つかりました。現在のバージョンは {currentVersion}",
+  "@newVersionFound": {
+    "placeholders": {
+      "tagName": {
+        "type": "String"
+      },
+      "currentVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "alreadyLatest": "現在 {version} は最新です",
+  "@alreadyLatest": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "checkingUpdate": "更新をチェック中...",
+  "goDownload": "ダウンロードへ",
+  "updateNow": "今すぐ更新",
+  "updateDetectingInstallation": "インストール方式を検出中...",
+  "updateResolvingAsset": "インストールパッケージを選択中...",
+  "updateDownloading": "更新パッケージをダウンロード中...",
+  "updateVerifying": "更新パッケージを検証中...",
+  "updateInstalling": "更新をインストール中...",
+  "updateSucceeded": "更新をインストールしました。新しいバージョンを使うにはアプリを一度閉じてから再度開いてください",
+  "updateFailed": "更新に失敗しました",
+  "updateCancelled": "更新をキャンセルしました",
+  "updateRetry": "再試行",
+  "updateManualInstallHint": "自動更新できません。ダウンロードページから手動でインストールしてください",
+  "updateUnsupportedArch": "現在のアーキテクチャは自動インストールに対応していません",
+  "updateChecksumMissing": "更新パッケージのチェックサム情報がないため、インストールを中止しました",
+  "updateChecksumFailed": "更新パッケージの検証に失敗したため、インストールを中止しました",
+  "cacheSize": "キャッシュサイズ",
+  "startupCheckUpdate": "起動時にストアの更新をチェック",
+  "startupCheckUpdateDesc": "起動のたびに新しいバージョンの有無を確認します",
+  "systemNotifications": "システム通知",
+  "systemNotificationsDescription": "一括更新の完了後、デスクトップ通知で結果を表示します",
+  "userExperienceProgram": "ユーザーエクスペリエンス向上プログラム",
+  "userExperienceProgramDesc": "匿名の利用統計を送信し、ストア改善にご協力ください",
+  "userExperienceProgramDialogIntro": "ユーザーエクスペリエンス向上プログラムに参加することで、Linyaps ストアの改善にご協力いただけます。収集するのは少量の匿名情報のみで、アプリのおすすめとダウンロード体験の改善に使われます：",
+  "userExperienceProgramDialogItemIdentity": "匿名デバイス識別子（ランダムな文字列で、個人を特定できません）",
+  "userExperienceProgramDialogItemSystem": "システムアーキテクチャ、システムバージョンとカーネル情報、ホスト名、Linyaps 環境のバージョン",
+  "userExperienceProgramDialogItemApps": "インストール済みの Linyaps アプリ一覧と、アプリのインストール・更新・アンインストール記録",
+  "userExperienceProgramDialogItemNetwork": "ネットワークアドレス（地域統計のみに使用）",
+  "userExperienceProgramDialogFooter": "これらの情報は実際の身元と紐付けられず、個人を特定するためにも使われません。スイッチはいつでもオフにでき、オフ後は一切データを送信しません。",
+  "a11yUserExperienceProgramInfo": "ユーザーエクスペリエンス向上プログラムの収集情報の説明を見る",
+  "updateBatchAllSucceededTitle": "{count} 件のアプリを更新しました",
+  "@updateBatchAllSucceededTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchFinishedTitle": "一括更新が終了しました",
+  "updateBatchNoSuccessTitle": "アプリの更新が完了していません",
+  "updateBatchResultSummary": "結果: {summary}",
+  "@updateBatchResultSummary": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchResultSeparator": "、",
+  "updateBatchSucceededCount": "成功 {count} 件",
+  "@updateBatchSucceededCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchFailedCount": "失敗 {count} 件",
+  "@updateBatchFailedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchCancelledCount": "キャンセル {count} 件",
+  "@updateBatchCancelledCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchInterruptedCount": "中断 {count} 件",
+  "@updateBatchInterruptedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updateBatchAppNameSeparator": "、",
+  "updateBatchUpdatedApps": "更新済み: {names}",
+  "@updateBatchUpdatedApps": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "updateBatchUpdatedAppsOverflow": "更新済み: {names} ほか {remainingCount} 件",
+  "@updateBatchUpdatedAppsOverflow": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "remainingCount": {
+        "type": "int"
+      }
+    }
+  },
+  "softwareRendering": "ソフトウェアレンダリング",
+  "softwareRenderingEnabled": "ソフトウェアレンダリング",
+  "hardwareRenderingEnabled": "ハードウェアレンダリング",
+  "rendererModeDetecting": "現在のレンダリング状態を検出中…",
+  "rendererModeDetectFailed": "現在のレンダリング状態を取得できませんでしたが、次回起動時に使う描画方式は保存できます。",
+  "rendererModeCurrentStatus": "現在は{mode}を使用しています。{reason}",
+  "@rendererModeCurrentStatus": {
+    "placeholders": {
+      "mode": {},
+      "reason": {}
+    }
+  },
+  "rendererModeReasonEnvironment": "現在のレンダリングモードは環境変数 {value} によって制御されています。",
+  "@rendererModeReasonEnvironment": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "rendererModeReasonUserPreference": "保存された設定に従って有効になっています。",
+  "rendererModeReasonCpuFallback": "互換性を高めるため、このデバイスでは既定でソフトウェアレンダリングを使用します。",
+  "rendererModeReasonDefault": "このデバイスでは既定でハードウェアレンダリングを使用します。",
+  "rendererModeEnvLocked": "環境変数 {value} が検出されました。現在のレンダリングモードはシステム環境によって制御されているため、ここでは変更できません。",
+  "@rendererModeEnvLocked": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "rendererModeNextLaunchStatus": "次回起動時は{mode}を使用します。",
+  "@rendererModeNextLaunchStatus": {
+    "placeholders": {
+      "mode": {}
+    }
+  },
+  "rendererModeWhitelistHint": "より安定した表示のため、このデバイスではソフトウェアレンダリングを維持することをおすすめします。",
+  "rendererModeHardwareRiskHint": "次回起動時はハードウェアレンダリングを使用します。画面が正常に表示されない場合は、以下のコマンドで復旧できます。",
+  "rendererModeDisableWarningTitle": "ソフトウェアレンダリングを無効にする確認",
+  "rendererModeDisableWarningMessage": "このデバイスでソフトウェアレンダリングを無効にすると、アプリが正常に表示されなくなる可能性があります。より安定した表示のためソフトウェアレンダリングを維持することをおすすめします。",
+  "rendererModeDetectedCpu": "このデバイスのプロセッサー: {cpu}",
+  "@rendererModeDetectedCpu": {
+    "placeholders": {
+      "cpu": {}
+    }
+  },
+  "rendererModeDisableBlackScreenHint": "次回の起動後にアプリが正常に表示されない場合は、ターミナルで以下のコマンドを実行してからアプリを再度開いてください。",
+  "rendererModeDataDirectoryLabel": "データディレクトリ",
+  "rendererModeDeleteCommandLabel": "削除コマンド",
+  "rendererModeSaveCommandHint": "アプリが正常に表示されなくなった場合に備えて、このコマンドをコピーして保管しておくことをおすすめします。",
+  "rendererModeDisableConfirm": "無効にする",
+  "rendererModeSavedSoftware": "ソフトウェアレンダリングに切り替えました。次回の起動時に有効になります。",
+  "rendererModeSavedHardware": "ハードウェアレンダリングに切り替えました。次回の起動時に有効になります。",
+  "rendererModeSaveFailed": "レンダリング設定の保存に失敗しました。しばらくしてから再試行してください。",
+  "showBaseServices": "基盤ランタイムサービスを表示",
+  "showBaseServicesDesc": "インストール済みリストに基盤ランタイムサービスを表示します",
+  "cleanDeprecatedServices": "廃止された基盤サービスを整理",
+  "cleanDeprecatedServicesDesc": "使用されなくなった基盤ランタイムサービスを削除し、ディスク領域を解放します",
+  "checkNewVersion": "新バージョンをチェック",
+  "feedbackMenu": "フィードバック",
+  "officialWebsite": "公式サイト",
+  "communityExchange": "コミュニティ",
+  "aboutDevelopers": "開発者について",
+  "feedbackTitle": "フィードバック",
+  "uploadLog": "ログファイルも一緒に送信",
+  "noPrivacyInfo": "ログに個人のプライバシー情報は含まれません",
+  "submitFeedback": "送信",
+  "feedbackHint": "問題の概要や説明をご記入ください",
+  "feedbackSuccess": "フィードバックありがとうございます！",
+  "feedbackFailed": "フィードバックの送信に失敗しました。しばらくしてから再試行してください",
+  "confirmExit": "終了の確認",
+  "exitWithInstalling": "進行中のインストールタスクがあります。終了しますか？",
+  "exitBtn": "終了",
+  "downloadManager": "ダウンロード管理",
+  "downloadWaitingForTask": "ダウンロードタスクの開始を待っています",
+  "downloadRealtimeSpeed": "リアルタイム速度 {speed}",
+  "@downloadRealtimeSpeed": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadHistoryCount": "{count} 件の記録",
+  "@downloadHistoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ogInstallRequestReceived": "ウェブからのインストール要求を受信しました: {appName}",
+  "@ogInstallRequestReceived": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallEnqueued": "ダウンロード管理に追加しました: {appName}",
+  "@ogInstallEnqueued": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallInvalidLink": "ウェブのインストールリンクを認識できません。og://appId のみ対応しています",
+  "ogInstallEnvironmentUnavailable": "Linyaps 実行環境が利用できないため、ウェブからの自動インストールは現在中断されています",
+  "ogInstallDuplicate": "{appName} は既にダウンロード管理にあります",
+  "@ogInstallDuplicate": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ogInstallDetailFailed": "アプリ情報を取得できないため、インストールを開始しませんでした",
+  "ogInstallDetailFailedWithError": "アプリ情報を取得できないため、インストールを開始しませんでした: {error}",
+  "@ogInstallDetailFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "clearRecords": "記録を消去",
+  "noDownloadTasks": "ダウンロードタスクはありません",
+  "cannotOpenLink": "リンクを開けません: {url}",
+  "@cannotOpenLink": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "envCheckPassed": "インストールが完了し、環境チェックに合格しました",
+  "envCheckFailed": "インストールは完了しましたが、環境にまだ問題があります。確認してください",
+  "launching": "{appName} を起動中...",
+  "@launching": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "launchFailed": "起動に失敗しました: {error}",
+  "@launchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "copied": "コピーしました: {value}",
+  "@copied": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "shareLink": "共有",
+  "shareMessage": "「{name}」というアプリを見てみて",
+  "@shareMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "linkCopied": "リンクをコピーしました。ぜひ共有してください",
+  "shareFailed": "共有に失敗しました",
+  "createDesktopShortcut": "デスクトップショートカットを作成",
+  "appDetailTitle": "アプリ詳細",
+  "appNotFound": "アプリ情報が見つかりません",
+  "noVersionHistory": "バージョン履歴はありません",
+  "installedBadge": "インストール済み",
+  "versionInstallTargetMissing": "対応するインストール済みバージョンが見つかりません。更新してから再試行してください",
+  "uninstallFailed": "アンインストールに失敗しました: {result}",
+  "@uninstallFailed": {
+    "placeholders": {
+      "result": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallSuccess": "{name} をアンインストールしました",
+  "@uninstallSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallError": "アンインストール中に異常が発生しました: {error}",
+  "@uninstallError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "commandCopied": "コマンドをクリップボードにコピーしました。ターミナルに貼り付けて実行してください",
+  "copy": "コピー",
+  "copyLog": "ログをコピー",
+  "copySucceeded": "コピーに成功しました",
+  "copyErrorMessage": "エラーメッセージをコピー",
+  "skipCheck": "チェックをスキップ",
+  "loadFailed": "読み込みに失敗しました",
+  "shortcutCreated": "ショートカットを作成しました",
+  "appComments": "コメント欄",
+  "appCommentsEmpty": "まだコメントがありません。最初のコメントを書いてみましょう",
+  "commentInputHint": "このアプリの使用感想を書いてみましょう",
+  "submitComment": "コメントを投稿",
+  "commentVersionLabel": "関連バージョン",
+  "anonymousComment": "匿名ゲスト",
+  "commentHelpful": "役に立った",
+  "commentNotHelpful": "役に立たなかった",
+  "commentAnonymousHint": "匿名コメント。新しい順に表示されます",
+  "commentSubmitSuccess": "コメントを送信しました",
+  "commentSubmitFailed": "コメントの送信に失敗しました: {error}",
+  "@commentSubmitFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreateFailed": "作成に失敗しました: {error}",
+  "@shortcutCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "envCheckTitle": "環境チェック",
+  "checkingLinglongEnv": "Linyaps 環境をチェック中...",
+  "unknownStatus": "不明な状態",
+  "llCliVersion": "ll-cli バージョン",
+  "notDetected": "未検出",
+  "errorMessage": "エラーメッセージ",
+  "repoShowFailureTitle": "リポジトリ読み取りコマンドの実行に失敗しました",
+  "repoShowFailureCommand": "{command} を実行して Linyaps リポジトリ設定を読み取るのに失敗しました。",
+  "@repoShowFailureCommand": {
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "repoShowFailureReason": "このコマンドはシステムサービス org.deepin.linglong.PackageManager.service を通じてリポジトリ設定を読み取ります。サービスが起動していない場合は失敗を返します。",
+  "repoShowFailureInstalledQuestion": "アプリ環境はもうインストール済みですか？",
+  "repoShowFailureRestartHint": "ll-cli とアプリ環境がインストール済みの場合は、このシステムサービスを再起動してから再度チェックしてみてください。",
+  "restartPackageManagerService": "org.deepin.linglong.PackageManager.service の再起動を試す",
+  "restartingPackageManagerService": "org.deepin.linglong.PackageManager.service を再起動中...",
+  "packageManagerServiceRestartPassed": "サービスを再起動しました。環境チェックに合格しました",
+  "packageManagerServiceRestartStillFailed": "サービスは再起動しましたが、環境にまだ問題があります。エラーメッセージを確認してください",
+  "packageManagerServiceRestartFailed": "サービスの再起動に失敗しました: {error}",
+  "@packageManagerServiceRestartFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "installingLinglong": "インストール中...",
+  "openInstallLogDirectory": "ログディレクトリを開く",
+  "cannotOpenDirectory": "ディレクトリを開けません: {path}",
+  "@cannotOpenDirectory": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "appIntroduction": "アプリ紹介",
+  "collapse": "折りたたむ",
+  "expandAll": "すべて展開",
+  "collapseCategories": "カテゴリを折りたたむ",
+  "expandCategories": "カテゴリを展開",
+  "packageName": "パッケージ名",
+  "architecture": "アーキテクチャ",
+  "channelLabel": "チャネル",
+  "runtime": "ランタイム",
+  "license": "ライセンス",
+  "homepage": "ホームページ",
+  "appInfo": "アプリ情報",
+  "versionHistory": "バージョン履歴",
+  "versionListLoadFailed": "バージョンリストの読み込みに失敗しました。再試行してください",
+  "versionListUpdateFailed": "バージョンリストの更新に失敗しました。前回の結果を表示しています",
+  "uninstallApp": "アプリをアンインストール",
+  "uninstallConfirmMessage": "{name} をアンインストールしますか？\nアンインストール後はアプリデータが削除され、この操作は元に戻せません。",
+  "@uninstallConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noDescription": "説明はありません",
+  "categoryLabel": "カテゴリ",
+  "searchNotFound": "関連するアプリが見つかりません",
+  "searchTryOtherKeywords": "他のキーワードで検索してみてください",
+  "searchInputHint": "上部の検索ボックスにキーワードを入力",
+  "searchPressEnter": "Enter キーでアプリを検索",
+  "searchResultCount": "{count} 件の結果が見つかりました",
+  "@searchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchInstalledApps": "インストール済みのアプリを検索",
+  "noMatchingApp": "一致するアプリが見つかりません",
+  "noMatchingAppHint": "\"{query}\" に関連するアプリが見つかりません",
+  "@noMatchingAppHint": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "updateCount": "{count} 件のアプリを更新できます",
+  "@updateCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ignoredUpdatesCount": "除外中 ({count})",
+  "@ignoredUpdatesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ignoredUpdatesTitle": "除外された更新",
+  "ignoredUpdatesEmptyTitle": "除外されたアプリはありません",
+  "ignoredUpdatesEmptyDescription": "更新可能なアプリのその他メニューから、アップグレードしたくないアプリを継続的に除外できます。",
+  "ignoreAppUpdates": "このアプリの更新を除外",
+  "restoreUpdateNotifications": "更新通知を復元",
+  "ignoredVersion": "除外時のバージョン: {version}",
+  "@ignoredVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateSuccess": "{appName} の今後の更新を除外しました。「除外済み」から復元できます",
+  "@ignoreUpdateSuccess": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateActiveTask": "{appName} は更新キューにあるため、現在中除できません",
+  "@ignoreUpdateActiveTask": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "ignoreUpdateFailed": "更新除外設定の保存に失敗しました。再試行してください",
+  "ignoreUpdateInvalidApp": "このアプリを除外できません: アプリ識別子が無効です",
+  "restoreUpdateSuccess": "{appName} の更新通知を復元しました",
+  "@restoreUpdateSuccess": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "restoreUpdateFailed": "更新通知の復元に失敗しました。再試行してください",
+  "restoreUpdateRefreshFailed": "更新通知は復元しましたが、更新チェックに失敗しました。あとで再試行できます",
+  "a11yManageIgnoredUpdates": "除外された更新を管理。全部で {count} 件のアプリがあります",
+  "@a11yManageIgnoredUpdates": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "a11yIgnoreAppUpdates": "{appName} の今後の更新を除外",
+  "@a11yIgnoreAppUpdates": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yUpdateAppMoreActions": "{appName} のその他の更新操作",
+  "@a11yUpdateAppMoreActions": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yRestoreAppUpdates": "{appName} の更新通知を復元",
+  "@a11yRestoreAppUpdates": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yIgnoredUpdateItem": "{appName}、アプリ ID {appId}、除外時のバージョン {version}",
+  "@a11yIgnoredUpdateItem": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "appId": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updating": "更新中...",
+  "updateAll": "すべて更新",
+  "updateCheckFailed": "更新のチェックに失敗しました",
+  "noUpdate": "更新はありません",
+  "allAppsUpToDate": "すべてのアプリは最新バージョンです",
+  "noMore": "これ以上ありません",
+  "appTitleShort": "Linyaps ストア",
+  "detectingEnv": "Linyaps 環境を検出中...",
+  "stepEnvCheck": "環境チェック",
+  "stepAppLoad": "アプリ読み込み",
+  "stepUpdateCheck": "更新チェック",
+  "stepQueueRecovery": "キュー復元",
+  "launchFailedTitle": "起動に失敗しました",
+  "skip": "スキップ",
+  "cannotGetVersion": "バージョン情報を取得できません",
+  "newVersionAvailable": "新バージョン {version} があります！\n現在のバージョン: {current}",
+  "@newVersionAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      }
+    }
+  },
+  "languageZh": "中文",
+  "languageSelfName": "日本語",
+  "themeFollowSystem": "システムに従う",
+  "themeLight": "ライトモード",
+  "themeDark": "ダークモード",
+  "clearingCache": "消去中...",
+  "clearCache": "キャッシュを消去",
+  "clearCacheDesc": "キャッシュを消去するとストレージ領域を解放できますが、アプリのアイコンと一部のデータが再ダウンロードされます。",
+  "clearCacheConfirm": "キャッシュ消去の確認",
+  "clearCacheMessage": "すべてのキャッシュを消去しますか？",
+  "cacheCleared": "キャッシュを消去しました",
+  "clearCacheFailed": "キャッシュの消去に失敗しました",
+  "appVersion": "アプリバージョン",
+  "appCount": "収録アプリ数",
+  "systemArch": "システムアーキテクチャ",
+  "linglongVersion": "Linyaps バージョン",
+  "checkNetwork": "ネットワーク接続を確認してから再試行してください",
+  "copyContainerCommand": "コンテナに入るコマンドをコピー",
+  "commandCopiedToClipboard": "コマンドをクリップボードにコピーしました",
+  "copyAppId": "アプリ ID をコピー",
+  "stopSuccess": "{name} を停止しました",
+  "@stopSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stopFailed": "停止に失敗しました",
+  "processRefreshFailed": "プロセスリストの更新に失敗しました...",
+  "noRunningApps": "現在実行中の Linyaps アプリはありません",
+  "notRefreshed": "まだ更新されていません",
+  "lastRefresh": "前回の更新",
+  "refreshing": "更新中",
+  "appName": "アプリ名",
+  "versionNo": "バージョン番号",
+  "source": "ソース",
+  "containerId": "コンテナ ID",
+  "appRunningTitle": "アプリが実行中です",
+  "appRunningMessage": "このアプリは実行中のため、アンインストールする前に先に終了する必要があります",
+  "downgradeConfirm": "ダウングレードの確認",
+  "downgradeMessage": "対象バージョンは現在のバージョンより低いため、ダウングレードしますか？",
+  "alreadyInstalledVersion": "このバージョンはインストール済みです",
+  "waiting": "待機中",
+  "completed": "完了",
+  "remove": "削除",
+  "feedbackCategories": "ストア不具合,アプリ更新,アプリ障害",
+  "feedbackCategory": "問題カテゴリ",
+  "overview": "概要",
+  "overviewHint": "問題を簡潔にご記入ください",
+  "detailDescription": "詳細な説明",
+  "none": "なし",
+  "clearSearch": "検索語を消去",
+  "minimize": "最小化",
+  "restore": "元に戻す",
+  "maximize": "最大化",
+  "close": "閉じる",
+  "goRecommend": "おすすめページを見てみましょう",
+  "processRefreshFailedHint": "プロセスリストの更新に失敗しました。現在表示しているのは前回成功時に取得したデータです",
+  "moreActions": "その他の操作",
+  "appRunningUninstallMessage": "{name} は現在実行中のため、アンインストール前にすべての実行インスタンスを強制終了する必要があります。\n強制終了してアンインストールしますか？",
+  "@appRunningUninstallMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "forceCloseAndUninstall": "強制終了してアンインストール",
+  "downgradeMessageWithVersion": "現在 {appName} v{currentVersion} がインストールされています。より低いバージョン v{targetVersion} をインストールしようとしています。\nダウングレードにより機能異常が発生する可能性があります。続行しますか？",
+  "@downgradeMessageWithVersion": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "currentVersion": {
+        "type": "String"
+      },
+      "targetVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmDowngrade": "ダウングレードを確認",
+  "reinstallMessage": "{appName} v{version} はインストール済みです。\n再インストールしますか（既存のインストールを上書きします）？",
+  "@reinstallMessage": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "forceReinstall": "強制再インストール",
+  "installingLabel": "インストール中",
+  "waitingCount": "待機中 ({count})",
+  "@waitingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "detailDescriptionHint": "遭遇した問題を詳しくご記入ください",
+  "linglongCommunity": "Linyaps コミュニティ",
+  "unknown": "不明",
+  "copyPid": "PID をコピー",
+  "copyContainerId": "コンテナ ID をコピー",
+  "refreshProcessList": "プロセスリストを更新",
+  "stopProcess": "プロセスを停止",
+  "checkUpdateNetworkError": "更新のチェックに失敗しました。ネットワーク接続を確認してください",
+  "pruneServiceTitle": "廃止された基盤サービスを整理",
+  "pruneServiceMessage": "ll-cli prune コマンドを実行し、どのアプリからも依存されなくなった基盤ランタイムサービスをすべて削除します。\n\n整理後はディスク領域を節約できますが、他の操作が進行中の場合は再ダウンロードが必要になることがあります。",
+  "pruneServiceSuccess": "廃止された基盤サービスを整理しました",
+  "pruneServiceFailed": "整理に失敗しました。しばらくしてから再試行してください",
+  "clearCacheHint": "キャッシュを消去するとストレージ領域を解放できますが、アプリがデータを再読み込みする必要が出る場合があります。",
+  "pruneBaseServiceMessage": "ll-cli prune コマンドを実行し、どのアプリからも依存されなくなった基盤ランタイムサービスをすべて削除します。\n\n整理後はディスク領域を節約できますが、他の操作が進行中の場合は再ダウンロードが必要になることがあります。",
+  "clean": "整理",
+  "baseServiceCleaned": "廃止された基盤サービスを整理しました",
+  "cleanFailed": "整理に失敗しました。しばらくしてから再試行してください",
+  "appCountValue": "{count} 件",
+  "@appCountValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "llCliVersionLabel": "ll-cli バージョン",
+  "rankingTabDownload": "ダウンロードランキング",
+  "rankingTabRising": "ニューフェイスランキング",
+  "rankingTabUpdate": "更新ランキング",
+  "rankingTabHot": "人気ランキング",
+  "sidebarAllApps": "すべて",
+  "sidebarRanking": "ランキング",
+
+  "installErrorGeneric": "インストールに失敗しました",
+  "installErrorTimeout": "インストール失敗: プログレスがタイムアウトしました",
+  "installCancelled": "インストールをキャンセルしました",
+  "installErrorUnknown": "インストール失敗: 不明なエラー",
+  "installErrorAppNotFoundRemote": "インストール失敗: リモートリポジトリにアプリが見つかりません",
+  "installErrorAppNotFoundLocal": "インストール失敗: ローカルにアプリが見つかりません",
+  "installFailed": "インストールに失敗しました",
+  "installErrorAppNotInRemote": "インストール失敗: リモートに該当アプリがありません",
+  "installErrorSameVersion": "インストール失敗: 同じバージョンがインストール済みです",
+  "installErrorDowngrade": "インストール失敗: ダウングレードが必要です",
+  "installErrorModuleVersionNotAllowed": "インストール失敗: モジュールのインストール時にバージョンは指定できません",
+  "installErrorModuleRequiresApp": "インストール失敗: モジュールのインストールには先にアプリのインストールが必要です",
+  "installErrorModuleExists": "インストール失敗: モジュールは既に存在します",
+  "installErrorArchMismatch": "インストール失敗: アーキテクチャが一致しません",
+  "installErrorModuleNotInRemote": "インストール失敗: リモートに該当モジュールがありません",
+  "installErrorMissingErofs": "インストール失敗: erofs 展開コマンドが見つかりません",
+  "installErrorUnsupportedFormat": "インストール失敗: 対応していないファイル形式です",
+  "installErrorNetwork": "インストール失敗: ネットワークエラー",
+  "installErrorInvalidRef": "インストール失敗: 無効な参照です",
+  "installErrorUnknownArch": "インストール失敗: 不明なアーキテクチャです",
+  "installErrorCode": "インストール失敗: エラーコード {code}",
+  "@installErrorCode": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+
+  "installStatusStarting": "インストールを開始",
+  "installStatusInstallingApp": "アプリをインストール中",
+  "installStatusInstallingRuntime": "ランタイムをインストール中",
+  "installStatusInstallingBase": "ベースパッケージをインストール中",
+  "installStatusDownloadingMeta": "メタデータをダウンロード中",
+  "installStatusDownloadingFiles": "ファイルをダウンロード中",
+  "installStatusPostProcessing": "インストール後処理",
+  "installStatusCompleted": "インストール完了",
+  "installStatusProcessing": "処理中",
+
+  "waitingForOperation": "{operation}を待っています...",
+  "@waitingForOperation": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationInstall": "インストール",
+  "operationUpdate": "更新",
+  "operationPreparing": "{operation}を準備中 {appId}...",
+  "@operationPreparing": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      },
+      "appId": {
+        "type": "String"
+      }
+    }
+  },
+  "operationCancelled": "{operation}をキャンセルしました",
+  "@operationCancelled": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationCompleted": "{operation}が完了しました",
+  "@operationCompleted": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationUnknown": "{operation}の状態は不明です",
+  "@operationUnknown": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationConfirmFailed": "{operation}の結果を確認できません",
+  "@operationConfirmFailed": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationTimeout": "{operation}がタイムアウトしました",
+  "@operationTimeout": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+  "operationFailed": "{operation}に失敗しました",
+  "@operationFailed": {
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+
+  "taskCrashInterrupted": "アプリがクラッシュし、タスクが中断されました",
+  "taskCrashRetryHint": "実行中にアプリがクラッシュしました。再試行してください",
+
+  "uninstallFailedWithError": "アンインストールに失敗しました: {error}",
+  "@uninstallFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "uninstallException": "アンインストール中に異常: {error}",
+  "@uninstallException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "stopFailedWithError": "終了に失敗しました: {error}",
+  "@stopFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "stopException": "終了中に異常: {error}",
+  "@stopException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreated": "ショートカットを作成しました",
+  "shortcutCreatedWithPath": "ショートカットを作成しました: {path}",
+  "@shortcutCreatedWithPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "shortcutCreateFailedWithError": "作成に失敗しました: {error}",
+  "@shortcutCreateFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pruneFailedWithError": "整理に失敗しました: {error}",
+  "@pruneFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pruneException": "整理中に異常: {error}",
+  "@pruneException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "getVersionFailed": "バージョンの取得に失敗しました",
+  "llCliNotInstalled": "ll-cli がインストールされていません",
+  "uosEnvInstallHint": "UOS システムに Linyaps 環境をインストールする前に、まずシステムの開発者モードを有効にし、現在のアカウントが root 権限を取得できることを確認してください（設定-一般-開発者オプション-開発者モードへ移行。業務用端末では IT 部門への相談をおすすめします）。",
+  "uosAppInstallFailureHint": "UOS システムの場合は、システムの開発者モードが有効になっているかご確認ください（設定-一般-開発者オプション-開発者モードへ移行。業務用端末では IT 部門への相談をおすすめします）。",
+  "appInfoUnavailable": "アプリ情報を取得できません",
+  "shortcutCreateException": "ショートカットの作成に失敗しました: {error}",
+  "@shortcutCreateException": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingForInstall": "インストール待ち",
+  "cancelInstall": "インストールをキャンセル",
+  "uninstallBlockedTitle": "現在アンインストールできません",
+  "uninstallBlockedMessage": "現在「{activeTaskName}」のインストール/更新が進行中です。Linyaps はインストールとアンインストールの同時実行に対応していません。現在のタスクの完了を待つか、先に現在のタスクをキャンセルしてからアンインストールしてください。",
+  "@uninstallBlockedMessage": {
+    "placeholders": {
+      "activeTaskName": {
+        "type": "String"
+      }
+    }
+  },
+  "iKnow": "了解",
+  "viewDownloadManager": "ダウンロード管理を見る",
+  "a11ySearchByTag": "タグで検索: {tag}",
+  "@a11ySearchByTag": { "placeholders": { "tag": {} } },
+  "a11yRemoveSearchTag": "検索タグを削除: {tag}",
+  "@a11yRemoveSearchTag": { "placeholders": { "tag": {} } },
+  "a11yInstallApp": "{appName} をインストール",
+  "@a11yInstallApp": { "placeholders": { "appName": {} } },
+  "a11yUpdateApp": "{appName} を更新",
+  "@a11yUpdateApp": { "placeholders": { "appName": {} } },
+  "a11yOpenApp": "{appName} を開く",
+  "@a11yOpenApp": { "placeholders": { "appName": {} } },
+  "a11yUninstallApp": "{appName} をアンインストール",
+  "@a11yUninstallApp": { "placeholders": { "appName": {} } },
+  "a11ySearchBox": "アプリを検索",
+  "a11ySearchInputHint": "キーワードを入力して検索",
+  "a11yCommentInputHint": "コメント内容を入力",
+  "a11ySidebarNav": "サイドバーナビゲーション",
+  "a11yAppCard": "{appName}、バージョン {version}、{status}",
+  "@a11yAppCard": { "placeholders": { "appName": {}, "version": {}, "status": {} } },
+  "a11yRankingItem": "第 {rank} 位、{appName}",
+  "@a11yRankingItem": { "placeholders": { "rank": {}, "appName": {} } },
+  "a11yProcessItem": "プロセス {name}、PID {pid}",
+  "@a11yProcessItem": { "placeholders": { "name": {}, "pid": {} } },
+  "a11yDownloadItem": "{appName} のダウンロード、進捗 {percent}%",
+  "@a11yDownloadItem": { "placeholders": { "appName": {}, "percent": {} } },
+  "a11yRecommendPage": "おすすめ",
+  "a11yAllAppsPage": "すべてのアプリ",
+  "a11yRankingPage": "ランキング",
+  "a11yMyAppsPage": "マイアプリ",
+  "a11ySettingsPage": "設定",
+  "a11yAppDetailPage": "アプリ詳細",
+  "a11yScreenshotArea": "スクリーンショット領域",
+  "a11yCommentSection": "コメント欄",
+  "a11yCarouselArea": "カルーセル領域",
+  "a11yAppListArea": "アプリリスト",
+  "a11ySidebarArea": "サイドバー",
+  "a11yMinimize": "最小化",
+  "a11yMaximize": "最大化",
+  "a11yRestore": "元に戻す",
+  "a11yClose": "閉じる",
+  "a11yPrevious": "前へ",
+  "a11yNext": "次へ",
+  "a11yTabSelected": "選択中",
+  "a11yTabNotSelected": "未選択",
+  "a11yStatusInstalled": "インストール済み",
+  "a11yStatusUpdatable": "更新可能",
+  "a11yStatusNotInstalled": "未インストール",
+  "noAppsInCategory": "このカテゴリにはアプリがありません",
+  "noRanking": "ランキングはありません",
+  "noRecommend": "おすすめはありません",
+  "installTimeout": "インストールがタイムアウトしました: 長時間進捗更新がありません",
+  "downloadManagerSlowInstallHint": "進捗が遅く見える場合は、ソフトウェアに必要な依存関係をインストールしている可能性があります。もう少々お待ちください……",
+  "loadingInstalledApps": "インストール済みアプリを読み込み中...",
+  "appDescriptionPlaceholder": "アプリの説明",
+  "rankingTabNewUpload": "新着ランキング",
+  "rankingTabDownloadCount": "ダウンロード数ランキング",
+  "uploadedXHoursAgo": "{count}時間前に登録",
+  "@uploadedXHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadedXDaysAgo": "{count}日前に登録",
+  "@uploadedXDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uploadedOnDate": "{date}に登録",
+  "@uploadedOnDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadedXTimes": "ダウンロード {count}回",
+  "@downloadedXTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "repoManagementHintTitle": "リポジトリ管理機能のみ提供",
+  "repoManagementHintMessage": "本ストアが取得できるのは公式 stable リポジトリのアプリデータのみです。stable リポジトリは削除しないでください。削除するとアプリをインストールできなくなります。",
+  "envManagementTitle": "Linyaps 環境管理",
+  "envManagementDescription": "環境の分析、リポジトリの管理、ベース環境の修復と保存先の移動",
+  "envManagementAnalysisTab": "環境分析",
+  "envManagementRepositoryTab": "リポジトリ管理",
+  "envManagementStorageTab": "保存先",
+  "envManagementAnalyzing": "Linyaps 環境を分析中...",
+  "envManagementApplying": "操作を実行中...",
+  "envManagementNotAnalyzed": "環境分析がまだ完了していません",
+  "envManagementHealthyTitle": "対応が必要な問題は見つかりませんでした",
+  "envManagementHealthyMessage": "Linyaps ベース環境、リポジトリ、ローカルデータは現在いずれも正常です。",
+  "envManagementBaseEnvironment": "ベース環境",
+  "envManagementRepositoryMetric": "リポジトリ",
+  "envManagementLocalData": "ローカルデータ",
+  "envManagementStorageLocation": "保存先",
+  "envManagementNotDetected": "未検出",
+  "envManagementUnknown": "不明",
+  "envManagementUsagePercent": "使用率 {percent}%",
+  "@envManagementUsagePercent": {"placeholders": {"percent": {"type": "int"}}},
+  "envManagementEnvironmentHealthyUpgrade": "環境は正常（アップグレード推奨）",
+  "envManagementEnvironmentHealthy": "環境は正常",
+  "envManagementRepositoryReadFailed": "リポジトリ設定の読み取りに失敗しました",
+  "envManagementEnvironmentAbnormal": "環境異常",
+  "envRepoStatusNormal": "正常",
+  "envRepoStatusNotConfigured": "未設定",
+  "envRepoStatusMisconfigured": "設定異常",
+  "envRepoStatusUnavailable": "利用不可",
+  "envRepoStatusUnknown": "不明",
+  "envLocalDataDetectionFailed": "検出に失敗しました",
+  "envLocalDataUnavailable": "利用不可",
+  "envLocalDataNormal": "正常",
+  "envIssueLlCliUnavailableTitle": "ll-cli が利用できません",
+  "envIssueLlCliUnavailableDescription": "利用可能な Linyaps コマンドライン環境が検出されません。",
+  "envIssueRepositoryNotConfiguredTitle": "Linyaps リポジトリが未設定",
+  "envIssueRepositoryNotConfiguredDescription": "現在有効な Linyaps リポジトリ設定がありません。先にリポジトリを追加または修復する必要があります。",
+  "envIssueDataPermissionTitle": "Linyaps データディレクトリの権限異常",
+  "envIssueDataPermissionDescription": "ll-package-manager はユーザー {serviceUser} として実行されていますが、Linyaps データディレクトリまたは重要な状態ファイルの所有者が異常であり、リポジトリ移行、ダウンロードオブジェクトや layer の作成に失敗する可能性があります。",
+  "@envIssueDataPermissionDescription": {"placeholders": {"serviceUser": {"type": "String"}}},
+  "envIssueLocalDataDetectionTitle": "Linyaps ローカルデータの検出に失敗しました",
+  "envIssueLocalDataDetectionDescription": "linyaps ローカルデータの読み取りチェックを実行できません。ll-cli と package-manager サービスの状態を確認してください。",
+  "envIssueLocalDataUnavailableTitle": "Linyaps ローカルデータを利用できません",
+  "envIssueLocalDataUnavailableDescription": "linyaps の実行パスに従ってインストール済みアプリデータを読み取れません。アプリリスト、インストールや実行に影響する可能性があります。先に Linyaps データディレクトリの権限とベース環境の状態を確認してから、必要に応じて修復を実行してください。",
+  "envIssueStorageSpaceTitle": "Linyaps の保存先の空き領域が不足しています",
+  "envIssueStorageSpaceDescription": "現在 {path} のあるファイルシステムの使用率は約 {percent}% です。整理するか保存先を移動することをおすすめします。",
+  "@envIssueStorageSpaceDescription": {"placeholders": {"path": {"type": "String"}, "percent": {"type": "int"}}},
+  "envIssueRunningAppsTitle": "実行中の Linyaps アプリがあります",
+  "envIssueRunningAppsDescription": "現在 {count} 件の Linyaps アプリが実行中です。保存先を移動する前に必ず終了してください。",
+  "@envIssueRunningAppsDescription": {"placeholders": {"count": {"type": "int"}}},
+  "envRepairAction": "修復",
+  "envHandleAction": "対処",
+  "envRepairLocalDataTitle": "Linyaps ローカルデータを修復",
+  "envRepairLocalDataMessage": "管理者権限で Linyaps ローカルデータの修復を試みます。再取得が必要なアプリやベース環境データが検出された場合は、ダウンロードが発生し時間がかかる可能性があります。続行しますか？",
+  "envRepairLocalDataConfirm": "修復を実行",
+  "envRepairPermissionTitle": "Linyaps データディレクトリの権限を修復",
+  "envRepairPermissionMessage": "管理者権限で {rootPath} の重要なディレクトリと状態ファイルの所有者を {serviceUser} に戻し、Linyaps package-manager を再起動します。続行しますか？",
+  "@envRepairPermissionMessage": {"placeholders": {"rootPath": {"type": "String"}, "serviceUser": {"type": "String"}}},
+  "envRepairPermissionConfirm": "権限を修復",
+  "envMoveStorageTitle": "Linyaps の保存先を移動",
+  "envMoveStorageMessage": "{rootPath} を {targetPath} にコピーし、systemd bind mount を作成します。対象パーティションの空き容量が十分であることをご確認ください。",
+  "@envMoveStorageMessage": {"placeholders": {"rootPath": {"type": "String"}, "targetPath": {"type": "String"}}},
+  "envMoveStorageConfirm": "移動を開始",
+  "envAddRepositoryTitle": "Linyaps リポジトリを追加",
+  "envRepositoryName": "リポジトリ名",
+  "envRepositoryAddress": "リポジトリアドレス",
+  "envRepositoryAliasOptional": "別名（任意）",
+  "envAddAction": "追加",
+  "envSaveAction": "保存",
+  "envDeleteAction": "削除",
+  "envUpdateRepositoryTitle": "リポジトリアドレスを変更: {name}",
+  "@envUpdateRepositoryTitle": {"placeholders": {"name": {"type": "String"}}},
+  "envSetPriorityTitle": "優先度を設定: {name}",
+  "@envSetPriorityTitle": {"placeholders": {"name": {"type": "String"}}},
+  "envRepositoryPriority": "優先度",
+  "envPriorityMustBeNumber": "優先度は数字である必要があります",
+  "envRemoveRepositoryTitle": "リポジトリを削除",
+  "envRemoveRepositoryMessage": "リポジトリ {name} を削除しますか？",
+  "@envRemoveRepositoryMessage": {"placeholders": {"name": {"type": "String"}}},
+  "envRepositoryAdded": "リポジトリを追加しました",
+  "envRepositoryAddFailed": "リポジトリの追加に失敗しました: {error}",
+  "@envRepositoryAddFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envRepositoryUpdated": "リポジトリを更新しました",
+  "envRepositoryUpdateFailed": "リポジトリの更新に失敗しました: {error}",
+  "@envRepositoryUpdateFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envPriorityUpdated": "優先度を更新しました",
+  "envPriorityUpdateFailed": "優先度の設定に失敗しました: {error}",
+  "@envPriorityUpdateFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envRepositoryRemoved": "リポジトリを削除しました",
+  "envRepositoryRemoveFailed": "リポジトリの削除に失敗しました: {error}",
+  "@envRepositoryRemoveFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envDefaultRepositoryUpdated": "デフォルトリポジトリを更新しました",
+  "envDefaultRepositoryUpdateFailed": "デフォルトリポジトリの設定に失敗しました: {error}",
+  "@envDefaultRepositoryUpdateFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envMirrorEnabled": "ミラーを有効にしました",
+  "envMirrorDisabled": "ミラーを無効にしました",
+  "envMirrorUpdateFailed": "ミラー状態の変更に失敗しました: {error}",
+  "@envMirrorUpdateFailed": {"placeholders": {"error": {"type": "String"}}},
+  "envOpenLogDirectoryFailed": "ログディレクトリを開けませんでした",
+  "envRepositoryNotLoaded": "リポジトリ設定がまだ読み込まれていません",
+  "envRepositoryDefaultValue": "デフォルトリポジトリ: {name}",
+  "@envRepositoryDefaultValue": {"placeholders": {"name": {"type": "String"}}},
+  "envNotSet": "未設定",
+  "envAddRepository": "リポジトリを追加",
+  "envNoRepositories": "リポジトリ設定がありません",
+  "envDefaultBadge": "デフォルト",
+  "envRepositoryDetails": "name={name}  priority={priority}",
+  "@envRepositoryDetails": {"placeholders": {"name": {"type": "String"}, "priority": {"type": "String"}}},
+  "envRepositoryActions": "リポジトリ操作",
+  "envEditAddress": "アドレスを変更",
+  "envSetDefault": "デフォルトに設定",
+  "envSetPriority": "優先度を設定",
+  "envEnableMirror": "ミラーを有効化",
+  "envDisableMirror": "ミラーを無効化",
+  "envCurrentStorageLocation": "現在の保存先",
+  "envStorageNotAnalyzed": "保存先の分析がまだ完了していません",
+  "envStorageSummary": "{path}  使用率 {percent}%",
+  "@envStorageSummary": {"placeholders": {"path": {"type": "String"}, "percent": {"type": "int"}}},
+  "envNewStorageLocation": "新しい保存先",
+  "envStorageMoveMethod": "移動方式",
+  "envStorageMoveMethodDescription": "Linyaps は現在インストールディレクトリの直接変更に対応していません。ここではデータをコピーした後 systemd bind mount を作成し、新しいディレクトリを {rootPath} にマウントします。",
+  "@envStorageMoveMethodDescription": {"placeholders": {"rootPath": {"type": "String"}}},
+  "envMoveStorageAction": "保存先を移動",
+  "envCloseAppsBeforeMoveTitle": "移動前にアプリを終了する必要があります",
+  "envCloseAppsBeforeMoveMessage": "現在 {count} 件の Linyaps アプリが実行中です。",
+  "@envCloseAppsBeforeMoveMessage": {"placeholders": {"count": {"type": "int"}}},
+  "envResultDataPermissionCompleted": "Linyaps データディレクトリの権限を修復しました",
+  "envResultDataPermissionFailed": "Linyaps データディレクトリの権限修復に失敗しました",
+  "envResultLocalDataUnsupported": "現在のシステムコンポーネントは問題オブジェクトの自動消去に対応していないため、Linyaps ローカルデータを自動修復できません。システム関連コンポーネントをアップグレードするか、ディストリビューションのツールで対処してください。",
+  "envResultLocalDataCompleted": "Linyaps ローカルデータの修復を実行しました",
+  "envResultLocalDataCompletedLegacy": "Linyaps ローカルデータの修復を実行しました（旧バージョンのシステムパラメータと互換）",
+  "envResultLocalDataFailed": "Linyaps ローカルデータの修復に失敗しました",
+  "envResultLocalDataChecksumMismatch": "Linyaps ローカルデータの再検証でオブジェクトの checksum 不一致が発見され、自動消去後も修復が完了しませんでした。再取得後も再発する場合は通常、上流リポジトリデータまたは linyaps ローカルストレージの互換性修復が必要です。",
+  "envPartialCommitsUnknown": "一部 partial commits",
+  "envPartialCommitsCount": "{count} 件の partial commits",
+  "@envPartialCommitsCount": {"placeholders": {"count": {"type": "int"}}},
+  "envResultLocalDataRepullCompleted": "Linyaps ローカルデータの問題オブジェクトを消去し、{partialCommits} を再取得して、再検証に合格しました。",
+  "@envResultLocalDataRepullCompleted": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultLocalDataRepullCompletedLegacy": "Linyaps ローカルデータの問題オブジェクトを消去し、{partialCommits} を再取得して、再検証に合格しました（旧バージョンのシステムパラメータと互換）。",
+  "@envResultLocalDataRepullCompletedLegacy": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultLocalDataRepullFailed": "Linyaps ローカルデータの自動処理可能な問題オブジェクトを消去し、{partialCommits} の再取得を試みましたが、再取得後も再検証に合格しませんでした。ログで各 ref の取得または再検証の失敗原因をご確認ください。",
+  "@envResultLocalDataRepullFailed": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultLocalDataRepullFailedLegacy": "Linyaps ローカルデータの自動処理可能な問題オブジェクトを消去し、{partialCommits} の再取得を試みましたが、再取得後も再検証に合格しませんでした。ログで各 ref の取得または再検証の失敗原因をご確認ください。（旧バージョンのシステムパラメータと互換）",
+  "@envResultLocalDataRepullFailedLegacy": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultLocalDataRepullChecksumMismatch": "Linyaps ローカルデータの自動処理可能な問題オブジェクトを消去し、{partialCommits} の再取得を試みましたが、再検証でも checksum 不一致が発見されました。上流リポジトリデータと linyaps ローカルストレージモードの非互換の可能性があります。",
+  "@envResultLocalDataRepullChecksumMismatch": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultLocalDataRepullChecksumMismatchLegacy": "Linyaps ローカルデータの自動処理可能な問題オブジェクトを消去し、{partialCommits} の再取得を試みましたが、再検証でも checksum 不一致が発見されました。上流リポジトリデータと linyaps ローカルストレージモードの非互換の可能性があります。（旧バージョンのシステムパラメータと互換）",
+  "@envResultLocalDataRepullChecksumMismatchLegacy": {"placeholders": {"partialCommits": {"type": "String"}}},
+  "envResultStorageBlockedRunningApps": "まだ {count} 件の Linyaps アプリが実行中です。終了してから保存先を移動してください。",
+  "@envResultStorageBlockedRunningApps": {"placeholders": {"count": {"type": "int"}}},
+  "envResultStorageBlockedActiveTask": "ダウンロード管理にまだインストールまたは更新タスクがあります。完了を待つかタスクをキャンセルしてから Linyaps の保存先を移動してください。",
+  "envResultStorageBlockedNamedTask": "現在「{name}」を処理中です。完了を待つかタスクをキャンセルしてから Linyaps の保存先を移動してください。",
+  "@envResultStorageBlockedNamedTask": {"placeholders": {"name": {"type": "String"}}},
+  "envResultStorageAlreadyBindMounted": "{path} は既に bind mount されています。先に既存のマウント設定をご確認のうえ移行してください。",
+  "@envResultStorageAlreadyBindMounted": {"placeholders": {"path": {"type": "String"}}},
+  "envResultStorageFilesystemUnavailable": "対象パスのあるファイルシステムの容量を読み取れません: {path}",
+  "@envResultStorageFilesystemUnavailable": {"placeholders": {"path": {"type": "String"}}},
+  "envResultStorageSpaceUnknown": "現在のディレクトリまたは対象パスのディスク容量を確認できません。確認してから再試行してください。",
+  "envResultStorageInsufficientSpace": "対象パスの利用可能領域が不足しています。最低 {requiredSpace} が必要で、現在利用可能なのは {availableSpace} です。",
+  "@envResultStorageInsufficientSpace": {"placeholders": {"requiredSpace": {"type": "String"}, "availableSpace": {"type": "String"}}},
+  "envResultStorageTargetNotAbsolute": "対象パスは絶対パスである必要があります。",
+  "envResultStorageTargetContainsLineBreak": "対象パスに改行文字を含めることはできません。",
+  "envResultStorageTargetUnsafeSystemPath": "対象パスはシステムのルートディレクトリや現在の Linyaps ディレクトリにすることはできません。",
+  "envResultStorageTargetInsideCurrentRoot": "対象パスを現在の Linyaps ディレクトリの内部にすることはできません。",
+  "envResultStorageMoveCompleted": "Linyaps の保存先を移動しました",
+  "envResultStorageMoveFailed": "Linyaps の保存先の移動に失敗しました",
+  "envResultUnexpectedFailure": "操作に失敗しました: {error}",
+  "@envResultUnexpectedFailure": {"placeholders": {"error": {"type": "String"}}},
+  "errorSolutionHelpTooltip": "解決策を見る",
+  "a11yErrorSolutionHelp": "このインストールエラーの解決策を調べる",
+  "errorSolutionNoSolution": "解決策はまだありません",
+  "errorSolutionQueryFailed": "照会に失敗しました。再試行してください",
+  "errorSolutionRetry": "再照会",
+  "errorSolutionCommunityPost": "コミュニティに投稿",
+  "errorSolutionRepair": "ワンクリック修復",
+  "errorSolutionClose": "解決策を閉じる",
+  "errorSolutionRemoteImage": "解決策のリモート画像",
+  "errorSolutionImageBlocked": "非ネットワーク画像をブロックしました",
+  "errorSolutionImageLoadFailed": "リモート画像の読み込みに失敗しました",
+  "scriptReviewTitle": "スクリプト内容のプレビュー",
+  "scriptReviewSemanticLabel": "まもなく実行される修復スクリプトの全文",
+  "executeRepairScript": "確認して実行",
+  "repairExecutionTitle": "ワンクリック修復",
+  "repairExecuting": "修復スクリプトを実行中…",
+  "repairOutputTitle": "リアルタイム出力",
+  "repairOutputEmpty": "スクリプトの出力を待っています…",
+  "repairOutputTruncated": "画面では古い {count} 行を省略しています。全文はログをご確認ください。",
+  "@repairOutputTruncated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "repairCompleteRetry": "修復が完了しました。再度インストールをお試しください。",
+  "repairFailedWithExitCode": "修復スクリプトの実行に失敗しました（終了コード {exitCode}）。",
+  "@repairFailedWithExitCode": {
+    "placeholders": {
+      "exitCode": {
+        "type": "int"
+      }
+    }
+  },
+  "repairTimedOut": "修復スクリプトの実行が 30 分を超えたため、待機を停止しました。ログでシステムの状態をご確認ください。",
+  "repairExecutionError": "修復スクリプトを実行できません: {message}",
+  "@repairExecutionError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "repairInvalidSignature": "修復スクリプトの署名が無効なため、実行をブロックしました。",
+  "openRepairLog": "ログディレクトリを開く",
+  "copyRepairOutput": "現在の出力をコピー",
+  "repairElapsedTime": "実行時間 {elapsed}",
+  "@repairElapsedTime": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      }
+    }
+  }
+}

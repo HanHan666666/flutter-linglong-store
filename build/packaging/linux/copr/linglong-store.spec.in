@@ -7,7 +7,7 @@
 #     供社区维护者在 Copr 上自建仓库。
 # 模板由 build/scripts/render-packaging-templates.sh 渲染，随 release 附件
 # 发布为 linglong-store-<version>.copr.spec，Copr 维护者直接提交该文件 URL
-# 即可构建，无需自行维护版本号（模式 B）。
+# 即可构建。
 
 # ---- Flutter SDK 版本锚点（必须与官方发布容器 debian10-release.Dockerfile 的
 # FLUTTER_VERSION 保持一致，升级 SDK 时两处同步修改） ----

@@ -331,12 +331,11 @@ Semantics(
 
 ## 变更记录
 
-- 2026-08-27：新增 Fedora Copr 源码构建支持（响应用户「源码添加 rpmspec，以便于
-  从 Fedora Copr 构建」）：RPM 打包拆分为「二进制重打包」与「Copr 源码构建」双轨，
-  发版随 release 附件发布 `linglong-store-<version>.copr.spec` 与自包含源码归档
-  （模式 B，Copr 维护者无需自行维护版本号）；Flutter SDK 按架构双路引导
-  （x86_64 官方 tarball + sha256，aarch64 git clone + commit 锚点），版本锚点与
-  发布容器 `FLUTTER_VERSION` 同步维护。设计决策、流水线接入与维护者指南见
+- 2026-08-27：新增 Fedora Copr 源码构建支持：RPM 打包拆分为「二进制重打包」与
+  「Copr 源码构建」双轨，发版随 release 附件发布 `linglong-store-<version>.copr.spec`
+  与自包含源码归档（版本号与 Source0 已渲染好，Copr 维护者直接提交附件 URL 即可）；
+  Flutter SDK 按架构双路引导（x86_64 官方 tarball + sha256，aarch64 git clone +
+  commit 锚点），版本锚点与发布容器 `FLUTTER_VERSION` 同步维护。设计文档见
   `docs/44-copr-source-build-design.md`。
 - 2026-08-01：新增阿拉伯语（ar）支持后，项目强制方向感知布局约定：新代码禁止
   硬编码物理方向（`Alignment.centerLeft` 等、`EdgeInsets.only(left:/right:)`、

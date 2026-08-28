@@ -149,7 +149,19 @@ copr-cli build <项目> <spec 附件 URL>
    bash build/scripts/package-source-archive.sh --version <version>
    ```
 
-4. **spec 语法验证**（需 Fedora 环境）：
+4. **给已发布的旧版本补制归档**（功能合入前发布的版本，如 v3.6.0）：
+   `--ref` 从指定 tag 取源码树，打包与渲染基础设施仍使用当前工作区。注意：
+   `packaging-dist/` 元数据按工作区当前语言集渲染，可能多于旧版本二进制
+   实际支持的语言（仅影响桌面条目文案，无功能影响）；补制后需手动上传
+   附件并更新 release 的 `hashes.sha256`：
+
+   ```bash
+   bash build/scripts/package-source-archive.sh --version 3.6.0 --ref v3.6.0
+   gh release upload v3.6.0 build/out/linux/3.6.0/source/linglong-store-3.6.0.tar.gz \
+     build/out/linux/3.6.0/source/linglong-store-3.6.0.copr.spec --clobber
+   ```
+
+5. **spec 语法验证**（需 Fedora 环境）：
 
    ```bash
    rpmspec -P --target x86_64  linglong-store-<v>.copr.spec

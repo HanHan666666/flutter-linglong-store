@@ -26,10 +26,13 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 release_version=""
+# 源码树取自哪个 git 引用：默认 HEAD（发版流水线场景，版本文件在工作区）；
+# 传入 tag/ref 时用于给已发布的旧版本补制归档（tag 树已含发版版本文件）。
+source_ref="HEAD"
 
 usage() {
   cat >&2 <<'EOF'
-Usage: package-source-archive.sh --version <version>
+Usage: package-source-archive.sh --version <version> [--ref <git-ref>]
 EOF
   exit 64
 }
@@ -38,6 +41,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --version)
       release_version="$2"
+      shift 2
+      ;;
+    --ref)
+      source_ref="$2"
       shift 2
       ;;
     *)
@@ -50,6 +57,12 @@ if [[ -z "$release_version" ]]; then
   usage
 fi
 
+# 引用必须能被 git 解析，提前失败避免半途报错。
+if ! git -C "$ROOT_DIR" rev-parse --verify --quiet "$source_ref^{commit}" >/dev/null; then
+  echo "Invalid git ref: $source_ref" >&2
+  exit 64
+fi
+
 # RPM Version 不允许连字符；Copr 源码构建仅接受纯 semver 的 stable 版本，
 # nightly（含 -nightly.<date>+<sha>）在此直接拒绝，防止产出不可构建的 spec。
 if [[ "$release_version" == *-* ]]; then
@@ -59,7 +72,13 @@ fi
 
 # 发版版本为纯三段 semver（resolve-release-version.sh 保证），pubspec 会由
 # update-version-files.dart 追加 "+1" 构建号，因此只比较 "+" 前的主版本。
-pubspec_version="$(awk '/^version:/ {print $2; exit}' "$ROOT_DIR/pubspec.yaml")"
+# 校验对象随模式切换：HEAD 模式看工作区（流水线中版本文件未提交）；ref 模式
+# 看目标引用的树（补制旧版本归档时版本文件已包含在 tag 树内）。
+if [[ "$source_ref" == "HEAD" ]]; then
+  pubspec_version="$(awk '/^version:/ {print $2; exit}' "$ROOT_DIR/pubspec.yaml")"
+else
+  pubspec_version="$(git -C "$ROOT_DIR" show "$source_ref:pubspec.yaml" | awk '/^version:/ {print $2; exit}')"
+fi
 pubspec_base_version="${pubspec_version%%+*}"
 if [[ "$pubspec_base_version" != "$release_version" ]]; then
   echo "pubspec.yaml version ($pubspec_version, base $pubspec_base_version) != requested version ($release_version)." >&2
@@ -72,7 +91,7 @@ if ! command -v rsvg-convert >/dev/null 2>&1 && ! command -v convert >/dev/null 
   exit 64
 fi
 
-commit_time="$(git -C "$ROOT_DIR" log -1 --format=%ct HEAD)"
+commit_time="$(git -C "$ROOT_DIR" log -1 --format=%ct "$source_ref")"
 output_dir="$ROOT_DIR/build/out/linux/$release_version/source"
 stage_root="$ROOT_DIR/build/tmp/package-source-archive/$release_version"
 rendered_dir="$stage_root/rendered"
@@ -95,13 +114,16 @@ bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
   --output-dir "$rendered_dir" \
   --channel stable
 
-# 以 git HEAD 树为基础（文件 mtime 继承提交时间），随后覆盖发版版本文件，
-# 保证归档内容与最终发版 tag 树一致（流水线中版本文件尚未提交）。
-git -C "$ROOT_DIR" archive HEAD | tar -x -C "$content_dir"
+# 以源码引用的树为基础（文件 mtime 继承提交时间）。HEAD 模式额外用工作区
+# 版本文件覆盖（发版流水线中版本文件尚未提交）；ref 模式（补制旧版本归档）
+# 时版本文件已在引用树内，直接跳过覆盖。
+git -C "$ROOT_DIR" archive "$source_ref" | tar -x -C "$content_dir"
 
-cp "$ROOT_DIR/pubspec.yaml" "$content_dir/pubspec.yaml"
-cp "$ROOT_DIR/linux/pubspec.yaml" "$content_dir/linux/pubspec.yaml"
-cp "$ROOT_DIR/lib/core/config/app_config.dart" "$content_dir/lib/core/config/app_config.dart"
+if [[ "$source_ref" == "HEAD" ]]; then
+  cp "$ROOT_DIR/pubspec.yaml" "$content_dir/pubspec.yaml"
+  cp "$ROOT_DIR/linux/pubspec.yaml" "$content_dir/linux/pubspec.yaml"
+  cp "$ROOT_DIR/lib/core/config/app_config.dart" "$content_dir/lib/core/config/app_config.dart"
+fi
 
 # packaging-dist/：Copr spec 的 %install 直接消费这些预渲染产物。
 desktop_filename="$(basename "$(find "$rendered_dir" -maxdepth 1 -name '*.desktop' -print -quit)")"

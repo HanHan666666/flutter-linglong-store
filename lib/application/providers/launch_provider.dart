@@ -353,6 +353,13 @@ class LaunchSequence extends _$LaunchSequence {
       if (envResult.arch != null && envResult.arch!.isNotEmpty) {
         ref.read(globalAppProvider.notifier).setArch(envResult.arch!);
       }
+      // 操作系统名称取发行版画像的 displayName（即 /etc/os-release 的
+      // PRETTY_NAME，缺失时回落 NAME），供设置页关于卡片展示。
+      if (envResult.distribution.displayName.isNotEmpty) {
+        ref
+            .read(globalAppProvider.notifier)
+            .setOsName(envResult.distribution.displayName);
+      }
       if (envResult.osVersion != null && envResult.osVersion!.isNotEmpty) {
         ref.read(globalAppProvider.notifier).setOsVersion(envResult.osVersion!);
       }

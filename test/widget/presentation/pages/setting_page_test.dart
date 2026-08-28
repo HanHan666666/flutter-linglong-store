@@ -160,6 +160,80 @@ void main() {
     expect(find.text('社区交流'), findsOneWidget);
   });
 
+  testWidgets(
+    'setting page about section shows operating system from PRETTY_NAME',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          // 启动期环境检测把 /etc/os-release 的 PRETTY_NAME 写入 GlobalAppState.osName，
+          // 这里直接注入以验证关于卡片只消费该字段（不再读文件、不解析诊断拼接串）。
+          globalAppProvider.overrideWith(
+            () => _FakeGlobalApp(
+              const GlobalAppState(osName: 'Fedora Linux 42 (Evernight Edition)'),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: SettingPage()),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('操作系统'), findsOneWidget);
+      expect(find.text('Fedora Linux 42 (Evernight Edition)'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'setting page about section falls back to unknown without osName',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          // 未采集到系统名称时与系统架构/玲珑版本一致，回落「未知」占位。
+          globalAppProvider.overrideWith(
+            () => _FakeGlobalApp(const GlobalAppState()),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            locale: const Locale('zh'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: SettingPage()),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('操作系统'), findsOneWidget);
+      // 操作系统/系统架构/玲珑版本三行均无值，各自回落同一个「未知」文案。
+      expect(find.text('未知'), findsNWidgets(3));
+    },
+  );
+
   testWidgets('setting page restores renderer entry and developer links', (
     tester,
   ) async {
@@ -428,4 +502,17 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
     },
   );
+}
+
+/// 固定初始状态的 GlobalApp 替身。
+///
+/// 关于卡片的环境信息行（osName/arch/llVersion）来自启动期一次性写入的全局状态，
+/// widget 测试通过注入初始值验证展示，避免触发真实的 SharedPreferences 初始化。
+class _FakeGlobalApp extends GlobalApp {
+  _FakeGlobalApp(this._initialState);
+
+  final GlobalAppState _initialState;
+
+  @override
+  GlobalAppState build() => _initialState;
 }

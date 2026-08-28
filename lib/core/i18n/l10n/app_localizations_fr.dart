@@ -1224,6 +1224,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appCount => 'Nombre d\'applications référencées';
 
   @override
+  String get operatingSystem => 'Système d\'exploitation';
+
+  @override
   String get systemArch => 'Architecture système';
 
   @override

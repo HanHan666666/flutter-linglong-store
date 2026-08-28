@@ -1210,6 +1210,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appCount => 'Всего приложений';
 
   @override
+  String get operatingSystem => 'Операционная система';
+
+  @override
   String get systemArch => 'Системная архитектура';
 
   @override

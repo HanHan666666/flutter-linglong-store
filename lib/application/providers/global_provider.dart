@@ -102,6 +102,7 @@ class GlobalAppState {
     this.checked = false,
     this.envReady = false,
     this.reason,
+    this.osName,
     this.osVersion,
     this.llVersion,
   });
@@ -139,6 +140,12 @@ class GlobalAppState {
   /// 环境检查失败原因
   final String? reason;
 
+  /// 操作系统名称
+  ///
+  /// 来自启动期环境检测解析出的 `/etc/os-release` `PRETTY_NAME`（缺失时回落 `NAME`），
+  /// 仅用于设置页关于卡片展示，不复用给诊断用的 [osVersion] 拼接串。
+  final String? osName;
+
   /// 操作系统版本
   final String? osVersion;
 
@@ -158,6 +165,7 @@ class GlobalAppState {
     bool? checked,
     bool? envReady,
     String? reason,
+    String? osName,
     String? osVersion,
     String? llVersion,
     bool clearReason = false,
@@ -174,6 +182,7 @@ class GlobalAppState {
       checked: checked ?? this.checked,
       envReady: envReady ?? this.envReady,
       reason: clearReason ? null : (reason ?? this.reason),
+      osName: osName ?? this.osName,
       osVersion: osVersion ?? this.osVersion,
       llVersion: llVersion ?? this.llVersion,
     );
@@ -474,6 +483,12 @@ class GlobalApp extends Notifier<GlobalAppState> {
   /// 设置失败原因
   void setReason(String? reason) =>
       state = state.copyWith(reason: reason, clearReason: reason == null);
+
+  /// 设置操作系统名称
+  ///
+  /// 启动期环境检测只写入一次（PRETTY_NAME 运行期间不会变化），
+  /// 与 [setArch] / [setLlVersion] 保持相同的“一次性环境信息”生命周期。
+  void setOsName(String name) => state = state.copyWith(osName: name);
 
   /// 设置OS版本
   void setOsVersion(String version) =>

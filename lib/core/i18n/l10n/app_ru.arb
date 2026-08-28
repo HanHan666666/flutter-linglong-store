@@ -699,6 +699,7 @@
   "clearCacheFailed": "Не удалось очистить кэш",
   "appVersion": "Версия приложения",
   "appCount": "Всего приложений",
+  "operatingSystem": "Операционная система",
   "systemArch": "Системная архитектура",
   "linglongVersion": "Версия Linyaps",
   "checkNetwork": "Пожалуйста, проверьте сеть и повторите попытку.",

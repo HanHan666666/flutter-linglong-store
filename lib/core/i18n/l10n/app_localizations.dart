@@ -2119,6 +2119,12 @@ abstract class AppLocalizations {
   /// **'已收录应用数量'**
   String get appCount;
 
+  /// No description provided for @operatingSystem.
+  ///
+  /// In zh, this message translates to:
+  /// **'操作系统'**
+  String get operatingSystem;
+
   /// No description provided for @systemArch.
   ///
   /// In zh, this message translates to:

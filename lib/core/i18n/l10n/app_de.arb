@@ -699,6 +699,7 @@
   "clearCacheFailed": "Cache leeren fehlgeschlagen",
   "appVersion": "App-Version",
   "appCount": "Anzahl erfasster Apps",
+  "operatingSystem": "Betriebssystem",
   "systemArch": "Systemarchitektur",
   "linglongVersion": "Linyaps-Version",
   "checkNetwork": "Bitte Netzwerkverbindung prüfen und erneut versuchen",

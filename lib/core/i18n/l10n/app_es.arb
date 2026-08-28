@@ -711,6 +711,7 @@
   "clearCacheFailed": "Error al limpiar la caché",
   "appVersion": "Versión de la Aplicación",
   "appCount": "Aplicaciones Registradas",
+  "operatingSystem": "Sistema operativo",
   "systemArch": "Arquitectura del Sistema",
   "linglongVersion": "Versión de Linyaps",
   "checkNetwork": "Por favor, verifique su conexión de red e intente de nuevo",

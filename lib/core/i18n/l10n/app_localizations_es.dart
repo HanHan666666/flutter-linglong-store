@@ -1189,6 +1189,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get appCount => 'Aplicaciones Registradas';
 
   @override
+  String get operatingSystem => 'Sistema operativo';
+
+  @override
   String get systemArch => 'Arquitectura del Sistema';
 
   @override

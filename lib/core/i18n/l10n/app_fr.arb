@@ -699,6 +699,7 @@
   "clearCacheFailed": "Échec du vidage du cache",
   "appVersion": "Version de l'application",
   "appCount": "Nombre d'applications référencées",
+  "operatingSystem": "Système d'exploitation",
   "systemArch": "Architecture système",
   "linglongVersion": "Version de Linyaps",
   "checkNetwork": "Vérifiez la connexion réseau puis réessayez",

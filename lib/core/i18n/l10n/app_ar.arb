@@ -717,6 +717,7 @@
   "clearCacheFailed": "فشل مسح ذاكرة التخزين المؤقت",
   "appVersion": "إصدار التطبيق",
   "appCount": "عدد التطبيقات المتاحة",
+  "operatingSystem": "نظام التشغيل",
   "systemArch": "بنية النظام",
   "linglongVersion": "إصدار Linglong",
   "checkNetwork": "يرجى التحقق من اتصال الشبكة ثم إعادة المحاولة",

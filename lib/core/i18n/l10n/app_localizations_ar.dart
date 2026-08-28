@@ -1277,6 +1277,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appCount => 'عدد التطبيقات المتاحة';
 
   @override
+  String get operatingSystem => 'نظام التشغيل';
+
+  @override
   String get systemArch => 'بنية النظام';
 
   @override

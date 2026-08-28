@@ -1146,6 +1146,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get appCount => '収録アプリ数';
 
   @override
+  String get operatingSystem => 'オペレーティングシステム';
+
+  @override
   String get systemArch => 'システムアーキテクチャ';
 
   @override

@@ -718,6 +718,7 @@
   "clearCacheFailed": "清除缓存失败",
   "appVersion": "应用版本",
   "appCount": "已收录应用数量",
+  "operatingSystem": "操作系统",
   "systemArch": "系统架构",
   "linglongVersion": "玲珑版本",
   "checkNetwork": "请检查网络连接后重试",

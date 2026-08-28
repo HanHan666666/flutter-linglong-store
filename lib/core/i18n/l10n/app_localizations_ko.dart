@@ -1143,6 +1143,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get appCount => '수록된 앱 수';
 
   @override
+  String get operatingSystem => '운영체제';
+
+  @override
   String get systemArch => '시스템 아키텍처';
 
   @override

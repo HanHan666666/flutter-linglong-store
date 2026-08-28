@@ -797,6 +797,14 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             ),
             _buildDivider(context),
 
+            // 操作系统（/etc/os-release 的 PRETTY_NAME，启动期一次性采集，缺失显示未知）
+            _buildInfoRow(
+              context,
+              label: l10n.operatingSystem,
+              value: globalState.osName ?? (l10n.unknown),
+            ),
+            _buildDivider(context),
+
             // 系统架构
             _buildInfoRow(
               context,

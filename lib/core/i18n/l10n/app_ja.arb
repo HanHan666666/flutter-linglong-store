@@ -699,6 +699,7 @@
   "clearCacheFailed": "キャッシュの消去に失敗しました",
   "appVersion": "アプリバージョン",
   "appCount": "収録アプリ数",
+  "operatingSystem": "オペレーティングシステム",
   "systemArch": "システムアーキテクチャ",
   "linglongVersion": "Linyaps バージョン",
   "checkNetwork": "ネットワーク接続を確認してから再試行してください",

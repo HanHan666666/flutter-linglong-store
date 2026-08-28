@@ -699,6 +699,7 @@
   "clearCacheFailed": "캐시 지우기 실패",
   "appVersion": "앱 버전",
   "appCount": "수록된 앱 수",
+  "operatingSystem": "운영체제",
   "systemArch": "시스템 아키텍처",
   "linglongVersion": "Linyaps 버전",
   "checkNetwork": "네트워크 연결을 확인한 후 다시 시도하세요",

@@ -700,6 +700,7 @@
   "clearCacheFailed": "Failed to clear cache",
   "appVersion": "App Version",
   "appCount": "Total Apps",
+  "operatingSystem": "Operating System",
   "systemArch": "System Architecture",
   "linglongVersion": "Linyaps Version",
   "checkNetwork": "Please check network and retry",

@@ -1126,6 +1126,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appCount => '已收录应用数量';
 
   @override
+  String get operatingSystem => '操作系统';
+
+  @override
   String get systemArch => '系统架构';
 
   @override
@@ -3452,6 +3455,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get appCount => '已收錄應用數量';
+
+  @override
+  String get operatingSystem => '作業系統';
 
   @override
   String get systemArch => '系統架構';

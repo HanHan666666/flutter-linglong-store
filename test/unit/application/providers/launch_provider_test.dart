@@ -14,6 +14,7 @@ import 'package:linglong_store/application/services/installed_app_diff_report_se
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
+import 'package:linglong_store/domain/models/linux_distribution.dart';
 import 'package:linglong_store/domain/models/linglong_env_check_result.dart';
 import 'package:linglong_store/domain/repositories/analytics_repository.dart';
 
@@ -564,6 +565,112 @@ void main() {
           equals('OS: Deepin 23 | glibc: 2.36 | kernel: Linux test kernel'),
         );
         expect(report.appVersion, equals('3.2.1'));
+      },
+    );
+
+    test(
+      'publishes distribution display name as global osName after launch',
+      () async {
+        final container = ProviderContainer(
+          overrides: [
+            installedAppDiffReportServiceProvider.overrideWithValue(
+              _RecordingDiffReportService(),
+            ),
+            launchAppVersionResolverProvider.overrideWithValue(
+              () async => '3.2.1',
+            ),
+            globalAppProvider.overrideWith(
+              () => _TestGlobalApp(
+                const GlobalAppState(
+                  userPreferences: UserPreferences(autoCheckUpdate: true),
+                ),
+              ),
+            ),
+            linglongEnvProvider.overrideWith(
+              () => _TestLinglongEnv(
+                const LinglongEnvCheckResult(
+                  isOk: true,
+                  llCliVersion: '1.9.0',
+                  arch: 'x86_64',
+                  // displayName 即 /etc/os-release 的 PRETTY_NAME（resolver 产出），
+                  // 启动期应一次性透传到 GlobalAppState.osName 供关于卡片展示。
+                  distribution: LinuxDistribution(
+                    displayName: 'Fedora Linux 42 (Evernight Edition)',
+                  ),
+                  repoStatus: RepoStatus.ok,
+                  checkedAt: 1,
+                ),
+              ),
+            ),
+            installedAppsProvider.overrideWith(
+              () => _TestInstalledApps(apps: const []),
+            ),
+            appSearchIndexProvider.overrideWith(
+              () => _RecordingSearchIndex(() {}),
+            ),
+            updateAppsProvider.overrideWith(() => _TestUpdateApps()),
+            installQueueProvider.overrideWith(() => _TestInstallQueue()),
+            analyticsRepositoryProvider.overrideWithValue(
+              const _NoopAnalyticsRepository(),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await container.read(launchSequenceProvider.notifier).runSequence();
+
+        expect(container.read(globalAppProvider).osName,
+            equals('Fedora Linux 42 (Evernight Edition)'));
+      },
+    );
+
+    test(
+      'keeps osName null when distribution display name is empty',
+      () async {
+        final container = ProviderContainer(
+          overrides: [
+            installedAppDiffReportServiceProvider.overrideWithValue(
+              _RecordingDiffReportService(),
+            ),
+            launchAppVersionResolverProvider.overrideWithValue(
+              () async => '3.2.1',
+            ),
+            globalAppProvider.overrideWith(
+              // 初始 osName 为空，模拟从未采集到系统名称的状态。
+              () => _TestGlobalApp(const GlobalAppState()),
+            ),
+            linglongEnvProvider.overrideWith(
+              () => _TestLinglongEnv(
+                // 未携带 distribution 时画像为 unknown，displayName 为空串。
+                const LinglongEnvCheckResult(
+                  isOk: true,
+                  llCliVersion: '1.9.0',
+                  arch: 'x86_64',
+                  repoStatus: RepoStatus.ok,
+                  checkedAt: 1,
+                ),
+              ),
+            ),
+            installedAppsProvider.overrideWith(
+              () => _TestInstalledApps(apps: const []),
+            ),
+            appSearchIndexProvider.overrideWith(
+              () => _RecordingSearchIndex(() {}),
+            ),
+            updateAppsProvider.overrideWith(() => _TestUpdateApps()),
+            installQueueProvider.overrideWith(() => _TestInstallQueue()),
+            analyticsRepositoryProvider.overrideWithValue(
+              const _NoopAnalyticsRepository(),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await container.read(launchSequenceProvider.notifier).runSequence();
+
+        // 发行版画像无名称（读不到 /etc/os-release）时不得写入空字符串，
+        // 关于卡片据此回落到「未知」占位。
+        expect(container.read(globalAppProvider).osName, isNull);
       },
     );
 

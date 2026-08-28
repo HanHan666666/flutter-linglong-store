@@ -699,6 +699,7 @@
   "clearCacheFailed": "清除快取失敗",
   "appVersion": "應用版本",
   "appCount": "已收錄應用數量",
+  "operatingSystem": "作業系統",
   "systemArch": "系統架構",
   "linglongVersion": "玲瓏版本",
   "checkNetwork": "請檢查網路連線後重試",

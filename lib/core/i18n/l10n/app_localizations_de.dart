@@ -1210,6 +1210,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appCount => 'Anzahl erfasster Apps';
 
   @override
+  String get operatingSystem => 'Betriebssystem';
+
+  @override
   String get systemArch => 'Systemarchitektur';
 
   @override

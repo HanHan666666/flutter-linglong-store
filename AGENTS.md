@@ -332,10 +332,12 @@ Semantics(
 ## 变更记录
 
 - 2026-08-28：应用不内置任何字体文件（体积原因，MiSans 官方全家桶 217MB）；
-  Linux 字体回退栈的简体变体（含所有非 CJK 语言的默认栈）以 `MiSans` /
-  `MiSans VF`（实测 name 表家族名）打头，系统装有 MiSans 的用户中文自动生效，
-  未装则自然回落 Noto/文泉驿。繁/日/韩栈禁止前插 MiSans——简体笔形会覆盖
-  字形变体功能的地区字形选择（来源：GitHub issue #22 社区建议）。
+  Linux 字体回退栈的简体与日文变体以 `MiSans` / `MiSans VF`（实测 name 表
+  家族名）打头，系统装有 MiSans 的用户中文/日文界面自动生效，未装则自然
+  回落 Noto/文泉驿。日文为同一用户明确要求（实测 MiSans cmap 覆盖假名与
+  JIS 专属汉字，不会混排，但笔形为中式习惯）；繁中/韩文栈禁止前插 MiSans
+  ——简体笔形会覆盖字形变体功能的地区字形选择（来源：GitHub issue #22
+  社区建议）。
 - 2026-08-27：新增日/韩/德/法/繁中五种发布语言（`app_ja/app_ko/app_de/app_fr/
   app_zh_Hant.arb`，各 678 键完整翻译，AR流程见 `docs/45-multi-language-expansion-design.md`）。
   伴随三处基础设施升级：①`tryResolveSupportedAppLocale` 升级为打分消歧，zh 与

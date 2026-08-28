@@ -70,8 +70,15 @@ class AppTheme {
   // 简体栈以 MiSans 打头（社区反馈的界面字体偏好，GitHub issue #22）：字体
   // 不入包、不增加下载体积，仅声明家族名——系统装有 MiSans 的用户中文自动
   // 以 MiSans 渲染，未安装时 fontconfig 匹配不到该家族会自然落到后续
-  // Noto/文泉驿字库，行为与现状一致。繁/日/韩栈不前插 MiSans：它是简体
-  // 笔形，会覆盖字形变体功能为这些语言选定的地区字形。
+  // Noto/文泉驿字库，行为与现状一致。
+  //
+  // 日文栈同样前插 MiSans（同一用户明确要求，2026-08-28）：实测 MiSans 的
+  // cmap 覆盖平/片假名、促音及 JIS 专属汉字（峠/辻/働），日文整体渲染不会
+  // 混排；但其假名与汉字为中式笔形而非 JIS 惯例，对字形纯正度敏感的日文
+  // 用户可自行移除系统 MiSans 回落 Noto JP。
+  //
+  // 繁中/韩文栈仍不前插 MiSans：简体笔形会覆盖字形变体功能为这两个语言
+  // 选定的地区字形，且暂无用户提出诉求。
   static List<String> _linuxFontFamilyFallback(AppCjkGlyphVariant variant) {
     return switch (variant) {
       AppCjkGlyphVariant.hant => <String>[
@@ -86,6 +93,10 @@ class AppTheme {
         'Noto Color Emoji',
       ],
       AppCjkGlyphVariant.ja => <String>[
+        // 与简体栈同理由前插 MiSans（两个家族名均实测自字体 name 表）。
+        // MiSans 覆盖假名与常用汉字，个别缺字由后续 Noto JP/思源 JP 兜底。
+        'MiSans',
+        'MiSans VF',
         'Noto Sans CJK JP',
         'Source Han Sans JP',
         'Noto Sans CJK SC',

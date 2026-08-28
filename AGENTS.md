@@ -339,7 +339,9 @@ Semantics(
   字库）；日文为同一用户要求（cmap 覆盖假名与 JIS 专属汉字）。韩文栈禁止
   前插 MiSans——实测其 cmap 无任何谚文字符，前插无效果，谚文由 Noto Sans
   CJK KR 兜底。曾有一个「应用内字体偏好设置」实现被评审否决：无人提出该
-  需求，禁止在无用户诉求时为字体回退新增设置项/持久化字段/翻译键。
+  需求，禁止在无用户诉求时为字体回退新增设置项/持久化字段/翻译键。设计文档
+  与覆盖实测见 `docs/46-misans-font-fallback-design.md`（致谢建议者
+  EvernightFedora）。
 - 2026-08-27：新增日/韩/德/法/繁中五种发布语言（`app_ja/app_ko/app_de/app_fr/
   app_zh_Hant.arb`，各 678 键完整翻译，AR流程见 `docs/45-multi-language-expansion-design.md`）。
   伴随三处基础设施升级：①`tryResolveSupportedAppLocale` 升级为打分消歧，zh 与

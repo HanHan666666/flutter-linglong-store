@@ -64,6 +64,30 @@ void main() {
         expectedLinuxFontFallback,
       );
     });
+
+    test('traditional Chinese locale also prefers MiSans (方案 A)', () {
+      final fallback = AppTheme.buildLightTheme(
+        appLocale: const Locale.fromSubtags(
+          languageCode: 'zh',
+          scriptCode: 'Hant',
+        ),
+      ).textTheme.bodyMedium?.fontFamilyFallback;
+
+      // MiSans 繁中码位全覆盖，前插不会混排；地区字库继续兜底缺字。
+      expect(fallback?.first, 'MiSans');
+      expect(fallback?[1], 'MiSans VF');
+      expect(fallback, contains('Noto Sans CJK TC'));
+    });
+
+    test('korean locale keeps regional font first (MiSans has no hangul)', () {
+      final fallback = AppTheme.buildLightTheme(
+        appLocale: const Locale('ko'),
+      ).textTheme.bodyMedium?.fontFamilyFallback;
+
+      // 实测 MiSans cmap 无谚文字符，前插对韩文无效果，维持 Noto KR 优先。
+      expect(fallback?.first, 'Noto Sans CJK KR');
+      expect(fallback, isNot(contains('MiSans')));
+    });
   });
 
   group('AppTheme dynamic typography', () {

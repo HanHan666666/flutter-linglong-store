@@ -72,16 +72,21 @@ class AppTheme {
   // 以 MiSans 渲染，未安装时 fontconfig 匹配不到该家族会自然落到后续
   // Noto/文泉驿字库，行为与现状一致。
   //
-  // 日文栈同样前插 MiSans（同一用户明确要求，2026-08-28）：实测 MiSans 的
-  // cmap 覆盖平/片假名、促音及 JIS 专属汉字（峠/辻/働），日文整体渲染不会
-  // 混排；但其假名与汉字为中式笔形而非 JIS 惯例，对字形纯正度敏感的日文
-  // 用户可自行移除系统 MiSans 回落 Noto JP。
+  // 日文与繁中栈同样前插 MiSans（日文为同一用户明确要求；繁中为 issue #22
+  // 讨论后的方案 A 决定）：实测 MiSans 的 cmap 覆盖平/片假名、促音、JIS
+  // 专属汉字（峠/辻/働）及全部繁体码位（門轉龍發麥體），整体渲染不会混排；
+  // 但假名与汉字均为中式/简体笔形，对地区字形纯正度敏感的用户可移除系统
+  // MiSans 自动回落 Noto 地区字库。
   //
-  // 繁中/韩文栈仍不前插 MiSans：简体笔形会覆盖字形变体功能为这两个语言
-  // 选定的地区字形，且暂无用户提出诉求。
+  // 韩文栈不前插 MiSans：实测其 cmap 不含任何谚文字符（한국어 等全部缺失），
+  // 前插对韩文文本无效果，谚文本来就会全部落到 Noto Sans CJK KR 兜底。
   static List<String> _linuxFontFamilyFallback(AppCjkGlyphVariant variant) {
     return switch (variant) {
       AppCjkGlyphVariant.hant => <String>[
+        // 方案 A（issue #22 讨论）：繁中码位实测全覆盖、不会混排，装了
+        // MiSans 的繁中用户优先 MiSans 观感；缺字由后续 Noto TC 兜底。
+        'MiSans',
+        'MiSans VF',
         'Noto Sans CJK TC',
         'Source Han Sans TC',
         // 繁体字库偶发缺字时退化到覆盖面最大的简体字库。

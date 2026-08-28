@@ -4,8 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/core/config/theme.dart';
 
 void main() {
-  // 与 AppTheme._linuxFontFamilyFallback 保持一致：CJK + 阿拉伯语 + 表情符号
+  // 与 AppTheme._linuxFontFamilyFallback 保持一致：MiSans 优先（已装用户
+  // 生效，未装自然回落）+ CJK + 阿拉伯语 + 表情符号
   const expectedLinuxFontFallback = <String>[
+    'MiSans',
+    'MiSans VF',
     'Noto Sans CJK SC',
     'Source Han Sans SC',
     'WenQuanYi Micro Hei',

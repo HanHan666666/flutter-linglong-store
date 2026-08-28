@@ -66,6 +66,12 @@ class AppTheme {
   //
   // 各字形变体的回退栈把目标地区字库排在首位，其余 CJK 字库继续兜底个别
   // 缺字；阿拉伯语与 Emoji 字库在所有变体中固定位于末尾。
+  //
+  // 简体栈以 MiSans 打头（社区反馈的界面字体偏好，GitHub issue #22）：字体
+  // 不入包、不增加下载体积，仅声明家族名——系统装有 MiSans 的用户中文自动
+  // 以 MiSans 渲染，未安装时 fontconfig 匹配不到该家族会自然落到后续
+  // Noto/文泉驿字库，行为与现状一致。繁/日/韩栈不前插 MiSans：它是简体
+  // 笔形，会覆盖字形变体功能为这些语言选定的地区字形。
   static List<String> _linuxFontFamilyFallback(AppCjkGlyphVariant variant) {
     return switch (variant) {
       AppCjkGlyphVariant.hant => <String>[
@@ -100,6 +106,11 @@ class AppTheme {
         'Noto Color Emoji',
       ],
       AppCjkGlyphVariant.hans => <String>[
+        // 两个家族名均取自官方字体文件的 name 表（nameID=1）而非臆测：
+        // 静态 10 字重包安装的家族是 MiSans，仅安装可变字体文件的用户
+        // 家族是 MiSans VF，两条都声明才能覆盖两种安装方式。
+        'MiSans',
+        'MiSans VF',
         'Noto Sans CJK SC',
         'Source Han Sans SC',
         'WenQuanYi Micro Hei',

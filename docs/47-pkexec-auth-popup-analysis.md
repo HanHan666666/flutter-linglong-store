@@ -1,6 +1,6 @@
 # 47 - 商店安装操作反复弹出 pkexec 授权问题分析报告
 
-> 状态：分析完成，方案 A（商店直连 D-Bus）待 spike 验证
+> 状态：问题分析完成；方案取舍未定，本文不预设推荐
 > 日期：2026-09-04
 > 环境：Deepin 25 (crimson) / linglong-bin 1.13.8-1（标准 C++ 版）/ linglong-store 3.5.0
 > 对照源码：`/home/han/code/linyaps`（master = 1.13.0-110-gd3c642c9）
@@ -58,9 +58,9 @@ sequenceDiagram
 - 缓存命中条件：同一个 ll-cli 进程的重复调用（例如终端里交互式 shell 一次
   连装多个包才可能命中）。
 - 商店形态：每次点击安装 = 新进程 = 新 subject = 必弹窗。
-- 结论：**既不是商店的 bug，也不是用户配置问题，而是上游 `9937c545` 引入
-  polkit 校验时，「keep 缓存语义」与「CLI 每次新进程调用方式」根本不匹配的
-  设计缺陷**。商店侧可以彻底规避（见方案 A）。
+- 结论：**弹窗行为由上游 `9937c545` 引入 polkit 校验后，「keep 缓存语义」与
+  「CLI/GUI 每次新进程调用」的组合方式共同决定，既非商店实现错误，也非本机
+  配置问题**。商店侧与上游侧均存在可行改进空间（事实对比见 §5，本文不做取舍）。
 
 ### 3.1 六个 polkit action 清单（来自本机 policy 文件）
 
@@ -85,9 +85,9 @@ sequenceDiagram
 
 结论：用户「以前不会这样」的记忆准确——`9937c545` 之前确实不弹窗。
 
-## 5. 解决方案对比与评估
+## 5. 候选方案事实对比（不含推荐倾向）
 
-### 方案 B：polkit rules.d 免密规则（已设计，因安全面过大被否决）
+### 方案 B：polkit rules.d 免密规则（已设计，未采纳）
 
 - 做法：写 `/etc/polkit-1/rules.d/60-linglong-store.rules`，对
   `install/update/install-from-file` 三个 action 在 local+active 会话返回
@@ -95,7 +95,8 @@ sequenceDiagram
 - 已核实边界：**规则按「调用方身份属性」（uid/会话）匹配，无法收窄到商店**——
   生效后终端 `ll-cli install` 同样免密，任何本机活动会话程序（含恶意程序）
   均可静默安装软件，属系统级全局授权降级。
-- 结论：立即止痛但安全让渡过大，**否决**（用户决策）。
+- 特点：止痛立竿见影、实现成本最低；代价是系统级授权降级，安全边界无法
+  收窄到单一前端。当前未采纳（用户决策）。
 
 ### 方案 C：推动上游修复（建议并行）
 
@@ -117,9 +118,11 @@ sequenceDiagram
 - 缺点：自研 IPC 协议 + 进程生命周期（EOF 自杀/超时/残留清理/双连接拒绝）+
   自研安全面（命令白名单/锁屏校验），代码量最大且安全责任全在自己；
   与「越简单越可控」的项目原则冲突。
-- 结论：**放弃**（保留于此供追溯）。
+- 特点：授权范围限定商店身份（优于方案 B 的全局降级）、进度零映射；
+  代价是自研 IPC 协议与进程生命周期代码量最大、安全责任全部自担。
+  当前未采纳。
 
-### 方案 A（推荐）：商店直连 D-Bus，不再 spawn ll-cli 做写操作
+### 方案 A：商店直连 D-Bus，不再 spawn ll-cli 做写操作
 
 - 做法：安装/更新类写操作直接调用系统 D-Bus
   `org.deepin.linglong.PackageManager1`；查询类命令（list/info/search/repo）
@@ -137,43 +140,53 @@ sequenceDiagram
 |------|----------|-----------|
 | 进度信息 | `Task1.TaskEvent(event, data:a{sv})` 推送 `state` 事件，字段 `{progress, message, state}`（`package_task.cpp:83-88`）；另有 `message` 事件透传日志 | 与 `ll-cli --json` 信息量等价，现有进度 UI 可无损支撑 |
 | 任务生命周期 | `Install(parameters:a{sv})` 返回 result → 取 taskPath → **必须再调 `task.Start()`** 才开始执行；结束有 `TaskFinished(result:a{sv})` | repository 需实现「创建→Start→订阅→收尾」编排 |
-| 非交互应答 | daemon 可能发 `RequestInteraction(interactionId, messageID, additional)`，需 `ReplyInteraction` 应答；CLI 模式用 `-y` 跳过 | 需在 parameters 中寻找等价非交互键，或实现自动应答 `confirm=true`；spike 重点验证项 |
+| 非交互应答 | daemon 可能发 `RequestInteraction(interactionId, messageID, additional)`，需 `ReplyInteraction` 应答；CLI 模式用 `-y` 跳过 | 需在 parameters 中寻找等价非交互键，或实现自动应答 `confirm=true`；若采纳本方案，此为前置验证项 |
 | 接口形态 | `Install/Update/Uninstall` 参数与返回均为弱类型 `a{sv}` 字典（无 schema） | 按 linyaps 源码逐字段映射（`api/dbus/*.xml` + `package_manager.cpp`），封装收敛在 Data 层 |
 | 取消 | `Task1.Cancel()`（root daemon 收到后 `g_cancellable_cancel()`） | 取代 `pkexec kill -15 <pid>`，零弹窗 |
 
 #### 5.2 综合对比
 
-| 维度 | B rules 免密 | C 上游修复 | D root helper | **A 直连 D-Bus（推荐）** |
+| 维度 | B rules 免密 | C 上游修复 | D root helper | A 直连 D-Bus |
 |------|-------------|-----------|---------------|--------------------------|
 | 弹窗频率 | 0 次 | 每会话 1 次 | 首次 1 次 | **5 分钟窗口 1 次** |
 | 恶意程序可蹭授权 | ⚠️ 可 | ✅ 不可 | ✅ 不可 | ✅ 不可 |
 | 自研特权/安全代码 | 极少 | 无 | ⚠️ 大量 | **无** |
 | 进度整合成本 | 无关 | 无关 | 最低（透传） | 低（字段等价） |
 | 改动面 | 设置页+文件读写 | 无（上游） | helper 五件套+路由 | D-Bus repository+状态映射 |
-| 长期维护 | 差（系统降权遗留） | 好 | 中（自研 IPC 演进） | **好（跟随上游标准接口）** |
+| 长期维护 | 差（系统降权遗留） | 好 | 中（自研 IPC 演进） | 好（跟随上游标准接口） |
 | 是否依赖上游 | 否 | 是 | 否 | 否 |
 
-## 6. 实施计划（方案 A）
+## 6. 各方案实施要点（并列陈述，无优先级）
 
-1. **Spike 验证（先行，产出验收结论后再进入正式开发）**
-   - 用 `dbus` Dart 包写最小验证脚本：`Install → task.Start → 订阅 TaskEvent
-     进度 → Task1.Cancel → TaskFinished` 全流程真机跑通；
-   - 实测弹窗频率：5 分钟内连续发起 ≥3 次安装，验证仅首弹 1 次；
-   - 验证 `RequestInteraction` 的自动应答方式（非交互参数键或 confirm 应答）；
-   - 验证 daemon 未激活场景（D-Bus activation 自动拉起）。
-2. **Data 层**：新增 `LinglongDBusRepository`（安装/更新写操作路由 D-Bus，
-   查询命令维持 CLI），进度事件映射到现有 `ProgressEvent` 模型。
-3. **Application 层**：安装队列/取消流程接入 D-Bus 取消；`docs/23` 的
-   `pkexec kill -15 <pid>` 路径标记废弃。
-4. **回退策略**：D-Bus 调用失败（daemon 异常等）时回退现有 ll-cli 路径并上报日志。
-5. **测试**：repository 单测（mock D-Bus）→ 队列整合 Widget 测试 →
-   真机集成测试（含弹窗频率断言、取消零弹窗断言）。
-6. **文档与提交**：设计文档落 `docs/`；按功能点分 commit
-   （`feat: 安装更新改走系统 D-Bus 消除反复授权弹窗` 等）。
+### 6.1 方案 B 如采纳
+
+- 设置页新增开关（默认关闭，开启时风险文案确认）；规则文件内容、写入/移除
+  通过 `pkexec bash <临时脚本>` 完成；开关状态以规则文件存在性为唯一事实来源。
+- 需评估项：规则覆盖的 action 范围（是否含 uninstall/prune/set-configuration）、
+  文案措辞、用户取消 pkexec 授权时的状态回弹。
+
+### 6.2 方案 C 如采纳
+
+- 按 §7.1 要点向 linyaps 提交 issue / PR；期间商店无代码改动。
+
+### 6.3 方案 D 如采纳
+
+- 新增 `lib/core/platform/privileged_helper/`（协议/Server/TaskRunner/Client/
+  helper 入口五件套）；`main()` 入口参数分流，helper 模式不初始化 GUI；
+  `cli_executor.dart` 写操作路由改造，查询命令维持不变。
+- 需评估项：命令白名单范围、锁屏会话加固（`loginctl` 校验）、空闲超时时长、
+  pkexec 授权取消（退出码 126）时的失败语义。
+
+### 6.4 方案 A 如采纳
+
+- 新增 Data 层 D-Bus repository（`dbus` Dart 包），安装/更新写操作路由 D-Bus，
+  查询命令维持 CLI；进度事件映射到现有 `ProgressEvent` 模型。
+- 需评估项：`a{sv}` 字段逐项映射、`task.Start()` 编排时序、
+  `RequestInteraction` 应答方式、D-Bus 失败时是否回退 ll-cli 路径及回退条件。
 
 ## 7. 附录
 
-### 7.1 上游 issue 要点（方案 C，待提交）
+### 7.1 上游 issue 要点（对应方案 C，如需推动上游修复）
 
 - 标题建议：`auth_admin_keep never caches for CLI/GUI callers because subject is per-process`
 - 事实：`9937c545` 起 daemon 按调用方 `system-bus-name`（解析为
@@ -193,7 +206,7 @@ sequenceDiagram
 | linyaps `api/dbus/org.deepin.linglong.PackageManager1.xml` / `...Task1.xml` | 弱类型 `a{sv}` 接口定义、`Start/Cancel/ReplyInteraction` |
 | 本机 `/usr/share/polkit-1/actions/org.deepin.linglong.PackageManager1.policy` | 六个 action 与 `auth_admin_keep` 默认值 |
 | 商店 `lib/core/platform/cli_executor.dart` | 现有 ll-cli spawn/流式解析/取消实现（对照与回退路径） |
-| 商店 `docs/23-install-cancel-sigterm-plan.md` | 旧取消方案及其 `pkexec` 弹窗遗留（方案 A 下自然消除） |
+| 商店 `docs/23-install-cancel-sigterm-plan.md` | 旧取消方案及其 `pkexec` 弹窗遗留（方案 A/D 下可消除） |
 
 ### 7.3 环境操作记录（本次排查过程中的系统变更）
 

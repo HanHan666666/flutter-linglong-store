@@ -68,6 +68,9 @@ set_target_properties(PkgConfig::GTK PROPERTIES IMPORTED_GLOBAL TRUE)
 # Application build; see runner/CMakeLists.txt.
 add_subdirectory("runner")
 
+# 特权 root helper：独立最小二进制（docs/47 §4.2/§12），与 runner 解耦构建。
+add_subdirectory("privileged_helper")
+
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)
 
@@ -135,3 +138,9 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
   install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
 endif()
+
+# 特权 helper 安装到 bundle 的 libexec/；DEB/RPM/AppImage 打包均整体复制
+# bundle 目录，该文件随产物分发，无需按包格式维护安装规则（docs/47 §4.2）。
+install(TARGETS linglong_store_helper
+  RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/libexec"
+  COMPONENT Runtime)

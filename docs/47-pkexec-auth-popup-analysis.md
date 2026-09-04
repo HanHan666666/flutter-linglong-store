@@ -7,6 +7,9 @@
 > v2 修订（2026-09-04）：收缩“全形态统一暂存”为仅 FUSE 文件系统暂存；简化 helper
 > 启动自检；将“跨形态字节级一致”验收放宽为“行为语义一致”
 >
+> v2.1 修订（2026-09-04）：暂存清理责任全部收敛到 GUI 侧（helper 不感知暂存概念）；
+> FUSE 检测固定为解析 `/proc/self/mountinfo`，不再保留 statfs 备选
+>
 > 环境：Deepin 25 (crimson) / linglong-bin 1.13.8-1（标准 C++ 版）/
 > linglong-store 3.5.0
 >
@@ -262,15 +265,26 @@ Type 2 AppImage 通常把 AppDir 作为当前用户拥有的只读 FUSE 挂载�
 
 1. 以 `Platform.resolvedExecutable` 所在 bundle 为唯一基准，从固定相对路径读取
    `libexec/linglong_store_helper`；不得接受环境变量或调用方指定其他 helper 路径；
-2. 检测 bundle 所在文件系统类型（解析 `/proc/self/mountinfo` 中挂载点的 fstype，
-   `fuse` 或以 `fuse.` 开头即视为 FUSE；或经 `dart:ffi` 调用 `statfs(2)` 判断
-   `FUSE_SUPER_MAGIC`，实现二选一，检测结果需可注入以便单测覆盖两个分支）；
+2. 检测 bundle 所在文件系统类型，实现固定为解析 `/proc/self/mountinfo`（纯 Dart，
+   不引入 dart:ffi 与 statfs 结构体的 ABI 适配）：取包含 helper 路径的最长挂载点，
+   前缀匹配按路径分量边界（目标路径等于挂载点或以“挂载点 + `/`”开头），并反转义
+   挂载点中的 `\040`/`\011`/`\012`/`\134` 八进制转义；fstype 为 `fuse`、`fuseblk`
+   或以 `fuse.` 开头即视为 FUSE。文件缺失、无匹配挂载点或解析失败时一律保守视为
+   FUSE——误判直启会让用户走完授权才在执行处失败，而多暂存一次只是冗余复制；
+   检测结果需可注入以便单测覆盖两个分支；
 3. 非 FUSE：直接把该绝对路径交给 pkexec，流程结束，不产生任何暂存文件；
-4. FUSE：在有效 `$XDG_RUNTIME_DIR` 下创建随机、仅当前用户可访问的临时目录
-   （`0700`），以“新建且不得覆盖”的方式复制 helper 为 `0500` 文件，再把暂存文件的
-   绝对路径交给 pkexec；
-5. helper 就绪后自行 `unlink` 暂存文件并移除空父目录；GUI 在 pkexec 启动失败、
-   授权取消（退出码 126）和进程退出后执行幂等清理；
+4. FUSE：在本应用专用暂存根（`$XDG_RUNTIME_DIR/<application-id>/helper-staging/`）
+   下创建随机、仅当前用户可访问的临时子目录（`0700`），以“新建且不得覆盖”的方式
+   复制 helper 为 `0500` 文件，再把暂存文件的绝对路径交给 pkexec；
+5. 暂存的创建与回收全部由 GUI 侧 `PrivilegedHelperBinary` 负责，helper 不知道
+   FUSE、AppImage 或暂存概念，也不删除任何文件——协议不向 helper 传递暂存标志，
+   它若无条件 unlink 会在直启形态误删 bundle 内正式 helper。GUI 收到 `ready` 后
+   立即删除暂存文件和空父目录（时机不能提前：pkexec 在整个认证期间都需要该路径
+   存在；unlink 已运行进程的 exe 无害）；pkexec 启动失败、授权取消（退出码 126）、
+   helper 退出（含未及发送 ready 的异常退出）时执行幂等清理；每次准备启动 helper
+   时先清扫暂存根中上次遗留的目录（无论本次是否走暂存分支，目录不存在时为空
+   操作），兜住 GUI 在认证期间被 SIGKILL 的场景——清扫只限本应用暂存根，不扫描
+   `$XDG_RUNTIME_DIR` 全局，且该目录随会话销毁，残留上界有限；
 6. helper 启动后只使用私有 stdin/stdout，不再读取原 bundle（AppImage 场景下 GUI
    退出后 FUSE 挂载随之消失，helper 收尾不能依赖原路径继续存在）。
 
@@ -380,7 +394,7 @@ policy/rule。
 
 | `type` | 关键字段 | 语义 |
 |---|---|---|
-| `ready` | `v` | helper 已完成 root 身份、暂存文件和协议初始化检查 |
+| `ready` | `v` | helper 已完成 §7 的 root 身份、PKEXEC_UID、ll-cli 与控制通道启动检查 |
 | `started` | `requestId`、`operation` | ll-cli 子进程已经创建 |
 | `output` | `requestId`、`stream`、`line` | 一行原始 ll-cli stdout/stderr |
 | `cancelAccepted` | `requestId` | SIGTERM 已发送或任务正处于退出过程 |
@@ -437,15 +451,14 @@ helper 启动时检查：
 3. `/usr/bin/ll-cli` 是普通文件，不允许 group/other 写入；
 4. stdin/stdout 是有效的父子控制通道。
 
-检查通过后，FUSE 暂存形态的 helper 立即 `unlink` 暂存文件并移除空父目录。该清理
-属于运行时卫生，防止运行时目录积累残留副本；它不是来源证明——同 UID 进程本来就能
-创建完全相同的文件，真正的边界是每次 pkexec 启动都需要用户重新授权。任一检查失败
-都应在建立业务会话前退出，不能降级执行其他命令。
+任一检查失败都应在建立业务会话前退出，不能降级执行其他命令。
 
 明确不做的检查：不校验父进程 UID，不取证自身 exe 路径的属主、权限或路径节点符号
-链接。这类检查只能证明“文件由本 UID 按规范暂存”，而 §5.2.2 承认的威胁（同 UID
-恶意进程、被篡改 bundle）恰好满足该条件，检查结果恒真，不改变任何攻击者的能力
-边界，只增加代码和测试负担。
+链接，也不区分自身是“暂存副本还是 bundle 正式文件”。这类检查只能证明“文件由本
+UID 按规范暂存”，而 §5.2.2 承认的威胁（同 UID 恶意进程、被篡改 bundle）恰好满足
+该条件，检查结果恒真，不改变任何攻击者的能力边界，只增加代码和测试负担。暂存
+副本的清理因此完全由 GUI 侧负责（§5.2.1 第 5 步），helper 不感知、也不删除任何
+暂存文件。
 
 ## 8. 串行、取消与结果判定
 
@@ -508,7 +521,8 @@ sequenceDiagram
 3. client 按 §5.2.1 定位 helper：普通文件系统形态直接以 bundle 内绝对路径启动一次
    `pkexec --disable-internal-agent helper`，FUSE 形态先创建一次性暂存副本再启动；
    两种启动方式对队列完全透明。
-4. 只有收到 `ready(v=1)` 后才能发送 start。
+4. 只有收到 `ready(v=1)` 后才能发送 start；FUSE 形态在收到 `ready` 的同时删除
+   暂存文件（§5.2.1 第 5 步）。
 5. 同一 GUI 会话后续任务复用现有进程，不再调用 pkexec。
 6. helper 运行期间仍然一次只启动一个 ll-cli。
 
@@ -619,9 +633,9 @@ root helper 的安全原则是“最小能力，不是信任 GUI 输入”。必
 11. 不新增无条件放行的 Polkit rules 或 sudoers 项。
 12. stderr、日志和错误消息有长度上限，不记录密码或认证内容。
 13. helper 协议错误默认失败关闭，不能降级成更宽松的执行方式。
-14. 仅 FUSE 形态暂存单个 helper（随机私有目录、独占创建、启动后立即删除、失败路径
-    幂等清理）；其余形态直接执行 bundle 内路径。任何形态都不得把整个 bundle 复制到
-    可写目录后以 root 运行。
+14. 仅 FUSE 形态暂存单个 helper（随机私有目录、独占创建、GUI 收到 ready 后立即
+    删除、失败路径幂等清理、下次启动清扫遗留）；其余形态直接执行 bundle 内路径。
+    任何形态都不得把整个 bundle 复制到可写目录后以 root 运行。
 
 在 helper 二进制本身未被替换的前提下，普通用户控制 GUI 并不意味着可以取得任意 root
 命令。被利用的 GUI 在 helper 存活期内只能请求白名单中的指定应用在线安装/更新；它
@@ -631,8 +645,8 @@ root helper 的安全原则是“最小能力，不是信任 GUI 输入”。必
 bundle、开发构建和 AppImage 形态的信任建立在“用户明确授权执行当前 bundle 内文件”
 之上，同 UID 篡改（含 FUSE 暂存从复制到执行的间隙）无法靠权限位、随机目录或内部
 哈希消除，只有发行签名验证或系统安装的 root-owned launcher 才能提升来源信任。产品
-已按 §5.2.2 接受该剩余风险；FUSE 暂存仍应保持独占创建与立即 unlink 以缩小残留面，
-但不得宣称这些措施等价于系统包来源保证。
+已按 §5.2.2 接受该剩余风险；FUSE 暂存仍应保持独占创建、就绪后立即删除与遗留清扫
+以缩小残留面，但不得宣称这些措施等价于系统包来源保证。
 
 ## 12. 最小代码改动范围
 
@@ -641,7 +655,7 @@ bundle、开发构建和 AppImage 形态的信任建立在“用户明确授权�
 ```text
 lib/core/platform/privileged_helper/
 ├── privileged_helper_client.dart       # 进程、握手、复用、关闭
-├── privileged_helper_binary.dart       # 当前 bundle 定位、FUSE 检测、仅 FUSE 暂存和幂等清理
+├── privileged_helper_binary.dart       # 当前 bundle 定位、mountinfo FUSE 检测、暂存创建/回收/清扫
 ├── privileged_helper_protocol.dart     # NDJSON DTO 与有界编解码
 └── privileged_helper_exception.dart    # 稳定传输失败类型
 
@@ -659,8 +673,9 @@ linux/privileged_helper/
 - `InstallQueue`：授权取消或 helper 启动失败时阻止自动消费下一任务；
 - production dependency wiring：创建应用级 `PrivilegedHelperClient`；
 - Linux CMake：构建并安装独立 helper；
-- helper binary preparer：所有运行形态统一定位同一个 helper，仅 FUSE 形态执行暂存
-  与幂等清理；不进入业务协议层，分支依据只有文件系统 FUSE 检测，不判断安装身份；
+- helper binary preparer：所有运行形态统一定位同一个 helper，独占 FUSE 形态的暂存
+  创建、ready 后删除、失败清理与遗留清扫；不进入业务协议层，分支依据只有
+  mountinfo 的 FUSE 检测，不判断安装身份；
 - 打包 smoke test：确认发布 bundle、系统包与 AppImage 均携带 helper 且依赖、权限正确；
 - l10n：补充授权取消和 helper 不可用的必要提示。
 
@@ -701,10 +716,14 @@ linux/privileged_helper/
 - 开发 bundle、release bundle、DEB/RPM/AUR/Copr 与 AppImage 产物都包含同一个 helper，
   且 helper 不依赖 `libflutter_linux_gtk.so`、bundle `lib/` 或 AppDir 动态库；
 - 所有运行形态只按 `Platform.resolvedExecutable` 的固定相对目录定位 helper；启动
-  方式的唯一分支是注入的文件系统类型检测结果（FUSE → 暂存并使用暂存路径，非 FUSE →
-  直启且不产生暂存文件），不读取 `APPIMAGE`、`APPDIR`、包管理器或构建模式来分流；
+  方式的唯一分支是注入的 mountinfo/FUSE 检测结果（FUSE → 暂存并使用暂存路径，
+  非 FUSE → 直启且不产生暂存文件），不读取 `APPIMAGE`、`APPDIR`、包管理器或构建
+  模式来分流；mountinfo 解析用例覆盖八进制转义、按路径分量边界的最长前缀匹配、
+  `fuseblk`、无匹配挂载点和解析失败保守走暂存；
 - FUSE 暂存分支覆盖独占创建（不覆盖已存在文件）、`0700`/`0500` 权限、复制不完整、
-  pkexec 启动失败、exit 126、正常退出和重复清理；任何失败路径不得残留暂存文件；
+  收到 ready 后立即删除、pkexec 启动失败、exit 126、正常退出、重复清理幂等，以及
+  上次 GUI 被 SIGKILL 遗留的目录在下次启动被清扫；GUI 存活的所有路径不得残留暂存
+  文件，GUI 被杀路径的残留以“下次启动清扫”为验收；
 - 各形态输入相同业务请求时，协议事件和队列状态迁移必须一致（按授权次数与行为语义
   验收），不要求跨形态断言 pkexec 参数字面相同。
 
@@ -718,7 +737,7 @@ linux/privileged_helper/
 | 接近完成时取消 | 最终状态与安装结果一致，不误报 cancelled |
 | 用户关闭首次授权 | 只弹一次，当前任务提示需要授权，后续队列不继续弹 |
 | GUI 正常关闭 | helper 和当前 ll-cli 均退出，daemon 不被杀 |
-| GUI SIGKILL | parent-death signal 使 helper/ll-cli 收尾，不遗留可复用 root 服务 |
+| GUI SIGKILL | parent-death signal 使 helper/ll-cli 收尾，不遗留可复用 root 服务；暂存残留有界，下次启动清扫 |
 | helper 空闲超过五分钟 | helper 退出；下一任务重新授权一次 |
 | helper 异常退出 | 当前任务可诊断，队列不自动重新 pkexec |
 | 普通用户直接启动 helper | 因非 root 立即失败 |

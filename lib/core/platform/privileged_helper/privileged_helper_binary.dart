@@ -342,8 +342,10 @@ _MountEntry? _longestCoveringMountPoint(
       continue;
     }
     final mountPoint = entry.mountPoint;
-    final covers = absolutePath == mountPoint ||
-        absolutePath.startsWith('$mountPoint/');
+    // 根挂载点 "/" 需要单独处理：字符串拼接 "/" + "/" 无法匹配任何绝对路径。
+    final covers = mountPoint == '/'
+        ? absolutePath.startsWith('/')
+        : absolutePath == mountPoint || absolutePath.startsWith('$mountPoint/');
     if (covers &&
         (best == null || mountPoint.length > best.mountPoint.length)) {
       best = entry;

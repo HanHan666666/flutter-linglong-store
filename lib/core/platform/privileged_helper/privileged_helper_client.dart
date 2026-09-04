@@ -11,6 +11,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+
 import '../../logging/app_logger.dart';
 import '../bounded_output_buffer.dart';
 import 'privileged_helper_binary.dart';
@@ -72,18 +74,26 @@ abstract class PrivilegedHelperTransport {
 /// helper 会话的运行状态。
 enum _SessionState { notStarted, starting, ready }
 
+/// helper 会话的启动命令；默认 `pkexec --disable-internal-agent <helper>`。
+typedef PrivilegedHelperLauncher =
+    Future<Process> Function(List<String> command);
+
 class PrivilegedHelperClient implements PrivilegedHelperTransport {
   /// 创建客户端。
   ///
   /// [readyTimeout] 是 pkexec 启动到收到 ready 的上限；认证对话框可能等待
   /// 用户输入，取值需覆盖 polkit 代理自身的自动关闭窗口。
+  /// [launcher] 为测试注入缝：默认启动 pkexec，测试用它替换为假 helper 进程。
   PrivilegedHelperClient({
     PrivilegedHelperBinary? binary,
     this.readyTimeout = const Duration(minutes: 5),
-  }) : _binary = binary ?? PrivilegedHelperBinary();
+    @visibleForTesting PrivilegedHelperLauncher? launcher,
+  }) : _binary = binary ?? PrivilegedHelperBinary(),
+       _launcher = launcher ?? _launchPkexec;
 
   final PrivilegedHelperBinary _binary;
   final Duration readyTimeout;
+  final PrivilegedHelperLauncher _launcher;
 
   _SessionState _state = _SessionState.notStarted;
   Process? _process;
@@ -131,9 +141,8 @@ class PrivilegedHelperClient implements PrivilegedHelperTransport {
     try {
       // --disable-internal-agent：无桌面代理时明确失败，避免文本代理占用
       // helper stdin 与协议通道争抢输入（§6.1）。
-      process = await Process.start(
-        'pkexec',
-        ['--disable-internal-agent', prepared.path],
+      process = await _launcher(
+        ['pkexec', '--disable-internal-agent', prepared.path],
       );
     } catch (error) {
       await prepared.release();
@@ -316,11 +325,18 @@ class PrivilegedHelperClient implements PrivilegedHelperTransport {
   /// 致命协议错误：当前任务按传输失败结束，会话整体作废。
   Future<void> _handleProtocolFailure(Object error) async {
     AppLogger.error('特权 helper 协议错误', error);
-    _failActiveTask(
-      error is PrivilegedHelperException
-          ? error
-          : PrivilegedHelperProtocolException(error.toString()),
-    );
+    final protocolError = error is PrivilegedHelperException
+        ? error
+        : PrivilegedHelperProtocolException(error.toString());
+    // 启动期收到非协议文本：立即让启动竞速以协议错误收场，而不是继续等
+    // ready 超时或进程退出（两种结果都会掩盖真实的协议故障原因）。
+    final ready = _readyCompleter;
+    if (_state == _SessionState.starting &&
+        ready != null &&
+        !ready.isCompleted) {
+      ready.completeError(protocolError);
+    }
+    _failActiveTask(protocolError);
     await _teardownSession();
   }
 
@@ -427,6 +443,9 @@ class PrivilegedHelperClient implements PrivilegedHelperTransport {
     } catch (_) {
       // 进程已退出时关闭失败无需处理。
     }
+    // EOF 后再补 SIGTERM：等价于 helper 自身的 SIGTERM 收尾路径（§9.3 表），
+    // 保证不依赖对端“看到 EOF 就退出”的实现细节；对已退出进程无害。
+    process?.kill(ProcessSignal.sigterm);
     await _stdoutLines?.cancel();
     _stdoutLines = null;
     await _stderrLines?.cancel();
@@ -437,5 +456,10 @@ class PrivilegedHelperClient implements PrivilegedHelperTransport {
     }
     await _preparedPath?.release();
     _preparedPath = null;
+  }
+
+  /// 默认启动器：pkexec 执行 helper（command[0] 固定为 pkexec）。
+  static Future<Process> _launchPkexec(List<String> command) {
+    return Process.start(command[0], command.sublist(1));
   }
 }

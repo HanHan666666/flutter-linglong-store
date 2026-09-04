@@ -297,7 +297,9 @@ class LinglongCliRepositoryImpl
       // 两种来源的输出行继续走同一套 CliOutputParser 解析与安装前后复验。
       final Stream<String> lines;
       if (_privilegedHelper case final helper?) {
-        lines = await _startHelperTaskLines(
+        // async* 生成器：ensureStarted 与授权异常在流被监听时触发，
+        // 由下方 await for 与本层 catch 统一承接。
+        lines = _startHelperTaskLines(
           helper,
           processId: processId,
           appId: appId,

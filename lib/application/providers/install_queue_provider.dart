@@ -97,6 +97,23 @@ class InstallQueue extends _$InstallQueue {
   /// 参考 Rust 版本 InstallSlot.is_cancelled
   bool _isUserCancelled = false;
 
+  /// 授权门闩：特权 helper 授权被用户取消或授权组件不可用时置位，
+  /// 阻止队列自动消费下一任务，避免故障时连续弹授权窗口（docs/47 §10.2）。
+  ///
+  /// 该门闩只是运行时状态，不持久化；用户下一次明确入队或重试时解除。
+  bool _authorizationGatePaused = false;
+
+  /// 授权门闩当前是否处于暂停状态（测试与 UI 诊断用）。
+  bool get isAuthorizationGatePaused => _authorizationGatePaused;
+
+  /// 用户明确发起新任务时解除授权门闩（§10.2 第 6 条）。
+  void _clearAuthorizationGate() {
+    if (_authorizationGatePaused) {
+      _authorizationGatePaused = false;
+      AppLogger.info('[InstallQueue] 用户重新发起任务，解除授权门闩');
+    }
+  }
+
   /// 把高响应的内存发布与必须先落盘的外部动作连接起来。
   final AppOperationPersistenceBarrier _persistenceBarrier =
       AppOperationPersistenceBarrier();
@@ -242,6 +259,8 @@ class InstallQueue extends _$InstallQueue {
     AppOperationTargetSnapshot? target,
     bool force = false,
   }) {
+    // 用户明确点击安装/更新：解除上一次授权失败留下的运行时暂停（§10.2）。
+    _clearAuthorizationGate();
     // 检查是否已在队列中
     if (state.isAppInQueue(appId)) {
       AppLogger.warning('App $appId is already in queue, skipping');
@@ -286,6 +305,8 @@ class InstallQueue extends _$InstallQueue {
 
   /// 批量入队安装/更新任务。
   List<String> enqueueBatchOperations(List<EnqueueTaskParams> tasksParams) {
+    // 批量更新同样是用户明确发起的动作，先解除授权门闩。
+    _clearAuthorizationGate();
     if (tasksParams.any((params) => params.kind != InstallTaskKind.update)) {
       AppLogger.warning('Rejected non-update task in update-all batch');
       return const <String>[];
@@ -377,6 +398,13 @@ class InstallQueue extends _$InstallQueue {
 
   /// 处理队列
   Future<void> processQueue() async {
+    // 授权门闩：授权被取消或授权组件不可用时，pending 任务保留但不自动消费，
+    // 避免故障时连续弹出授权窗口；用户明确入队/重试时在入队入口解除（§10.2）。
+    if (_authorizationGatePaused) {
+      AppLogger.info('授权门闩暂停中，跳过自动消费队列');
+      return;
+    }
+
     try {
       // 入队和终态更新通常由微任务触发下一轮处理；先等待最新快照，确保即将
       // 执行的任务或上一任务的终态已经成为可恢复事实。
@@ -620,6 +648,18 @@ class InstallQueue extends _$InstallQueue {
 
     _disposeActiveExecutor(taskId: taskId);
 
+    // 授权取消或授权组件不可用：挂起授权门闩，pending 任务保留但不再自动
+    // 消费，等待用户明确重试（§10.2）；其余失败照常调度下一任务。
+    final authorizationBlocked =
+        failure.kind == AppOperationFailureKind.authorizationCancelled ||
+        failure.kind == AppOperationFailureKind.helperUnavailable;
+    if (authorizationBlocked) {
+      _authorizationGatePaused = true;
+      AppLogger.warning(
+        '授权门闩已暂停队列自动消费: kind=${failure.kind.name}',
+      );
+    }
+
     // 检查是否为用户取消（参考 Rust 版本 InstallSlot.is_cancelled）
     final wasCancelled = isUserCancelled();
 
@@ -641,6 +681,8 @@ class InstallQueue extends _$InstallQueue {
       );
     }
 
+    // 无论何种失败都正常调度下一任务；授权门闩在 processQueue 统一拦截，
+    // 保证门闩判定只有一个入口。
     _scheduleNextTask();
   }
 

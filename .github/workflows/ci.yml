@@ -32,6 +32,18 @@ jobs:
       - name: Run tests
         run: flutter test
 
+      # 特权 helper 的纯逻辑单测（NDJSON 协议、白名单 argv、串行状态机），
+      # 独立于 Flutter 测试运行（docs/47 §13.1 第 3 步）。
+      - name: Run privileged helper unit tests
+        run: bash build/scripts/test-privileged-helper.sh
+
+      # 构建 release bundle 并断言 helper 随产物分发且不依赖 Flutter/GTK、
+      # 无 RPATH（docs/47 §13.2 打包检查；DEB/RPM/AppImage 均整体复制 bundle）。
+      - name: Verify privileged helper artifact
+        run: |
+          flutter build linux --release
+          bash build/scripts/verify-privileged-helper-artifact.sh
+
       # Packaging smoke tests moved to nightly to keep PR feedback fast.
       - name: Run release CLI smoke test
         run: bash build/scripts/release-cli-smoke-test.sh

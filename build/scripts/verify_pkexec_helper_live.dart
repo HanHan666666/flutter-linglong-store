@@ -35,16 +35,39 @@ Future<void> main(List<String> args) async {
   final scenario = args[0];
   final helperPath = args[1];
   final appIds = args.skip(2).toList();
+  // `pkexec:` 前缀只影响启动方式，协议场景归一化后复用同一套分支。
+  final normalizedScenario = scenario.replaceFirst(RegExp('^pkexec:'), '');
 
   // 以当前真实 UID 作为 PKEXEC_UID（等价 pkexec 完成授权后的环境）。
   final uidResult = await Process.run('id', ['-u']);
   final uid = (uidResult.stdout as String).trim();
   final isRoot = uid == '0';
+  // `pkexec:` 前缀场景走真实 pkexec 链路（需图形会话 polkit 代理弹窗授权），
+  // ready 超时默认放宽到 3 分钟等待用户在桌面上输入密码。
+  final viaPkexec = scenario.startsWith('pkexec:');
+  final readyTimeoutSeconds = int.tryParse(
+        Platform.environment['VERIFY_READY_TIMEOUT_SECONDS'] ?? '',
+      ) ??
+      (viaPkexec ? 180 : 15);
 
   // 驱动自身已在 root 下（外层 bash `sudo -n dart run ...`）时直接启动，
   // 避免嵌套 sudo 的票据按父进程键控而失效；普通用户下回退 `sudo -n`。
   final Process process;
-  if (isRoot) {
+  if (viaPkexec && !isRoot) {
+    // 连接图形会话的 polkit 代理：pkexec 弹窗显示在用户桌面上。
+    final sessionEnv = <String, String>{...Platform.environment};
+    sessionEnv['DISPLAY'] ??= ':0';
+    sessionEnv['XDG_RUNTIME_DIR'] ??= '/run/user/$uid';
+    sessionEnv['DBUS_SESSION_BUS_ADDRESS'] ??=
+        'unix:path=/run/user/$uid/bus';
+    process = await Process.start(
+      'pkexec',
+      ['--disable-internal-agent', helperPath],
+      environment: sessionEnv,
+    );
+    stderr.writeln('[driver] helper pid=${process.pid} (via pkexec, '
+        'DISPLAY=${sessionEnv['DISPLAY']})');
+  } else if (isRoot) {
     // root 下无法从环境拿到原用户 UID，默认按常见桌面用户 1000；可用
     // VERIFY_UID 覆盖。
     final invokingUid =
@@ -79,9 +102,8 @@ Future<void> main(List<String> args) async {
   var readySeen = false;
   var fatalErrorSeen = false;
   final readyCompleter = Completer<void>();
-  final taskTimeout = const Duration(minutes: 12);
 
-  final timeoutTimer = Timer(const Duration(seconds: 15), () {
+  final timeoutTimer = Timer(Duration(seconds: readyTimeoutSeconds), () {
     if (!readyCompleter.isCompleted) {
       stderr.writeln('[driver] FAIL: ready 超时');
       process.kill();
@@ -114,7 +136,8 @@ Future<void> main(List<String> args) async {
           if (!readyCompleter.isCompleted) {
             readyCompleter.complete();
           }
-          unawaited(_onReady(scenario, appIds, process, taskDone, firstOutputFuture));
+          unawaited(
+            _onReady(normalizedScenario, appIds, process, taskDone, firstOutputFuture));
         case 'started':
           current = reports.putIfAbsent(
             event['requestId'] as String,
@@ -174,7 +197,7 @@ Future<void> main(List<String> args) async {
     stderr.writeln('[driver] FAIL: 未收到 ready');
     exit(2);
   }
-  switch (scenario) {
+  switch (normalizedScenario) {
     case 'double-install':
       if (reports.length != appIds.length) {
         stderr.writeln('[driver] FAIL: 期望 ${appIds.length} 个任务，'
@@ -236,7 +259,7 @@ Future<String?> _desktopUserId() async {
 
 /// ready 后按场景发送请求。
 Future<void> _onReady(
-  String scenario,
+  String normalizedScenario,
   List<String> appIds,
   Process process,
   Map<String, Completer<void>> taskDone,
@@ -247,7 +270,7 @@ Future<void> _onReady(
     await process.stdin.flush();
   }
 
-  switch (scenario) {
+  switch (normalizedScenario) {
     case 'double-install':
       for (final appId in appIds) {
         final requestId = 'install_$appId';

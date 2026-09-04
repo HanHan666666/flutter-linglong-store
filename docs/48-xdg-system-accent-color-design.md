@@ -2,7 +2,7 @@
 
 > 文档版本：1.0<br>
 > 更新日期：2026-09-04<br>
-> 状态：开发方案待确认，确认后按本文分阶段实施<br>
+> 状态：已实施（2026-09-04，提交 93c2fb6 / 760e540 / 8392315 / 90a6986）<br>
 > 适用范围：玲珑应用商店 Linux 桌面端、Flutter 全局主题、Linux runner 平台通道<br>
 > 反馈致谢：感谢 GitHub 用户 [`EvernightFedora`](https://github.com/EvernightFedora)
 > 在 [issue #22 的评论](https://github.com/HanHan666666/flutter-linglong-store/issues/22#issuecomment-5453872807)

@@ -331,6 +331,22 @@ Semantics(
 
 ## 变更记录
 
+- 2026-09-04：界面强调色跟随 XDG 系统设置（docs/48）：Linux runner 以 GDBus 订阅
+  `org.freedesktop.portal.Settings` 的 `org.freedesktop.appearance/accent-color`
+  （`linux/runner/system_accent_color_portal.cc/.h` + `system_accent_color_channel.cc`），
+  经 EventChannel `<application-id>/system_accent_color` 发布到
+  `LinuxSystemAccentColorGateway` 与根级 `systemAccentColorProvider`；
+  `LinglongStoreApp` 是唯一长期订阅者，不持久化，事件驱动不轮询、不加动画。
+  主题以系统色为种子走 `ColorScheme.fromSeed(DynamicSchemeVariant.fidelity)`
+  派生浅/深角色；portal 不可用或值非法时逐位回退品牌蓝 `#016FFD`。
+  强调色令牌收敛为 `colorScheme` 唯一来源：组件一律读取
+  `Theme.of(context).colorScheme.primary/onPrimary/primaryContainer`；
+  `AppColors.brandPrimary/brandPrimaryLight/brandPrimaryContainerDark` 仅供主题
+  回退路径使用、禁止组件直接引用；`AppColorPalette` 已移除 primary 系列；
+  Logo 蓝、TOP 标签与 error/warning/success/info 功能色不跟随系统强调色。
+  Native 解析单测入口 `bash build/scripts/test-system-accent-color.sh`
+  （已挂 CI 独立步骤）。设计文档 `docs/48-xdg-system-accent-color-design.md`，
+  致谢建议者 EvernightFedora（issue #22）。
 - 2026-09-04：落地 pkexec 重复授权修复（docs/47）：安装/更新传输切换到独立最小
   C++ root helper（`linux/privileged_helper/`，随 bundle 分发于 `libexec/`，
   空 RPATH、不链接 Flutter/GTK）；GUI 侧唯一入口为

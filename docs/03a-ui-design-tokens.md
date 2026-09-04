@@ -9,7 +9,9 @@
 
 ### 1.1 色彩系统
 
-#### 品牌色
+#### 强调色（主色）
+
+旧版（rust-linglong-store）以固定品牌蓝实现主色，令牌对照如下：
 
 | 令牌名称 | 值 | 用途 |
 |----------|------|------|
@@ -18,7 +20,18 @@
 | `primaryBorderHover` | Ant Design 算法生成 | 卡片 hover 边框 |
 | `primaryText` | Ant Design 算法生成 | 主色文字（链接、速度数值等） |
 
-> **Flutter 映射**：`ColorScheme.fromSeed(seedColor: Color(0xFF016FFD))`，再提取 `primary`、`primaryContainer`、`onPrimaryContainer` 等值。
+> **Flutter 实现（docs/48-xdg-system-accent-color-design.md）**：主色不再是固定品牌色，
+> 而是由 XDG 系统强调色派生：`ColorScheme.fromSeed(seedColor: 系统强调色,
+> dynamicSchemeVariant: DynamicSchemeVariant.fidelity)`，浅色与深色各自派生
+> `primary`、`onPrimary`、`primaryContainer` 等角色。桌面未提供
+> `org.freedesktop.appearance/accent-color`（或值非法）时，回退品牌蓝 `#016FFD`。
+
+**强调色使用规则**：
+
+- 组件强调色统一读取 `Theme.of(context).colorScheme.primary` / `onPrimary` / `primaryContainer`（按钮、链接、激活态、侧边栏选中、焦点、进度、indicator 竖条）；
+- `AppColors.brandPrimary`（#016FFD）、`brandPrimaryLight`（#E6F0FF）、`brandPrimaryContainerDark`（#0D2040）仅供 `AppTheme` 品牌回退路径组装 ColorScheme 使用，禁止组件直接引用；
+- `AppColorPalette`（`context.appColors`）已不含 primary 系列，强调色只能来自 `colorScheme`；
+- Logo 蓝 `logoBlue`（#025BFF）、TOP 标签（`topLabel`）与 error/warning/success/info 功能色具有独立业务语义，不随系统强调色变化。
 
 #### 功能色
 
@@ -239,7 +252,7 @@ Flutter 中使用系统默认字体即可（Linux 下通常为 Noto Sans CJK）�
 - 高度: 2rem (32px)
 - 圆角: 1rem (16px) — 胶囊形
 - 默认边框: `1px solid borderSecondary`
-- Focus 边框: 主色 `#016FFD`
+- Focus 边框: 主色（现读取 `colorScheme.primary` 随系统强调色流动，回退 `#016FFD`）
 - 左侧搜索图标区: 宽 3rem, 高 1.5rem, margin-left 0.5rem
 - 输入字号: 0.75rem (12px)
 

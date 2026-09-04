@@ -144,6 +144,7 @@ NIGHTLY_COMPAT_DESKTOP_IDS=linglong-store-nightly.desktop
 | WM Class | `${APPLICATION_ID}` | `com.dongpl.linglong-store.v2` |
 | AppStream launchable | canonical desktop ID | `com.dongpl.linglong-store.v2.desktop` |
 | 系统通知通道 | `${APPLICATION_ID}/system_notification` | `com.dongpl.linglong-store.v2/system_notification` |
+| 系统强调色通道 | `${APPLICATION_ID}/system_accent_color` | `com.dongpl.linglong-store.v2/system_accent_color` |
 
 禁止为了调用方便把这些派生结果重新写回身份配置。
 
@@ -168,6 +169,7 @@ build/scripts/lib/application-identity.sh
    - `NIGHTLY_COMPAT_DESKTOP_IDS`
    - `WM_CLASS`
    - `SYSTEM_NOTIFICATION_CHANNEL`
+   - `SYSTEM_ACCENT_COLOR_CHANNEL`
 4. 提供按发行渠道选择兼容 desktop ID 列表的公共函数。
 5. 所有错误写入 stderr，并返回非零退出码。
 
@@ -211,10 +213,11 @@ Dart 生成文件提供不可实例化的常量类，至少包含：
 - `applicationId`
 - `canonicalDesktopId`
 - `systemNotificationChannel`
+- `systemAccentColorChannel`
 - Stable/Nightly 兼容 desktop ID 常量列表
 
-`AppXdgPaths` 和 `LinuxSystemNotificationGateway` 通过该类读取身份，不再保存
-字面量。
+`AppXdgPaths`、`LinuxSystemNotificationGateway` 和
+`LinuxSystemAccentColorGateway` 通过该类读取身份，不再保存字面量。
 
 生成文件不负责发行渠道判断，避免把打包逻辑带入应用运行时。
 
@@ -227,6 +230,12 @@ runner 继续把 `APPLICATION_ID` 作为编译定义传入 C++。系统通知通
 
 ```cpp
 APPLICATION_ID "/system_notification"
+```
+
+系统强调色 EventChannel 同规则派生（`linux/runner/system_accent_color_channel.cc`）：
+
+```cpp
+APPLICATION_ID "/system_accent_color"
 ```
 
 C/C++ 字符串字面量在编译期完成拼接，因此不会引入运行时分配，也无需再

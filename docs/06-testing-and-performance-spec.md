@@ -166,6 +166,17 @@ test/
 - [ ] repo show 为文本输出
 - [ ] 容器环境检测结果
 
+#### D. 系统强调色（XDG Portal）
+
+必须验证（设计见 `docs/48-xdg-system-accent-color-design.md`）：
+
+- [ ] Native GLib 单测通过：`bash build/scripts/test-system-accent-color.sh`（CI 独立步骤），覆盖 `(ddd)` 解析、`ReadAll` 提取、舍入边界与 unavailable 事件
+- [ ] Platform 契约测试（`test/unit/platform/appearance/linux_system_accent_color_gateway_test.dart`）：合法 RGB 转换、unavailable 转 null、缺字段/错误类型/越界分量拒绝、相同事件去重、流级错误不逃逸为未处理异步异常
+- [ ] Provider 测试（`test/unit/application/providers/system_accent_color_provider_test.dart`）：loading、null 与流错误均由主题层解析为品牌蓝回退
+- [ ] 主题回退逐位锁定（`test/unit/core/config/theme/app_theme_accent_test.dart`）：portal 不可用时浅/深 ColorScheme 关键令牌与现状逐位一致（primary `#016FFD`、primaryContainer 浅 `#E6F0FF` / 深 `#0D2040`、onPrimary `#FFFFFF`）
+- [ ] 极端种子对比度：亮黄/近白/近黑等种子下 `primary/onPrimary` 与 `primaryContainer/onPrimaryContainer` 配对 ≥ WCAG AA 4.5:1
+- [ ] 根应用热更新 Widget 测试（`test/widget/linglong_store_app_accent_test.dart`）：Fake Gateway 推送事件后无需重启即更新按钮、侧边栏、进度、焦点主色；强制浅色、强制深色与系统明暗模式均生效；Logo 与功能状态色不随强调色变化
+
 ### 3.5 Mock 规范
 
 优先级：
@@ -457,6 +468,13 @@ test/
 - [ ] 统一保存轻量 ViewModel，而不是重复存整份 DTO
 - [ ] 高频路径使用 `Map<String, T>` 做 O(1) 查询
 - [ ] 禁止在滚动回调里做重运算
+
+### 8.5 动态主题与系统强调色规则
+
+- [ ] 事件驱动不轮询：原生侧只执行一次初始 `ReadAll`，后续完全依赖 D-Bus 信号；禁止 Timer 轮询和 `gsettings`/`dbus-send` 等外部进程
+- [ ] 仅根应用订阅 `systemAccentColorProvider`；页面与卡片不得重复订阅系统强调色流
+- [ ] 强调色变化不加动画：收到事件后直接在下一可用帧重建主题，不引入过渡动画或 debounce
+- [ ] `ColorScheme` 只在强调色、亮度、locale 或无障碍字体输入实际变化时重建（`select` + 值判等去重），Widget `build` 内不解析平台数据
 
 ---
 

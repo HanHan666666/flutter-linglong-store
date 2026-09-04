@@ -109,6 +109,7 @@ lib/
 │   ├── persistence/
 │   └── repositories/
 ├── platform/
+│   ├── appearance/
 │   └── notifications/
 ├── core/
 │   ├── accessibility/
@@ -141,7 +142,8 @@ Application 端口。禁止在业务 Provider 中通过默认值偷偷创建 Rep
 - `LinglongCliRepository` 和仓库管理端口；
 - XDG App Operation Journal；
 - 旧队列迁移 Repository；
-- Linux 系统通知 Gateway。
+- Linux 系统通知 Gateway；
+- Linux 系统强调色 Gateway。
 
 测试不需要复制完整组合根，只覆盖测试实际触达的端口。未注入端口会抛出包含
 Provider 名称的确定性错误。
@@ -156,7 +158,8 @@ Domain 保存跨 UI 和基础设施稳定的业务语言：
 - 结构化操作失败和 `ll-cli` 失败；
 - 环境检查、仓库配置和修复结果；
 - 系统通知请求；
-- Repository 和 Gateway 接口。
+- 系统强调色 RGB 值对象（`SystemAccentColor`）；
+- Repository 和 Gateway 接口（含 `SystemAccentColorGateway`）。
 
 Domain 模型可使用 Freezed 和 JSON 注解，但源文件不得依赖生成器的具体实现逻辑。
 展示文案、`BuildContext`、Dio、进程对象和文件路径不属于 Domain。
@@ -187,7 +190,8 @@ Application 负责用例、状态发布和跨端口编排：
 - 生命周期 Outbox 副作用；
 - 环境分析与修复；
 - 安装错误解决方案和引导修复；
-- `og://` 协议安装控制器。
+- `og://` 协议安装控制器；
+- 系统强调色订阅（`systemAccentColorProvider`，只维护 Gateway 流生命周期）。
 
 Riverpod Provider 是应用状态和 UI 的连接方式，不等于可以把全部逻辑堆在
 Notifier 中。纯转换进入 service/reducer，单任务资源生命周期进入 executor，
@@ -216,6 +220,37 @@ Presentation 只负责：
 - `presentation/widgets/download_manager/`；
 - `presentation/widgets/linglong_environment_management/`。
 
+### 4.6 Platform
+
+`platform/` 承载独立于 Data 的 Linux 平台适配，均实现 Domain 端口：
+
+- `platform/notifications/`：Linux 系统通知 Gateway（MethodChannel → GNotification）；
+- `platform/appearance/`：`LinuxSystemAccentColorGateway`，监听 EventChannel
+  `<application-id>/system_accent_color`（常量来自生成的
+  `ApplicationIdentity.systemAccentColorChannel`），严格校验消息契约
+  （`available`/`red`/`green`/`blue`）并去重，损坏事件只记日志不中断订阅。
+
+runner 侧实现在 `linux/runner/system_accent_color_portal.cc/.h`（纯 GLib/GIO
+GDBus 订阅 `org.freedesktop.portal.Settings` 的
+`org.freedesktop.appearance/accent-color`，`(ddd)` 校验、8-bit 转换与去重）与
+`linux/runner/system_accent_color_channel.cc`（EventChannel listen/cancel 生命周期）。
+
+### 4.7 系统强调色链路与根订阅
+
+```text
+XDG Portal Settings
+  → Linux runner（GDBus 订阅 + 去重）
+  → EventChannel <application-id>/system_accent_color
+  → LinuxSystemAccentColorGateway
+  → systemAccentColorProvider
+  → LinglongStoreApp → AppTheme（fidelity 派生 / 品牌蓝回退）
+```
+
+`systemAccentColorProvider` 不持久化、非 autoDispose：强调色是可丢弃的运行时系统
+状态，`LinglongStoreApp` 是唯一长期订阅者，页面与卡片禁止各自订阅。loading、
+能力不可用（null）与流错误统一由主题层解析为品牌蓝回退。完整设计见
+`docs/48-xdg-system-accent-color-design.md`。
+
 ## 5. 启动与根生命周期
 
 `main(List<String> arguments)` 的固定顺序：
@@ -235,7 +270,9 @@ Presentation 只负责：
 
 `LinglongStoreApp` 负责主题、语言、字体缩放、无障碍根节点、路由和运行期
 `og://` 桥接。平台协议只把 URL 交给 `OgInstallController`，安装仍必须进入统一
-操作队列。
+操作队列。根应用同时是 `systemAccentColorProvider` 的唯一订阅者，把解析后的
+系统强调色种子传入浅/深主题构建函数；异步首读不阻塞首帧，先以品牌蓝渲染
+（见 §4.7 与 `docs/48-xdg-system-accent-color-design.md`）。
 
 ### 5.1 业务启动序列
 
@@ -519,3 +556,4 @@ bash build/scripts/nightly-cli-smoke-test.sh
 - `docs/34-download-manager-dialog-decomposition.md`
 - `docs/35-app-detail-page-decomposition.md`
 - `docs/36-generated-source-policy.md`
+- `docs/48-xdg-system-accent-color-design.md`

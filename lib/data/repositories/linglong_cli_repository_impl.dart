@@ -15,6 +15,9 @@ import '../../domain/models/linglong_repository_config.dart';
 import '../../domain/repositories/linglong_cli_repository.dart';
 import '../../domain/repositories/linglong_repository_management_repository.dart';
 import '../../core/platform/cli_executor.dart';
+import '../../core/platform/privileged_helper/privileged_helper_client.dart';
+import '../../core/platform/privileged_helper/privileged_helper_exception.dart';
+import '../../core/platform/privileged_helper/privileged_helper_protocol.dart';
 import '../../core/logging/app_logger.dart';
 import '../mappers/cli_output_parser.dart';
 
@@ -40,23 +43,32 @@ typedef CliCancelWithSystemKillFn =
 /// ll-cli Repository 实现
 class LinglongCliRepositoryImpl
     implements LinglongCliRepository, LinglongRepositoryManagementRepository {
-  LinglongCliRepositoryImpl()
+  LinglongCliRepositoryImpl({PrivilegedHelperTransport? privilegedHelper})
     : _execute = CliExecutor.execute,
       _executeWithProgressAndProcess =
           CliExecutor.executeWithProgressAndProcess,
-      _cancelWithSystemKill = CliExecutor.cancelWithSystemKill;
+      _cancelWithSystemKill = CliExecutor.cancelWithSystemKill,
+      _privilegedHelper = privilegedHelper;
 
   LinglongCliRepositoryImpl.withExecutor({
     required CliExecuteFn execute,
     required CliExecuteWithProgressAndProcessFn executeWithProgressAndProcess,
     required CliCancelWithSystemKillFn cancelWithSystemKill,
+    PrivilegedHelperTransport? privilegedHelper,
   }) : _execute = execute,
        _executeWithProgressAndProcess = executeWithProgressAndProcess,
-       _cancelWithSystemKill = cancelWithSystemKill;
+       _cancelWithSystemKill = cancelWithSystemKill,
+       _privilegedHelper = privilegedHelper;
 
   final CliExecuteFn _execute;
   final CliExecuteWithProgressAndProcessFn _executeWithProgressAndProcess;
   final CliCancelWithSystemKillFn _cancelWithSystemKill;
+
+  /// 特权 helper 传输；null 时 install/update 保持旧直连路径（测试替身）。
+  ///
+  /// 生产装配必须传入应用级单例客户端（docs/47 §4.3）；本 Repository 所在
+  /// provider 是 autoDispose，实例重建也必须复用同一个客户端。
+  final PrivilegedHelperTransport? _privilegedHelper;
 
   /// 取消标志
   final Map<String, bool> _cancelFlags = {};
@@ -280,15 +292,33 @@ class LinglongCliRepositoryImpl
     try {
       AppLogger.info('[LinglongCli] 开始$operationLabel: $commandLine');
 
-      await for (final event in _executeWithProgressAndProcess(
-        args,
-        processId: processId,
-        onProcessCreated: (process) {
-          AppLogger.debug(
-            '[LinglongCli] 记录$operationLabel进程 PID: ${process.pid}',
-          );
-        },
-      )) {
+      // 传输选择（docs/47 §4.3）：生产走特权 helper（首次授权一次、后续复用、
+      // 取消不再授权）；未注入 helper 时保持旧直连路径（测试替身/过渡期）。
+      // 两种来源的输出行继续走同一套 CliOutputParser 解析与安装前后复验。
+      final Stream<String> lines;
+      if (_privilegedHelper case final helper?) {
+        lines = await _startHelperTaskLines(
+          helper,
+          processId: processId,
+          appId: appId,
+          kind: kind,
+          version: kind == InstallTaskKind.install ? version : null,
+          force: force,
+        );
+      } else {
+        lines = _executeWithProgressAndProcess(
+          args,
+          processId: processId,
+        ).map((event) => event.line);
+      }
+
+      // 收到 completed/failed 终态后不再处理后续行，但继续等待传输流结束
+      // （helper 路径必须消费 exited 事件，否则客户端会一直认为任务占用中）。
+      var terminalEmitted = false;
+      await for (final line in lines) {
+        if (terminalEmitted) {
+          continue;
+        }
         if (_cancelFlags[processId] == true) {
           yield InstallProgress(
             appId: appId,
@@ -299,13 +329,13 @@ class LinglongCliRepositoryImpl
           return;
         }
 
-        final jsonEvent = CliOutputParser.parseJsonLine(event.line);
+        final jsonEvent = CliOutputParser.parseJsonLine(line);
         // 复用上面已解析的 JSON 事件，安装输出行高频到达，避免逐行二次 jsonDecode
         final progressInfo = CliOutputParser.parseInstallProgressFromEvent(
           jsonEvent,
-          event.line,
+          line,
         );
-        final rawMessage = _extractRawMessage(event.line, jsonEvent: jsonEvent);
+        final rawMessage = _extractRawMessage(line, jsonEvent: jsonEvent);
 
         if (progressInfo.phase == InstallPhase.downloading) {
           yield InstallProgress(
@@ -315,7 +345,7 @@ class LinglongCliRepositoryImpl
             progress: progressInfo.progress,
             messageCode: progressInfo.messageCode,
             rawMessage: rawMessage,
-            outputLine: event.line,
+            outputLine: line,
           );
         } else if (progressInfo.phase == InstallPhase.installing) {
           yield InstallProgress(
@@ -325,9 +355,10 @@ class LinglongCliRepositoryImpl
             progress: progressInfo.progress,
             messageCode: progressInfo.messageCode,
             rawMessage: rawMessage,
-            outputLine: event.line,
+            outputLine: line,
           );
         } else if (progressInfo.phase == InstallPhase.completed) {
+          terminalEmitted = true;
           yield InstallProgress(
             appId: appId,
             eventType: _mapEventType(jsonEvent),
@@ -335,17 +366,17 @@ class LinglongCliRepositoryImpl
             progress: 100,
             messageCode: AppOperationMessageCode.completed,
             rawMessage: rawMessage.isNotEmpty ? rawMessage : null,
-            outputLine: event.line,
+            outputLine: line,
           );
-          return;
         } else if (progressInfo.phase == InstallPhase.failed) {
+          terminalEmitted = true;
           final errorCode = jsonEvent?.code;
           // 诊断匹配必须优先保留 JSON message 的逐字内容；rawMessage 还承担
           // 进度展示职责，会经过历史 trim 兼容，不能作为新诊断协议的首选值。
           final exactErrorMessage = jsonEvent?.message;
           final errorDetail =
               exactErrorMessage ??
-              (rawMessage.isNotEmpty ? rawMessage : event.line.trim());
+              (rawMessage.isNotEmpty ? rawMessage : line.trim());
 
           yield InstallProgress(
             appId: appId,
@@ -360,10 +391,14 @@ class LinglongCliRepositoryImpl
                   ? LinuxDistributionGuidanceScenario.appUpdateFailure
                   : LinuxDistributionGuidanceScenario.appInstallFailure,
             ),
-            outputLine: event.line,
+            outputLine: line,
           );
-          return;
         }
+      }
+
+      if (terminalEmitted) {
+        // CLI 已给出明确终态（与旧路径的提前 return 等价），跳过复验。
+        return;
       }
 
       final confirmed = await _confirmInstalledTarget(
@@ -420,6 +455,41 @@ class LinglongCliRepositoryImpl
               : LinuxDistributionGuidanceScenario.appInstallFailure,
         ),
       );
+    } on PrivilegedHelperAuthorizationCancelledException {
+      // 用户关闭授权对话框：稳定失败事实 + 队列授权门闩（§10.2）。
+      yield _helperFailureProgress(
+        appId,
+        kind: kind,
+        failureKind: AppOperationFailureKind.authorizationCancelled,
+        diagnostic: 'pkexec authorization dismissed by user',
+      );
+    } on PrivilegedHelperException catch (e) {
+      // 授权组件不可用或会话中断：先按本机事实复验目标是否已落地
+      // （§8.2：中断 ≠ 取消成功，不得伪装 cancelled）。
+      final confirmed = await _confirmInstalledTarget(
+        appId,
+        kind: kind,
+        version: kind == InstallTaskKind.install ? version : null,
+        force: force,
+        installedVersionsBefore: installedVersionsBefore,
+      );
+      if (confirmed) {
+        yield InstallProgress(
+          appId: appId,
+          eventType: InstallProgressEventType.progress,
+          status: InstallStatus.success,
+          progress: 100,
+          messageCode: AppOperationMessageCode.completed,
+          outputLine: 'Operation result confirmed',
+        );
+      } else {
+        yield _helperFailureProgress(
+          appId,
+          kind: kind,
+          failureKind: AppOperationFailureKind.helperUnavailable,
+          diagnostic: e.message,
+        );
+      }
     } on CliCancelledException {
       yield InstallProgress(
         appId: appId,
@@ -446,6 +516,66 @@ class LinglongCliRepositoryImpl
     } finally {
       _cancelFlags.remove(processId);
     }
+  }
+
+  /// 建立特权 helper 任务并返回输出行流。
+  ///
+  /// ensureStarted 首次会触发一次 pkexec 授权；授权取消、组件不可用与
+  /// ready 超时按 [PrivilegedHelperException] 向上抛，由调用方映射为稳定
+  /// 失败事实。流在 exited 事件后结束；任务中会话中断以异常结束。
+  Stream<String> _startHelperTaskLines(
+    PrivilegedHelperTransport helper, {
+    required String processId,
+    required String appId,
+    required InstallTaskKind kind,
+    String? version,
+    bool force = false,
+  }) async* {
+    await helper.ensureStarted();
+    final events = helper.startTask(
+      PrivilegedHelperStartRequest(
+        requestId: processId,
+        operation: kind == InstallTaskKind.update
+            ? PrivilegedHelperOperation.update
+            : PrivilegedHelperOperation.install,
+        appId: appId,
+        version: kind == InstallTaskKind.install ? version : null,
+        force: force,
+      ),
+    );
+    await for (final event in events) {
+      switch (event) {
+        case PrivilegedHelperTaskLine(:final line):
+          // 与旧直连路径一致：stdout/stderr 行都进入同一解析管道，ll-cli
+          // --json 的阶段事件在 stdout，人类可读诊断在 stderr，由 parser 决定。
+          yield line;
+        case PrivilegedHelperTaskExited():
+          return;
+      }
+    }
+  }
+
+  /// helper 传输失败的统一进度事件构造（authorizationCancelled / helperUnavailable）。
+  InstallProgress _helperFailureProgress(
+    String appId, {
+    required InstallTaskKind kind,
+    required AppOperationFailureKind failureKind,
+    required String diagnostic,
+  }) {
+    return InstallProgress(
+      appId: appId,
+      eventType: InstallProgressEventType.error,
+      status: InstallStatus.failed,
+      rawMessage: diagnostic,
+      outputLine: diagnostic,
+      failure: AppOperationFailure(
+        kind: failureKind,
+        diagnostic: diagnostic,
+        guidanceScenario: kind == InstallTaskKind.update
+            ? LinuxDistributionGuidanceScenario.appUpdateFailure
+            : LinuxDistributionGuidanceScenario.appInstallFailure,
+      ),
+    );
   }
 
   Future<bool> _confirmInstalledTarget(
@@ -803,6 +933,28 @@ class LinglongCliRepositoryImpl
     final operationLabel = _operationLabel(kind);
 
     AppLogger.info('[LinglongCli] 开始取消$operationLabel: $appId');
+
+    // 特权 helper 传输的活动任务：经 helper 的 requestId 取消，SIGTERM 由
+    // root helper 直接发送，不再触发第二次 pkexec 授权（docs/47 §8.2）。
+    if (_privilegedHelper case final helper?) {
+      if (!helper.hasActiveTask) {
+        // 没有经 helper 启动的任务（授权阶段被取消、尚未 start 或已退出）。
+        AppLogger.warning(
+          '[LinglongCli] 取消$operationLabel失败：helper 无活动任务: $appId',
+        );
+        return false;
+      }
+      final accepted = await helper.cancelTask(processId);
+      if (accepted) {
+        _setOperationCancelled(appId, kind: kind);
+        AppLogger.info('[LinglongCli] 经 helper 取消$operationLabel已接受: $appId');
+      } else {
+        AppLogger.warning(
+          '[LinglongCli] helper 拒绝取消请求（任务可能已结束）: $appId',
+        );
+      }
+      return accepted;
+    }
 
     // 从 CliExecutor 的静态进程表读取该任务的 root ll-cli 进程 PID。
     //

@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../application/providers/application_dependency_providers.dart';
 import '../core/platform/file_downloader.dart';
+import '../core/platform/privileged_helper/privileged_helper_client.dart';
 import '../core/platform/shell_command_executor.dart';
 import '../core/storage/app_xdg_paths.dart';
 import '../data/repositories/analytics_repository_impl.dart';
@@ -37,6 +38,11 @@ List<Override> createProductionDependencyOverrides({
   final selfUpdateCommandExecutor = ShellCommandExecutor();
   final selfUpdateNetworkClient = Dio();
 
+  // 特权 helper 会话是应用生命周期单例（docs/47 §4.3）：install/update 的
+  // 首次授权一次、后续复用都依赖同一进程句柄；两个 CLI Repository 覆盖共享
+  // 同一客户端，防止 autoDispose 重建实例时重复拉起 pkexec。
+  final privilegedHelper = PrivilegedHelperClient();
+
   return [
     sharedPreferencesProvider.overrideWithValue(sharedPreferences),
     appRepositoryProvider.overrideWith((ref) => AppRepositoryImpl()),
@@ -47,10 +53,10 @@ List<Override> createProductionDependencyOverrides({
       (ref) => ErrorSolutionRepositoryImpl(),
     ),
     linglongCliRepositoryProvider.overrideWith((ref) {
-      return LinglongCliRepositoryImpl();
+      return LinglongCliRepositoryImpl(privilegedHelper: privilegedHelper);
     }),
     linglongRepositoryManagementRepositoryProvider.overrideWith((ref) {
-      return LinglongCliRepositoryImpl();
+      return LinglongCliRepositoryImpl(privilegedHelper: privilegedHelper);
     }),
     appOperationJournalRepositoryProvider.overrideWith((ref) {
       final journalPath = AppXdgPaths.resolveOperationJournalFilePath();

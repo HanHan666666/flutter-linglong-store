@@ -1,6 +1,19 @@
 cmake_minimum_required(VERSION 3.13)
-project(runner LANGUAGES CXX)
 
+# 本目录支持两种配置形态：
+# 1. 作为 Flutter 父工程（linux/CMakeLists.txt）的子目录：构建 runner 主程序；
+# 2. 由 build/scripts/test-system-accent-color.sh 独立配置：只构建系统强调色
+#    纯逻辑单测，此时不存在 BINARY_NAME、flutter target 等父工程变量，
+#    主程序段落整体跳过，测试 target 通过 PkgConfig 链接 GLib/GIO。
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  project(linglong_store_accent_color_tests_standalone LANGUAGES CXX)
+  set(LINGLONG_RUNNER_STANDALONE ON)
+else()
+  project(runner LANGUAGES CXX)
+  set(LINGLONG_RUNNER_STANDALONE OFF)
+endif()
+
+if(NOT LINGLONG_RUNNER_STANDALONE)
 # Define the application target. To change its name, change BINARY_NAME in the
 # top-level CMakeLists.txt, not the value here, or `flutter run` will no longer
 # work.
@@ -10,6 +23,8 @@ add_executable(${BINARY_NAME}
   "main.cc"
   "my_application.cc"
   "system_notification_channel.cc"
+  "system_accent_color_channel.cc"
+  "system_accent_color_portal.cc"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
 )
 
@@ -43,3 +58,24 @@ endif()
 target_link_libraries(${BINARY_NAME} PRIVATE flutter)
 
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
+endif()
+
+# --- 系统强调色纯逻辑单测：默认不构建，由脚本显式开启 ---
+# 只编译 system_accent_color_portal.cc（纯 GLib/GIO，禁止依赖 flutter/GTK），
+# 保证解析/校验逻辑可以脱离 Flutter 构建链路独立验证（docs/48 §12.4）。
+option(LINGLONG_BUILD_ACCENT_COLOR_TESTS
+       "Build system accent color portal unit tests" OFF)
+if(LINGLONG_BUILD_ACCENT_COLOR_TESTS)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(ACCENT_COLOR_GLIB REQUIRED IMPORTED_TARGET
+                   glib-2.0 gio-2.0)
+  add_executable(linglong_store_accent_color_tests
+    system_accent_color_portal.cc
+    system_accent_color_tests.cc
+  )
+  target_compile_features(linglong_store_accent_color_tests PUBLIC cxx_std_17)
+  # 编译选项与特权 helper 测试保持同一口径，保证告警即错误。
+  target_compile_options(linglong_store_accent_color_tests PRIVATE -Wall -Werror)
+  target_link_libraries(linglong_store_accent_color_tests
+                        PRIVATE PkgConfig::ACCENT_COLOR_GLIB)
+endif()

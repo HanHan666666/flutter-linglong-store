@@ -15,6 +15,7 @@ import '../../domain/repositories/error_solution_repository.dart';
 import '../../domain/repositories/linglong_cli_repository.dart';
 import '../../domain/repositories/linglong_repository_management_repository.dart';
 import '../../domain/repositories/legacy_app_operation_state_repository.dart';
+import '../../domain/repositories/system_accent_color_gateway.dart';
 import '../../domain/repositories/system_notification_gateway.dart';
 
 /// 应用启动阶段初始化的用户偏好存储端口。
@@ -69,6 +70,13 @@ final systemNotificationGatewayProvider = Provider<SystemNotificationGateway>((
   ref,
 ) {
   return _missingDependency('systemNotificationGatewayProvider');
+});
+
+/// XDG 系统强调色订阅端口。
+final systemAccentColorGatewayProvider = Provider<SystemAccentColorGateway>((
+  ref,
+) {
+  return _missingDependency('systemAccentColorGatewayProvider');
 });
 
 /// 当前进程安装身份探测端口。

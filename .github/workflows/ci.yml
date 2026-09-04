@@ -39,6 +39,11 @@ jobs:
       - name: Run privileged helper unit tests
         run: bash build/scripts/test-privileged-helper.sh
 
+      # 系统强调色的纯逻辑单测（XDG Portal (ddd) 解析、ReadAll 提取、
+      # 舍入边界），独立于 Flutter 测试运行（docs/48 §12.4）。
+      - name: Run system accent color unit tests
+        run: bash build/scripts/test-system-accent-color.sh
+
       # 构建 release bundle 并断言 helper 随产物分发且不依赖 Flutter/GTK、
       # 无 RPATH（docs/47 §13.2 打包检查；DEB/RPM/AppImage 均整体复制 bundle）。
       - name: Install Linux build dependencies

@@ -9,6 +9,7 @@
 #endif
 
 #include "flutter/generated_plugin_registrant.h"
+#include "system_accent_color_channel.h"
 #include "system_notification_channel.h"
 
 struct _MyApplication {
@@ -17,6 +18,7 @@ struct _MyApplication {
   FlMethodChannel* native_theme_channel;
   FlMethodChannel* linux_renderer_channel;
   FlMethodChannel* system_notification_channel;
+  FlEventChannel* system_accent_color_channel;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
@@ -450,6 +452,9 @@ static void my_application_activate(GApplication* application) {
   setup_linux_renderer_channel(self, view);
   self->system_notification_channel =
       system_notification_channel_new(view, application);
+  // 系统强调色 EventChannel：只负责创建与释放，D-Bus 逻辑全部封装在
+  // system_accent_color_channel/portal 模块中（docs/48 §5.3）。
+  self->system_accent_color_channel = system_accent_color_channel_new(view);
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
 
@@ -502,6 +507,7 @@ static void my_application_dispose(GObject* object) {
   g_clear_object(&self->native_theme_channel);
   g_clear_object(&self->linux_renderer_channel);
   g_clear_object(&self->system_notification_channel);
+  g_clear_object(&self->system_accent_color_channel);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }
 

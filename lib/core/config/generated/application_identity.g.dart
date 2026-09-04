@@ -17,6 +17,10 @@ abstract final class ApplicationIdentity {
   static const String systemNotificationChannel =
       'com.dongpl.linglong-store.v2/system_notification';
 
+  /// Linux runner 与 Dart 端共同使用的系统强调色 EventChannel。
+  static const String systemAccentColorChannel =
+      'com.dongpl.linglong-store.v2/system_accent_color';
+
   /// Stable 包保留的隐藏 desktop 兼容入口。
   static const List<String> stableCompatDesktopIds = <String>[
     'linglong-store.desktop',

@@ -71,6 +71,10 @@ write_dart_string_list() {
     '  static const String systemNotificationChannel =' \
     "      '$SYSTEM_NOTIFICATION_CHANNEL';" \
     '' \
+    '  /// Linux runner 与 Dart 端共同使用的系统强调色 EventChannel。' \
+    '  static const String systemAccentColorChannel =' \
+    "      '$SYSTEM_ACCENT_COLOR_CHANNEL';" \
+    '' \
     '  /// Stable 包保留的隐藏 desktop 兼容入口。' \
     '  static const List<String> stableCompatDesktopIds = <String>['
   write_dart_string_list "$STABLE_COMPAT_DESKTOP_IDS"

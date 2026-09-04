@@ -22,6 +22,7 @@ import '../data/repositories/file_app_operation_journal_repository.dart';
 import '../data/repositories/linglong_cli_repository_impl.dart';
 import '../data/repositories/shared_preferences_legacy_app_operation_state_repository.dart';
 import '../domain/repositories/app_self_update_gateways.dart';
+import '../platform/appearance/linux_system_accent_color_gateway.dart';
 import '../platform/notifications/linux_system_notification_gateway.dart';
 import '../platform/self_update/linux_app_installation_probe.dart';
 import '../platform/self_update/linux_app_update_installers.dart';
@@ -71,6 +72,9 @@ List<Override> createProductionDependencyOverrides({
     ),
     systemNotificationGatewayProvider.overrideWith(
       (ref) => const LinuxSystemNotificationGateway(),
+    ),
+    systemAccentColorGatewayProvider.overrideWith(
+      (ref) => const LinuxSystemAccentColorGateway(),
     ),
     appInstallationProbeProvider.overrideWith((ref) {
       return LinuxAppInstallationProbe(

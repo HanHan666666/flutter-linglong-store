@@ -171,4 +171,5 @@ load_application_identity() {
   declare -gr NIGHTLY_COMPAT_DESKTOP_IDS="$nightly_ids"
   declare -gr WM_CLASS="$application_id"
   declare -gr SYSTEM_NOTIFICATION_CHANNEL="${application_id}/system_notification"
+  declare -gr SYSTEM_ACCENT_COLOR_CHANNEL="${application_id}/system_accent_color"
 }

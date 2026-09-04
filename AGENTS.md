@@ -331,6 +331,18 @@ Semantics(
 
 ## 变更记录
 
+- 2026-09-04：落地 pkexec 重复授权修复（docs/47）：安装/更新传输切换到独立最小
+  C++ root helper（`linux/privileged_helper/`，随 bundle 分发于 `libexec/`，
+  空 RPATH、不链接 Flutter/GTK）；GUI 侧唯一入口为
+  `lib/core/platform/privileged_helper/` 的 `PrivilegedHelperClient`（应用级
+  单例）与 `PrivilegedHelperBinary`（bundle 定位 + mountinfo FUSE 检测 +
+  一次性暂存），禁止出现第二条 pkexec 启动路径或按安装形态分流业务行为。
+  协议为父子 stdin/stdout NDJSON，helper 只接受 install/update/cancel/shutdown
+  白名单请求，固定执行 `/usr/bin/ll-cli`；取消经 requestId 发 SIGTERM，不再触发
+  第二次授权。授权被取消（pkexec 126）或组件不可用时以
+  `authorizationCancelled` / `helperUnavailable` 失败事实挂起队列授权门闩，
+  用户明确入队后解除；旧 `pkexec kill` 路径保留待 docs/47 §14 条件满足后删除。
+  vendored nlohmann/json v3.11.3 位于 `linux/privileged_helper/third_party/`。
 - 2026-08-28：应用不内置任何字体文件（体积原因，MiSans 官方全家桶 217MB）；
   Linux 字体回退栈的简体、繁中、日文变体均以 `MiSans` / `MiSans VF`（实测
   name 表家族名）打头，系统装有 MiSans 的用户中/繁/日界面自动生效，未装则

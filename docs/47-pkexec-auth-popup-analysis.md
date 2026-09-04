@@ -1,6 +1,6 @@
 # 47 - 商店安装操作反复弹出 pkexec 授权问题分析与修复设计
 
-> 状态：方案草案 v2 已收敛（直启为主、仅 FUSE 暂存），待人工复核后实现
+> 状态：**已实现并通过真机验证**（2026-09-04，实施记录见 §17）
 >
 > 日期：2026-09-04
 >
@@ -816,3 +816,54 @@ linux/privileged_helper/
   `deepin-desktop-environment-*` 元包；
 - 恢复后验证：已安装应用列表完好、`ll-cli repo show` 正常、
   `org.deepin.linglong.PackageManager.service` active。
+
+## 17. 实施与验证记录（2026-09-04）
+
+### 17.1 已交付代码
+
+按 §12 的目录结构完整落地：
+
+| 模块 | 位置 | 说明 |
+|---|---|---|
+| C++ helper | `linux/privileged_helper/` | 协议（vendored nlohmann/json v3.11.3）、串行任务状态机、fork/execv 子进程管理、poll 事件循环与生命周期收尾 |
+| CMake | `linux/CMakeLists.txt` + `linux/privileged_helper/CMakeLists.txt` | 独立 target 安装到 bundle `libexec/`，空 RPATH，不链接 Flutter/GTK |
+| Dart 协议/异常 | `lib/core/platform/privileged_helper/privileged_helper_protocol.dart`、`privileged_helper_exception.dart` | NDJSON DTO、有界编解码、稳定失败类型 |
+| 定位与暂存 | `privileged_helper_binary.dart` | mountinfo FUSE 检测、`$XDG_RUNTIME_DIR/<app-id>/helper-staging/` 暂存、清扫与幂等清理 |
+| 会话客户端 | `privileged_helper_client.dart` | pkexec 启动（单飞）、ready 竞速、任务事件流、取消路由、126/127 映射 |
+| Repository | `lib/data/repositories/linglong_cli_repository_impl.dart` | install/update 传输切换，输出行继续走 `CliOutputParser` 与安装前后复验；取消经 requestId |
+| 队列门闩 | `lib/application/providers/install_queue_provider.dart` | authorizationCancelled/helperUnavailable 失败后暂停自动消费，用户明确入队解除 |
+| 失败模型与文案 | `app_operation_failure.dart` + 10 语言 ARB | 新增两类失败事实与本地化提示 |
+| 测试与脚本 | `test/unit/.../privileged_helper/`、`build/scripts/test-privileged-helper.sh`、`verify-privileged-helper-artifact.sh`、`verify_pkexec_helper_live.dart` | C++ 66 项、Dart 44 项、产物 smoke、真机驱动 |
+
+### 17.2 自动化验证结果
+
+- C++ 纯逻辑单测：66 checks / 0 failures；
+- Dart 新增单测 44 项（协议、字符集、mountinfo 边界、暂存权限/清扫/幂等、
+  客户端握手/取消/超时/协议错误/单飞、Repository 传输映射、队列门闩）全过；
+- 全量 `flutter test` 1030+ 项通过，`flutter analyze` 0 问题；
+- release bundle smoke：helper 进 `libexec/`，仅系统库依赖，无 RPATH 条目；
+  发布 bundle（DEB/RPM/AppImage 共同输入）同样通过。
+
+### 17.3 真机验证矩阵（Deepin 25 / linglong-bin 1.13.8）
+
+| 场景 | 结果 |
+|---|---|
+| 非白名单请求（携带 executable 字段） | ✅ `invalidRequest` fatal 拒绝，未创建子进程 |
+| 单 root 会话连续安装两个真实应用（draw + editor） | ✅ §4.3 门禁：无嵌套授权，两次 exited(0) |
+| 首个输出后取消大体积应用（movie） | ✅ cancelAccepted → exited(cancelRequested=true)，应用未后台装完 |
+| 普通用户直跑 helper | ✅ 立即失败（exit 10） |
+| pkexec 真实弹窗正向授权（图形会话代理） | ✅ 一次弹窗 → 输入密码 → ready → 协议正常退出 |
+| 授权对话框超时自动关闭 | ✅ pkexec exit 126，客户端映射为 authorizationCancelled |
+| helper 子进程对象复用 | ✅ 真机抓出 `reaped_` 未重置导致第二任务 exited 丢失的缺陷并修复 |
+
+真机驱动：`dart run build/scripts/verify_pkexec_helper_live.dart <scenario> <helper>`
+（`double-install`/`cancel`/`reject`，前缀 `pkexec:` 走真实弹窗链路）。
+
+### 17.4 边界与后续
+
+- AppImage FUSE 形态的端到端弹窗计数未在本机执行（需打包 AppImage 并以 FUSE
+  运行）：暂存/清扫/权限逻辑由 44 项 Dart 单测覆盖，真机回归列入发版清单；
+- §14 的旧 `pkexec kill` 路径仍保留在 `CliExecutor`（生产装配已不触达），
+  待全部打包 smoke 与 AppImage 真机回归通过后按 §14 条件删除；
+- 空闲五分钟自退由 helper 单调时钟实现，GUI 侧无计时器；
+- CI（`.github/workflows/ci.yml`）已挂载 C++ 单测与 bundle 产物 smoke。

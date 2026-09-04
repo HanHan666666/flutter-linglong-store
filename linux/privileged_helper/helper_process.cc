@@ -61,6 +61,8 @@ std::vector<std::string> buildChildEnvironment() {
 
 bool ChildProcess::spawn(const std::vector<std::string>& argv,
                          const std::vector<std::string>& env) {
+  // 对象可能被上一任务复用：重置收割状态，否则第二次 tryReap 永远失败。
+  reaped_ = false;
   // 初始化为 -1：pipe() 失败时其余组的值未定义，统一按“无效则跳过”兜底。
   int stdoutPipe[2] = {-1, -1};
   int stderrPipe[2] = {-1, -1};

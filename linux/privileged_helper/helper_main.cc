@@ -47,7 +47,6 @@ constexpr int kExitNotRoot = 10;
 constexpr int kExitBadPkexecUid = 11;
 constexpr int kExitBadLlCli = 12;
 constexpr int kExitBadStdio = 13;
-constexpr int kExitProtocolFatal = 20;
 
 /// 信号自管管道：handler 只做 write，主循环在 poll 中统一消费（异步信号安全）。
 int gSignalPipe[2] = {-1, -1};
@@ -182,8 +181,11 @@ void reapCurrentTask(HelperSession& session, LineAssembler& stdoutLines,
   if (!session.child.tryReap(exitCode, execFailed)) {
     // 正常路径下管道 EOF 与进程退出几乎同时发生；双关闭但未退出时由
     // 主循环短轮询重试，这里不再阻塞。
+    fprintf(stderr, "helper: reap pending for %s\n", requestId.c_str());
     return;
   }
+  fprintf(stderr, "helper: reaped %s code=%d execFailed=%d\n",
+          requestId.c_str(), exitCode, execFailed ? 1 : 0);
   if (execFailed) {
     // exec 失败：任务从未真正启动，按 spawnFailed 汇报且不发送 exited。
     writeEventLine(helper::encodeError(&requestId,
@@ -320,6 +322,7 @@ int main() {
     }
     const int readyCount = poll(fds, fdCount, timeoutMs);
     if (readyCount < 0 && errno != EINTR) {
+      fprintf(stderr, "helper: poll error, stopping\n");
       stopping = true;
       break;
     }
@@ -336,12 +339,14 @@ int main() {
     // ---- 空闲超时（§9.2）：任务耗时计入活跃期，不占空闲窗口 ----
     if (session.runner.isIdle() &&
         nowMs() - session.idleSinceMs >= kIdleTimeoutMs) {
+      fprintf(stderr, "helper: idle timeout, stopping\n");
       stopping = true;
       break;
     }
 
     // ---- 停止信号：停止接收请求，进入收尾 ----
     if (wasReady(gSignalPipe[0])) {
+      fprintf(stderr, "helper: stop signal, stopping\n");
       stopping = true;
       break;
     }
@@ -391,6 +396,7 @@ int main() {
       if (n <= 0) {
         // stdin EOF：GUI 已离开，停止接收请求并收尾（§9.3）。
         stdinOpen = false;
+        fprintf(stderr, "helper: stdin EOF, stopping\n");
         stopping = true;
         break;
       }

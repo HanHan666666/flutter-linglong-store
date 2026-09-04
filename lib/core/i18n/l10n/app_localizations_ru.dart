@@ -1474,6 +1474,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get installErrorUnknown => 'Установка не удалась: неизвестная ошибка.';
 
   @override
+  String get installErrorAuthorizationCancelled =>
+      'Для установки требуется авторизация администратора. Авторизация отменена.';
+
+  @override
+  String get installErrorHelperUnavailable =>
+      'Компонент авторизации недоступен. Установку не удалось завершить.';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'Установка не удалась: приложение не найдено в удаленном репозитории.';
 

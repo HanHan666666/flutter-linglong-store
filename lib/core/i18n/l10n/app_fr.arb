@@ -828,6 +828,8 @@
   "installErrorTimeout": "Échec de l'installation : délai d'attente de la progression dépassé",
   "installCancelled": "Installation annulée",
   "installErrorUnknown": "Échec de l'installation : erreur inconnue",
+  "installErrorAuthorizationCancelled": "L'installation nécessite une autorisation administrateur. L'autorisation a été annulée.",
+  "installErrorHelperUnavailable": "Le composant d'autorisation est indisponible. L'installation ne peut pas aboutir.",
   "installErrorAppNotFoundRemote": "Échec de l'installation : application introuvable dans le dépôt distant",
   "installErrorAppNotFoundLocal": "Échec de l'installation : application introuvable en local",
   "installFailed": "Échec de l'installation",

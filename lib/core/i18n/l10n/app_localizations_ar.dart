@@ -1542,6 +1542,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get installErrorUnknown => 'فشل التثبيت: خطأ غير معروف';
 
   @override
+  String get installErrorAuthorizationCancelled =>
+      'يتطلب التثبيت تصريحًا إداريًا. تم إلغاء التصريح.';
+
+  @override
+  String get installErrorHelperUnavailable =>
+      'مكوّن التصريح غير متاح، لا يمكن إكمال التثبيت';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'فشل التثبيت: لم يتم العثور على التطبيق في المستودع البعيد';
 

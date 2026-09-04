@@ -847,6 +847,8 @@
   "installErrorTimeout": "安装失败: 进度超时",
   "installCancelled": "安装已取消",
   "installErrorUnknown": "安装失败: 未知错误",
+  "installErrorAuthorizationCancelled": "安装需要管理员授权，本次授权已取消",
+  "installErrorHelperUnavailable": "授权组件不可用，无法完成安装",
   "installErrorAppNotFoundRemote": "安装失败: 远程仓库找不到应用",
   "installErrorAppNotFoundLocal": "安装失败: 本地找不到应用",
   "installFailed": "安装失败",

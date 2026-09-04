@@ -828,6 +828,8 @@
   "installErrorTimeout": "Installation fehlgeschlagen: Fortschritt-Timeout",
   "installCancelled": "Installation abgebrochen",
   "installErrorUnknown": "Installation fehlgeschlagen: Unbekannter Fehler",
+  "installErrorAuthorizationCancelled": "Für die Installation ist eine Administratorautorisierung erforderlich. Die Autorisierung wurde abgebrochen.",
+  "installErrorHelperUnavailable": "Die Autorisierungskomponente ist nicht verfügbar. Die Installation kann nicht abgeschlossen werden.",
   "installErrorAppNotFoundRemote": "Installation fehlgeschlagen: App im Remote-Repository nicht gefunden",
   "installErrorAppNotFoundLocal": "Installation fehlgeschlagen: App lokal nicht gefunden",
   "installFailed": "Installation fehlgeschlagen",

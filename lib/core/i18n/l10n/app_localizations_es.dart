@@ -1452,6 +1452,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get installErrorUnknown => 'Error de instalación: Error desconocido';
 
   @override
+  String get installErrorAuthorizationCancelled =>
+      'La instalación requiere autorización de administrador. La autorización se canceló.';
+
+  @override
+  String get installErrorHelperUnavailable =>
+      'El componente de autorización no está disponible. No se puede completar la instalación.';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'Error de instalación: Aplicación no encontrada en el repositorio remoto';
 

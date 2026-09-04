@@ -827,6 +827,8 @@
   "installErrorTimeout": "Установка не удалась: тайм-аут выполнения",
   "installCancelled": "Установка отменена",
   "installErrorUnknown": "Установка не удалась: неизвестная ошибка.",
+  "installErrorAuthorizationCancelled": "Для установки требуется авторизация администратора. Авторизация отменена.",
+  "installErrorHelperUnavailable": "Компонент авторизации недоступен. Установку не удалось завершить.",
   "installErrorAppNotFoundRemote": "Установка не удалась: приложение не найдено в удаленном репозитории.",
   "installErrorAppNotFoundLocal": "Установка не удалась: приложение не найдено локально",
   "installFailed": "Установка не удалась",

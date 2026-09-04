@@ -35,6 +35,8 @@ const _$AppOperationFailureKindEnumMap = {
       'streamEndedWithoutTerminal',
   AppOperationFailureKind.execution: 'execution',
   AppOperationFailureKind.interrupted: 'interrupted',
+  AppOperationFailureKind.authorizationCancelled: 'authorizationCancelled',
+  AppOperationFailureKind.helperUnavailable: 'helperUnavailable',
 };
 
 const _$LinuxDistributionGuidanceScenarioEnumMap = {

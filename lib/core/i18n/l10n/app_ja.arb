@@ -828,6 +828,8 @@
   "installErrorTimeout": "インストール失敗: プログレスがタイムアウトしました",
   "installCancelled": "インストールをキャンセルしました",
   "installErrorUnknown": "インストール失敗: 不明なエラー",
+  "installErrorAuthorizationCancelled": "インストールには管理者認証が必要です。認証がキャンセルされました。",
+  "installErrorHelperUnavailable": "認証コンポーネントが利用できないため、インストールを完了できません。",
   "installErrorAppNotFoundRemote": "インストール失敗: リモートリポジトリにアプリが見つかりません",
   "installErrorAppNotFoundLocal": "インストール失敗: ローカルにアプリが見つかりません",
   "installFailed": "インストールに失敗しました",

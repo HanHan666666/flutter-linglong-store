@@ -845,6 +845,8 @@
   "installErrorTimeout": "فشل التثبيت: انتهت مهلة التقدم",
   "installCancelled": "تم إلغاء التثبيت",
   "installErrorUnknown": "فشل التثبيت: خطأ غير معروف",
+  "installErrorAuthorizationCancelled": "يتطلب التثبيت تصريحًا إداريًا. تم إلغاء التصريح.",
+  "installErrorHelperUnavailable": "مكوّن التصريح غير متاح، لا يمكن إكمال التثبيت",
   "installErrorAppNotFoundRemote": "فشل التثبيت: لم يتم العثور على التطبيق في المستودع البعيد",
   "installErrorAppNotFoundLocal": "فشل التثبيت: لم يتم العثور على التطبيق محليًا",
   "installFailed": "فشل التثبيت",

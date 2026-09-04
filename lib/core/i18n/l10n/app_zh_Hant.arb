@@ -827,6 +827,8 @@
   "installErrorTimeout": "安裝失敗: 進度逾時",
   "installCancelled": "安裝已取消",
   "installErrorUnknown": "安裝失敗: 未知錯誤",
+  "installErrorAuthorizationCancelled": "安裝需要管理員授權，本次授權已取消",
+  "installErrorHelperUnavailable": "授權組件不可用，無法完成安裝",
   "installErrorAppNotFoundRemote": "安裝失敗: 遠端儲存庫找不到應用",
   "installErrorAppNotFoundLocal": "安裝失敗: 本地找不到應用",
   "installFailed": "安裝失敗",

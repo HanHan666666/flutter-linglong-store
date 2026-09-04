@@ -1432,6 +1432,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get installErrorUnknown => 'Installation failed: Unknown error';
 
   @override
+  String get installErrorAuthorizationCancelled =>
+      'Administrator authorization is required. Authorization was cancelled.';
+
+  @override
+  String get installErrorHelperUnavailable =>
+      'The authorization component is unavailable. Installation cannot proceed.';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'Installation failed: App not found in remote repo';
 

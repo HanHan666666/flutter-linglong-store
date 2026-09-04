@@ -30,6 +30,13 @@ enum AppOperationFailureKind {
 
   /// 应用退出后恢复时无法证明原任务成功。
   interrupted,
+
+  /// 用户关闭了特权 helper 的首次 pkexec 授权对话框（docs/47 §10.2）。
+  authorizationCancelled,
+
+  /// 授权组件不可用：helper 缺失、pkexec 失败或 helper 会话中断
+  /// （docs/47 §10.3）。
+  helperUnavailable,
 }
 
 /// 可本地化的操作阶段代码。

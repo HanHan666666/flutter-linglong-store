@@ -1397,6 +1397,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get installErrorUnknown => 'インストール失敗: 不明なエラー';
 
   @override
+  String get installErrorAuthorizationCancelled =>
+      'インストールには管理者認証が必要です。認証がキャンセルされました。';
+
+  @override
+  String get installErrorHelperUnavailable =>
+      '認証コンポーネントが利用できないため、インストールを完了できません。';
+
+  @override
   String get installErrorAppNotFoundRemote => 'インストール失敗: リモートリポジトリにアプリが見つかりません';
 
   @override

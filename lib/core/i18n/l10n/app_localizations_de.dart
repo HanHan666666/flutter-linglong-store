@@ -1471,6 +1471,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Installation fehlgeschlagen: Unbekannter Fehler';
 
   @override
+  String get installErrorAuthorizationCancelled =>
+      'Für die Installation ist eine Administratorautorisierung erforderlich. Die Autorisierung wurde abgebrochen.';
+
+  @override
+  String get installErrorHelperUnavailable =>
+      'Die Autorisierungskomponente ist nicht verfügbar. Die Installation kann nicht abgeschlossen werden.';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'Installation fehlgeschlagen: App im Remote-Repository nicht gefunden';
 

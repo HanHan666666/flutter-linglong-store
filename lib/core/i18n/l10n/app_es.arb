@@ -839,6 +839,8 @@
   "installErrorTimeout": "Error de instalación: Tiempo de espera agotado",
   "installCancelled": "Instalación cancelada",
   "installErrorUnknown": "Error de instalación: Error desconocido",
+  "installErrorAuthorizationCancelled": "La instalación requiere autorización de administrador. La autorización se canceló.",
+  "installErrorHelperUnavailable": "El componente de autorización no está disponible. No se puede completar la instalación.",
   "installErrorAppNotFoundRemote": "Error de instalación: Aplicación no encontrada en el repositorio remoto",
   "installErrorAppNotFoundLocal": "Error de instalación: Aplicación no encontrada localmente",
   "installFailed": "Error de instalación",

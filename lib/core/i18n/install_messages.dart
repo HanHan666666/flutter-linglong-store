@@ -226,6 +226,12 @@ class InstallMessages {
       ),
       AppOperationFailureKind.execution => failed(operation),
       AppOperationFailureKind.interrupted => taskCrashRetryHint,
+      // 特权 helper 授权链路失败（docs/47 §10.2/§10.3）：给出明确的授权语义
+      // 文案，而不是泛化的“操作失败”。
+      AppOperationFailureKind.authorizationCancelled =>
+        _l10n.installErrorAuthorizationCancelled,
+      AppOperationFailureKind.helperUnavailable =>
+        _l10n.installErrorHelperUnavailable,
     };
     final detail = failure.diagnostic?.trim();
     final message =

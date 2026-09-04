@@ -1375,6 +1375,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get installErrorUnknown => '安装失败: 未知错误';
 
   @override
+  String get installErrorAuthorizationCancelled => '安装需要管理员授权，本次授权已取消';
+
+  @override
+  String get installErrorHelperUnavailable => '授权组件不可用，无法完成安装';
+
+  @override
   String get installErrorAppNotFoundRemote => '安装失败: 远程仓库找不到应用';
 
   @override
@@ -3704,6 +3710,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get installErrorUnknown => '安裝失敗: 未知錯誤';
+
+  @override
+  String get installErrorAuthorizationCancelled => '安裝需要管理員授權，本次授權已取消';
+
+  @override
+  String get installErrorHelperUnavailable => '授權組件不可用，無法完成安裝';
 
   @override
   String get installErrorAppNotFoundRemote => '安裝失敗: 遠端儲存庫找不到應用';

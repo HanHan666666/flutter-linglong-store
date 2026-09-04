@@ -1486,6 +1486,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Échec de l\'installation : erreur inconnue';
 
   @override
+  String get installErrorAuthorizationCancelled =>
+      'L\'installation nécessite une autorisation administrateur. L\'autorisation a été annulée.';
+
+  @override
+  String get installErrorHelperUnavailable =>
+      'Le composant d\'autorisation est indisponible. L\'installation ne peut pas aboutir.';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'Échec de l\'installation : application introuvable dans le dépôt distant';
 

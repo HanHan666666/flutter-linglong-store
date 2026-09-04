@@ -2585,6 +2585,18 @@ abstract class AppLocalizations {
   /// **'安装失败: 未知错误'**
   String get installErrorUnknown;
 
+  /// No description provided for @installErrorAuthorizationCancelled.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装需要管理员授权，本次授权已取消'**
+  String get installErrorAuthorizationCancelled;
+
+  /// No description provided for @installErrorHelperUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'授权组件不可用，无法完成安装'**
+  String get installErrorHelperUnavailable;
+
   /// No description provided for @installErrorAppNotFoundRemote.
   ///
   /// In zh, this message translates to:

@@ -829,6 +829,8 @@
   "installErrorTimeout": "Installation failed: Progress timeout",
   "installCancelled": "Installation cancelled",
   "installErrorUnknown": "Installation failed: Unknown error",
+  "installErrorAuthorizationCancelled": "Administrator authorization is required. Authorization was cancelled.",
+  "installErrorHelperUnavailable": "The authorization component is unavailable. Installation cannot proceed.",
   "installErrorAppNotFoundRemote": "Installation failed: App not found in remote repo",
   "installErrorAppNotFoundLocal": "Installation failed: App not found locally",
   "installFailed": "Installation failed",

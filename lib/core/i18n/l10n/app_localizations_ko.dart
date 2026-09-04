@@ -1394,6 +1394,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get installErrorUnknown => '설치 실패: 알 수 없는 오류';
 
   @override
+  String get installErrorAuthorizationCancelled =>
+      '설치에는 관리자 인증이 필요합니다. 인증이 취소되었습니다.';
+
+  @override
+  String get installErrorHelperUnavailable =>
+      '인증 구성 요소를 사용할 수 없어 설치를 완료할 수 없습니다.';
+
+  @override
   String get installErrorAppNotFoundRemote => '설치 실패: 원격 저장소에서 앱을 찾을 수 없습니다';
 
   @override

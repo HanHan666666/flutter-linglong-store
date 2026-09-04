@@ -45,7 +45,8 @@ class DownloadManagerHeader extends StatelessWidget {
           ExcludeSemantics(
             child: Icon(
               Icons.download_rounded,
-              color: appColors.primary,
+              // 面板标识图标属于强调色语义，迁移到 scheme.primary 随主题流动
+              color: Theme.of(context).colorScheme.primary,
               size: 18,
             ),
           ),

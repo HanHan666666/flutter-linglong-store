@@ -34,12 +34,12 @@ void main() {
     final harness = await _AccentTestHarness.pump(tester, ThemeMode.light);
 
     // 初始 loading → null → 品牌蓝（docs/48 §8：冷启动不阻塞首帧）。
-    expect(harness.innerPrimary, AppColors.primary);
+    expect(harness.innerPrimary, AppColors.brandPrimary);
 
     // 在真实页面里渲染一个真实 ElevatedButton（§12.3 的核心组件组合验证）：
     // 初始取色为品牌回退。
     await harness.pushProbePage();
-    expect(harness.probeButtonBackground, AppColors.primary);
+    expect(harness.probeButtonBackground, AppColors.brandPrimary);
 
     await harness.emit(const SystemAccentColor(red: 232, green: 89, blue: 12));
     final expected = _expectedPrimary(
@@ -60,18 +60,18 @@ void main() {
     // 验证的是 Provider → 根主题 → Theme InheritedWidget → 组件取色的
     // 完整接线（ElevatedButtonTheme.of 正是组件渲染时的取色入口）。
     expect(harness.probeButtonBackground, expected);
-    expect(harness.probeButtonBackground, isNot(AppColors.primary));
+    expect(harness.probeButtonBackground, isNot(AppColors.brandPrimary));
 
     // 不可用事件（portal 无该键）回退品牌蓝。
     await harness.emit(null);
-    expect(harness.innerPrimary, AppColors.primary);
-    expect(harness.probeButtonBackground, AppColors.primary);
+    expect(harness.innerPrimary, AppColors.brandPrimary);
+    expect(harness.probeButtonBackground, AppColors.brandPrimary);
   });
 
   testWidgets('强制深色：强调色事件在深色主题下生效', (tester) async {
     final harness = await _AccentTestHarness.pump(tester, ThemeMode.dark);
 
-    expect(harness.innerPrimary, AppColors.primary);
+    expect(harness.innerPrimary, AppColors.brandPrimary);
 
     const seed = SystemAccentColor(red: 0, green: 200, blue: 83);
     await harness.emit(seed);
@@ -93,7 +93,7 @@ void main() {
     final harness = await _AccentTestHarness.pump(tester, ThemeMode.system);
 
     expect(harness.innerBrightness, Brightness.dark);
-    expect(harness.innerPrimary, AppColors.primary);
+    expect(harness.innerPrimary, AppColors.brandPrimary);
 
     const seed = SystemAccentColor(red: 255, green: 235, blue: 0);
     await harness.emit(seed);

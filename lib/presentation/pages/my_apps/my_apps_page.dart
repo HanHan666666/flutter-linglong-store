@@ -347,7 +347,8 @@ class _TabTitle extends StatelessWidget {
             width: isActive ? 56 : 0,
             height: 3,
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              // 活动 Tab 的 indicator 竖条迁移到 scheme.primary（docs/48 §7.5）
+              color: Theme.of(context).colorScheme.primary,
               borderRadius: BorderRadius.circular(999),
             ),
           ),

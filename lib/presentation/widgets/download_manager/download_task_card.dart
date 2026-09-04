@@ -172,13 +172,17 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
     AppLocalizations l10n,
     AppColorPalette appColors,
   ) {
+    // 当前任务卡片的强调底/边框迁移到 scheme 角色（docs/48 §7.5）：
+    // 底色 primaryContainer 半透明、边框 primary 半透明，回退值与原
+    // primaryLight/品牌蓝组合逐位一致，系统强调色下随主题流动。
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: appColors.primaryLight.withValues(alpha: 0.55),
+        color: scheme.primaryContainer.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: appColors.primary.withValues(alpha: 0.18)),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.18)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,7 +387,11 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
           minHeight: 8,
           borderRadius: BorderRadius.circular(AppRadius.full),
           backgroundColor: appColors.surfaceContainerHighest,
-          valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+          // 下载进度强调色改为 build 时读当前主题（docs/48 §7.5），
+          // 去掉 const 后行为一致，系统强调色变化时能跟随更新。
+          valueColor: AlwaysStoppedAnimation(
+            Theme.of(context).colorScheme.primary,
+          ),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
@@ -403,17 +411,21 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
   /// 构建任务当前状态的紧凑标签。
   Widget _buildStatusPill(BuildContext context) {
     final appColors = context.appColors;
+    // 下载中/安装中是「进行中」的强调色语义（与同卡片进度条同源），按
+    // docs/48 §7.5 迁移到 scheme.primary 随主题流动；success/error/warning
+    // 属于固定业务状态色，保持调色板取值不变。
+    final accentColor = Theme.of(context).colorScheme.primary;
     final (label, color) = switch (widget.task.status) {
       InstallStatus.pending => ('等待中', appColors.textSecondary),
-      InstallStatus.downloading => ('下载中', appColors.primary),
-      InstallStatus.installing => ('安装中', appColors.primary),
+      InstallStatus.downloading => ('下载中', accentColor),
+      InstallStatus.installing => ('安装中', accentColor),
       InstallStatus.success => ('已完成', appColors.success),
       InstallStatus.failed => ('失败', appColors.error),
       InstallStatus.cancelled => ('已取消', appColors.warning),
       InstallStatus.interrupted => ('已中断', appColors.warning),
     };
     final resolvedLabel = widget.featured ? '当前任务' : label;
-    final resolvedColor = widget.featured ? appColors.primary : color;
+    final resolvedColor = widget.featured ? accentColor : color;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -485,7 +497,6 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
   /// 构建只复制 `InstallTask.commandOutput` 的日志按钮。
   Widget _buildCopyOutputButton(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final appColors = context.appColors;
     final buttonLabel = _isOutputCopied ? (l10n.copySucceeded) : (l10n.copyLog);
 
     return Tooltip(
@@ -500,7 +511,8 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
         child: Text(
           buttonLabel,
           style: context.appTextStyles.caption.copyWith(
-            color: appColors.primary,
+            // 复制入口是链接式强调动作，迁移到 scheme.primary（docs/48 §7.5）
+            color: Theme.of(context).colorScheme.primary,
             fontWeight: context.appFontWeight(FontWeight.w600),
           ),
         ),

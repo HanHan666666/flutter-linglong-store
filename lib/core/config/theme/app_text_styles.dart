@@ -441,9 +441,12 @@ class AppTextStyles {
   /// 菜单激活态文字 - 16px, medium（展开态侧边栏菜单）
   static TextStyle get menuActive => _defaultTypography.menuActive;
 
-  /// 链接文字
+  /// 链接文字排版样式（仅排版属性，不含颜色）
+  ///
+  /// docs/48 §7.5：链接色属于交互强调色，必须由使用处的当前主题提供
+  /// （`Theme.of(context).colorScheme.primary`），不能在此静态捕获品牌蓝，
+  /// 否则系统强调色变化时链接不会跟随更新。
   static TextStyle get link => body.copyWith(
-    color: AppColors.primary,
     decoration: TextDecoration.underline,
   );
 

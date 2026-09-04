@@ -226,7 +226,8 @@ class _SearchListPageState extends ConsumerState<SearchListPage>
             Text(
               '"$displayTerm"',
               style: context.appTextStyles.bodyMedium.copyWith(
-                color: AppColors.primary,
+                // 搜索词高亮属于强调色语义，迁移到 scheme.primary 随主题流动
+                color: Theme.of(context).colorScheme.primary,
                 fontWeight: context.appFontWeight(FontWeight.w500),
               ),
             ),

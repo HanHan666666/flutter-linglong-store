@@ -420,11 +420,13 @@ class _ProcessTableRowState extends State<_ProcessTableRow> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    // 右键选中行的底色与边框迁移到 scheme 角色：底色 primaryContainer、
+    // 边框 primary（docs/48 §7.5），回退值与原 primaryLight/品牌蓝逐位一致。
     final rowColor = widget.isMenuSelected
-        ? context.appColors.primaryLight
+        ? theme.colorScheme.primaryContainer
         : context.appColors.surface;
     final borderColor = widget.isMenuSelected
-        ? AppColors.primary
+        ? theme.colorScheme.primary
         : theme.colorScheme.outlineVariant.withValues(alpha: 0.35);
 
     return Semantics(

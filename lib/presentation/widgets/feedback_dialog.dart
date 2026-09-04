@@ -63,23 +63,27 @@ class _FeedbackDialogState extends ConsumerState<FeedbackDialog> {
                 ),
               ),
               const SizedBox(height: 8),
+              // 问题分类 Chip 的选中强调色统一读取当前主题 scheme 角色：
+              // 选中文字 primary、选中底 primaryContainer（docs/48 §7.5），
+              // 回退值与原品牌蓝/primaryLight 逐位一致，系统强调色下跟随主题。
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
                 children: categories.map((cat) {
                   final selected = _selectedCategories.contains(cat);
+                  final scheme = Theme.of(context).colorScheme;
                   return FilterChip(
                     label: Text(cat),
                     selected: selected,
                     // 显式指定文字颜色，确保浅灰背景上文字清晰可读
                     labelStyle: context.appTextStyles.caption.copyWith(
                       color: selected
-                          ? AppColors.primary
+                          ? scheme.primary
                           : AppColors.textPrimary,
                     ),
-                    // 选中态使用主色浅底，未选中态使用卡片灰色底
+                    // 选中态使用强调色浅底，未选中态使用卡片灰色底
                     backgroundColor: AppColors.cardBackground,
-                    selectedColor: AppColors.primaryLight,
+                    selectedColor: scheme.primaryContainer,
                     // 未选中态边框
                     side: const BorderSide(color: AppColors.border),
                     onSelected: (value) {

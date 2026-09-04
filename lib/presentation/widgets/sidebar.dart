@@ -207,8 +207,9 @@ class _MenuItemTile extends StatelessWidget {
                   Icon(
                     isSelected ? item.selectedIcon : item.icon,
                     size: 20,
+                    // 强调色走 scheme.primary，随系统强调色热更新（docs/48 §7.5）
                     color: isSelected
-                        ? AppColors.primary
+                        ? Theme.of(context).colorScheme.primary
                         : context.appColors.textSecondary,
                   ),
                   // 文字
@@ -221,8 +222,9 @@ class _MenuItemTile extends StatelessWidget {
                         softWrap: false,
                         overflow: TextOverflow.ellipsis,
                         style: context.appTextStyles.menuActive.copyWith(
+                          // 活动导航文字与图标同源，统一读取 scheme.primary
                           color: isSelected
-                              ? AppColors.primary
+                              ? Theme.of(context).colorScheme.primary
                               : context.appColors.textPrimary,
                           fontWeight: context.appFontWeight(
                             isSelected ? FontWeight.w500 : FontWeight.w400,
@@ -408,8 +410,9 @@ class _DynamicMenuItemTile extends StatelessWidget {
                 Icon(
                   isSelected ? presentation.selectedIcon : presentation.icon,
                   size: 20,
+                  // 强调色走 scheme.primary，与静态菜单保持同一迁移口径
                   color: isSelected
-                      ? AppColors.primary
+                      ? Theme.of(context).colorScheme.primary
                       : context.appColors.textSecondary,
                 ),
                 if (!isCollapsed) ...[
@@ -421,8 +424,9 @@ class _DynamicMenuItemTile extends StatelessWidget {
                       softWrap: false,
                       overflow: TextOverflow.ellipsis,
                       style: context.appTextStyles.menuActive.copyWith(
+                        // 活动导航文字与图标同源，统一读取 scheme.primary
                         color: isSelected
-                            ? AppColors.primary
+                            ? Theme.of(context).colorScheme.primary
                             : context.appColors.textPrimary,
                         fontWeight: context.appFontWeight(
                           isSelected ? FontWeight.w500 : FontWeight.w400,
@@ -528,10 +532,11 @@ class _BottomIconContentState extends State<_BottomIconContent> {
       child: Icon(
         widget.isSelected ? widget.item.selectedIcon : widget.item.icon,
         size: 20,
+        // 选中/hover 强调色统一读取 scheme.primary，随系统强调色流动
         color: widget.isSelected
-            ? AppColors.primary
+            ? Theme.of(context).colorScheme.primary
             : (_isHovered
-                  ? AppColors.primary
+                  ? Theme.of(context).colorScheme.primary
                   : context.appColors.textSecondary),
       ),
     );

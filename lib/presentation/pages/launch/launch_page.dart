@@ -276,13 +276,17 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
   Widget _buildProgressSection(BuildContext context, LaunchState launchState) {
     return Column(
       children: [
-        // 进度条
+        // 进度条（valueColor 改为 build 时读当前主题，替换 const 静态品牌蓝）
         SizedBox(
           width: 280,
           child: LinearProgressIndicator(
             value: launchState.totalProgress,
             backgroundColor: context.appColors.cardBackground,
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+            // 进度强调色迁移到 scheme.primary（docs/48 §7.5），去掉 const
+            // 后行为一致，但系统强调色变化时能跟随主题更新。
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).colorScheme.primary,
+            ),
             minHeight: 4,
             borderRadius: BorderRadius.circular(2),
           ),
@@ -299,6 +303,8 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
   /// 构建步骤指示器
   Widget _buildStepIndicators(BuildContext context, LaunchState launchState) {
     final l10n = AppLocalizations.of(context)!;
+    // 步骤点的激活色与当前步焦点边框统一读取 scheme.primary（docs/48 §7.5）
+    final accentColor = Theme.of(context).colorScheme.primary;
     final steps = [
       (LaunchStep.environmentCheck, l10n.stepEnvCheck),
       (LaunchStep.installedAppsInit, l10n.stepAppLoad),
@@ -326,9 +332,9 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
               height: 8,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isActive ? AppColors.primary : context.appColors.border,
+                color: isActive ? accentColor : context.appColors.border,
                 border: isCurrent
-                    ? Border.all(color: AppColors.primary, width: 2)
+                    ? Border.all(color: accentColor, width: 2)
                     : null,
               ),
             ),
@@ -389,8 +395,10 @@ class _LaunchPageState extends ConsumerState<LaunchPage>
                 icon: const Icon(Icons.refresh, size: 18),
                 label: Text(AppLocalizations.of(context)!.retry),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
+                  // 按钮底色/前景迁移到 scheme.primary/onPrimary 配对，
+                  // 回退路径前景仍为纯白，外观不变（docs/48 §7.5）
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 10,

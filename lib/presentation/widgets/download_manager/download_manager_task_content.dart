@@ -171,7 +171,8 @@ class _DownloadManagerSectionHeader extends StatelessWidget {
             width: 3,
             height: 14,
             decoration: BoxDecoration(
-              color: appColors.primary,
+              // 分区标题 indicator 竖条迁移到 scheme.primary（docs/48 §7.5）
+              color: Theme.of(context).colorScheme.primary,
               borderRadius: BorderRadius.circular(AppRadius.full),
             ),
           ),

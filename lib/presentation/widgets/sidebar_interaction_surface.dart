@@ -55,9 +55,14 @@ class _SidebarInteractionSurfaceState extends State<SidebarInteractionSurface> {
   Widget build(BuildContext context) {
     final palette = context.appColors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // 选中 pill 背景按原设计是「品牌蓝的半透明变体」，因此对 scheme.primary
+    // 做同样的透明度运算（docs/48 §7.6）：回退路径数值逐位不变，系统强调色
+    // 下随 scheme.primary 一起流动。调用方传入的 selectedColor 优先级不变。
     final selectedBg =
         widget.selectedColor ??
-        AppColors.primary.withValues(alpha: isDark ? 0.22 : 0.08);
+        Theme.of(context).colorScheme.primary.withValues(
+          alpha: isDark ? 0.22 : 0.08,
+        );
     final hoverBg =
         widget.hoverColor ??
         palette.surfaceContainerHighest.withValues(alpha: isDark ? 0.46 : 0.72);

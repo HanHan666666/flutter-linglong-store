@@ -480,7 +480,11 @@ class LinglongEnvDialog extends ConsumerWidget {
           child: LinearProgressIndicator(
             value: envState.installProgress,
             backgroundColor: context.appColors.cardBackground,
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+            // 安装进度强调色改为 build 时读当前主题（docs/48 §7.5），
+            // 去掉 const 后行为一致，系统强调色变化时能跟随更新。
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Theme.of(context).colorScheme.primary,
+            ),
             minHeight: 4,
             borderRadius: BorderRadius.circular(2),
           ),

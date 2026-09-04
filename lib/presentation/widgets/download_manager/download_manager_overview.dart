@@ -87,6 +87,10 @@ class _DownloadManagerOverviewTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appColors = context.appColors;
+    // 高亮 tile 的强调色迁移到 scheme 角色（docs/48 §7.5）：底色
+    // primaryContainer 半透明、边框/图标/文字 primary，回退值与原
+    // primaryLight/品牌蓝组合逐位一致，系统强调色下随主题流动。
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -94,12 +98,12 @@ class _DownloadManagerOverviewTile extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: highlighted
-            ? appColors.primaryLight.withValues(alpha: 0.62)
+            ? scheme.primaryContainer.withValues(alpha: 0.62)
             : appColors.cardBackground.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
           color: highlighted
-              ? appColors.primary.withValues(alpha: 0.18)
+              ? scheme.primary.withValues(alpha: 0.18)
               : appColors.borderSecondary,
         ),
       ),
@@ -109,7 +113,7 @@ class _DownloadManagerOverviewTile extends StatelessWidget {
             child: Icon(
               icon,
               size: 18,
-              color: highlighted ? appColors.primary : appColors.textTertiary,
+              color: highlighted ? scheme.primary : appColors.textTertiary,
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -118,7 +122,7 @@ class _DownloadManagerOverviewTile extends StatelessWidget {
               label,
               style: context.appTextStyles.caption.copyWith(
                 color: highlighted
-                    ? appColors.primary
+                    ? scheme.primary
                     : appColors.textSecondary,
                 fontWeight: context.appFontWeight(FontWeight.w600),
               ),
@@ -130,7 +134,7 @@ class _DownloadManagerOverviewTile extends StatelessWidget {
           Text(
             '$count',
             style: context.appTextStyles.caption.copyWith(
-              color: highlighted ? appColors.primary : appColors.textPrimary,
+              color: highlighted ? scheme.primary : appColors.textPrimary,
               fontWeight: context.appFontWeight(FontWeight.w700),
             ),
           ),

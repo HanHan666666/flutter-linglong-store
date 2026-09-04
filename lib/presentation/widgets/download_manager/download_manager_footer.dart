@@ -42,7 +42,12 @@ class DownloadManagerFooter extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.speed_outlined, size: 16, color: appColors.primary),
+          // 实时速度标识图标属于强调色语义，迁移到 scheme.primary 随主题流动
+          Icon(
+            Icons.speed_outlined,
+            size: 16,
+            color: Theme.of(context).colorScheme.primary,
+          ),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(

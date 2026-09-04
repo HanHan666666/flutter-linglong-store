@@ -329,7 +329,9 @@ class _GuidedRepairExecutionDialogState
 
     if (_isRunning) {
       message = l10n.repairExecuting;
-      color = appColors.primary;
+      // 执行中状态与同组的 success/error/warning 不同，属于「进行中」的
+      // 强调色语义，迁移到 scheme.primary 随主题流动（docs/48 §7.5）。
+      color = Theme.of(context).colorScheme.primary;
       icon = Icons.sync_rounded;
     } else if (_error != null) {
       message = _error is InvalidTrustedContentSignatureException

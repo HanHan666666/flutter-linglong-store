@@ -206,8 +206,10 @@ class AppTheme {
       );
     }
     return ColorScheme.fromSeed(
-      seedColor: AppColors.primary,
-      primary: AppColors.primary,
+      // 品牌回退只允许读取 brandPrimary 系列令牌（docs/48 §7.5）；
+      // 组件强调色一律走下方 scheme 角色，不直接引用静态品牌蓝。
+      seedColor: AppColors.brandPrimary,
+      primary: AppColors.brandPrimary,
       surface: AppColors.surface,
       error: AppColors.error,
       onSurface: AppColors.textPrimary,
@@ -218,7 +220,7 @@ class AppTheme {
       surfaceContainerHigh: AppColors.surfaceContainerHighest,
       surfaceContainerHighest: AppColors.surfaceContainerHighest,
       outlineVariant: AppColors.borderSecondary,
-      primaryContainer: AppColors.primaryLight,
+      primaryContainer: AppColors.brandPrimaryLight,
       // 历史兼容：当前 SDK 的 fromSeed 会为覆盖后的 primary 派生深蓝
       // onPrimary（#152E60），而既有按钮/FAB 前景一直是纯白（textLight）。
       // 回退路径必须显式固定，否则组件前景迁移到 scheme.onPrimary 后
@@ -250,8 +252,9 @@ class AppTheme {
       );
     }
     return ColorScheme.fromSeed(
-      seedColor: AppColors.primary,
-      primary: AppColors.primary,
+      // 与浅色回退同构：品牌回退只读取 brandPrimary 系列令牌（docs/48 §7.5）。
+      seedColor: AppColors.brandPrimary,
+      primary: AppColors.brandPrimary,
       surface: palette.surface,
       error: AppColors.error,
       onSurface: palette.textPrimary,
@@ -263,7 +266,8 @@ class AppTheme {
       surfaceContainerHigh: palette.surfaceContainerHighest,
       surfaceContainerHighest: palette.surfaceContainerHighest,
       outlineVariant: palette.borderSecondary,
-      primaryContainer: palette.primaryLight,
+      // 深色品牌回退容器色即深色调色板历史上的主色浅色变体取值 #0D2040。
+      primaryContainer: AppColors.brandPrimaryContainerDark,
       // 历史兼容：与浅色回退同因，深色既有按钮/FAB 前景为纯白，
       // 显式固定 onPrimary 避免迁移到 scheme 角色后改变现状外观。
       onPrimary: AppColors.textLight,

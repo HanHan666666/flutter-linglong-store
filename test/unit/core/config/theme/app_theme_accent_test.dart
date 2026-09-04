@@ -19,18 +19,24 @@ import 'package:linglong_store/domain/models/system_accent_color.dart';
 void main() {
   group('品牌回退路径关键令牌锁定（systemAccentColor == null）', () {
     test('浅色与深色 primary 均为品牌蓝 #016FFD', () {
-      expect(AppTheme.buildLightTheme().colorScheme.primary, AppColors.primary);
-      expect(AppTheme.buildDarkTheme().colorScheme.primary, AppColors.primary);
+      expect(
+        AppTheme.buildLightTheme().colorScheme.primary,
+        AppColors.brandPrimary,
+      );
+      expect(
+        AppTheme.buildDarkTheme().colorScheme.primary,
+        AppColors.brandPrimary,
+      );
     });
 
     test('primaryContainer 回退到品牌容器色（浅 #E6F0FF / 深 #0D2040）', () {
       expect(
         AppTheme.buildLightTheme().colorScheme.primaryContainer,
-        AppColors.primaryLight,
+        AppColors.brandPrimaryLight,
       );
       expect(
         AppTheme.buildDarkTheme().colorScheme.primaryContainer,
-        AppColorPalette.dark.primaryLight,
+        AppColors.brandPrimaryContainerDark,
       );
     });
 
@@ -49,12 +55,12 @@ void main() {
     });
 
     test('elevatedButton 背景取 scheme.primary、前景为纯白', () {
-      // 验证静态 AppColors.primary/textLight 迁移到 ColorScheme 角色后的
+      // 验证静态 AppColors.brandPrimary/textLight 迁移到 ColorScheme 角色后的
       // 组件级接线：回退时解析值必须与迁移前完全一致。
       for (final theme in [AppTheme.buildLightTheme(), AppTheme.buildDarkTheme()]) {
         final style = theme.elevatedButtonTheme.style!;
         expect(style.backgroundColor?.resolve({}), theme.colorScheme.primary);
-        expect(style.backgroundColor?.resolve({}), AppColors.primary);
+        expect(style.backgroundColor?.resolve({}), AppColors.brandPrimary);
         expect(style.foregroundColor?.resolve({}), const Color(0xFFFFFFFF));
       }
     });

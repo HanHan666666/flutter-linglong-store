@@ -101,6 +101,9 @@ class _RankingPageState extends ConsumerState<RankingPage>
   Widget _buildTabBar(RankingType selectedType) {
     // Tab 内容区和分隔线颜色跟随主题
     final palette = context.appColors;
+    // Tab 选中文字与胶囊 indicator 迁移到 scheme 角色（docs/48 §7.5），
+    // 回退值与原品牌蓝/primaryLight 逐位一致，系统强调色下跟随主题。
+    final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
@@ -115,7 +118,7 @@ class _RankingPageState extends ConsumerState<RankingPage>
       child: TabBar(
         controller: _tabController,
         isScrollable: false,
-        labelColor: AppColors.primary,
+        labelColor: scheme.primary,
         unselectedLabelColor: palette.textSecondary,
         // 使用 14px 字号 + 紧凑行高，保证文字在按钮内垂直居中
         labelStyle: context.appTextStyles.bodyMedium.copyWith(
@@ -126,7 +129,7 @@ class _RankingPageState extends ConsumerState<RankingPage>
           height: 1.0,
         ),
         indicator: BoxDecoration(
-          color: palette.primaryLight,
+          color: scheme.primaryContainer,
           borderRadius: BorderRadius.circular(48), // 胶囊形圆角，与 Tab 高度匹配
         ),
         indicatorSize: TabBarIndicatorSize.tab,
@@ -190,12 +193,15 @@ class _HoverableTabState extends State<_HoverableTab> {
   Widget build(BuildContext context) {
     final palette = context.appColors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // hover 弱高亮与选中文字色统一读取 scheme.primary：hover 底是品牌蓝的
+    // 半透明变体，按 docs/48 §7.6 对 scheme.primary 做同样的透明度运算。
+    final accentColor = Theme.of(context).colorScheme.primary;
     final showHoverHighlight = !widget.isSelected && (_isHovered || _isPressed);
     final hoverBackground = _isPressed
-        ? AppColors.primary.withValues(alpha: isDark ? 0.24 : 0.10)
-        : AppColors.primary.withValues(alpha: isDark ? 0.18 : 0.06);
+        ? accentColor.withValues(alpha: isDark ? 0.24 : 0.10)
+        : accentColor.withValues(alpha: isDark ? 0.18 : 0.06);
     final textColor = widget.isSelected || _isHovered || _isPressed
-        ? AppColors.primary
+        ? accentColor
         : palette.textSecondary;
 
     return MouseRegion(

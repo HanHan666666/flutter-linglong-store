@@ -596,6 +596,9 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox>
               itemBuilder: (context, index) {
                 final item = state.items[index];
                 final isSelected = index == _selectedIndex;
+                // 强调色必须用 OverlayEntry 自己的 builder context 读取主题，
+                // 不能捕获页面闭包的过期 context（docs/48 §7.6）。
+                final overlayScheme = Theme.of(overlayContext).colorScheme;
 
                 return MouseRegion(
                   onEnter: (_) {
@@ -620,8 +623,10 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox>
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
+                        // 选中底色迁移到 primaryContainer 角色（回退仍为
+                        // #E6F0FF/#0D2040，外观逐位不变）
                         color: isSelected
-                            ? overlayContext.appColors.primaryLight
+                            ? overlayScheme.primaryContainer
                             : Colors.transparent,
                         borderRadius: AppRadius.xsRadius,
                       ),
@@ -635,20 +640,22 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox>
                               style: overlayContext.appTextStyles.bodyMedium
                                   .copyWith(
                                     color: isSelected
-                                        ? AppColors.primary
+                                        ? overlayScheme.primary
                                         : overlayContext.appColors.textPrimary,
                                   ),
                             ),
                           ),
                           if (isSelected)
-                            const Padding(
+                            // 强调色来自 Overlay 自身 context 的主题，
+                            // 因此不能保持 const 构造（docs/48 §7.6）。
+                            Padding(
                               // 图标内建 matchTextDirection，保持单一图标即可随环境镜像。
-                              padding: EdgeInsetsDirectional.only(start: 8),
+                              padding: const EdgeInsetsDirectional.only(start: 8),
                               child: ExcludeSemantics(
                                 child: Icon(
                                   Icons.arrow_forward_ios,
                                   size: 12,
-                                  color: AppColors.primary,
+                                  color: overlayScheme.primary,
                                 ),
                               ),
                             ),
@@ -714,6 +721,9 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    // 搜索框聚焦态的强调色（边框/图标）统一读取当前主题 scheme.primary，
+    // 替换静态品牌蓝，保证系统强调色变化时同步更新（docs/48 §7.5）。
+    final accentColor = Theme.of(context).colorScheme.primary;
 
     // 两种模式共用同一个搜索框外壳，仅切换内部内容，保证标题栏布局稳定。
     final tag = widget.currentTag;
@@ -741,7 +751,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox>
           borderRadius: AppRadius.lgRadius,
           border: Border.all(
             color: tag == null && _isFocused
-                ? AppColors.primary.withValues(alpha: 0.56)
+                ? accentColor.withValues(alpha: 0.56)
                 : context.appColors.borderSecondary,
             width: 1,
           ),
@@ -758,7 +768,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox>
                   Icons.search,
                   size: 16,
                   color: tag == null && _isFocused
-                      ? AppColors.primary
+                      ? accentColor
                       : context.appColors.textTertiary,
                 ),
               ),
@@ -858,6 +868,11 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox>
     AppTag tag,
     AppLocalizations l10n,
   ) {
+    // 标签胶囊底色与文字同源读取 scheme 角色：底色 primaryContainer、
+    // 文字 primary（回退即原 primaryLight/#016FFD 组合，外观逐位不变），
+    // 系统强调色变化时胶囊跟随主题更新（docs/48 §7.5）。
+    final tagScheme = Theme.of(context).colorScheme;
+
     // 标签模式没有 TextField，直接通过 FocusNode 拦截 Backspace/Delete。
     return Focus(
       focusNode: _tagFocusNode,
@@ -883,7 +898,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox>
             constraints: const BoxConstraints(maxWidth: 320),
             padding: const EdgeInsetsDirectional.only(start: 10),
             decoration: BoxDecoration(
-              color: context.appColors.primaryLight,
+              color: tagScheme.primaryContainer,
               borderRadius: AppRadius.fullRadius,
             ),
             child: Row(
@@ -896,7 +911,7 @@ class _TitleSearchBoxState extends ConsumerState<_TitleSearchBox>
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.appTextStyles.tiny.copyWith(
-                        color: AppColors.primary,
+                        color: tagScheme.primary,
                       ),
                     ),
                   ),

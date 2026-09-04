@@ -406,8 +406,10 @@ class _UpdatableAppItemState extends ConsumerState<_UpdatableAppItem> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final itemRadius = AppRadius.mdRadius;
+    // hover 边框是品牌蓝的半透明弱高亮，按 docs/48 §7.6 改为对
+    // scheme.primary 做同样的透明度运算，随系统强调色流动。
     final itemBorderColor = _isHovered
-        ? AppColors.primary.withValues(alpha: isDark ? 0.34 : 0.18)
+        ? theme.colorScheme.primary.withValues(alpha: isDark ? 0.34 : 0.18)
         : context.appColors.cardBorder;
 
     // 确定按钮状态：仅处理活跃任务，其余均显示"更新"

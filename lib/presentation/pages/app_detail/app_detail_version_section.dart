@@ -302,10 +302,14 @@ class AppDetailVersionSection extends StatelessWidget {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
             shape: const StadiumBorder(),
-            backgroundColor: AppColors.primary.withValues(alpha: 0.72),
-            foregroundColor: Colors.white,
-            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.72),
-            disabledForegroundColor: Colors.white,
+            // 进度/等待态按钮强调色迁移到 scheme.primary/onPrimary 配对
+            // （docs/48 §7.5）；回退路径 onPrimary 为纯白，外观逐位不变。
+            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.72),
+            foregroundColor: theme.colorScheme.onPrimary,
+            disabledBackgroundColor: theme.colorScheme.primary.withValues(
+              alpha: 0.72,
+            ),
+            disabledForegroundColor: theme.colorScheme.onPrimary,
             textStyle: theme.textTheme.labelLarge?.copyWith(
               fontWeight: context.appFontWeight(FontWeight.w600),
             ),

@@ -6,17 +6,30 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // ==================== 品牌色 ====================
+  // ==================== 品牌色（仅供主题回退路径使用） ====================
+  //
+  // docs/48 §7.5：交互强调色统一来自 Theme.of(context).colorScheme，随 XDG
+  // 系统强调色流动；以下品牌色只允许在 AppTheme 的品牌回退路径（portal 不可
+  // 用时的 ColorScheme 组装）中读取，禁止 Presentation 组件直接引用，否则
+  // 系统强调色变化时这些位置不会跟着更新，形成双轨状态。
 
-  /// 主色 - #016FFD
-  /// 用于: 按钮、链接、激活态、侧边栏选中、indicator 竖条
-  static const Color primary = Color(0xFF016FFD);
+  /// 品牌主色 - #016FFD
+  ///
+  /// 仅供 [AppTheme] 品牌回退路径派生 ColorScheme.primary 使用；
+  /// 组件的按钮、链接、选中态、焦点、进度等必须读取 `colorScheme.primary`。
+  static const Color brandPrimary = Color(0xFF016FFD);
 
-  /// 主色 - 浅色变体 (用于 hover 状态等)
-  static const Color primaryLight = Color(0xFFE6F0FF);
+  /// 品牌主色浅色变体 - #E6F0FF
+  ///
+  /// 仅供 [AppTheme] 浅色品牌回退路径派生 ColorScheme.primaryContainer
+  /// 使用；组件的选中背景必须读取 `colorScheme.primaryContainer`。
+  static const Color brandPrimaryLight = Color(0xFFE6F0FF);
 
-  /// 主色 - 深色变体
-  static const Color primaryDark = Color(0xFF0052CC);
+  /// 品牌主色深色容器变体 - #0D2040
+  ///
+  /// 仅供 [AppTheme] 深色品牌回退路径派生 ColorScheme.primaryContainer
+  /// 使用（即深色调色板历史上的主色浅色变体取值）。
+  static const Color brandPrimaryContainerDark = Color(0xFF0D2040);
 
   // ==================== 背景色 ====================
 
@@ -138,8 +151,10 @@ class AppColors {
 /// 提供浅色 (light) 和深色 (dark) 两套颜色方案。
 /// 通过 [BuildContext.appColors] 扩展方法访问，自动跟随系统/用户主题。
 ///
-/// 品牌固定色（主色、功能色）直接从 [AppColors] 获取，不随主题变化。
+/// 品牌固定色（功能色、业务固定色）直接从 [AppColors] 获取，不随主题变化。
 /// 背景色、表面色、文字色等语义色才随主题切换。
+/// 强调色角色（primary 系列）不在调色板内，组件统一读取
+/// `Theme.of(context).colorScheme`（docs/48 §7.5）。
 class AppColorPalette {
   const AppColorPalette._({
     required this.background,
@@ -148,7 +163,6 @@ class AppColorPalette {
     required this.cardBorder,
     required this.surfaceContainerLow,
     required this.surfaceContainerHighest,
-    required this.primaryLight,
     required this.textPrimary,
     required this.textSecondary,
     required this.textTertiary,
@@ -171,7 +185,6 @@ class AppColorPalette {
     cardBorder: Color(0xFFECEFF3),
     surfaceContainerLow: Color(0xFFF8F9FB),
     surfaceContainerHighest: Color(0xFFF3F5F7),
-    primaryLight: Color(0xFFE6F0FF),
     textPrimary: Color(0xFF1A1A1A),
     textSecondary: Color(0xFF666666),
     textTertiary: Color(0xFF767676),
@@ -194,7 +207,6 @@ class AppColorPalette {
     cardBorder: Color(0xFF333333),
     surfaceContainerLow: Color(0xFF161616),
     surfaceContainerHighest: Color(0xFF2A2A2A),
-    primaryLight: Color(0xFF0D2040),
     textPrimary: Color(0xFFE4E4E4),
     textSecondary: Color(0xFF9A9A9A),
     textTertiary: Color(0xFF666666),
@@ -228,9 +240,6 @@ class AppColorPalette {
 
   /// 高亮表面色（搜索框 focus 等）
   final Color surfaceContainerHighest;
-
-  /// 主色浅色变体（Tab indicator、选中背景）
-  final Color primaryLight;
 
   /// 主文字色
   final Color textPrimary;
@@ -269,12 +278,10 @@ class AppColorPalette {
   final Color skeletonHighlight;
 
   // ==================== 品牌固定色（不随主题变化）====================
-
-  /// 主色 - #016FFD
-  Color get primary => AppColors.primary;
-
-  /// 主色深色变体
-  Color get primaryDark => AppColors.primaryDark;
+  //
+  // 注意：强调色角色（primary/primaryLight 等）已按 docs/48 §7.5 从调色板
+  // 移除，Presentation 必须读取 Theme.of(context).colorScheme 的对应角色，
+  // 这里只保留不随系统强调色流动的功能色与业务固定色。
 
   /// 错误色 - #FF4D4F
   Color get error => AppColors.error;

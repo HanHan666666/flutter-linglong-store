@@ -72,7 +72,9 @@ class ErrorSolutionDialog extends StatelessWidget {
                           color: appColors.surfaceContainerLow,
                           border: Border(
                             left: BorderSide(
-                              color: appColors.primary,
+                              // 引用块 indicator 竖条属于强调色语义，迁移到
+                              // scheme.primary（docs/48 §7.5），随主题流动
+                              color: Theme.of(context).colorScheme.primary,
                               width: 3,
                             ),
                           ),

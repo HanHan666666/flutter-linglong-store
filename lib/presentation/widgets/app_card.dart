@@ -103,8 +103,12 @@ class _AppCardState extends State<AppCard> {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardRadius = AppRadius.mdRadius;
+    // hover 边框是品牌蓝的半透明弱高亮，按 docs/48 §7.6 改为对
+    // scheme.primary 做同样的透明度运算，随系统强调色流动。
     final cardBorderColor = _isHovered
-        ? AppColors.primary.withValues(alpha: isDark ? 0.34 : 0.18)
+        ? Theme.of(context).colorScheme.primary.withValues(
+            alpha: isDark ? 0.34 : 0.18,
+          )
         : context.appColors.cardBorder;
 
     return MouseRegion(
@@ -363,10 +367,13 @@ class _AppCardState extends State<AppCard> {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
             shape: const StadiumBorder(),
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.65),
-            disabledForegroundColor: Colors.white,
+            // 主按钮强调色迁移到 scheme.primary/onPrimary 配对；回退路径
+            // onPrimary 固定为纯白，前景外观不变（docs/48 §7.5）。
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            disabledBackgroundColor: Theme.of(context).colorScheme.primary
+                .withValues(alpha: 0.65),
+            disabledForegroundColor: Theme.of(context).colorScheme.onPrimary,
           ),
           child: isLoading
               ? Row(

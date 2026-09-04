@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'application/providers/global_provider.dart';
 import 'application/providers/og_install_controller.dart';
+import 'application/providers/system_accent_color_provider.dart';
 import 'core/accessibility/accessibility.dart';
 import 'core/config/routes.dart';
 import 'core/config/theme.dart';
@@ -41,6 +42,15 @@ class LinglongStoreApp extends ConsumerWidget {
         .accessibilityFeatures
         .boldText;
 
+    // 根应用是系统强调色的唯一长期订阅者（docs/48 §7.6）：loading、能力
+    // 不可用（null）与通道错误一律解析为 null → 品牌蓝回退，不阻塞首帧；
+    // Riverpod 3 的 AsyncValue.value 在 loading/错误时安全返回 null。
+    // SystemAccentColor 实现了 ==，select 后相同值与 loading 态不会触发
+    // 根主题重建，事件频率极低，也不需要节流。
+    final systemAccentColor = ref.watch(
+      systemAccentColorProvider.select((value) => value.value),
+    );
+
     // 语言变化会重建 MaterialApp，这里闭包捕获当前 locale，
     // 让 CJK 字形变体（简/繁/日/韩）跟随界面语言一起切换。
     ThemeData buildTypographyTheme({
@@ -52,11 +62,13 @@ class LinglongStoreApp extends ConsumerWidget {
               fontWeightAdjustment: fontWeightAdjustment,
               systemBoldText: systemBoldText,
               appLocale: locale,
+              systemAccentColor: systemAccentColor,
             )
           : AppTheme.buildLightTheme(
               fontWeightAdjustment: fontWeightAdjustment,
               systemBoldText: systemBoldText,
               appLocale: locale,
+              systemAccentColor: systemAccentColor,
             );
     }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../domain/models/system_accent_color.dart';
 import 'app_colors.dart';
 import 'app_text_styles.dart';
 import 'app_spacing.dart';
@@ -158,11 +159,52 @@ class AppTheme {
     );
   }
 
+  /// 用系统强调色种子派生基础 ColorScheme（docs/48 §7.5）。
+  ///
+  /// 使用 `DynamicSchemeVariant.fidelity`：在尽量保留种子色相与饱和度的
+  /// 同时，由算法生成可读的 primary/onPrimary、primaryContainer/
+  /// onPrimaryContainer 配对。与品牌回退路径不同，这里刻意不覆盖 primary
+  /// 系列角色——外部桌面允许近白/近黑/亮黄等极端种子，强制套用原始 RGB
+  /// 会破坏配对对比度；项目中性表面色、错误色与边框令牌仍随后续 copyWith
+  /// 固定，保证系统强调色只染强调角色、不重染整个界面。
+  static ColorScheme _fromSystemSeed(
+    SystemAccentColor accent,
+    Brightness brightness,
+  ) {
+    // 8-bit 分量直接映射为不透明 sRGB；归一化已在 Platform 边界完成。
+    return ColorScheme.fromSeed(
+      seedColor: Color.fromARGB(0xFF, accent.red, accent.green, accent.blue),
+      dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
+      brightness: brightness,
+    );
+  }
+
   /// 构建浅色 ColorScheme。
+  ///
+  /// [systemAccentColor] 为 XDG Portal 提供的系统强调色种子：
+  /// - null（loading、能力不可用或未设置）走品牌回退路径，关键令牌与既有
+  ///   外观逐位一致（primary #016FFD、primaryContainer #E6F0FF），这是
+  ///   Golden 与兼容性验收的硬性要求；
+  /// - 非 null 走 fidelity 派生路径，primary 系列随系统强调色流动。
   ///
   /// ColorScheme 的 surfaceContainer 系列会被部分页面直接读取，
   /// 这里必须和 AppColorPalette.light 同步，避免旧灰底绕过项目令牌回流。
-  static ColorScheme _buildLightColorScheme() {
+  static ColorScheme _buildLightColorScheme({
+    SystemAccentColor? systemAccentColor,
+  }) {
+    if (systemAccentColor != null) {
+      return _fromSystemSeed(systemAccentColor, Brightness.light).copyWith(
+        surface: AppColors.surface,
+        error: AppColors.error,
+        onSurface: AppColors.textPrimary,
+        surfaceContainerLowest: AppColors.background,
+        surfaceContainerLow: AppColors.surfaceContainerLow,
+        surfaceContainer: AppColors.surfaceContainerLow,
+        surfaceContainerHigh: AppColors.surfaceContainerHighest,
+        surfaceContainerHighest: AppColors.surfaceContainerHighest,
+        outlineVariant: AppColors.borderSecondary,
+      );
+    }
     return ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       primary: AppColors.primary,
@@ -177,14 +219,36 @@ class AppTheme {
       surfaceContainerHighest: AppColors.surfaceContainerHighest,
       outlineVariant: AppColors.borderSecondary,
       primaryContainer: AppColors.primaryLight,
+      // 历史兼容：当前 SDK 的 fromSeed 会为覆盖后的 primary 派生深蓝
+      // onPrimary（#152E60），而既有按钮/FAB 前景一直是纯白（textLight）。
+      // 回退路径必须显式固定，否则组件前景迁移到 scheme.onPrimary 后
+      // 无声改变现状外观（阶段二硬性要求：回退逐位一致）。
+      onPrimary: AppColors.textLight,
     );
   }
 
   /// 构建深色 ColorScheme。
   ///
-  /// 深色主题本阶段只做令牌同步，不改变既有暗色层级，避免浅色改造
-  /// 连带破坏深色模式的可读对比。
-  static ColorScheme _buildDarkColorScheme(AppColorPalette palette) {
+  /// [systemAccentColor] 语义与浅色一致：null 走品牌回退（primaryContainer
+  /// 固定为 #0D2040），非 null 走 fidelity 派生。深色主题本阶段只做令牌
+  /// 同步，不改变既有暗色层级，避免浅色改造连带破坏深色模式的可读对比。
+  static ColorScheme _buildDarkColorScheme(
+    AppColorPalette palette, {
+    SystemAccentColor? systemAccentColor,
+  }) {
+    if (systemAccentColor != null) {
+      return _fromSystemSeed(systemAccentColor, Brightness.dark).copyWith(
+        surface: palette.surface,
+        error: AppColors.error,
+        onSurface: palette.textPrimary,
+        surfaceContainerLowest: palette.background,
+        surfaceContainerLow: palette.surfaceContainerLow,
+        surfaceContainer: palette.surfaceContainerLow,
+        surfaceContainerHigh: palette.surfaceContainerHighest,
+        surfaceContainerHighest: palette.surfaceContainerHighest,
+        outlineVariant: palette.borderSecondary,
+      );
+    }
     return ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       primary: AppColors.primary,
@@ -200,6 +264,9 @@ class AppTheme {
       surfaceContainerHighest: palette.surfaceContainerHighest,
       outlineVariant: palette.borderSecondary,
       primaryContainer: palette.primaryLight,
+      // 历史兼容：与浅色回退同因，深色既有按钮/FAB 前景为纯白，
+      // 显式固定 onPrimary 避免迁移到 scheme 角色后改变现状外观。
+      onPrimary: AppColors.textLight,
     );
   }
 
@@ -207,11 +274,15 @@ class AppTheme {
   static ThemeData get lightTheme => buildLightTheme();
 
   /// [appLocale] 决定 CJK 字形变体首选的地区字库；传 null 保持简体形态。
+  ///
+  /// [systemAccentColor] 为 XDG 系统强调色种子；null（默认）走品牌蓝回退，
+  /// 关键令牌与既有外观逐位一致（docs/48 §7.5）。
   static ThemeData buildLightTheme({
     AppFontWeightAdjustment fontWeightAdjustment =
         AppFontWeightAdjustment.normal,
     bool systemBoldText = false,
     Locale? appLocale,
+    SystemAccentColor? systemAccentColor,
   }) {
     final typography = _withLinuxTypographyFallbacks(
       AppTextStyles.resolveTypography(
@@ -221,11 +292,16 @@ class AppTheme {
       cjkGlyphVariantOf(appLocale),
     );
 
+    // 先构建 ColorScheme 再组装组件主题：组件主题统一引用 scheme 的
+    // primary/onPrimary/primaryContainer 角色，系统强调色变化才能让按钮、
+    // Tab、进度、焦点等组件一起换色，而不是残留静态品牌蓝（docs/48 §7.5）。
+    final scheme = _buildLightColorScheme(systemAccentColor: systemAccentColor);
+
     return ThemeData(
       useMaterial3: true,
       // 全局禁用页面路由转场动画
       pageTransitionsTheme: _noTransitionTheme,
-      colorScheme: _buildLightColorScheme(),
+      colorScheme: scheme,
       scaffoldBackgroundColor: AppColors.background,
       // 注意: 移除 fontFamily 配置，使用 Flutter 默认字体
       // Flutter 不支持 CSS 风格的逗号分隔字体列表
@@ -260,8 +336,10 @@ class AppTheme {
       // 按钮主题
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.textLight,
+          // 强调色随系统种子流动；前景取 scheme.onPrimary 而非固定白色，
+          // 亮黄等高明度系统色下算法会派生深色前景保证对比度（docs/48 §11）。
+          backgroundColor: scheme.primary,
+          foregroundColor: scheme.onPrimary,
           shape: const StadiumBorder(),
           minimumSize: const Size(68, 28),
           padding: const EdgeInsets.symmetric(
@@ -275,7 +353,7 @@ class AppTheme {
       // 文字按钮主题
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
+          foregroundColor: scheme.primary,
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
             vertical: AppSpacing.sm,
@@ -297,7 +375,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.lgRadius,
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: BorderSide(color: scheme.primary, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg,
@@ -334,14 +412,14 @@ class AppTheme {
 
       // TabBar 主题
       tabBarTheme: TabBarThemeData(
-        labelColor: AppColors.primary,
+        labelColor: scheme.primary,
         unselectedLabelColor: AppColors.textSecondary,
         labelStyle: typography.body.copyWith(
           fontWeight: typography.resolveFontWeight(FontWeight.w500),
         ),
         unselectedLabelStyle: typography.body,
         indicator: BoxDecoration(
-          color: AppColors.primaryLight,
+          color: scheme.primaryContainer,
           borderRadius: AppRadius.lgRadius,
         ),
         indicatorSize: TabBarIndicatorSize.tab,
@@ -349,9 +427,9 @@ class AppTheme {
       ),
 
       // 底部导航栏主题
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.background,
-        selectedItemColor: AppColors.primary,
+        selectedItemColor: scheme.primary,
         unselectedItemColor: AppColors.textSecondary,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
@@ -360,11 +438,11 @@ class AppTheme {
       // 导航栏主题
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.background,
-        indicatorColor: AppColors.primaryLight,
+        indicatorColor: scheme.primaryContainer,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return typography.caption.copyWith(
-              color: AppColors.primary,
+              color: scheme.primary,
               fontWeight: typography.resolveFontWeight(FontWeight.w500),
             );
           }
@@ -373,16 +451,16 @@ class AppTheme {
       ),
 
       // 导航抽屉主题
-      navigationDrawerTheme: const NavigationDrawerThemeData(
+      navigationDrawerTheme: NavigationDrawerThemeData(
         backgroundColor: AppColors.background,
-        indicatorColor: AppColors.primaryLight,
+        indicatorColor: scheme.primaryContainer,
         tileHeight: 48,
       ),
 
       // 悬浮按钮主题
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.textLight,
+        backgroundColor: scheme.primary,
+        foregroundColor: scheme.onPrimary,
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.fullRadius),
       ),
@@ -390,7 +468,7 @@ class AppTheme {
       // Chip 主题
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceContainerLow,
-        selectedColor: AppColors.primaryLight,
+        selectedColor: scheme.primaryContainer,
         labelStyle: typography.caption,
         side: const BorderSide(color: AppColors.border),
         shape: RoundedRectangleBorder(borderRadius: AppRadius.fullRadius),
@@ -405,8 +483,8 @@ class AppTheme {
       ),
 
       // 进度指示器主题
-      progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: AppColors.primary,
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: scheme.primary,
         linearTrackColor: AppColors.cardBackground,
         circularTrackColor: AppColors.cardBackground,
       ),
@@ -417,11 +495,15 @@ class AppTheme {
   static ThemeData get darkTheme => buildDarkTheme();
 
   /// [appLocale] 决定 CJK 字形变体首选的地区字库；传 null 保持简体形态。
+  ///
+  /// [systemAccentColor] 语义与浅色构建一致：null（默认）走品牌蓝回退，
+  /// 非 null 走 fidelity 派生（docs/48 §7.5）。
   static ThemeData buildDarkTheme({
     AppFontWeightAdjustment fontWeightAdjustment =
         AppFontWeightAdjustment.normal,
     bool systemBoldText = false,
     Locale? appLocale,
+    SystemAccentColor? systemAccentColor,
   }) {
     const palette = AppColorPalette.dark;
     final typography = _withLinuxTypographyFallbacks(
@@ -432,11 +514,17 @@ class AppTheme {
       cjkGlyphVariantOf(appLocale),
     );
 
+    // 与浅色构建同构：组件主题统一引用 scheme 强调角色，随系统种子流动。
+    final scheme = _buildDarkColorScheme(
+      palette,
+      systemAccentColor: systemAccentColor,
+    );
+
     return ThemeData(
       useMaterial3: true,
       // 全局禁用页面路由转场动画
       pageTransitionsTheme: _noTransitionTheme,
-      colorScheme: _buildDarkColorScheme(palette),
+      colorScheme: scheme,
       scaffoldBackgroundColor: palette.background,
       textTheme: typography.textTheme,
       extensions: <ThemeExtension<dynamic>>[typography],
@@ -461,8 +549,9 @@ class AppTheme {
 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.textLight,
+          // 强调色随系统种子流动；前景取 scheme.onPrimary 保证配对对比度。
+          backgroundColor: scheme.primary,
+          foregroundColor: scheme.onPrimary,
           shape: const StadiumBorder(),
           minimumSize: const Size(68, 28),
           padding: const EdgeInsets.symmetric(
@@ -475,7 +564,7 @@ class AppTheme {
 
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
+          foregroundColor: scheme.primary,
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
             vertical: AppSpacing.sm,
@@ -496,7 +585,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.lgRadius,
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: BorderSide(color: scheme.primary, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg,
@@ -529,14 +618,14 @@ class AppTheme {
       tooltipTheme: _tooltipTheme,
 
       tabBarTheme: TabBarThemeData(
-        labelColor: AppColors.primary,
+        labelColor: scheme.primary,
         unselectedLabelColor: palette.textSecondary,
         labelStyle: typography.body.copyWith(
           fontWeight: typography.resolveFontWeight(FontWeight.w500),
         ),
         unselectedLabelStyle: typography.body,
         indicator: BoxDecoration(
-          color: palette.primaryLight,
+          color: scheme.primaryContainer,
           borderRadius: AppRadius.lgRadius,
         ),
         indicatorSize: TabBarIndicatorSize.tab,
@@ -545,7 +634,7 @@ class AppTheme {
 
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: palette.background,
-        selectedItemColor: AppColors.primary,
+        selectedItemColor: scheme.primary,
         unselectedItemColor: palette.textSecondary,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
@@ -553,11 +642,11 @@ class AppTheme {
 
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: palette.background,
-        indicatorColor: palette.primaryLight,
+        indicatorColor: scheme.primaryContainer,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return typography.caption.copyWith(
-              color: AppColors.primary,
+              color: scheme.primary,
               fontWeight: typography.resolveFontWeight(FontWeight.w500),
             );
           }
@@ -567,20 +656,20 @@ class AppTheme {
 
       navigationDrawerTheme: NavigationDrawerThemeData(
         backgroundColor: palette.background,
-        indicatorColor: palette.primaryLight,
+        indicatorColor: scheme.primaryContainer,
         tileHeight: 48,
       ),
 
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.textLight,
+        backgroundColor: scheme.primary,
+        foregroundColor: scheme.onPrimary,
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.fullRadius),
       ),
 
       chipTheme: ChipThemeData(
         backgroundColor: palette.cardBackground,
-        selectedColor: palette.primaryLight,
+        selectedColor: scheme.primaryContainer,
         labelStyle: typography.caption.copyWith(color: palette.textPrimary),
         side: BorderSide(color: palette.border),
         shape: RoundedRectangleBorder(borderRadius: AppRadius.fullRadius),
@@ -594,7 +683,7 @@ class AppTheme {
       ),
 
       progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: AppColors.primary,
+        color: scheme.primary,
         linearTrackColor: palette.cardBackground,
         circularTrackColor: palette.cardBackground,
       ),

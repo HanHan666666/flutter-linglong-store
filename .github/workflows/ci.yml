@@ -39,6 +39,11 @@ jobs:
 
       # 构建 release bundle 并断言 helper 随产物分发且不依赖 Flutter/GTK、
       # 无 RPATH（docs/47 §13.2 打包检查；DEB/RPM/AppImage 均整体复制 bundle）。
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang cmake ninja-build pkg-config libgtk-3-dev
       - name: Verify privileged helper artifact
         run: |
           flutter build linux --release

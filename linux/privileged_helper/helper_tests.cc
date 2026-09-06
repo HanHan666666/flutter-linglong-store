@@ -104,6 +104,11 @@ void testValidRequests() {
 }
 
 void testInvalidRequests() {
+  // 空行同样是致命协议错误：issue #25 中客户端曾因 writeln 双重换行把
+  // 空行送进协议通道，导致任务执行中会话被终止。此断言锁定 helper 端
+  // 的严格契约，客户端必须保证每帧恰好一行 JSON（帧自带 \n 终止符）。
+  expectEq(parseFatalCode(""), helper::kErrorCodeInvalidRequest,
+           "blank line is fatal malformed JSON");
   expectEq(parseFatalCode("not-json"), helper::kErrorCodeInvalidRequest,
            "malformed JSON");
   expectEq(parseFatalCode(R"([])"), helper::kErrorCodeInvalidRequest,

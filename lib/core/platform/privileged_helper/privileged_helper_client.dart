@@ -141,9 +141,11 @@ class PrivilegedHelperClient implements PrivilegedHelperTransport {
     try {
       // --disable-internal-agent：无桌面代理时明确失败，避免文本代理占用
       // helper stdin 与协议通道争抢输入（§6.1）。
-      process = await _launcher(
-        ['pkexec', '--disable-internal-agent', prepared.path],
-      );
+      process = await _launcher([
+        'pkexec',
+        '--disable-internal-agent',
+        prepared.path,
+      ]);
     } catch (error) {
       await prepared.release();
       throw PrivilegedHelperUnavailableException('pkexec 启动失败: $error');
@@ -304,12 +306,14 @@ class PrivilegedHelperClient implements PrivilegedHelperTransport {
       default:
         // invalidRequest/protocolMismatch/outputTooLarge/internal 均为致命
         // 错误：会话不可继续（§6.4）。
-        unawaited(_handleProtocolFailure(
-          PrivilegedHelperProtocolException(
-            'helper fatal error (${event.code}): ${event.message}',
-            code: event.code,
+        unawaited(
+          _handleProtocolFailure(
+            PrivilegedHelperProtocolException(
+              'helper fatal error (${event.code}): ${event.message}',
+              code: event.code,
+            ),
           ),
-        ));
+        );
     }
   }
 
@@ -383,7 +387,11 @@ class PrivilegedHelperClient implements PrivilegedHelperTransport {
     _taskEvents = events;
     _activeRequestId = request.requestId;
     try {
-      _process!.stdin.writeln(request.encode());
+      // 帧编码已自带 \n 终止符（_terminateFrame），必须用 write 原样写帧；
+      // 若误用 writeln 会再补一个 \n，真实 helper 会把随后的空行按致命
+      // 协议错误处理（invalidRequest: malformed JSON，issue #25），在任务
+      // 执行中直接终止会话。
+      _process!.stdin.write(request.encode());
       await _process!.stdin.flush();
     } catch (error) {
       AppLogger.warning('向 helper 写入 start 失败', error);
@@ -404,7 +412,9 @@ class PrivilegedHelperClient implements PrivilegedHelperTransport {
     _cancelCompleter = completer;
     _cancelRequestId = requestId;
     try {
-      _process!.stdin.writeln(
+      // 与 startTask 相同：帧编码自带 \n 终止符，用 write 原样写帧，
+      // 不得再用 writeln 附加空行（issue #25）。
+      _process!.stdin.write(
         PrivilegedHelperCancelRequest(requestId: requestId).encode(),
       );
       await _process!.stdin.flush();

@@ -15,7 +15,6 @@ import 'package:linglong_store/core/platform/privileged_helper/privileged_helper
 import 'package:linglong_store/core/platform/privileged_helper/privileged_helper_exception.dart';
 import 'package:linglong_store/core/platform/privileged_helper/privileged_helper_protocol.dart';
 
-
 late String _dartExecutable;
 late Directory _tempDir;
 
@@ -48,11 +47,7 @@ void main() {
       binary: binary,
       readyTimeout: readyTimeout,
       launcher: (command) {
-        final args = <String>[
-          _fakeHelperScriptAbs(),
-          mode,
-          ?launchLog,
-        ];
+        final args = <String>[_fakeHelperScriptAbs(), mode, ?launchLog];
         return Process.start(_dartExecutable, args);
       },
     );
@@ -77,8 +72,7 @@ void main() {
           .toList();
 
       final lines = events.whereType<PrivilegedHelperTaskLine>().toList();
-      final terminal =
-          events.whereType<PrivilegedHelperTaskExited>().single;
+      final terminal = events.whereType<PrivilegedHelperTaskExited>().single;
       expect(lines, hasLength(2));
       expect(lines.first.line, contains('Downloading files'));
       expect(terminal.exitCode, 0);
@@ -158,6 +152,43 @@ void main() {
       expect(client.hasActiveTask, isFalse);
 
       await subscription.cancel();
+      await client.disposeSession();
+    });
+
+    test('issue #25: request frames carry no trailing blank lines', () async {
+      // 回归背景：客户端曾用 writeln(encode()) 写帧，而帧编码已自带 \n
+      // 终止符，多出的空行被真实 helper 按致命协议错误处理（invalidRequest:
+      // malformed JSON），在任务执行中直接终止会话——表现为用户安装时
+      // 「helper fatal error (invalidRequest): malformed JSON」。
+      // 假 helper 已对齐真实语义（空行即 fatal），本用例校验「start 占位
+      // 任务 → cancel 收尾」全程无会话级错误事件；若客户端再引入空行，
+      // helper 会在任务占位期间 fatal，任务流将以协议/传输错误收场。
+      final client = buildClient('hold-task');
+      addTearDown(client.disposeSession);
+      await client.ensureStarted();
+
+      final collected = <PrivilegedHelperTaskEvent>[];
+      final errors = <Object>[];
+      final done = Completer<void>();
+      final subscription = client
+          .startTask(
+            const PrivilegedHelperStartRequest(
+              requestId: 'install_a.b',
+              operation: PrivilegedHelperOperation.install,
+              appId: 'a.b',
+              force: false,
+            ),
+          )
+          .listen(collected.add, onError: errors.add, onDone: done.complete);
+      await _waitForCondition(() => collected.isNotEmpty);
+
+      expect(await client.cancelTask('install_a.b'), isTrue);
+      await done.future;
+      await subscription.cancel();
+
+      expect(errors, isEmpty, reason: '请求帧带空行会毒化会话（issue #25 malformed JSON）');
+      final terminal = collected.whereType<PrivilegedHelperTaskExited>().single;
+      expect(terminal.cancelRequested, isTrue);
       await client.disposeSession();
     });
 
@@ -267,8 +298,11 @@ void main() {
           .split('\n')
           .where((line) => line.trim().isNotEmpty)
           .toList();
-      expect(lines, hasLength(1),
-          reason: '并发 ensureStarted 必须复用同一启动 Future（§4.3）');
+      expect(
+        lines,
+        hasLength(1),
+        reason: '并发 ensureStarted 必须复用同一启动 Future（§4.3）',
+      );
     });
   });
 }

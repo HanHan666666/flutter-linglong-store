@@ -17,6 +17,9 @@
 //                   不发送 exited（模拟会话中断）。
 // - slow-ready    ：延迟 400ms 再 ready；第二参数为启动标记文件路径，
 //                   启动时追加本进程 PID（用于验证并发 ensureStarted 单飞）。
+//
+// 协议严格性：空行与非 JSON 行按真实 helper 语义处理为致命协议错误
+// （invalidRequest: malformed JSON，error 事件 + 退出），不得放宽。
 import 'dart:convert';
 import 'dart:io';
 
@@ -58,6 +61,9 @@ Future<void> main(List<String> args) async {
   final out = stdout;
   String? activeRequestId;
   var cancelled = false;
+  // 收到致命协议错误后置位：与真实 helper 的 stopping 语义一致，此后
+  // 忽略一切后续输入，等待客户端拆除会话（关闭 stdin）后自然退出。
+  var stopped = false;
 
   Future<void> send(Map<String, Object?> event) async {
     out.writeln(jsonEncode(event));
@@ -66,17 +72,31 @@ Future<void> main(List<String> args) async {
 
   await send({'v': 1, 'type': 'ready'});
 
-  final lines = stdin
-      .transform(utf8.decoder)
-      .transform(const LineSplitter())
-      .listen((line) async {
+  // 行处理必须串行：listen 的 async 回调不会被 Stream 等待，同一 chunk
+  // 里的多行（例如客户端缺陷导致的请求帧+空行）会并发进入回调，与
+  // stdout.flush() 的 in-flight 状态互相踩踏。真实 helper 的主循环本就
+  // 串行处理请求（§8.1），这里用 Future 链镜像该语义。
+  Future<void> pending = Future<void>.value();
+  Future<void> handleLine(String line) async {
+    if (stopped) {
+      return;
+    }
+    // 与真实 helper（linux/privileged_helper/helper_protocol.cc 的
+    // parseRequestLine）语义严格对齐：空行与非 JSON 行都是致命协议错误
+    // （invalidRequest: malformed JSON），发送 error 事件后终止会话。
+    // 此前测试桩静默忽略空行，掩盖了客户端 writeln 双重换行把空行写进
+    // 协议通道的缺陷（issue #25），测试桩不得比真实实现更宽松。
     if (line.trim().isEmpty) {
+      stopped = true;
+      await _sendFatalMalformedJson(send);
       return;
     }
     final Map<String, dynamic> request;
     try {
       request = jsonDecode(line) as Map<String, dynamic>;
     } catch (_) {
+      stopped = true;
+      await _sendFatalMalformedJson(send);
       return;
     }
     final type = request['type'] as String?;
@@ -95,7 +115,12 @@ Future<void> main(List<String> args) async {
           return;
         }
         activeRequestId = requestId;
-        await send({'v': 1, 'type': 'started', 'requestId': requestId, 'pid': pid});
+        await send({
+          'v': 1,
+          'type': 'started',
+          'requestId': requestId,
+          'pid': pid,
+        });
         if (mode == 'die-mid-task') {
           await send({
             'v': 1,
@@ -143,7 +168,11 @@ Future<void> main(List<String> args) async {
       case 'cancel':
         if (requestId != null && requestId == activeRequestId) {
           cancelled = true;
-          await send({'v': 1, 'type': 'cancelAccepted', 'requestId': requestId});
+          await send({
+            'v': 1,
+            'type': 'cancelAccepted',
+            'requestId': requestId,
+          });
           if (mode == 'hold-task') {
             // 取消后补发终态并释放任务占位，与真实 helper 的 SIGTERM 收尾一致。
             await send({
@@ -174,9 +203,35 @@ Future<void> main(List<String> args) async {
           stderr.writeln('fake helper: shutdown ignored while task running');
         }
     }
-  });
+  }
+
+  final lines = stdin
+      .transform(utf8.decoder)
+      .transform(const LineSplitter())
+      .listen((line) {
+        pending = pending.then<void>((_) => handleLine(line));
+      });
 
   // stdin EOF（客户端 disposeSession）时退出，模拟 helper 的生命周期收尾。
+  // 退出前等所有已入队的行处理完毕，保证最后一帧的应答已经落盘。
   await lines.asFuture<void>();
+  await pending;
   exit(0);
+}
+
+/// 发送与真实 helper 一致的致命协议错误事件。
+///
+/// 真实 helper 在 fatal 错误路径上写完 error 事件即停止处理请求，进程
+/// 存活到客户端关闭 stdin（EOF）后才退出；这里不调用 exit()，避免与
+/// stdout 的异步缓冲产生竞争。
+Future<void> _sendFatalMalformedJson(
+  Future<void> Function(Map<String, Object?>) send,
+) async {
+  await send({
+    'v': 1,
+    'type': 'error',
+    'code': 'invalidRequest',
+    'message': 'malformed JSON',
+    'fatal': true,
+  });
 }

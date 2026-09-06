@@ -331,6 +331,15 @@ Semantics(
 
 ## 变更记录
 
+- 2026-09-06：修复特权 helper 安装报「helper fatal error (invalidRequest):
+  malformed JSON」（issue #25 报告）：客户端曾用 `writeln(encode())` 写协议
+  帧，而帧编码（`_terminateFrame`）已自带 `\n`，多出的空行被 helper 的
+  `parseRequestLine` 按致命协议错误处理，任务执行中会话被直接终止。契约
+  收敛为「帧自带单行终止符，客户端必须 `write` 原样写帧」；C++ 端补空行
+  fatal 契约测试，测试桩 fake_helper.dart 对齐真实语义（空行/坏 JSON 即
+  fatal + 停止处理）并串行化行处理——**测试桩严禁比真实实现更宽松，否则
+  会掩盖跨边界协议缺陷**。单任务会话不受影响、会话复用场景必现，是当时
+  真机验证（独立驱动脚本手写帧）与单测（宽松测试桩）双漏检的根因。
 - 2026-09-06：侧边栏支持拖拽调宽（issue #27，docs/49）：新增
   `ResizableSidebar`（`lib/presentation/widgets/resizable_sidebar.dart`）
   承载侧边栏 + 拖拽手柄，宽度唯一事实来源为 Application 层

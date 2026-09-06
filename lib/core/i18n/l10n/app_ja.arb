@@ -1064,6 +1064,8 @@
   "a11yCarouselArea": "カルーセル領域",
   "a11yAppListArea": "アプリリスト",
   "a11ySidebarArea": "サイドバー",
+  "a11ySidebarResizeHandle": "サイドバーの幅を変更",
+  "a11ySidebarResizeHint": "ドラッグまたは左右の方向キーで幅を調整します。ダブルクリックで既定の幅に戻せます",
   "a11yMinimize": "最小化",
   "a11yMaximize": "最大化",
   "a11yRestore": "元に戻す",

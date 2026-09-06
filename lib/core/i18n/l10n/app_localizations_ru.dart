@@ -1806,6 +1806,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get a11ySidebarArea => 'Боковая панель';
 
   @override
+  String get a11ySidebarResizeHandle => 'Изменить ширину боковой панели';
+
+  @override
+  String get a11ySidebarResizeHint =>
+      'Перетащите или используйте клавиши со стрелками; двойной щелчок сбрасывает ширину';
+
+  @override
   String get a11yMinimize => 'Свернуть';
 
   @override

@@ -1786,6 +1786,13 @@ class AppLocalizationsEs extends AppLocalizations {
   String get a11ySidebarArea => 'Barra lateral';
 
   @override
+  String get a11ySidebarResizeHandle => 'Ajustar el ancho de la barra lateral';
+
+  @override
+  String get a11ySidebarResizeHint =>
+      'Arrastra o usa las teclas de flecha para ajustar; doble clic para restablecer';
+
+  @override
   String get a11yMinimize => 'Minimizar';
 
   @override

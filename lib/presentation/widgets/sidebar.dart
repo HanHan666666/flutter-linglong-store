@@ -58,10 +58,16 @@ class Sidebar extends ConsumerWidget {
   /// 侧边栏折叠宽度 - 56px (3.5rem)
   static const double collapsedWidth = 56.0;
 
+  /// 自动折叠断点：窗口宽度 ≤ 该值时强制折叠为 [collapsedWidth]。
+  ///
+  /// 断点收敛为常量供 [ResizableSidebar] 复用，保证「折叠态判定」在
+  /// 侧边栏与拖拽手柄两处只有单一事实来源，避免阈值漂移。
+  static const double autoCollapseBreakpoint = 768.0;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isCollapsed = screenWidth <= 768;
+    final isCollapsed = screenWidth <= autoCollapseBreakpoint;
     final downloadBadgeCount = ref.watch(menuInstallingBadgeCountProvider);
 
     // 读取服务端下发的动态菜单（失败时默认返回空列表，不影响静态菜单）

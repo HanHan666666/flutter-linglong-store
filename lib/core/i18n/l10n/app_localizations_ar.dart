@@ -1867,6 +1867,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get a11ySidebarArea => 'الشريط الجانبي';
 
   @override
+  String get a11ySidebarResizeHandle => 'تغيير عرض الشريط الجانبي';
+
+  @override
+  String get a11ySidebarResizeHint =>
+      'اسحب أو استخدم مفاتيح الأسهم لتغيير العرض؛ انقر نقرًا مزدوجًا لاستعادة العرض الافتراضي';
+
+  @override
   String get a11yMinimize => 'تصغير';
 
   @override

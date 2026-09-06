@@ -1121,6 +1121,8 @@
   "a11yCarouselArea": "منطقة العرض المتناوب",
   "a11yAppListArea": "قائمة التطبيقات",
   "a11ySidebarArea": "الشريط الجانبي",
+  "a11ySidebarResizeHandle": "تغيير عرض الشريط الجانبي",
+  "a11ySidebarResizeHint": "اسحب أو استخدم مفاتيح الأسهم لتغيير العرض؛ انقر نقرًا مزدوجًا لاستعادة العرض الافتراضي",
   "a11yMinimize": "تصغير",
   "a11yMaximize": "تكبير",
   "a11yRestore": "استعادة",

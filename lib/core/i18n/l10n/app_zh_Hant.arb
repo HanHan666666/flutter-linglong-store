@@ -1103,6 +1103,8 @@
   "a11yCarouselArea": "輪播區域",
   "a11yAppListArea": "應用清單",
   "a11ySidebarArea": "側邊欄",
+  "a11ySidebarResizeHandle": "調整側邊欄寬度",
+  "a11ySidebarResizeHint": "拖曳或使用左右方向鍵調整寬度，雙擊恢復預設寬度",
   "a11yMinimize": "最小化",
   "a11yMaximize": "最大化",
   "a11yRestore": "還原",

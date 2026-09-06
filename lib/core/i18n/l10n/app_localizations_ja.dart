@@ -1716,6 +1716,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get a11ySidebarArea => 'サイドバー';
 
   @override
+  String get a11ySidebarResizeHandle => 'サイドバーの幅を変更';
+
+  @override
+  String get a11ySidebarResizeHint =>
+      'ドラッグまたは左右の方向キーで幅を調整します。ダブルクリックで既定の幅に戻せます';
+
+  @override
   String get a11yMinimize => '最小化';
 
   @override

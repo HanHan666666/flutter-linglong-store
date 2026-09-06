@@ -1064,6 +1064,8 @@
   "a11yCarouselArea": "Zone du carrousel",
   "a11yAppListArea": "Liste des applications",
   "a11ySidebarArea": "Barre latérale",
+  "a11ySidebarResizeHandle": "Redimensionner la largeur du panneau latéral",
+  "a11ySidebarResizeHint": "Faites glisser ou utilisez les flèches du clavier pour ajuster ; double-cliquez pour réinitialiser",
   "a11yMinimize": "Réduire",
   "a11yMaximize": "Agrandir",
   "a11yRestore": "Restaurer",

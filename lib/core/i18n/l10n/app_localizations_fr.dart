@@ -1823,6 +1823,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get a11ySidebarArea => 'Barre latérale';
 
   @override
+  String get a11ySidebarResizeHandle =>
+      'Redimensionner la largeur du panneau latéral';
+
+  @override
+  String get a11ySidebarResizeHint =>
+      'Faites glisser ou utilisez les flèches du clavier pour ajuster ; double-cliquez pour réinitialiser';
+
+  @override
   String get a11yMinimize => 'Réduire';
 
   @override

@@ -1805,6 +1805,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get a11ySidebarArea => 'Seitenleiste';
 
   @override
+  String get a11ySidebarResizeHandle => 'Seitenleistenbreite anpassen';
+
+  @override
+  String get a11ySidebarResizeHint =>
+      'Zum Anpassen ziehen oder die Pfeiltasten verwenden; Doppelklick setzt zurück';
+
+  @override
   String get a11yMinimize => 'Minimieren';
 
   @override

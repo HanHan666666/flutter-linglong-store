@@ -1064,6 +1064,8 @@
   "a11yCarouselArea": "Karussell-Bereich",
   "a11yAppListArea": "App-Liste",
   "a11ySidebarArea": "Seitenleiste",
+  "a11ySidebarResizeHandle": "Seitenleistenbreite anpassen",
+  "a11ySidebarResizeHint": "Zum Anpassen ziehen oder die Pfeiltasten verwenden; Doppelklick setzt zurück",
   "a11yMinimize": "Minimieren",
   "a11yMaximize": "Maximieren",
   "a11yRestore": "Wiederherstellen",

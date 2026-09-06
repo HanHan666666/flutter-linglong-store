@@ -1065,6 +1065,8 @@
   "a11yCarouselArea": "Carousel",
   "a11yAppListArea": "App list",
   "a11ySidebarArea": "Sidebar",
+  "a11ySidebarResizeHandle": "Resize sidebar width",
+  "a11ySidebarResizeHint": "Drag or use the arrow keys to resize; double-click to reset",
   "a11yMinimize": "Minimize",
   "a11yMaximize": "Maximize",
   "a11yRestore": "Restore",

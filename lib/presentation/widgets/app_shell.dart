@@ -17,6 +17,7 @@ import '../../presentation/pages/my_apps/my_apps_page.dart';
 import '../../presentation/pages/ranking/ranking_page.dart';
 import '../../presentation/pages/recommend/recommend_page.dart';
 import 'install_to_download_flyout.dart';
+import 'resizable_sidebar.dart';
 import 'sidebar.dart';
 import 'title_bar.dart';
 
@@ -236,28 +237,35 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
               Expanded(
                 child: Row(
                   children: [
-                    // 左侧导航栏
-                    Sidebar(
-                      currentPath: widget.currentPath,
-                      updateCount: updateCount,
-                    ),
-                    // 右侧工作区使用轻边框和圆角承载页面，避免旧灰底在底部形成硬切割。
+                    // 左侧导航栏 + 拖拽调宽手柄（issue #27）。
+                    // ResizableSidebar 内部含 Expanded（内容区），必须以
+                    // Expanded 挂载：Row 的非 flex 子项拿到的是无界宽度，
+                    // 会让内部 Expanded 无法求解而崩溃。
+                    // 宽度状态与持久化收敛在 sidebarWidthProvider；
+                    // 内容区实例在拖拽帧内保持不变，仅按新宽度重排版。
                     Expanded(
-                      child: Padding(
-                        padding: contentPadding,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: context.appColors.surface,
-                            borderRadius: contentRadius,
-                            border: Border.all(
-                              color: context.appColors.borderSecondary,
-                            ),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: contentRadius,
-                            child: ColoredBox(
+                      child: ResizableSidebar(
+                        sidebar: Sidebar(
+                          currentPath: widget.currentPath,
+                          updateCount: updateCount,
+                        ),
+                        // 右侧工作区使用轻边框和圆角承载页面，避免旧灰底在底部形成硬切割。
+                        child: Padding(
+                          padding: contentPadding,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
                               color: context.appColors.surface,
-                              child: _buildContentArea(),
+                              borderRadius: contentRadius,
+                              border: Border.all(
+                                color: context.appColors.borderSecondary,
+                              ),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: contentRadius,
+                              child: ColoredBox(
+                                color: context.appColors.surface,
+                                child: _buildContentArea(),
+                              ),
                             ),
                           ),
                         ),

@@ -1761,6 +1761,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get a11ySidebarArea => 'Sidebar';
 
   @override
+  String get a11ySidebarResizeHandle => 'Resize sidebar width';
+
+  @override
+  String get a11ySidebarResizeHint =>
+      'Drag or use the arrow keys to resize; double-click to reset';
+
+  @override
   String get a11yMinimize => 'Minimize';
 
   @override

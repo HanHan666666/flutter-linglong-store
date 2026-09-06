@@ -1083,6 +1083,8 @@
   "a11yCarouselArea": "轮播区域",
   "a11yAppListArea": "应用列表",
   "a11ySidebarArea": "侧边栏",
+  "a11ySidebarResizeHandle": "调整侧边栏宽度",
+  "a11ySidebarResizeHint": "拖动或使用左右方向键调整宽度，双击恢复默认宽度",
   "a11yMinimize": "最小化",
   "a11yMaximize": "最大化",
   "a11yRestore": "还原",

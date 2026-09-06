@@ -1145,6 +1145,8 @@
   "a11yCarouselArea": "Área de carrusel",
   "a11yAppListArea": "Lista de aplicaciones",
   "a11ySidebarArea": "Barra lateral",
+  "a11ySidebarResizeHandle": "Ajustar el ancho de la barra lateral",
+  "a11ySidebarResizeHint": "Arrastra o usa las teclas de flecha para ajustar; doble clic para restablecer",
   "a11yMinimize": "Minimizar",
   "a11yMaximize": "Maximizar",
   "a11yRestore": "Restaurar",

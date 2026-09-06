@@ -1690,6 +1690,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get a11ySidebarArea => '侧边栏';
 
   @override
+  String get a11ySidebarResizeHandle => '调整侧边栏宽度';
+
+  @override
+  String get a11ySidebarResizeHint => '拖动或使用左右方向键调整宽度，双击恢复默认宽度';
+
+  @override
   String get a11yMinimize => '最小化';
 
   @override
@@ -4025,6 +4031,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get a11ySidebarArea => '側邊欄';
+
+  @override
+  String get a11ySidebarResizeHandle => '調整側邊欄寬度';
+
+  @override
+  String get a11ySidebarResizeHint => '拖曳或使用左右方向鍵調整寬度，雙擊恢復預設寬度';
 
   @override
   String get a11yMinimize => '最小化';

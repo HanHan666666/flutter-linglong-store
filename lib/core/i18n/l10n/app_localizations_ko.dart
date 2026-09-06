@@ -1712,6 +1712,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get a11ySidebarArea => '사이드바';
 
   @override
+  String get a11ySidebarResizeHandle => '사이드바 너비 조정';
+
+  @override
+  String get a11ySidebarResizeHint =>
+      '드래그하거나 좌우 방향키로 너비를 조정하고, 두 번 클릭하면 기본 너비로 돌아갑니다';
+
+  @override
   String get a11yMinimize => '최소화';
 
   @override

@@ -3095,6 +3095,18 @@ abstract class AppLocalizations {
   /// **'侧边栏'**
   String get a11ySidebarArea;
 
+  /// No description provided for @a11ySidebarResizeHandle.
+  ///
+  /// In zh, this message translates to:
+  /// **'调整侧边栏宽度'**
+  String get a11ySidebarResizeHandle;
+
+  /// No description provided for @a11ySidebarResizeHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'拖动或使用左右方向键调整宽度，双击恢复默认宽度'**
+  String get a11ySidebarResizeHint;
+
   /// No description provided for @a11yMinimize.
   ///
   /// In zh, this message translates to:

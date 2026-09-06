@@ -331,6 +331,20 @@ Semantics(
 
 ## 变更记录
 
+- 2026-09-06：侧边栏支持拖拽调宽（issue #27，docs/49）：新增
+  `ResizableSidebar`（`lib/presentation/widgets/resizable_sidebar.dart`）
+  承载侧边栏 + 拖拽手柄，宽度唯一事实来源为 Application 层
+  `sidebarWidthProvider`（`SidebarWidthPolicy`：默认 176 / 下限 120 /
+  上限 400 / 键盘步长 16，持久化键 `sidebar_expanded_width`），两阶段
+  契约「帧内 previewWidth 零 IO、dragEnd 一次 commitWidth 落盘」。
+  拖拽帧仅更新外层 `SizedBox` 紧约束，sidebar/child 实例不变只重排版
+  不重建；`ResizableSidebar` 内部含 `Expanded`，在 AppShell 的 Row 中
+  必须以 `Expanded` 挂载，否则非 flex 子项无界宽度会触发 RenderFlex
+  崩溃。手柄 8px 热区 + `DragStartBehavior.down`（宽度与指针 1:1）、
+  双击重置、左右方向键 ±16、`Semantics` increase/decrease（10 语言
+  `a11ySidebarResizeHandle/Hint`）；RTL 下拖拽与按键方向取反。
+  ≤768px 自动折叠态（断点收敛为 `Sidebar.autoCollapseBreakpoint`）
+  固定 56px 且隐藏手柄。
 - 2026-09-04：界面强调色跟随 XDG 系统设置（docs/48）：Linux runner 以 GDBus 订阅
   `org.freedesktop.portal.Settings` 的 `org.freedesktop.appearance/accent-color`
   （`linux/runner/system_accent_color_portal.cc/.h` + `system_accent_color_channel.cc`），

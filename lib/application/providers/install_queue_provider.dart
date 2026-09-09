@@ -114,6 +114,38 @@ class InstallQueue extends _$InstallQueue {
     }
   }
 
+  /// 设置页免密开关事务期间的临时出队暂停（docs/50 §7.1）。
+  ///
+  /// 与授权门闩相互独立：暂停只避免“一边同步系统规则、一边启动另一轮安装
+  /// 授权”，不打断进行中的任务，也不解除已有的授权失败门闩。暂停按事件释放，
+  /// 不轮询、不超时。
+  bool _settingsDequeuePaused = false;
+
+  /// 暂缓新任务出队；进行中的任务继续执行。
+  void pauseDequeueForSettings() {
+    if (_settingsDequeuePaused) {
+      return;
+    }
+    _settingsDequeuePaused = true;
+    AppLogger.info('[InstallQueue] 免密设置事务开始，暂缓新任务出队');
+  }
+
+  /// 释放临时暂停，并在有等待任务时重新调度。
+  ///
+  /// 所有结束路径都必须调用；释放本身不解除授权门闩，也不取消当前任务。
+  void resumeDequeueForSettings() {
+    if (!_settingsDequeuePaused) {
+      return;
+    }
+    _settingsDequeuePaused = false;
+    AppLogger.info('[InstallQueue] 免密设置事务结束，恢复队列调度');
+    if (state.queue.isNotEmpty &&
+        !state.isProcessing &&
+        state.currentTask == null) {
+      _scheduleNextTask();
+    }
+  }
+
   /// 把高响应的内存发布与必须先落盘的外部动作连接起来。
   final AppOperationPersistenceBarrier _persistenceBarrier =
       AppOperationPersistenceBarrier();
@@ -402,6 +434,13 @@ class InstallQueue extends _$InstallQueue {
     // 避免故障时连续弹出授权窗口；用户明确入队/重试时在入队入口解除（§10.2）。
     if (_authorizationGatePaused) {
       AppLogger.info('授权门闩暂停中，跳过自动消费队列');
+      return;
+    }
+
+    // 设置页免密开关事务进行中：pending 任务保留但暂不出队，避免与系统规则
+    // 同步同时启动另一轮安装授权（docs/50 §7.1）。
+    if (_settingsDequeuePaused) {
+      AppLogger.info('免密设置事务进行中，暂缓新任务出队');
       return;
     }
 

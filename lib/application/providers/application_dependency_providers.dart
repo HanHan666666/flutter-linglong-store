@@ -15,8 +15,11 @@ import '../../domain/repositories/error_solution_repository.dart';
 import '../../domain/repositories/linglong_cli_repository.dart';
 import '../../domain/repositories/linglong_repository_management_repository.dart';
 import '../../domain/repositories/legacy_app_operation_state_repository.dart';
+import '../../domain/repositories/polkit_rule_gateway.dart';
 import '../../domain/repositories/system_accent_color_gateway.dart';
 import '../../domain/repositories/system_notification_gateway.dart';
+import '../services/polkit_rule_service.dart';
+import '../../domain/models/polkit_rule_state.dart' show PasswordFreeInstallModeReader;
 
 /// 应用启动阶段初始化的用户偏好存储端口。
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
@@ -94,6 +97,28 @@ final appUpdateWorkspaceFactoryProvider = Provider<AppUpdateWorkspaceFactory>((
 /// DEB、RPM 与 AppImage 安装适配器集合。
 final appUpdateInstallersProvider = Provider<List<AppUpdateInstaller>>((ref) {
   return _missingDependency('appUpdateInstallersProvider');
+});
+
+/// 免密安装规则的提权同步端口（docs/50 §6.1）。
+///
+/// 这是本功能唯一的特权配置入口；生产实现由 bootstrap 组合根装配，
+/// 禁止在别处新增第二条 pkexec 调用路径。
+final polkitRuleGatewayProvider = Provider<PolkitRuleGateway>((ref) {
+  return _missingDependency('polkitRuleGatewayProvider');
+});
+
+/// 免密安装模式的只读快照端口（docs/50 §7.1）。
+///
+/// Data 层在任务启动时同步读取一次并绑定到该任务；组合根负责把它接到
+/// Application 控制器的内存状态，Data 不反向导入 Application Provider。
+final passwordFreeInstallModeReaderProvider =
+    Provider<PasswordFreeInstallModeReader>((ref) {
+      return _missingDependency('passwordFreeInstallModeReaderProvider');
+    });
+
+/// 免密安装规则同步服务。
+final polkitRuleServiceProvider = Provider<PolkitRuleService>((ref) {
+  return PolkitRuleService(gateway: ref.watch(polkitRuleGatewayProvider));
 });
 
 /// 为遗漏的根装配提供包含端口名称的确定性错误。

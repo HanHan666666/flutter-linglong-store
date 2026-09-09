@@ -262,4 +262,45 @@ void main() {
         .errorMessageForTask(historyTask);
     expect(message, contains('授权组件不可用'));
   });
+
+  test('设置事务暂停与释放不解除授权门闩，也不消费 pending 任务', () async {
+    final fakeRepo = _GateFakeCliRepository()
+      ..eventsByApp['org.first.app'] = const [
+        InstallProgress(
+          appId: 'ignored',
+          status: InstallStatus.failed,
+          failure: AppOperationFailure(
+            kind: AppOperationFailureKind.authorizationCancelled,
+            diagnostic: 'pkexec authorization dismissed by user',
+          ),
+        ),
+      ];
+    final container = await _createContainer(fakeRepo);
+    addTearDown(container.dispose);
+
+    final queue = container.read(installQueueProvider.notifier);
+    queue.enqueueOperation(
+      kind: InstallTaskKind.install,
+      appId: 'org.first.app',
+      appName: 'First',
+    );
+    queue.enqueueOperation(
+      kind: InstallTaskKind.install,
+      appId: 'org.second.app',
+      appName: 'Second',
+    );
+    await _eventually(
+      () => container.read(installQueueProvider).history.isNotEmpty,
+    );
+    expect(queue.isAuthorizationGatePaused, isTrue);
+
+    // 设置页免密开关事务的临时暂停与释放是两个独立开关：结束路径不得顺带
+    // 解除授权门闩，否则会再次连续弹出授权框（docs/50 §7.1）。
+    queue.pauseDequeueForSettings();
+    queue.resumeDequeueForSettings();
+
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    expect(queue.isAuthorizationGatePaused, isTrue);
+    expect(fakeRepo.installedApps, ['org.first.app']);
+  });
 }

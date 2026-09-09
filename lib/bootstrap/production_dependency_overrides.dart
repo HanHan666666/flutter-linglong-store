@@ -11,7 +11,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart' show Override;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../application/providers/application_dependency_providers.dart';
+import '../application/providers/polkit_rule_provider.dart';
 import '../core/platform/file_downloader.dart';
+import '../core/platform/polkit_rule_gateway.dart';
 import '../core/platform/privileged_helper/privileged_helper_client.dart';
 import '../core/platform/shell_command_executor.dart';
 import '../core/storage/app_xdg_paths.dart';
@@ -92,6 +94,18 @@ List<Override> createProductionDependencyOverrides({
         RpmAppUpdateInstaller(selfUpdateCommandExecutor),
         AppImageAppUpdateInstaller(selfUpdateCommandExecutor),
       ];
+    }),
+    // 免密规则提权同步：唯一配置入口，独立于安装传输用的特权 helper
+    // （docs/50 §6.1）。执行器无状态，随组合根创建一次即可。
+    polkitRuleGatewayProvider.overrideWith((ref) {
+      return PolkitRuleScriptGateway(
+        executor: ShellCommandExecutor(),
+      );
+    }),
+    // Data 层不得反向导入 Application Provider：这里只注入一个同步只读函数，
+    // 任务启动时读取控制器内存状态，不做 IO、不提权（docs/50 §7.1）。
+    passwordFreeInstallModeReaderProvider.overrideWith((ref) {
+      return () => ref.read(polkitRuleProvider).usesPasswordFreeCli;
     }),
   ];
 }

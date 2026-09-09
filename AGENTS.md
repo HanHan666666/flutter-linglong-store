@@ -331,6 +331,13 @@ Semantics(
 
 ## 变更记录
 
+- 2026-09-09：修复标题栏应用名在英文、西语等长语言下出现省略号：标题从固定
+  240px 截断改为按内容固有宽度优先占位，搜索框让位右移收窄（仍遵循 docs/03b
+  §1.3「父容器 50%，最大 534px」）。`CustomTitleBar` 用 `LayoutBuilder` 按窗口
+  可用宽度计算标题上限 `_titleReservedForSearchWidth = 260`（保证搜索框在极端
+  窄窗口下不低于候选浮层最小可渲染宽度约 56px），只有窗口窄到该阈值都保不住时
+  才回退省略号，任何宽度下都不会 Row 溢出；窗口最小宽度 1280px 下 10 种语言
+  标题均完整显示。回归测试 `test/widget/presentation/widgets/title_bar_title_test.dart`。
 - 2026-09-06：修复特权 helper 安装报「helper fatal error (invalidRequest):
   malformed JSON」（issue #25 报告）：客户端曾用 `writeln(encode())` 写协议
   帧，而帧编码（`_terminateFrame`）已自带 `\n`，多出的空行被 helper 的

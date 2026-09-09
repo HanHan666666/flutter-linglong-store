@@ -400,15 +400,20 @@ class CliExecutor {
       // 发送取消信号
       _cancelSignals[processId]?.complete();
 
-      // 终止进程
-      if (force) {
-        process.kill(ProcessSignal.sigkill);
+      // 终止进程。
+      //
+      // kill 返回 false 表示信号未送达（进程已退出或权限不足）：此时不得让
+      // 调用方把取消当成已受理，否则会在没有信号的情况下把任务标记为取消
+      // （docs/50 §7.2「信号失败、进程已退出或任务已完成时，不伪造 cancelled」）。
+      final signalSent = process.kill(
+        force ? ProcessSignal.sigkill : ProcessSignal.sigterm,
+      );
+      if (!signalSent) {
+        AppLogger.warning('[CLI] 取消信号未送达（进程可能已退出）: $processId');
       } else {
-        process.kill(ProcessSignal.sigterm);
+        AppLogger.info('[CLI] 已取消进程: $processId');
       }
-
-      AppLogger.info('[CLI] 已取消进程: $processId');
-      return true;
+      return signalSent;
     } catch (e) {
       AppLogger.error('[CLI] 取消进程失败: $processId', e);
       return false;

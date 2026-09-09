@@ -140,10 +140,10 @@ void main() {
     // 的结果必须由更早的规则决定，说明白名单断言使用的顺序语义与 polkit 一致。
     final harness = File('${workspace.path}/rule_order.js');
     await harness.writeAsString(
-      _harnessPrologue +
-          "polkit.addRule(function(action, subject) { return polkit.Result.NO; });\n" +
-          kPasswordFreeInstallRuleTemplate +
-          _harnessEpilogue,
+      '$_harnessPrologue'
+      'polkit.addRule(function(action, subject) { return polkit.Result.NO; });\n'
+      '$kPasswordFreeInstallRuleTemplate'
+      '$_harnessEpilogue',
     );
     final run = await Process.run('node', <String>[harness.path]);
     expect(run.exitCode, 0, reason: run.stderr.toString());

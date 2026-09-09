@@ -106,6 +106,8 @@ void main() {
     final dir = await Directory.systemTemp.createTemp('polkit-rules-dir-');
     addTearDown(() async {
       if (await dir.exists()) {
+        // 故障注入用例会把目录改成只读，删除前先恢复权限。
+        await Process.run('chmod', <String>['700', dir.path]);
         await dir.delete(recursive: true);
       }
     });
@@ -281,6 +283,86 @@ void main() {
       expect(run.result?['outcome'], 'applied');
       expect(await stale.exists(), isFalse);
       expect(await foreign.readAsString(), '// other\n');
+    });
+
+    test('属组异常视为冲突，不覆盖也不删除', () async {
+      final rulesDir = await createRulesDir();
+      final ruleFile = ruleFileIn(rulesDir);
+      await ruleFile.writeAsString(kPasswordFreeInstallRuleTemplate);
+      // 测试文件继承 umask，先显式设为 0644，确保命中的是属组校验。
+      await Process.run('chmod', <String>['644', ruleFile.path]);
+      final primaryGid = (await Process.run('id', <String>[
+        '-g',
+      ])).stdout.toString().trim();
+      final groups = (await Process.run('id', <String>[
+        '-G',
+      ])).stdout.toString().trim().split(RegExp(r'\s+'));
+      final otherGroup = groups
+          .where((group) => group != primaryGid && group.isNotEmpty)
+          .firstOrNull;
+      if (otherGroup == null) {
+        markTestSkipped('当前用户没有补充组，无法构造属组异常场景');
+        return;
+      }
+      final chgrp = await Process.run('chgrp', <String>[
+        otherGroup,
+        ruleFile.path,
+      ]);
+      expect(chgrp.exitCode, 0, reason: chgrp.stderr.toString());
+
+      final run = await runTransaction(rulesDir, 'enable');
+
+      expect(run.result?['outcome'], 'conflict');
+      expect(await ruleFile.readAsString(), kPasswordFreeInstallRuleTemplate);
+    });
+
+    test('删除失败时保留原文件并按 failed 回读实际状态', () async {
+      // 目录只读 → rm 失败；脚本必须回读真实状态后按 failed 结束，
+      // 既不能谎报成功，也不能把原文件说成已删除（docs/50 §6.3）。
+      final rulesDir = await createRulesDir();
+      final ruleFile = ruleFileIn(rulesDir);
+      await ruleFile.writeAsString(kPasswordFreeInstallRuleTemplate);
+      // 测试文件继承 umask，先显式设为 0644，确保命中删除失败而不是权限校验。
+      await Process.run('chmod', <String>['644', ruleFile.path]);
+      await Process.run('chmod', <String>['500', rulesDir.path]);
+
+      final run = await runTransaction(rulesDir, 'disable');
+
+      expect(run.exitCode, 0);
+      expect(run.result?['outcome'], 'failed');
+      expect(run.result?['reason'], 'deleteFailed');
+      expect(run.result?['after'], 'enabled');
+      expect(await ruleFile.readAsString(), kPasswordFreeInstallRuleTemplate);
+    });
+
+    test('无法创建临时文件时明确失败且不留下正式空文件', () async {
+      // 目录只读 → mktemp 失败：不存在目标文件时绝不能留下空的正式文件。
+      final rulesDir = await createRulesDir();
+      await Process.run('chmod', <String>['500', rulesDir.path]);
+
+      final run = await runTransaction(rulesDir, 'enable');
+
+      expect(run.exitCode, isNot(0));
+      expect(run.result, isNull);
+      expect(await rulesDir.list().toList(), isEmpty);
+    });
+
+    test('临时文件名不以 .rules 结尾，避免 polkit 提前加载半成品', () async {
+      // 命名规则由固定前缀保证：前缀本身不含 .rules，mktemp 只追加随机字符。
+      expect(
+        buildPolkitRuleTransactionScript(),
+        contains("TMP_PREFIX='.ll-store-polkit-rule.'"),
+      );
+      final rulesDir = await createRulesDir();
+
+      final run = await runTransaction(rulesDir, 'enable');
+
+      expect(run.result?['outcome'], 'applied');
+      final names = await rulesDir
+          .list()
+          .map((entity) => entity.path.split('/').last)
+          .toList();
+      expect(names, <String>['60-linglong-store.rules']);
     });
 
     test('规则目录缺失时明确失败，不创建目录（退出码 65）', () async {

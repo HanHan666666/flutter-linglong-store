@@ -119,8 +119,10 @@ emit_result() {
 }
 
 # 读取固定路径的系统状态：enabled / disabled / conflict / unknown。
+#
+# enabled 必须同时满足：普通文件、预期属主与属组、0644、正文与模板逐字节一致。
 read_state() {
-  local mode owner
+  local mode owner group
   if [[ -L "$rules_path" ]]; then
     printf 'conflict'
     return
@@ -135,7 +137,8 @@ read_state() {
   fi
   mode=$(stat -c '%a' -- "$rules_path" 2>/dev/null) || { printf 'unknown'; return; }
   owner=$(stat -c '%u' -- "$rules_path" 2>/dev/null) || { printf 'unknown'; return; }
-  if [[ "$mode" != '644' || "$owner" != "$expected_uid" ]]; then
+  group=$(stat -c '%g' -- "$rules_path" 2>/dev/null) || { printf 'unknown'; return; }
+  if [[ "$mode" != '644' || "$owner" != "$expected_uid" || "$group" != "$expected_gid" ]]; then
     printf 'conflict'
     return
   fi
@@ -176,10 +179,17 @@ fi
 # 生产路径（root）只操作固定路径；隔离测试模式仅在非 root 时生效。
 rules_dir="$RULE_DIR_FIXED"
 expected_uid=0
+expected_gid=0
 if [[ "$EUID" -ne 0 ]]; then
   if [[ -n "${LL_STORE_POLKIT_RULES_DIR:-}" ]]; then
+    # 隔离测试模式不得指向系统目录，避免非 root 调用产生第二目标路径。
+    if [[ "${LL_STORE_POLKIT_RULES_DIR}" == "$RULE_DIR_FIXED" ]]; then
+      log 'isolated rules directory must not be the system directory'
+      exit "$EXIT_NOT_ROOT"
+    fi
     rules_dir="${LL_STORE_POLKIT_RULES_DIR}"
     expected_uid="$EUID"
+    expected_gid="$(id -g)"
   else
     log 'refusing to run without root privileges'
     exit "$EXIT_NOT_ROOT"
@@ -190,6 +200,12 @@ rules_path="$rules_dir/$RULE_FILE_NAME"
 # 目录缺失或不是目录：明确失败，不修改目录权限、不自动部署 polkit。
 if [[ ! -d "$rules_dir" ]]; then
   log "rules directory is unavailable: $rules_dir"
+  exit "$EXIT_UNSUPPORTED"
+fi
+
+# 缺少 flock 说明环境无法保证本功能各实例串行，按环境不支持处理。
+if ! command -v flock >/dev/null 2>&1; then
+  log 'flock is unavailable; cannot serialize rule transactions'
   exit "$EXIT_UNSUPPORTED"
 fi
 
@@ -365,12 +381,15 @@ class PolkitRuleScriptGateway implements PolkitRuleGateway {
       // 0700 目录 + 0700 脚本：工作区对同机其他用户不可遍历。
       await _setMode(workspace.path, '700');
       final script = File('${workspace.path}/transaction.sh');
+      // 先落一个空文件并收紧到 0700，再写入正文：writeAsString 会沿用已有
+      // 文件的权限，避免正文在默认 umask 权限下短暂可读（§6.1 要求脚本 0700）。
+      await script.create();
+      await _setMode(script.path, '700');
       // 异步完整写入后再执行，避免执行到半截脚本。
       await script.writeAsString(
         buildPolkitRuleTransactionScript(),
         flush: true,
       );
-      await _setMode(script.path, '700');
 
       final ShellCommandResult result;
       try {

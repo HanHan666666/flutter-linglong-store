@@ -44,7 +44,7 @@ final class PolkitRuleProvider
   }
 }
 
-String _$polkitRuleHash() => r'3e647e0c7cbf5c81efbb7e7065fd4b0b035eb872';
+String _$polkitRuleHash() => r'9160adf43c71e0653b9fc5f55bd3dc00a3f57b78';
 
 /// 免密安装开关控制器。
 
@@ -66,56 +66,3 @@ abstract class _$PolkitRule extends $Notifier<PasswordFreeInstallState> {
     return element.handleCreate(ref, build);
   }
 }
-
-/// 便捷访问：免密安装开关状态。
-
-@ProviderFor(passwordFreeInstallState)
-final passwordFreeInstallStateProvider = PasswordFreeInstallStateProvider._();
-
-/// 便捷访问：免密安装开关状态。
-
-final class PasswordFreeInstallStateProvider
-    extends
-        $FunctionalProvider<
-          PasswordFreeInstallState,
-          PasswordFreeInstallState,
-          PasswordFreeInstallState
-        >
-    with $Provider<PasswordFreeInstallState> {
-  /// 便捷访问：免密安装开关状态。
-  PasswordFreeInstallStateProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'passwordFreeInstallStateProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$passwordFreeInstallStateHash();
-
-  @$internal
-  @override
-  $ProviderElement<PasswordFreeInstallState> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  PasswordFreeInstallState create(Ref ref) {
-    return passwordFreeInstallState(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(PasswordFreeInstallState value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<PasswordFreeInstallState>(value),
-    );
-  }
-}
-
-String _$passwordFreeInstallStateHash() =>
-    r'e62e077429d9d0982ac8828522f44443ad78c854';

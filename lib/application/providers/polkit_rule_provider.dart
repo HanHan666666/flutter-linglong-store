@@ -8,6 +8,7 @@ library;
 
 import 'dart:convert';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -19,6 +20,14 @@ import 'install_queue_provider.dart';
 
 part 'polkit_rule_provider.freezed.dart';
 part 'polkit_rule_provider.g.dart';
+
+/// 免密安装规则同步服务。
+///
+/// 与其它 Application 服务一致，装配声明与使用它的控制器放在同一文件；
+/// 外部依赖端口仍集中在 `application_dependency_providers.dart`。
+final polkitRuleServiceProvider = Provider<PolkitRuleService>((ref) {
+  return PolkitRuleService(gateway: ref.watch(polkitRuleGatewayProvider));
+});
 
 /// 免密开关事务阶段。
 enum PasswordFreeInstallPhase {
@@ -237,6 +246,10 @@ class PolkitRule extends _$PolkitRule {
     }
 
     // 写入/删除失败但回读成功：保存实际状态，同时说明目标未完成。
+    //
+    // 回读到确定状态说明缓存已经与系统一致（§4.1 对 needsSync 的定义是“尚未
+    // 获得可靠结果或结果未能写回缓存”），因此此时清除待同步标记；只有回读失败
+    // （after=unknown）才保留标记（§4.3 第 7 步、§6.3 表格）。
     final determined =
         result.after == PolkitRuleSystemState.enabled ||
         result.after == PolkitRuleSystemState.disabled;
@@ -244,7 +257,7 @@ class PolkitRule extends _$PolkitRule {
       enabled: determined
           ? result.after == PolkitRuleSystemState.enabled
           : snapshot.enabled,
-      needsSync: true,
+      needsSync: !determined,
       feedback: PasswordFreeInstallFeedback.failed,
       failureKind: PolkitRuleFailureKind.applyFailed,
       diagnostic:
@@ -380,10 +393,4 @@ class PolkitRule extends _$PolkitRule {
       return false;
     }
   }
-}
-
-/// 便捷访问：免密安装开关状态。
-@riverpod
-PasswordFreeInstallState passwordFreeInstallState(Ref ref) {
-  return ref.watch(polkitRuleProvider);
 }

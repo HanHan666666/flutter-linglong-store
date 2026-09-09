@@ -203,6 +203,44 @@ PolkitRuleTransactionResult _result({
   );
 }
 
+/// 构造一个能消费安装任务的 CLI 替身（用于观察队列是否恢复出队）。
+MockLinglongCliRepository _buildConsumingCliRepository() {
+  final repository = MockLinglongCliRepository();
+  when(
+    repository.installApp(any, version: anyNamed('version'), force: anyNamed('force')),
+  ).thenAnswer(
+    (_) => Stream<InstallProgress>.value(
+      const InstallProgress(
+        appId: 'ignored',
+        status: InstallStatus.success,
+        progress: 100,
+      ),
+    ),
+  );
+  return repository;
+}
+
+/// 入队一个任务并断言它被消费，证明队列暂停已释放。
+Future<void> _expectQueueResumed(
+  ProviderContainer container,
+  MockLinglongCliRepository cliRepository,
+) async {
+  container
+      .read(installQueueProvider.notifier)
+      .enqueueOperation(
+        kind: InstallTaskKind.install,
+        appId: 'org.example.queued',
+        appName: 'Queued',
+      );
+  final consumed = await _eventually(
+    () => container.read(installQueueProvider).history.isNotEmpty,
+  );
+  expect(consumed, isTrue, reason: '事务结束后必须恢复出队');
+  verify(
+    cliRepository.installApp(any, version: anyNamed('version'), force: anyNamed('force')),
+  ).called(1);
+}
+
 void main() {
   setUpAll(() async {
     await AppLogger.init();
@@ -501,7 +539,7 @@ void main() {
     expect(state.usesPasswordFreeCli, isFalse);
   });
 
-  test('写入失败但回读成功：保存实际状态并提示目标未完成', () async {
+  test('写入失败但回读成功：保存实际状态并清除待同步标记', () async {
     final gateway = _FakePolkitRuleGateway(
       result: _result(
         requested: true,
@@ -524,7 +562,58 @@ void main() {
     expect(feedback, PasswordFreeInstallFeedback.failed);
     final state = container.read(polkitRuleProvider);
     expect(state.enabled, isFalse);
+    // 回读已确定状态且缓存已按实际值写入，按 §4.1 的定义无需再标记待同步。
+    expect(state.needsSync, isFalse);
+  });
+
+  test('回读失败（after=unknown）才保留最近可靠值并标记待同步', () async {
+    final gateway = _FakePolkitRuleGateway(
+      result: _result(
+        requested: true,
+        before: PolkitRuleSystemState.disabled,
+        after: PolkitRuleSystemState.unknown,
+        outcome: PolkitRuleOutcome.failed,
+        reason: PolkitRuleFailureReason.verifyFailed,
+      ),
+    );
+    final container = _createContainer(
+      gateway: gateway,
+      prefs: await _mockPreferences({
+        PasswordFreeInstallCache.preferencesKey: jsonEncode(
+          const PasswordFreeInstallCache(enabled: true, needsSync: false)
+              .toJson(),
+        ),
+      }),
+    );
+    addTearDown(container.dispose);
+
+    final notifier = container.read(polkitRuleProvider.notifier);
+    notifier.beginEnableRequest();
+    final feedback = await notifier.applyTarget(enabled: true);
+
+    expect(feedback, PasswordFreeInstallFeedback.failed);
+    final state = container.read(polkitRuleProvider);
+    expect(state.enabled, isTrue);
     expect(state.needsSync, isTrue);
+  });
+
+  test('上次修改中断后保留待同步标记，不使用免密执行路径', () async {
+    final container = _createContainer(
+      gateway: _FakePolkitRuleGateway(),
+      prefs: await _mockPreferences({
+        PasswordFreeInstallCache.preferencesKey: jsonEncode(
+          const PasswordFreeInstallCache(enabled: true, needsSync: true)
+              .toJson(),
+        ),
+      }),
+    );
+    addTearDown(container.dispose);
+
+    final state = container.read(polkitRuleProvider);
+
+    expect(state.enabled, isTrue);
+    expect(state.needsSync, isTrue);
+    expect(state.usesPasswordFreeCli, isFalse);
   });
 
   test('超时或结果不可靠：保留最近可靠值并标记待同步', () async {
@@ -652,5 +741,67 @@ void main() {
     );
     expect(consumed, isTrue, reason: '事务结束后必须恢复出队');
     verify(cliRepository.installApp(any, version: anyNamed('version'), force: anyNamed('force'))).called(1);
+  });
+
+  test('待同步标记写入失败时不启动修改，并释放队列暂停', () async {
+    final gateway = _FakePolkitRuleGateway(
+      result: _result(
+        requested: true,
+        before: PolkitRuleSystemState.disabled,
+        after: PolkitRuleSystemState.enabled,
+        outcome: PolkitRuleOutcome.applied,
+      ),
+    );
+    final cliRepository = _buildConsumingCliRepository();
+    final container = _createContainer(
+      gateway: gateway,
+      prefs: _WriteFailingPreferences(await _mockPreferences()),
+      cliRepository: cliRepository,
+    );
+    addTearDown(container.dispose);
+
+    final notifier = container.read(polkitRuleProvider.notifier);
+    notifier.beginEnableRequest();
+    final feedback = await notifier.applyTarget(enabled: true);
+
+    expect(feedback, PasswordFreeInstallFeedback.failed);
+    expect(gateway.requests, isEmpty, reason: '待同步标记写入失败不得启动系统修改');
+    await _expectQueueResumed(container, cliRepository);
+  });
+
+  test('提权同步异常结束后仍释放队列暂停', () async {
+    final gateway = _FakePolkitRuleGateway(error: StateError('boom'));
+    final cliRepository = _buildConsumingCliRepository();
+    final container = _createContainer(
+      gateway: gateway,
+      prefs: await _mockPreferences(),
+      cliRepository: cliRepository,
+    );
+    addTearDown(container.dispose);
+
+    final notifier = container.read(polkitRuleProvider.notifier);
+    notifier.beginEnableRequest();
+    final feedback = await notifier.applyTarget(enabled: true);
+
+    expect(feedback, PasswordFreeInstallFeedback.failed);
+    await _expectQueueResumed(container, cliRepository);
+  });
+
+  test('取消风险确认不暂停队列', () async {
+    final gateway = _FakePolkitRuleGateway();
+    final cliRepository = _buildConsumingCliRepository();
+    final container = _createContainer(
+      gateway: gateway,
+      prefs: await _mockPreferences(),
+      cliRepository: cliRepository,
+    );
+    addTearDown(container.dispose);
+
+    final notifier = container.read(polkitRuleProvider.notifier);
+    expect(notifier.beginEnableRequest(), isTrue);
+    notifier.cancelEnableRequest();
+
+    expect(gateway.requests, isEmpty);
+    await _expectQueueResumed(container, cliRepository);
   });
 }

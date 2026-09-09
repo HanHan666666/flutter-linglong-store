@@ -18,7 +18,6 @@ import '../../domain/repositories/legacy_app_operation_state_repository.dart';
 import '../../domain/repositories/polkit_rule_gateway.dart';
 import '../../domain/repositories/system_accent_color_gateway.dart';
 import '../../domain/repositories/system_notification_gateway.dart';
-import '../services/polkit_rule_service.dart';
 import '../../domain/models/polkit_rule_state.dart' show PasswordFreeInstallModeReader;
 
 /// 应用启动阶段初始化的用户偏好存储端口。
@@ -115,11 +114,6 @@ final passwordFreeInstallModeReaderProvider =
     Provider<PasswordFreeInstallModeReader>((ref) {
       return _missingDependency('passwordFreeInstallModeReaderProvider');
     });
-
-/// 免密安装规则同步服务。
-final polkitRuleServiceProvider = Provider<PolkitRuleService>((ref) {
-  return PolkitRuleService(gateway: ref.watch(polkitRuleGatewayProvider));
-});
 
 /// 为遗漏的根装配提供包含端口名称的确定性错误。
 Never _missingDependency(String providerName) {

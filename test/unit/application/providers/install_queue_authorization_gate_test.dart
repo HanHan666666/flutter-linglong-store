@@ -5,6 +5,8 @@
 /// 用户明确重新入队时解除门闩并恢复执行。
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -34,6 +36,9 @@ class _GateFakeCliRepository implements LinglongCliRepository {
   /// installApp 被调用的应用序列（验证自动消费是否停止）。
   final List<String> installedApps = [];
 
+  /// 非空时 installApp 挂起，用于观察进行中的任务是否被打断。
+  Completer<void>? holdInstall;
+
   @override
   Stream<InstallProgress> installApp(
     String appId, {
@@ -41,6 +46,10 @@ class _GateFakeCliRepository implements LinglongCliRepository {
     bool force = false,
   }) async* {
     installedApps.add(appId);
+    final gate = holdInstall;
+    if (gate != null) {
+      await gate.future;
+    }
     final events = eventsByApp[appId] ??
         const [
           InstallProgress(
@@ -350,5 +359,71 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 300));
     expect(queue.isAuthorizationGatePaused, isTrue);
     expect(fakeRepo.installedApps, ['org.first.app']);
+  });
+
+  test('普通下载失败不挂授权门闩，队列继续消费', () async {
+    final fakeRepo = _GateFakeCliRepository()
+      ..eventsByApp['org.network.app'] = const [
+        InstallProgress(
+          appId: 'ignored',
+          status: InstallStatus.failed,
+          failure: AppOperationFailure(
+            kind: AppOperationFailureKind.cli,
+            cliCode: 3001,
+            diagnostic: 'Network error',
+          ),
+        ),
+      ];
+    final container = await _createContainer(fakeRepo);
+    addTearDown(container.dispose);
+
+    final queue = container.read(installQueueProvider.notifier);
+    queue.enqueueOperation(
+      kind: InstallTaskKind.install,
+      appId: 'org.network.app',
+      appName: 'Network',
+    );
+    queue.enqueueOperation(
+      kind: InstallTaskKind.install,
+      appId: 'org.next.app',
+      appName: 'Next',
+    );
+
+    final consumedBoth = await _eventually(
+      () => fakeRepo.installedApps.contains('org.next.app'),
+    );
+
+    expect(consumedBoth, isTrue, reason: '普通下载失败不得暂停自动消费');
+    expect(queue.isAuthorizationGatePaused, isFalse);
+  });
+
+  test('设置事务暂停不打断进行中的任务', () async {
+    final fakeRepo = _GateFakeCliRepository()..holdInstall = Completer<void>();
+    final container = await _createContainer(fakeRepo);
+    addTearDown(container.dispose);
+
+    final queue = container.read(installQueueProvider.notifier);
+    queue.enqueueOperation(
+      kind: InstallTaskKind.install,
+      appId: 'org.running.app',
+      appName: 'Running',
+    );
+    await _eventually(
+      () => fakeRepo.installedApps.contains('org.running.app'),
+    );
+
+    // 事务期间只暂缓新任务出队，进行中的任务必须继续执行到终态。
+    queue.pauseDequeueForSettings();
+    fakeRepo.holdInstall!.complete();
+    final finished = await _eventually(
+      () => container.read(installQueueProvider).history.isNotEmpty,
+    );
+    queue.resumeDequeueForSettings();
+
+    expect(finished, isTrue);
+    expect(
+      container.read(installQueueProvider).history.first.status,
+      InstallStatus.success,
+    );
   });
 }

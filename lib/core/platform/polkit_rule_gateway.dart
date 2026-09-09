@@ -85,8 +85,12 @@ const String _kTransactionScriptTemplate = r'''
 # 玲珑商店免密安装规则事务脚本（模板版本 1）。
 #
 # 由商店 GUI 通过 `pkexec --disable-internal-agent /bin/bash <脚本> <enable|disable>`
-# 以 root 执行。只接受两个固定动作、只操作固定规则路径，正文来自随应用分发的
-# 固定模板，不接受任何来自普通用户的路径或内容参数。
+# 以 root 执行。只接受两个固定动作，正文来自随应用分发的固定模板，不接受任何
+# 来自普通用户的路径或内容参数。
+#
+# root 下只操作固定规则路径；非 root 时仅允许在 LL_STORE_POLKIT_RULES_DIR 指定的
+# 隔离目录中执行（供自动化测试），并且该目录不得等于系统规则目录——普通用户
+# 因此永远无法让本脚本触碰系统策略目录。
 set -u
 
 readonly RULE_DIR_FIXED='/etc/polkit-1/rules.d'
@@ -182,12 +186,14 @@ expected_uid=0
 expected_gid=0
 if [[ "$EUID" -ne 0 ]]; then
   if [[ -n "${LL_STORE_POLKIT_RULES_DIR:-}" ]]; then
-    # 隔离测试模式不得指向系统目录，避免非 root 调用产生第二目标路径。
-    if [[ "${LL_STORE_POLKIT_RULES_DIR}" == "$RULE_DIR_FIXED" ]]; then
+    # 隔离测试模式不得指向系统目录，避免非 root 调用产生第二目标路径；
+    # 先去掉尾部斜杠，防止 `/etc/polkit-1/rules.d/` 绕过字面比较。
+    isolated_dir="${LL_STORE_POLKIT_RULES_DIR%/}"
+    if [[ "$isolated_dir" == "$RULE_DIR_FIXED" ]]; then
       log 'isolated rules directory must not be the system directory'
       exit "$EXIT_NOT_ROOT"
     fi
-    rules_dir="${LL_STORE_POLKIT_RULES_DIR}"
+    rules_dir="$isolated_dir"
     expected_uid="$EUID"
     expected_gid="$(id -g)"
   else

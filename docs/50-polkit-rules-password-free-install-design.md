@@ -517,7 +517,7 @@ sudo rm -f /etc/polkit-1/rules.d/60-linglong-store.rules
 ### 13.2 自动化验证结果
 
 - `flutter analyze`：0 问题；
-- `flutter test`：1167 项通过、11 项跳过（跳过项为既有的需要网络或图形环境的用例）；
+- `flutter test`：1170 项通过、11 项跳过（跳过项为既有的需要网络或图形环境的用例）；
 - `bash build/scripts/verify-generated-sources.sh`：生成源码与提交一致；
 - `dart run build/scripts/verify_directional_layout.dart`：方向布局门禁通过；
 - `dart run build/scripts/verify_localization_resources.dart`：10 个 locale、698 条消息。
@@ -526,7 +526,7 @@ sudo rm -f /etc/polkit-1/rules.d/60-linglong-store.rules
 
 | 文件 | 覆盖 |
 |---|---|
-| `test/unit/core/platform/polkit_rule_gateway_test.dart` | 事务脚本在隔离目录真实执行（原子发布、幂等、同名冲突/符号链接/目录/权限与属组异常、非 root 拒绝、隔离目录不得指向系统目录、目录缺失、目录只读导致的删除失败与临时文件创建失败、并发串行、锁超时、只清理本功能临时文件）、命令构造、严格解析、退出码映射、工作区清理 |
+| `test/unit/core/platform/polkit_rule_gateway_test.dart` | 事务脚本在隔离目录真实执行（原子发布、幂等、同名冲突/符号链接/目录/权限与属组异常、非 root 拒绝、隔离目录不得指向系统目录、目录缺失、目录只读导致的删除失败与临时文件创建失败、并发串行、锁超时、只清理本功能临时文件）、命令构造、脚本与工作区权限 0700、严格解析、退出码映射、工作区清理 |
 | `test/unit/core/platform/polkit_rule_evaluation_test.dart` | node + polkit API 桩的规则求值：三个安装 action 在本机活动会话 YES，卸载/清理/配置/通用 exec/未知 action 不处理，远程与非活动会话不放行 |
 | `test/unit/domain/models/polkit_rule_state_test.dart` | 缓存版本化格式、损坏/版本不支持回退、成功判定 |
 | `test/unit/application/services/polkit_rule_service_test.dart` | 事实归约与异常映射 |
@@ -535,6 +535,7 @@ sudo rm -f /etc/polkit-1/rules.d/60-linglong-store.rules
 | `test/unit/data/repositories/linglong_cli_repository_impl_command_test.dart` | 授权失败归类（PermissionDenied / AccessDenied / 用户取消 / 网络） |
 | `test/unit/application/providers/install_queue_authorization_gate_test.dart` | `authorizationDenied` 门闩、设置暂停不解除门闩也不打断进行中的任务、普通下载失败不挂门闩 |
 | `test/widget/presentation/pages/password_free_install_tile_test.dart` | 开关交互、确认与取消、处理中禁用与 loading、失败详情、离页收尾、语义与键盘 |
+| `test/unit/bootstrap/production_dependency_overrides_test.dart` | 组合根确实注入免密规则 Gateway 与只读模式读取器 |
 
 测试环境说明：脚本测试在**非 root** 且通过 `LL_STORE_POLKIT_RULES_DIR` 指定的
 隔离目录中执行，**不修改开发机真实 polkit 策略**；规则求值测试需要 `node`。

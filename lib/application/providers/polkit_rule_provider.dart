@@ -190,6 +190,19 @@ class PolkitRule extends _$PolkitRule {
           .read(polkitRuleServiceProvider)
           .synchronize(enabled: enabled);
       return await _applyFact(fact, requested: enabled, snapshot: snapshot);
+    } catch (error, stackTrace) {
+      // 兜底：服务层已归约所有同步异常，这里只可能是装配缺失等意外错误。
+      // 必须把阶段恢复为 ready 并标记待同步，避免开关永久卡在不可交互状态。
+      AppLogger.error('[PolkitRule] 设置事务异常', error, stackTrace);
+      state = state.copyWith(
+        phase: PasswordFreeInstallPhase.ready,
+        enabled: snapshot.enabled,
+        // 提权前已把待同步标记落盘，这里让内存状态与缓存保持一致。
+        needsSync: true,
+        lastFailureKind: PolkitRuleFailureKind.unexpected,
+        lastDiagnostic: error.toString(),
+      );
+      return PasswordFreeInstallFeedback.failed;
     } finally {
       _inFlight = false;
       queue.resumeDequeueForSettings();

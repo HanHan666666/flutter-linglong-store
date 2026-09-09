@@ -804,4 +804,30 @@ void main() {
     expect(gateway.requests, isEmpty);
     await _expectQueueResumed(container, cliRepository);
   });
+
+  test('装配缺失等意外错误也能恢复可交互状态并标记待同步', () async {
+    // 不覆盖 polkitRuleGatewayProvider：服务读取端口时抛 StateError，
+    // 控制器必须兜底把阶段恢复为 ready，避免开关永久卡在 applying。
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    final prefs = await SharedPreferences.getInstance();
+    final container = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        appOperationJournalRepositoryProvider.overrideWithValue(
+          MemoryAppOperationJournalRepository(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final notifier = container.read(polkitRuleProvider.notifier);
+    notifier.beginEnableRequest();
+    final feedback = await notifier.applyTarget(enabled: true);
+
+    expect(feedback, PasswordFreeInstallFeedback.failed);
+    final state = container.read(polkitRuleProvider);
+    expect(state.phase, PasswordFreeInstallPhase.ready);
+    expect(state.needsSync, isTrue);
+    expect(state.lastFailureKind, PolkitRuleFailureKind.unexpected);
+  });
 }

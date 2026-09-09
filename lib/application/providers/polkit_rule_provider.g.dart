@@ -44,7 +44,7 @@ final class PolkitRuleProvider
   }
 }
 
-String _$polkitRuleHash() => r'9160adf43c71e0653b9fc5f55bd3dc00a3f57b78';
+String _$polkitRuleHash() => r'b207e7bbbcc52d1f8a79b6c8f3abba2009bdce68';
 
 /// 免密安装开关控制器。
 

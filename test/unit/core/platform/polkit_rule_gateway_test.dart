@@ -25,6 +25,8 @@ class _RecordingShellRunner implements ShellCommandRunner {
   final List<List<String>> commands = <List<String>>[];
   String? scriptContentAtRun;
   bool? scriptExistedAtRun;
+  String? scriptModeAtRun;
+  String? workspaceModeAtRun;
 
   @override
   Future<ShellCommandResult> run(
@@ -38,6 +40,18 @@ class _RecordingShellRunner implements ShellCommandRunner {
     scriptExistedAtRun = await script.exists();
     if (scriptExistedAtRun == true) {
       scriptContentAtRun = await script.readAsString();
+      final scriptStat = await Process.run('stat', <String>[
+        '-c',
+        '%a',
+        script.path,
+      ]);
+      scriptModeAtRun = scriptStat.stdout.toString().trim();
+      final workspaceStat = await Process.run('stat', <String>[
+        '-c',
+        '%a',
+        script.parent.path,
+      ]);
+      workspaceModeAtRun = workspaceStat.stdout.toString().trim();
     }
     return result;
   }
@@ -365,6 +379,18 @@ void main() {
       expect(names, <String>['60-linglong-store.rules']);
     });
 
+    test('隔离目录不得指向系统规则目录（退出码 66）', () async {
+      // 守卫在脚本入口最先执行，不会读取或写入系统策略目录。
+      final run = await runTransaction(
+        Directory('/etc/polkit-1/rules.d'),
+        'enable',
+      );
+
+      expect(run.exitCode, 66);
+      expect(run.result, isNull);
+      expect(run.stderr, contains('must not be the system directory'));
+    });
+
     test('规则目录缺失时明确失败，不创建目录（退出码 65）', () async {
       final parent = await Directory.systemTemp.createTemp('polkit-missing-');
       addTearDown(() async {
@@ -478,6 +504,8 @@ void main() {
         runner.scriptContentAtRun,
         contains(kPasswordFreeInstallRuleTemplate.trim()),
       );
+      expect(runner.scriptModeAtRun, '700', reason: '脚本必须为 0700');
+      expect(runner.workspaceModeAtRun, '700', reason: '工作区必须为 0700');
       expect(
         await Directory(File(command[3]).parent.path).exists(),
         isFalse,

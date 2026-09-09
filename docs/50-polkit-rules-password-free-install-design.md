@@ -1,7 +1,7 @@
 # 50 - 设置页安装免密开关设计
 
 > 日期：2026-09-09
-> 状态：设计已修订，功能未实施
+> 状态：**已实现，自动化门禁通过；真机验收待执行**（实施记录见 §13）
 > 关联：`docs/47-pkexec-auth-popup-analysis.md`、`docs/23-install-cancel-sigterm-plan.md`
 > 本次确定：本地缓存开关状态；用户切换时先提权读取系统状态，再按点击的目标值修改。
 
@@ -495,3 +495,77 @@ sudo rm -f /etc/polkit-1/rules.d/60-linglong-store.rules
   实施验收时需记录实际安装版本，不能把本地 master 等同于所有发行版包。
 - [polkit 规则接口、加载与求值顺序](https://polkit.pages.freedesktop.org/polkit/polkit.8.html)。
 - [pkexec 授权代理、退出码与参数边界](https://polkit.pages.freedesktop.org/polkit/pkexec.1.html)。
+
+## 13. 实施与验证记录（2026-09-09）
+
+### 13.1 已交付代码
+
+| 模块 | 位置 | 说明 |
+|---|---|---|
+| 领域模型 | `lib/domain/models/polkit_rule_state.dart` | 系统状态、事务结论与失败原因枚举、版本化缓存、只读模式读取器 |
+| 端口 | `lib/domain/repositories/polkit_rule_gateway.dart` | 按目标值执行一次提权同步的端口 |
+| 平台 Gateway | `lib/core/platform/polkit_rule_gateway.dart` | 固定模板常量、私有工作区、root 事务脚本、stdout 严格解析 |
+| 同步服务 | `lib/application/services/polkit_rule_service.dart` | 调用 Gateway 并归约为事实，不写缓存、不碰界面 |
+| 控制器 | `lib/application/providers/polkit_rule_provider.dart` | 本地缓存、单飞、确认阶段、待同步标记与结果保存 |
+| 队列入口 | `lib/application/providers/install_queue_provider.dart` | `pauseDequeueForSettings` / `resumeDequeueForSettings`，与授权门闩相互独立 |
+| 根部装配 | `lib/bootstrap/production_dependency_overrides.dart`、`application_dependency_providers.dart` | Gateway 与只读模式读取器；Data 不反向导入 Application |
+| 执行路径与取消 | `lib/data/repositories/linglong_cli_repository_impl.dart` | 任务启动取一次快照并绑定路径；三种取消路由互不串线 |
+| 失败事实 | `lib/domain/models/app_operation_failure.dart`、`lib/core/i18n/install_messages.dart` | 新增 `authorizationDenied` 与 10 语言文案 |
+| 设置页 | `lib/presentation/pages/setting/widgets/password_free_install_tile.dart`、`setting/setting_page.dart` | 开关、风险确认、loading、可复制诊断 |
+| 国际化 | 10 个 ARB | §9 的 14 个键 + `installErrorAuthorizationDenied` |
+
+### 13.2 自动化验证结果
+
+- `flutter analyze`：0 问题；
+- `flutter test`：1167 项通过、11 项跳过（跳过项为既有的需要网络或图形环境的用例）；
+- `bash build/scripts/verify-generated-sources.sh`：生成源码与提交一致；
+- `dart run build/scripts/verify_directional_layout.dart`：方向布局门禁通过；
+- `dart run build/scripts/verify_localization_resources.dart`：10 个 locale、698 条消息。
+
+新增/扩展测试：
+
+| 文件 | 覆盖 |
+|---|---|
+| `test/unit/core/platform/polkit_rule_gateway_test.dart` | 事务脚本在隔离目录真实执行（原子发布、幂等、同名冲突/符号链接/目录/权限与属组异常、非 root 拒绝、隔离目录不得指向系统目录、目录缺失、目录只读导致的删除失败与临时文件创建失败、并发串行、锁超时、只清理本功能临时文件）、命令构造、严格解析、退出码映射、工作区清理 |
+| `test/unit/core/platform/polkit_rule_evaluation_test.dart` | node + polkit API 桩的规则求值：三个安装 action 在本机活动会话 YES，卸载/清理/配置/通用 exec/未知 action 不处理，远程与非活动会话不放行 |
+| `test/unit/domain/models/polkit_rule_state_test.dart` | 缓存版本化格式、损坏/版本不支持回退、成功判定 |
+| `test/unit/application/services/polkit_rule_service_test.dart` | 事实归约与异常映射 |
+| `test/unit/application/providers/polkit_rule_provider_test.dart` | 缓存恢复、先落盘待同步标记再提权、单飞、确认前置、授权取消恢复快照、冲突语义、写/删失败回读成功清除待同步、回读失败保留待同步、中断后保留标记、本地保存失败、所有结束路径释放队列暂停、取消确认不暂停队列 |
+| `test/unit/data/repositories/linglong_cli_repository_password_free_test.dart` | 路径选择与三种取消路由 |
+| `test/unit/data/repositories/linglong_cli_repository_impl_command_test.dart` | 授权失败归类（PermissionDenied / AccessDenied / 用户取消 / 网络） |
+| `test/unit/application/providers/install_queue_authorization_gate_test.dart` | `authorizationDenied` 门闩、设置暂停不解除门闩也不打断进行中的任务、普通下载失败不挂门闩 |
+| `test/widget/presentation/pages/password_free_install_tile_test.dart` | 开关交互、确认与取消、处理中禁用与 loading、失败详情、离页收尾、语义与键盘 |
+
+测试环境说明：脚本测试在**非 root** 且通过 `LL_STORE_POLKIT_RULES_DIR` 指定的
+隔离目录中执行，**不修改开发机真实 polkit 策略**；规则求值测试需要 `node`。
+
+### 13.3 真机验收矩阵（未执行）
+
+§10.2 的九项真机验收需要在明确允许修改系统策略的环境执行，本次实施**未执行**，
+下列项目仍为待验证，不得据此声称已通过：
+
+| 场景 | 状态 |
+|---|---|
+| 默认关闭进入设置页不弹授权；取消开启确认不触发系统操作 | 待验证 |
+| 开启时一次授权内先读后改，回读与本地缓存一致 | 待验证 |
+| 重启后首次安装、连续安装、批量更新走普通 CLI 且不弹授权 | 待验证 |
+| 取消安装不弹授权，任务与队列正确收尾 | 待验证 |
+| 终端 `ll-cli install/upgrade` 与本地文件安装命中规则 | 待验证 |
+| 独立卸载、手动清理、修改配置不被本规则放行 | 待验证 |
+| 关闭只移除本功能规则，后续任务恢复 helper 路径，运行中任务不切换 | 待验证 |
+| 人工改/删规则后按缓存展示，下次切换回读校正 | 待验证 |
+| 0750 规则目录、授权取消、无代理、文件冲突、写入失败与缓存失败反馈 | 待验证 |
+| SSH、非活动会话与早于本文件的拒绝规则不被放行 | 待验证 |
+
+### 13.4 与设计的差异
+
+1. 事务脚本 stdout 在 §6.3 的五个必需字段外增加固定枚举 `reason`
+   （`rulesDirMissing` / `lockTimeout` / `writeFailed` / `verifyFailed` 等）：
+   目的是让 GUI 在不解析自由文本的前提下区分失败原因；成功判定仍只看退出码
+   与 `after` 是否等于目标。
+2. 事务脚本支持 `LL_STORE_POLKIT_RULES_DIR` 隔离目录，**仅在调用者不是 root 时**
+   生效（root 下忽略；pkexec 本身也会重置环境），用于满足 §10.1「root 脚本使用
+   隔离目录和故障注入验证」；生产路径仍是固定路径与预期属主校验。
+3. `legacyDirectCli` 取消路径保留：未注入 helper 的过渡期/测试替身仍走旧
+   `pkexec kill` 精确取消，免密路径与 helper 路径都不触达它（§7.2 只约束普通
+   CLI 免密任务）。

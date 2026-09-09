@@ -329,8 +329,39 @@ Semantics(
   （dart 脚本、rsvg 等）；元数据变更时同步维护该脚本与两份 spec 模板。
 - 完整设计决策与 Copr 维护者操作指南见 `docs/44-copr-source-build-design.md`。
 
+## 安装免密（polkit rules）约定
+
+- 本功能存在**两个互不替代的特权入口**：安装传输用的 `PrivilegedHelperClient`
+  （docs/47）与免密规则配置用的 `PolkitRuleScriptGateway`
+  （`lib/core/platform/polkit_rule_gateway.dart`）。禁止把规则写入塞进 helper
+  的命令白名单，也禁止复用已授权的 helper 会话静默修改系统策略。
+- 免密规则只豁免 `org.deepin.linglong.PackageManager1.{install,update,install-from-file}`；
+  独立卸载、手动清理、修改配置与 `org.freedesktop.policykit.exec` 一律不处理，
+  不得为绕过管理员策略改名、挪动或重写其他规则文件。
+- 规则正文只有一份常量 `kPasswordFreeInstallRuleTemplate`，必须使用大写
+  `polkit.Result.YES`；脚本正文、回读比对与测试都从它派生，禁止在别处复制。
+- 开关状态唯一事实来源是 `polkitRuleProvider`（本地缓存
+  `setting_password_free_install_state`）+ 一次提权事务的回读值；Presentation
+  不保存第二份业务开关，Data 不反向导入 Application Provider（只读函数在组合根注入）。
+- 执行路径在任务启动时取一次快照并绑定：开启且无待同步才走普通 CLI，否则走
+  helper；任何失败都不自动切换路径重试。取消严格按绑定的路径路由，免密任务
+  只向本进程启动的 ll-cli 发 SIGTERM，禁止复用 `pkexec kill`。
+- 脚本测试必须使用 `LL_STORE_POLKIT_RULES_DIR` 隔离目录（仅非 root 生效），
+  禁止在自动化测试中修改开发机真实 polkit 策略。
+- 完整设计、状态机与验收矩阵见 `docs/50-polkit-rules-password-free-install-design.md`。
+
 ## 变更记录
 
+- 2026-09-09：落地「安装时免密码确认」开关（docs/50）：设置页新增唯一开关，
+  开启/关闭都通过一次 pkexec 提权在同一个 root 进程内完成「读取 → 修改 → 回读」，
+  规则文件固定为 `/etc/polkit-1/rules.d/60-linglong-store.rules`（root:root 0644、
+  同目录 mktemp + `mv -T` 原子发布、目录 fd flock 串行、只豁免三个安装类 action）。
+  本地缓存为单键版本化 JSON `setting_password_free_install_state`；开启且无待同步
+  时商店安装改由普通用户执行 `ll-cli`，否则沿用 docs/47 helper，取消按任务启动时
+  绑定的路径路由（免密任务只发 SIGTERM，不再 pkexec kill）。新增稳定失败类型
+  `authorizationDenied` 与 14 个 l10n 键（10 语言）。自动化门禁全过
+  （`flutter analyze` 0 问题、1167 项测试通过、生成源码与方向布局校验通过）；
+  docs/50 §10.2 的九项真机验收需在允许修改系统策略的环境执行，**尚未执行**。
 - 2026-09-09：修复标题栏应用名在英文、西语等长语言下出现省略号：标题从固定
   240px 截断改为按内容固有宽度优先占位，搜索框让位右移收窄（仍遵循 docs/03b
   §1.3「父容器 50%，最大 534px」）。`CustomTitleBar` 用 `LayoutBuilder` 按窗口

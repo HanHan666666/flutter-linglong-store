@@ -867,3 +867,26 @@ linux/privileged_helper/
   待全部打包 smoke 与 AppImage 真机回归通过后按 §14 条件删除；
 - 空闲五分钟自退由 helper 单调时钟实现，GUI 侧无计时器；
 - CI（`.github/workflows/ci.yml`）已挂载 C++ 单测与 bundle 产物 smoke。
+
+## 18. 与免密安装配置入口的职责边界（2026-09-09）
+
+docs/50 增加了「安装时免密码确认」开关，它带来**第二个** pkexec 调用入口。两者
+职责严格分离，不得互相替代：
+
+| 入口 | 位置 | 授权边界 | 职责 |
+|---|---|---|---|
+| 安装传输 helper | `lib/core/platform/privileged_helper/`（`PrivilegedHelperClient`） | `org.freedesktop.policykit.exec` 启动 helper，再由 helper 以 root 启动 `/usr/bin/ll-cli` | 开关关闭时承载 install/update 的串行任务、进度输出与 requestId 取消；会话内复用授权 |
+| 免密规则配置脚本 | `lib/core/platform/polkit_rule_gateway.dart`（`PolkitRuleScriptGateway`） | `org.freedesktop.policykit.exec` 启动一次性 `/bin/bash` 脚本 | 只按用户点击的目标值同步 `/etc/polkit-1/rules.d/60-linglong-store.rules`；读取、修改、回读共用一次授权 |
+
+约定：
+
+1. 两个入口各自独立，**不得**把规则写入塞进 helper 的命令白名单，也**不得**为
+   规则配置复用已获授权的 helper 会话静默修改系统策略；
+2. 免密规则只豁免 `org.deepin.linglong.PackageManager1.{install,update,install-from-file}`
+   三个 action，不影响 `org.freedesktop.policykit.exec`——helper 启动与规则配置
+   本身始终需要授权；
+3. 免密开启后商店的 install/update 改由普通用户直接执行 `ll-cli`（不启动 helper、
+   不额外 pkexec 包装），取消只向本进程启动的 ll-cli 发 SIGTERM；helper 会话不
+   因开关切换被强杀，空闲后沿用既有回收机制；
+4. §14 的旧 `pkexec kill` 路径仍只服务于未注入 helper 的过渡期直连任务，免密
+   路径禁止复用该分支。

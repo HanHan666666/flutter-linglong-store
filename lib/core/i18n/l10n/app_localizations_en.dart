@@ -1444,6 +1444,59 @@ class AppLocalizationsEn extends AppLocalizations {
       'Installation requires administrator authorization, but the request was denied.';
 
   @override
+  String get passwordFreeInstallTitle =>
+      'Install without password confirmation';
+
+  @override
+  String get passwordFreeInstallSubtitle =>
+      'Skip the password prompt when installing and updating apps; uninstalling and other operations keep the system authorization settings.';
+
+  @override
+  String get passwordFreeInstallConfirmTitle =>
+      'Enable password-free confirmation?';
+
+  @override
+  String get passwordFreeInstallRiskDescription =>
+      'Once enabled, active local users can install and update Linglong apps without a password, and this also applies to the terminal and other programs. Unverified programs may install or replace apps without your knowledge; updates may also remove old versions and related content. Uninstalling, manual cleanup and changing the system configuration still follow the existing authorization settings. This setting applies to the whole computer and remains after the store is uninstalled; turn it off here first if you no longer need it.';
+
+  @override
+  String get passwordFreeInstallConfirmAction =>
+      'I understand the risks, enable';
+
+  @override
+  String get passwordFreeInstallCancelAction => 'Keep the current setting';
+
+  @override
+  String get passwordFreeInstallEnabled => 'Password-free installation enabled';
+
+  @override
+  String get passwordFreeInstallDisabled =>
+      'Password-free setting for this feature disabled';
+
+  @override
+  String get passwordFreeInstallAuthCancelled =>
+      'Authorization was not completed, the setting was not changed';
+
+  @override
+  String get passwordFreeInstallNeedsSync =>
+      'Showing the last saved state; changing it will sync the system setting.';
+
+  @override
+  String get passwordFreeInstallRuleConflict =>
+      'The system rule file conflicts with this feature template and was not modified';
+
+  @override
+  String get passwordFreeInstallUnsupported =>
+      'This environment does not support modifying system authorization rules';
+
+  @override
+  String get passwordFreeInstallCacheSaveFailed =>
+      'The system setting took effect, but the local state was not saved';
+
+  @override
+  String get passwordFreeInstallFailed => 'Operation failed';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'Installation failed: App not found in remote repo';
 

@@ -1384,6 +1384,49 @@ class AppLocalizationsZh extends AppLocalizations {
   String get installErrorAuthorizationDenied => '安装需要管理员授权，但系统拒绝了本次请求';
 
   @override
+  String get passwordFreeInstallTitle => '安装时免密码确认';
+
+  @override
+  String get passwordFreeInstallSubtitle => '安装和更新应用时免输密码；卸载等操作沿用系统授权设置。';
+
+  @override
+  String get passwordFreeInstallConfirmTitle => '开启免密码确认？';
+
+  @override
+  String get passwordFreeInstallRiskDescription =>
+      '开启后，本机活动登录用户可免密码安装、更新玲珑应用，终端和其他程序也会生效。来路不明的程序可能在您不知情时安装或替换应用；更新还可能清理旧版本及关联内容。单独卸载、手动清理和修改系统配置仍按系统原有授权设置处理。这项设置对整台电脑生效，卸载商店后也会保留；如不再需要，请先在这里关闭。';
+
+  @override
+  String get passwordFreeInstallConfirmAction => '我已了解风险，开启';
+
+  @override
+  String get passwordFreeInstallCancelAction => '保持原设置';
+
+  @override
+  String get passwordFreeInstallEnabled => '已开启安装免密';
+
+  @override
+  String get passwordFreeInstallDisabled => '已关闭本功能的免密设置';
+
+  @override
+  String get passwordFreeInstallAuthCancelled => '未完成授权，未修改设置';
+
+  @override
+  String get passwordFreeInstallNeedsSync => '显示的是上次保存的状态，修改时将同步系统设置。';
+
+  @override
+  String get passwordFreeInstallRuleConflict => '系统规则文件与本功能模板冲突，未做修改';
+
+  @override
+  String get passwordFreeInstallUnsupported => '当前环境不支持修改系统授权规则';
+
+  @override
+  String get passwordFreeInstallCacheSaveFailed => '系统设置已生效，但本地状态未保存';
+
+  @override
+  String get passwordFreeInstallFailed => '操作失败';
+
+  @override
   String get installErrorAppNotFoundRemote => '安装失败: 远程仓库找不到应用';
 
   @override
@@ -3728,6 +3771,49 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get installErrorAuthorizationDenied => '安裝需要管理員授權，但系統拒絕了本次請求';
+
+  @override
+  String get passwordFreeInstallTitle => '安裝時免密碼確認';
+
+  @override
+  String get passwordFreeInstallSubtitle => '安裝和更新應用程式時免輸密碼；解除安裝等操作沿用系統授權設定。';
+
+  @override
+  String get passwordFreeInstallConfirmTitle => '開啟免密碼確認？';
+
+  @override
+  String get passwordFreeInstallRiskDescription =>
+      '開啟後，本機使用中工作階段的登入使用者可免密碼安裝、更新玲瓏應用程式，終端機和其他程式也會生效。來路不明的程式可能在您不知情時安裝或取代應用程式；更新還可能清理舊版本及關聯內容。單獨解除安裝、手動清理和修改系統設定仍按系統原有授權設定處理。這項設定對整台電腦生效，解除安裝商店後也會保留；如不再需要，請先在這裡關閉。';
+
+  @override
+  String get passwordFreeInstallConfirmAction => '我已瞭解風險，開啟';
+
+  @override
+  String get passwordFreeInstallCancelAction => '保持原設定';
+
+  @override
+  String get passwordFreeInstallEnabled => '已開啟安裝免密';
+
+  @override
+  String get passwordFreeInstallDisabled => '已關閉本功能的免密設定';
+
+  @override
+  String get passwordFreeInstallAuthCancelled => '未完成授權，未修改設定';
+
+  @override
+  String get passwordFreeInstallNeedsSync => '顯示的是上次儲存的狀態，修改時將同步系統設定。';
+
+  @override
+  String get passwordFreeInstallRuleConflict => '系統規則檔案與本功能範本衝突，未做修改';
+
+  @override
+  String get passwordFreeInstallUnsupported => '目前環境不支援修改系統授權規則';
+
+  @override
+  String get passwordFreeInstallCacheSaveFailed => '系統設定已生效，但本機狀態未儲存';
+
+  @override
+  String get passwordFreeInstallFailed => '操作失敗';
 
   @override
   String get installErrorAppNotFoundRemote => '安裝失敗: 遠端儲存庫找不到應用';

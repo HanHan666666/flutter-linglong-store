@@ -1486,6 +1486,57 @@ class AppLocalizationsRu extends AppLocalizations {
       'Для установки требуется авторизация администратора, но запрос был отклонён.';
 
   @override
+  String get passwordFreeInstallTitle => 'Установка без подтверждения пароля';
+
+  @override
+  String get passwordFreeInstallSubtitle =>
+      'Не вводить пароль при установке и обновлении приложений; удаление и другие операции по-прежнему используют системные настройки авторизации.';
+
+  @override
+  String get passwordFreeInstallConfirmTitle =>
+      'Включить установку без пароля?';
+
+  @override
+  String get passwordFreeInstallRiskDescription =>
+      'После включения активные локальные пользователи смогут устанавливать и обновлять приложения Linglong без пароля; это также распространяется на терминал и другие программы. Программы неизвестного происхождения могут устанавливать или заменять приложения без вашего ведома; обновления также могут удалять старые версии и связанные данные. Отдельное удаление, ручная очистка и изменение системных настроек по-прежнему используют существующие настройки авторизации. Эта настройка действует для всего компьютера и сохраняется после удаления магазина; отключите её здесь, если она больше не нужна.';
+
+  @override
+  String get passwordFreeInstallConfirmAction => 'Я понимаю риски, включить';
+
+  @override
+  String get passwordFreeInstallCancelAction => 'Оставить текущую настройку';
+
+  @override
+  String get passwordFreeInstallEnabled => 'Установка без пароля включена';
+
+  @override
+  String get passwordFreeInstallDisabled =>
+      'Настройка без пароля для этой функции отключена';
+
+  @override
+  String get passwordFreeInstallAuthCancelled =>
+      'Авторизация не завершена, настройка не изменена';
+
+  @override
+  String get passwordFreeInstallNeedsSync =>
+      'Показано последнее сохранённое состояние; при изменении системная настройка будет синхронизирована.';
+
+  @override
+  String get passwordFreeInstallRuleConflict =>
+      'Системный файл правил конфликтует с шаблоном этой функции и не был изменён';
+
+  @override
+  String get passwordFreeInstallUnsupported =>
+      'Текущее окружение не поддерживает изменение системных правил авторизации';
+
+  @override
+  String get passwordFreeInstallCacheSaveFailed =>
+      'Системная настройка вступила в силу, но локальное состояние не сохранено';
+
+  @override
+  String get passwordFreeInstallFailed => 'Не удалось выполнить операцию';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'Установка не удалась: приложение не найдено в удаленном репозитории.';
 

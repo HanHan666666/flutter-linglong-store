@@ -1409,6 +1409,53 @@ class AppLocalizationsJa extends AppLocalizations {
       'インストールには管理者の認証が必要ですが、今回のリクエストは拒否されました';
 
   @override
+  String get passwordFreeInstallTitle => 'インストール時にパスワード確認を省略';
+
+  @override
+  String get passwordFreeInstallSubtitle =>
+      'アプリのインストールと更新時にパスワード入力を省略します。アンインストールなどの操作はシステムの認証設定に従います。';
+
+  @override
+  String get passwordFreeInstallConfirmTitle => 'パスワード確認を省略しますか？';
+
+  @override
+  String get passwordFreeInstallRiskDescription =>
+      '有効にすると、本機のアクティブなログインユーザーはパスワードなしで Linglong アプリをインストール・更新でき、ターミナルや他のプログラムにも適用されます。出所不明のプログラムが、気づかないうちにアプリをインストールしたり置き換えたりする可能性があります。更新により旧バージョンや関連コンテンツが削除されることもあります。アンインストール、手動クリーンアップ、システム設定の変更は、引き続きシステムの既存の認証設定に従います。この設定はコンピューター全体に適用され、ストアをアンインストールしても保持されます。不要になった場合は、先にここでオフにしてください。';
+
+  @override
+  String get passwordFreeInstallConfirmAction => 'リスクを理解しました。有効にします';
+
+  @override
+  String get passwordFreeInstallCancelAction => '現在の設定を維持';
+
+  @override
+  String get passwordFreeInstallEnabled => 'パスワードなしのインストールを有効にしました';
+
+  @override
+  String get passwordFreeInstallDisabled => 'この機能のパスワードなし設定を無効にしました';
+
+  @override
+  String get passwordFreeInstallAuthCancelled => '認証が完了しなかったため、設定は変更されていません';
+
+  @override
+  String get passwordFreeInstallNeedsSync =>
+      '最後に保存された状態を表示しています。変更時にシステム設定を同期します。';
+
+  @override
+  String get passwordFreeInstallRuleConflict =>
+      'システムのルールファイルがこの機能のテンプレートと競合しているため、変更していません';
+
+  @override
+  String get passwordFreeInstallUnsupported => '現在の環境はシステム認証ルールの変更に対応していません';
+
+  @override
+  String get passwordFreeInstallCacheSaveFailed =>
+      'システム設定は有効になりましたが、ローカル状態は保存されませんでした';
+
+  @override
+  String get passwordFreeInstallFailed => '操作に失敗しました';
+
+  @override
   String get installErrorAppNotFoundRemote => 'インストール失敗: リモートリポジトリにアプリが見つかりません';
 
   @override

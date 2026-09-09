@@ -2603,6 +2603,90 @@ abstract class AppLocalizations {
   /// **'安装需要管理员授权，但系统拒绝了本次请求'**
   String get installErrorAuthorizationDenied;
 
+  /// No description provided for @passwordFreeInstallTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装时免密码确认'**
+  String get passwordFreeInstallTitle;
+
+  /// No description provided for @passwordFreeInstallSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装和更新应用时免输密码；卸载等操作沿用系统授权设置。'**
+  String get passwordFreeInstallSubtitle;
+
+  /// No description provided for @passwordFreeInstallConfirmTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启免密码确认？'**
+  String get passwordFreeInstallConfirmTitle;
+
+  /// No description provided for @passwordFreeInstallRiskDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后，本机活动登录用户可免密码安装、更新玲珑应用，终端和其他程序也会生效。来路不明的程序可能在您不知情时安装或替换应用；更新还可能清理旧版本及关联内容。单独卸载、手动清理和修改系统配置仍按系统原有授权设置处理。这项设置对整台电脑生效，卸载商店后也会保留；如不再需要，请先在这里关闭。'**
+  String get passwordFreeInstallRiskDescription;
+
+  /// No description provided for @passwordFreeInstallConfirmAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'我已了解风险，开启'**
+  String get passwordFreeInstallConfirmAction;
+
+  /// No description provided for @passwordFreeInstallCancelAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'保持原设置'**
+  String get passwordFreeInstallCancelAction;
+
+  /// No description provided for @passwordFreeInstallEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已开启安装免密'**
+  String get passwordFreeInstallEnabled;
+
+  /// No description provided for @passwordFreeInstallDisabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已关闭本功能的免密设置'**
+  String get passwordFreeInstallDisabled;
+
+  /// No description provided for @passwordFreeInstallAuthCancelled.
+  ///
+  /// In zh, this message translates to:
+  /// **'未完成授权，未修改设置'**
+  String get passwordFreeInstallAuthCancelled;
+
+  /// No description provided for @passwordFreeInstallNeedsSync.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示的是上次保存的状态，修改时将同步系统设置。'**
+  String get passwordFreeInstallNeedsSync;
+
+  /// No description provided for @passwordFreeInstallRuleConflict.
+  ///
+  /// In zh, this message translates to:
+  /// **'系统规则文件与本功能模板冲突，未做修改'**
+  String get passwordFreeInstallRuleConflict;
+
+  /// No description provided for @passwordFreeInstallUnsupported.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前环境不支持修改系统授权规则'**
+  String get passwordFreeInstallUnsupported;
+
+  /// No description provided for @passwordFreeInstallCacheSaveFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'系统设置已生效，但本地状态未保存'**
+  String get passwordFreeInstallCacheSaveFailed;
+
+  /// No description provided for @passwordFreeInstallFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'操作失败'**
+  String get passwordFreeInstallFailed;
+
   /// No description provided for @installErrorAppNotFoundRemote.
   ///
   /// In zh, this message translates to:

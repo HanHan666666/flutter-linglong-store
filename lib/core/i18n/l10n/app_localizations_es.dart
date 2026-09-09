@@ -1464,6 +1464,60 @@ class AppLocalizationsEs extends AppLocalizations {
       'La instalación requiere autorización de administrador, pero la solicitud fue denegada.';
 
   @override
+  String get passwordFreeInstallTitle => 'Instalar sin confirmar la contraseña';
+
+  @override
+  String get passwordFreeInstallSubtitle =>
+      'Omite la contraseña al instalar y actualizar aplicaciones; la desinstalación y otras operaciones siguen la configuración de autorización del sistema.';
+
+  @override
+  String get passwordFreeInstallConfirmTitle =>
+      '¿Activar la instalación sin contraseña?';
+
+  @override
+  String get passwordFreeInstallRiskDescription =>
+      'Al activarlo, los usuarios locales activos pueden instalar y actualizar aplicaciones Linglong sin contraseña, y también se aplica a la terminal y a otros programas. Programas de origen desconocido pueden instalar o reemplazar aplicaciones sin que usted lo sepa; las actualizaciones también pueden eliminar versiones antiguas y contenido asociado. La desinstalación individual, la limpieza manual y el cambio de la configuración del sistema siguen la configuración de autorización existente. Esta opción se aplica a todo el equipo y se mantiene tras desinstalar la tienda; desactívela aquí si ya no la necesita.';
+
+  @override
+  String get passwordFreeInstallConfirmAction =>
+      'Entiendo los riesgos, activar';
+
+  @override
+  String get passwordFreeInstallCancelAction =>
+      'Mantener la configuración actual';
+
+  @override
+  String get passwordFreeInstallEnabled =>
+      'Instalación sin contraseña activada';
+
+  @override
+  String get passwordFreeInstallDisabled =>
+      'Configuración sin contraseña de esta función desactivada';
+
+  @override
+  String get passwordFreeInstallAuthCancelled =>
+      'Autorización no completada, la configuración no se modificó';
+
+  @override
+  String get passwordFreeInstallNeedsSync =>
+      'Se muestra el último estado guardado; al modificarlo se sincronizará la configuración del sistema.';
+
+  @override
+  String get passwordFreeInstallRuleConflict =>
+      'El archivo de reglas del sistema entra en conflicto con la plantilla de esta función y no se modificó';
+
+  @override
+  String get passwordFreeInstallUnsupported =>
+      'Este entorno no admite modificar las reglas de autorización del sistema';
+
+  @override
+  String get passwordFreeInstallCacheSaveFailed =>
+      'La configuración del sistema se aplicó, pero el estado local no se guardó';
+
+  @override
+  String get passwordFreeInstallFailed => 'La operación falló';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'Error de instalación: Aplicación no encontrada en el repositorio remoto';
 

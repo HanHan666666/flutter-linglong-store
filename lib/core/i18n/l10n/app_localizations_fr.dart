@@ -1498,6 +1498,60 @@ class AppLocalizationsFr extends AppLocalizations {
       'L\'installation nécessite une autorisation administrateur, mais la demande a été refusée.';
 
   @override
+  String get passwordFreeInstallTitle =>
+      'Installation sans confirmation du mot de passe';
+
+  @override
+  String get passwordFreeInstallSubtitle =>
+      'Évitez la saisie du mot de passe lors de l\'installation et de la mise à jour des applications ; la désinstallation et les autres opérations suivent les réglages d\'autorisation du système.';
+
+  @override
+  String get passwordFreeInstallConfirmTitle =>
+      'Activer l’installation sans mot de passe ?';
+
+  @override
+  String get passwordFreeInstallRiskDescription =>
+      'Une fois activé, les utilisateurs locaux actifs peuvent installer et mettre à jour les applications Linglong sans mot de passe, et cela s\'applique aussi au terminal et à d\'autres programmes. Des programmes d\'origine inconnue peuvent installer ou remplacer des applications à votre insu ; les mises à jour peuvent aussi supprimer les anciennes versions et les contenus associés. La désinstallation, le nettoyage manuel et la modification de la configuration système suivent toujours les réglages d\'autorisation existants. Ce réglage s\'applique à tout l\'ordinateur et reste actif après la désinstallation du store ; désactivez-le ici si vous n\'en avez plus besoin.';
+
+  @override
+  String get passwordFreeInstallConfirmAction =>
+      'J\'ai compris les risques, activer';
+
+  @override
+  String get passwordFreeInstallCancelAction => 'Conserver le réglage actuel';
+
+  @override
+  String get passwordFreeInstallEnabled =>
+      'Installation sans mot de passe activée';
+
+  @override
+  String get passwordFreeInstallDisabled =>
+      'Réglage sans mot de passe de cette fonction désactivé';
+
+  @override
+  String get passwordFreeInstallAuthCancelled =>
+      'Autorisation non terminée, réglage non modifié';
+
+  @override
+  String get passwordFreeInstallNeedsSync =>
+      'Affichage du dernier état enregistré ; une modification synchronisera le réglage système.';
+
+  @override
+  String get passwordFreeInstallRuleConflict =>
+      'Le fichier de règles système est en conflit avec le modèle de cette fonction et n\'a pas été modifié';
+
+  @override
+  String get passwordFreeInstallUnsupported =>
+      'Cet environnement ne prend pas en charge la modification des règles d\'autorisation système';
+
+  @override
+  String get passwordFreeInstallCacheSaveFailed =>
+      'Le réglage système a pris effet, mais l\'état local n\'a pas été enregistré';
+
+  @override
+  String get passwordFreeInstallFailed => 'Échec de l\'opération';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'Échec de l\'installation : application introuvable dans le dépôt distant';
 

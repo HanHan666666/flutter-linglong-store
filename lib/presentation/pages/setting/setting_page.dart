@@ -28,6 +28,7 @@ import '../../widgets/app_update_flow.dart';
 import '../../widgets/update_available_dialog.dart';
 import '../../widgets/user_experience_program_dialog.dart';
 import 'widgets/app_language_selector.dart';
+import 'widgets/password_free_install_tile.dart';
 import 'widgets/renderer_preference_tile.dart';
 
 /// 设置页
@@ -692,6 +693,10 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                 ? null
                 : () => _pruneBaseService(context),
           ),
+          _buildDivider(context),
+          // 安装免密开关（docs/50 §5）：风险确认、loading 与结果反馈都在
+          // 独立组件内，设置页只负责布局。
+          const PasswordFreeInstallTile(),
         ],
       ),
     );

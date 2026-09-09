@@ -1554,6 +1554,57 @@ class AppLocalizationsAr extends AppLocalizations {
       'يتطلب التثبيت تصريحًا من المسؤول، ولكن تم رفض الطلب.';
 
   @override
+  String get passwordFreeInstallTitle => 'التثبيت دون تأكيد كلمة المرور';
+
+  @override
+  String get passwordFreeInstallSubtitle =>
+      'تخطَّ إدخال كلمة المرور عند تثبيت التطبيقات وتحديثها؛ وتبقى عمليات الإزالة وغيرها وفق إعدادات التصريح في النظام.';
+
+  @override
+  String get passwordFreeInstallConfirmTitle =>
+      'هل تريد تفعيل التثبيت دون كلمة مرور؟';
+
+  @override
+  String get passwordFreeInstallRiskDescription =>
+      'بعد التفعيل، يمكن للمستخدمين المحليين النشطين تثبيت تطبيقات Linglong وتحديثها دون كلمة مرور، وينطبق ذلك أيضًا على الطرفية والبرامج الأخرى. قد تقوم برامج مجهولة المصدر بتثبيت التطبيقات أو استبدالها دون علمك؛ وقد تؤدي التحديثات أيضًا إلى إزالة الإصدارات القديمة والمحتوى المرتبط بها. تبقى عمليات الإزالة الفردية والتنظيف اليدوي وتغيير إعدادات النظام وفق إعدادات التصريح الحالية. ينطبق هذا الإعداد على الجهاز بالكامل ويبقى بعد إزالة المتجر؛ أوقفه من هنا إذا لم تعد بحاجة إليه.';
+
+  @override
+  String get passwordFreeInstallConfirmAction => 'أفهم المخاطر، فعّل';
+
+  @override
+  String get passwordFreeInstallCancelAction => 'الإبقاء على الإعداد الحالي';
+
+  @override
+  String get passwordFreeInstallEnabled => 'تم تفعيل التثبيت دون كلمة مرور';
+
+  @override
+  String get passwordFreeInstallDisabled =>
+      'تم إيقاف إعداد عدم كلمة المرور لهذه الميزة';
+
+  @override
+  String get passwordFreeInstallAuthCancelled =>
+      'لم يكتمل التصريح، ولم يتم تغيير الإعداد';
+
+  @override
+  String get passwordFreeInstallNeedsSync =>
+      'يتم عرض آخر حالة محفوظة؛ وسيتم مزامنة إعداد النظام عند التغيير.';
+
+  @override
+  String get passwordFreeInstallRuleConflict =>
+      'ملف قواعد النظام يتعارض مع قالب هذه الميزة ولم يتم تعديله';
+
+  @override
+  String get passwordFreeInstallUnsupported =>
+      'لا تدعم البيئة الحالية تعديل قواعد التصريح في النظام';
+
+  @override
+  String get passwordFreeInstallCacheSaveFailed =>
+      'تم تطبيق إعداد النظام، لكن الحالة المحلية لم تُحفظ';
+
+  @override
+  String get passwordFreeInstallFailed => 'فشلت العملية';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'فشل التثبيت: لم يتم العثور على التطبيق في المستودع البعيد';
 

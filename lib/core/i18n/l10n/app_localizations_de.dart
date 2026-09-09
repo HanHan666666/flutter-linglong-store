@@ -1483,6 +1483,61 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die Installation erfordert eine Administratorautorisierung, aber die Anfrage wurde abgelehnt.';
 
   @override
+  String get passwordFreeInstallTitle =>
+      'Installation ohne Passwortbestätigung';
+
+  @override
+  String get passwordFreeInstallSubtitle =>
+      'Beim Installieren und Aktualisieren von Apps entfällt die Passworteingabe; Deinstallieren und andere Vorgänge folgen weiterhin den Systemautorisierungseinstellungen.';
+
+  @override
+  String get passwordFreeInstallConfirmTitle =>
+      'Passwortbestätigung aktivieren?';
+
+  @override
+  String get passwordFreeInstallRiskDescription =>
+      'Nach dem Aktivieren können aktive lokale Benutzer Linglong-Apps ohne Passwort installieren und aktualisieren; das gilt auch für das Terminal und andere Programme. Programme unbekannter Herkunft können Apps ohne Ihr Wissen installieren oder ersetzen; Aktualisierungen können zudem alte Versionen und zugehörige Inhalte entfernen. Einzelnes Deinstallieren, manuelles Aufräumen und Ändern der Systemkonfiguration folgen weiterhin den bestehenden Autorisierungseinstellungen. Diese Einstellung gilt für den gesamten Computer und bleibt auch nach dem Deinstallieren des Stores erhalten; deaktivieren Sie sie hier, wenn Sie sie nicht mehr benötigen.';
+
+  @override
+  String get passwordFreeInstallConfirmAction =>
+      'Ich habe die Risiken verstanden, aktivieren';
+
+  @override
+  String get passwordFreeInstallCancelAction =>
+      'Aktuelle Einstellung beibehalten';
+
+  @override
+  String get passwordFreeInstallEnabled =>
+      'Passwortfreie Installation aktiviert';
+
+  @override
+  String get passwordFreeInstallDisabled =>
+      'Passwortfreie Einstellung dieser Funktion deaktiviert';
+
+  @override
+  String get passwordFreeInstallAuthCancelled =>
+      'Autorisierung nicht abgeschlossen, Einstellung nicht geändert';
+
+  @override
+  String get passwordFreeInstallNeedsSync =>
+      'Angezeigt wird der zuletzt gespeicherte Zustand; eine Änderung synchronisiert die Systemeinstellung.';
+
+  @override
+  String get passwordFreeInstallRuleConflict =>
+      'Die Systemregeldatei steht im Konflikt mit der Vorlage dieser Funktion und wurde nicht geändert';
+
+  @override
+  String get passwordFreeInstallUnsupported =>
+      'Diese Umgebung unterstützt das Ändern von Systemautorisierungsregeln nicht';
+
+  @override
+  String get passwordFreeInstallCacheSaveFailed =>
+      'Die Systemeinstellung ist aktiv, der lokale Status wurde jedoch nicht gespeichert';
+
+  @override
+  String get passwordFreeInstallFailed => 'Vorgang fehlgeschlagen';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'Installation fehlgeschlagen: App im Remote-Repository nicht gefunden';
 

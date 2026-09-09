@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/application/providers/application_dependency_providers.dart';
 import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/providers/linglong_env_provider.dart';
+import 'package:linglong_store/application/providers/polkit_rule_provider.dart';
 import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
@@ -287,6 +288,30 @@ void main() {
 
     final size = tester.getSize(find.byType(SwitchListTile));
     expect(size.height, greaterThanOrEqualTo(48));
+  });
+
+  testWidgets('离开设置页后事务仍正确收尾并更新缓存', (tester) async {
+    final gateway = _FakePolkitRuleGateway(
+      result: _appliedResult(requested: true),
+    )..hold = Completer<void>();
+    final container = await _pumpTile(tester, gateway: gateway);
+
+    await tester.tap(find.byType(SwitchListTile));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('我已了解风险，开启'));
+    await tester.pump();
+
+    // 离开设置页（组件被移除）后再完成提权：控制器不依赖页面可见性。
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: SizedBox.shrink())),
+    );
+    gateway.hold!.complete();
+    await tester.pumpAndSettle();
+
+    final state = container.read(polkitRuleProvider);
+    expect(state.enabled, isTrue);
+    expect(state.needsSync, isFalse);
+    expect(state.phase, PasswordFreeInstallPhase.ready);
   });
 
   testWidgets('键盘可达：Tab 聚焦后按空格可触发开启确认', (tester) async {

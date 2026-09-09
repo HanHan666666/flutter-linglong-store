@@ -687,10 +687,12 @@ class InstallQueue extends _$InstallQueue {
 
     _disposeActiveExecutor(taskId: taskId);
 
-    // 授权取消或授权组件不可用：挂起授权门闩，pending 任务保留但不再自动
-    // 消费，等待用户明确重试（§10.2）；其余失败照常调度下一任务。
+    // 授权取消、授权被拒绝或授权组件不可用：挂起授权门闩，pending 任务保留但
+    // 不再自动消费，等待用户明确重试（docs/47 §10.2、docs/50 §7.3）；其余失败
+    // 照常调度下一任务。
     final authorizationBlocked =
         failure.kind == AppOperationFailureKind.authorizationCancelled ||
+        failure.kind == AppOperationFailureKind.authorizationDenied ||
         failure.kind == AppOperationFailureKind.helperUnavailable;
     if (authorizationBlocked) {
       _authorizationGatePaused = true;

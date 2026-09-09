@@ -56,7 +56,13 @@ List<Override> createProductionDependencyOverrides({
       (ref) => ErrorSolutionRepositoryImpl(),
     ),
     linglongCliRepositoryProvider.overrideWith((ref) {
-      return LinglongCliRepositoryImpl(privilegedHelper: privilegedHelper);
+      return LinglongCliRepositoryImpl(
+        privilegedHelper: privilegedHelper,
+        // 只读模式读取器在任务启动时取一次快照并绑定到该任务（docs/50 §7.1）。
+        passwordFreeInstallModeReader: ref.read(
+          passwordFreeInstallModeReaderProvider,
+        ),
+      );
     }),
     linglongRepositoryManagementRepositoryProvider.overrideWith((ref) {
       return LinglongCliRepositoryImpl(privilegedHelper: privilegedHelper);

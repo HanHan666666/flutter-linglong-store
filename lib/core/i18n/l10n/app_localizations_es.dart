@@ -1460,6 +1460,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'El componente de autorización no está disponible. No se puede completar la instalación.';
 
   @override
+  String get installErrorAuthorizationDenied =>
+      'La instalación requiere autorización de administrador, pero la solicitud fue denegada.';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'Error de instalación: Aplicación no encontrada en el repositorio remoto';
 

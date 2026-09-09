@@ -1402,6 +1402,10 @@ class AppLocalizationsKo extends AppLocalizations {
       '인증 구성 요소를 사용할 수 없어 설치를 완료할 수 없습니다.';
 
   @override
+  String get installErrorAuthorizationDenied =>
+      '설치에 관리자 인증이 필요하지만 이번 요청은 거부되었습니다';
+
+  @override
   String get installErrorAppNotFoundRemote => '설치 실패: 원격 저장소에서 앱을 찾을 수 없습니다';
 
   @override

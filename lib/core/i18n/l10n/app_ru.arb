@@ -829,6 +829,7 @@
   "installErrorUnknown": "Установка не удалась: неизвестная ошибка.",
   "installErrorAuthorizationCancelled": "Для установки требуется авторизация администратора. Авторизация отменена.",
   "installErrorHelperUnavailable": "Компонент авторизации недоступен. Установку не удалось завершить.",
+  "installErrorAuthorizationDenied": "Для установки требуется авторизация администратора, но запрос был отклонён.",
   "installErrorAppNotFoundRemote": "Установка не удалась: приложение не найдено в удаленном репозитории.",
   "installErrorAppNotFoundLocal": "Установка не удалась: приложение не найдено локально",
   "installFailed": "Установка не удалась",

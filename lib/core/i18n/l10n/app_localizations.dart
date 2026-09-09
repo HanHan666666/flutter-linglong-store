@@ -2597,6 +2597,12 @@ abstract class AppLocalizations {
   /// **'授权组件不可用，无法完成安装'**
   String get installErrorHelperUnavailable;
 
+  /// No description provided for @installErrorAuthorizationDenied.
+  ///
+  /// In zh, this message translates to:
+  /// **'安装需要管理员授权，但系统拒绝了本次请求'**
+  String get installErrorAuthorizationDenied;
+
   /// No description provided for @installErrorAppNotFoundRemote.
   ///
   /// In zh, this message translates to:

@@ -841,6 +841,7 @@
   "installErrorUnknown": "Error de instalación: Error desconocido",
   "installErrorAuthorizationCancelled": "La instalación requiere autorización de administrador. La autorización se canceló.",
   "installErrorHelperUnavailable": "El componente de autorización no está disponible. No se puede completar la instalación.",
+  "installErrorAuthorizationDenied": "La instalación requiere autorización de administrador, pero la solicitud fue denegada.",
   "installErrorAppNotFoundRemote": "Error de instalación: Aplicación no encontrada en el repositorio remoto",
   "installErrorAppNotFoundLocal": "Error de instalación: Aplicación no encontrada localmente",
   "installFailed": "Error de instalación",

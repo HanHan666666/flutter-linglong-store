@@ -112,7 +112,7 @@ final class InstallQueueProvider
   }
 }
 
-String _$installQueueHash() => r'6e63f97b5cf4d3127d3dcac0fce808f24acab911';
+String _$installQueueHash() => r'bab7bd2be33dd15fb0a21643d10ba4cb083e313d';
 
 /// 安装队列状态机 Provider
 ///

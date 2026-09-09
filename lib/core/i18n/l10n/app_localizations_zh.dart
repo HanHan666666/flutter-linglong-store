@@ -1381,6 +1381,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get installErrorHelperUnavailable => '授权组件不可用，无法完成安装';
 
   @override
+  String get installErrorAuthorizationDenied => '安装需要管理员授权，但系统拒绝了本次请求';
+
+  @override
   String get installErrorAppNotFoundRemote => '安装失败: 远程仓库找不到应用';
 
   @override
@@ -3722,6 +3725,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get installErrorHelperUnavailable => '授權組件不可用，無法完成安裝';
+
+  @override
+  String get installErrorAuthorizationDenied => '安裝需要管理員授權，但系統拒絕了本次請求';
 
   @override
   String get installErrorAppNotFoundRemote => '安裝失敗: 遠端儲存庫找不到應用';

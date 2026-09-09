@@ -31,8 +31,15 @@ enum AppOperationFailureKind {
   /// 应用退出后恢复时无法证明原任务成功。
   interrupted,
 
-  /// 用户关闭了特权 helper 的首次 pkexec 授权对话框（docs/47 §10.2）。
+  /// 用户关闭了特权 helper 的首次 pkexec 授权对话框（docs/47 §10.2），
+  /// 或上游给出明确的授权取消事实。
   authorizationCancelled,
+
+  /// 上游 daemon 明确拒绝了本次安装授权请求（polkit 未放行、D-Bus AccessDenied）。
+  ///
+  /// 与 [authorizationCancelled] 区分：前者是用户主动取消，后者是系统拒绝；
+  /// 两者都会挂起队列自动消费，但反馈文案不同（docs/50 §7.3）。
+  authorizationDenied,
 
   /// 授权组件不可用：helper 缺失、pkexec 失败或 helper 会话中断
   /// （docs/47 §10.3）。

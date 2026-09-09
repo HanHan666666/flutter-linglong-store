@@ -624,4 +624,69 @@ void main() {
       },
     );
   });
+
+  group('授权失败归类（docs/50 §7.3）', () {
+    Future<InstallProgress> runInstallWithFailure(
+      String jsonErrorLine,
+    ) async {
+      final executor = _RecordingCliExecutor()
+        ..progressEvents = <ProgressEvent>[
+          ProgressEvent(line: jsonErrorLine, type: ProgressEventType.stdout),
+        ];
+      final repository = LinglongCliRepositoryImpl.withExecutor(
+        execute: executor.execute,
+        executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+        cancelWithSystemKill: executor.cancelWithSystemKill,
+      );
+
+      final events = await repository
+          .installApp('org.example.demo')
+          .toList();
+      return events.last;
+    }
+
+    test('PermissionDenied 错误码映射为授权被拒绝', () async {
+      final failed = await runInstallWithFailure(
+        '{"code":2,"message":"not authorized"}',
+      );
+
+      expect(failed.status, InstallStatus.failed);
+      expect(
+        failed.failure?.kind,
+        AppOperationFailureKind.authorizationDenied,
+      );
+      expect(failed.failure?.cliCode, 2);
+    });
+
+    test('通用 AccessDenied 文本同样按授权拒绝处理', () async {
+      final failed = await runInstallWithFailure(
+        '{"code":-1,"message":"Access denied by policy"}',
+      );
+
+      expect(
+        failed.failure?.kind,
+        AppOperationFailureKind.authorizationDenied,
+      );
+    });
+
+    test('明确的用户取消事实沿用 authorizationCancelled', () async {
+      final failed = await runInstallWithFailure(
+        '{"code":-1,"message":"Request dismissed by user"}',
+      );
+
+      expect(
+        failed.failure?.kind,
+        AppOperationFailureKind.authorizationCancelled,
+      );
+    });
+
+    test('网络或下载失败不误归类为授权问题', () async {
+      final failed = await runInstallWithFailure(
+        '{"code":3001,"message":"Network error"}',
+      );
+
+      expect(failed.failure?.kind, AppOperationFailureKind.cli);
+      expect(failed.failure?.cliCode, 3001);
+    });
+  });
 }

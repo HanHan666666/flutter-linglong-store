@@ -36,6 +36,7 @@ const _$AppOperationFailureKindEnumMap = {
   AppOperationFailureKind.execution: 'execution',
   AppOperationFailureKind.interrupted: 'interrupted',
   AppOperationFailureKind.authorizationCancelled: 'authorizationCancelled',
+  AppOperationFailureKind.authorizationDenied: 'authorizationDenied',
   AppOperationFailureKind.helperUnavailable: 'helperUnavailable',
 };
 

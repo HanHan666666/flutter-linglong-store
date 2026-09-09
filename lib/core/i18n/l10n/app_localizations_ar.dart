@@ -1550,6 +1550,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'مكوّن التصريح غير متاح، لا يمكن إكمال التثبيت';
 
   @override
+  String get installErrorAuthorizationDenied =>
+      'يتطلب التثبيت تصريحًا من المسؤول، ولكن تم رفض الطلب.';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'فشل التثبيت: لم يتم العثور على التطبيق في المستودع البعيد';
 

@@ -1405,6 +1405,10 @@ class AppLocalizationsJa extends AppLocalizations {
       '認証コンポーネントが利用できないため、インストールを完了できません。';
 
   @override
+  String get installErrorAuthorizationDenied =>
+      'インストールには管理者の認証が必要ですが、今回のリクエストは拒否されました';
+
+  @override
   String get installErrorAppNotFoundRemote => 'インストール失敗: リモートリポジトリにアプリが見つかりません';
 
   @override

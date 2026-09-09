@@ -1482,6 +1482,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Компонент авторизации недоступен. Установку не удалось завершить.';
 
   @override
+  String get installErrorAuthorizationDenied =>
+      'Для установки требуется авторизация администратора, но запрос был отклонён.';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'Установка не удалась: приложение не найдено в удаленном репозитории.';
 

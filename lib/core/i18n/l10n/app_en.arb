@@ -831,6 +831,7 @@
   "installErrorUnknown": "Installation failed: Unknown error",
   "installErrorAuthorizationCancelled": "Administrator authorization is required. Authorization was cancelled.",
   "installErrorHelperUnavailable": "The authorization component is unavailable. Installation cannot proceed.",
+  "installErrorAuthorizationDenied": "Installation requires administrator authorization, but the request was denied.",
   "installErrorAppNotFoundRemote": "Installation failed: App not found in remote repo",
   "installErrorAppNotFoundLocal": "Installation failed: App not found locally",
   "installFailed": "Installation failed",

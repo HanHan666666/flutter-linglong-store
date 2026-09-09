@@ -1494,6 +1494,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le composant d\'autorisation est indisponible. L\'installation ne peut pas aboutir.';
 
   @override
+  String get installErrorAuthorizationDenied =>
+      'L\'installation nécessite une autorisation administrateur, mais la demande a été refusée.';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'Échec de l\'installation : application introuvable dans le dépôt distant';
 

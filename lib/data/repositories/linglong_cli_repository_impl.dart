@@ -12,6 +12,7 @@ import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_task.dart';
 import '../../domain/models/linux_distribution.dart';
 import '../../domain/models/linglong_repository_config.dart';
+import '../../domain/models/polkit_rule_state.dart';
 import '../../domain/repositories/linglong_cli_repository.dart';
 import '../../domain/repositories/linglong_repository_management_repository.dart';
 import '../../core/platform/cli_executor.dart';
@@ -40,35 +41,79 @@ typedef CliExecuteWithProgressAndProcessFn =
 typedef CliCancelWithSystemKillFn =
     Future<bool> Function(String processId, {required int pid, bool force});
 
+/// 取消普通 CLI 任务：向本进程自己启动的 ll-cli 发送 SIGTERM。
+///
+/// 免密安装路径下 ll-cli 由普通用户直接运行，取消只需要信号，不再需要
+/// `pkexec kill`（docs/50 §7.2）；旧直连路径仍保留系统级精确取消。
+typedef CliCancelProcessFn = bool Function(String processId, {bool force});
+
+/// 安装类任务实际使用的执行路径（任务启动时绑定，取消时据此路由）。
+enum _CliTaskTransport {
+  /// docs/47 的特权 helper 会话。
+  privilegedHelper,
+
+  /// 免密开启后的普通用户 ll-cli（取消只发 SIGTERM）。
+  passwordFreeCli,
+
+  /// 未注入 helper 的旧直连路径（测试替身/过渡期，取消保持 pkexec kill）。
+  legacyDirectCli,
+}
+
 /// ll-cli Repository 实现
 class LinglongCliRepositoryImpl
     implements LinglongCliRepository, LinglongRepositoryManagementRepository {
-  LinglongCliRepositoryImpl({PrivilegedHelperTransport? privilegedHelper})
-    : _execute = CliExecutor.execute,
-      _executeWithProgressAndProcess =
-          CliExecutor.executeWithProgressAndProcess,
-      _cancelWithSystemKill = CliExecutor.cancelWithSystemKill,
-      _privilegedHelper = privilegedHelper;
+  LinglongCliRepositoryImpl({
+    PrivilegedHelperTransport? privilegedHelper,
+    PasswordFreeInstallModeReader? passwordFreeInstallModeReader,
+    CliCancelProcessFn? cancelProcess,
+  }) : _execute = CliExecutor.execute,
+       _executeWithProgressAndProcess =
+           CliExecutor.executeWithProgressAndProcess,
+       _cancelWithSystemKill = CliExecutor.cancelWithSystemKill,
+       _cancelProcess = cancelProcess ?? CliExecutor.cancel,
+       _privilegedHelper = privilegedHelper,
+       _passwordFreeInstallModeReader = passwordFreeInstallModeReader;
 
   LinglongCliRepositoryImpl.withExecutor({
     required CliExecuteFn execute,
     required CliExecuteWithProgressAndProcessFn executeWithProgressAndProcess,
     required CliCancelWithSystemKillFn cancelWithSystemKill,
     PrivilegedHelperTransport? privilegedHelper,
+    PasswordFreeInstallModeReader? passwordFreeInstallModeReader,
+    CliCancelProcessFn? cancelProcess,
   }) : _execute = execute,
        _executeWithProgressAndProcess = executeWithProgressAndProcess,
        _cancelWithSystemKill = cancelWithSystemKill,
-       _privilegedHelper = privilegedHelper;
+       _cancelProcess = cancelProcess ?? CliExecutor.cancel,
+       _privilegedHelper = privilegedHelper,
+       _passwordFreeInstallModeReader = passwordFreeInstallModeReader;
 
   final CliExecuteFn _execute;
   final CliExecuteWithProgressAndProcessFn _executeWithProgressAndProcess;
   final CliCancelWithSystemKillFn _cancelWithSystemKill;
+
+  /// 取消普通用户自己启动的 ll-cli（免密路径），默认走 [CliExecutor.cancel]。
+  final CliCancelProcessFn _cancelProcess;
 
   /// 特权 helper 传输；null 时 install/update 保持旧直连路径（测试替身）。
   ///
   /// 生产装配必须传入应用级单例客户端（docs/47 §4.3）；本 Repository 所在
   /// provider 是 autoDispose，实例重建也必须复用同一个客户端。
   final PrivilegedHelperTransport? _privilegedHelper;
+
+  /// 免密安装模式的只读快照读取器（docs/50 §7.1）。
+  ///
+  /// 由生产组合根注入：任务启动时同步取一次值并绑定到该任务；未注入时一律
+  /// 使用特权 helper，保持既有行为。
+  final PasswordFreeInstallModeReader? _passwordFreeInstallModeReader;
+
+  /// 任务执行路径绑定表：任务启动时写入，取消时按记录路由。
+  ///
+  /// 使用静态表与 [CliExecutor] 的进程表同理：Repository 实例可能被重建，
+  /// 而取消必须绑定到启动该任务的实际路径，不能根据当前开关值、helper 是否
+  /// 注入或 helper 是否仍存活临时推断（docs/50 §7.2）。
+  static final Map<String, _CliTaskTransport> _taskTransports =
+      <String, _CliTaskTransport>{};
 
   /// 取消标志
   final Map<String, bool> _cancelFlags = {};
@@ -281,6 +326,19 @@ class LinglongCliRepositoryImpl
     // 每次开始新任务前重置该任务的取消标志。
     _cancelFlags[processId] = false;
 
+    // 执行路径在任务开始时取一次本地快照并绑定到该任务（docs/50 §7.1）：
+    // 设置改变不会切换正在运行的任务，下一次任务使用新状态。免密开启且无
+    // 待同步时走普通用户 ll-cli；否则沿用 docs/47 的特权 helper。任何一次
+    // 任务失败都不自动切换执行路径重试。
+    final usePasswordFreeCli = _passwordFreeInstallModeReader?.call() ?? false;
+    final helper = _privilegedHelper;
+    final transport = helper != null && !usePasswordFreeCli
+        ? _CliTaskTransport.privilegedHelper
+        : usePasswordFreeCli
+        ? _CliTaskTransport.passwordFreeCli
+        : _CliTaskTransport.legacyDirectCli;
+    _taskTransports[processId] = transport;
+
     yield InstallProgress(
       appId: appId,
       eventType: InstallProgressEventType.message,
@@ -292,15 +350,17 @@ class LinglongCliRepositoryImpl
     try {
       AppLogger.info('[LinglongCli] 开始$operationLabel: $commandLine');
 
-      // 传输选择（docs/47 §4.3）：生产走特权 helper（首次授权一次、后续复用、
-      // 取消不再授权）；未注入 helper 时保持旧直连路径（测试替身/过渡期）。
-      // 两种来源的输出行继续走同一套 CliOutputParser 解析与安装前后复验。
+      // 传输选择（docs/47 §4.3、docs/50 §7.1）：生产默认走特权 helper（首次
+      // 授权一次、后续复用、取消不再授权）；免密开启时以普通用户执行，不调用
+      // ensureStarted，也不额外用 pkexec 包装，由上游 daemon 的 polkit 检查
+      // 决定是否获准。两种来源的输出行继续走同一套 CliOutputParser 解析与
+      // 安装前后复验。
       final Stream<String> lines;
-      if (_privilegedHelper case final helper?) {
+      if (transport == _CliTaskTransport.privilegedHelper) {
         // async* 生成器：ensureStarted 与授权异常在流被监听时触发，
         // 由下方 await for 与本层 catch 统一承接。
         lines = _startHelperTaskLines(
-          helper,
+          helper!,
           processId: processId,
           appId: appId,
           kind: kind,
@@ -386,7 +446,10 @@ class LinglongCliRepositoryImpl
             status: InstallStatus.failed,
             rawMessage: errorDetail,
             failure: AppOperationFailure(
-              kind: AppOperationFailureKind.cli,
+              kind: _failureKindForCliError(
+                cliCode: errorCode,
+                diagnostic: errorDetail,
+              ),
               cliCode: errorCode,
               diagnostic: errorDetail,
               guidanceScenario: kind == InstallTaskKind.update
@@ -516,8 +579,36 @@ class LinglongCliRepositoryImpl
         ),
       );
     } finally {
+      _taskTransports.remove(processId);
       _cancelFlags.remove(processId);
     }
+  }
+
+  /// 把 CLI 错误事实归类为稳定失败类型（docs/50 §7.3）。
+  ///
+  /// 识别依据是已核实的诊断契约：上游 `PermissionDenied` 的错误码为 2，
+  /// 消息为 "not authorized"；D-Bus 层拒绝为 `AccessDenied`。不臆造 CLI 错误码，
+  /// 也不把网络、仓库或下载失败误归类为授权问题。
+  AppOperationFailureKind _failureKindForCliError({
+    required int? cliCode,
+    required String diagnostic,
+  }) {
+    final lower = diagnostic.toLowerCase();
+    // 明确的用户取消事实优先沿用 authorizationCancelled。
+    if (lower.contains('request dismissed') ||
+        lower.contains('dismissed by user') ||
+        lower.contains('authentication cancelled') ||
+        lower.contains('authentication canceled')) {
+      return AppOperationFailureKind.authorizationCancelled;
+    }
+    // linglong ErrorCode::PermissionDenied == 2（已核实）。
+    if (cliCode == 2 ||
+        lower.contains('not authorized') ||
+        lower.contains('permission denied') ||
+        lower.contains('access denied')) {
+      return AppOperationFailureKind.authorizationDenied;
+    }
+    return AppOperationFailureKind.cli;
   }
 
   /// 建立特权 helper 任务并返回输出行流。
@@ -936,10 +1027,35 @@ class LinglongCliRepositoryImpl
 
     AppLogger.info('[LinglongCli] 开始取消$operationLabel: $appId');
 
+    // 按任务启动时绑定的实际路径路由取消（docs/50 §7.2），不根据当前开关值、
+    // helper 是否注入或 helper 是否仍存活来取消另一路任务。
+    final transport = _taskTransports[processId];
+
+    // 免密路径：向本进程自己启动的普通 ll-cli 发 SIGTERM，由 CLI 的信号处理
+    // 触发 cancelCurrentTask → D-Bus Cancel；不复用旧 pkexec kill 分支，避免
+    // 取消再次弹授权框，也不使用 killall、不杀 daemon。
+    if (transport == _CliTaskTransport.passwordFreeCli) {
+      final accepted = _cancelProcess(processId);
+      if (accepted) {
+        _setOperationCancelled(appId, kind: kind);
+        AppLogger.info('[LinglongCli] 已向普通 CLI 任务发送 SIGTERM: $appId');
+      } else {
+        // 信号失败、进程已退出或权限不足时不伪造 cancelled，任务保持运行。
+        AppLogger.warning(
+          '[LinglongCli] 普通 CLI 取消信号未发送（进程已结束或权限不足）: $appId',
+        );
+      }
+      return accepted;
+    }
+
     // 特权 helper 传输的活动任务：经 helper 的 requestId 取消，SIGTERM 由
     // root helper 直接发送，不再触发第二次 pkexec 授权（docs/47 §8.2）。
-    if (_privilegedHelper case final helper?) {
-      if (!helper.hasActiveTask) {
+    final helper = _privilegedHelper;
+    final helperOwnsTask =
+        transport == _CliTaskTransport.privilegedHelper ||
+        (transport == null && (helper?.hasActiveTask ?? false));
+    if (helperOwnsTask) {
+      if (helper == null || !helper.hasActiveTask) {
         // 没有经 helper 启动的任务（授权阶段被取消、尚未 start 或已退出）。
         AppLogger.warning(
           '[LinglongCli] 取消$operationLabel失败：helper 无活动任务: $appId',
@@ -958,6 +1074,7 @@ class LinglongCliRepositoryImpl
       return accepted;
     }
 
+    // 旧直连路径（未注入 helper 的测试替身/过渡期）：保持精确 PID + pkexec kill。
     // 从 CliExecutor 的静态进程表读取该任务的 root ll-cli 进程 PID。
     //
     // 关键：必须用 CliExecutor 静态表，而非本实例的 _activeProcessPids。

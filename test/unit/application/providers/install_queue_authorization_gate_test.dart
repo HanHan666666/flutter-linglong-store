@@ -263,6 +263,54 @@ void main() {
     expect(message, contains('授权组件不可用'));
   });
 
+  test('authorization denied also pauses the queue', () async {
+    final fakeRepo = _GateFakeCliRepository()
+      ..eventsByApp['org.denied.app'] = const [
+        InstallProgress(
+          appId: 'ignored',
+          status: InstallStatus.failed,
+          failure: AppOperationFailure(
+            kind: AppOperationFailureKind.authorizationDenied,
+            cliCode: 2,
+            diagnostic: 'not authorized',
+          ),
+        ),
+      ];
+    final container = await _createContainer(fakeRepo);
+    addTearDown(container.dispose);
+
+    final queue = container.read(installQueueProvider.notifier);
+    queue.enqueueOperation(
+      kind: InstallTaskKind.install,
+      appId: 'org.denied.app',
+      appName: 'Denied',
+    );
+    queue.enqueueOperation(
+      kind: InstallTaskKind.install,
+      appId: 'org.after.app',
+      appName: 'After',
+    );
+
+    final failed = await _eventually(
+      () => container.read(installQueueProvider).history.isNotEmpty,
+    );
+    expect(failed, isTrue);
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    expect(queue.isAuthorizationGatePaused, isTrue);
+    expect(
+      fakeRepo.installedApps,
+      ['org.denied.app'],
+      reason: '授权被拒绝后不得自动换路径重试或继续批量任务',
+    );
+
+    // 历史失败文案使用授权语义，而不是泛化失败。
+    final historyTask = container.read(installQueueProvider).history.first;
+    final message = container
+        .read(installMessagesProvider)
+        .errorMessageForTask(historyTask);
+    expect(message, contains('授权'));
+  });
+
   test('设置事务暂停与释放不解除授权门闩，也不消费 pending 任务', () async {
     final fakeRepo = _GateFakeCliRepository()
       ..eventsByApp['org.first.app'] = const [

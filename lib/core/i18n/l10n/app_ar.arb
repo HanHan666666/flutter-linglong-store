@@ -847,6 +847,7 @@
   "installErrorUnknown": "فشل التثبيت: خطأ غير معروف",
   "installErrorAuthorizationCancelled": "يتطلب التثبيت تصريحًا إداريًا. تم إلغاء التصريح.",
   "installErrorHelperUnavailable": "مكوّن التصريح غير متاح، لا يمكن إكمال التثبيت",
+  "installErrorAuthorizationDenied": "يتطلب التثبيت تصريحًا من المسؤول، ولكن تم رفض الطلب.",
   "installErrorAppNotFoundRemote": "فشل التثبيت: لم يتم العثور على التطبيق في المستودع البعيد",
   "installErrorAppNotFoundLocal": "فشل التثبيت: لم يتم العثور على التطبيق محليًا",
   "installFailed": "فشل التثبيت",

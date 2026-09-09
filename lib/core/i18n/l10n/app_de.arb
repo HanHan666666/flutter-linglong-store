@@ -830,6 +830,7 @@
   "installErrorUnknown": "Installation fehlgeschlagen: Unbekannter Fehler",
   "installErrorAuthorizationCancelled": "Für die Installation ist eine Administratorautorisierung erforderlich. Die Autorisierung wurde abgebrochen.",
   "installErrorHelperUnavailable": "Die Autorisierungskomponente ist nicht verfügbar. Die Installation kann nicht abgeschlossen werden.",
+  "installErrorAuthorizationDenied": "Die Installation erfordert eine Administratorautorisierung, aber die Anfrage wurde abgelehnt.",
   "installErrorAppNotFoundRemote": "Installation fehlgeschlagen: App im Remote-Repository nicht gefunden",
   "installErrorAppNotFoundLocal": "Installation fehlgeschlagen: App lokal nicht gefunden",
   "installFailed": "Installation fehlgeschlagen",

@@ -1479,6 +1479,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die Autorisierungskomponente ist nicht verfügbar. Die Installation kann nicht abgeschlossen werden.';
 
   @override
+  String get installErrorAuthorizationDenied =>
+      'Die Installation erfordert eine Administratorautorisierung, aber die Anfrage wurde abgelehnt.';
+
+  @override
   String get installErrorAppNotFoundRemote =>
       'Installation fehlgeschlagen: App im Remote-Repository nicht gefunden';
 

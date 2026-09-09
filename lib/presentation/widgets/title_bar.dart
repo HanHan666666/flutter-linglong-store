@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -56,6 +57,17 @@ class CustomTitleBar extends StatelessWidget {
   /// 标题栏高度 - 57.6px (3.6rem)
   static const double height = 57.6;
 
+  /// 标题为搜索区让出的最小宽度（极端窄窗口下的兜底阈值）。
+  ///
+  /// 标题优先按内容固有宽度完整展示，搜索框让位收缩；只有窗口窄到连这部分
+  /// 空间都保不住时，才限制标题宽度并回退省略号，避免标题区把搜索框与拖拽区
+  /// 挤成负宽度导致 Row 溢出。
+  /// 取值依据：搜索候选浮层内部最小可渲染宽度约 56px（列表内边距 12 + 条目
+  /// 内边距 24 + 展开箭头 12 + 间距 8）加搜索区左右内边距 48px，搜索区与拖拽区
+  /// 再按 1:1 分配，合计 208px；加上 Logo 与间距的固定占位 40px，取整为 260px。
+  /// 正常窗口（最小宽度 1280px）下该阈值不会生效，任何语言的标题都完整显示。
+  static const double _titleReservedForSearchWidth = 260.0;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -71,16 +83,30 @@ class CustomTitleBar extends StatelessWidget {
             child: Padding(
               // 方向感知间距：RTL 下 logo 区靠右留白，镜像布局
               padding: const EdgeInsetsDirectional.only(start: AppSpacing.lg),
-              child: Row(
-                children: [
-                  // 搜索框改为真实输入后，拖拽区域需要避开输入控件。
-                  _WindowDragHandle(
-                    onDoubleTap: onMaximize,
-                    child: _buildLogoSection(context),
-                  ),
-                  if (showSearch) _buildSearchSection(context),
-                  Expanded(child: _WindowDragSpacer(onDoubleTap: onMaximize)),
-                ],
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // 标题优先按内容固有宽度占位，搜索框与拖拽区分配剩余空间：
+                  // 标题变长（英文、西语等长语言）时搜索框右移并收窄，标题不再截断。
+                  // 只有窗口窄到搜索区连最小宽度都保不住时，才限制标题宽度，
+                  // 由 Text 的 ellipsis 兜底，保证任何窗口宽度下都不会溢出。
+                  final titleMaxWidth = math.max(
+                    0.0,
+                    constraints.maxWidth - _titleReservedForSearchWidth,
+                  );
+                  return Row(
+                    children: [
+                      // 搜索框改为真实输入后，拖拽区域需要避开输入控件。
+                      _WindowDragHandle(
+                        onDoubleTap: onMaximize,
+                        child: _buildLogoSection(context, titleMaxWidth),
+                      ),
+                      if (showSearch) _buildSearchSection(context),
+                      Expanded(
+                        child: _WindowDragSpacer(onDoubleTap: onMaximize),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -97,7 +123,10 @@ class CustomTitleBar extends StatelessWidget {
   }
 
   /// 构建 Logo 区域
-  Widget _buildLogoSection(BuildContext context) {
+  ///
+  /// [maxTitleWidth] 为标题允许占用的最大宽度，由标题栏按窗口可用宽度计算：
+  /// 正常窗口下远大于标题固有宽度，标题完整显示；仅在极端窄窗口下才会截断。
+  Widget _buildLogoSection(BuildContext context, double maxTitleWidth) {
     final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -110,15 +139,18 @@ class CustomTitleBar extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.sm),
         // 应用名称（标题栏级别：16px shell 文字）
-        // 长语言（如阿拉伯语）下标题远超中文宽度，限制最大宽度并省略号
-        // 截断，避免撑爆标题栏导致 Row 溢出
+        // 标题按内容固有宽度完整展示：外层 Row 不对非 flex 子项设宽度上限，
+        // 标题变宽时由搜索框（Expanded）让位收缩，不再按固定像素截断
+        // （此前 240px 上限会让英文、西语等长语言标题出现省略号）。
+        // Flexible + ellipsis 仅作为极窄窗口下的兜底，正常窗口不会触发。
         Flexible(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 240),
+            constraints: BoxConstraints(maxWidth: maxTitleWidth),
             child: Text(
               l10n.appTitle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              softWrap: false,
               style: context.appTextStyles.body.copyWith(
                 color: context.appColors.textPrimary,
                 fontWeight: context.appFontWeight(FontWeight.w400),

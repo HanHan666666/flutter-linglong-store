@@ -108,12 +108,16 @@ docs/47 §5.2.2 与 §11 曾将该窗口记录为"产品已接受的剩余风险
 查询（全部固定绝对路径并显式指定包数据库目录）：
 
 1. `/usr/bin/dpkg-query --admindir /var/lib/dpkg -S <path>`：退出码 0 且输出行
-   最后一个 `: ` 之后的字段与该路径精确相等 → 由 dpkg 管理；
+   最后一个 `: ` 之后的字段与该路径精确相等 → 由 dpkg 管理（涵盖
+   `pkg[:arch]: /path` 与 `diversion by ... from: /path` 两类记录，均表示 dpkg
+   管理该路径）；
 2. `/usr/bin/rpm --dbpath /var/lib/rpm -qf <path>`：退出码 0 → 由 rpm 管理；
 3. `/usr/bin/pacman --dbpath /var/lib/pacman -Qo <path>`：退出码 0 → 由 pacman 管理。
 
 - 任一步命中即返回 true；命令或数据库目录不存在（非对应发行版）按未命中处理，
   继续下一项；全部未命中、探测异常或超时返回 false（**fail closed**）；
+- 查询统一固定 `LC_ALL=C`：dpkg 归属输出与错误消息不随系统语言漂移，保证不同
+  `LANG` 下解析行为一致；
 - **不校验包名**：只证明"由系统包管理器落盘"；
 - **安全约束（复核加固）**：命令固定绝对路径、数据库目录显式传参，防止同 UID
   进程用 PATH 垫片（如 `~/.local/bin/dpkg-query`）或 `DPKG_ADMINDIR`、rpm 宏等
@@ -216,7 +220,7 @@ helper 注入 && 不可信/未注入解析器  → directCliFallback（本次新
 
 | 位置 | 变更 |
 |---|---|
-| `lib/platform/self_update/linux_app_installation_probe.dart` | 新增 bundle 包管理器归属探测；命令绝对路径 + 显式数据库目录 + 耗时日志；`detect()` 查询命令同步收敛 |
+| `lib/platform/self_update/linux_app_installation_probe.dart` | 新增 bundle 包管理器归属探测；命令绝对路径 + 显式数据库目录 + 固定 `LC_ALL=C` + 耗时日志；`detect()` 查询命令同步收敛 |
 | `lib/domain/models/privileged_helper_trust.dart` | 新增 `PrivilegedHelperTrustResolver` 端口类型 |
 | `lib/application/providers/application_dependency_providers.dart` | 新增信任 resolver provider 占位（fail closed 语义） |
 | `lib/bootstrap/production_dependency_overrides.dart` | 注入 `buildMemoizedHelperTrustResolver`（单次解析 + 缓存 + 异常保守 false） |

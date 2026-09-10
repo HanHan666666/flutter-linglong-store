@@ -13,8 +13,9 @@
   （DEB/RPM/Copr/AUR，`/opt/linglong-store` root 属主）。判定经
   `AppInstallationProbe.isManagedBySystemPackageManager()`（dpkg/rpm/pacman
   归属查询，探测失败按不可信处理，不得失败开放）：探测命令固定绝对路径并显式
-  指定包数据库目录（防 PATH 垫片与 `DPKG_ADMINDIR` 等环境重定向欺骗），未注入
-  解析器或解析异常一律按不可信（fail closed），组合根单次解析并在会话内缓存；
+  指定包数据库目录、输出固定 `LC_ALL=C`（防 PATH 垫片与 `DPKG_ADMINDIR` 等环境
+  重定向欺骗），未注入解析器或解析异常一律按不可信（fail closed），组合根单次
+  解析并在会话内缓存；
   FUSE 暂存机制整体删除（它正是篡改窗口来源，且新规则下不可达）。AppImage/
   解压包的真机回归列入发版清单；AUR 探测以单测覆盖。
 - 2026-09-09：落地「安装时免密码确认」开关（docs/50）：设置页新增唯一开关，

@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../application/providers/application_dependency_providers.dart';
 import '../application/providers/polkit_rule_provider.dart';
+import '../core/logging/app_logger.dart';
 import '../core/platform/file_downloader.dart';
 import '../core/platform/polkit_rule_gateway.dart';
 import '../core/platform/privileged_helper/privileged_helper_client.dart';
@@ -23,6 +24,7 @@ import '../data/repositories/error_solution_repository_impl.dart';
 import '../data/repositories/file_app_operation_journal_repository.dart';
 import '../data/repositories/linglong_cli_repository_impl.dart';
 import '../data/repositories/shared_preferences_legacy_app_operation_state_repository.dart';
+import '../domain/models/privileged_helper_trust.dart';
 import '../domain/repositories/app_self_update_gateways.dart';
 import '../platform/appearance/linux_system_accent_color_gateway.dart';
 import '../platform/notifications/linux_system_notification_gateway.dart';
@@ -106,22 +108,39 @@ List<Override> createProductionDependencyOverrides({
     // 免密规则提权同步：唯一配置入口，独立于安装传输用的特权 helper
     // （docs/50 §6.1）。执行器无状态，随组合根创建一次即可。
     polkitRuleGatewayProvider.overrideWith((ref) {
-      return PolkitRuleScriptGateway(
-        executor: ShellCommandExecutor(),
-      );
+      return PolkitRuleScriptGateway(executor: ShellCommandExecutor());
     }),
     // Data 层不得反向导入 Application Provider：这里只注入一个同步只读函数，
     // 任务启动时读取控制器内存状态，不做 IO、不提权（docs/50 §7.1）。
     passwordFreeInstallModeReaderProvider.overrideWith((ref) {
       return () => ref.read(polkitRuleProvider).usesPasswordFreeCli;
     }),
-    // docs/51：helper 来源信任判定——单次解析 + 会话内缓存（探测会启动系统
-    // 命令，不应每个任务重复执行）；探测失败由 Data 层按不可信回退直连，
-    // 不得失败开放。
+    // docs/51：helper 来源信任判定——单次解析 + 会话内缓存；解析异常保守
+    // 返回 false（fail closed），统一由构造器实现。
     privilegedHelperTrustResolverProvider.overrideWith((ref) {
-      final probe = ref.watch(appInstallationProbeProvider);
-      Future<bool>? resolved;
-      return () => resolved ??= probe.isManagedBySystemPackageManager();
+      return buildMemoizedHelperTrustResolver(
+        ref.watch(appInstallationProbeProvider),
+      );
     }),
   ];
+}
+
+/// 构造 helper 信任解析器：单次解析 + 会话内缓存（docs/51 §4.2）。
+///
+/// 探测会启动系统命令，同一会话只应执行一次；解析异常在这里就保守返回
+/// false 并随缓存复用（不得失败开放），Data 层的兜底捕获只是第二道防线。
+PrivilegedHelperTrustResolver buildMemoizedHelperTrustResolver(
+  AppInstallationProbe probe,
+) {
+  Future<bool>? resolved;
+  return () => resolved ??= _resolveHelperTrust(probe);
+}
+
+Future<bool> _resolveHelperTrust(AppInstallationProbe probe) async {
+  try {
+    return await probe.isManagedBySystemPackageManager();
+  } catch (error, stackTrace) {
+    AppLogger.warning('[HelperTrust] 包管理器归属探测失败，按不可信处理', error, stackTrace);
+    return false;
+  }
 }

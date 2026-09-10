@@ -153,6 +153,8 @@ LinglongCliRepositoryImpl _buildRepository({
     cancelProcess: executor.cancelProcess,
     privilegedHelper: helper,
     passwordFreeInstallModeReader: reader,
+    // docs/51：本文件覆盖免密路径与 helper 回归，helper 场景显式模拟可信来源。
+    helperTrustResolver: () async => true,
   );
 }
 
@@ -201,10 +203,7 @@ void main() {
     test('未注入模式读取器时保持 helper 路径', () async {
       final executor = _RecordingCliExecutor();
       final helper = _FakeHelperTransport();
-      final repository = _buildRepository(
-        executor: executor,
-        helper: helper,
-      );
+      final repository = _buildRepository(executor: executor, helper: helper);
 
       await repository.installApp('org.example.demo').drain<void>();
 

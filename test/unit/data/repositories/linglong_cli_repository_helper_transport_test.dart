@@ -110,12 +110,14 @@ LinglongCliRepositoryImpl buildRepository(PrivilegedHelperTransport helper) {
     execute: (args, {timeout = kDefaultTimeout, processId, locale}) async {
       return const CliOutput(stdout: '[]', stderr: '', exitCode: 0);
     },
-    executeWithProgressAndProcess: (args,
-        {processId, locale, onProcessCreated}) async* {},
+    executeWithProgressAndProcess:
+        (args, {processId, locale, onProcessCreated}) async* {},
     cancelWithSystemKill: (processId, {required int pid, force = false}) async {
       return true;
     },
     privilegedHelper: helper,
+    // docs/51：本文件验证 helper 传输行为，显式模拟"系统包管理器形态"（可信）。
+    helperTrustResolver: () async => true,
   );
 }
 
@@ -163,7 +165,8 @@ void main() {
 
   test('authorization cancelled maps to stable failure fact', () async {
     final helper = _FakeHelperTransport(
-      ensureStartedError: const PrivilegedHelperAuthorizationCancelledException(),
+      ensureStartedError:
+          const PrivilegedHelperAuthorizationCancelledException(),
     );
     final repository = buildRepository(helper);
 
@@ -248,11 +251,9 @@ void main() {
       ),
       isTrue,
     );
-    expect(
-      activeHelper.cancelledRequestIds,
-      ['install_org.deepin.demo'],
-      reason: '取消必须经 helper 的 requestId 通道（§8.2）',
-    );
+    expect(activeHelper.cancelledRequestIds, [
+      'install_org.deepin.demo',
+    ], reason: '取消必须经 helper 的 requestId 通道（§8.2）');
 
     await subscription.cancel();
   });

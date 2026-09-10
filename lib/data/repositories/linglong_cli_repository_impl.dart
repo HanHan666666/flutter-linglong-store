@@ -121,8 +121,8 @@ class LinglongCliRepositoryImpl
   ///
   /// 返回 true 表示当前运行 bundle 可证明由系统包管理器安装（helper 位于
   /// root 属主安装树内、不可被当前用户替换）。由生产组合根注入"单次解析 +
-  /// 会话内缓存"的实现；未注入时按可信处理，保持既有测试与过渡装配行为。
-  /// 解析失败按不可信处理（回退直连），不得失败开放。
+  /// 会话内缓存"的实现；未注入或解析失败一律按不可信处理（fail closed），
+  /// 回退普通用户直连，不得失败开放。
   final PrivilegedHelperTrustResolver? _helperTrustResolver;
 
   /// 任务执行路径绑定表：任务启动时写入，取消时按记录路由。
@@ -354,26 +354,23 @@ class LinglongCliRepositoryImpl
     final helper = _privilegedHelper;
 
     // 信任判定只服务 helper 传输选择：未注入 helper 或已走免密时不做探测。
+    // 未注入解析器时按不可信处理（fail closed）：生产组合根必须注入
+    // （docs/51 §4.2），漏注入只会让所有形态退化为每任务授权，不得静默恢复
+    // "对不可验证来源使用特权 helper"的旧行为。
     var helperTrusted = false;
-    if (helper != null && !usePasswordFreeCli) {
-      final resolver = _helperTrustResolver;
-      if (resolver == null) {
-        // 未注入 resolver 时按可信处理，保持既有测试与过渡装配行为；生产
-        // 组合根必须注入（docs/51 §4.2），非信任形态才会回退直连。
-        helperTrusted = true;
-      } else {
-        try {
-          helperTrusted = await resolver();
-        } catch (error, stackTrace) {
-          // 探测失败按不可信处理：宁可让系统包形态退化为每任务授权，也不得
-          // 把"无法证明来源"的形态当作可信（docs/51：不得失败开放）。
-          AppLogger.warning(
-            '[LinglongCli] helper 信任探测失败，按不可信回退直连',
-            error,
-            stackTrace,
-          );
-          helperTrusted = false;
-        }
+    final resolver = _helperTrustResolver;
+    if (helper != null && !usePasswordFreeCli && resolver != null) {
+      try {
+        helperTrusted = await resolver();
+      } catch (error, stackTrace) {
+        // 探测失败按不可信处理：宁可让系统包形态退化为每任务授权，也不得把
+        // "无法证明来源"的形态当作可信（docs/51：不得失败开放）。
+        AppLogger.warning(
+          '[LinglongCli] helper 信任探测失败，按不可信回退直连',
+          error,
+          stackTrace,
+        );
+        helperTrusted = false;
       }
     }
 
@@ -1090,9 +1087,7 @@ class LinglongCliRepositoryImpl
         AppLogger.info('[LinglongCli] 已向普通 CLI 任务发送 SIGTERM: $appId');
       } else {
         // 信号失败、进程已退出或权限不足时不伪造 cancelled，任务保持运行。
-        AppLogger.warning(
-          '[LinglongCli] 普通 CLI 取消信号未发送（进程已结束或权限不足）: $appId',
-        );
+        AppLogger.warning('[LinglongCli] 普通 CLI 取消信号未发送（进程已结束或权限不足）: $appId');
       }
       return accepted;
     }
@@ -1116,9 +1111,7 @@ class LinglongCliRepositoryImpl
         _setOperationCancelled(appId, kind: kind);
         AppLogger.info('[LinglongCli] 经 helper 取消$operationLabel已接受: $appId');
       } else {
-        AppLogger.warning(
-          '[LinglongCli] helper 拒绝取消请求（任务可能已结束）: $appId',
-        );
+        AppLogger.warning('[LinglongCli] helper 拒绝取消请求（任务可能已结束）: $appId');
       }
       return accepted;
     }

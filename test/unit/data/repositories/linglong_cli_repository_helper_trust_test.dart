@@ -85,13 +85,14 @@ class _FakeHelperTransport implements PrivilegedHelperTransport {
   final List<String> cancelledRequestIds = <String>[];
 
   /// 默认给出成功终态；需要挂起时可覆写为自定义事件序列。
-  List<PrivilegedHelperTaskEvent> taskEvents = const <PrivilegedHelperTaskEvent>[
-    PrivilegedHelperTaskLine(
-      isStderr: false,
-      line: '{"message":"Install success"}',
-    ),
-    PrivilegedHelperTaskExited(exitCode: 0, cancelRequested: false),
-  ];
+  List<PrivilegedHelperTaskEvent> taskEvents =
+      const <PrivilegedHelperTaskEvent>[
+        PrivilegedHelperTaskLine(
+          isStderr: false,
+          line: '{"message":"Install success"}',
+        ),
+        PrivilegedHelperTaskExited(exitCode: 0, cancelRequested: false),
+      ];
 
   @override
   bool get hasActiveTask => false;
@@ -210,15 +211,16 @@ void main() {
       expect(helper.startedRequests, isEmpty);
     });
 
-    test('未注入信任解析器时保持 helper 路径（过渡装配语义）', () async {
+    test('未注入信任解析器时按不可信回退直连（fail closed）', () async {
       final executor = _RecordingCliExecutor();
       final helper = _FakeHelperTransport();
       final repository = _buildRepository(executor: executor, helper: helper);
 
       await repository.installApp('org.example.demo').drain<void>();
 
-      expect(helper.ensureStartedCalls, 1);
-      expect(executor.progressCalls, isEmpty);
+      expect(executor.progressCalls.single.first, 'install');
+      expect(helper.ensureStartedCalls, 0);
+      expect(helper.startedRequests, isEmpty);
     });
 
     test('更新任务同样按信任判定选择路径', () async {

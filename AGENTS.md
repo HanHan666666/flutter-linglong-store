@@ -352,6 +352,16 @@ Semantics(
 
 ## 变更记录
 
+- 2026-09-10：落地特权 helper 信任边界收敛（docs/51）：pkexec 认证期间同 UID
+  进程可替换 helper 文件的 TOCTOU 提权窗口不再接受，所有存在该风险的形态
+  （AppImage FUSE/extract-and-run、用户解压 bundle、开发构建）的 install/update
+  改为普通用户直连 `ll-cli`（每任务一次系统授权、取消只发 SIGTERM、失败复用
+  `authorizationDenied` + 队列授权门闩），helper 仅保留给系统包管理器安装形态
+  （DEB/RPM/Copr/AUR，`/opt/linglong-store` root 属主）。判定经
+  `AppInstallationProbe.isManagedBySystemPackageManager()`（dpkg/rpm/pacman
+  归属查询，探测失败按不可信处理，不得失败开放），组合根单次解析并缓存；
+  FUSE 暂存机制整体删除（它正是篡改窗口来源，且新规则下不可达）。AppImage/
+  解压包的真机回归列入发版清单；AUR 探测以单测覆盖。
 - 2026-09-09：落地「安装时免密码确认」开关（docs/50）：设置页新增唯一开关，
   开启/关闭都通过一次 pkexec 提权在同一个 root 进程内完成「读取 → 修改 → 回读」，
   规则文件固定为 `/etc/polkit-1/rules.d/60-linglong-store.rules`（root:root 0644、

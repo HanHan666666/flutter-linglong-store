@@ -1,11 +1,16 @@
-## 文档指引
-/home/han/code/linglong-store/linglong-server 这个是后端代码，你在对接接口的时候需要参考。
+# AGENTS.md
 
+本文件是本仓库对 AI 编码助手的统一工作指令（供 Codex / Copilot / Claude 等工具读取）：行为准则、工作方式、项目知识与开发规范。
+
+## 文档指引
+
+后端代码位于 `/home/han/code/linglong-store/linglong-server`（独立仓库），对接接口时以其实现为准。
 
 ## 重点（极其重要）
-- 未经允许，禁止使用git worktree功能。
-- 所有的业务细节都要落实到文档里面去，详细的细节文档，docs目录
-- 当前项目要求绝对的高性能，高UI响应速度。
+
+- 未经允许，禁止使用 git worktree 功能。
+- 所有的业务细节都要落实到文档里，详细设计文档统一放 `docs/` 目录。
+- 当前项目要求绝对的高性能、高 UI 响应速度。
 - 严禁使用 `PopupMenuButton`。按钮和设置字段展开的轻量菜单必须统一复用
   `AppAnchoredMenu<T>` / `AppAnchoredMenuButton<T>`；右键上下文操作继续使用项目既有
   原生菜单入口，禁止以 `showMenu` 或页面私有 Overlay 规避此约定。
@@ -16,18 +21,19 @@
   方向性图标（如展开箭头）按 `Directionality` 镜像。CI 门禁
   `build/scripts/verify_directional_layout.dart` 会拦截违规；确属窗口物理几何等合理豁免时，
   在源码加 `// ignore: hardcoded_direction` 注释说明理由。
-- 每开发一个功能点就进行一次commit
-- Git commit 必须遵循 Conventional Commits，统一使用 `type: 简短描述`，不要再写无类型前缀的自然语句提交信息。
-- 在接到用户的任务的时候，先不要着急开始修改代码，要先分析需求，分析代码，列举解决方案，
-- 详细的向用户说明你的思路，和你打算如何实现这个需求。
-- 要分析整个项目的架构，一切都要从整个项目的角度入手，不能直接看完一个文件就写代码。
-- 先问清楚、绝对不允许猜测：遇到需求或现状不确定时，先明确提问，不要主观假设；方案需先得到用户确认再开工。
-- 每一处代码修改都要有必要的注释
-- 先方案后编码：先梳理背景/现状 → 列备选方案（含改动面、影响范围、取舍理由）→ 让用户确认 → 再动手。**只有在用户确认你的方案后，才开始动手写代码, 不然你很快就会被关机，更换下一个AI，一定要小心。**
-- 统一入口：能收敛的业务逻辑要集中封装（如卸载流程用 `useAppUninstall`），避免在多个页面/组件里写重复弹窗或副作用。
-- 在编写代码前先**明确用户需求并确认方案**；优先**复用已有的 hooks/store**，避免新增零散的 `invoke` 或 `ll-cli` 调用。
-- 保持 ll-cli 的使用**最小化且可预测**：优先使用现有的 **Rust 命令与 IPC 事件**，而不是新增 Shell 调用。
-
+- 每开发一个功能点就进行一次 commit；提交信息必须遵循 Conventional Commits，统一使用
+  `type: 简短描述`，不要再写无类型前缀的自然语句提交信息。
+- 先分析后动笔：接到任务先分析需求、现有代码与整体架构（禁止只看一个文件就写代码），
+  列举解决方案，并详细向用户说明思路与实现打算。
+- 先问清楚、绝对不允许猜测：遇到需求或现状不确定时，先明确提问，不要主观假设。
+- 先方案后编码：先梳理背景/现状 → 列备选方案（含改动面、影响范围、取舍理由）→ 让用户确认 → 再动手；
+  **只有在用户确认你的方案后，才开始动手写代码，否则你很快就会被关机、更换下一个 AI，一定要小心。**
+- 每一处代码修改都要有必要的注释。
+- 统一入口：能收敛的业务逻辑要集中封装（如卸载流程统一走 `AppUninstallService`），
+  避免在多个页面/组件里写重复弹窗或副作用。
+- 编写代码前先明确需求并确认方案；优先复用已有的 Provider、Service 与通用组件，
+  避免新增零散的平台通道或 `ll-cli` 调用。
+- 保持 `ll-cli` 的使用**最小化且可预测**：优先复用既有的服务封装与平台通道，而不是新增 Shell 调用。
 
 ## 代码要求
 1. 代码要求结构清晰，不应付事情，长远维护考虑，遵循设计模式最佳实践，遵循项目代码风格。
@@ -63,9 +69,7 @@ Shame in breaking architecture, Honor in following specifications.
 Shame in pretending to understand, Honor in honest ignorance.
 Shame in blind modification, Honor in careful refactoring.
 
-## 代码注释规则（强制）
-
-## 注释规范
+## 代码注释规范（强制）
 
 所有生成或修改的代码必须遵守以下注释要求：
 1. 注释语言统一使用中文。
@@ -78,85 +82,90 @@ Shame in blind modification, Honor in careful refactoring.
 8. 涉及业务规则、兼容逻辑、异常兜底、性能取舍、安全限制或历史原因时，必须在注释中说明为什么这样处理。
 9. 修改代码时必须同步维护相关注释，避免注释与实际代码行为不一致。
 
-## 根据需要，必须严格遵守这些skill
-### 核心开发技能
-brainstorming - 创意工作前必须使用，探索用户意图和设计
-writing-plans - 编写实施计划
-executing-plans - 执行实施计划
-test-driven-development - 测试驱动开发
-systematic-debugging - 系统化调试
-verification-before-completion - 完成前验证
-requesting-code-review - 请求代码审查
-receiving-code-review - 接收代码审查反馈
-subagent-driven-development - 子代理驱动开发
-dispatching-parallel-agents - 并行代理调度
-using-git-worktrees - 使用 git worktrees
-finishing-a-development-branch - 完成开发分支
-### Flutter 专项技能
-flutter-architecting-apps - Flutter 应用架构
-flutter-building-layouts - Flutter 布局构建
-flutter-building-forms - Flutter 表单构建
-flutter-managing-state - Flutter 状态管理
-flutter-testing-apps - Flutter 应用测试
-flutter-animating-apps - Flutter 动画
-flutter-theming-apps - Flutter 主题
-flutter-localizing-apps - Flutter 国际化
-flutter-caching-data - Flutter 数据缓存
-flutter-handling-concurrency - Flutter 并发处理
-flutter-handling-http-and-json - Flutter HTTP 和 JSON 处理
-flutter-implementing-navigation-and-routing - Flutter 导航和路由
-flutter-working-with-databases - Flutter 数据库
-flutter-embedding-native-views - Flutter 嵌入原生视图
-flutter-interoperating-with-native-apis - Flutter 与原生 API 互操作
-flutter-building-plugins - Flutter 插件构建
-flutter-adding-home-screen-widgets - Flutter 主屏幕小部件
-flutter-improving-accessibility - Flutter 无障碍
-flutter-reducing-app-size - Flutter 应用大小优化
-flutter-setting-up-on-linux - Flutter Linux 环境设置
-flutter-setting-up-on-macos - Flutter macOS 环境设置
-flutter-setting-up-on-windows - Flutter Windows 环境设置
+## 工作方式
+
+本节规定 AI 工具的协作行为基线；与本文其他章节或仓库既有约定冲突时，以仓库既有约定为准
+（例如「每功能点一次 commit」「每处修改必须有注释」优先于工具的默认行为）。
+
+### 沟通风格
+
+- 语气简洁、直接、友好：先给结论与下一步，再给必要细节；明确前提假设、环境依赖与后续动作，不写空泛客套。
+- 只输出有行动价值的信息，避免冗长解释与重复。
+
+### 进展沟通
+
+- 多步骤长任务按阶段用一两句话汇报进展：已完成什么、接下来做什么。
+- 开始大块改动（新建文件、批量重构）前，先用一句话说明打算，避免用户无感等待。
+
+### 计划
+
+- 非平凡任务先列计划再动手；步骤要具体、可验证、有顺序，禁止「把界面调好看」这类空话。
+- 简单任务直接做，不要为凑步骤而计划；计划变化时更新并说明原因，同一时间只保留一个进行中步骤。
+
+### 任务执行
+
+- 修复问题要落到根因，避免表面补丁；方案保持最小复杂度，不过度设计。
+- 不修与任务无关的 bug 与测试（可在最终回复中提及）；改动最小化、聚焦，并与现有代码风格保持一致。
+- 从零开始的任务可以大胆设计；在既有代码库中要保持外科手术式的精确，不越界改文件名、变量或无关结构。
+- 需要历史背景时用 `git log` / `git blame` 查证，不凭印象猜测。
+
+### 验证
+
+- 有测试与构建能力时用它验证完成度：先跑与改动最相关的窄测试，再逐步扩大范围。
+- 同一问题最多迭代 3 次；仍不通过要如实说明现状、影响与原因，不要掩盖或虚报。
+- 质量门禁的具体要求见「测试与质量门禁（硬性要求）」。
+
+### 交付
+
+- 最终回复像同事交接一样自然、简洁：结论先行、可扫读，信息足以支撑用户决策。
+- 引用文件用反引号包裹路径（需要时带行号），保证可点击跳转；不要重复粘贴已写入文件的大段内容。
+- 给出明确的下一步建议（运行测试、提交、真机验证等）。
 
 ## 项目概览
+
 - 本仓库是玲珑应用商店从旧版 Tauri/React 迁移到 Flutter 的实现，目标是 **UI 像素级一致** 与 **业务逻辑等价**。
-- 仅面向 Linux 桌面端，核心系统能力通过 `ll-cli` 完成，必要时使用 Rust FFI（见 `lib/rust/`）。
-- 详细迁移背景与对照见：`/home/han/linglong-store/flutter-linglong-store/docs/01-migration-plan.md`。
+- 仅面向 Linux 桌面端，核心系统能力通过 `ll-cli` 完成；必要时可使用 Rust FFI（迁移期关键决策见 `docs/01-migration-plan.md` 第 3.3 节）。
+- 功能与 UI 需与旧版对齐，避免引入新功能或改动行为语义。
+- 迁移背景、对应关系与风险评估见 `docs/01-migration-plan.md`。
+
+## 架构与模块（高层）
+整体为分层架构（依赖方向：Presentation → Application → Domain ← Data ← Platform）：
+- **Presentation**：页面与通用组件，Riverpod Provider 读取状态并渲染 UI。
+- **Application**：业务编排（Controllers/Services/Providers），负责启动流程、安装队列、更新检查等。
+- **Domain**：纯模型与 Repository 接口（Freezed 模型不可变）。
+- **Data**：Repository 实现、API/CLI 数据源与输出解析（如 `cli_output_parser`）。
+- **Platform**：`ll-cli` 执行器、进程管理、窗口管理、单实例。
+
+关键入口与配置：
+- 入口初始化（单实例、窗口、日志、存储、语言）在 `main.dart`。
+- 路由使用 `go_router`，集中在 `core/config/routes.dart`。
+- 设计与目录结构详见：`docs/02-flutter-architecture.md`。
+
+## 关键业务约束（迁移一致性）
+- **启动流程**：环境检测 → 已安装列表 → 更新检查 → 安装队列恢复 → 进入首页；失败必须可诊断。
+- **安装队列**：同一时刻仅允许 1 个任务执行；失败/取消需区分；完成后刷新已安装、更新与列表缓存。
+- **KeepAlive**：页面 LRU 缓存上限 10；隐藏页面必须暂停滚动监听/自动补页/轮询等副作用；恢复时仅轻量刷新。
+- **分页与缓存**：列表页统一分页与自动补页策略，缓存 key 必须包含 locale，seed 数据位于 `assets/seeds/`。
+- **UI 性能**：列表必须用 builder；`build` 中禁止重计算/解析/IO；卡片组件不要直接订阅多个全局 Provider，应由页面聚合后下发轻量 props。
+
+时序与状态机参考：`docs/07-runtime-sequence-and-state-diagrams.md`。
 
 ## 常用命令
-```bash
-# 开发运行（Linux）
-flutter run -d linux
 
-# 生产构建
-flutter build linux --release
+- 开发运行（Linux）：`flutter run -d linux`
+- 生产构建：`flutter build linux --release`
+- 代码生成（Freezed/Retrofit/Riverpod）：`dart run build_runner build --delete-conflicting-outputs`
+- 静态分析：`flutter analyze`
+- 全量测试：`flutter test`
+- 分层测试（按目录）：`flutter test test/unit/`、`flutter test test/widget/`、`flutter test test/golden/`、`flutter test integration_test/`
+- 单个测试文件（示例）：`flutter test test/unit/core/format_utils_test.dart`
+- Profile 性能验证：`flutter run -d linux --profile`
+- 打包脚本：`time ./build/package-deb.sh`、`./build/package-rpm.sh`、`./build/package-appimage.sh`
 
-# 代码生成（Freezed/Retrofit/Riverpod）
-dart run build_runner build --delete-conflicting-outputs
+## 开发规范
 
-# 静态分析
-flutter analyze
+### Git Commit 规范
 
-# 全量测试
-flutter test
-
-# 单测/组件/Golden/集成测试（按目录）
-flutter test test/unit/
-flutter test test/widget/
-flutter test test/golden/
-flutter test integration_test/
-
-# 运行单个测试文件（示例）
-flutter test test/unit/core/format_utils_test.dart
-
-# Profile 性能验证（建议）
-flutter run -d linux --profile
-
-# 打包脚本
-time ./build/package-deb.sh
-./build/package-rpm.sh
-./build/package-appimage.sh
-```
-
-## Git Commit 规范
 - 每个功能点、修复点、文档点各自单独提交，不要把无关改动混在一个 commit 里。
 - 提交信息统一使用 `type: 描述`，`type` 小写，后面跟英文冒号和一个空格。
 - 描述优先写中文，要求简短、明确、可直接看出本次变更目的，不写空泛语句。
@@ -170,44 +179,18 @@ time ./build/package-deb.sh
   - `refactor: 统一应用列表卡片状态逻辑`
   - `docs: 补充内存优化设计文档`
 
-## 架构与模块（高层）
-整体为分层架构（依赖方向：Presentation → Application → Domain ← Data ← Platform）：
-- **Presentation**：页面与通用组件，Riverpod Provider 读取状态并渲染 UI。
-- **Application**：业务编排（Controllers/Services/Providers），负责启动流程、安装队列、更新检查等。
-- **Domain**：纯模型与 Repository 接口（Freezed 模型不可变）。
-- **Data**：Repository 实现、API/CLI 数据源与输出解析（如 `cli_output_parser`）。
-- **Platform**：`ll-cli` 执行器、进程管理、窗口管理、单实例、可选 Rust FFI。
-
-关键入口与配置：
-- 入口初始化（单实例、窗口、日志、存储、语言）在 `main.dart`。
-- 路由使用 `go_router`，集中在 `core/config/routes.dart`。
-- 设计与目录结构详见：`/home/han/linglong-store/flutter-linglong-store/docs/02-flutter-architecture.md`。
-
-## 关键业务约束（迁移一致性）
-- **启动流程**：环境检测 → 已安装列表 → 更新检查 → 安装队列恢复 → 进入首页；失败必须可诊断。
-- **安装队列**：同一时刻仅允许 1 个任务执行；失败/取消需区分；完成后刷新已安装、更新与列表缓存。
-- **KeepAlive**：页面 LRU 缓存上限 10；隐藏页面必须暂停滚动监听/自动补页/轮询等副作用；恢复时仅轻量刷新。
-- **分页与缓存**：列表页统一分页与自动补页策略，缓存 key 必须包含 locale，seed 数据位于 `assets/seeds/`。
-- **UI 性能**：列表必须用 builder；`build` 中禁止重计算/解析/IO；卡片组件不要直接订阅多个全局 Provider，应由页面聚合后下发轻量 props。
-
-时序与状态机参考：`/home/han/linglong-store/flutter-linglong-store/docs/07-runtime-sequence-and-state-diagrams.md`。
-
-## 测试与质量门禁（硬性要求）
+### 测试与质量门禁（硬性要求）
 - 测试分层：单元 → Widget → Golden → 集成 → MCP UI 驱动。
 - 目录约定：`test/unit/`、`test/widget/`、`test/golden/`、`test/integration/`、`test/mcp/`。
 - 覆盖目标（按规范）：单元测试行覆盖率 ≥ 90%，核心组件/核心页面 100% 场景覆盖。
 - 发布门禁：`flutter analyze` 0 error/0 warning + 关键测试通过 + 性能/内存指标达标。
 
-详见：`/home/han/linglong-store/flutter-linglong-store/docs/06-testing-and-performance-spec.md`。
+详见：`docs/06-testing-and-performance-spec.md`。
 
-## UI 规范入口
-- 设计令牌与布局/组件/页面规范：`/home/han/linglong-store/flutter-linglong-store/docs/03a-ui-design-tokens.md` ~ `03d-ui-pages.md`。
+### UI 规范入口
+- 设计令牌与布局/组件/页面规范：`docs/03a-ui-design-tokens.md` ~ `03d-ui-pages.md`。
 
-## 迁移对照与限制
-- 功能与 UI 需与旧版对齐，避免引入新功能或改动行为语义。
-- 对应关系与风险评估见：`/home/han/linglong-store/flutter-linglong-store/docs/01-migration-plan.md`。
-
-## 无障碍与屏幕阅读器（Accessibility）
+### 无障碍与屏幕阅读器（Accessibility）
 
 完整规范、代码示例与测试要求见 `docs/52-accessibility-guide.md`。无障碍支持体系位于 `lib/core/accessibility/`，编写页面与组件必须遵守以下硬性约定：
 
@@ -220,7 +203,53 @@ time ./build/package-deb.sh
 7. **字体缩放不硬编码**：使用系统默认缩放；需要上限时用 `clampTextScaler(context, max: 1.5)`。
 8. **无障碍标签必须国际化**：所有 `Semantics.label` 使用 `l10n`（`a11y` 前缀键），禁止硬编码中文/英文。
 
-## 应用自更新约定
+## 技能清单（Skills）
+
+任务落在对应领域时，必须先读取并遵循该技能的完整说明，禁止凭印象执行；技能定义位于 `.agents/skills/`，版本由 `skills-lock.json` 锁定。
+
+### 核心开发技能
+
+- `brainstorming`：创意工作前必须使用，探索用户意图和设计
+- `writing-plans`：编写实施计划
+- `executing-plans`：执行实施计划
+- `test-driven-development`：测试驱动开发
+- `systematic-debugging`：系统化调试
+- `verification-before-completion`：完成前验证
+- `requesting-code-review`：请求代码审查
+- `receiving-code-review`：接收代码审查反馈
+- `subagent-driven-development`：子代理驱动开发
+- `dispatching-parallel-agents`：并行代理调度
+- `using-git-worktrees`：使用 git worktrees
+- `finishing-a-development-branch`：完成开发分支
+
+### Flutter 专项技能
+
+- `flutter-architecting-apps`：Flutter 应用架构
+- `flutter-building-layouts`：Flutter 布局构建
+- `flutter-building-forms`：Flutter 表单构建
+- `flutter-managing-state`：Flutter 状态管理
+- `flutter-testing-apps`：Flutter 应用测试
+- `flutter-animating-apps`：Flutter 动画
+- `flutter-theming-apps`：Flutter 主题
+- `flutter-localizing-apps`：Flutter 国际化
+- `flutter-caching-data`：Flutter 数据缓存
+- `flutter-handling-concurrency`：Flutter 并发处理
+- `flutter-handling-http-and-json`：Flutter HTTP 和 JSON 处理
+- `flutter-implementing-navigation-and-routing`：Flutter 导航和路由
+- `flutter-working-with-databases`：Flutter 数据库
+- `flutter-embedding-native-views`：Flutter 嵌入原生视图
+- `flutter-interoperating-with-native-apis`：Flutter 与原生 API 互操作
+- `flutter-building-plugins`：Flutter 插件构建
+- `flutter-adding-home-screen-widgets`：Flutter 主屏幕小部件
+- `flutter-improving-accessibility`：Flutter 无障碍
+- `flutter-reducing-app-size`：Flutter 应用大小优化
+- `flutter-setting-up-on-linux`：Flutter Linux 环境设置
+- `flutter-setting-up-on-macos`：Flutter macOS 环境设置
+- `flutter-setting-up-on-windows`：Flutter Windows 环境设置
+
+## 专项设计约定
+
+### 应用自更新约定
 
 - 应用自更新只支持当前实际运行身份为 DEB、RPM 或 AppImage 的场景；其它身份提示用户手动下载安装。
 - 当前运行身份必须由 `LinuxAppInstallationProbe` 判断：有效 `APPIMAGE` 优先，否则查询 `Platform.resolvedExecutable` 的 dpkg/RPM 文件归属。禁止按发行版名称或机器上是否残留同名包推断。
@@ -231,7 +260,7 @@ time ./build/package-deb.sh
 - DEB、RPM、AppImage 必须保持三个独立 `AppUpdateInstaller`；AppImage 替换后必须设置 `0755`，避免下载文件权限导致应用无法再次启动。
 - 安装成功后不自动退出、不拉起新进程、不引入 PID 重启协调器；只提示用户手动关闭并重新打开应用。
 
-## RPM 打包双轨约定
+### RPM 打包双轨约定
 
 - RPM spec 存在两条独立轨道，禁止互相混用模式：
   - 二进制重打包：`build/packaging/linux/rpm/linglong-store.spec.in`（`%build` 为空，
@@ -247,7 +276,7 @@ time ./build/package-deb.sh
   （dart 脚本、rsvg 等）；元数据变更时同步维护该脚本与两份 spec 模板。
 - 完整设计决策与 Copr 维护者操作指南见 `docs/44-copr-source-build-design.md`。
 
-## 安装免密（polkit rules）约定
+### 安装免密（polkit rules）约定
 
 - 本功能存在**两个互不替代的特权入口**：安装传输用的 `PrivilegedHelperClient`
   （docs/47）与免密规则配置用的 `PolkitRuleScriptGateway`

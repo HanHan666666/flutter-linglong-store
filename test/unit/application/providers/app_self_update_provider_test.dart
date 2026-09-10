@@ -15,6 +15,9 @@ class _UnusedGateways
   Future<AppInstallation> detect() => throw UnimplementedError();
 
   @override
+  Future<bool> isManagedBySystemPackageManager() => throw UnimplementedError();
+
+  @override
   Future<AppUpdateWorkspace> create() => throw UnimplementedError();
 }
 

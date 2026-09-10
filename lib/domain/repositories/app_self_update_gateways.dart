@@ -10,6 +10,14 @@ import '../models/app_self_update.dart';
 abstract interface class AppInstallationProbe {
   /// 判断当前进程实际来自 DEB、RPM、AppImage 或其它手动安装。
   Future<AppInstallation> detect();
+
+  /// 判断当前运行 bundle 是否由系统包管理器（dpkg/rpm/pacman）安装。
+  ///
+  /// docs/51：这是特权 helper 的唯一信任条件——只有包管理器安装树（root
+  /// 属主）内的 helper 才能证明"同 UID 进程不可替换"。任一包管理器证明当前
+  /// 可执行文件归属即返回 true；无法证明（含命令缺失、超时等探测失败）一律
+  /// 返回 false，调用方必须回退普通用户直连路径，不得失败开放。
+  Future<bool> isManagedBySystemPackageManager();
 }
 
 /// 单次更新的 XDG 下载工作区。

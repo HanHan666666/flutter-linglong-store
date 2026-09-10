@@ -105,4 +105,111 @@ void main() {
       expect((await probe.detect()).kind, AppInstallationKind.manual);
     });
   });
+
+  group('isManagedBySystemPackageManager（docs/51 信任判定）', () {
+    test('dpkg 命中即返回 true 且不再查询其它包管理器', () async {
+      final commands = <List<String>>[];
+      final probe = LinuxAppInstallationProbe(
+        shellExecutor: ShellCommandExecutor(
+          runner: _FakeShellRunner((command) async {
+            commands.add(command);
+            return _result(
+              stdout: 'linglong-store: /opt/linglong-store/linglong_store\n',
+            );
+          }),
+        ),
+        resolvedExecutable: '/opt/linglong-store/linglong_store',
+      );
+
+      expect(await probe.isManagedBySystemPackageManager(), isTrue);
+      expect(commands, [
+        ['dpkg-query', '-S', '/opt/linglong-store/linglong_store'],
+      ]);
+    });
+
+    test('dpkg 未命中、rpm 命中时返回 true', () async {
+      final commands = <List<String>>[];
+      final probe = LinuxAppInstallationProbe(
+        shellExecutor: ShellCommandExecutor(
+          runner: _FakeShellRunner((command) async {
+            commands.add(command);
+            if (command.first == 'dpkg-query') {
+              return _result(exitCode: 1);
+            }
+            return _result(stdout: 'linglong-store\n');
+          }),
+        ),
+        resolvedExecutable: '/opt/linglong-store/linglong_store',
+      );
+
+      expect(await probe.isManagedBySystemPackageManager(), isTrue);
+      expect(commands.map((command) => command.first), ['dpkg-query', 'rpm']);
+    });
+
+    test('仅 pacman 命中时返回 true（AUR 形态）', () async {
+      final commands = <List<String>>[];
+      final probe = LinuxAppInstallationProbe(
+        shellExecutor: ShellCommandExecutor(
+          runner: _FakeShellRunner((command) async {
+            commands.add(command);
+            if (command.first == 'pacman') {
+              return _result(
+                stdout: '/opt/linglong-store/linglong_store '
+                    'is owned by linglong-store-bin 3.5.0-1\n',
+              );
+            }
+            return _result(exitCode: 1);
+          }),
+        ),
+        resolvedExecutable: '/opt/linglong-store/linglong_store',
+      );
+
+      expect(await probe.isManagedBySystemPackageManager(), isTrue);
+      expect(commands.map((command) => command.first), [
+        'dpkg-query',
+        'rpm',
+        'pacman',
+      ]);
+    });
+
+    test('三库均未命中时返回 false', () async {
+      final probe = LinuxAppInstallationProbe(
+        shellExecutor: ShellCommandExecutor(
+          runner: _FakeShellRunner((_) async => _result(exitCode: 1)),
+        ),
+        resolvedExecutable: '/home/user/bundle/linglong_store',
+      );
+
+      expect(await probe.isManagedBySystemPackageManager(), isFalse);
+    });
+
+    test('包管理器命令缺失（探测异常）按未命中处理，不得失败开放', () async {
+      final probe = LinuxAppInstallationProbe(
+        shellExecutor: ShellCommandExecutor(
+          runner: _FakeShellRunner((command) async {
+            throw Exception('模拟命令缺失: ${command.first}');
+          }),
+        ),
+        resolvedExecutable: '/home/user/bundle/linglong_store',
+      );
+
+      expect(await probe.isManagedBySystemPackageManager(), isFalse);
+    });
+
+    test('可执行路径为空时不查询任何包管理器', () async {
+      final commands = <List<String>>[];
+      final probe = LinuxAppInstallationProbe(
+        shellExecutor: ShellCommandExecutor(
+          runner: _FakeShellRunner((command) async {
+            commands.add(command);
+            return _result();
+          }),
+        ),
+        resolvedExecutable: '   ',
+      );
+
+      expect(await probe.isManagedBySystemPackageManager(), isFalse);
+      expect(commands, isEmpty);
+    });
+  });
 }

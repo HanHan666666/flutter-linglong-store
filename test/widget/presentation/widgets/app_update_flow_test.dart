@@ -16,6 +16,9 @@ import 'package:linglong_store/presentation/widgets/app_update_flow.dart';
 class _UnusedProbe implements AppInstallationProbe {
   @override
   Future<AppInstallation> detect() => throw UnimplementedError();
+
+  @override
+  Future<bool> isManagedBySystemPackageManager() => throw UnimplementedError();
 }
 
 /// 只为构造测试服务提供的未调用工作区端口。

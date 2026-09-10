@@ -18,6 +18,10 @@ class _FakeProbe implements AppInstallationProbe {
 
   @override
   Future<AppInstallation> detect() async => installation;
+
+  /// 自更新用例不涉及 helper 信任判定，固定返回不可信即可。
+  @override
+  Future<bool> isManagedBySystemPackageManager() async => false;
 }
 
 /// 记录所有退出路径是否释放临时文件的工作区替身。

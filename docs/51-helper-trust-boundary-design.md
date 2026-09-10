@@ -1,6 +1,6 @@
 # 51 - 特权 helper 信任边界收敛（仅系统包形态）与直连回退设计
 
-> 状态：**已定稿，实施中**（2026-09-10）
+> 状态：**已实施**（2026-09-10；自动化门禁通过，真机回归列入发版清单）
 >
 > 日期：2026-09-10
 >
@@ -38,8 +38,8 @@ docs/47 §5.2.2 与 §11 曾将该窗口记录为"产品已接受的剩余风险
 只有能证明**当前运行 bundle 由系统包管理器安装**时才启用特权 helper：
 
 - 判定输入：`Platform.resolvedExecutable`（当前实际运行的可执行文件）；
-- 判定方式：`dpkg-query -S` / `rpm -qf` / `pacman -Qo` 任一证明该路径由系统包
-  管理器落盘，即视为可信；全部不命中即不可信；
+- 判定方式：`dpkg-query` / `rpm` / `pacman` 归属查询任一命中即可信；全部不命中
+  即不可信（命令绝对路径与数据库目录已固定，见 §4.1）；
 - 可信等价于"路径位于 root 属主的包管理器安装树内，同 UID 进程无法替换"；
 - 不需要维护包名白名单：恶意同 UID 进程无法让 root 级包管理器为其落盘任何文件，
   而白名单会随包名（`-bin`、nightly、未来改名）漂移。
@@ -97,41 +97,54 @@ docs/47 §5.2.2 与 §11 曾将该窗口记录为"产品已接受的剩余风险
 | 授权拒绝输出契约 | daemon 回复 `AccessDenied` + `"not authorized"`；ll-cli `printErr` 输出 `{"code":9,"message":"not authorized"}`（Qt `AccessDenied` 枚举 = 9；消息非本地化） |
 | 直连路径的归类/门闩/文案已存在 | `lib/data/repositories/linglong_cli_repository_impl.dart` `_failureKindForCliError`（匹配 `not authorized` → `authorizationDenied`）；`lib/application/providers/install_queue_provider.dart` 授权门闩；10 语言 `installErrorAuthorizationDenied` |
 | 系统包安装路径（root 属主） | DEB：`build/scripts/package-deb.sh`（`/opt/linglong-store`）；AUR：`build/packaging/linux/aur/PKGBUILD.in`（`/opt/linglong-store`）；RPM/Copr 同布局 |
-| 旧暂存窗口存在 | `lib/core/platform/privileged_helper/privileged_helper_binary.dart`（暂存创建/清理）；`privileged_helper_client.dart` 仅在收到 `ready` 后删除暂存副本 |
+| 旧暂存窗口存在 | `lib/core/platform/privileged_helper/privileged_helper_binary.dart`（暂存创建/清理，已删除）；`privileged_helper_client.dart` 曾在收到 `ready` 后才删除暂存副本 |
 
 ## 4. 设计
 
 ### 4.1 探测：bundle 包管理器归属
 
 `LinuxAppInstallationProbe`（`lib/platform/self_update/linux_app_installation_probe.dart`）
-新增方法（实现后定名），对 `Platform.resolvedExecutable` 依次查询：
+新增 `isManagedBySystemPackageManager()`，对 `Platform.resolvedExecutable` 依次
+查询（全部固定绝对路径并显式指定包数据库目录）：
 
-1. `dpkg-query -S <path>`：成功且输出包含该路径 → 由 dpkg 管理；
-2. `rpm -qf <path>`：进程成功 → 由 rpm 管理；
-3. `pacman -Qo <path>`：成功 → 由 pacman 管理。
+1. `/usr/bin/dpkg-query --admindir /var/lib/dpkg -S <path>`：退出码 0 且输出行
+   最后一个 `: ` 之后的字段与该路径精确相等 → 由 dpkg 管理；
+2. `/usr/bin/rpm --dbpath /var/lib/rpm -qf <path>`：退出码 0 → 由 rpm 管理；
+3. `/usr/bin/pacman --dbpath /var/lib/pacman -Qo <path>`：退出码 0 → 由 pacman 管理。
 
-任一步命中即返回 true；命令不存在（非对应发行版）按未命中处理，继续下一项；
-全部未命中返回 false。`detect()`（自更新身份语义）保持不变。
+- 任一步命中即返回 true；命令或数据库目录不存在（非对应发行版）按未命中处理，
+  继续下一项；全部未命中、探测异常或超时返回 false（**fail closed**）；
+- **不校验包名**：只证明"由系统包管理器落盘"；
+- **安全约束（复核加固）**：命令固定绝对路径、数据库目录显式传参，防止同 UID
+  进程用 PATH 垫片（如 `~/.local/bin/dpkg-query`）或 `DPKG_ADMINDIR`、rpm 宏等
+  环境重定向把探测指向伪造数据库；找不到命令时按未命中处理，失败方向是
+  回退直连（安全方向）；
+- `detect()`（自更新身份语义）的查询命令同步改为绝对路径与显式数据库目录，
+  行为语义不变（原为裸命令名，存在同类环境依赖，一并收敛）。
 
 ### 4.2 信任 resolver 与组合根注入
 
 - 新增 `PrivilegedHelperTrustResolver = Future<bool> Function()`（异步，探测
   需要启动子进程）；
 - Application 层新增 `privilegedHelperTrustResolverProvider`（占位默认
-  `_missingDependency`），生产组合根覆盖为"单次解析 + 缓存"的闭包：首个任务
-  触发一次探测，结果（含异常保守返回 false）在整个会话内复用；
-- 解析异常一律按**不可信**处理（直连），不开 fail open 口子；
-- Data 层不反向依赖 Application：resolver 由组合根注入 Repository。
+  `_missingDependency`）；生产组合根覆盖为
+  `buildMemoizedHelperTrustResolver(probe)`（`lib/bootstrap/production_dependency_overrides.dart`，
+  可单测）：**单次解析 + 会话内缓存**，解析异常在构造器内就保守返回 false 并
+  随缓存复用；
+- **未注入解析器时按不可信处理（fail closed）**：漏注入只会让所有形态退化为
+  每任务系统授权，不得静默恢复"对不可验证来源使用特权 helper"的旧行为；
+- Data 层不反向依赖 Application：resolver 由组合根注入 Repository；Data 层对
+  任何解析异常还有第二道兜底捕获（同样回退不可信）。
 
 ### 4.3 传输选择与取消路由
 
 `LinglongCliRepositoryImpl`（`_runInstallLikeOperation`）任务启动时绑定传输：
 
 ```text
-免密开启                → passwordFreeCli（既有）
-未注入 helper（测试）    → legacyDirectCli（既有）
-helper 注入 && 可信      → privilegedHelper（既有）
-helper 注入 && 不可信    → directCliFallback（本次新增）
+免密开启                          → passwordFreeCli（既有）
+未注入 helper（测试）              → legacyDirectCli（既有）
+helper 注入 && 可信                → privilegedHelper（既有）
+helper 注入 && 不可信/未注入解析器  → directCliFallback（本次新增）
 ```
 
 - 新增 `_CliTaskTransport.directCliFallback`：直连普通用户 ll-cli，取消走
@@ -139,8 +152,7 @@ helper 注入 && 不可信    → directCliFallback（本次新增）
   `pkexec kill`；
 - 判定在任务启动时执行一次并记录到 `_taskTransports`，取消严格按绑定路由
   （docs/50 §7.2 语义不变）；
-- 不注入 resolver 时默认按可信处理（保持既有测试/过渡行为）；**生产组合根
-  必须注入**，以实现形态收敛。
+- **生产组合根必须注入解析器**，系统包形态才会使用 helper。
 
 ### 4.4 helper 定位入口简化
 
@@ -148,14 +160,15 @@ helper 注入 && 不可信    → directCliFallback（本次新增）
 
 - 删除：FUSE 检测（mountinfo 解析）、暂存创建、清扫、`PreparedHelperPath`
   的 `staged`/`release()` 语义、`_chmod`/随机目录等全部辅助设施；
-- `prepare()` 返回可直接交给 pkexec 的绝对路径（bundle 内
+- `prepare()`（同步）返回可直接交给 pkexec 的绝对路径（bundle 内
   `libexec/linglong_store_helper`）；文件缺失时抛
   `PrivilegedHelperUnavailableException`（结论不变）；
 - `PrivilegedHelperClient` 删除 `release()` 调用与 `staged` 日志。
 
 ### 4.5 诊断
 
-- 探测结果记录命中的包管理器（dpkg/rpm/pacman/未命中）与判定耗时；
+- 探测结果记录命中的包管理器（dpkg/rpm/pacman/未命中）与判定耗时（首个安装
+  任务会同步等待该判定，耗时日志用于定位首次任务延迟）；
 - 传输绑定时记录 `transport` 与信任判定结果，便于真机诊断
   （例如用户报告"AppImage 每任务弹窗"时可直接确认走的是直连回退）。
 
@@ -165,9 +178,10 @@ helper 注入 && 不可信    → directCliFallback（本次新增）
 
 | 范围 | 内容 |
 |---|---|
-| probe 单测 | 三管理器命中/未命中/命令缺失/空可执行路径 |
-| resolver | 单次解析缓存、异常保守为不可信 |
-| Repository 传输矩阵 | 可信→helper；不可信→直连（且不触发 `ensureStarted`）；免密优先；未注入 helper→legacy |
+| probe 单测 | 三管理器命中/未命中/命令缺失/超时/任意包名归属/空可执行路径；命令绝对路径与数据库目录断言 |
+| resolver | 单次解析缓存、异常保守为不可信（`buildMemoizedHelperTrustResolver` 单测） |
+| 组合根装配 | 信任解析器与安装 Repository 的注入 smoke 测试（端口被覆盖、可构建） |
+| Repository 传输矩阵 | 可信→helper；不可信→直连（且不触发 `ensureStarted`）；未注入解析器→直连（fail closed）；免密优先且不探测；更新同规则 |
 | 取消路由 | `directCliFallback` → SIGTERM（不触 `pkexec kill`） |
 | 失败归类 | `{"code":9,"message":"not authorized"}` → `authorizationDenied` + 门闩 |
 | binary 简化 | 路径解析、缺失即不可用（删除暂存用例） |
@@ -192,6 +206,9 @@ helper 注入 && 不可信    → directCliFallback（本次新增）
   安装/更新，不能执行任意命令（docs/47 §11 仍有效）；
 - 非包形态的 bundle 本身仍可被同 UID 篡改，但它不再获得任何特权执行机会
   （ll-cli 为系统安装的普通用户程序；授权由桌面代理向用户如实展示）；
+- 探测命令已固定绝对路径与数据库目录；"GUI 进程自身的启动环境可信"仍是产品级
+  隐含前提（与既有的 `pkexec`、`ll-cli` PATH 解析一致），如未来要求更强保证，
+  需要系统级组件（root 属主启动器 / 发行签名验证锚）而非应用内加固；
 - AppImage / 解压包 / AUR 的真机端到端验证依赖打包产物与对应发行版环境，
   已列入发版清单；AUR 探测逻辑以单测覆盖。
 
@@ -199,12 +216,13 @@ helper 注入 && 不可信    → directCliFallback（本次新增）
 
 | 位置 | 变更 |
 |---|---|
-| `lib/platform/self_update/linux_app_installation_probe.dart` | 新增 bundle 包管理器归属探测 |
-| `lib/application/providers/application_dependency_providers.dart` | 新增信任 resolver provider 占位 |
-| `lib/bootstrap/production_dependency_overrides.dart` | 注入单次解析 + 缓存的 resolver |
-| `lib/data/repositories/linglong_cli_repository_impl.dart` | 传输矩阵新增 `directCliFallback`；取消路由；注释更新 |
-| `lib/core/platform/privileged_helper/privileged_helper_binary.dart` | 删除暂存机制，收敛为路径解析 |
+| `lib/platform/self_update/linux_app_installation_probe.dart` | 新增 bundle 包管理器归属探测；命令绝对路径 + 显式数据库目录 + 耗时日志；`detect()` 查询命令同步收敛 |
+| `lib/domain/models/privileged_helper_trust.dart` | 新增 `PrivilegedHelperTrustResolver` 端口类型 |
+| `lib/application/providers/application_dependency_providers.dart` | 新增信任 resolver provider 占位（fail closed 语义） |
+| `lib/bootstrap/production_dependency_overrides.dart` | 注入 `buildMemoizedHelperTrustResolver`（单次解析 + 缓存 + 异常保守 false） |
+| `lib/data/repositories/linglong_cli_repository_impl.dart` | 传输矩阵新增 `directCliFallback`（未注入解析器按不可信）；取消路由；注释更新 |
+| `lib/core/platform/privileged_helper/privileged_helper_binary.dart` | 删除暂存机制，收敛为路径解析（`prepare()` 同步返回路径） |
 | `lib/core/platform/privileged_helper/privileged_helper_client.dart` | 删除 `release()`/`staged` 相关 |
-| `docs/47` | 顶部修订说明；§5.2/§5.2.1/§5.2.2/§10.3/§17.4 标注被本文档取代 |
-| `docs/50` | §18 边界补充非包形态直连说明 |
-| 测试 | probe/resolver/传输/取消/失败归类/binary 重写与扩展 |
+| `docs/47` | 顶部 v3 修订说明；§5.2/§5.2.1/§5.2.2/§6.1/§9.1/§10.3/§17.4 标注被本文档取代；§18 第 5 条补充非包形态直连说明 |
+| `CHANGELOG.md` | 2026-09-10 变更记录 |
+| 测试 | probe/组合根/传输/取消/失败归类/binary 重写与扩展 |

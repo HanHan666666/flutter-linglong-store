@@ -117,12 +117,24 @@ log "模式：$MODE，仓库：$GITEE_REPO"
 
 # ---------- 1. 预检商店连通性 ----------
 
-# 先探测域名可达性。若这里失败，说明是构建节点网络问题而非账号或包的问题，
-# 提前失败可以省下后面几百兆的依赖下载时间。
+# 用 Python 标准库做探测：python:3.12-slim 里的基础镜像并不自带 curl，
+# 如果在这里用 curl，会因为 command not found 直接失败，掩盖真正的网络问题。
 log "预检商店连通性：$STORE_ORIGIN"
-if ! curl -sSf -o /dev/null --max-time 30 "$STORE_ORIGIN/"; then
-  fail "无法访问 $STORE_ORIGIN，当前节点到统信开发者平台的网络不可达"
-fi
+python3 - "$STORE_ORIGIN" <<'PY' || fail "无法访问统信开发者平台，当前节点网络不可达"
+import sys
+import urllib.error
+import urllib.request
+
+url = sys.argv[1]
+try:
+    urllib.request.urlopen(url, timeout=30)
+except urllib.error.HTTPError:
+    # 能拿到 HTTP 状态码说明链路是通的，业务层的 4xx/5xx 不算网络问题。
+    pass
+except Exception as exc:  # noqa: BLE001
+    print(f"[uos-store][错误] {url} 不可达：{type(exc).__name__} {exc}", file=sys.stderr)
+    sys.exit(1)
+PY
 
 # ---------- 2. 解析 Release 版本 ----------
 
@@ -134,9 +146,18 @@ if [[ -z "$RELEASE_TAG" ]]; then
   # Gitee 的 releases/latest 接口对公开仓库免鉴权，直接取最新 Release 即可，
   # 避免在流水线里再引入一个 Gitee Token 变量。
   log "未指定 RELEASE_TAG，读取 Gitee 最新 Release"
-  RELEASE_TAG="$(curl -sSf --max-time 30 "https://gitee.com/api/v5/repos/${GITEE_REPO}/releases/latest" |
-    python3 -c 'import json,sys; print(json.load(sys.stdin).get("tag_name", ""))')" ||
-    fail "读取 Gitee 最新 Release 失败"
+  RELEASE_TAG="$(python3 - "$GITEE_REPO" <<'PY'
+import json
+import sys
+import urllib.request
+
+repo = sys.argv[1]
+with urllib.request.urlopen(
+    f"https://gitee.com/api/v5/repos/{repo}/releases/latest", timeout=30
+) as response:
+    print(json.load(response).get("tag_name", ""))
+PY
+  )" || fail "读取 Gitee 最新 Release 失败"
 fi
 [[ -n "$RELEASE_TAG" ]] || fail "未能解析出 Release 版本号"
 
@@ -154,8 +175,15 @@ for arch in amd64 arm64; do
   deb_name="linglong-store_${VERSION}_${arch}.deb"
   deb_url="https://gitee.com/${GITEE_REPO}/releases/download/${RELEASE_TAG}/${deb_name}"
   log "下载 $deb_name"
-  curl -sSfL --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 600 \
-    -o "$deb_name" "$deb_url" || fail "下载失败：$deb_url"
+  python3 - "$deb_url" "$deb_name" <<'PY' || fail "下载失败：$deb_url"
+import sys
+import urllib.request
+
+url, target = sys.argv[1], sys.argv[2]
+with urllib.request.urlopen(url, timeout=600) as response, open(target, "wb") as out:
+    while chunk := response.read(1 << 20):
+        out.write(chunk)
+PY
   # 产物必须非空，避免把空文件交给商店接口造成难排查的远端报错。
   [[ -s "$deb_name" ]] || fail "下载得到空文件：$deb_name"
   DEB_FILES+=("$WORK_DIR/$deb_name")
@@ -164,15 +192,11 @@ ls -lh "$WORK_DIR"/*.deb
 
 # ---------- 4. 准备容器运行环境 ----------
 
-# 先补齐脚本自身依赖的基础命令：下载产物与 clone 工具都需要 curl/git。
+# 先补齐脚本自身依赖的基础命令：clone 工具需要 git。
 # 只在缺失时安装，避免每次运行都重复 apt-get update 浪费时间与核分。
-missing_tools=()
-for tool in curl git; do
-  command -v "$tool" >/dev/null 2>&1 || missing_tools+=("$tool")
-done
-if [[ ${#missing_tools[@]} -gt 0 ]]; then
-  log "安装基础工具：${missing_tools[*]}"
-  apt_install ca-certificates "${missing_tools[@]}"
+if ! command -v git >/dev/null 2>&1; then
+  log "安装基础工具：git"
+  apt_install ca-certificates git
 fi
 
 # 工具本身是纯 Python，但登录必须靠无头 Chromium（pyppeteer）。
@@ -192,10 +216,18 @@ log "拉取投递工具：$APPSTORE_TOOL_REPO（$APPSTORE_TOOL_REF）"
 if ! git clone --depth 1 --branch "$APPSTORE_TOOL_REF" "$APPSTORE_TOOL_REPO" appstore-tool; then
   # GitHub 在国内偶发抖动，退化为 tarball 下载，失败才真正终止。
   log "git clone 失败，改用 tarball 下载"
-  mkdir -p appstore-tool
-  curl -sSfL --retry 3 --connect-timeout 20 --max-time 300 \
-    -o appstore.tar.gz "${APPSTORE_TOOL_REPO%.git}/archive/refs/heads/${APPSTORE_TOOL_REF}.tar.gz" ||
+  rm -rf appstore-tool appstore.tar.gz
+  python3 - "${APPSTORE_TOOL_REPO%.git}/archive/refs/heads/${APPSTORE_TOOL_REF}.tar.gz" <<'PY' ||
     fail "投递工具获取失败，请检查 APPSTORE_TOOL_REPO 是否可达"
+import sys
+import urllib.request
+
+url, target = sys.argv[1], "appstore.tar.gz"
+with urllib.request.urlopen(url, timeout=300) as response, open(target, "wb") as out:
+    while chunk := response.read(1 << 20):
+        out.write(chunk)
+PY
+  mkdir -p appstore-tool
   tar -xzf appstore.tar.gz -C appstore-tool --strip-components=1
 fi
 [[ -f appstore-tool/appstore/upload_batch.py ]] ||

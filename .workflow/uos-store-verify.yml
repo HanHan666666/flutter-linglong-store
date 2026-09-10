@@ -1,31 +1,30 @@
-# 文件定位：统信商店投递的「只验证」流水线，与 uos-store-upload.yml 配套。
-#
-# 为什么需要这个文件：
-#   正式投递流水线（uos-store-upload.yml）一旦运行就会真实提交到统信商店。
-#   当需要验证「账号是否还能登录」「商店能力数据能否拉取」「网络是否通」时，
-#   跑正式流水线代价太大；本流水线用 MODE=verify 只做登录与能力同步，
-#   不会向商店提交任何包，可以放心随时运行。
-#
-# 适用场景：
-#   - 首次配置后验证账号与网络；
-#   - 商店密码轮换后确认凭据仍然有效；
-#   - 投递工具升级后先探测兼容性。
-#
-# 注意：与正式流水线一样不做自动触发，仅手工运行。
+# 本文件是 Gitee Go 流水线的权威配置，由 Gitee Go 在保存流水线时规范化写入。
+# 手工编辑时的注意事项：
+#   1. triggers.trigger 必须保持 manual，避免 push 自动触发；
+#   2. variables.global 中的条目是流水线关联的通用变量，删掉会导致构建时取不到凭据；
+#   3. 通过 Gitee Go 界面保存会重写本文件并去除注释，因此设计说明统一维护在
+#      docs/53-uos-store-gitee-go-design.md，不要在本文件里写长注释。
 version: "1.0"
 name: uos-store-verify
 displayName: 统信商店凭据验证
 stages:
-  - stage:
-    name: verify
-    displayName: 验证
-    steps:
-      - step: execute@docker
-        name: uos-store-verify
-        displayName: 验证商店账号与网络
-        certificate: ""
-        image: "docker.m.daocloud.io/library/python:3.12-slim"
-        # MODE=verify 保证只登录并同步能力数据，不进入提交流程。
-        command: |
-          export MODE="verify"
-          bash build/scripts/uos-store-submit.sh
+- name: 验证
+  displayName: 验证
+  strategy: naturally
+  trigger: auto
+  steps:
+  - step: execute@docker
+    name: uos-store-verify
+    displayName: 验证商店账号与网络
+    certificate: ""
+    image: docker.m.daocloud.io/library/python:3.12-slim
+    command:
+    - export MODE="verify"
+    - bash build/scripts/uos-store-submit.sh
+triggers:
+  trigger: manual
+notify: []
+variables:
+  global:
+  - APPSTORE_USERNAME
+  - APPSTORE_PASSWORD

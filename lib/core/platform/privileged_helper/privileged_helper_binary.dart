@@ -23,13 +23,17 @@ const String _helperRelativePath = 'libexec/linglong_store_helper';
 class PrivilegedHelperBinary {
   /// 创建定位器。
   ///
-  /// [bundleHelperPathOverride] 为测试注入点：默认以
-  /// `Platform.resolvedExecutable` 所在 bundle 为唯一基准；生产代码不需要
-  /// 显式传参。
-  PrivilegedHelperBinary({String? bundleHelperPathOverride})
-    : _bundleHelperPathOverride = bundleHelperPathOverride;
+  /// [bundleHelperPathOverride] 与 [resolvedExecutableOverride] 均为测试注入点：
+  /// 生产代码不传参，默认以 `Platform.resolvedExecutable` 所在 bundle 为唯一
+  /// 基准推导 helper 路径。
+  PrivilegedHelperBinary({
+    String? bundleHelperPathOverride,
+    String? resolvedExecutableOverride,
+  }) : _bundleHelperPathOverride = bundleHelperPathOverride,
+       _resolvedExecutableOverride = resolvedExecutableOverride;
 
   final String? _bundleHelperPathOverride;
+  final String? _resolvedExecutableOverride;
 
   /// 解析本次启动要执行的 helper 绝对路径。
   ///
@@ -48,9 +52,8 @@ class PrivilegedHelperBinary {
   /// bundle 内 helper 的默认绝对路径：以 `Platform.resolvedExecutable` 所在
   /// bundle 为唯一基准，不接受环境变量或调用方指定其他路径（docs/47 §5.2）。
   String _defaultBundleHelperPath() {
-    return p.join(
-      p.dirname(Platform.resolvedExecutable),
-      _helperRelativePath,
-    );
+    final resolvedExecutable =
+        _resolvedExecutableOverride ?? Platform.resolvedExecutable;
+    return p.join(p.dirname(resolvedExecutable), _helperRelativePath);
   }
 }

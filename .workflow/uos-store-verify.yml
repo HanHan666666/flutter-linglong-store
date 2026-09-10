@@ -1,0 +1,31 @@
+# 文件定位：统信商店投递的「只验证」流水线，与 uos-store-upload.yml 配套。
+#
+# 为什么需要这个文件：
+#   正式投递流水线（uos-store-upload.yml）一旦运行就会真实提交到统信商店。
+#   当需要验证「账号是否还能登录」「商店能力数据能否拉取」「网络是否通」时，
+#   跑正式流水线代价太大；本流水线用 MODE=verify 只做登录与能力同步，
+#   不会向商店提交任何包，可以放心随时运行。
+#
+# 适用场景：
+#   - 首次配置后验证账号与网络；
+#   - 商店密码轮换后确认凭据仍然有效；
+#   - 投递工具升级后先探测兼容性。
+#
+# 注意：与正式流水线一样不做自动触发，仅手工运行。
+version: "1.0"
+name: uos-store-verify
+displayName: 统信商店凭据验证
+stages:
+  - stage:
+    name: verify
+    displayName: 验证
+    steps:
+      - step: execute@docker
+        name: uos-store-verify
+        displayName: 验证商店账号与网络
+        certificate: ""
+        image: "docker.m.daocloud.io/library/python:3.12-slim"
+        # MODE=verify 保证只登录并同步能力数据，不进入提交流程。
+        command: |
+          export MODE="verify"
+          bash build/scripts/uos-store-submit.sh

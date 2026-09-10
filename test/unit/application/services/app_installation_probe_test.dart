@@ -174,9 +174,21 @@ void main() {
       );
 
       expect(await probe.isManagedBySystemPackageManager(), isTrue);
-      expect(commands.map((command) => command.first), <String>[
-        '/usr/bin/dpkg-query',
-        '/usr/bin/rpm',
+      expect(commands, <List<String>>[
+        <String>[
+          '/usr/bin/dpkg-query',
+          '--admindir',
+          '/var/lib/dpkg',
+          '-S',
+          '/opt/linglong-store/linglong_store',
+        ],
+        <String>[
+          '/usr/bin/rpm',
+          '--dbpath',
+          '/var/lib/rpm',
+          '-qf',
+          '/opt/linglong-store/linglong_store',
+        ],
       ]);
     });
 
@@ -200,10 +212,28 @@ void main() {
       );
 
       expect(await probe.isManagedBySystemPackageManager(), isTrue);
-      expect(commands.map((command) => command.first), <String>[
-        '/usr/bin/dpkg-query',
-        '/usr/bin/rpm',
-        '/usr/bin/pacman',
+      expect(commands, <List<String>>[
+        <String>[
+          '/usr/bin/dpkg-query',
+          '--admindir',
+          '/var/lib/dpkg',
+          '-S',
+          '/opt/linglong-store/linglong_store',
+        ],
+        <String>[
+          '/usr/bin/rpm',
+          '--dbpath',
+          '/var/lib/rpm',
+          '-qf',
+          '/opt/linglong-store/linglong_store',
+        ],
+        <String>[
+          '/usr/bin/pacman',
+          '--dbpath',
+          '/var/lib/pacman',
+          '-Qo',
+          '/opt/linglong-store/linglong_store',
+        ],
       ]);
     });
 

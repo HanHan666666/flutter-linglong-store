@@ -111,8 +111,9 @@ class LinuxAppInstallationProbe implements AppInstallationProbe {
   ///
   /// 不校验包名：威胁模型是同 UID 进程，任何由 root 级包管理器落盘的文件都
   /// 不具备被其替换的条件；包名白名单会随 AUR 命名（-bin/nightly）与未来
-  /// 改名漂移。输出行为 `pkg[:arch]: /path`，按最后一个 `: ` 分隔符取路径
-  /// 精确比对，避免更长路径恰好以后缀相同的误判。
+  /// 改名漂移。输出形态包括 `pkg[:arch]: /path` 与 `diversion by ... from: /path`；
+  /// 统一按最后一个 `: ` 分隔符取路径精确比对——两类记录都表示 dpkg 管理该
+  /// 路径，均按可信处理；查询固定 `LC_ALL=C`，输出不随系统语言变化。
   Future<bool> _isManagedByAnyDpkgPackage(String executable) async {
     final result = await _query([
       _dpkgQueryBinary,
@@ -197,6 +198,9 @@ class LinuxAppInstallationProbe implements AppInstallationProbe {
       return await _shellExecutor.run(
         command,
         timeout: const Duration(seconds: 10),
+        // 固定 C locale：dpkg 的归属输出（含 diversion 行）与错误消息不随系统
+        // 语言漂移，保证归属解析在不同 LANG 下行为一致（docs/51 §4.1）。
+        environment: const {'LC_ALL': 'C'},
       );
     } catch (error, stackTrace) {
       // 某一包管理器不存在只代表当前身份不属于它，继续尝试下一种身份。

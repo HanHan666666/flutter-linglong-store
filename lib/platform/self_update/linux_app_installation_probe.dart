@@ -1,7 +1,14 @@
 /// Linux 当前进程安装身份探测实现。
 ///
 /// 探测顺序以“当前实际运行来源”为准：AppImage 环境证据优先，其次查询当前
-/// 可执行文件在 dpkg/RPM 数据库中的归属。系统里仅仅残留同名包不会改变结果。
+/// 可执行文件在 dpkg/RPM/pacman 数据库中的归属。系统里仅仅残留同名包不会
+/// 改变结果。
+///
+/// 安全约束（docs/51）：包管理器归属判定是特权 helper 的唯一信任条件，所有
+/// 查询命令固定绝对路径并显式指定包数据库目录，防止同 UID 进程通过 PATH
+/// 垫片（如 `~/.local/bin/dpkg-query`）或 `DPKG_ADMINDIR` / rpm 宏等环境
+/// 重定向把探测指向伪造数据库；命令或目录不存在时按未命中处理，失败方向
+/// 是“回退普通用户直连”（安全方向）。
 library;
 
 import 'dart:convert';
@@ -27,6 +34,15 @@ class LinuxAppInstallationProbe implements AppInstallationProbe {
 
   /// 正式 DEB/RPM 包名。
   static const String packageName = 'linglong-store';
+
+  // 探测命令与包数据库位置：全部使用绝对路径/显式参数，不接受 PATH 与环境
+  // 变量重定向（docs/51 复核加固）。非对应发行版上命令不存在即按未命中处理。
+  static const String _dpkgQueryBinary = '/usr/bin/dpkg-query';
+  static const String _dpkgAdminDir = '/var/lib/dpkg';
+  static const String _rpmBinary = '/usr/bin/rpm';
+  static const String _rpmDbPath = '/var/lib/rpm';
+  static const String _pacmanBinary = '/usr/bin/pacman';
+  static const String _pacmanDbPath = '/var/lib/pacman';
 
   final ShellCommandExecutor _shellExecutor;
   final Map<String, String> _environment;
@@ -72,34 +88,46 @@ class LinuxAppInstallationProbe implements AppInstallationProbe {
     if (executable.isEmpty) {
       return false;
     }
+    final stopwatch = Stopwatch()..start();
+    String? matched;
     if (await _isManagedByAnyDpkgPackage(executable)) {
-      AppLogger.info('[AppInstallationProbe] bundle 由 dpkg 管理: $executable');
-      return true;
+      matched = 'dpkg';
+    } else if (await _isManagedByAnyRpmPackage(executable)) {
+      matched = 'rpm';
+    } else if (await _isManagedByAnyPacmanPackage(executable)) {
+      matched = 'pacman';
     }
-    if (await _isManagedByAnyRpmPackage(executable)) {
-      AppLogger.info('[AppInstallationProbe] bundle 由 rpm 管理: $executable');
-      return true;
-    }
-    if (await _isManagedByAnyPacmanPackage(executable)) {
-      AppLogger.info('[AppInstallationProbe] bundle 由 pacman 管理: $executable');
-      return true;
-    }
-    AppLogger.info('[AppInstallationProbe] bundle 无包管理器归属: $executable');
-    return false;
+    stopwatch.stop();
+    // 记录命中来源与耗时：首个安装任务会同步等待本判定，便于真机诊断
+    // 首次任务延迟来源（docs/51 §4.5）。
+    AppLogger.info(
+      '[AppInstallationProbe] bundle 包管理器归属判定: '
+      'manager=${matched ?? 'none'}, 耗时=${stopwatch.elapsedMilliseconds}ms',
+    );
+    return matched != null;
   }
 
   /// dpkg 数据库中是否存在拥有该路径的软件包（不限定包名）。
   ///
   /// 不校验包名：威胁模型是同 UID 进程，任何由 root 级包管理器落盘的文件都
   /// 不具备被其替换的条件；包名白名单会随 AUR 命名（-bin/nightly）与未来
-  /// 改名漂移。输出行为 `pkg[:arch]: /path`，按路径后缀匹配即可。
+  /// 改名漂移。输出行为 `pkg[:arch]: /path`，按最后一个 `: ` 分隔符取路径
+  /// 精确比对，避免更长路径恰好以后缀相同的误判。
   Future<bool> _isManagedByAnyDpkgPackage(String executable) async {
-    final result = await _query(['dpkg-query', '-S', executable]);
+    final result = await _query([
+      _dpkgQueryBinary,
+      '--admindir',
+      _dpkgAdminDir,
+      '-S',
+      executable,
+    ]);
     if (result == null || !result.success) {
       return false;
     }
     for (final line in const LineSplitter().convert(result.stdout)) {
-      if (line.trim().endsWith(executable)) {
+      final separator = line.lastIndexOf(': ');
+      if (separator >= 0 &&
+          line.substring(separator + 2).trim() == executable) {
         return true;
       }
     }
@@ -108,18 +136,36 @@ class LinuxAppInstallationProbe implements AppInstallationProbe {
 
   /// rpm 数据库中是否存在拥有该路径的软件包（退出码 0 即命中）。
   Future<bool> _isManagedByAnyRpmPackage(String executable) async {
-    final result = await _query(['rpm', '-qf', executable]);
+    final result = await _query([
+      _rpmBinary,
+      '--dbpath',
+      _rpmDbPath,
+      '-qf',
+      executable,
+    ]);
     return result != null && result.success;
   }
 
   /// pacman 数据库中是否存在拥有该路径的软件包（退出码 0 即命中）。
   Future<bool> _isManagedByAnyPacmanPackage(String executable) async {
-    final result = await _query(['pacman', '-Qo', executable]);
+    final result = await _query([
+      _pacmanBinary,
+      '--dbpath',
+      _pacmanDbPath,
+      '-Qo',
+      executable,
+    ]);
     return result != null && result.success;
   }
 
   Future<bool> _isOwnedByDpkg(String executable) async {
-    final result = await _query(['dpkg-query', '-S', executable]);
+    final result = await _query([
+      _dpkgQueryBinary,
+      '--admindir',
+      _dpkgAdminDir,
+      '-S',
+      executable,
+    ]);
     if (result == null || !result.success) {
       return false;
     }
@@ -133,7 +179,9 @@ class LinuxAppInstallationProbe implements AppInstallationProbe {
 
   Future<bool> _isOwnedByRpm(String executable) async {
     final result = await _query([
-      'rpm',
+      _rpmBinary,
+      '--dbpath',
+      _rpmDbPath,
       '-qf',
       '--qf',
       '%{NAME}\n',

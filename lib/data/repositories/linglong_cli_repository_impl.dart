@@ -382,6 +382,12 @@ class LinglongCliRepositoryImpl
         ? _CliTaskTransport.privilegedHelper
         : _CliTaskTransport.directCliFallback;
     _taskTransports[processId] = transport;
+    // docs/51 §4.5：记录传输绑定与信任判定结果，便于真机诊断（例如用户报告
+    // "AppImage 每任务弹窗"时确认走的是直连回退）。
+    AppLogger.info(
+      '[LinglongCli] 任务传输绑定: $processId → ${transport.name}'
+      '（helperTrusted=$helperTrusted）',
+    );
 
     yield InstallProgress(
       appId: appId,

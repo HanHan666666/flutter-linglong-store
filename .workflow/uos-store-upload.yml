@@ -1,0 +1,36 @@
+# 文件定位：统信应用商店（UOS Store）投递流水线，由 Gitee Go 读取本文件生成流水线。
+#
+# 为什么需要这个文件：
+#   GitHub Actions 的运行器在境外，访问统信开发者平台 appstore-dev.uniontech.com
+#   长期失败；Gitee 的构建节点在国内，可以正常访问。Gitee Go 会扫描仓库内的
+#   .workflow/*.yml 作为流水线定义，因此把这条流水线随代码一起版本化：
+#   配置进仓库、逻辑进 build/scripts/uos-store-submit.sh。
+#
+# 使用方式：
+#   在 Gitee 仓库「流水线 Gitee Go」页面手工点击「运行」触发，不做任何自动触发，
+#   避免误投递到商店审核。运行前请确认：
+#     1. 目标版本已通过 Gitee Release 同步完成（含 amd64/arm64 的 deb 资产）；
+#     2. 流水线已关联通用变量 APPSTORE_USERNAME / APPSTORE_PASSWORD。
+#
+# 运行环境说明：
+#   镜像固定使用国内可拉取的 daocloud 镜像源。Gitee Go 的构建节点无法直连
+#   Docker Hub，image 里写裸镜像名会直接报 “Back-off pulling image”。
+version: "1.0"
+name: uos-store-upload
+displayName: 统信商店投递
+stages:
+  - stage:
+    name: submit
+    displayName: 投递
+    steps:
+      - step: execute@docker
+        name: uos-store-submit
+        displayName: 提交到统信应用商店
+        certificate: ""
+        image: "docker.m.daocloud.io/library/python:3.12-slim"
+        # 只做一层转发：真正的逻辑全部在脚本里，便于本地复现与代码评审。
+        # MODE=submit 表示这是正式的提交流水线；账号密码来自关联的通用变量，
+        # 由 Gitee Go 注入环境变量，不在此处展开，避免出现在构建日志中。
+        command: |
+          export MODE="submit"
+          bash build/scripts/uos-store-submit.sh

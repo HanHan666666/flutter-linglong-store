@@ -19,6 +19,7 @@ import '../../domain/repositories/polkit_rule_gateway.dart';
 import '../../domain/repositories/system_accent_color_gateway.dart';
 import '../../domain/repositories/system_notification_gateway.dart';
 import '../../domain/models/polkit_rule_state.dart' show PasswordFreeInstallModeReader;
+import '../../domain/models/privileged_helper_trust.dart';
 
 /// 应用启动阶段初始化的用户偏好存储端口。
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
@@ -113,6 +114,16 @@ final polkitRuleGatewayProvider = Provider<PolkitRuleGateway>((ref) {
 final passwordFreeInstallModeReaderProvider =
     Provider<PasswordFreeInstallModeReader>((ref) {
       return _missingDependency('passwordFreeInstallModeReaderProvider');
+    });
+
+/// 特权 helper 来源信任端口（docs/51）。
+///
+/// Data 层在任务启动时解析一次并绑定到该任务；组合根负责注入"单次解析 +
+/// 会话内缓存"的实现（探测会启动系统命令）。Data 层对未注入的解析器按可信
+/// 处理以保持既有装配行为；生产组合根必须覆盖本端口。
+final privilegedHelperTrustResolverProvider =
+    Provider<PrivilegedHelperTrustResolver>((ref) {
+      return _missingDependency('privilegedHelperTrustResolverProvider');
     });
 
 /// 为遗漏的根装配提供包含端口名称的确定性错误。

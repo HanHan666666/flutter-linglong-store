@@ -62,6 +62,8 @@ List<Override> createProductionDependencyOverrides({
         passwordFreeInstallModeReader: ref.read(
           passwordFreeInstallModeReaderProvider,
         ),
+        // 信任解析器在任务启动时解析一次并绑定到该任务（docs/51 §4.2）。
+        helperTrustResolver: ref.read(privilegedHelperTrustResolverProvider),
       );
     }),
     linglongRepositoryManagementRepositoryProvider.overrideWith((ref) {
@@ -112,6 +114,14 @@ List<Override> createProductionDependencyOverrides({
     // 任务启动时读取控制器内存状态，不做 IO、不提权（docs/50 §7.1）。
     passwordFreeInstallModeReaderProvider.overrideWith((ref) {
       return () => ref.read(polkitRuleProvider).usesPasswordFreeCli;
+    }),
+    // docs/51：helper 来源信任判定——单次解析 + 会话内缓存（探测会启动系统
+    // 命令，不应每个任务重复执行）；探测失败由 Data 层按不可信回退直连，
+    // 不得失败开放。
+    privilegedHelperTrustResolverProvider.overrideWith((ref) {
+      final probe = ref.watch(appInstallationProbeProvider);
+      Future<bool>? resolved;
+      return () => resolved ??= probe.isManagedBySystemPackageManager();
     }),
   ];
 }

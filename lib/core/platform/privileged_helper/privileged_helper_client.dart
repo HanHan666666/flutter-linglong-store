@@ -97,7 +97,6 @@ class PrivilegedHelperClient implements PrivilegedHelperTransport {
 
   _SessionState _state = _SessionState.notStarted;
   Process? _process;
-  PreparedHelperPath? _preparedPath;
   StreamSubscription<String>? _stdoutLines;
   StreamSubscription<String>? _stderrLines;
   final BoundedOutputBuffer _helperStderr = BoundedOutputBuffer(
@@ -132,10 +131,9 @@ class PrivilegedHelperClient implements PrivilegedHelperTransport {
   }
 
   Future<void> _startSession() async {
-    // 每次启动都重新 resolve 路径：非 FUSE 直启 bundle 路径；FUSE 先清扫
-    // 上次遗留再创建新暂存副本（§5.2.1）。
-    final prepared = await _binary.prepare();
-    _preparedPath = prepared;
+    // 每次启动都重新解析 bundle 内 helper 路径（docs/51：信任边界收敛后
+    // 不再有 FUSE 暂存分支，路径必然位于包管理器安装树内）。
+    final helperPath = _binary.prepare();
 
     final Process process;
     try {
@@ -144,10 +142,9 @@ class PrivilegedHelperClient implements PrivilegedHelperTransport {
       process = await _launcher([
         'pkexec',
         '--disable-internal-agent',
-        prepared.path,
+        helperPath,
       ]);
     } catch (error) {
-      await prepared.release();
       throw PrivilegedHelperUnavailableException('pkexec 启动失败: $error');
     }
     _process = process;
@@ -202,10 +199,7 @@ class PrivilegedHelperClient implements PrivilegedHelperTransport {
     }
 
     _state = _SessionState.ready;
-    AppLogger.info('特权 helper 会话已建立（staged=${prepared.staged}）');
-    // FUSE 形态：收到 ready 后立即删除暂存文件（§9.1 第 4 步）；删除运行中
-    // 进程的 exe 无害，且 pkexec 认证期间路径必须存在，因此不能更早。
-    unawaited(prepared.release());
+    AppLogger.info('特权 helper 会话已建立');
   }
 
   void _observeStdout(Process process, Completer<void> readyCompleter) {
@@ -464,8 +458,6 @@ class PrivilegedHelperClient implements PrivilegedHelperTransport {
     if (stderrTail.isNotEmpty) {
       AppLogger.info('特权 helper stderr 尾部: $stderrTail');
     }
-    await _preparedPath?.release();
-    _preparedPath = null;
   }
 
   /// 默认启动器：pkexec 执行 helper（command[0] 固定为 pkexec）。

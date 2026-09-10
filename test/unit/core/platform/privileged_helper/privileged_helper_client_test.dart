@@ -31,16 +31,13 @@ void main() {
 
   /// 构建一个注入了假 helper 启动器的客户端。
   ///
-  /// [mode] 传给 fake_helper.dart；非 FUSE 形态（根 ext4）避免引入暂存逻辑。
+  /// [mode] 传给 fake_helper.dart。
   PrivilegedHelperClient buildClient(
     String mode, {
     Duration readyTimeout = const Duration(seconds: 10),
     String? launchLog,
   }) {
     final binary = PrivilegedHelperBinary(
-      mountinfoReader: () =>
-          '36 35 98:0 /mnt1 / rw,noatime master:1 - ext4 /dev/root rw\n',
-      appRuntimeDirResolver: () => _tempDir.path,
       bundleHelperPathOverride: _fakeBundleHelper().path,
     );
     return PrivilegedHelperClient(

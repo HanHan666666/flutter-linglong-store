@@ -892,8 +892,9 @@ class _TestInstalledApps extends InstalledApps {
   InstalledAppsState build() => const InstalledAppsState();
 
   @override
-  Future<void> refresh() async {
+  Future<bool> refresh() async {
     state = InstalledAppsState(apps: apps);
+    return true;
   }
 }
 

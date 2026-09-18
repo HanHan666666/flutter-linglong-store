@@ -6,6 +6,7 @@ library;
 
 import '../../domain/models/install_task.dart';
 import '../../domain/models/installed_app.dart';
+import 'app_operation_target_matcher.dart';
 
 /// 应用操作恢复结论。
 enum AppOperationRecoveryStatus {
@@ -34,7 +35,15 @@ class AppOperationRecoveryResult {
 /// 应用操作恢复规则服务。
 class AppOperationRecoveryService {
   /// 创建无状态恢复服务。
-  const AppOperationRecoveryService();
+  ///
+  /// 匹配规则统一委托给 [AppOperationTargetMatcher]，与更新成功后的收敛判定
+  /// 共用同一份口径；测试可注入替身验证委托关系。
+  const AppOperationRecoveryService({
+    AppOperationTargetMatcher matcher = const AppOperationTargetMatcher(),
+  }) : _matcher = matcher;
+
+  /// 目标身份与版本匹配规则。
+  final AppOperationTargetMatcher _matcher;
 
   /// 根据冻结目标和当前已安装列表核验任务结果。
   AppOperationRecoveryResult evaluate(
@@ -56,20 +65,11 @@ class AppOperationRecoveryService {
     InstallTask task,
     List<InstalledApp> installedApps,
   ) {
-    final target = task.target;
-    final candidates = installedApps.where((app) {
-      if (app.appId != task.appId) {
-        return false;
-      }
-      if (target == null) {
-        return true;
-      }
-      return _matchesOptionalIdentity(target.arch, app.arch) &&
-          _matchesOptionalIdentity(target.channel, app.channel) &&
-          _matchesOptionalIdentity(target.module, app.module) &&
-          _matchesOptionalIdentity(target.repoName, app.repoName);
-    }).toList();
-    return candidates.length == 1 ? candidates.single : null;
+    return _matcher.resolveUniqueInstalledTarget(
+      appId: task.appId,
+      installedApps: installedApps,
+      target: task.target,
+    );
   }
 
   /// 根据操作类型核验实际版本是否满足原任务目标。
@@ -83,20 +83,13 @@ class AppOperationRecoveryService {
 
     final target = task.target;
     if (task.isUpdateTask) {
-      final expectedVersion = target?.expectedVersion;
-      return expectedVersion != null &&
-          expectedVersion.isNotEmpty &&
-          installedTarget.version == expectedVersion;
+      // 更新必须匹配入队时冻结的目标版本，禁止只凭 appId 乐观判定成功。
+      return _matcher.isUpdateSatisfiedOnInstance(installedTarget, target);
     }
 
     final requestedVersion = target?.requestedInstallVersion ?? task.version;
     return requestedVersion == null ||
         requestedVersion.isEmpty ||
         installedTarget.version == requestedVersion;
-  }
-
-  /// 目标未冻结字段时允许兼容，已冻结字段必须完全一致。
-  bool _matchesOptionalIdentity(String? expected, String? actual) {
-    return expected == null || expected.isEmpty || expected == actual;
   }
 }

@@ -13,8 +13,11 @@ import 'package:linglong_store/application/providers/application_dependency_prov
 import 'package:linglong_store/application/providers/app_operation_lifecycle_coordinator.dart';
 import 'package:linglong_store/application/providers/global_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
+import 'package:linglong_store/application/providers/installed_app_diff_report_provider.dart';
 import 'package:linglong_store/application/providers/installed_apps_provider.dart';
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
+import 'package:linglong_store/application/services/installed_app_diff_report_service.dart';
+import 'package:linglong_store/application/services/update_convergence_service.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/domain/models/app_operation_batch.dart';
 import 'package:linglong_store/domain/models/app_operation_journal_snapshot.dart';
@@ -26,6 +29,7 @@ import 'package:linglong_store/domain/repositories/system_notification_gateway.d
 import 'package:linglong_store/domain/repositories/app_operation_journal_repository.dart';
 
 import '../../../helpers/memory_app_operation_journal_repository.dart';
+import '../../../mocks/mock_classes.mocks.dart';
 
 void main() {
   setUpAll(() async {
@@ -114,6 +118,208 @@ void main() {
     await _waitForOutboxToDrain(container);
     expect(gateway.messages, hasLength(1));
   });
+
+  test('单任务更新成功时把目标版本期望交给收敛确认', () async {
+    final verifier = _RecordingConvergenceVerifier();
+    final container = _createSyncContainer(
+      journal: MemoryAppOperationJournalRepository(_singleUpdateSnapshot),
+      verifier: verifier,
+    );
+    addTearDown(container.dispose);
+
+    container.read(appOperationLifecycleCoordinatorProvider);
+    await _waitForOutboxToDrain(container);
+
+    // 更新成功后必须把入队时冻结的期望版本交给同步链路，否则会用更新前的
+    // 旧快照重新判定为可更新。
+    expect(verifier.targets, hasLength(1));
+    expect(verifier.targets.single.single.appId, 'com.example.demo');
+    expect(verifier.targets.single.single.expectedVersion, '2.0.0');
+    expect(container.read(installQueueProvider).outbox, isEmpty);
+  });
+
+  test('一键更新批次只汇总成功更新任务的目标版本', () async {
+    final verifier = _RecordingConvergenceVerifier();
+    final container = _createSyncContainer(
+      journal: MemoryAppOperationJournalRepository(_mixedBatchSnapshot),
+      verifier: verifier,
+    );
+    addTearDown(container.dispose);
+
+    container.read(appOperationLifecycleCoordinatorProvider);
+    await _waitForOutboxToDrain(container);
+
+    // 批次只做一次收敛确认：失败任务与缺少期望版本的历史任务都不参与判定。
+    expect(verifier.targets, hasLength(1));
+    final targets = verifier.targets.single;
+    expect(targets.map((target) => target.appId), ['com.example.demo']);
+    expect(targets.single.expectedVersion, '2.0.0');
+  });
+}
+
+/// 单任务更新成功的恢复快照：任务没有 batchId，直接触发单任务同步路径。
+const _singleUpdateSnapshot = AppOperationJournalSnapshot(
+  history: [
+    InstallTask(
+      id: 'task-single',
+      kind: InstallTaskKind.update,
+      appId: 'com.example.demo',
+      appName: '示例应用',
+      version: '2.0.0',
+      target: AppOperationTargetSnapshot(
+        appId: 'com.example.demo',
+        displayName: '示例应用',
+        installedVersion: '1.0.0',
+        expectedVersion: '2.0.0',
+      ),
+      status: InstallStatus.success,
+      createdAt: 1,
+      finishedAt: 2,
+    ),
+  ],
+  outbox: [
+    AppOperationEffect(
+      id: 'task-succeeded-task-single',
+      type: AppOperationEffectType.taskSucceeded,
+      aggregateId: 'task-single',
+      createdAt: 2,
+    ),
+  ],
+);
+
+/// 混合终态批次的恢复快照：包含成功、失败与缺少期望版本三类任务。
+const _mixedBatchSnapshot = AppOperationJournalSnapshot(
+  history: [
+    InstallTask(
+      id: 'task-ok',
+      batchId: 'batch-mixed',
+      kind: InstallTaskKind.update,
+      appId: 'com.example.demo',
+      appName: '示例应用',
+      version: '2.0.0',
+      target: AppOperationTargetSnapshot(
+        appId: 'com.example.demo',
+        displayName: '示例应用',
+        installedVersion: '1.0.0',
+        expectedVersion: '2.0.0',
+      ),
+      status: InstallStatus.success,
+      createdAt: 1,
+      finishedAt: 2,
+    ),
+    InstallTask(
+      id: 'task-failed',
+      batchId: 'batch-mixed',
+      kind: InstallTaskKind.update,
+      appId: 'com.example.other',
+      appName: '其他应用',
+      version: '3.0.0',
+      target: AppOperationTargetSnapshot(
+        appId: 'com.example.other',
+        displayName: '其他应用',
+        installedVersion: '2.0.0',
+        expectedVersion: '3.0.0',
+      ),
+      status: InstallStatus.failed,
+      createdAt: 1,
+      finishedAt: 3,
+    ),
+    InstallTask(
+      id: 'task-legacy',
+      batchId: 'batch-mixed',
+      kind: InstallTaskKind.update,
+      appId: 'com.example.legacy',
+      appName: '历史任务',
+      status: InstallStatus.success,
+      createdAt: 1,
+      finishedAt: 4,
+    ),
+  ],
+  batches: [
+    AppOperationBatch(
+      id: 'batch-mixed',
+      taskIds: ['task-ok', 'task-failed', 'task-legacy'],
+      targets: [
+        AppOperationTargetSnapshot(
+          appId: 'com.example.demo',
+          displayName: '示例应用',
+          installedVersion: '1.0.0',
+          expectedVersion: '2.0.0',
+        ),
+        AppOperationTargetSnapshot(
+          appId: 'com.example.other',
+          displayName: '其他应用',
+          installedVersion: '2.0.0',
+          expectedVersion: '3.0.0',
+        ),
+      ],
+      createdAt: 1,
+      finishedAt: 4,
+      status: AppOperationBatchStatus.completed,
+      notificationState: AppOperationNotificationState.pending,
+    ),
+  ],
+  outbox: [
+    AppOperationEffect(
+      id: 'update-batch-completed-batch-mixed',
+      type: AppOperationEffectType.updateBatchCompleted,
+      aggregateId: 'batch-mixed',
+      createdAt: 4,
+    ),
+  ],
+);
+
+/// 创建只关注收敛目标的隔离容器，避免通知与 ll-cli 依赖。
+ProviderContainer _createSyncContainer({
+  required AppOperationJournalRepository journal,
+  required UpdateConvergenceVerifier verifier,
+}) {
+  return ProviderContainer(
+    overrides: [
+      appOperationJournalRepositoryProvider.overrideWithValue(journal),
+      globalAppProvider.overrideWith(() => _TestGlobalApp(const GlobalAppState())),
+      installedAppsProvider.overrideWith(_TestInstalledApps.new),
+      updateAppsProvider.overrideWith(_TestUpdateApps.new),
+      systemNotificationGatewayProvider.overrideWithValue(
+        _RecordingNotificationGateway(),
+      ),
+      updateConvergenceVerifierProvider.overrideWithValue(verifier),
+      installedAppDiffReportServiceProvider.overrideWithValue(
+        _NoopDiffReportService(),
+      ),
+    ],
+  );
+}
+
+/// 记录每次收敛确认入参的替身，确认结果固定为未收敛以跳过更新列表重算。
+class _RecordingConvergenceVerifier implements UpdateConvergenceVerifier {
+  /// 每次 verify 调用收到的目标集合。
+  final List<List<AppOperationTargetSnapshot>> targets = [];
+
+  @override
+  Future<UpdateConvergenceResult> verify(
+    List<AppOperationTargetSnapshot> targets,
+  ) async {
+    this.targets.add(List<AppOperationTargetSnapshot>.from(targets));
+    return const UpdateConvergenceResult(
+      confirmed: false,
+      attempts: 1,
+      unconfirmedTargets: [],
+      refreshFailed: false,
+    );
+  }
+}
+
+/// 差量检测空实现：同步链路会触发统计上报，测试不依赖真实 ll-cli。
+class _NoopDiffReportService extends InstalledAppDiffReportService {
+  _NoopDiffReportService()
+    : super(
+        cliRepository: MockLinglongCliRepository(),
+        analyticsRepository: MockAnalyticsRepository(),
+      );
+
+  @override
+  void scheduleImmediateCheck() {}
 }
 
 /// 已完成批次及其待消费事件的恢复快照。
@@ -190,6 +396,10 @@ ProviderContainer _createContainer({
       installedAppsProvider.overrideWith(_TestInstalledApps.new),
       updateAppsProvider.overrideWith(_TestUpdateApps.new),
       systemNotificationGatewayProvider.overrideWithValue(gateway),
+      // 通知验证不关注收敛确认耗时：重试间隔归零，避免拖慢 Outbox 消费。
+      updateConvergenceVerifierProvider.overrideWith(
+        (ref) => UpdateConvergenceService(ref, retryDelay: Duration.zero),
+      ),
     ],
   );
 }
@@ -270,7 +480,7 @@ class _TestInstalledApps extends InstalledApps {
   InstalledAppsState build() => const InstalledAppsState();
 
   @override
-  Future<void> refresh() async {}
+  Future<bool> refresh() async => true;
 }
 
 /// 避免关键协调器验证触发真实远端更新检查。

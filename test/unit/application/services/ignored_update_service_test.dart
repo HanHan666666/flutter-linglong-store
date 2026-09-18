@@ -247,9 +247,10 @@ class _TrackingInstalledApps extends InstalledApps {
   InstalledAppsState build() => const InstalledAppsState();
 
   @override
-  Future<void> refresh() async {
+  Future<bool> refresh() async {
     events?.add('installed:refresh');
     state = const InstalledAppsState();
+    return true;
   }
 }
 

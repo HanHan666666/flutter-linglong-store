@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:linglong_store/application/providers/app_collection_sync_provider.dart';
 import 'package:linglong_store/application/providers/app_operation_queue_provider.dart';
 import 'package:linglong_store/application/providers/ignored_updates_provider.dart';
 import 'package:linglong_store/application/providers/installed_app_diff_report_provider.dart';
@@ -13,8 +14,11 @@ import 'package:linglong_store/application/providers/network_speed_provider.dart
 import 'package:linglong_store/application/providers/update_apps_provider.dart';
 import 'package:linglong_store/core/config/theme.dart';
 import 'package:linglong_store/core/i18n/l10n/app_localizations.dart';
+import 'package:linglong_store/core/logging/app_logger.dart';
 import 'package:linglong_store/application/services/installed_app_diff_report_service.dart';
+import 'package:linglong_store/application/services/update_convergence_service.dart';
 import 'package:linglong_store/core/storage/ignored_update_storage.dart';
+import 'package:linglong_store/domain/models/app_operation_target_snapshot.dart';
 import 'package:linglong_store/domain/models/ignored_update.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_queue_state.dart';
@@ -27,6 +31,11 @@ import 'package:linglong_store/presentation/widgets/install_to_download_flyout.d
 import 'package:linglong_store/presentation/widgets/install_button.dart';
 
 void main() {
+  setUpAll(() async {
+    // 未收敛窗口会写入诊断日志，Widget 测试进程同样需要初始化日志器。
+    await AppLogger.init();
+  });
+
   group('UpdateAppPage', () {
     testWidgets(
       'renders installing update row in Row layout without infinite width exception',
@@ -169,6 +178,88 @@ void main() {
         await tester.pump();
 
         expect(recordedSingles, isEmpty);
+      },
+    );
+
+    testWidgets(
+      'keeps a successfully updated row removed while the installed snapshot has not converged',
+      (tester) async {
+        final updateApps = TestUpdateApps(
+          apps: const [
+            UpdatableApp(
+              installedApp: InstalledApp(
+                appId: 'org.example.demo',
+                name: 'Demo',
+                version: '1.0.0',
+              ),
+              latestVersion: '1.1.0',
+            ),
+          ],
+        );
+        final verifier = _FixedConvergenceVerifier(confirmed: false);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              installedAppDiffReportServiceProvider.overrideWithValue(
+                _NoopDiffReportService(),
+              ),
+              installQueueProvider.overrideWith(
+                () => TestInstallQueue(initialState: const InstallQueueState()),
+              ),
+              installedAppsProvider.overrideWith(() => TestInstalledApps()),
+              updateAppsProvider.overrideWith(() => updateApps),
+              networkSpeedProvider.overrideWithValue(const NetworkSpeed()),
+              appOperationQueueControllerProvider.overrideWith(
+                (ref) => RecordingAppOperationQueueController(ref),
+              ),
+              updateConvergenceVerifierProvider.overrideWithValue(verifier),
+            ],
+            child: const MaterialApp(
+              locale: Locale('zh'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(body: UpdateAppPage()),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        // 更新前该应用确实在更新列表中。
+        expect(find.widgetWithText(FilledButton, '更 新'), findsOneWidget);
+
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(UpdateAppPage)),
+          listen: false,
+        );
+        // 模拟协调器在任务成功后的乐观移除。
+        container
+            .read(updateAppsProvider.notifier)
+            .removeApp('org.example.demo');
+        await tester.pump();
+        expect(find.widgetWithText(FilledButton, '更 新'), findsNothing);
+
+        final checksBefore = updateApps.checkUpdatesCalls;
+        await container
+            .read(appCollectionSyncServiceProvider)
+            .syncAfterSuccessfulOperation(
+              updateTargets: const [
+                AppOperationTargetSnapshot(
+                  appId: 'org.example.demo',
+                  displayName: 'Demo',
+                  installedVersion: '1.0.0',
+                  expectedVersion: '1.1.0',
+                ),
+              ],
+            );
+        await tester.pump();
+
+        // 关键回归点：已安装快照未收敛时不得重算更新列表，条目不得回流。
+        expect(verifier.verifyCalls, 1);
+        expect(updateApps.checkUpdatesCalls, checksBefore);
+        expect(find.widgetWithText(FilledButton, '更 新'), findsNothing);
       },
     );
 
@@ -1025,9 +1116,10 @@ class TestInstalledApps extends InstalledApps {
   }
 
   @override
-  Future<void> refresh() async {
+  Future<bool> refresh() async {
     events?.add('installed:refresh');
     state = build();
+    return true;
   }
 }
 
@@ -1111,6 +1203,30 @@ class _MemoryIgnoredUpdateStorage implements IgnoredUpdateStorage {
   }
 }
 
+
+/// 固定收敛结论的替身：用于覆盖"更新成功但快照未收敛"的窗口期。
+class _FixedConvergenceVerifier implements UpdateConvergenceVerifier {
+  _FixedConvergenceVerifier({required this.confirmed});
+
+  /// 期望返回的收敛结论。
+  final bool confirmed;
+
+  /// 被调用次数，用于断言同步入口确实做了收敛确认。
+  int verifyCalls = 0;
+
+  @override
+  Future<UpdateConvergenceResult> verify(
+    List<AppOperationTargetSnapshot> targets,
+  ) async {
+    verifyCalls += 1;
+    return UpdateConvergenceResult(
+      confirmed: confirmed,
+      attempts: 1,
+      unconfirmedTargets: confirmed ? const [] : targets,
+      refreshFailed: false,
+    );
+  }
+}
 
 /// 差量检测空实现：更新页 initState 走同步链路会触发差量检测，
 /// 测试用空占位避免依赖 ll-cli 与真实轮询。

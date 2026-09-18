@@ -5,6 +5,28 @@
 
 ## 变更记录
 
+- 2026-09-18：修复「应用更新完成后仍残留在更新列表，手动刷新或重启客户端后才消失」。
+  根因：`ll-cli upgrade` 报告完成后 `ll-cli list`（已安装快照）不保证立即暴露新版本，
+  而更新成功后的同步链路仍无条件用这份快照重算更新列表，于是把刚更新到
+  `4.1.13.20` 的应用按其旧版本 `4.1.13.9` 与远端最新版本比对，重新判为可更新
+  （真机证据：更新卡片显示 `4.1.13.9 → 4.1.13.20`，而操作队列中该更新任务已
+  `success`）。修复分三层：① 新增 `AppOperationTargetMatcher` 统一"目标身份 +
+  `expectedVersion`"匹配规则，`AppOperationRecoveryService` 改为复用，保证启动恢复
+  与运行期收敛判定口径同源；② `InstalledApps.refresh()` 改为返回是否成功落下新
+  快照，并增加请求序号守卫（并发刷新时旧响应必须丢弃，不得覆盖新快照）；
+  ③ 新增 `UpdateConvergenceService`：更新成功后由协调器汇总成功任务冻结的
+  `expectedVersion`（单任务取自身；一键更新批次只汇总"成功且带期望版本"的更新
+  任务，整批只重算一次），有界重试（最多 3 次、间隔 1s）刷新已安装快照并确认
+  目标版本可见，未确认时**跳过** `updateAppsProvider.checkUpdates()`，保留协调器
+  的乐观移除结果，等下一次成功刷新自然收敛；差量统计上报与该重算解耦，跳过重算
+  时仍执行 `scheduleImmediateCheck()`。诊断日志关键字 `[更新收敛]`
+  （`reason=listStale|refreshFailed`）。本次按方案 A ①②③ 实施，未纳入按
+  `expectedVersion` 过滤更新结果的 A④。自动化门禁：`flutter analyze` 0 问题；
+  `flutter test` 1195 通过、11 跳过，仅 3 项与本改动无关的环境受限用例失败
+  （`privileged_helper_client_test` 需 `dart` 在 PATH、`polkit_rule_gateway_test`
+  属组用例需 root 权限），其中 2 项在将 Flutter 工具链加入 PATH 后通过。
+  约定详见 `docs/07-runtime-sequence-and-state-diagrams.md` §9.1。
+
 - 2026-09-10：落地特权 helper 信任边界收敛（docs/51）：pkexec 认证期间同 UID
   进程可替换 helper 文件的 TOCTOU 提权窗口不再接受，所有存在该风险的形态
   （AppImage FUSE/extract-and-run、用户解压 bundle、开发构建）的 install/update

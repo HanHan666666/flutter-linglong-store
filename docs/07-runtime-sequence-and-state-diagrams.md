@@ -560,19 +560,31 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant Action as Install/Uninstall/UpdatePage
+    participant Action as 安装/卸载/更新成功/更新页
     participant Sync as AppCollectionSyncService
+    participant Converge as UpdateConvergenceService
     participant Installed as InstalledAppsProvider
     participant Updates as UpdatesProvider
     participant Menu as Sidebar/MenuBadgeProvider
     participant Cache as AppListCacheService
 
-    Action->>Sync: syncAfterSuccessfulOperation()
-    Sync->>Installed: refresh()
-    Installed-->>Sync: latest ll-cli list --json snapshot
-    Sync->>Updates: checkUpdates()
-    Updates-->>Sync: recomputed update list
-    Action->>Cache: invalidate related cache
+    Action->>Sync: syncAfterSuccessfulOperation(updateTargets)
+    alt 携带更新目标（更新成功）
+        Sync->>Converge: verify(updateTargets)
+        Converge->>Installed: refresh()（最多 3 次、间隔 1s）
+        Installed-->>Converge: 已安装快照 + 刷新成败
+        alt 目标版本已在快照中可见
+            Converge-->>Sync: confirmed=true
+            Sync->>Updates: checkUpdates()
+        else 未收敛（列表滞后 / 刷新失败 / 身份歧义）
+            Converge-->>Sync: confirmed=false
+            Sync->>Sync: 跳过重算，保留乐观移除结果
+        end
+    else 无更新目标（安装、卸载、更新页手动刷新）
+        Sync->>Installed: refresh()
+        Sync->>Updates: checkUpdates()
+    end
+    Sync->>Cache: 触发差量统计上报（两条分支都必须执行）
     Updates-->>Menu: update count
 ```
 
@@ -581,6 +593,28 @@ sequenceDiagram
 是本机已安装版本的事实来源，必须先刷新 `installedAppsProvider`，再调用
 `updateAppsProvider.checkUpdates()`；禁止在更新页直接调用 `checkUpdates()`，
 否则应用更新完成后可能继续用内存中的旧版本计算可更新列表。
+
+2026-09-18 约定：**更新成功后的更新列表重算，必须以「已安装快照已收敛」为前提。**
+`ll-cli upgrade` 报告完成不等于 `ll-cli list` 立即暴露新版本，此时按快照里的旧版本
+与远端最新版本比对，就会把刚更新的应用重新判为可更新（用户看到"更新完成仍在更新
+列表"，手动刷新或重启后消失）。因此：
+
+1. 协调器从成功任务冻结的 `AppOperationTargetSnapshot.expectedVersion` 收集目标：
+   单任务取自身；一键更新批次只汇总"成功且带期望版本"的更新任务，整批只重算一次。
+2. 目标交给 `UpdateConvergenceService`（最多 3 次、间隔 1s）刷新 `installedAppsProvider`
+   并比对目标版本；只有确认目标版本已在快照中可见，才允许调用 `checkUpdates()`。
+3. 未确认时保持协调器的乐观移除结果，等下一次成功刷新（手动检查更新、启动、下一次
+   操作）自然收敛；禁止在未收敛时猜测版本或改写列表状态。
+4. 收敛判定与崩溃恢复共用 `AppOperationTargetMatcher`（`AppOperationRecoveryService`
+   已改为复用），保证"启动恢复认为已完成、运行期却认为可更新"的分叉不会出现；
+   身份歧义（多实例）与缺少 `expectedVersion` 的历史任务一律不猜测成功。
+5. `InstalledApps.refresh()` 返回是否成功落下新快照，并带请求序号守卫：并发刷新时
+   只允许最后一次请求落状态，旧的响应必须丢弃，不得覆盖新快照。
+6. 差量统计上报与更新列表重算解耦：即使跳过重算，也必须执行
+   `InstalledAppDiffReportService.scheduleImmediateCheck()`，否则会丢安装/更新统计。
+7. 真机排查关键字：`[更新收敛] attempts=… confirmed=… reason=listStale|refreshFailed
+   targets=appId@expected->snapshot`；未收敛时同步入口另有一条
+   `更新完成后已安装快照未收敛，跳过更新列表重算` 警告。
 
 ### 9.2 持续忽略与恢复更新
 

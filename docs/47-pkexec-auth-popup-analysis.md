@@ -17,6 +17,11 @@
 > §17.4 中与这些形态/暂存相关的内容仅作历史记录，§5.2.2 记录的"已接受剩余风险"
 > 已撤销；§18 第 5 条补充非包形态直连说明。
 >
+> **v4 修订（2026-09-27，详见 docs/54）**：安装队列不得把 ll-cli 输出中的业务成功/
+> 失败消息等同于传输终态。helper 路径只有收到 `exited`（子进程已被 `waitpid` 回收）、
+> 直连路径只有进程真实退出后，Repository 才能向队列发布 success/failed/cancelled 并
+> 允许下一任务启动；`cancelAccepted` 同样不能提前释放当前任务。
+>
 > 环境：Deepin 25 (crimson) / linglong-bin 1.13.8-1（标准 C++ 版）/
 > linglong-store 3.5.0
 >

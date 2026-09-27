@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../core/logging/app_logger.dart';
 import '../../domain/models/app_operation_batch.dart';
+import '../../domain/models/app_operation_target_snapshot.dart';
 import '../../domain/models/install_progress.dart';
 import '../../domain/models/install_queue_state.dart';
 import '../../domain/models/install_task.dart';
@@ -123,7 +124,12 @@ class AppOperationLifecycleCoordinator {
     _ref.read(updateAppsProvider.notifier).removeApp(task.appId);
 
     if (task.batchId == null) {
-      await _syncAppCollections('同步应用集合失败: ${task.appId}');
+      // 单任务更新必须携带目标版本期望，让同步链路先确认快照已收敛；
+      // 否则刚更新的应用会被旧快照重新判定为可更新。
+      await _syncAppCollections(
+        '同步应用集合失败: ${task.appId}',
+        updateTargets: _updateTargetsOf(task),
+      );
     }
 
     final preferences = _ref.read(globalAppProvider).userPreferences;
@@ -154,8 +160,14 @@ class AppOperationLifecycleCoordinator {
     }
 
     final queueNotifier = _ref.read(installQueueProvider.notifier);
+    // 批次内成功更新的目标只在批次结束时汇总一次，避免 N 个任务触发 N 轮
+    // 已安装列表刷新与远端更新检查。
+    final updateTargets = _collectSucceededUpdateTargets(queueState, batchId);
     if (!_ref.read(globalAppProvider).userPreferences.enableNotifications) {
-      await _syncAppCollections('一键更新结束后同步应用集合失败: $batchId');
+      await _syncAppCollections(
+        '一键更新结束后同步应用集合失败: $batchId',
+        updateTargets: updateTargets,
+      );
       queueNotifier.acknowledgeEffect(
         effectId,
         notificationState: AppOperationNotificationState.suppressed,
@@ -166,7 +178,10 @@ class AppOperationLifecycleCoordinator {
     try {
       // 批次内每项只做乐观移除，所有任务结束后统一完整同步一次，
       // 避免 N 个更新产生 N 轮已安装列表和远端更新检查。
-      await _syncAppCollections('一键更新结束后同步应用集合失败: $batchId');
+      await _syncAppCollections(
+        '一键更新结束后同步应用集合失败: $batchId',
+        updateTargets: updateTargets,
+      );
       final summary = queueState.summarizeBatch(batchId);
       final l10n = lookupAppLocalizations(_ref.read(currentLocaleProvider));
       final message = _ref
@@ -224,12 +239,64 @@ class AppOperationLifecycleCoordinator {
   }
 
   /// 通过唯一同步服务刷新已安装列表和待更新列表。
-  Future<void> _syncAppCollections(String diagnosticMessage) {
+  ///
+  /// [updateTargets] 为本次成功更新任务冻结的目标快照；同步服务据此确认
+  /// 目标版本已在快照中可见后才重算可更新列表。
+  Future<void> _syncAppCollections(
+    String diagnosticMessage, {
+    List<AppOperationTargetSnapshot> updateTargets = const [],
+  }) {
     return _runBestEffort(
       diagnosticMessage,
       () => _ref
           .read(appCollectionSyncServiceProvider)
-          .syncAfterSuccessfulOperation(),
+          .syncAfterSuccessfulOperation(updateTargets: updateTargets),
     );
+  }
+
+  /// 读取单个成功更新目标的目标版本期望。
+  ///
+  /// 非更新任务、或旧持久化任务缺少目标快照/期望版本时返回空集合：
+  /// 此时无法证明"哪个版本应当出现"，同步服务按既有语义处理，不做猜测。
+  List<AppOperationTargetSnapshot> _updateTargetsOf(InstallTask task) {
+    if (!task.isUpdateTask) {
+      return const [];
+    }
+    final target = task.target;
+    if (target == null || (target.expectedVersion ?? '').isEmpty) {
+      return const [];
+    }
+    return [target];
+  }
+
+  /// 汇总批次内已成功更新任务的目标快照。
+  ///
+  /// 只汇总成功任务：失败或取消的任务不存在"目标版本应当出现"的事实，
+  /// 若纳入判定会让整个批次永远无法确认收敛，反而拖延更新列表重算。
+  List<AppOperationTargetSnapshot> _collectSucceededUpdateTargets(
+    InstallQueueState queueState,
+    String batchId,
+  ) {
+    final batch = queueState.batches
+        .where((item) => item.id == batchId)
+        .firstOrNull;
+    if (batch == null) {
+      return const [];
+    }
+
+    final tasksById = <String, InstallTask>{
+      for (final task in queueState.allTasks) task.id: task,
+    };
+
+    return batch.taskIds
+        .map((taskId) => tasksById[taskId])
+        .whereType<InstallTask>()
+        .where(
+          (task) => task.status == InstallStatus.success && task.isUpdateTask,
+        )
+        .map((task) => task.target)
+        .whereType<AppOperationTargetSnapshot>()
+        .where((target) => (target.expectedVersion ?? '').isNotEmpty)
+        .toList();
   }
 }

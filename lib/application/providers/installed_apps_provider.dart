@@ -44,13 +44,25 @@ class InstalledAppsState {
 /// 管理已安装应用列表的状态
 @Riverpod(keepAlive: true)
 class InstalledApps extends _$InstalledApps {
+  /// 已安装快照的请求序号。
+  ///
+  /// 已安装快照是"更新列表"判定的唯一事实来源（更新检查只读取这里的版本），
+  /// 因此并发刷新时只允许最后一次请求落状态，避免先发起的旧快照覆盖新快照。
+  int _latestRequestId = 0;
+
   @override
   InstalledAppsState build() {
     return const InstalledAppsState();
   }
 
-  /// 刷新已安装应用列表
-  Future<void> refresh() async {
+  /// 重建已安装应用列表快照，并回报本次请求是否成功落下新快照。
+  ///
+  /// 返回值供上层判断"这份快照是否可信"：更新成功后的收敛确认与更新列表
+  /// 重算必须建立在刷新成功的快照之上，禁止在刷新失败时继续用旧版本比对。
+  /// 失败（含被更新的请求取代）时保留调用前的 `apps`，只更新 loading/error，
+  /// 调用方仍能读到"最后一次成功快照"，但不会被误导为最新事实。
+  Future<bool> refresh() async {
+    final requestId = ++_latestRequestId;
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
@@ -63,9 +75,19 @@ class InstalledApps extends _$InstalledApps {
       final appRepo = ref.read(appRepositoryProvider);
       final enrichedApps = await appRepo.enrichInstalledAppsWithDetails(apps);
 
+      if (requestId != _latestRequestId) {
+        return false;
+      }
+
       state = InstalledAppsState(apps: enrichedApps, isLoading: false);
+      return true;
     } catch (e) {
+      if (requestId != _latestRequestId) {
+        return false;
+      }
+
       state = state.copyWith(isLoading: false, error: presentAppError(e));
+      return false;
     }
   }
 

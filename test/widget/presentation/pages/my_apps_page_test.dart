@@ -190,7 +190,7 @@ class _StaticInstalledApps extends InstalledApps {
   }
 
   @override
-  Future<void> refresh() async {}
+  Future<bool> refresh() async => true;
 }
 
 class _StaticRunningProcess extends RunningProcess {

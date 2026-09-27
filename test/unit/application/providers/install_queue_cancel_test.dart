@@ -1,3 +1,9 @@
+/// 安装队列取消与传输终态的编排回归测试。
+///
+/// 使用可控 Repository 保留任务流，验证 SIGTERM 受理后队列仍严格串行，
+/// 且传输异常不会被上层取消意图掩盖为已取消。
+library;
+
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +12,7 @@ import 'package:linglong_store/application/providers/application_dependency_prov
 import 'package:linglong_store/application/providers/app_operation_queue_provider.dart';
 import 'package:linglong_store/application/providers/install_queue_provider.dart';
 import 'package:linglong_store/core/logging/app_logger.dart';
+import 'package:linglong_store/domain/models/app_operation_failure.dart';
 import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/installed_app.dart';
@@ -46,6 +53,7 @@ void main() {
 
         final activeTask = await _waitForCurrentTask(container);
         expect(activeTask.status, InstallStatus.installing);
+        await _waitForCondition(() => fakeRepo.startedApps.isNotEmpty);
 
         final cancelled = await container
             .read(installQueueProvider.notifier)
@@ -61,6 +69,7 @@ void main() {
         expect(state.history, isEmpty);
 
         fakeRepo.emitInstallProgress(
+          'org.example.demo',
           const InstallProgress(
             appId: 'org.example.demo',
             status: InstallStatus.success,
@@ -72,40 +81,154 @@ void main() {
       },
     );
 
-    test('marks current task cancelled when system kill succeeds', () async {
-      final fakeRepo = _ControllableLinglongCliRepository()
-        ..cancelOperationResult = true;
-      final container = await _createTestContainer(fakeRepo);
-      addTearDown(() async {
-        await fakeRepo.dispose();
-        container.dispose();
-      });
+    test(
+      'accepted cancellation keeps task occupied until stream terminal',
+      () async {
+        final fakeRepo = _ControllableLinglongCliRepository()
+          ..cancelOperationResult = true;
+        final container = await _createTestContainer(fakeRepo);
+        addTearDown(() async {
+          await fakeRepo.dispose();
+          container.dispose();
+        });
 
-      container
-          .read(appOperationQueueControllerProvider)
-          .enqueueAppOperation(
-            const EnqueueAppOperationParams(
-              kind: InstallTaskKind.install,
-              appId: 'org.example.demo',
-              appName: 'Demo',
+        container
+            .read(appOperationQueueControllerProvider)
+            .enqueueAppOperation(
+              const EnqueueAppOperationParams(
+                kind: InstallTaskKind.install,
+                appId: 'org.example.demo',
+                appName: 'Demo',
+              ),
+            );
+        container
+            .read(appOperationQueueControllerProvider)
+            .enqueueAppOperation(
+              const EnqueueAppOperationParams(
+                kind: InstallTaskKind.install,
+                appId: 'org.second.demo',
+                appName: 'Second',
+              ),
+            );
+
+        await _waitForCurrentTask(container);
+        await _waitForCondition(() => fakeRepo.startedApps.isNotEmpty);
+
+        final cancelled = await container
+            .read(installQueueProvider.notifier)
+            .cancelTask('org.example.demo');
+
+        expect(cancelled, isTrue);
+        expect(fakeRepo.cancelOperationCallCount, 1);
+        // docs/54：取消已受理只是 SIGTERM 已发送；helper 未 exited 时仍需占位。
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+        final state = container.read(installQueueProvider);
+        expect(state.currentTask?.appId, 'org.example.demo');
+        expect(state.isProcessing, isTrue);
+        expect(state.history, isEmpty);
+        expect(fakeRepo.startedApps, ['org.example.demo']);
+
+        fakeRepo.emitInstallProgress(
+          'org.example.demo',
+          const InstallProgress(
+            appId: 'org.example.demo',
+            status: InstallStatus.cancelled,
+          ),
+        );
+        await _waitForFirstHistoryTask(container);
+        expect(
+          container.read(installQueueProvider).history.first.status,
+          InstallStatus.cancelled,
+        );
+        await _waitForCondition(() => fakeRepo.startedApps.length == 2);
+        expect(fakeRepo.startedApps, ['org.example.demo', 'org.second.demo']);
+      },
+    );
+
+    test(
+      'stream failure after accepted cancellation stays a failure',
+      () async {
+        // 取消已受理不能证明进程已取消；传输失败仍须保留真实失败诊断。
+        final fakeRepo = _ControllableLinglongCliRepository()
+          ..cancelOperationResult = true;
+        final container = await _createTestContainer(fakeRepo);
+        addTearDown(() async {
+          await fakeRepo.dispose();
+          container.dispose();
+        });
+
+        container
+            .read(appOperationQueueControllerProvider)
+            .enqueueAppOperation(
+              const EnqueueAppOperationParams(
+                kind: InstallTaskKind.install,
+                appId: 'org.example.demo',
+                appName: 'Demo',
+              ),
+            );
+        await _waitForCurrentTask(container);
+        await _waitForCondition(() => fakeRepo.startedApps.isNotEmpty);
+        expect(
+          await container
+              .read(installQueueProvider.notifier)
+              .cancelTask('org.example.demo'),
+          isTrue,
+        );
+
+        fakeRepo.emitInstallProgress(
+          'org.example.demo',
+          const InstallProgress(
+            appId: 'org.example.demo',
+            status: InstallStatus.failed,
+            rawMessage: 'helper transport disconnected',
+          ),
+        );
+        final completed = await _waitForFirstHistoryTask(container);
+        expect(completed.status, InstallStatus.failed);
+        expect(completed.failure?.diagnostic, 'helper transport disconnected');
+      },
+    );
+
+    test(
+      'helper busy execution error does not pause authorization gate',
+      () async {
+        // docs/54：内部 busy 不能按授权组件不可用处理，否则后续任务会被误暂停。
+        final fakeRepo = _ControllableLinglongCliRepository();
+        final container = await _createTestContainer(fakeRepo);
+        addTearDown(() async {
+          await fakeRepo.dispose();
+          container.dispose();
+        });
+
+        final queue = container.read(installQueueProvider.notifier);
+        for (final appId in ['org.example.demo', 'org.second.demo']) {
+          container
+              .read(appOperationQueueControllerProvider)
+              .enqueueAppOperation(
+                EnqueueAppOperationParams(
+                  kind: InstallTaskKind.install,
+                  appId: appId,
+                  appName: appId,
+                ),
+              );
+        }
+        await _waitForCondition(() => fakeRepo.startedApps.isNotEmpty);
+        fakeRepo.emitInstallProgress(
+          'org.example.demo',
+          const InstallProgress(
+            appId: 'org.example.demo',
+            status: InstallStatus.failed,
+            failure: AppOperationFailure(
+              kind: AppOperationFailureKind.execution,
+              diagnostic: '客户端已有活动任务',
             ),
-          );
+          ),
+        );
 
-      await _waitForCurrentTask(container);
-
-      final cancelled = await container
-          .read(installQueueProvider.notifier)
-          .cancelTask('org.example.demo');
-
-      final state = container.read(installQueueProvider);
-      expect(cancelled, isTrue);
-      expect(fakeRepo.cancelOperationCallCount, 1);
-      expect(state.currentTask, isNull);
-      expect(state.isProcessing, isFalse);
-      expect(state.history, isNotEmpty);
-      expect(state.history.first.appId, 'org.example.demo');
-      expect(state.history.first.status, InstallStatus.cancelled);
-    });
+        await _waitForCondition(() => fakeRepo.startedApps.length == 2);
+        expect(queue.isAuthorizationGatePaused, isFalse);
+      },
+    );
   });
 }
 
@@ -155,22 +278,44 @@ Future<InstallTask> _waitForFirstHistoryTask(
   throw TestFailure('Timed out waiting for install queue history to update');
 }
 
-class _ControllableLinglongCliRepository implements LinglongCliRepository {
-  final StreamController<InstallProgress> _installController =
-      StreamController<InstallProgress>();
+/// 等待 fake CLI 收到下一任务，避免定时调度差异让测试依赖固定延迟。
+Future<void> _waitForCondition(bool Function() condition) async {
+  for (var attempt = 0; attempt < 100; attempt++) {
+    if (condition()) {
+      return;
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+  }
+  throw TestFailure('Timed out waiting for queue condition');
+}
 
+/// 分应用保留进度流的测试替身，用于观察下一项真正开始的时刻。
+class _ControllableLinglongCliRepository implements LinglongCliRepository {
+  /// 按应用隔离流，保证两个排队任务的启动顺序可独立观察。
+  final Map<String, StreamController<InstallProgress>> _installControllers = {};
+
+  /// 实际开始监听的安装任务序列。
+  final List<String> startedApps = [];
+
+  /// 让测试精确控制底层是否接受取消请求。
   bool cancelOperationResult = true;
+
+  /// 记录取消调用次数，防止测试误把队列移除当作活动任务取消。
   int cancelOperationCallCount = 0;
 
+  /// 收尾仍在监听的测试流，避免测试间保留活动订阅。
   Future<void> dispose() async {
-    if (!_installController.isClosed) {
-      await _installController.close();
+    for (final controller in _installControllers.values) {
+      if (!controller.isClosed) {
+        await controller.close();
+      }
     }
     await Future<void>.delayed(const Duration(milliseconds: 1));
   }
 
-  void emitInstallProgress(InstallProgress progress) {
-    _installController.add(progress);
+  /// 向指定任务发送一个进度事件，其他排队任务不会收到。
+  void emitInstallProgress(String appId, InstallProgress progress) {
+    _installControllers[appId]!.add(progress);
   }
 
   @override
@@ -209,7 +354,10 @@ class _ControllableLinglongCliRepository implements LinglongCliRepository {
     String? version,
     bool force = false,
   }) async* {
-    yield* _installController.stream;
+    startedApps.add(appId);
+    final controller = StreamController<InstallProgress>();
+    _installControllers[appId] = controller;
+    yield* controller.stream;
   }
 
   @override

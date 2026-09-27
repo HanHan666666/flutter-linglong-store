@@ -4,6 +4,7 @@
 /// - helper 输出行继续进入现有 CliOutputParser 并产生既有语义的进度；
 /// - ensureStarted 的授权取消/组件不可用映射为稳定失败事实；
 /// - exited 无终态时走安装结果复验；
+/// - 业务终态与进程退出之间保持队列屏障，取消也等待传输终态；
 /// - 取消路由到 helper（免第二次授权），无活动任务时返回 false。
 library;
 
@@ -24,19 +25,27 @@ import 'package:linglong_store/domain/models/install_task.dart';
 class _FakeHelperTransport implements PrivilegedHelperTransport {
   _FakeHelperTransport({
     this.ensureStartedError,
+    this.startTaskError,
     this.taskEvents = const [],
     this.holdTaskOpen = false,
+    this.completeOnCancel = true,
   });
 
   /// ensureStarted 抛出的异常；null 表示成功。
   final Object? ensureStartedError;
 
-  /// startTask 后依次推送的事件；holdTaskOpen 为 false 时最后自动补 exited。
+  /// startTask 抛出的异常，用于验证 helper busy 的领域分类。
+  final Object? startTaskError;
+
+  /// startTask 后依次推送的事件；未保持占位时随后自然结束流。
   final List<PrivilegedHelperTaskEvent> taskEvents;
 
-  /// 任务事件发完后保持占位（不自动清 _active），由 cancelTask 收尾；
-  /// 用于验证取消路由的确定性。
+  /// 任务事件发完后保持占位（不自动清 _active），由测试显式发送 exited；
+  /// 用于验证业务终态、取消应答与传输终态之间的间隔。
   final bool holdTaskOpen;
+
+  /// 取消应答是否立即附带 exited；关闭时模拟 SIGTERM 后的清理窗口。
+  final bool completeOnCancel;
 
   /// 记录收到的 start 请求。
   final List<PrivilegedHelperStartRequest> startedRequests = [];
@@ -50,6 +59,29 @@ class _FakeHelperTransport implements PrivilegedHelperTransport {
   bool _active = false;
 
   StreamController<PrivilegedHelperTaskEvent>? _heldEvents;
+
+  /// 手动收尾测试等待事件流进入可控阶段的屏障。
+  final Completer<void> _heldTaskReady = Completer<void>();
+
+  /// 等待 fake helper 已发送预设输出并开始等待显式 exited。
+  Future<void> get heldTaskReady => _heldTaskReady.future;
+
+  /// 模拟真实 helper 在 waitpid 回收子进程后才发送 exited。
+  Future<void> finishHeldTask({bool cancelRequested = false}) async {
+    final held = _heldEvents;
+    if (held == null || held.isClosed) {
+      throw StateError('没有等待退出的 helper 任务');
+    }
+    _heldEvents = null;
+    _active = false;
+    held.add(
+      PrivilegedHelperTaskExited(
+        exitCode: cancelRequested ? 1 : 0,
+        cancelRequested: cancelRequested,
+      ),
+    );
+    await held.close();
+  }
 
   @override
   bool get hasActiveTask => _active;
@@ -66,15 +98,19 @@ class _FakeHelperTransport implements PrivilegedHelperTransport {
   Stream<PrivilegedHelperTaskEvent> startTask(
     PrivilegedHelperStartRequest request,
   ) async* {
+    if (startTaskError case final error?) {
+      throw error;
+    }
     startedRequests.add(request);
     _active = true;
     for (final event in taskEvents) {
       yield event;
     }
     if (holdTaskOpen) {
-      // 保持任务占位：缓存控制器，cancelTask 时补 exited 并结束。
+      // 保持任务占位：缓存控制器，由取消应答或测试显式补 exited。
       final held = StreamController<PrivilegedHelperTaskEvent>();
       _heldEvents = held;
+      _heldTaskReady.complete();
       yield* held.stream;
       return;
     }
@@ -85,14 +121,8 @@ class _FakeHelperTransport implements PrivilegedHelperTransport {
   Future<bool> cancelTask(String requestId) async {
     cancelledRequestIds.add(requestId);
     final reply = cancelReply;
-    final held = _heldEvents;
-    _heldEvents = null;
-    _active = false;
-    if (held != null && !held.isClosed) {
-      held.add(
-        const PrivilegedHelperTaskExited(exitCode: 1, cancelRequested: true),
-      );
-      await held.close();
+    if (reply == true && completeOnCancel && _heldEvents != null) {
+      await finishHeldTask(cancelRequested: true);
     }
     if (reply == null) {
       return false;
@@ -162,6 +192,153 @@ void main() {
     expect(request.operation, PrivilegedHelperOperation.install);
     expect(request.appId, 'org.deepin.demo');
   });
+
+  test('success output stays nonterminal until helper reaps ll-cli', () async {
+    // docs/54：业务成功输出与 waitpid 可以相隔任意时长，队列只能看到后者的终态。
+    final helper = _FakeHelperTransport(
+      taskEvents: const [
+        PrivilegedHelperTaskLine(
+          isStderr: false,
+          line: '{"message":"Install success"}',
+        ),
+      ],
+      holdTaskOpen: true,
+    );
+    final repository = buildRepository(helper);
+    final received = <InstallProgress>[];
+    final done = Completer<void>();
+    final subscription = repository
+        .installApp('org.deepin.demo')
+        .listen(received.add, onDone: done.complete);
+    addTearDown(subscription.cancel);
+
+    await helper.heldTaskReady;
+    expect(
+      received.where((event) => event.status == InstallStatus.success),
+      isEmpty,
+    );
+    expect(helper.hasActiveTask, isTrue);
+
+    await helper.finishHeldTask();
+    await done.future;
+    expect(received.last.status, InstallStatus.success);
+  });
+
+  test('failed output also waits for helper exited', () async {
+    // 失败终态也必须等待 helper 清空活动任务，才能让队列安全执行下一项。
+    final helper = _FakeHelperTransport(
+      taskEvents: const [
+        PrivilegedHelperTaskLine(
+          isStderr: false,
+          line: '{"message":"Network failed","code":3001}',
+        ),
+      ],
+      holdTaskOpen: true,
+    );
+    final repository = buildRepository(helper);
+    final received = <InstallProgress>[];
+    final done = Completer<void>();
+    final subscription = repository
+        .installApp('org.deepin.demo')
+        .listen(received.add, onDone: done.complete);
+    addTearDown(subscription.cancel);
+
+    await helper.heldTaskReady;
+    expect(
+      received.where((event) => event.status == InstallStatus.failed),
+      isEmpty,
+    );
+
+    await helper.finishHeldTask();
+    await done.future;
+    expect(received.last.status, InstallStatus.failed);
+    expect(received.last.failure?.cliCode, 3001);
+  });
+
+  test('confirmed success wins over a late accepted cancellation', () async {
+    // 安装成功行已到达时即使 SIGTERM 受理，退出后也不能伪记为取消。
+    final helper = _FakeHelperTransport(
+      taskEvents: const [
+        PrivilegedHelperTaskLine(
+          isStderr: false,
+          line: '{"message":"Install success"}',
+        ),
+      ],
+      holdTaskOpen: true,
+      completeOnCancel: false,
+    );
+    final repository = buildRepository(helper);
+    final received = <InstallProgress>[];
+    final done = Completer<void>();
+    final subscription = repository
+        .installApp('org.deepin.demo')
+        .listen(received.add, onDone: done.complete);
+    addTearDown(subscription.cancel);
+
+    await helper.heldTaskReady;
+    expect(
+      await repository.cancelOperation(
+        'org.deepin.demo',
+        kind: InstallTaskKind.install,
+      ),
+      isTrue,
+    );
+    await helper.finishHeldTask(cancelRequested: true);
+    await done.future;
+    expect(received.last.status, InstallStatus.success);
+  });
+
+  test(
+    'accepted cancellation waits for exited before reporting cancelled',
+    () async {
+      // docs/54：cancelAccepted 仅表示信号已发送，不能让下一任务提前出队。
+      final helper = _FakeHelperTransport(
+        holdTaskOpen: true,
+        completeOnCancel: false,
+      );
+      final repository = buildRepository(helper);
+      final received = <InstallProgress>[];
+      final done = Completer<void>();
+      final subscription = repository
+          .installApp('org.deepin.demo')
+          .listen(received.add, onDone: done.complete);
+      addTearDown(subscription.cancel);
+
+      await helper.heldTaskReady;
+      expect(
+        await repository.cancelOperation(
+          'org.deepin.demo',
+          kind: InstallTaskKind.install,
+        ),
+        isTrue,
+      );
+      expect(
+        received.where((event) => event.status == InstallStatus.cancelled),
+        isEmpty,
+      );
+      expect(helper.hasActiveTask, isTrue);
+
+      await helper.finishHeldTask(cancelRequested: true);
+      await done.future;
+      expect(received.last.status, InstallStatus.cancelled);
+    },
+  );
+
+  test(
+    'helper busy is an execution error rather than authorization failure',
+    () async {
+      final helper = _FakeHelperTransport(
+        startTaskError: const PrivilegedHelperBusyException('客户端已有活动任务'),
+      );
+      final repository = buildRepository(helper);
+
+      final progress = await repository.installApp('org.deepin.demo').toList();
+
+      expect(progress.last.status, InstallStatus.failed);
+      expect(progress.last.failure?.kind, AppOperationFailureKind.execution);
+      expect(progress.last.failure?.diagnostic, '客户端已有活动任务');
+    },
+  );
 
   test('authorization cancelled maps to stable failure fact', () async {
     final helper = _FakeHelperTransport(

@@ -2,7 +2,7 @@
 ///
 /// 验证：本地模式快照决定任务路径且只取一次、设置改变不切换正在运行的任务、
 /// 取消严格按任务启动时绑定的路径路由（helper requestId / 普通 CLI SIGTERM /
-/// 旧 pkexec 路径互不串线），信号失败不伪造取消成功。
+/// 旧 pkexec 路径互不串线），信号失败不伪造取消成功；直连流终态也等待进程退出。
 library;
 
 import 'dart:async';
@@ -14,6 +14,7 @@ import 'package:linglong_store/core/platform/cli_executor.dart';
 import 'package:linglong_store/core/platform/privileged_helper/privileged_helper_client.dart';
 import 'package:linglong_store/core/platform/privileged_helper/privileged_helper_protocol.dart';
 import 'package:linglong_store/data/repositories/linglong_cli_repository_impl.dart';
+import 'package:linglong_store/domain/models/install_progress.dart';
 import 'package:linglong_store/domain/models/install_task.dart';
 import 'package:linglong_store/domain/models/polkit_rule_state.dart';
 
@@ -164,6 +165,56 @@ void main() {
   });
 
   group('执行路径选择', () {
+    test('免密直连的成功输出等待进程流关闭', () async {
+      // docs/54：直连进度流由进程 exitCode 关闭，成功输出不能提前释放队列。
+      final held = StreamController<ProgressEvent>();
+      final executor = _RecordingCliExecutor()..heldProgress = held;
+      final repository = _buildRepository(
+        executor: executor,
+        reader: () => true,
+      );
+      final received = <InstallProgress>[];
+      final done = Completer<void>();
+      final subscription = repository
+          .installApp('org.example.demo')
+          .listen(received.add, onDone: done.complete);
+      addTearDown(subscription.cancel);
+
+      expect(
+        await _eventually(() => executor.progressCalls.isNotEmpty),
+        isTrue,
+      );
+      held.add(
+        const ProgressEvent(
+          line: '{"message":"Downloading files","percentage":20}',
+          type: ProgressEventType.stdout,
+        ),
+      );
+      expect(
+        await _eventually(
+          () => received.any(
+            (event) => event.status == InstallStatus.downloading,
+          ),
+        ),
+        isTrue,
+      );
+      held.add(
+        const ProgressEvent(
+          line: '{"message":"Install success"}',
+          type: ProgressEventType.stdout,
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(
+        received.where((event) => event.status == InstallStatus.success),
+        isEmpty,
+      );
+
+      await held.close();
+      await done.future;
+      expect(received.last.status, InstallStatus.success);
+    });
+
     test('免密开启且无待同步时以普通用户执行，不启动 helper', () async {
       final executor = _RecordingCliExecutor();
       final helper = _FakeHelperTransport();

@@ -5,6 +5,14 @@
 
 ## 变更记录
 
+- 2026-09-27：修复连续安装/更新时第二项偶发“客户端已有活动任务”（docs/54）。
+  原因是 `ll-cli` 输出业务成功后，队列在 helper 发出 `exited` 前就释放执行器并
+  启动下一项；取消受理后也曾提前出队。现由 Repository 缓存业务终态，待
+  helper 子进程退出或直连进程真实退出后才发布 success/failed/cancelled；取消
+  受理期间保持当前任务占位，已落地结果优先于临界取消。helper busy 独立归类为
+  execution，不再误触发授权门闩。自动化验证：`flutter analyze` 0 问题、
+  全量 Flutter 测试 1187 项通过（11 项条件跳过）、C++ helper 67 项检查通过；
+  Omarchy 真机连续任务回归待执行。独立的无进度超时路径仍需后续收敛。
 - 2026-09-27：修复 Flutter 3.47 Impeller 关闭逻辑在 GitHub Actions 干净构建中
   未进入最终产物的问题（docs/42）：旧 CMake 在配置阶段扫描尚未由
   `flutter_assemble` 生成的 `linux/flutter/ephemeral` 头文件，本地增量构建会被

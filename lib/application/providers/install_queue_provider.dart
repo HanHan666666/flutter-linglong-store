@@ -50,7 +50,7 @@ InstallMessages installMessages(Ref ref) {
 /// 2. XDG Journal：应用崩溃后可恢复完整操作状态
 /// 3. 持久化屏障：外部动作不得领先于可恢复事实
 /// 4. 错误恢复：重试机制
-/// 5. 取消状态管理：区分"用户取消"和"真正失败"
+/// 5. 取消状态管理：只有底层传输结束后才接受最终 cancelled 事实
 @Riverpod(keepAlive: true)
 class InstallQueue extends _$InstallQueue {
   @override
@@ -92,10 +92,6 @@ class InstallQueue extends _$InstallQueue {
 
   /// 终态提交后的下一任务延迟调度器。
   Timer? _nextTaskTimer;
-
-  /// 用户取消标志（区分"用户取消"和"真正失败"）
-  /// 参考 Rust 版本 InstallSlot.is_cancelled
-  bool _isUserCancelled = false;
 
   /// 授权门闩：特权 helper 授权被用户取消或授权组件不可用时置位，
   /// 阻止队列自动消费下一任务，避免故障时连续弹授权窗口（docs/47 §10.2）。
@@ -224,34 +220,6 @@ class InstallQueue extends _$InstallQueue {
     _nextTaskTimer?.cancel();
     _nextTaskTimer = null;
     _disposeActiveExecutor();
-  }
-
-  // -----------------------------------------------------------------------
-  // 取消标志管理
-  // -----------------------------------------------------------------------
-
-  /// 标记当前安装为用户取消
-  ///
-  /// 参考 Rust 版本 InstallSlot.mark_cancelled()
-  /// 在用户主动取消安装时调用
-  void markUserCancelled() {
-    _isUserCancelled = true;
-    AppLogger.info('[InstallQueue] 已标记用户取消');
-  }
-
-  /// 检查当前安装是否被用户取消
-  ///
-  /// 参考 Rust 版本 InstallSlot.is_cancelled()
-  /// 读取后会重置标志
-  bool isUserCancelled() {
-    final result = _isUserCancelled;
-    _isUserCancelled = false;
-    return result;
-  }
-
-  /// 重置取消标志
-  void _resetCancelFlag() {
-    _isUserCancelled = false;
   }
 
   // -----------------------------------------------------------------------
@@ -475,9 +443,6 @@ class InstallQueue extends _$InstallQueue {
   Future<void> processInstallTask(InstallTask task) async {
     final previousState = state;
 
-    // 重置取消标志（确保每次安装都是干净的状态）
-    _resetCancelFlag();
-
     // 更新状态为安装中
     final installingTask = task.copyWith(
       status: InstallStatus.installing,
@@ -672,8 +637,8 @@ class InstallQueue extends _$InstallQueue {
 
   /// 标记失败
   ///
-  /// 将当前任务标记为失败，记录错误信息，继续处理下一个任务
-  /// 会自动检测是否为用户取消，并设置正确的状态
+  /// 将当前任务标记为失败，记录错误信息，继续处理下一个任务。
+  /// 取消请求后的结果由 Repository 在传输退出后核验，不能把未知失败伪装成取消。
   void _markFailed(String taskId, AppOperationFailure failure) {
     final currentTask = state.currentTask;
     if (currentTask == null || currentTask.id != taskId) {
@@ -696,31 +661,21 @@ class InstallQueue extends _$InstallQueue {
         failure.kind == AppOperationFailureKind.helperUnavailable;
     if (authorizationBlocked) {
       _authorizationGatePaused = true;
-      AppLogger.warning(
-        '授权门闩已暂停队列自动消费: kind=${failure.kind.name}',
-      );
+      AppLogger.warning('授权门闩已暂停队列自动消费: kind=${failure.kind.name}');
     }
 
-    // 检查是否为用户取消（参考 Rust 版本 InstallSlot.is_cancelled）
-    final wasCancelled = isUserCancelled();
-
-    // 根据取消状态决定任务状态
     final failedTask = currentTask.copyWith(
-      status: wasCancelled ? InstallStatus.cancelled : InstallStatus.failed,
-      failure: wasCancelled ? null : failure,
+      status: InstallStatus.failed,
+      failure: failure,
       finishedAt: DateTime.now().millisecondsSinceEpoch,
     );
 
     _commitTerminalTask(failedTask);
 
-    if (wasCancelled) {
-      AppLogger.info('Task cancelled by user: $appId');
-    } else {
-      AppLogger.error(
-        'Task failed: $appId, kind=${failure.kind.name}, '
-        'code=${failure.cliCode}, diagnostic=${failure.diagnostic}',
-      );
-    }
+    AppLogger.error(
+      'Task failed: $appId, kind=${failure.kind.name}, '
+      'code=${failure.cliCode}, diagnostic=${failure.diagnostic}',
+    );
 
     // 无论何种失败都正常调度下一任务；授权门闩在 processQueue 统一拦截，
     // 保证门闩判定只有一个入口。
@@ -792,10 +747,8 @@ class InstallQueue extends _$InstallQueue {
   ///
   /// 取消当前正在执行的任务或从队列中移除
   ///
-  /// 参考精确 PID 协作取消流程：
-  /// 1. 通过当前执行器调用 CLI Repository 的精确取消入口
-  /// 2. 系统级 SIGTERM 成功后标记取消状态（`markUserCancelled`）
-  /// 3. 更新任务状态为 `cancelled`
+  /// 取消受理仅表示 SIGTERM 已发送；保持当前任务占位，等待 Repository
+  /// 在进程退出并复验目标后发布最终状态，避免下一项撞上仍占用的 helper。
   Future<bool> cancelTask(String appId) async {
     final currentTask = state.currentTask;
     if (currentTask != null && currentTask.appId == appId) {
@@ -814,37 +767,18 @@ class InstallQueue extends _$InstallQueue {
 
       if (!cancelSuccess) {
         // 授权取消或 SIGTERM 失败时，安装可能仍在后台继续，必须保持当前任务。
-        _resetCancelFlag();
         AppLogger.warning('[InstallQueue] 取消安装未完成，保持任务继续运行: $appId');
         return false;
       }
 
-      // 标记为用户取消（参考 Rust 版本 InstallSlot.mark_cancelled）
-      markUserCancelled();
-
-      _disposeActiveExecutor(taskId: currentTask.id);
-
       final activeTask = state.currentTask;
       if (activeTask?.id != currentTask.id) {
-        // 取消等待期间任务可能已由 CLI 流终结，标志不得泄漏到下一任务。
-        _resetCancelFlag();
+        // 取消等待期间原任务可能已经退出，以流的最终结果为准。
         AppLogger.info('[InstallQueue] 任务已由进度流完成取消: $appId');
         return true;
       }
 
-      const cancellationLog = 'Operation cancelled by user';
-
-      final cancelledTask = _queueReducer
-          .appendCommandOutput(activeTask!, cancellationLog)
-          .copyWith(
-            status: InstallStatus.cancelled,
-            finishedAt: DateTime.now().millisecondsSinceEpoch,
-          );
-
-      _commitTerminalTask(cancelledTask);
-      AppLogger.info('[InstallQueue] 任务已取消: $appId');
-
-      _scheduleNextTask();
+      AppLogger.info('[InstallQueue] 取消请求已受理，等待传输退出: $appId');
 
       return true;
     }

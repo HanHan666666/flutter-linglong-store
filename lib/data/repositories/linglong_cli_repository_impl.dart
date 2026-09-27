@@ -424,21 +424,12 @@ class LinglongCliRepositoryImpl
         ).map((event) => event.line);
       }
 
-      // 收到 completed/failed 终态后不再处理后续行，但继续等待传输流结束
-      // （helper 路径必须消费 exited 事件，否则客户端会一直认为任务占用中）。
-      var terminalEmitted = false;
+      // ll-cli 的业务终态不等于进程退出；先缓存终态，待 helper exited 或
+      // 直连进程退出后才交给队列，避免下一任务撞上仍被占用的 helper。
+      InstallProgress? pendingTerminal;
       await for (final line in lines) {
-        if (terminalEmitted) {
+        if (pendingTerminal != null) {
           continue;
-        }
-        if (_cancelFlags[processId] == true) {
-          yield InstallProgress(
-            appId: appId,
-            eventType: InstallProgressEventType.cancelled,
-            status: InstallStatus.cancelled,
-            outputLine: 'Operation cancelled by user',
-          );
-          return;
         }
 
         final jsonEvent = CliOutputParser.parseJsonLine(line);
@@ -450,28 +441,31 @@ class LinglongCliRepositoryImpl
         final rawMessage = _extractRawMessage(line, jsonEvent: jsonEvent);
 
         if (progressInfo.phase == InstallPhase.downloading) {
-          yield InstallProgress(
-            appId: appId,
-            eventType: _mapEventType(jsonEvent),
-            status: InstallStatus.downloading,
-            progress: progressInfo.progress,
-            messageCode: progressInfo.messageCode,
-            rawMessage: rawMessage,
-            outputLine: line,
-          );
+          if (_cancelFlags[processId] != true) {
+            yield InstallProgress(
+              appId: appId,
+              eventType: _mapEventType(jsonEvent),
+              status: InstallStatus.downloading,
+              progress: progressInfo.progress,
+              messageCode: progressInfo.messageCode,
+              rawMessage: rawMessage,
+              outputLine: line,
+            );
+          }
         } else if (progressInfo.phase == InstallPhase.installing) {
-          yield InstallProgress(
-            appId: appId,
-            eventType: _mapEventType(jsonEvent),
-            status: InstallStatus.installing,
-            progress: progressInfo.progress,
-            messageCode: progressInfo.messageCode,
-            rawMessage: rawMessage,
-            outputLine: line,
-          );
+          if (_cancelFlags[processId] != true) {
+            yield InstallProgress(
+              appId: appId,
+              eventType: _mapEventType(jsonEvent),
+              status: InstallStatus.installing,
+              progress: progressInfo.progress,
+              messageCode: progressInfo.messageCode,
+              rawMessage: rawMessage,
+              outputLine: line,
+            );
+          }
         } else if (progressInfo.phase == InstallPhase.completed) {
-          terminalEmitted = true;
-          yield InstallProgress(
+          pendingTerminal = InstallProgress(
             appId: appId,
             eventType: _mapEventType(jsonEvent),
             status: InstallStatus.success,
@@ -481,7 +475,6 @@ class LinglongCliRepositoryImpl
             outputLine: line,
           );
         } else if (progressInfo.phase == InstallPhase.failed) {
-          terminalEmitted = true;
           final errorCode = jsonEvent?.code;
           // 诊断匹配必须优先保留 JSON message 的逐字内容；rawMessage 还承担
           // 进度展示职责，会经过历史 trim 兼容，不能作为新诊断协议的首选值。
@@ -490,7 +483,7 @@ class LinglongCliRepositoryImpl
               exactErrorMessage ??
               (rawMessage.isNotEmpty ? rawMessage : line.trim());
 
-          yield InstallProgress(
+          pendingTerminal = InstallProgress(
             appId: appId,
             eventType: InstallProgressEventType.error,
             status: InstallStatus.failed,
@@ -511,11 +504,16 @@ class LinglongCliRepositoryImpl
         }
       }
 
-      if (terminalEmitted) {
-        // CLI 已给出明确终态（与旧路径的提前 return 等价），跳过复验。
-        return;
+      final cancelAccepted = _cancelFlags[processId] == true;
+      if (pendingTerminal case final terminal?) {
+        // 已确认的业务成功优先于临界时刻到达的取消；普通明确失败无需复验。
+        if (terminal.status == InstallStatus.success || !cancelAccepted) {
+          yield terminal;
+          return;
+        }
       }
 
+      // 取消已受理但传输尚未结束时不能发布 cancelled；退出后再核验是否落地。
       final confirmed = await _confirmInstalledTarget(
         appId,
         kind: kind,
@@ -532,6 +530,13 @@ class LinglongCliRepositoryImpl
           progress: 100,
           messageCode: AppOperationMessageCode.completed,
           outputLine: 'Operation result confirmed',
+        );
+      } else if (cancelAccepted) {
+        yield InstallProgress(
+          appId: appId,
+          eventType: InstallProgressEventType.cancelled,
+          status: InstallStatus.cancelled,
+          outputLine: 'Operation cancelled by user',
         );
       } else {
         final targetRef = version != null && version.isNotEmpty
@@ -577,6 +582,14 @@ class LinglongCliRepositoryImpl
         kind: kind,
         failureKind: AppOperationFailureKind.authorizationCancelled,
         diagnostic: 'pkexec authorization dismissed by user',
+      );
+    } on PrivilegedHelperBusyException catch (e) {
+      // busy 是内部串行时序错误，不是授权组件故障，不得暂停后续任务的授权门闩。
+      yield _helperFailureProgress(
+        appId,
+        kind: kind,
+        failureKind: AppOperationFailureKind.execution,
+        diagnostic: e.message,
       );
     } on PrivilegedHelperException catch (e) {
       // 授权组件不可用或会话中断：先按本机事实复验目标是否已落地

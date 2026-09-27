@@ -161,7 +161,21 @@ has_reusable_bundle() {
     && grep -qx "arch=$target_arch" "$manifest_path"
 }
 
+# 在复用或发布 bundle 前验证最终 ELF，而不是仅相信源码与 CMake 日志；Loong64
+# 锁定的 Flutter 3.46 没有 Impeller API，因此只允许该架构缺少引擎导出符号。
+verify_impeller_opt_out_artifact() {
+  local -a verifier_args=("$bundle_dir")
+
+  if [[ "$target_arch" == "loong64" || "$target_arch" == "loongarch64" ]]; then
+    verifier_args=(--allow-missing-api "$bundle_dir")
+  fi
+
+  "$ROOT_DIR/build/scripts/verify-impeller-opt-out-artifact.sh" \
+    "${verifier_args[@]}"
+}
+
 if has_reusable_bundle; then
+  verify_impeller_opt_out_artifact
   exit 0
 fi
 
@@ -173,10 +187,13 @@ rm -rf "$bundle_dir"
 mkdir -p "$source_copy_dir" "$output_dir/bundle"
 
 # Build from a disposable copy so release-version rewrites never dirty the worktree.
+# ephemeral 是 Flutter 构建产物，复制本机残留会掩盖干净 CI 的配置时序问题；
+# 发布副本必须让 Flutter 按当前 SDK 重新生成。
 rsync -a \
   --delete \
   --exclude '.git' \
   --exclude '.dart_tool' \
+  --exclude 'linux/flutter/ephemeral' \
   --exclude 'build/linux' \
   --exclude 'build/out' \
   --exclude 'build/tmp' \
@@ -228,6 +245,10 @@ if [[ ! -d "$expected_bundle_dir" ]]; then
 fi
 
 cp -a "$expected_bundle_dir" "$bundle_dir"
+
+# 发布脚本统一从该 bundle 派生 DEB/RPM/AppImage，在复制附加资源前先阻断错误
+# runner，保证所有包格式共享同一条 Impeller 关闭契约。
+verify_impeller_opt_out_artifact
 
 # Add logo.png to bundle root for AUR packaging
 # Convert SVG to PNG if rsvg-convert is available, otherwise use fallback

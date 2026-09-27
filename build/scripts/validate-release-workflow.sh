@@ -136,6 +136,11 @@ require_no_grep "app_constants.dart" .github/workflows/release.yml
 require_grep "pull_request" .github/workflows/ci.yml
 require_grep "release-cli-smoke-test.sh" .github/workflows/ci.yml
 require_grep "nightly-cli-smoke-test.sh" .github/workflows/ci.yml
+# Impeller 关闭必须同时覆盖直接 CI 构建和所有包格式共享的 bundle 构建入口，
+# 且发布源码副本不得携带会掩盖干净构建问题的 ephemeral 文件。
+require_grep "verify-impeller-opt-out-artifact.sh" .github/workflows/ci.yml
+require_grep "verify-impeller-opt-out-artifact.sh" build/scripts/build-linux-bundle.sh
+require_grep "--exclude 'linux/flutter/ephemeral'" build/scripts/build-linux-bundle.sh
 require_grep "schedule" .github/workflows/nightly.yml
 require_grep "workflow_dispatch" .github/workflows/nightly.yml
 require_grep "force_aur_publish" .github/workflows/nightly.yml

@@ -47,9 +47,49 @@ OpenGL/GLES 路径，而该回退路径正是上游问题最集中的地方：
 - `linux/runner/my_application.cc`：创建 `FlDartProject` 后调用
   `fl_dart_project_set_enable_impeller(project, FALSE)`，恢复 3.46 及之前的
   Skia + OpenGL 渲染路径。调用点带注释说明原因与上游 issue 编号。
-- `linux/runner/CMakeLists.txt`：通过扫描引擎头文件 `fl_dart_project.h` 是否包含
-  `fl_dart_project_set_enable_impeller` 生成编译宏 `FLUTTER_SDK_HAS_IMPELLER_SWITCH`，
-  上面的调用由该宏保护。
+- `linux/runner/CMakeLists.txt`：从 CMake 配置前已经生成的
+  `linux/flutter/ephemeral/generated_config.cmake` 取得 `FLUTTER_ROOT`，再按
+  `FLUTTER_TARGET_PLATFORM` 与 `CMAKE_BUILD_TYPE` 定位 Flutter SDK 缓存中的
+  `fl_dart_project.h`。头文件声明
+  `fl_dart_project_set_enable_impeller` 时才生成编译宏
+  `FLUTTER_SDK_HAS_IMPELLER_SWITCH`，上面的调用由该宏保护；无法定位头文件时
+  直接终止配置，禁止静默产出未关闭 Impeller 的包。
+- `build/scripts/build-linux-bundle.sh`：制作发布源码副本时显式排除
+  `linux/flutter/ephemeral`，防止开发机残留生成物掩盖干净构建问题；每次新建或
+  复用 bundle 都调用 `verify-impeller-opt-out-artifact.sh` 检查最终 ELF。
+- `.github/workflows/ci.yml`：直接执行 `flutter build linux --release` 后同样运行
+  ELF 门禁，覆盖不经过统一打包脚本的 CI 构建路径。
+
+### 为什么不能扫描项目 ephemeral 头文件
+
+Flutter 3.47 的 Linux 构建顺序是：
+
+1. `build_linux.dart` 写入 `generated_config.cmake`；
+2. 执行 CMake 配置；
+3. 执行 Ninja 构建；
+4. Ninja 的 `flutter_assemble` 触发 `UnpackLinux`，这时才把 embedder 头文件复制到
+   `linux/flutter/ephemeral/flutter_linux/`。
+
+因此 CMake 配置阶段扫描项目 ephemeral 头文件存在确定性的时序错误：干净检出时
+文件尚不存在，增量构建时又可能残留旧文件。2026-09-20 Nightly
+（`3.6.0-nightly.20260920+23d2597`）正是因此出现「源码存在关闭调用，但最终 runner
+没有 `fl_dart_project_set_enable_impeller` 动态引用」的回归；其 amd64/arm64
+DEB、RPM、AppImage 都由同一个错误 bundle 派生。
+
+SDK 缓存中的目标引擎头文件在进入 `buildLinux()` 前已经由 Flutter artifact
+下载流程准备好，不依赖后续 Ninja 阶段，所以它才是 CMake 配置期稳定的能力真相源。
+
+### 最终产物门禁
+
+`build/scripts/verify-impeller-opt-out-artifact.sh` 同时检查：
+
+1. `lib/libflutter_linux_gtk.so` 是否导出
+   `fl_dart_project_set_enable_impeller`；
+2. `linglong_store` 是否存在同名动态引用。
+
+amd64/arm64 默认要求引擎提供 API 且 runner 必须引用；任一条件不满足都阻断 CI 与
+打包。Loong64 构建显式传入 `--allow-missing-api`，只允许 Flutter 3.46 引擎缺少
+该 API；如果后续 Loong64 引擎开始导出 API，runner 也必须同步保留调用。
 
 ### 龙芯（loong64）兼容性
 
@@ -59,6 +99,7 @@ OpenGL/GLES 路径，而该回退路径正是上游问题最集中的地方：
 
 - CMake 检测到 3.46 头文件时不生成宏，调用点整体跳过；
 - 龙芯 3.46 引擎默认就是 Skia 路径，行为不受影响；
+- ELF 门禁允许该引擎缺少 API，但不会豁免已经提供 API 的新 Loong64 引擎；
 - 已用 3.46 头文件对 `my_application.cc` 做过 `-fsyntax-only` 编译验证。
 
 ## 为什么禁用几乎没有代价：Impeller 的收益边界

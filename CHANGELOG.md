@@ -5,6 +5,15 @@
 
 ## 变更记录
 
+- 2026-09-27：修复 Flutter 3.47 Impeller 关闭逻辑在 GitHub Actions 干净构建中
+  未进入最终产物的问题（docs/42）：旧 CMake 在配置阶段扫描尚未由
+  `flutter_assemble` 生成的 `linux/flutter/ephemeral` 头文件，本地增量构建会被
+  残留文件掩盖，`3.6.0-nightly.20260920+23d2597` 的 amd64/arm64 runner 因而
+  没有 `fl_dart_project_set_enable_impeller` 动态引用。能力检测改为读取与目标架构、
+  构建模式匹配的 Flutter SDK 缓存头文件，缺失时失败关闭；发布源码副本禁止复制
+  ephemeral。新增最终 ELF 门禁，同时核对引擎导出与 runner 引用，并接入统一 bundle
+  构建和直接 Release CI；Loong64 Flutter 3.46 仅允许引擎确实缺少 API，未来一旦
+  提供该 API 仍强制 runner 保留关闭调用。
 - 2026-09-10：落地特权 helper 信任边界收敛（docs/51）：pkexec 认证期间同 UID
   进程可替换 helper 文件的 TOCTOU 提权窗口不再接受，所有存在该风险的形态
   （AppImage FUSE/extract-and-run、用户解压 bundle、开发构建）的 install/update

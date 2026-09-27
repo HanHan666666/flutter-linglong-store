@@ -35,22 +35,47 @@ apply_standard_settings(${BINARY_NAME})
 # Add preprocessor definitions for the application ID.
 add_definitions(-DAPPLICATION_ID="${APPLICATION_ID}")
 
-# 检测当前 Flutter SDK 是否提供 Impeller 开关 API（fl_dart_project_set_enable_impeller，
-# Flutter 3.47+ 才引入）。龙芯构建锁定的 3.46 SDK 既没有该 API、引擎也没有 Impeller，
-# 因此通过扫描引擎头文件生成编译宏，让同一份 runner 代码在两套 SDK 下都能编译，
-# my_application.cc 中的禁用调用必须由该宏保护。
+# Flutter 工具在 CMake 配置完成后的 Ninja 阶段才生成 ephemeral embedder 头文件；
+# 若在这里扫描 ephemeral，干净 CI 会因文件尚不存在而静默漏掉关闭调用，本地增量
+# 构建则会被旧文件掩盖。generated_config.cmake 已在 CMake 前生成，可用它定位
+# Flutter SDK 缓存中与目标架构、构建模式完全匹配且此时已经存在的引擎头文件。
+set(FLUTTER_GENERATED_CONFIG
+    "${FLUTTER_MANAGED_DIR}/ephemeral/generated_config.cmake")
+if(NOT EXISTS "${FLUTTER_GENERATED_CONFIG}")
+  message(FATAL_ERROR
+      "Flutter generated_config.cmake is missing; cannot verify the Impeller API")
+endif()
+include("${FLUTTER_GENERATED_CONFIG}")
+
+string(TOLOWER "${CMAKE_BUILD_TYPE}" FLUTTER_ENGINE_BUILD_MODE)
+if(FLUTTER_ENGINE_BUILD_MODE STREQUAL "debug")
+  set(FLUTTER_ENGINE_ARTIFACT_VARIANT "${FLUTTER_TARGET_PLATFORM}")
+elseif(FLUTTER_ENGINE_BUILD_MODE STREQUAL "profile" OR
+       FLUTTER_ENGINE_BUILD_MODE STREQUAL "release")
+  set(FLUTTER_ENGINE_ARTIFACT_VARIANT
+      "${FLUTTER_TARGET_PLATFORM}-${FLUTTER_ENGINE_BUILD_MODE}")
+else()
+  message(FATAL_ERROR
+      "Unsupported Flutter build mode for Impeller API detection: ${CMAKE_BUILD_TYPE}")
+endif()
+
 set(FLUTTER_DART_PROJECT_HEADER
-    "${FLUTTER_MANAGED_DIR}/ephemeral/flutter_linux/fl_dart_project.h")
-if(EXISTS "${FLUTTER_DART_PROJECT_HEADER}")
-  file(STRINGS "${FLUTTER_DART_PROJECT_HEADER}" impeller_switch_api_line
-       REGEX "fl_dart_project_set_enable_impeller")
-  if(impeller_switch_api_line)
-    target_compile_definitions(${BINARY_NAME} PRIVATE
-        FLUTTER_SDK_HAS_IMPELLER_SWITCH=1)
-    message(STATUS "Flutter SDK provides Impeller switch API; runner will disable Impeller")
-  else()
-    message(STATUS "Flutter SDK has no Impeller switch API; skipping Impeller disable call")
-  endif()
+    "${FLUTTER_ROOT}/bin/cache/artifacts/engine/${FLUTTER_ENGINE_ARTIFACT_VARIANT}/flutter_linux/fl_dart_project.h")
+if(NOT EXISTS "${FLUTTER_DART_PROJECT_HEADER}")
+  message(FATAL_ERROR
+      "Flutter engine header is missing; cannot verify the Impeller API: ${FLUTTER_DART_PROJECT_HEADER}")
+endif()
+
+# Flutter 3.47+ 提供该 API；Loong64 锁定的 3.46 SDK 没有 API 且没有 Impeller。
+# 只在 SDK 头文件明确声明 API 时生成宏，保证同一 runner 源码兼容两套引擎。
+file(STRINGS "${FLUTTER_DART_PROJECT_HEADER}" impeller_switch_api_line
+     REGEX "fl_dart_project_set_enable_impeller")
+if(impeller_switch_api_line)
+  target_compile_definitions(${BINARY_NAME} PRIVATE
+      FLUTTER_SDK_HAS_IMPELLER_SWITCH=1)
+  message(STATUS "Flutter SDK provides Impeller switch API; runner will disable Impeller")
+else()
+  message(STATUS "Flutter SDK has no Impeller switch API; skipping Impeller disable call")
 endif()
 
 # Add dependency libraries. Add any application-specific dependencies here.

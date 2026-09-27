@@ -626,6 +626,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get downloadManager => 'ダウンロード管理';
 
   @override
+  String get downloadTaskStatusPending => '待機中';
+
+  @override
+  String get downloadTaskStatusDownloading => 'ダウンロード中';
+
+  @override
+  String get downloadTaskStatusInstalling => 'インストール中';
+
+  @override
+  String get downloadTaskStatusSuccess => '完了';
+
+  @override
+  String get downloadTaskStatusFailed => '失敗';
+
+  @override
+  String get downloadTaskStatusCancelled => 'キャンセル済み';
+
+  @override
+  String get downloadTaskStatusInterrupted => '中断';
+
+  @override
+  String get downloadTaskStatusCurrent => '現在のタスク';
+
+  @override
   String get downloadWaitingForTask => 'ダウンロードタスクの開始を待っています';
 
   @override

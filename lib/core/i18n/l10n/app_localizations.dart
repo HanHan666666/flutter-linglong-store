@@ -1237,6 +1237,54 @@ abstract class AppLocalizations {
   /// **'下载管理'**
   String get downloadManager;
 
+  /// 下载管理任务卡中等待任务使用的短状态标签。
+  ///
+  /// In zh, this message translates to:
+  /// **'等待中'**
+  String get downloadTaskStatusPending;
+
+  /// 下载管理任务卡中下载阶段使用的短状态标签。
+  ///
+  /// In zh, this message translates to:
+  /// **'下载中'**
+  String get downloadTaskStatusDownloading;
+
+  /// 下载管理任务卡中安装阶段使用的短状态标签。
+  ///
+  /// In zh, this message translates to:
+  /// **'安装中'**
+  String get downloadTaskStatusInstalling;
+
+  /// 下载管理任务卡中成功任务使用的短状态标签。
+  ///
+  /// In zh, this message translates to:
+  /// **'已完成'**
+  String get downloadTaskStatusSuccess;
+
+  /// 下载管理任务卡中失败任务使用的短状态标签。
+  ///
+  /// In zh, this message translates to:
+  /// **'失败'**
+  String get downloadTaskStatusFailed;
+
+  /// 下载管理任务卡中取消任务使用的短状态标签。
+  ///
+  /// In zh, this message translates to:
+  /// **'已取消'**
+  String get downloadTaskStatusCancelled;
+
+  /// 下载管理任务卡中中断任务使用的短状态标签。
+  ///
+  /// In zh, this message translates to:
+  /// **'已中断'**
+  String get downloadTaskStatusInterrupted;
+
+  /// 下载管理当前任务卡替代阶段状态显示的短标签。
+  ///
+  /// In zh, this message translates to:
+  /// **'当前任务'**
+  String get downloadTaskStatusCurrent;
+
   /// No description provided for @downloadWaitingForTask.
   ///
   /// In zh, this message translates to:

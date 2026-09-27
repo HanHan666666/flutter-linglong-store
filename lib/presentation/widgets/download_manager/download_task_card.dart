@@ -414,20 +414,41 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
   /// 构建任务当前状态的紧凑标签。
   Widget _buildStatusPill(BuildContext context) {
     final appColors = context.appColors;
+    final l10n = AppLocalizations.of(context)!;
     // 下载中/安装中是「进行中」的强调色语义（与同卡片进度条同源），按
     // docs/48 §7.5 迁移到 scheme.primary 随主题流动；success/error/warning
     // 属于固定业务状态色，保持调色板取值不变。
     final accentColor = Theme.of(context).colorScheme.primary;
     final (label, color) = switch (widget.task.status) {
-      InstallStatus.pending => ('等待中', appColors.textSecondary),
-      InstallStatus.downloading => ('下载中', accentColor),
-      InstallStatus.installing => ('安装中', accentColor),
-      InstallStatus.success => ('已完成', appColors.success),
-      InstallStatus.failed => ('失败', appColors.error),
-      InstallStatus.cancelled => ('已取消', appColors.warning),
-      InstallStatus.interrupted => ('已中断', appColors.warning),
+      InstallStatus.pending => (
+        l10n.downloadTaskStatusPending,
+        appColors.textSecondary,
+      ),
+      InstallStatus.downloading => (
+        l10n.downloadTaskStatusDownloading,
+        accentColor,
+      ),
+      InstallStatus.installing => (
+        l10n.downloadTaskStatusInstalling,
+        accentColor,
+      ),
+      InstallStatus.success => (
+        l10n.downloadTaskStatusSuccess,
+        appColors.success,
+      ),
+      InstallStatus.failed => (l10n.downloadTaskStatusFailed, appColors.error),
+      InstallStatus.cancelled => (
+        l10n.downloadTaskStatusCancelled,
+        appColors.warning,
+      ),
+      InstallStatus.interrupted => (
+        l10n.downloadTaskStatusInterrupted,
+        appColors.warning,
+      ),
     };
-    final resolvedLabel = widget.featured ? '当前任务' : label;
+    final resolvedLabel = widget.featured
+        ? l10n.downloadTaskStatusCurrent
+        : label;
     final resolvedColor = widget.featured ? accentColor : color;
 
     return Container(

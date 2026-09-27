@@ -705,6 +705,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get downloadManager => 'إدارة التنزيلات';
 
   @override
+  String get downloadTaskStatusPending => 'قيد الانتظار';
+
+  @override
+  String get downloadTaskStatusDownloading => 'جارٍ التنزيل';
+
+  @override
+  String get downloadTaskStatusInstalling => 'جارٍ التثبيت';
+
+  @override
+  String get downloadTaskStatusSuccess => 'مكتمل';
+
+  @override
+  String get downloadTaskStatusFailed => 'فشل';
+
+  @override
+  String get downloadTaskStatusCancelled => 'ملغى';
+
+  @override
+  String get downloadTaskStatusInterrupted => 'متوقف';
+
+  @override
+  String get downloadTaskStatusCurrent => 'المهمة الحالية';
+
+  @override
   String get downloadWaitingForTask => 'في انتظار بدء مهمة التنزيل';
 
   @override

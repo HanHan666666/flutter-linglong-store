@@ -323,6 +323,38 @@
   "exitWithInstalling": "有正在进行的安装任务，确定要退出吗？",
   "exitBtn": "退出",
   "downloadManager": "下载管理",
+  "downloadTaskStatusPending": "等待中",
+  "@downloadTaskStatusPending": {
+    "description": "下载管理任务卡中等待任务使用的短状态标签。"
+  },
+  "downloadTaskStatusDownloading": "下载中",
+  "@downloadTaskStatusDownloading": {
+    "description": "下载管理任务卡中下载阶段使用的短状态标签。"
+  },
+  "downloadTaskStatusInstalling": "安装中",
+  "@downloadTaskStatusInstalling": {
+    "description": "下载管理任务卡中安装阶段使用的短状态标签。"
+  },
+  "downloadTaskStatusSuccess": "已完成",
+  "@downloadTaskStatusSuccess": {
+    "description": "下载管理任务卡中成功任务使用的短状态标签。"
+  },
+  "downloadTaskStatusFailed": "失败",
+  "@downloadTaskStatusFailed": {
+    "description": "下载管理任务卡中失败任务使用的短状态标签。"
+  },
+  "downloadTaskStatusCancelled": "已取消",
+  "@downloadTaskStatusCancelled": {
+    "description": "下载管理任务卡中取消任务使用的短状态标签。"
+  },
+  "downloadTaskStatusInterrupted": "已中断",
+  "@downloadTaskStatusInterrupted": {
+    "description": "下载管理任务卡中中断任务使用的短状态标签。"
+  },
+  "downloadTaskStatusCurrent": "当前任务",
+  "@downloadTaskStatusCurrent": {
+    "description": "下载管理当前任务卡替代阶段状态显示的短标签。"
+  },
   "downloadWaitingForTask": "等待下载任务开始",
   "downloadRealtimeSpeed": "实时速度 {speed}",
   "@downloadRealtimeSpeed": {

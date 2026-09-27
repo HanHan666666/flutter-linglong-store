@@ -624,6 +624,30 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadManager => '다운로드 관리';
 
   @override
+  String get downloadTaskStatusPending => '대기 중';
+
+  @override
+  String get downloadTaskStatusDownloading => '다운로드 중';
+
+  @override
+  String get downloadTaskStatusInstalling => '설치 중';
+
+  @override
+  String get downloadTaskStatusSuccess => '완료';
+
+  @override
+  String get downloadTaskStatusFailed => '실패';
+
+  @override
+  String get downloadTaskStatusCancelled => '취소됨';
+
+  @override
+  String get downloadTaskStatusInterrupted => '중단됨';
+
+  @override
+  String get downloadTaskStatusCurrent => '현재 작업';
+
+  @override
   String get downloadWaitingForTask => '다운로드 작업 시작 대기 중';
 
   @override

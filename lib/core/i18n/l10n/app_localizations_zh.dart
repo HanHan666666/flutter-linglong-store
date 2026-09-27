@@ -613,6 +613,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadManager => '下载管理';
 
   @override
+  String get downloadTaskStatusPending => '等待中';
+
+  @override
+  String get downloadTaskStatusDownloading => '下载中';
+
+  @override
+  String get downloadTaskStatusInstalling => '安装中';
+
+  @override
+  String get downloadTaskStatusSuccess => '已完成';
+
+  @override
+  String get downloadTaskStatusFailed => '失败';
+
+  @override
+  String get downloadTaskStatusCancelled => '已取消';
+
+  @override
+  String get downloadTaskStatusInterrupted => '已中断';
+
+  @override
+  String get downloadTaskStatusCurrent => '当前任务';
+
+  @override
   String get downloadWaitingForTask => '等待下载任务开始';
 
   @override
@@ -2999,6 +3023,30 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get downloadManager => '下載管理';
+
+  @override
+  String get downloadTaskStatusPending => '等待中';
+
+  @override
+  String get downloadTaskStatusDownloading => '下載中';
+
+  @override
+  String get downloadTaskStatusInstalling => '安裝中';
+
+  @override
+  String get downloadTaskStatusSuccess => '已完成';
+
+  @override
+  String get downloadTaskStatusFailed => '失敗';
+
+  @override
+  String get downloadTaskStatusCancelled => '已取消';
+
+  @override
+  String get downloadTaskStatusInterrupted => '已中斷';
+
+  @override
+  String get downloadTaskStatusCurrent => '目前任務';
 
   @override
   String get downloadWaitingForTask => '等待下載任務開始';

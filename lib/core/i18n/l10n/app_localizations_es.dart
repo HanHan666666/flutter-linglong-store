@@ -652,6 +652,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String get downloadManager => 'Gestor de Descargas';
 
   @override
+  String get downloadTaskStatusPending => 'Pendiente';
+
+  @override
+  String get downloadTaskStatusDownloading => 'Descargando';
+
+  @override
+  String get downloadTaskStatusInstalling => 'Instalando';
+
+  @override
+  String get downloadTaskStatusSuccess => 'Completado';
+
+  @override
+  String get downloadTaskStatusFailed => 'Fallido';
+
+  @override
+  String get downloadTaskStatusCancelled => 'Cancelado';
+
+  @override
+  String get downloadTaskStatusInterrupted => 'Interrumpido';
+
+  @override
+  String get downloadTaskStatusCurrent => 'Tarea actual';
+
+  @override
   String get downloadWaitingForTask => 'Esperando que comience una descarga';
 
   @override

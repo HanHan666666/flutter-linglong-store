@@ -659,6 +659,30 @@ class AppLocalizationsRu extends AppLocalizations {
   String get downloadManager => 'Менеджер загрузок';
 
   @override
+  String get downloadTaskStatusPending => 'Ожидание';
+
+  @override
+  String get downloadTaskStatusDownloading => 'Загрузка';
+
+  @override
+  String get downloadTaskStatusInstalling => 'Установка';
+
+  @override
+  String get downloadTaskStatusSuccess => 'Завершено';
+
+  @override
+  String get downloadTaskStatusFailed => 'Сбой';
+
+  @override
+  String get downloadTaskStatusCancelled => 'Отменено';
+
+  @override
+  String get downloadTaskStatusInterrupted => 'Прервано';
+
+  @override
+  String get downloadTaskStatusCurrent => 'Текущая задача';
+
+  @override
   String get downloadWaitingForTask => 'Ожидание начала загрузки';
 
   @override

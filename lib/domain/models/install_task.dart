@@ -73,6 +73,12 @@ sealed class InstallTask with _$InstallTask {
     /// 当前任务累计的 ll-cli 命令与原始输出，随下载中心 item 生命周期保存。
     @Default('') String commandOutput,
 
+    /// 按实际 CLI 输出顺序观察到的依赖 ID；不代表完整依赖树或安装成功。
+    @Default(<String>[]) List<String> observedDependencyIds,
+
+    /// 最近一条明确的依赖处理身份；未知阶段保持为空，不能推断逐项百分比。
+    String? activeDependencyId,
+
     /// 旧快照中的错误文案；新任务不得写入本地化字符串。
     String? errorMessage,
 

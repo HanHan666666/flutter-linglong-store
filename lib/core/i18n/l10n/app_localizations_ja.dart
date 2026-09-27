@@ -1823,6 +1823,15 @@ class AppLocalizationsJa extends AppLocalizations {
       '進捗が遅く見える場合は、ソフトウェアに必要な依存関係をインストールしている可能性があります。もう少々お待ちください……';
 
   @override
+  String get dependencyProcessingSteps => '依存関係の処理履歴';
+
+  @override
+  String get dependencyCurrentlyProcessing => '処理中';
+
+  @override
+  String get dependencyPreviouslyProcessed => '以前に処理';
+
+  @override
   String get loadingInstalledApps => 'インストール済みアプリを読み込み中...';
 
   @override

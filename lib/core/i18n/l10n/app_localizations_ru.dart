@@ -1918,6 +1918,15 @@ class AppLocalizationsRu extends AppLocalizations {
       'Если прогресс выглядит медленным, возможно, необходимые зависимости все еще устанавливаются. Пожалуйста, подождите еще немного…';
 
   @override
+  String get dependencyProcessingSteps => 'Обработка зависимостей';
+
+  @override
+  String get dependencyCurrentlyProcessing => 'Обрабатывается';
+
+  @override
+  String get dependencyPreviouslyProcessed => 'Обработано ранее';
+
+  @override
   String get loadingInstalledApps => 'Загрузка установленных приложений...';
 
   @override

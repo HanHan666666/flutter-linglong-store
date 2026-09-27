@@ -1979,6 +1979,15 @@ class AppLocalizationsAr extends AppLocalizations {
       'إذا بدا التقدم بطيئًا، فقد يكون ذلك بسبب تثبيت التبعيات الأساسية للبرنامج، يرجى الانتظار قليلاً...';
 
   @override
+  String get dependencyProcessingSteps => 'سجل معالجة التبعيات';
+
+  @override
+  String get dependencyCurrentlyProcessing => 'قيد المعالجة';
+
+  @override
+  String get dependencyPreviouslyProcessed => 'عولج سابقًا';
+
+  @override
   String get loadingInstalledApps => 'جارٍ تحميل التطبيقات المثبتة...';
 
   @override

@@ -34,7 +34,9 @@ mixin _$InstallTask {
  String? get message;/// 可在当前语言下重新格式化的稳定阶段代码。
  AppOperationMessageCode? get messageCode;/// 安装链路中保留的原始 message 文本，用于诊断。
  String? get rawMessage;/// 当前任务累计的 ll-cli 命令与原始输出，随下载中心 item 生命周期保存。
- String get commandOutput;/// 旧快照中的错误文案；新任务不得写入本地化字符串。
+ String get commandOutput;/// 按实际 CLI 输出顺序观察到的依赖 ID；不代表完整依赖树或安装成功。
+ List<String> get observedDependencyIds;/// 最近一条明确的依赖处理身份；未知阶段保持为空，不能推断逐项百分比。
+ String? get activeDependencyId;/// 旧快照中的错误文案；新任务不得写入本地化字符串。
  String? get errorMessage;/// 错误代码
  int? get errorCode;/// 错误详情
  String? get errorDetail;/// 与 locale 无关的结构化失败事实。
@@ -54,16 +56,16 @@ $InstallTaskCopyWith<InstallTask> get copyWith => _$InstallTaskCopyWithImpl<Inst
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InstallTask&&(identical(other.id, id) || other.id == id)&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.appName, appName) || other.appName == appName)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.batchId, batchId) || other.batchId == batchId)&&(identical(other.target, target) || other.target == target)&&(identical(other.version, version) || other.version == version)&&(identical(other.force, force) || other.force == force)&&(identical(other.status, status) || other.status == status)&&(identical(other.progress, progress) || other.progress == progress)&&(identical(other.message, message) || other.message == message)&&(identical(other.messageCode, messageCode) || other.messageCode == messageCode)&&(identical(other.rawMessage, rawMessage) || other.rawMessage == rawMessage)&&(identical(other.commandOutput, commandOutput) || other.commandOutput == commandOutput)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.errorCode, errorCode) || other.errorCode == errorCode)&&(identical(other.errorDetail, errorDetail) || other.errorDetail == errorDetail)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.finishedAt, finishedAt) || other.finishedAt == finishedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InstallTask&&(identical(other.id, id) || other.id == id)&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.appName, appName) || other.appName == appName)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.batchId, batchId) || other.batchId == batchId)&&(identical(other.target, target) || other.target == target)&&(identical(other.version, version) || other.version == version)&&(identical(other.force, force) || other.force == force)&&(identical(other.status, status) || other.status == status)&&(identical(other.progress, progress) || other.progress == progress)&&(identical(other.message, message) || other.message == message)&&(identical(other.messageCode, messageCode) || other.messageCode == messageCode)&&(identical(other.rawMessage, rawMessage) || other.rawMessage == rawMessage)&&(identical(other.commandOutput, commandOutput) || other.commandOutput == commandOutput)&&const DeepCollectionEquality().equals(other.observedDependencyIds, observedDependencyIds)&&(identical(other.activeDependencyId, activeDependencyId) || other.activeDependencyId == activeDependencyId)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.errorCode, errorCode) || other.errorCode == errorCode)&&(identical(other.errorDetail, errorDetail) || other.errorDetail == errorDetail)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.finishedAt, finishedAt) || other.finishedAt == finishedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,appId,appName,icon,kind,batchId,target,version,force,status,progress,message,messageCode,rawMessage,commandOutput,errorMessage,errorCode,errorDetail,failure,createdAt,startedAt,finishedAt]);
+int get hashCode => Object.hashAll([runtimeType,id,appId,appName,icon,kind,batchId,target,version,force,status,progress,message,messageCode,rawMessage,commandOutput,const DeepCollectionEquality().hash(observedDependencyIds),activeDependencyId,errorMessage,errorCode,errorDetail,failure,createdAt,startedAt,finishedAt]);
 
 @override
 String toString() {
-  return 'InstallTask(id: $id, appId: $appId, appName: $appName, icon: $icon, kind: $kind, batchId: $batchId, target: $target, version: $version, force: $force, status: $status, progress: $progress, message: $message, messageCode: $messageCode, rawMessage: $rawMessage, commandOutput: $commandOutput, errorMessage: $errorMessage, errorCode: $errorCode, errorDetail: $errorDetail, failure: $failure, createdAt: $createdAt, startedAt: $startedAt, finishedAt: $finishedAt)';
+  return 'InstallTask(id: $id, appId: $appId, appName: $appName, icon: $icon, kind: $kind, batchId: $batchId, target: $target, version: $version, force: $force, status: $status, progress: $progress, message: $message, messageCode: $messageCode, rawMessage: $rawMessage, commandOutput: $commandOutput, observedDependencyIds: $observedDependencyIds, activeDependencyId: $activeDependencyId, errorMessage: $errorMessage, errorCode: $errorCode, errorDetail: $errorDetail, failure: $failure, createdAt: $createdAt, startedAt: $startedAt, finishedAt: $finishedAt)';
 }
 
 
@@ -74,7 +76,7 @@ abstract mixin class $InstallTaskCopyWith<$Res>  {
   factory $InstallTaskCopyWith(InstallTask value, $Res Function(InstallTask) _then) = _$InstallTaskCopyWithImpl;
 @useResult
 $Res call({
- String id, String appId, String appName, String? icon, InstallTaskKind kind, String? batchId, AppOperationTargetSnapshot? target, String? version, bool force, InstallStatus status, double progress, String? message, AppOperationMessageCode? messageCode, String? rawMessage, String commandOutput, String? errorMessage, int? errorCode, String? errorDetail, AppOperationFailure? failure, int createdAt, int? startedAt, int? finishedAt
+ String id, String appId, String appName, String? icon, InstallTaskKind kind, String? batchId, AppOperationTargetSnapshot? target, String? version, bool force, InstallStatus status, double progress, String? message, AppOperationMessageCode? messageCode, String? rawMessage, String commandOutput, List<String> observedDependencyIds, String? activeDependencyId, String? errorMessage, int? errorCode, String? errorDetail, AppOperationFailure? failure, int createdAt, int? startedAt, int? finishedAt
 });
 
 
@@ -91,7 +93,7 @@ class _$InstallTaskCopyWithImpl<$Res>
 
 /// Create a copy of InstallTask
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? appId = null,Object? appName = null,Object? icon = freezed,Object? kind = null,Object? batchId = freezed,Object? target = freezed,Object? version = freezed,Object? force = null,Object? status = null,Object? progress = null,Object? message = freezed,Object? messageCode = freezed,Object? rawMessage = freezed,Object? commandOutput = null,Object? errorMessage = freezed,Object? errorCode = freezed,Object? errorDetail = freezed,Object? failure = freezed,Object? createdAt = null,Object? startedAt = freezed,Object? finishedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? appId = null,Object? appName = null,Object? icon = freezed,Object? kind = null,Object? batchId = freezed,Object? target = freezed,Object? version = freezed,Object? force = null,Object? status = null,Object? progress = null,Object? message = freezed,Object? messageCode = freezed,Object? rawMessage = freezed,Object? commandOutput = null,Object? observedDependencyIds = null,Object? activeDependencyId = freezed,Object? errorMessage = freezed,Object? errorCode = freezed,Object? errorDetail = freezed,Object? failure = freezed,Object? createdAt = null,Object? startedAt = freezed,Object? finishedAt = freezed,}) {
   return _then(InstallTask(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
@@ -108,7 +110,9 @@ as double,message: freezed == message ? _self.message : message // ignore: cast_
 as String?,messageCode: freezed == messageCode ? _self.messageCode : messageCode // ignore: cast_nullable_to_non_nullable
 as AppOperationMessageCode?,rawMessage: freezed == rawMessage ? _self.rawMessage : rawMessage // ignore: cast_nullable_to_non_nullable
 as String?,commandOutput: null == commandOutput ? _self.commandOutput : commandOutput // ignore: cast_nullable_to_non_nullable
-as String,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String,observedDependencyIds: null == observedDependencyIds ? _self.observedDependencyIds : observedDependencyIds // ignore: cast_nullable_to_non_nullable
+as List<String>,activeDependencyId: freezed == activeDependencyId ? _self.activeDependencyId : activeDependencyId // ignore: cast_nullable_to_non_nullable
+as String?,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,errorCode: freezed == errorCode ? _self.errorCode : errorCode // ignore: cast_nullable_to_non_nullable
 as int?,errorDetail: freezed == errorDetail ? _self.errorDetail : errorDetail // ignore: cast_nullable_to_non_nullable
 as String?,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable
@@ -221,10 +225,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String appId,  String appName,  String? icon,  InstallTaskKind kind,  String? batchId,  AppOperationTargetSnapshot? target,  String? version,  bool force,  InstallStatus status,  double progress,  String? message,  AppOperationMessageCode? messageCode,  String? rawMessage,  String commandOutput,  String? errorMessage,  int? errorCode,  String? errorDetail,  AppOperationFailure? failure,  int createdAt,  int? startedAt,  int? finishedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String appId,  String appName,  String? icon,  InstallTaskKind kind,  String? batchId,  AppOperationTargetSnapshot? target,  String? version,  bool force,  InstallStatus status,  double progress,  String? message,  AppOperationMessageCode? messageCode,  String? rawMessage,  String commandOutput,  List<String> observedDependencyIds,  String? activeDependencyId,  String? errorMessage,  int? errorCode,  String? errorDetail,  AppOperationFailure? failure,  int createdAt,  int? startedAt,  int? finishedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _InstallTask() when $default != null:
-return $default(_that.id,_that.appId,_that.appName,_that.icon,_that.kind,_that.batchId,_that.target,_that.version,_that.force,_that.status,_that.progress,_that.message,_that.messageCode,_that.rawMessage,_that.commandOutput,_that.errorMessage,_that.errorCode,_that.errorDetail,_that.failure,_that.createdAt,_that.startedAt,_that.finishedAt);case _:
+return $default(_that.id,_that.appId,_that.appName,_that.icon,_that.kind,_that.batchId,_that.target,_that.version,_that.force,_that.status,_that.progress,_that.message,_that.messageCode,_that.rawMessage,_that.commandOutput,_that.observedDependencyIds,_that.activeDependencyId,_that.errorMessage,_that.errorCode,_that.errorDetail,_that.failure,_that.createdAt,_that.startedAt,_that.finishedAt);case _:
   return orElse();
 
 }
@@ -242,10 +246,10 @@ return $default(_that.id,_that.appId,_that.appName,_that.icon,_that.kind,_that.b
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String appId,  String appName,  String? icon,  InstallTaskKind kind,  String? batchId,  AppOperationTargetSnapshot? target,  String? version,  bool force,  InstallStatus status,  double progress,  String? message,  AppOperationMessageCode? messageCode,  String? rawMessage,  String commandOutput,  String? errorMessage,  int? errorCode,  String? errorDetail,  AppOperationFailure? failure,  int createdAt,  int? startedAt,  int? finishedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String appId,  String appName,  String? icon,  InstallTaskKind kind,  String? batchId,  AppOperationTargetSnapshot? target,  String? version,  bool force,  InstallStatus status,  double progress,  String? message,  AppOperationMessageCode? messageCode,  String? rawMessage,  String commandOutput,  List<String> observedDependencyIds,  String? activeDependencyId,  String? errorMessage,  int? errorCode,  String? errorDetail,  AppOperationFailure? failure,  int createdAt,  int? startedAt,  int? finishedAt)  $default,) {final _that = this;
 switch (_that) {
 case _InstallTask():
-return $default(_that.id,_that.appId,_that.appName,_that.icon,_that.kind,_that.batchId,_that.target,_that.version,_that.force,_that.status,_that.progress,_that.message,_that.messageCode,_that.rawMessage,_that.commandOutput,_that.errorMessage,_that.errorCode,_that.errorDetail,_that.failure,_that.createdAt,_that.startedAt,_that.finishedAt);}
+return $default(_that.id,_that.appId,_that.appName,_that.icon,_that.kind,_that.batchId,_that.target,_that.version,_that.force,_that.status,_that.progress,_that.message,_that.messageCode,_that.rawMessage,_that.commandOutput,_that.observedDependencyIds,_that.activeDependencyId,_that.errorMessage,_that.errorCode,_that.errorDetail,_that.failure,_that.createdAt,_that.startedAt,_that.finishedAt);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -259,10 +263,10 @@ return $default(_that.id,_that.appId,_that.appName,_that.icon,_that.kind,_that.b
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String appId,  String appName,  String? icon,  InstallTaskKind kind,  String? batchId,  AppOperationTargetSnapshot? target,  String? version,  bool force,  InstallStatus status,  double progress,  String? message,  AppOperationMessageCode? messageCode,  String? rawMessage,  String commandOutput,  String? errorMessage,  int? errorCode,  String? errorDetail,  AppOperationFailure? failure,  int createdAt,  int? startedAt,  int? finishedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String appId,  String appName,  String? icon,  InstallTaskKind kind,  String? batchId,  AppOperationTargetSnapshot? target,  String? version,  bool force,  InstallStatus status,  double progress,  String? message,  AppOperationMessageCode? messageCode,  String? rawMessage,  String commandOutput,  List<String> observedDependencyIds,  String? activeDependencyId,  String? errorMessage,  int? errorCode,  String? errorDetail,  AppOperationFailure? failure,  int createdAt,  int? startedAt,  int? finishedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _InstallTask() when $default != null:
-return $default(_that.id,_that.appId,_that.appName,_that.icon,_that.kind,_that.batchId,_that.target,_that.version,_that.force,_that.status,_that.progress,_that.message,_that.messageCode,_that.rawMessage,_that.commandOutput,_that.errorMessage,_that.errorCode,_that.errorDetail,_that.failure,_that.createdAt,_that.startedAt,_that.finishedAt);case _:
+return $default(_that.id,_that.appId,_that.appName,_that.icon,_that.kind,_that.batchId,_that.target,_that.version,_that.force,_that.status,_that.progress,_that.message,_that.messageCode,_that.rawMessage,_that.commandOutput,_that.observedDependencyIds,_that.activeDependencyId,_that.errorMessage,_that.errorCode,_that.errorDetail,_that.failure,_that.createdAt,_that.startedAt,_that.finishedAt);case _:
   return null;
 
 }
@@ -274,7 +278,7 @@ return $default(_that.id,_that.appId,_that.appName,_that.icon,_that.kind,_that.b
 @JsonSerializable()
 
 class _InstallTask implements InstallTask {
-  const _InstallTask({required this.id, required this.appId, required this.appName, this.icon, this.kind = InstallTaskKind.install, this.batchId, this.target, this.version, this.force = false, this.status = InstallStatus.pending, this.progress = 0.0, this.message, this.messageCode, this.rawMessage, this.commandOutput = '', this.errorMessage, this.errorCode, this.errorDetail, this.failure, required this.createdAt, this.startedAt, this.finishedAt});
+  const _InstallTask({required this.id, required this.appId, required this.appName, this.icon, this.kind = InstallTaskKind.install, this.batchId, this.target, this.version, this.force = false, this.status = InstallStatus.pending, this.progress = 0.0, this.message, this.messageCode, this.rawMessage, this.commandOutput = '',  List<String> observedDependencyIds = const <String>[], this.activeDependencyId, this.errorMessage, this.errorCode, this.errorDetail, this.failure, required this.createdAt, this.startedAt, this.finishedAt}): _observedDependencyIds = observedDependencyIds;
   factory _InstallTask.fromJson(Map<String, dynamic> json) => _$InstallTaskFromJson(json);
 
 /// 唯一任务ID
@@ -310,6 +314,17 @@ class _InstallTask implements InstallTask {
 @override final  String? rawMessage;
 /// 当前任务累计的 ll-cli 命令与原始输出，随下载中心 item 生命周期保存。
 @override@JsonKey() final  String commandOutput;
+/// 按实际 CLI 输出顺序观察到的依赖 ID；不代表完整依赖树或安装成功。
+ final  List<String> _observedDependencyIds;
+/// 按实际 CLI 输出顺序观察到的依赖 ID；不代表完整依赖树或安装成功。
+@override@JsonKey() List<String> get observedDependencyIds {
+  if (_observedDependencyIds is EqualUnmodifiableListView) return _observedDependencyIds;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_observedDependencyIds);
+}
+
+/// 最近一条明确的依赖处理身份；未知阶段保持为空，不能推断逐项百分比。
+@override final  String? activeDependencyId;
 /// 旧快照中的错误文案；新任务不得写入本地化字符串。
 @override final  String? errorMessage;
 /// 错误代码
@@ -338,16 +353,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InstallTask&&(identical(other.id, id) || other.id == id)&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.appName, appName) || other.appName == appName)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.batchId, batchId) || other.batchId == batchId)&&(identical(other.target, target) || other.target == target)&&(identical(other.version, version) || other.version == version)&&(identical(other.force, force) || other.force == force)&&(identical(other.status, status) || other.status == status)&&(identical(other.progress, progress) || other.progress == progress)&&(identical(other.message, message) || other.message == message)&&(identical(other.messageCode, messageCode) || other.messageCode == messageCode)&&(identical(other.rawMessage, rawMessage) || other.rawMessage == rawMessage)&&(identical(other.commandOutput, commandOutput) || other.commandOutput == commandOutput)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.errorCode, errorCode) || other.errorCode == errorCode)&&(identical(other.errorDetail, errorDetail) || other.errorDetail == errorDetail)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.finishedAt, finishedAt) || other.finishedAt == finishedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InstallTask&&(identical(other.id, id) || other.id == id)&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.appName, appName) || other.appName == appName)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.batchId, batchId) || other.batchId == batchId)&&(identical(other.target, target) || other.target == target)&&(identical(other.version, version) || other.version == version)&&(identical(other.force, force) || other.force == force)&&(identical(other.status, status) || other.status == status)&&(identical(other.progress, progress) || other.progress == progress)&&(identical(other.message, message) || other.message == message)&&(identical(other.messageCode, messageCode) || other.messageCode == messageCode)&&(identical(other.rawMessage, rawMessage) || other.rawMessage == rawMessage)&&(identical(other.commandOutput, commandOutput) || other.commandOutput == commandOutput)&&const DeepCollectionEquality().equals(other._observedDependencyIds, _observedDependencyIds)&&(identical(other.activeDependencyId, activeDependencyId) || other.activeDependencyId == activeDependencyId)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.errorCode, errorCode) || other.errorCode == errorCode)&&(identical(other.errorDetail, errorDetail) || other.errorDetail == errorDetail)&&(identical(other.failure, failure) || other.failure == failure)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.startedAt, startedAt) || other.startedAt == startedAt)&&(identical(other.finishedAt, finishedAt) || other.finishedAt == finishedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,appId,appName,icon,kind,batchId,target,version,force,status,progress,message,messageCode,rawMessage,commandOutput,errorMessage,errorCode,errorDetail,failure,createdAt,startedAt,finishedAt]);
+int get hashCode => Object.hashAll([runtimeType,id,appId,appName,icon,kind,batchId,target,version,force,status,progress,message,messageCode,rawMessage,commandOutput,const DeepCollectionEquality().hash(_observedDependencyIds),activeDependencyId,errorMessage,errorCode,errorDetail,failure,createdAt,startedAt,finishedAt]);
 
 @override
 String toString() {
-  return 'InstallTask(id: $id, appId: $appId, appName: $appName, icon: $icon, kind: $kind, batchId: $batchId, target: $target, version: $version, force: $force, status: $status, progress: $progress, message: $message, messageCode: $messageCode, rawMessage: $rawMessage, commandOutput: $commandOutput, errorMessage: $errorMessage, errorCode: $errorCode, errorDetail: $errorDetail, failure: $failure, createdAt: $createdAt, startedAt: $startedAt, finishedAt: $finishedAt)';
+  return 'InstallTask(id: $id, appId: $appId, appName: $appName, icon: $icon, kind: $kind, batchId: $batchId, target: $target, version: $version, force: $force, status: $status, progress: $progress, message: $message, messageCode: $messageCode, rawMessage: $rawMessage, commandOutput: $commandOutput, observedDependencyIds: $observedDependencyIds, activeDependencyId: $activeDependencyId, errorMessage: $errorMessage, errorCode: $errorCode, errorDetail: $errorDetail, failure: $failure, createdAt: $createdAt, startedAt: $startedAt, finishedAt: $finishedAt)';
 }
 
 
@@ -358,7 +373,7 @@ abstract mixin class _$InstallTaskCopyWith<$Res> implements $InstallTaskCopyWith
   factory _$InstallTaskCopyWith(_InstallTask value, $Res Function(_InstallTask) _then) = __$InstallTaskCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String appId, String appName, String? icon, InstallTaskKind kind, String? batchId, AppOperationTargetSnapshot? target, String? version, bool force, InstallStatus status, double progress, String? message, AppOperationMessageCode? messageCode, String? rawMessage, String commandOutput, String? errorMessage, int? errorCode, String? errorDetail, AppOperationFailure? failure, int createdAt, int? startedAt, int? finishedAt
+ String id, String appId, String appName, String? icon, InstallTaskKind kind, String? batchId, AppOperationTargetSnapshot? target, String? version, bool force, InstallStatus status, double progress, String? message, AppOperationMessageCode? messageCode, String? rawMessage, String commandOutput, List<String> observedDependencyIds, String? activeDependencyId, String? errorMessage, int? errorCode, String? errorDetail, AppOperationFailure? failure, int createdAt, int? startedAt, int? finishedAt
 });
 
 
@@ -375,7 +390,7 @@ class __$InstallTaskCopyWithImpl<$Res>
 
 /// Create a copy of InstallTask
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? appId = null,Object? appName = null,Object? icon = freezed,Object? kind = null,Object? batchId = freezed,Object? target = freezed,Object? version = freezed,Object? force = null,Object? status = null,Object? progress = null,Object? message = freezed,Object? messageCode = freezed,Object? rawMessage = freezed,Object? commandOutput = null,Object? errorMessage = freezed,Object? errorCode = freezed,Object? errorDetail = freezed,Object? failure = freezed,Object? createdAt = null,Object? startedAt = freezed,Object? finishedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? appId = null,Object? appName = null,Object? icon = freezed,Object? kind = null,Object? batchId = freezed,Object? target = freezed,Object? version = freezed,Object? force = null,Object? status = null,Object? progress = null,Object? message = freezed,Object? messageCode = freezed,Object? rawMessage = freezed,Object? commandOutput = null,Object? observedDependencyIds = null,Object? activeDependencyId = freezed,Object? errorMessage = freezed,Object? errorCode = freezed,Object? errorDetail = freezed,Object? failure = freezed,Object? createdAt = null,Object? startedAt = freezed,Object? finishedAt = freezed,}) {
   return _then(_InstallTask(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
@@ -392,7 +407,9 @@ as double,message: freezed == message ? _self.message : message // ignore: cast_
 as String?,messageCode: freezed == messageCode ? _self.messageCode : messageCode // ignore: cast_nullable_to_non_nullable
 as AppOperationMessageCode?,rawMessage: freezed == rawMessage ? _self.rawMessage : rawMessage // ignore: cast_nullable_to_non_nullable
 as String?,commandOutput: null == commandOutput ? _self.commandOutput : commandOutput // ignore: cast_nullable_to_non_nullable
-as String,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String,observedDependencyIds: null == observedDependencyIds ? _self._observedDependencyIds : observedDependencyIds // ignore: cast_nullable_to_non_nullable
+as List<String>,activeDependencyId: freezed == activeDependencyId ? _self.activeDependencyId : activeDependencyId // ignore: cast_nullable_to_non_nullable
+as String?,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,errorCode: freezed == errorCode ? _self.errorCode : errorCode // ignore: cast_nullable_to_non_nullable
 as int?,errorDetail: freezed == errorDetail ? _self.errorDetail : errorDetail // ignore: cast_nullable_to_non_nullable
 as String?,failure: freezed == failure ? _self.failure : failure // ignore: cast_nullable_to_non_nullable

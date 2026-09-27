@@ -1901,6 +1901,15 @@ class AppLocalizationsEs extends AppLocalizations {
       'Si el progreso parece lento, es posible que se estén instalando dependencias necesarias. Por favor, espere un poco más...';
 
   @override
+  String get dependencyProcessingSteps => 'Procesamiento de dependencias';
+
+  @override
+  String get dependencyCurrentlyProcessing => 'Procesando';
+
+  @override
+  String get dependencyPreviouslyProcessed => 'Procesado antes';
+
+  @override
   String get loadingInstalledApps => 'Cargando aplicaciones instaladas...';
 
   @override

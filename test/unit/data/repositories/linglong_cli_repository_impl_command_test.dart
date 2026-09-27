@@ -269,6 +269,71 @@ void main() {
       },
     );
 
+    test(
+      'forwards observed dependency identity without changing global progress',
+      () async {
+        final executor = _RecordingCliExecutor()
+          ..progressEvents = const [
+            ProgressEvent(
+              line:
+                  '{"message":"Installing main:org.deepin.base/25.2.2/x86_64/binary","percentage":42}',
+              type: ProgressEventType.stdout,
+            ),
+            ProgressEvent(
+              line: '{"message":"Install success"}',
+              type: ProgressEventType.stdout,
+            ),
+          ];
+        final repository = LinglongCliRepositoryImpl.withExecutor(
+          execute: executor.execute,
+          executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+          cancelWithSystemKill: executor.cancelWithSystemKill,
+        );
+
+        final events = await repository.installApp('org.example.demo').toList();
+
+        final dependencyEvent = events.firstWhere(
+          (event) => event.status == InstallStatus.installing,
+        );
+        expect(dependencyEvent.processingPackageId, 'org.deepin.base');
+        expect(dependencyEvent.progress, closeTo(0.42, 0.0001));
+        expect(events.last.status, InstallStatus.success);
+        expect(events.last.processingPackageId, isNull);
+      },
+    );
+
+    test(
+      'forwards update dependency identity from message-only events',
+      () async {
+        final executor = _RecordingCliExecutor()
+          ..progressEvents = const [
+            ProgressEvent(
+              line:
+                  '{"message":"Updating main:org.deepin.runtime.dtk/25.2.2/x86_64/binary"}',
+              type: ProgressEventType.stdout,
+            ),
+            ProgressEvent(
+              line: '{"message":"Install success"}',
+              type: ProgressEventType.stdout,
+            ),
+          ];
+        final repository = LinglongCliRepositoryImpl.withExecutor(
+          execute: executor.execute,
+          executeWithProgressAndProcess: executor.executeWithProgressAndProcess,
+          cancelWithSystemKill: executor.cancelWithSystemKill,
+        );
+
+        final events = await repository.updateApp('org.example.demo').toList();
+
+        expect(
+          events
+              .firstWhere((event) => event.status == InstallStatus.installing)
+              .processingPackageId,
+          'org.deepin.runtime.dtk',
+        );
+      },
+    );
+
     test('includes ll-cli json message for specific error code', () async {
       const detail = 'mirror unavailable while fetching object';
       final executor = _RecordingCliExecutor()

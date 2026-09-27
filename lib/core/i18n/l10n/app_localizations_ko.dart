@@ -1819,6 +1819,15 @@ class AppLocalizationsKo extends AppLocalizations {
       '진행률이 느려 보이면 소프트웨어에 필요한 의존성을 설치하고 있을 수 있습니다. 조금만 더 기다려 주세요……';
 
   @override
+  String get dependencyProcessingSteps => '의존성 처리 기록';
+
+  @override
+  String get dependencyCurrentlyProcessing => '처리 중';
+
+  @override
+  String get dependencyPreviouslyProcessed => '이전에 처리됨';
+
+  @override
   String get loadingInstalledApps => '설치된 앱을 불러오는 중...';
 
   @override

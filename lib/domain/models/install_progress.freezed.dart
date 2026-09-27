@@ -19,7 +19,8 @@ mixin _$InstallProgress {
  String get appId; InstallProgressEventType get eventType; InstallStatus get status; double get progress;/// 旧调用方使用的展示文案；新 Data 事件保持为空。
  String? get message;/// 可在当前语言下重新格式化的稳定阶段代码。
  AppOperationMessageCode? get messageCode;/// ll-cli 返回的原始 message 文本。
- String? get rawMessage;/// ll-cli 输出流中的原始单行内容，用于下载中心按任务保存诊断日志。
+ String? get rawMessage;/// 从本行结构化输出识别的处理包 ID；不是独立的依赖进度。
+ String? get processingPackageId;/// ll-cli 输出流中的原始单行内容，用于下载中心按任务保存诊断日志。
  String? get outputLine;/// 旧调用方使用的错误摘要；新 Data 事件保持为空。
  String? get error; int? get errorCode;/// 后端返回的原始错误详情。
  String? get errorDetail;/// 与 locale 无关的结构化失败事实。
@@ -36,16 +37,16 @@ $InstallProgressCopyWith<InstallProgress> get copyWith => _$InstallProgressCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InstallProgress&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.eventType, eventType) || other.eventType == eventType)&&(identical(other.status, status) || other.status == status)&&(identical(other.progress, progress) || other.progress == progress)&&(identical(other.message, message) || other.message == message)&&(identical(other.messageCode, messageCode) || other.messageCode == messageCode)&&(identical(other.rawMessage, rawMessage) || other.rawMessage == rawMessage)&&(identical(other.outputLine, outputLine) || other.outputLine == outputLine)&&(identical(other.error, error) || other.error == error)&&(identical(other.errorCode, errorCode) || other.errorCode == errorCode)&&(identical(other.errorDetail, errorDetail) || other.errorDetail == errorDetail)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InstallProgress&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.eventType, eventType) || other.eventType == eventType)&&(identical(other.status, status) || other.status == status)&&(identical(other.progress, progress) || other.progress == progress)&&(identical(other.message, message) || other.message == message)&&(identical(other.messageCode, messageCode) || other.messageCode == messageCode)&&(identical(other.rawMessage, rawMessage) || other.rawMessage == rawMessage)&&(identical(other.processingPackageId, processingPackageId) || other.processingPackageId == processingPackageId)&&(identical(other.outputLine, outputLine) || other.outputLine == outputLine)&&(identical(other.error, error) || other.error == error)&&(identical(other.errorCode, errorCode) || other.errorCode == errorCode)&&(identical(other.errorDetail, errorDetail) || other.errorDetail == errorDetail)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appId,eventType,status,progress,message,messageCode,rawMessage,outputLine,error,errorCode,errorDetail,failure);
+int get hashCode => Object.hash(runtimeType,appId,eventType,status,progress,message,messageCode,rawMessage,processingPackageId,outputLine,error,errorCode,errorDetail,failure);
 
 @override
 String toString() {
-  return 'InstallProgress(appId: $appId, eventType: $eventType, status: $status, progress: $progress, message: $message, messageCode: $messageCode, rawMessage: $rawMessage, outputLine: $outputLine, error: $error, errorCode: $errorCode, errorDetail: $errorDetail, failure: $failure)';
+  return 'InstallProgress(appId: $appId, eventType: $eventType, status: $status, progress: $progress, message: $message, messageCode: $messageCode, rawMessage: $rawMessage, processingPackageId: $processingPackageId, outputLine: $outputLine, error: $error, errorCode: $errorCode, errorDetail: $errorDetail, failure: $failure)';
 }
 
 
@@ -56,7 +57,7 @@ abstract mixin class $InstallProgressCopyWith<$Res>  {
   factory $InstallProgressCopyWith(InstallProgress value, $Res Function(InstallProgress) _then) = _$InstallProgressCopyWithImpl;
 @useResult
 $Res call({
- String appId, InstallProgressEventType eventType, InstallStatus status, double progress, String? message, AppOperationMessageCode? messageCode, String? rawMessage, String? outputLine, String? error, int? errorCode, String? errorDetail, AppOperationFailure? failure
+ String appId, InstallProgressEventType eventType, InstallStatus status, double progress, String? message, AppOperationMessageCode? messageCode, String? rawMessage, String? processingPackageId, String? outputLine, String? error, int? errorCode, String? errorDetail, AppOperationFailure? failure
 });
 
 
@@ -73,7 +74,7 @@ class _$InstallProgressCopyWithImpl<$Res>
 
 /// Create a copy of InstallProgress
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? eventType = null,Object? status = null,Object? progress = null,Object? message = freezed,Object? messageCode = freezed,Object? rawMessage = freezed,Object? outputLine = freezed,Object? error = freezed,Object? errorCode = freezed,Object? errorDetail = freezed,Object? failure = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? appId = null,Object? eventType = null,Object? status = null,Object? progress = null,Object? message = freezed,Object? messageCode = freezed,Object? rawMessage = freezed,Object? processingPackageId = freezed,Object? outputLine = freezed,Object? error = freezed,Object? errorCode = freezed,Object? errorDetail = freezed,Object? failure = freezed,}) {
   return _then(InstallProgress(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,eventType: null == eventType ? _self.eventType : eventType // ignore: cast_nullable_to_non_nullable
@@ -82,6 +83,7 @@ as InstallStatus,progress: null == progress ? _self.progress : progress // ignor
 as double,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,messageCode: freezed == messageCode ? _self.messageCode : messageCode // ignore: cast_nullable_to_non_nullable
 as AppOperationMessageCode?,rawMessage: freezed == rawMessage ? _self.rawMessage : rawMessage // ignore: cast_nullable_to_non_nullable
+as String?,processingPackageId: freezed == processingPackageId ? _self.processingPackageId : processingPackageId // ignore: cast_nullable_to_non_nullable
 as String?,outputLine: freezed == outputLine ? _self.outputLine : outputLine // ignore: cast_nullable_to_non_nullable
 as String?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,errorCode: freezed == errorCode ? _self.errorCode : errorCode // ignore: cast_nullable_to_non_nullable
@@ -181,10 +183,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String appId,  InstallProgressEventType eventType,  InstallStatus status,  double progress,  String? message,  AppOperationMessageCode? messageCode,  String? rawMessage,  String? outputLine,  String? error,  int? errorCode,  String? errorDetail,  AppOperationFailure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String appId,  InstallProgressEventType eventType,  InstallStatus status,  double progress,  String? message,  AppOperationMessageCode? messageCode,  String? rawMessage,  String? processingPackageId,  String? outputLine,  String? error,  int? errorCode,  String? errorDetail,  AppOperationFailure? failure)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _InstallProgress() when $default != null:
-return $default(_that.appId,_that.eventType,_that.status,_that.progress,_that.message,_that.messageCode,_that.rawMessage,_that.outputLine,_that.error,_that.errorCode,_that.errorDetail,_that.failure);case _:
+return $default(_that.appId,_that.eventType,_that.status,_that.progress,_that.message,_that.messageCode,_that.rawMessage,_that.processingPackageId,_that.outputLine,_that.error,_that.errorCode,_that.errorDetail,_that.failure);case _:
   return orElse();
 
 }
@@ -202,10 +204,10 @@ return $default(_that.appId,_that.eventType,_that.status,_that.progress,_that.me
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String appId,  InstallProgressEventType eventType,  InstallStatus status,  double progress,  String? message,  AppOperationMessageCode? messageCode,  String? rawMessage,  String? outputLine,  String? error,  int? errorCode,  String? errorDetail,  AppOperationFailure? failure)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String appId,  InstallProgressEventType eventType,  InstallStatus status,  double progress,  String? message,  AppOperationMessageCode? messageCode,  String? rawMessage,  String? processingPackageId,  String? outputLine,  String? error,  int? errorCode,  String? errorDetail,  AppOperationFailure? failure)  $default,) {final _that = this;
 switch (_that) {
 case _InstallProgress():
-return $default(_that.appId,_that.eventType,_that.status,_that.progress,_that.message,_that.messageCode,_that.rawMessage,_that.outputLine,_that.error,_that.errorCode,_that.errorDetail,_that.failure);}
+return $default(_that.appId,_that.eventType,_that.status,_that.progress,_that.message,_that.messageCode,_that.rawMessage,_that.processingPackageId,_that.outputLine,_that.error,_that.errorCode,_that.errorDetail,_that.failure);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -219,10 +221,10 @@ return $default(_that.appId,_that.eventType,_that.status,_that.progress,_that.me
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String appId,  InstallProgressEventType eventType,  InstallStatus status,  double progress,  String? message,  AppOperationMessageCode? messageCode,  String? rawMessage,  String? outputLine,  String? error,  int? errorCode,  String? errorDetail,  AppOperationFailure? failure)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String appId,  InstallProgressEventType eventType,  InstallStatus status,  double progress,  String? message,  AppOperationMessageCode? messageCode,  String? rawMessage,  String? processingPackageId,  String? outputLine,  String? error,  int? errorCode,  String? errorDetail,  AppOperationFailure? failure)?  $default,) {final _that = this;
 switch (_that) {
 case _InstallProgress() when $default != null:
-return $default(_that.appId,_that.eventType,_that.status,_that.progress,_that.message,_that.messageCode,_that.rawMessage,_that.outputLine,_that.error,_that.errorCode,_that.errorDetail,_that.failure);case _:
+return $default(_that.appId,_that.eventType,_that.status,_that.progress,_that.message,_that.messageCode,_that.rawMessage,_that.processingPackageId,_that.outputLine,_that.error,_that.errorCode,_that.errorDetail,_that.failure);case _:
   return null;
 
 }
@@ -234,7 +236,7 @@ return $default(_that.appId,_that.eventType,_that.status,_that.progress,_that.me
 @JsonSerializable()
 
 class _InstallProgress implements InstallProgress {
-  const _InstallProgress({required this.appId, this.eventType = InstallProgressEventType.message, required this.status, this.progress = 0.0, this.message, this.messageCode, this.rawMessage, this.outputLine, this.error, this.errorCode, this.errorDetail, this.failure});
+  const _InstallProgress({required this.appId, this.eventType = InstallProgressEventType.message, required this.status, this.progress = 0.0, this.message, this.messageCode, this.rawMessage, this.processingPackageId, this.outputLine, this.error, this.errorCode, this.errorDetail, this.failure});
   factory _InstallProgress.fromJson(Map<String, dynamic> json) => _$InstallProgressFromJson(json);
 
 @override final  String appId;
@@ -247,6 +249,8 @@ class _InstallProgress implements InstallProgress {
 @override final  AppOperationMessageCode? messageCode;
 /// ll-cli 返回的原始 message 文本。
 @override final  String? rawMessage;
+/// 从本行结构化输出识别的处理包 ID；不是独立的依赖进度。
+@override final  String? processingPackageId;
 /// ll-cli 输出流中的原始单行内容，用于下载中心按任务保存诊断日志。
 @override final  String? outputLine;
 /// 旧调用方使用的错误摘要；新 Data 事件保持为空。
@@ -270,16 +274,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InstallProgress&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.eventType, eventType) || other.eventType == eventType)&&(identical(other.status, status) || other.status == status)&&(identical(other.progress, progress) || other.progress == progress)&&(identical(other.message, message) || other.message == message)&&(identical(other.messageCode, messageCode) || other.messageCode == messageCode)&&(identical(other.rawMessage, rawMessage) || other.rawMessage == rawMessage)&&(identical(other.outputLine, outputLine) || other.outputLine == outputLine)&&(identical(other.error, error) || other.error == error)&&(identical(other.errorCode, errorCode) || other.errorCode == errorCode)&&(identical(other.errorDetail, errorDetail) || other.errorDetail == errorDetail)&&(identical(other.failure, failure) || other.failure == failure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InstallProgress&&(identical(other.appId, appId) || other.appId == appId)&&(identical(other.eventType, eventType) || other.eventType == eventType)&&(identical(other.status, status) || other.status == status)&&(identical(other.progress, progress) || other.progress == progress)&&(identical(other.message, message) || other.message == message)&&(identical(other.messageCode, messageCode) || other.messageCode == messageCode)&&(identical(other.rawMessage, rawMessage) || other.rawMessage == rawMessage)&&(identical(other.processingPackageId, processingPackageId) || other.processingPackageId == processingPackageId)&&(identical(other.outputLine, outputLine) || other.outputLine == outputLine)&&(identical(other.error, error) || other.error == error)&&(identical(other.errorCode, errorCode) || other.errorCode == errorCode)&&(identical(other.errorDetail, errorDetail) || other.errorDetail == errorDetail)&&(identical(other.failure, failure) || other.failure == failure));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appId,eventType,status,progress,message,messageCode,rawMessage,outputLine,error,errorCode,errorDetail,failure);
+int get hashCode => Object.hash(runtimeType,appId,eventType,status,progress,message,messageCode,rawMessage,processingPackageId,outputLine,error,errorCode,errorDetail,failure);
 
 @override
 String toString() {
-  return 'InstallProgress(appId: $appId, eventType: $eventType, status: $status, progress: $progress, message: $message, messageCode: $messageCode, rawMessage: $rawMessage, outputLine: $outputLine, error: $error, errorCode: $errorCode, errorDetail: $errorDetail, failure: $failure)';
+  return 'InstallProgress(appId: $appId, eventType: $eventType, status: $status, progress: $progress, message: $message, messageCode: $messageCode, rawMessage: $rawMessage, processingPackageId: $processingPackageId, outputLine: $outputLine, error: $error, errorCode: $errorCode, errorDetail: $errorDetail, failure: $failure)';
 }
 
 
@@ -290,7 +294,7 @@ abstract mixin class _$InstallProgressCopyWith<$Res> implements $InstallProgress
   factory _$InstallProgressCopyWith(_InstallProgress value, $Res Function(_InstallProgress) _then) = __$InstallProgressCopyWithImpl;
 @override @useResult
 $Res call({
- String appId, InstallProgressEventType eventType, InstallStatus status, double progress, String? message, AppOperationMessageCode? messageCode, String? rawMessage, String? outputLine, String? error, int? errorCode, String? errorDetail, AppOperationFailure? failure
+ String appId, InstallProgressEventType eventType, InstallStatus status, double progress, String? message, AppOperationMessageCode? messageCode, String? rawMessage, String? processingPackageId, String? outputLine, String? error, int? errorCode, String? errorDetail, AppOperationFailure? failure
 });
 
 
@@ -307,7 +311,7 @@ class __$InstallProgressCopyWithImpl<$Res>
 
 /// Create a copy of InstallProgress
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? appId = null,Object? eventType = null,Object? status = null,Object? progress = null,Object? message = freezed,Object? messageCode = freezed,Object? rawMessage = freezed,Object? outputLine = freezed,Object? error = freezed,Object? errorCode = freezed,Object? errorDetail = freezed,Object? failure = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? appId = null,Object? eventType = null,Object? status = null,Object? progress = null,Object? message = freezed,Object? messageCode = freezed,Object? rawMessage = freezed,Object? processingPackageId = freezed,Object? outputLine = freezed,Object? error = freezed,Object? errorCode = freezed,Object? errorDetail = freezed,Object? failure = freezed,}) {
   return _then(_InstallProgress(
 appId: null == appId ? _self.appId : appId // ignore: cast_nullable_to_non_nullable
 as String,eventType: null == eventType ? _self.eventType : eventType // ignore: cast_nullable_to_non_nullable
@@ -316,6 +320,7 @@ as InstallStatus,progress: null == progress ? _self.progress : progress // ignor
 as double,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String?,messageCode: freezed == messageCode ? _self.messageCode : messageCode // ignore: cast_nullable_to_non_nullable
 as AppOperationMessageCode?,rawMessage: freezed == rawMessage ? _self.rawMessage : rawMessage // ignore: cast_nullable_to_non_nullable
+as String?,processingPackageId: freezed == processingPackageId ? _self.processingPackageId : processingPackageId // ignore: cast_nullable_to_non_nullable
 as String?,outputLine: freezed == outputLine ? _self.outputLine : outputLine // ignore: cast_nullable_to_non_nullable
 as String?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,errorCode: freezed == errorCode ? _self.errorCode : errorCode // ignore: cast_nullable_to_non_nullable

@@ -15,6 +15,7 @@ import '../../../domain/models/install_progress.dart';
 import '../../../domain/models/install_task.dart';
 import '../app_icon.dart';
 import '../error_solution_help_button.dart';
+import 'download_dependency_steps.dart';
 import 'download_task_view_data.dart';
 
 /// 展示当前、等待或历史安装任务，并管理卡片局部即时反馈。
@@ -208,6 +209,8 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
             const SizedBox(height: AppSpacing.md),
             _buildProgressBar(context),
           ],
+          if (widget.task.observedDependencyIds.isNotEmpty)
+            DownloadDependencySteps(task: widget.task),
           if (widget.task.shouldShowSlowInstallHint(_now)) ...[
             const SizedBox(height: AppSpacing.xs),
             Row(

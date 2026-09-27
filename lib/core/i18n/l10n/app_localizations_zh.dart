@@ -1790,6 +1790,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadManagerSlowInstallHint => '如果进度看起来较慢，可能正在安装软件必备依赖，请再等等……';
 
   @override
+  String get dependencyProcessingSteps => '依赖处理记录';
+
+  @override
+  String get dependencyCurrentlyProcessing => '正在处理';
+
+  @override
+  String get dependencyPreviouslyProcessed => '此前处理';
+
+  @override
   String get loadingInstalledApps => '正在加载已安装应用...';
 
   @override
@@ -4177,6 +4186,15 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get downloadManagerSlowInstallHint => '如果進度看起來較慢，可能正在安裝軟體必備依賴，請再等等……';
+
+  @override
+  String get dependencyProcessingSteps => '依賴處理記錄';
+
+  @override
+  String get dependencyCurrentlyProcessing => '正在處理';
+
+  @override
+  String get dependencyPreviouslyProcessed => '此前處理';
 
   @override
   String get loadingInstalledApps => '正在載入已安裝應用...';

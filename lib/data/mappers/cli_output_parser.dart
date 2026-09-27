@@ -13,6 +13,11 @@ import '../../domain/models/running_app.dart';
 class CliOutputParser {
   CliOutputParser._();
 
+  /// 只接受完整的 CLI 包 ref，避免把泛化阶段文案误当成依赖身份。
+  static final RegExp _processingPackageRef = RegExp(
+    r'^(?:Installing|Updating)\s+(?:[^\s/:]+:)?([^\s/:]+)/[^\s/]+/[^\s/]+/[^\s/\[]+(?:\s|$)',
+  );
+
   /// 在后台 isolate 解析已安装应用列表。
   ///
   /// `ll-cli list --json --type=all`（含基础服务）是 CLI 输出里最大的单体 JSON，
@@ -372,18 +377,30 @@ class CliOutputParser {
     return InstallProgressInfo(rawLine: rawLine);
   }
 
-  /// 将 JSON 事件转换为进度信息
+  /// 将 JSON 事件转换为进度信息。
+  ///
+  /// 完整包 ref 既可能以 Installing，也可能以 Updating 出现；后者只有
+  /// message 而无 percentage 时仍应发出处理阶段，不能丢失依赖观察事实。
   static InstallProgressInfo _convertJsonEventToProgressInfo(
     ParsedJsonEvent event,
     String rawLine,
   ) {
     final info = InstallProgressInfo(rawLine: rawLine);
 
+    // 错误事件即使引用了包 ref，也不能产生正在处理的观察事实。
+    if (event.eventType != JsonEventType.error) {
+      info.processingPackageId = _processingPackageRef
+          .firstMatch(event.message)
+          ?.group(1);
+    }
+
     switch (event.eventType) {
       case JsonEventType.progress:
         // 进度事件 (CLI 输出 percentage 0-100，归一化为 0.0-1.0)
         info.progress = (event.percentage ?? 0.0) / 100;
-        if (InstallMessageClassifier.isDownloading(event.message)) {
+        if (info.processingPackageId != null) {
+          info.phase = InstallPhase.installing;
+        } else if (InstallMessageClassifier.isDownloading(event.message)) {
           info.phase = InstallPhase.downloading;
         } else if (InstallMessageClassifier.isInstalling(event.message)) {
           info.phase = InstallPhase.installing;
@@ -408,7 +425,9 @@ class CliOutputParser {
       case JsonEventType.message:
         // 消息事件
         final lowerMsg = event.message.toLowerCase();
-        if (lowerMsg.contains('success') ||
+        if (info.processingPackageId != null) {
+          info.phase = InstallPhase.installing;
+        } else if (lowerMsg.contains('success') ||
             lowerMsg.contains('completed') ||
             lowerMsg.contains('finished')) {
           info.phase = InstallPhase.completed;
@@ -425,7 +444,10 @@ class CliOutputParser {
         break;
     }
 
-    info.messageCode = InstallMessageClassifier.classify(event.message);
+    // 包 ID 中可能含有 success/base 等阶段词；完整 ref 应保留原文而非误分类。
+    info.messageCode = info.processingPackageId == null
+        ? InstallMessageClassifier.classify(event.message)
+        : null;
     return info;
   }
 }
@@ -487,6 +509,9 @@ class InstallProgressInfo {
 
   /// 可在 Presentation 按当前语言格式化的稳定阶段代码。
   AppOperationMessageCode? messageCode;
+
+  /// 本行明确报告正在处理的包 ID；无完整 ref 时为空。
+  String? processingPackageId;
 }
 
 /// 把 ll-cli 协议消息归类为稳定阶段代码。

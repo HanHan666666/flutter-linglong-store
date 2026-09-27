@@ -3293,6 +3293,24 @@ abstract class AppLocalizations {
   /// **'如果进度看起来较慢，可能正在安装软件必备依赖，请再等等……'**
   String get downloadManagerSlowInstallHint;
 
+  /// No description provided for @dependencyProcessingSteps.
+  ///
+  /// In zh, this message translates to:
+  /// **'依赖处理记录'**
+  String get dependencyProcessingSteps;
+
+  /// No description provided for @dependencyCurrentlyProcessing.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在处理'**
+  String get dependencyCurrentlyProcessing;
+
+  /// No description provided for @dependencyPreviouslyProcessed.
+  ///
+  /// In zh, this message translates to:
+  /// **'此前处理'**
+  String get dependencyPreviouslyProcessed;
+
   /// No description provided for @loadingInstalledApps.
   ///
   /// In zh, this message translates to:

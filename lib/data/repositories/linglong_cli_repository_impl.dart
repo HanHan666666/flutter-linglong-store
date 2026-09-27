@@ -449,6 +449,7 @@ class LinglongCliRepositoryImpl
               progress: progressInfo.progress,
               messageCode: progressInfo.messageCode,
               rawMessage: rawMessage,
+              processingPackageId: progressInfo.processingPackageId,
               outputLine: line,
             );
           }
@@ -461,6 +462,7 @@ class LinglongCliRepositoryImpl
               progress: progressInfo.progress,
               messageCode: progressInfo.messageCode,
               rawMessage: rawMessage,
+              processingPackageId: progressInfo.processingPackageId,
               outputLine: line,
             );
           }

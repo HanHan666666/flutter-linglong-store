@@ -30,6 +30,23 @@ void main() {
       expect(task.progressValue, closeTo(0.74, 0.0001));
     });
 
+    test('persists observed dependency steps and reads legacy snapshots', () {
+      final task = buildTask(0.42).copyWith(
+        observedDependencyIds: ['org.deepin.base', 'org.deepin.runtime.dtk'],
+        activeDependencyId: 'org.deepin.runtime.dtk',
+      );
+
+      final restored = InstallTask.fromJson(task.toJson());
+      expect(restored.observedDependencyIds, task.observedDependencyIds);
+      expect(restored.activeDependencyId, 'org.deepin.runtime.dtk');
+
+      final legacy = Map<String, dynamic>.from(task.toJson())
+        ..remove('observedDependencyIds')
+        ..remove('activeDependencyId');
+      expect(InstallTask.fromJson(legacy).observedDependencyIds, isEmpty);
+      expect(InstallTask.fromJson(legacy).activeDependencyId, isNull);
+    });
+
     test(
       'restores full raw message when persisted display text is ellipsized',
       () {

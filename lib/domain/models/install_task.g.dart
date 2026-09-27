@@ -33,6 +33,12 @@ _InstallTask _$InstallTaskFromJson(Map<String, dynamic> json) => _InstallTask(
   ),
   rawMessage: json['rawMessage'] as String?,
   commandOutput: json['commandOutput'] as String? ?? '',
+  observedDependencyIds:
+      (json['observedDependencyIds'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const <String>[],
+  activeDependencyId: json['activeDependencyId'] as String?,
   errorMessage: json['errorMessage'] as String?,
   errorCode: (json['errorCode'] as num?)?.toInt(),
   errorDetail: json['errorDetail'] as String?,
@@ -61,6 +67,8 @@ Map<String, dynamic> _$InstallTaskToJson(_InstallTask instance) =>
       'messageCode': _$AppOperationMessageCodeEnumMap[instance.messageCode],
       'rawMessage': instance.rawMessage,
       'commandOutput': instance.commandOutput,
+      'observedDependencyIds': instance.observedDependencyIds,
+      'activeDependencyId': instance.activeDependencyId,
       'errorMessage': instance.errorMessage,
       'errorCode': instance.errorCode,
       'errorDetail': instance.errorDetail,

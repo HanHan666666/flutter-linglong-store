@@ -41,6 +41,9 @@ sealed class InstallProgress with _$InstallProgress {
     /// ll-cli 返回的原始 message 文本。
     String? rawMessage,
 
+    /// 从本行结构化输出识别的处理包 ID；不是独立的依赖进度。
+    String? processingPackageId,
+
     /// ll-cli 输出流中的原始单行内容，用于下载中心按任务保存诊断日志。
     String? outputLine,
 

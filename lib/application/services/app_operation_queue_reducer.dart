@@ -41,6 +41,21 @@ class AppOperationQueueReducer {
     if (currentTask == null || currentTask.id != taskId) {
       return state;
     }
+    final processingPackageId = progress.processingPackageId;
+    final isDependency =
+        processingPackageId != null && processingPackageId != currentTask.appId;
+    // 依赖仅由明确的包 ref 进入列表；泛化阶段和终态不得留下虚假的“正在处理”。
+    final shouldClearActive =
+        processingPackageId == currentTask.appId ||
+        progress.messageCode != null ||
+        (progress.status != InstallStatus.installing &&
+            progress.status != InstallStatus.downloading);
+    final observedDependencyIds =
+        isDependency &&
+            processingPackageId != currentTask.activeDependencyId &&
+            !currentTask.observedDependencyIds.contains(processingPackageId)
+        ? [...currentTask.observedDependencyIds, processingPackageId]
+        : currentTask.observedDependencyIds;
     final updatedTask = appendCommandOutput(currentTask, progress.outputLine)
         .copyWith(
           status: progress.status,
@@ -52,6 +67,10 @@ class AppOperationQueueReducer {
           errorCode: progress.errorCode,
           errorDetail: progress.errorDetail ?? progress.rawMessage,
           failure: progress.failure,
+          observedDependencyIds: observedDependencyIds,
+          activeDependencyId: isDependency
+              ? processingPackageId
+              : (shouldClearActive ? null : currentTask.activeDependencyId),
         );
     return state.copyWith(currentTask: updatedTask);
   }

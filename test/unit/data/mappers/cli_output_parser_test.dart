@@ -310,6 +310,51 @@ com.example.app2          2.0.0
   });
 
   group('parseInstallProgressEx', () {
+    test(
+      'extracts observed package identity from real install and update events',
+      () {
+        final install = CliOutputParser.parseInstallProgressEx(
+          '{"message":"Installing main:org.deepin.runtime.dtk/25.2.2/x86_64/binary [35.31KB/s]","percentage":13.1}',
+        );
+        final update = CliOutputParser.parseInstallProgressEx(
+          '{"message":"Updating main:org.deepin.base/25.2.2/x86_64/binary"}',
+        );
+
+        expect(install.processingPackageId, 'org.deepin.runtime.dtk');
+        expect(update.processingPackageId, 'org.deepin.base');
+        expect(update.phase, InstallPhase.installing);
+      },
+    );
+
+    test('prioritizes a valid ref over words inside its package ID', () {
+      final info = CliOutputParser.parseInstallProgressEx(
+        '{"message":"Updating main:org.example.success/1.0/x86_64/binary"}',
+      );
+      final downloadNamed = CliOutputParser.parseInstallProgressEx(
+        '{"message":"Installing main:org.example.downloading/1.0/x86_64/binary","percentage":42}',
+      );
+
+      expect(info.processingPackageId, 'org.example.success');
+      expect(info.phase, InstallPhase.installing);
+      expect(info.messageCode, isNull);
+      expect(downloadNamed.phase, InstallPhase.installing);
+      expect(downloadNamed.messageCode, isNull);
+    });
+
+    test('does not infer package identity from errors or incomplete refs', () {
+      for (final line in [
+        '{"message":"Installing main:org.deepin.base/25.2.2/x86_64/binary","code":1}',
+        '{"message":"Installing runtime","percentage":5}',
+        '{"message":"Installing main:org.deepin.base/25.2.2","percentage":5}',
+        'Installing main:org.deepin.base/25.2.2/x86_64/binary',
+      ]) {
+        expect(
+          CliOutputParser.parseInstallProgressEx(line).processingPackageId,
+          isNull,
+        );
+      }
+    });
+
     test('parses JSON progress event', () {
       final info = CliOutputParser.parseInstallProgressEx(
         '{"message":"Downloading files","percentage":45.5}',

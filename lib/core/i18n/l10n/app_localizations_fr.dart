@@ -1939,6 +1939,15 @@ class AppLocalizationsFr extends AppLocalizations {
       'Si la progression semble lente, des dépendances nécessaires au logiciel sont peut-être en cours d\'installation. Veuillez patienter encore un peu……';
 
   @override
+  String get dependencyProcessingSteps => 'Traitement des dépendances';
+
+  @override
+  String get dependencyCurrentlyProcessing => 'En cours';
+
+  @override
+  String get dependencyPreviouslyProcessed => 'Traité auparavant';
+
+  @override
   String get loadingInstalledApps =>
       'Chargement des applications installées...';
 

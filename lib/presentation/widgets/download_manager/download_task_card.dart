@@ -276,6 +276,9 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
   Widget _buildTaskText(BuildContext context, {required bool featured}) {
     final appColors = context.appColors;
     final subtitle = _buildSubtitle(includeProgressMessage: !featured);
+    final currentPackageId = featured
+        ? widget.task.currentProcessingPackageId
+        : null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -292,6 +295,22 @@ class _DownloadTaskCardState extends State<DownloadTaskCard> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
+        if (currentPackageId != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          // 只展示本次 CLI 明确报告的当前包，不能用固定任务 appId 伪装阶段。
+          Tooltip(
+            message: currentPackageId,
+            child: Text(
+              currentPackageId,
+              key: const Key('downloadTaskCurrentPackageId'),
+              style: context.appTextStyles.caption.copyWith(
+                color: appColors.textSecondary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
         if (subtitle.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xs),
           Text(

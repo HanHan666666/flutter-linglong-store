@@ -87,4 +87,36 @@ void main() {
     expect(find.byType(DownloadDependencySteps), findsNothing);
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
   });
+
+  testWidgets('shows the reported package below the localized app name', (
+    tester,
+  ) async {
+    const task = InstallTask(
+      id: 'task-3',
+      appId: 'org.deepin.mail',
+      appName: '邮箱',
+      status: InstallStatus.installing,
+      progress: 0.23,
+      currentProcessingPackageId: 'org.deepin.mail',
+      createdAt: 1,
+    );
+    await pumpCard(tester, task);
+
+    final packageLabel = find.byKey(const Key('downloadTaskCurrentPackageId'));
+    expect(find.text('邮箱'), findsOneWidget);
+    expect(packageLabel, findsOneWidget);
+    expect(tester.widget<Text>(packageLabel).data, 'org.deepin.mail');
+
+    await pumpCard(
+      tester,
+      task.copyWith(currentProcessingPackageId: 'org.deepin.runtime.webengine'),
+    );
+    expect(
+      tester.widget<Text>(packageLabel).data,
+      'org.deepin.runtime.webengine',
+    );
+
+    await pumpCard(tester, task.copyWith(currentProcessingPackageId: null));
+    expect(packageLabel, findsNothing);
+  });
 }

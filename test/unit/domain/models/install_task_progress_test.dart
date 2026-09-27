@@ -34,17 +34,21 @@ void main() {
       final task = buildTask(0.42).copyWith(
         observedDependencyIds: ['org.deepin.base', 'org.deepin.runtime.dtk'],
         activeDependencyId: 'org.deepin.runtime.dtk',
+        currentProcessingPackageId: 'org.deepin.runtime.dtk',
       );
 
       final restored = InstallTask.fromJson(task.toJson());
       expect(restored.observedDependencyIds, task.observedDependencyIds);
       expect(restored.activeDependencyId, 'org.deepin.runtime.dtk');
+      expect(restored.currentProcessingPackageId, 'org.deepin.runtime.dtk');
 
       final legacy = Map<String, dynamic>.from(task.toJson())
         ..remove('observedDependencyIds')
-        ..remove('activeDependencyId');
+        ..remove('activeDependencyId')
+        ..remove('currentProcessingPackageId');
       expect(InstallTask.fromJson(legacy).observedDependencyIds, isEmpty);
       expect(InstallTask.fromJson(legacy).activeDependencyId, isNull);
+      expect(InstallTask.fromJson(legacy).currentProcessingPackageId, isNull);
     });
 
     test(

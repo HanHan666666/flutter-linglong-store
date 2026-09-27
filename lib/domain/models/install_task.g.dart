@@ -39,6 +39,7 @@ _InstallTask _$InstallTaskFromJson(Map<String, dynamic> json) => _InstallTask(
           .toList() ??
       const <String>[],
   activeDependencyId: json['activeDependencyId'] as String?,
+  currentProcessingPackageId: json['currentProcessingPackageId'] as String?,
   errorMessage: json['errorMessage'] as String?,
   errorCode: (json['errorCode'] as num?)?.toInt(),
   errorDetail: json['errorDetail'] as String?,
@@ -69,6 +70,7 @@ Map<String, dynamic> _$InstallTaskToJson(_InstallTask instance) =>
       'commandOutput': instance.commandOutput,
       'observedDependencyIds': instance.observedDependencyIds,
       'activeDependencyId': instance.activeDependencyId,
+      'currentProcessingPackageId': instance.currentProcessingPackageId,
       'errorMessage': instance.errorMessage,
       'errorCode': instance.errorCode,
       'errorDetail': instance.errorDetail,

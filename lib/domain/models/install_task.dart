@@ -79,6 +79,9 @@ sealed class InstallTask with _$InstallTask {
     /// 最近一条明确的依赖处理身份；未知阶段保持为空，不能推断逐项百分比。
     String? activeDependencyId,
 
+    /// ll-cli 最近明确报告的处理包 ID，包含父应用；不以任务 appId 猜测当前阶段。
+    String? currentProcessingPackageId,
+
     /// 旧快照中的错误文案；新任务不得写入本地化字符串。
     String? errorMessage,
 

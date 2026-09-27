@@ -44,8 +44,8 @@ class AppOperationQueueReducer {
     final processingPackageId = progress.processingPackageId;
     final isDependency =
         processingPackageId != null && processingPackageId != currentTask.appId;
-    // 依赖仅由明确的包 ref 进入列表；泛化阶段和终态不得留下虚假的“正在处理”。
-    final shouldClearActive =
+    // 只有完整包 ref 才能切换当前身份；泛化阶段和终态需结束旧包的展示。
+    final shouldClearProcessingIdentity =
         processingPackageId == currentTask.appId ||
         progress.messageCode != null ||
         (progress.status != InstallStatus.installing &&
@@ -70,7 +70,14 @@ class AppOperationQueueReducer {
           observedDependencyIds: observedDependencyIds,
           activeDependencyId: isDependency
               ? processingPackageId
-              : (shouldClearActive ? null : currentTask.activeDependencyId),
+              : (shouldClearProcessingIdentity
+                    ? null
+                    : currentTask.activeDependencyId),
+          currentProcessingPackageId:
+              processingPackageId ??
+              (shouldClearProcessingIdentity
+                  ? null
+                  : currentTask.currentProcessingPackageId),
         );
     return state.copyWith(currentTask: updatedTask);
   }

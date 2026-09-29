@@ -510,6 +510,7 @@ jobs:
             --notes-file nightly-release-notes.md \
             --hashes-output nightly-artifacts/hashes.sha256
 
+      # action-gh-release 默认覆盖同名资产；后续步骤再删除旧日期的不同名资产。
       - name: Publish nightly prerelease
         uses: softprops/action-gh-release@v2
         with:
@@ -519,7 +520,6 @@ jobs:
           body_path: nightly-release-notes.md
           prerelease: true
           make_latest: false
-          overwrite_files: true
           fail_on_unmatched_files: true
           files: |
             nightly-artifacts/*

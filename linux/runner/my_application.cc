@@ -12,6 +12,13 @@
 #include "system_accent_color_channel.h"
 #include "system_notification_channel.h"
 
+#ifdef FLUTTER_SDK_NEEDS_IMPELLER_SWITCH_DECLARATION
+// 龙芯 SDK 的引擎导出关闭接口却遗漏公开头文件声明；沿用 Flutter 3.47 的
+// C ABI 签名，让该构建也能显式关闭 Impeller，产物阶段再校验动态引用。
+extern "C" void fl_dart_project_set_enable_impeller(
+    FlDartProject* project, gboolean enable_impeller);
+#endif
+
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
@@ -428,7 +435,7 @@ static void my_application_activate(GApplication* application) {
   // 恢复并保持 3.46 及之前长期使用的 Skia+OpenGL 渲染路径。
   // 注意：release 引擎不解析 FLUTTER_ENGINE_SWITCHES 环境变量，
   // 因此必须在 runner 中调用本 API 关闭；命令行/环境变量方式对发布包无效。
-  // 龙芯锁定的 3.46 SDK 无此 API 且引擎无 Impeller，编译期由宏直接跳过。
+  // 龙芯 SDK 的引擎已导出此接口，旧头文件缺声明时由上方兼容声明补齐。
   fl_dart_project_set_enable_impeller(project, FALSE);
 #endif
   fl_dart_project_set_dart_entrypoint_arguments(

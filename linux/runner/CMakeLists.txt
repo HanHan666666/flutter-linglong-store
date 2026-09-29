@@ -59,23 +59,59 @@ else()
       "Unsupported Flutter build mode for Impeller API detection: ${CMAKE_BUILD_TYPE}")
 endif()
 
+set(FLUTTER_ENGINE_ARTIFACT_DIR
+    "${FLUTTER_ROOT}/bin/cache/artifacts/engine/${FLUTTER_ENGINE_ARTIFACT_VARIANT}")
 set(FLUTTER_DART_PROJECT_HEADER
-    "${FLUTTER_ROOT}/bin/cache/artifacts/engine/${FLUTTER_ENGINE_ARTIFACT_VARIANT}/flutter_linux/fl_dart_project.h")
+    "${FLUTTER_ENGINE_ARTIFACT_DIR}/flutter_linux/fl_dart_project.h")
+set(FLUTTER_ENGINE_LIBRARY
+    "${FLUTTER_ENGINE_ARTIFACT_DIR}/libflutter_linux_gtk.so")
 if(NOT EXISTS "${FLUTTER_DART_PROJECT_HEADER}")
   message(FATAL_ERROR
       "Flutter engine header is missing; cannot verify the Impeller API: ${FLUTTER_DART_PROJECT_HEADER}")
 endif()
+if(NOT EXISTS "${FLUTTER_ENGINE_LIBRARY}")
+  message(FATAL_ERROR
+      "Flutter engine library is missing; cannot verify the Impeller API: ${FLUTTER_ENGINE_LIBRARY}")
+endif()
 
-# Flutter 3.47+ 提供该 API；Loong64 锁定的 3.46 SDK 没有 API 且没有 Impeller。
-# 只在 SDK 头文件明确声明 API 时生成宏，保证同一 runner 源码兼容两套引擎。
+# 龙芯 3.46 SDK 的头文件缺少声明，但同包引擎实际导出该函数；必须以最终
+# 链接的引擎库为能力事实来源，避免仅扫描头文件时跳过关闭调用。
+find_program(FLUTTER_READELF_EXECUTABLE readelf)
+if(NOT FLUTTER_READELF_EXECUTABLE)
+  message(FATAL_ERROR "readelf is required to verify the Flutter Impeller API")
+endif()
+execute_process(
+  COMMAND "${FLUTTER_READELF_EXECUTABLE}" --dyn-syms --wide "${FLUTTER_ENGINE_LIBRARY}"
+  RESULT_VARIABLE FLUTTER_READELF_RESULT
+  OUTPUT_VARIABLE FLUTTER_ENGINE_SYMBOLS
+  ERROR_VARIABLE FLUTTER_READELF_ERROR
+)
+if(NOT FLUTTER_READELF_RESULT EQUAL 0)
+  message(FATAL_ERROR
+      "Cannot read Flutter engine symbols: ${FLUTTER_READELF_ERROR}")
+endif()
+string(FIND "${FLUTTER_ENGINE_SYMBOLS}"
+    " fl_dart_project_set_enable_impeller" FLUTTER_IMPELLER_SYMBOL_INDEX)
+
+# 头文件只决定是否需要补声明；声明存在但引擎不导出时必须在配置期失败。
 file(STRINGS "${FLUTTER_DART_PROJECT_HEADER}" impeller_switch_api_line
      REGEX "fl_dart_project_set_enable_impeller")
-if(impeller_switch_api_line)
+if(NOT FLUTTER_IMPELLER_SYMBOL_INDEX EQUAL -1)
   target_compile_definitions(${BINARY_NAME} PRIVATE
       FLUTTER_SDK_HAS_IMPELLER_SWITCH=1)
-  message(STATUS "Flutter SDK provides Impeller switch API; runner will disable Impeller")
+  if(impeller_switch_api_line)
+    message(STATUS "Flutter SDK declares and exports Impeller switch API")
+  else()
+    target_compile_definitions(${BINARY_NAME} PRIVATE
+        FLUTTER_SDK_NEEDS_IMPELLER_SWITCH_DECLARATION=1)
+    message(STATUS "Flutter engine exports Impeller switch API; adding missing SDK declaration")
+  endif()
 else()
-  message(STATUS "Flutter SDK has no Impeller switch API; skipping Impeller disable call")
+  if(impeller_switch_api_line)
+    message(FATAL_ERROR
+        "Flutter SDK declares Impeller switch API but engine does not export it")
+  endif()
+  message(STATUS "Flutter engine has no Impeller switch API; skipping Impeller disable call")
 endif()
 
 # Add dependency libraries. Add any application-specific dependencies here.

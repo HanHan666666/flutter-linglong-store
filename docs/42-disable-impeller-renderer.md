@@ -40,7 +40,8 @@ OpenGL/GLES 路径，而该回退路径正是上游问题最集中的地方：
    `shell/platform/common/engine_switches.cc`），**发布包无法通过环境变量或命令行
    关闭 Impeller**，`--enable-impeller=false` 只在 debug/profile 生效。
 3. release 包中禁用 Impeller 的唯一正规途径是 runner 调用引擎公开 API
-   `fl_dart_project_set_enable_impeller(project, FALSE)`（Flutter 3.47+ 提供）。
+   `fl_dart_project_set_enable_impeller(project, FALSE)`。官方 Flutter 3.47+
+   声明并导出该接口；当前龙芯 3.46 定制引擎也导出接口，但 SDK 头文件遗漏声明。
 
 ## 修复实现
 
@@ -50,10 +51,11 @@ OpenGL/GLES 路径，而该回退路径正是上游问题最集中的地方：
 - `linux/runner/CMakeLists.txt`：从 CMake 配置前已经生成的
   `linux/flutter/ephemeral/generated_config.cmake` 取得 `FLUTTER_ROOT`，再按
   `FLUTTER_TARGET_PLATFORM` 与 `CMAKE_BUILD_TYPE` 定位 Flutter SDK 缓存中的
-  `fl_dart_project.h`。头文件声明
-  `fl_dart_project_set_enable_impeller` 时才生成编译宏
-  `FLUTTER_SDK_HAS_IMPELLER_SWITCH`，上面的调用由该宏保护；无法定位头文件时
-  直接终止配置，禁止静默产出未关闭 Impeller 的包。
+  引擎库和 `fl_dart_project.h`。用引擎库的动态导出决定是否生成
+  `FLUTTER_SDK_HAS_IMPELLER_SWITCH`；头文件只决定是否需要补兼容声明。
+  缺文件、无法读取符号或“头文件有声明而引擎未导出”均在配置期失败。
+- `linux/runner/my_application.cc`：龙芯头文件遗漏声明但引擎已导出接口时，
+  以 Flutter 3.47 公布的 C ABI 签名补声明，保持同一个关闭调用点。
 - `build/scripts/build-linux-bundle.sh`：制作发布源码副本时显式排除
   `linux/flutter/ephemeral`，防止开发机残留生成物掩盖干净构建问题；每次新建或
   复用 bundle 都调用 `verify-impeller-opt-out-artifact.sh` 检查最终 ELF。
@@ -76,8 +78,9 @@ Flutter 3.47 的 Linux 构建顺序是：
 没有 `fl_dart_project_set_enable_impeller` 动态引用」的回归；其 amd64/arm64
 DEB、RPM、AppImage 都由同一个错误 bundle 派生。
 
-SDK 缓存中的目标引擎头文件在进入 `buildLinux()` 前已经由 Flutter artifact
-下载流程准备好，不依赖后续 Ninja 阶段，所以它才是 CMake 配置期稳定的能力真相源。
+SDK 缓存中的目标引擎库和头文件在进入 `buildLinux()` 前已经由 Flutter artifact
+下载流程准备好，不依赖后续 Ninja 阶段。动态导出是 CMake 配置期的能力真相源，
+头文件仅用于判断编译时是否需要补声明。
 
 ### 最终产物门禁
 
@@ -94,13 +97,16 @@ amd64/arm64 默认要求引擎提供 API 且 runner 必须引用；任一条件�
 ### 龙芯（loong64）兼容性
 
 龙芯构建链锁定的 SDK 是 3.46.0-1.0.pre-327（见
-`build/scripts/build-loong64-in-container.sh`），其引擎头文件没有该 API、引擎本身
-也没有 Impeller。若不加保护直接调用，龙芯包会编译/链接失败。因此：
+`build/scripts/build-loong64-in-container.sh`）。2026-09-28 Nightly Loong64 构建
+已产出 runner，却被 ELF 门禁拦截：runner 未引用关闭接口。检查同版本上游引擎
+归档确认，`fl_dart_project.h` 没有该声明，但 `libflutter_linux_gtk.so` 导出
+`fl_dart_project_set_enable_impeller`，归档还包含 Impeller 资源。过去仅按头文件
+判断导致关闭调用被编译掉，不能再假设该引擎没有 Impeller。
 
-- CMake 检测到 3.46 头文件时不生成宏，调用点整体跳过；
-- 龙芯 3.46 引擎默认就是 Skia 路径，行为不受影响；
-- ELF 门禁允许该引擎缺少 API，但不会豁免已经提供 API 的新 Loong64 引擎；
-- 已用 3.46 头文件对 `my_application.cc` 做过 `-fsyntax-only` 编译验证。
+- 引擎导出接口时，CMake 生成关闭宏；旧头文件缺声明时补同签名 C ABI 声明；
+- 引擎没有接口且头文件也没有声明时，保留旧 SDK 的兼容跳过路径；
+- ELF 门禁仍要求任何导出接口的引擎对应的 runner 必须保留动态引用；
+- 龙芯 Nightly 需以真实 SDK 完整构建和产物校验确认该兼容路径。
 
 ## 为什么禁用几乎没有代价：Impeller 的收益边界
 

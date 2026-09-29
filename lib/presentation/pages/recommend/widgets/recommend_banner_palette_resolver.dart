@@ -1,3 +1,9 @@
+/// 推荐 Banner 的品牌取色与展台材质令牌。
+///
+/// 复用图标缓存提取品牌色，再生成低饱和背景，避免应用图标的高饱和颜色
+/// 铺满首页；浅色展台和深色画廊共享同一取色入口。
+library;
+
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -8,15 +14,37 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 /// 推荐页轮播背景调色板。
 class RecommendBannerPalette {
+  /// 固定主题材质与品牌色，供背景、展品和文案共同使用。
   const RecommendBannerPalette({
     required this.start,
     required this.end,
     required this.accent,
+    required this.isDark,
   });
 
+  /// 阅读起始侧的中性底色，保障文字对比度。
   final Color start;
+
+  /// 展品侧略带品牌色的背景。
   final Color end;
+
+  /// 仅用于展台反光等局部细节的品牌色。
   final Color accent;
+
+  /// 当前实际主题，不能从品牌色深浅推断。
+  final bool isDark;
+
+  /// 标题和主要操作采用稳定的中性色，避免取色影响可读性。
+  Color get foreground =>
+      isDark ? const Color(0xFFF2F1ED) : const Color(0xFF252B32);
+
+  /// 描述文字在两种中性背景上均保留足够对比度。
+  Color get secondaryForeground =>
+      isDark ? const Color(0xFFB8BEC8) : const Color(0xFF58616C);
+
+  /// 图标托板与展台采用一致的材质底色。
+  Color get surface =>
+      isDark ? const Color(0xFF303641) : const Color(0xFFF7F8FA);
 }
 
 /// 推荐页轮播主色解析器。
@@ -42,6 +70,7 @@ class RecommendBannerPaletteResolver {
     return buildPaletteFromBaseColor(baseColor, isDark: isDark);
   }
 
+  /// 让品牌色仅染入中性材质，浅色保持珍珠灰，深色保持石墨灰。
   static RecommendBannerPalette buildPaletteFromBaseColor(
     Color baseColor, {
     required bool isDark,
@@ -51,22 +80,21 @@ class RecommendBannerPaletteResolver {
         .withSaturation(hsl.saturation.clamp(0.42, 0.82))
         .withLightness(hsl.lightness.clamp(0.32, 0.58));
 
-    final start = normalized
-        .withSaturation(
-          (normalized.saturation * (isDark ? 0.92 : 0.84)).clamp(0.38, 0.82),
-        )
-        .withLightness(isDark ? 0.34 : 0.58)
-        .toColor();
-    final end = normalized
-        .withSaturation((normalized.saturation * 0.96).clamp(0.40, 0.84))
-        .withLightness(isDark ? 0.22 : 0.48)
-        .toColor();
     final accent = normalized
-        .withSaturation((normalized.saturation * 0.72).clamp(0.28, 0.68))
-        .withLightness(isDark ? 0.40 : 0.68)
+        .withSaturation((normalized.saturation * 0.65).clamp(0.28, 0.54))
+        .withLightness(isDark ? 0.66 : 0.56)
         .toColor();
 
-    return RecommendBannerPalette(start: start, end: end, accent: accent);
+    return RecommendBannerPalette(
+      start: isDark ? const Color(0xFF191D24) : const Color(0xFFF4F5F7),
+      end: Color.lerp(
+        isDark ? const Color(0xFF252B34) : const Color(0xFFE6E8EB),
+        accent,
+        isDark ? 0.08 : 0.07,
+      )!,
+      accent: accent,
+      isDark: isDark,
+    );
   }
 
   static Color? extractPrimaryColorFromSvgContent(String svgContent) {

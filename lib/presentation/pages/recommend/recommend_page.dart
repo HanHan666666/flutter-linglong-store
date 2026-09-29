@@ -1,11 +1,16 @@
+/// 推荐页聚合推荐内容、轮播生命周期与详情路由。
+///
+/// Banner 的展台视觉独立封装，页面仅处理当前条目、可见性与用户操作。
+library;
+
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../application/providers/recommend_provider.dart';
+import '../../../core/accessibility/accessibility.dart';
 import '../../../core/config/routes.dart';
 import '../../../core/config/theme.dart';
 import '../../../core/config/shell_primary_route.dart';
@@ -13,15 +18,26 @@ import '../../../core/config/shell_branch_visibility.dart';
 import '../../../core/i18n/l10n/app_localizations.dart';
 import '../../../core/utils/app_notification_helpers.dart';
 import '../../../domain/models/recommend_models.dart';
-import 'widgets/recommend_banner_background.dart';
+import 'widgets/recommend_banner.dart';
 import '../../widgets/app_card_actions.dart';
 import '../../widgets/widgets.dart';
 
-// 推荐页轮播保持略高于当前信息卡内容，给底部指示器预留稳定安全区。
+/// 默认字号下保留首页既有的轮播高度，放大字体时按需扩展。
 const double _recommendBannerHeight = 236;
+
+/// 指示器的点击区域下方保留边距，与展台内容分离。
 const double _recommendBannerIndicatorBottom = 4;
-// 为左侧轮播切换按钮预留安全距离，避免与信息区图标发生重叠。
-const double _recommendBannerInfoDockLeftInset = 72;
+
+/// 加载占位与真实轮播共用高度，系统大字号下仍为双行文案保留空间。
+double _recommendBannerHeightFor(BuildContext context) {
+  final extraHeight =
+      (MediaQuery.textScalerOf(context).scale(32) - 32).clamp(
+        0.0,
+        double.infinity,
+      ) *
+      5;
+  return _recommendBannerHeight + extraHeight;
+}
 
 /// 推荐页
 ///
@@ -236,13 +252,14 @@ class _RecommendPageState extends ConsumerState<RecommendPage>
     );
   }
 
+  /// 占位与展台保持相同外框，避免首屏数据到达时改变页面节奏。
   Widget _buildBannerSkeleton() {
     return Container(
       margin: const EdgeInsets.all(AppSpacing.lg),
-      height: 220,
+      height: _recommendBannerHeightFor(context),
       decoration: BoxDecoration(
         color: context.appColors.skeletonBackground,
-        borderRadius: AppRadius.smRadius,
+        borderRadius: BorderRadius.circular(16),
       ),
     );
   }
@@ -373,14 +390,14 @@ class _BannerSectionState extends State<_BannerSection> {
     final l10n = AppLocalizations.of(context)!;
 
     return Container(
-      height: _recommendBannerHeight,
+      height: _recommendBannerHeightFor(context),
       margin: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: context.appColors.surface,
-        borderRadius: AppRadius.smRadius,
+        borderRadius: BorderRadius.circular(16),
       ),
       child: ClipRRect(
-        borderRadius: AppRadius.smRadius,
+        borderRadius: BorderRadius.circular(16),
         child: GestureDetector(
           onHorizontalDragStart: (_) {
             _stopAutoPlay();
@@ -395,7 +412,7 @@ class _BannerSectionState extends State<_BannerSection> {
                 },
                 itemCount: widget.banners.length,
                 itemBuilder: (context, index) {
-                  return _BannerItem(
+                  return RecommendBanner(
                     banner: widget.banners[index],
                     onTap: () => _onBannerTap(widget.banners[index]),
                   );
@@ -408,26 +425,10 @@ class _BannerSectionState extends State<_BannerSection> {
                   top: 0,
                   bottom: 0,
                   child: Center(
-                    child: Semantics(
-                      button: true,
+                    child: _BannerNavigationButton(
                       label: l10n.a11yPrevious,
-                      child: SizedBox(
-                        width: 48,
-                        height: 48,
-                        child: Material(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          borderRadius: AppRadius.fullRadius,
-                          child: InkWell(
-                            borderRadius: AppRadius.fullRadius,
-                            onTap: _goToPrevious,
-                            child: const Icon(
-                              Icons.chevron_left,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                        ),
-                      ),
+                      icon: Icons.chevron_left,
+                      onTap: _goToPrevious,
                     ),
                   ),
                 ),
@@ -438,26 +439,10 @@ class _BannerSectionState extends State<_BannerSection> {
                   top: 0,
                   bottom: 0,
                   child: Center(
-                    child: Semantics(
-                      button: true,
+                    child: _BannerNavigationButton(
                       label: l10n.a11yNext,
-                      child: SizedBox(
-                        width: 48,
-                        height: 48,
-                        child: Material(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          borderRadius: AppRadius.fullRadius,
-                          child: InkWell(
-                            borderRadius: AppRadius.fullRadius,
-                            onTap: _goToNext,
-                            child: const Icon(
-                              Icons.chevron_right,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                        ),
-                      ),
+                      icon: Icons.chevron_right,
+                      onTap: _goToNext,
                     ),
                   ),
                 ),
@@ -535,183 +520,102 @@ class _BannerSectionState extends State<_BannerSection> {
   }
 }
 
-/// 轮播项
-class _BannerItem extends StatelessWidget {
-  const _BannerItem({required this.banner, this.onTap});
+/// 两种主题下都保持克制且可辨识的轮播按钮。
+class _BannerNavigationButton extends StatelessWidget {
+  /// 使用统一无障碍入口承接鼠标、键盘和读屏操作。
+  const _BannerNavigationButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
 
-  final BannerInfo banner;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dockBackground = isDark
-        ? Colors.black.withValues(alpha: 0.18)
-        : Colors.white.withValues(alpha: 0.16);
-    final dockBorder = Colors.white.withValues(alpha: isDark ? 0.10 : 0.18);
-
-    return RecommendBannerBackground(
-      banner: banner,
-      child: Padding(
-        // 左 inset 是为信息停靠区预留的空间：方向感知后 RTL 下停靠区移到
-        // 右下角，留白随之镜像到 start 侧
-        padding: const EdgeInsetsDirectional.fromSTEB(
-          AppSpacing.lg + _recommendBannerInfoDockLeftInset,
-          AppSpacing.lg,
-          AppSpacing.lg,
-          AppSpacing.lg,
-        ),
-        child: Align(
-          // 信息停靠区随文本方向镜像（RTL 下停靠右下角）
-          alignment: AlignmentDirectional.bottomStart,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-              child: Container(
-                key: const Key('recommend-banner-info-dock'),
-                constraints: const BoxConstraints(maxWidth: 460),
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  color: dockBackground,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: dockBorder),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    AppIcon(
-                      iconUrl: banner.imageUrl,
-                      size: 72,
-                      borderRadius: 18,
-                      appName: banner.title,
-                      placeholderColor: Colors.white.withValues(
-                        alpha: isDark ? 0.20 : 0.24,
-                      ),
-                      errorColor: Colors.white.withValues(
-                        alpha: isDark ? 0.16 : 0.20,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.lg),
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            banner.title,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: context.appFontWeight(
-                                FontWeight.w600,
-                              ),
-                              color: Colors.white,
-                              height: 1.1,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            banner.description?.trim().isNotEmpty == true
-                                ? banner.description!
-                                : l10n.appDescriptionPlaceholder,
-                            style: TextStyle(
-                              // banner 描述：14px 常规说明文字
-                              fontSize: 14,
-                              color: Colors.white.withValues(alpha: 0.86),
-                              height: 1.35,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          _BannerDetailButton(
-                            label: l10n.viewDetail,
-                            onPressed: onTap,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BannerDetailButton extends StatelessWidget {
-  const _BannerDetailButton({required this.label, this.onPressed});
-
+  /// 来自当前语言的上一项或下一项说明。
   final String label;
-  final VoidCallback? onPressed;
+
+  /// Material 方向图标会根据 Directionality 自动镜像。
+  final IconData icon;
+
+  /// 复用页面已有的轮播控制。
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 30,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.16)),
-          backgroundColor: Colors.white.withValues(alpha: 0.12),
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-          shape: const StadiumBorder(),
-          visualDensity: VisualDensity.compact,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Material(
+      color: isDark ? const Color(0xFF303640) : const Color(0xFFFAFBFC),
+      shape: CircleBorder(
+        side: BorderSide(
+          color: isDark ? const Color(0xFF484F5A) : const Color(0xFFD8DDE4),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: context.appFontWeight(FontWeight.w500),
-          ),
+      ),
+      child: A11yIconButton(
+        semanticsLabel: label,
+        tooltip: label,
+        onTap: onTap,
+        iconSize: 20,
+        icon: Icon(
+          icon,
+          color: isDark ? const Color(0xFFDCE0E6) : const Color(0xFF56606D),
         ),
       ),
     );
   }
 }
 
-/// 轮播指示器
+/// 与中性背景保持对比度的轮播位置提示。
 class _BannerIndicators extends StatelessWidget {
+  /// 按钮尺寸稳定，选中态只改变内部短线。
   const _BannerIndicators({
     required this.count,
     required this.currentIndex,
     this.onTap,
   });
 
+  /// 服务端返回的实际轮播条目数。
   final int count;
+
+  /// PageView 当前已显示的条目。
   final int currentIndex;
+
+  /// 由页面控制器负责切换。
   final ValueChanged<int>? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(count, (index) {
         final isActive = index == currentIndex;
-        return GestureDetector(
-          onTap: () => onTap?.call(index),
+        return Material(
+          type: MaterialType.transparency,
           child: Semantics(
-            button: true,
-            label: '${index + 1}',
             selected: isActive,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              width: isActive ? 20 : 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: isActive
-                    ? Colors.white
-                    : Colors.white.withValues(alpha: 0.5),
-                borderRadius: AppRadius.fullRadius,
+            child: A11yButton(
+              onTap: () => onTap?.call(index),
+              semanticsLabel: '${l10n.a11yRecommendPage} ${index + 1} / $count',
+              enabled: onTap != null,
+              child: SizedBox(
+                width: 32,
+                height: 24,
+                child: Center(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: isActive ? 20 : 6,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? (isActive
+                                ? const Color(0xFFDCE0E6)
+                                : const Color(0xFF636D7B))
+                          : (isActive
+                                ? const Color(0xFF535F70)
+                                : const Color(0xFFA4ACB8)),
+                      borderRadius: AppRadius.fullRadius,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

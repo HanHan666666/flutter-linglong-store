@@ -1,282 +1,97 @@
-import 'dart:ui';
+/// 推荐 Banner 的主题背景与异步品牌取色边界。
+///
+/// 主题切换立即使用对应的中性底色，取色结果仅补充品牌反光；网络完成顺序
+/// 不能将旧主题或旧应用的调色板重新写回当前画面。
+library;
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../domain/models/recommend_models.dart';
 import 'recommend_banner_palette_resolver.dart';
 
-/// 推荐页轮播背景层。
-///
-/// 职责仅限于渲染品牌色背景与风格化背景元素，
-/// 后续替换为图片背景或其他风格时，只需要替换这个组件。
+/// 将取色结果集中下发，避免背景、文案和展台各自请求或判断主题。
 class RecommendBannerBackground extends StatefulWidget {
+  /// 构建器只负责表现层，不在构建过程中执行图片解析或网络请求。
   const RecommendBannerBackground({
     required this.banner,
-    required this.child,
+    required this.builder,
     super.key,
   });
 
+  /// 当前轮播条目，标题在无图时提供稳定的兜底色种子。
   final BannerInfo banner;
-  final Widget child;
 
+  /// 同一份调色板同时用于文字、展台和图标托板。
+  final Widget Function(BuildContext, RecommendBannerPalette) builder;
+
+  /// 将异步取色绑定到条目生命周期。
   @override
   State<RecommendBannerBackground> createState() =>
       _RecommendBannerBackgroundState();
 }
 
+/// 只保存视觉取色状态，不持有轮播、导航或业务数据的第二份状态。
 class _RecommendBannerBackgroundState extends State<RecommendBannerBackground> {
-  RecommendBannerPalette? _resolvedPalette;
+  /// 立即可用的主题底色，等待取色期间也保持可读。
+  late RecommendBannerPalette _palette;
+
+  /// 避免无关依赖变化触发重复取色。
   Brightness? _lastBrightness;
 
+  /// 每次主题或条目切换递增，丢弃已过期的异步响应。
+  int _paletteRequest = 0;
+
+  /// 主题切换立即重建中性底色，不等待网络取色。
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final brightness = Theme.of(context).brightness;
     if (_lastBrightness != brightness) {
       _lastBrightness = brightness;
-      _resolvedPalette = null;
       _loadPalette();
     }
   }
 
+  /// 复用轮播位置但条目变化时，使旧图片的异步结果失效。
   @override
   void didUpdateWidget(covariant RecommendBannerBackground oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.banner.imageUrl != widget.banner.imageUrl ||
         oldWidget.banner.title != widget.banner.title) {
-      _resolvedPalette = null;
       _loadPalette();
     }
   }
 
+  /// 生命周期方法随后会构建首帧；只有有效异步结果需要额外重绘。
   Future<void> _loadPalette() async {
+    final request = ++_paletteRequest;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    _palette = RecommendBannerPaletteResolver.buildPaletteFromBaseColor(
+      const Color(0xFF637B9B),
+      isDark: isDark,
+    );
     final palette = await RecommendBannerPaletteResolver.resolve(
       seed: widget.banner.title,
       imageUrl: widget.banner.imageUrl,
-      isDark: Theme.of(context).brightness == Brightness.dark,
+      isDark: isDark,
     );
-    if (!mounted) return;
-    setState(() => _resolvedPalette = palette);
+    if (!mounted || request != _paletteRequest) return;
+    setState(() => _palette = palette);
   }
 
+  /// 背景仅由普通渐变构成，不使用全幅模糊或离屏玻璃合成。
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final banner = widget.banner;
-    final palette =
-        _resolvedPalette ??
-        RecommendBannerPaletteResolver.buildPaletteFromBaseColor(
-          const Color(0xFF1D74FF),
-          isDark: isDark,
-        );
-
     return DecoratedBox(
       key: const Key('recommend-banner-background'),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [palette.start, palette.end],
+          begin: AlignmentDirectional.centerStart,
+          end: AlignmentDirectional.centerEnd,
+          colors: [_palette.start, _palette.end],
         ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            PositionedDirectional(
-              // 装饰光晕跟随内容起始侧，保持与品牌预览区相对分离。
-              start: -36,
-              top: 34,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.white.withValues(
-                        alpha: isDark ? 0.06 : 0.12,
-                      ),
-                      blurRadius: 56,
-                      spreadRadius: 10,
-                    ),
-                  ],
-                ),
-                child: const SizedBox(width: 1, height: 1),
-              ),
-            ),
-            PositionedDirectional(
-              end: -44,
-              top: -34,
-              child: Container(
-                width: 220,
-                height: 220,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: isDark ? 0.04 : 0.08),
-                ),
-              ),
-            ),
-            if (banner.imageUrl.isNotEmpty)
-              PositionedDirectional(
-                // 品牌图位于内容结束侧，RTL 下避免遮挡右侧信息区。
-                end: -12,
-                top: -8,
-                child: IgnorePointer(
-                  child: Opacity(
-                    opacity: isDark ? 0.18 : 0.24,
-                    child: ImageFiltered(
-                      imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                      child: Transform.rotate(
-                        angle: -0.18,
-                        child: CachedNetworkImage(
-                          imageUrl: banner.imageUrl,
-                          width: 196,
-                          height: 196,
-                          fit: BoxFit.cover,
-                          // 限制内存解码尺寸，原图可能远大于 196px
-                          memCacheWidth: 196 * 2,
-                          memCacheHeight: 196 * 2,
-                          errorWidget: (_, _, _) =>
-                              _FallbackBrandShape(palette: palette),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              )
-            else
-              PositionedDirectional(
-                end: -18,
-                top: -8,
-                child: _FallbackBrandShape(palette: palette),
-              ),
-            PositionedDirectional(
-              end: 36,
-              top: 30,
-              child: _PreviewPlate(isDark: isDark),
-            ),
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.white.withValues(alpha: isDark ? 0.02 : 0.06),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            widget.child,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FallbackBrandShape extends StatelessWidget {
-  const _FallbackBrandShape({required this.palette});
-
-  final RecommendBannerPalette palette;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 196,
-      height: 196,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(44),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.32),
-            palette.accent.withValues(alpha: 0.48),
-          ],
-        ),
-      ),
-      child: Stack(
-        children: [
-          PositionedDirectional(
-            start: 32,
-            top: 26,
-            child: Container(
-              width: 92,
-              height: 92,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                color: Colors.white.withValues(alpha: 0.28),
-              ),
-            ),
-          ),
-          PositionedDirectional(
-            end: 30,
-            bottom: 30,
-            child: Container(
-              width: 76,
-              height: 76,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(22),
-                color: Colors.white.withValues(alpha: 0.18),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PreviewPlate extends StatelessWidget {
-  const _PreviewPlate({required this.isDark});
-
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    final border = Colors.white.withValues(alpha: isDark ? 0.10 : 0.16);
-    final fill = isDark
-        ? Colors.black.withValues(alpha: 0.12)
-        : Colors.white.withValues(alpha: 0.14);
-
-    return Container(
-      width: 176,
-      height: 104,
-      decoration: BoxDecoration(
-        color: fill,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: border),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 108,
-              height: 10,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: isDark ? 0.22 : 0.30),
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              width: 86,
-              height: 10,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: isDark ? 0.18 : 0.22),
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: widget.builder(context, _palette),
     );
   }
 }

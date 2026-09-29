@@ -23,63 +23,57 @@ import '../../../mocks/mock_classes.mocks.dart';
 
 void main() {
   group('RecommendPage banner refresh', () {
-    testWidgets(
-      'renders brand banner with extracted background and simplified copy',
-      (tester) async {
-        await tester.pumpWidget(
-          _buildTestApp(
-            const RecommendState(
-              data: RecommendData(
-                banners: [
-                  BannerInfo(
-                    id: 'banner-1',
-                    title: 'Banner App',
-                    imageUrl: '',
-                    targetAppId: 'banner.app',
-                    description: 'Banner description',
+    testWidgets('renders exhibition banner with app copy and artwork', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _buildTestApp(
+          const RecommendState(
+            data: RecommendData(
+              banners: [
+                BannerInfo(
+                  id: 'banner-1',
+                  title: 'Banner App',
+                  imageUrl: '',
+                  targetAppId: 'banner.app',
+                  description: 'Banner description',
+                ),
+              ],
+              categories: [CategoryInfo(code: 'all', name: '全部')],
+              apps: PaginatedResponse<RecommendAppInfo>(
+                items: [
+                  RecommendAppInfo(
+                    appId: 'app.one',
+                    name: 'App One',
+                    version: '1.0.0',
                   ),
                 ],
-                categories: [CategoryInfo(code: 'all', name: '全部')],
-                apps: PaginatedResponse<RecommendAppInfo>(
-                  items: [
-                    RecommendAppInfo(
-                      appId: 'app.one',
-                      name: 'App One',
-                      version: '1.0.0',
-                    ),
-                  ],
-                  total: 1,
-                  page: 1,
-                  pageSize: 10,
-                  hasMore: false,
-                ),
+                total: 1,
+                page: 1,
+                pageSize: 10,
+                hasMore: false,
               ),
             ),
           ),
-        );
-        await tester.pump();
+        ),
+      );
+      await tester.pump();
 
-        expect(find.text('玲珑推荐'), findsOneWidget);
-        expect(find.text('App One'), findsOneWidget);
-        expect(find.text('Banner App'), findsOneWidget);
-        expect(find.text('Banner description'), findsOneWidget);
-        expect(
-          find.byKey(const Key('recommend-banner-background')),
-          findsOneWidget,
-        );
-        expect(
-          find.byKey(const Key('recommend-banner-info-dock')),
-          findsOneWidget,
-        );
-        expect(find.text('版本：-'), findsNothing);
-        expect(find.text('分类：-'), findsNothing);
-        expect(find.byType(CategoryFilterSection), findsNothing);
-      },
-    );
+      expect(find.text('玲珑推荐'), findsOneWidget);
+      expect(find.text('App One'), findsOneWidget);
+      expect(find.text('Banner App'), findsOneWidget);
+      expect(find.text('Banner description'), findsOneWidget);
+      expect(
+        find.byKey(const Key('recommend-banner-background')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('recommend-banner-copy')), findsOneWidget);
+      expect(find.text('版本：-'), findsNothing);
+      expect(find.text('分类：-'), findsNothing);
+      expect(find.byType(CategoryFilterSection), findsNothing);
+    });
 
-    testWidgets('keeps banner taller and indicator below info dock', (
-      tester,
-    ) async {
+    testWidgets('keeps banner height and indicator below copy', (tester) async {
       await tester.pumpWidget(
         _buildTestApp(
           const RecommendState(
@@ -117,14 +111,14 @@ void main() {
         find.byKey(const Key('recommend-banner-background')),
       );
       final infoDockRect = tester.getRect(
-        find.byKey(const Key('recommend-banner-info-dock')),
+        find.byKey(const Key('recommend-banner-copy')),
       );
       final activeIndicatorRect = tester.getRect(
         find.byWidgetPredicate(
           (widget) =>
               widget is AnimatedContainer &&
               widget.constraints ==
-                  const BoxConstraints.tightFor(width: 20, height: 8),
+                  const BoxConstraints.tightFor(width: 20, height: 4),
         ),
       );
 
@@ -135,7 +129,7 @@ void main() {
       );
     });
 
-    testWidgets('offsets banner info dock to avoid left carousel control', (
+    testWidgets('keeps banner copy clear of the previous control', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -182,12 +176,15 @@ void main() {
         find.byKey(const Key('recommend-banner-background')),
       );
       final infoDockRect = tester.getRect(
-        find.byKey(const Key('recommend-banner-info-dock')),
+        find.byKey(const Key('recommend-banner-copy')),
       );
       final leftControlRect = tester.getRect(
         find.ancestor(
           of: find.byIcon(Icons.chevron_left),
-          matching: find.byType(SizedBox),
+          // 统一无障碍图标按钮内部也有图标 SizedBox，只检查完整点击区。
+          matching: find.byWidgetPredicate(
+            (widget) => widget is SizedBox && widget.width == 48,
+          ),
         ),
       );
 
@@ -293,10 +290,7 @@ void main() {
         find.byKey(const Key('recommend-banner-background')),
         findsOneWidget,
       );
-      expect(
-        find.byKey(const Key('recommend-banner-info-dock')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('recommend-banner-copy')), findsOneWidget);
     });
 
     testWidgets('auto loads more when first page cannot scroll', (

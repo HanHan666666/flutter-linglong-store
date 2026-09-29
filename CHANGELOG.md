@@ -5,6 +5,8 @@
 
 ## 变更记录
 
+- 2026-09-30：调整 PR CI 的 Linux 依赖安装顺序，使系统强调色单测在
+  GLib/GIO 开发头文件就绪后运行，修复干净 GitHub runner 上的编译失败。
 - 2026-09-30：正式版与 Nightly 发版说明改用 Pi Agent 的 `deepseek-flash`，
   Nightly 始终从最近正式版累计到当前源码。模型可使用工作区读写与 shell 工具，
   正文自由组织，不再强制 JSON、编号或条目数量；固定下载与哈希信息继续由

@@ -38,6 +38,13 @@ jobs:
       - name: Run privileged helper unit tests
         run: bash build/scripts/test-privileged-helper.sh
 
+      # 强调色单测需要 GLib/GIO 头文件，必须先安装 Linux 构建依赖。
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang cmake ninja-build pkg-config libgtk-3-dev
+
       # 系统强调色的纯逻辑单测（XDG Portal (ddd) 解析、ReadAll 提取、
       # 舍入边界），独立于 Flutter 测试运行（docs/48 §12.4）。
       - name: Run system accent color unit tests
@@ -46,11 +53,6 @@ jobs:
       # 构建 release bundle 并断言 helper 随产物分发且不依赖 Flutter/GTK、
       # 无 RPATH；同时检查 runner 最终 ELF 确实保留 Impeller 关闭调用，避免干净
       # 构建与本地增量构建行为分叉（docs/42、docs/47 §13.2）。
-      - name: Install Linux build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            clang cmake ninja-build pkg-config libgtk-3-dev
       - name: Verify Linux release artifacts
         run: |
           flutter build linux --release

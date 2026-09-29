@@ -1,8 +1,26 @@
+/// 分类筛选栏的单行与多行布局。
+///
+/// 两种布局共享胶囊尺寸，避免横向列表的紧约束与 Wrap 的自然尺寸
+/// 不一致，导致展开时分类按钮突然变厚。
+library;
+
 import 'package:flutter/material.dart';
 
 import '../../core/config/theme.dart';
 import '../../core/i18n/l10n/app_localizations.dart';
 import '../../domain/models/recommend_models.dart';
+
+/// 保持既有吸顶栏高度，展开仅改变分类排列的行数。
+const double _categoryHeaderExtent = 64;
+
+/// 容器边框会占用布局空间，需计入单行可用高度。
+const double _categoryContainerBorderWidth = 1;
+
+/// 扣除外层、列表各两侧的竖向间距及边框，统一两种布局的胶囊外高。
+const double _categoryChipHeight =
+    _categoryHeaderExtent -
+    AppSpacing.sm * 4 -
+    _categoryContainerBorderWidth * 2;
 
 /// 推荐页/全部应用页通用分类筛选栏
 class CategoryFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
@@ -26,12 +44,13 @@ class CategoryFilterHeaderDelegate extends SliverPersistentHeaderDelegate {
   /// 切换展开/折叠回调
   final VoidCallback? onToggleExpand;
 
+  /// 与胶囊尺寸使用相同的高度来源，防止吸顶收缩改变按钮厚度。
   @override
-  double get minExtent => 64;
+  double get minExtent => _categoryHeaderExtent;
 
   /// 头部始终保持单行固定高度；展开内容由外层 sliver 承载。
   @override
-  double get maxExtent => 64;
+  double get maxExtent => _categoryHeaderExtent;
 
   @override
   Widget build(
@@ -107,6 +126,8 @@ class CategoryFilterHeaderBox extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isDark ? const Color(0xFF3A3A3A) : const Color(0xFFE7EBF0),
+            // 与胶囊可用高度的计算保持一致。
+            width: _categoryContainerBorderWidth,
           ),
           boxShadow: showShadow
               ? [
@@ -280,6 +301,8 @@ class _CategoryChipState extends State<_CategoryChip> {
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: AnimatedContainer(
+          // ListView 和 Wrap 使用相同外高，不再依赖父级压缩 48px 最小高度。
+          height: _categoryChipHeight,
           duration: AppAnimation.fast,
           curve: AppAnimation.ease,
           transform: Matrix4.translationValues(0, _isHovered ? -2 : 0, 0),
@@ -298,15 +321,11 @@ class _CategoryChipState extends State<_CategoryChip> {
               splashColor: const Color(0x14000000),
               highlightColor: Colors.transparent,
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minWidth: showBadge ? 108 : 92,
-                  minHeight: 48,
-                ),
+                constraints: BoxConstraints(minWidth: showBadge ? 108 : 92),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
+                  // Row 在固定高度内居中，省去竖向内边距为字号缩放和数量
+                  // 徽标留出空间，避免内容再次撑大胶囊或被压缩。
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.center,

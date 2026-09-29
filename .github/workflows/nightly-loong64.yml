@@ -115,7 +115,8 @@ jobs:
               repo: context.repo.repo,
               per_page: 100,
             }))
-              .filter((release) => release.prerelease && (release.tag_name || '').startsWith('nightly-'))
+              // 自动补传仅处理新月度版；旧日版保持原状，仍可通过显式 tag 手动恢复。
+              .filter((release) => release.prerelease && /^nightly-\d{6}$/.test(release.tag_name || ''))
               .map((release) => ({ release, metadata: parseMetadata(release) }));
 
             let target = null;
@@ -258,20 +259,44 @@ jobs:
     needs: [prepare-loong64-nightly, build-loong64-nightly]
     if: ${{ needs.prepare-loong64-nightly.outputs.should_build == 'true' && needs.build-loong64-nightly.result == 'success' }}
     runs-on: ubuntu-latest
+    # 主发布完成后再补传，防止较慢的旧 Loong64 任务覆盖新版本说明和哈希。
+    concurrency:
+      group: nightly-release-${{ github.repository }}
+      cancel-in-progress: false
     steps:
+      - name: Check nightly source before Loong64 patch
+        id: current
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NIGHTLY_TAG: ${{ needs.prepare-loong64-nightly.outputs.nightly_tag }}
+          EXPECTED_SOURCE_COMMIT: ${{ needs.prepare-loong64-nightly.outputs.source_commit }}
+        run: |
+          # 同月较新的主构建可能已替换 Release；旧 Loong64 资产与说明不能补到新源码。
+          published_sha="$(gh release view "$NIGHTLY_TAG" --repo "$GITHUB_REPOSITORY" --json body --jq '.body' \
+            | sed -n 's/^Nightly source commit: //p' | tail -n 1)"
+          if [[ "$published_sha" != "$EXPECTED_SOURCE_COMMIT" ]]; then
+            echo "should_patch=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping stale Loong64 patch: $NIGHTLY_TAG now points to $published_sha"
+          else
+            echo "should_patch=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout nightly source
+        if: ${{ steps.current.outputs.should_patch == 'true' }}
         uses: actions/checkout@v4
         with:
           ref: ${{ needs.prepare-loong64-nightly.outputs.source_commit }}
           fetch-depth: 0
 
       - name: Download Loong64 nightly assets
+        if: ${{ steps.current.outputs.should_patch == 'true' }}
         uses: actions/download-artifact@v4
         with:
           name: nightly-loong64-assets
           path: loong64-artifacts
 
       - name: Download current nightly release assets and notes
+        if: ${{ steps.current.outputs.should_patch == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -285,6 +310,7 @@ jobs:
             --dir nightly-release-assets
 
       - name: Refresh nightly notes and hashes for Loong64
+        if: ${{ steps.current.outputs.should_patch == 'true' }}
         run: |
           cp loong64-artifacts/* nightly-release-assets/
           bash build/scripts/augment-nightly-release-notes-loong64.sh \
@@ -296,6 +322,7 @@ jobs:
             --hashes-output nightly-release-assets/hashes.sha256
 
       - name: Upload Loong64 nightly assets and refreshed hashes
+        if: ${{ steps.current.outputs.should_patch == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

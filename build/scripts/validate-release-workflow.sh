@@ -134,6 +134,8 @@ require_no_grep "/home/han/flutter" .github/workflows/release.yml
 require_no_grep "git describe --tags --abbrev=0 --match 'v3.0.*'" .github/workflows/release.yml
 require_no_grep "app_constants.dart" .github/workflows/release.yml
 require_grep "pull_request" .github/workflows/ci.yml
+# 默认分支提交不再逐次触发 CI，发布构建统一由定时 Nightly 承担。
+require_no_grep "  push:" .github/workflows/ci.yml
 require_grep "release-cli-smoke-test.sh" .github/workflows/ci.yml
 require_grep "nightly-cli-smoke-test.sh" .github/workflows/ci.yml
 # Impeller 关闭必须同时覆盖直接 CI 构建和所有包格式共享的 bundle 构建入口，
@@ -161,7 +163,6 @@ require_grep "should_publish_aur" .github/workflows/nightly.yml
 require_grep "aur_asset_source" .github/workflows/nightly.yml
 require_grep "aur_nightly_label" .github/workflows/nightly.yml
 require_grep "aur_nightly_tag" .github/workflows/nightly.yml
-require_grep "previous_nightly_source_commit" .github/workflows/nightly.yml
 require_grep "needs.prepare-nightly.outputs.should_publish_release == 'true'" .github/workflows/nightly.yml
 require_grep "needs.prepare-nightly.outputs.should_publish_aur == 'true'" .github/workflows/nightly.yml
 require_grep "always() && needs.prepare-nightly.outputs.should_publish_release == 'true' && needs.sign-nightly.result == 'success'" .github/workflows/nightly.yml
@@ -186,7 +187,12 @@ require_grep "publish-aur.sh" .github/workflows/nightly.yml
 require_grep "linglong-store-nightly-bin" .github/workflows/nightly.yml
 require_grep "ssh://aur@aur.archlinux.org/linglong-store-nightly-bin.git" .github/workflows/nightly.yml
 require_grep_in_job "publish-aur" "dart-lang/setup-dart@v1" .github/workflows/release.yml
-require_grep "listReleases" .github/workflows/nightly.yml
+# 月 tag 更新前必须保留旧资产；只有新资产发布成功后才允许清理过期文件。
+require_grep 'nightly_tag=$nightly_tag' .github/workflows/nightly.yml
+require_grep "Remove superseded assets from this month" .github/workflows/nightly.yml
+require_grep "deleteReleaseAsset" .github/workflows/nightly.yml
+require_grep "Move this month's nightly tag to the published source" .github/workflows/nightly.yml
+require_grep "nightly-release-\${{ github.repository }}" .github/workflows/nightly.yml
 require_grep "workflow_run" .github/workflows/nightly-loong64.yml
 require_grep "workflow_dispatch" .github/workflows/nightly-loong64.yml
 require_grep "Nightly" .github/workflows/nightly-loong64.yml

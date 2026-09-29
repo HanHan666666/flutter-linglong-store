@@ -30,7 +30,6 @@ jobs:
       aur_asset_source: ${{ steps.decide.outputs.aur_asset_source }}
       aur_nightly_label: ${{ steps.decide.outputs.aur_nightly_label }}
       aur_nightly_tag: ${{ steps.decide.outputs.aur_nightly_tag }}
-      previous_nightly_source_commit: ${{ steps.existing.outputs.latest_published_sha }}
       base_version: ${{ steps.metadata.outputs.base_version }}
       nightly_label: ${{ steps.metadata.outputs.nightly_label }}
       nightly_tag: ${{ steps.metadata.outputs.nightly_tag }}
@@ -49,7 +48,7 @@ jobs:
           eval "$(bash build/scripts/resolve-nightly-metadata.sh)"
           echo "base_version=$base_version" >> "$GITHUB_OUTPUT"
           echo "nightly_label=$nightly_label" >> "$GITHUB_OUTPUT"
-          echo "nightly_tag=nightly-$nightly_date" >> "$GITHUB_OUTPUT"
+          echo "nightly_tag=$nightly_tag" >> "$GITHUB_OUTPUT"
           echo "short_sha=$short_sha" >> "$GITHUB_OUTPUT"
           echo "nightly_date=$nightly_date" >> "$GITHUB_OUTPUT"
 
@@ -58,11 +57,9 @@ jobs:
         uses: actions/github-script@v7
         env:
           LOOKUP_NIGHTLY_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.aur_release_tag || steps.metadata.outputs.nightly_tag }}
-          SOURCE_COMMIT: ${{ github.sha }}
         with:
           script: |
             const lookupTag = process.env.LOOKUP_NIGHTLY_TAG;
-            const sourceCommit = process.env.SOURCE_COMMIT;
 
             const parseMetadata = (release) => {
               const body = release.body || '';
@@ -93,28 +90,6 @@ jobs:
               core.setOutput('published_label', publishedLabel || '');
             };
 
-            const isLikelyCommitSha = (value) => /^[0-9a-f]{7,40}$/i.test(value || '');
-
-            const releases = await github.paginate(github.rest.repos.listReleases, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              per_page: 100,
-            });
-
-            const nightlyReleases = releases
-              .filter((release) => release.prerelease && release.tag_name.startsWith('nightly-'))
-              .map((release) => ({ release, metadata: parseMetadata(release) }));
-
-            const latestNightlyWithValidSha = nightlyReleases.find(({ metadata }) =>
-              isLikelyCommitSha(metadata.publishedSha),
-            );
-
-            // 额外暴露最近一次 nightly prerelease 的 source commit，供 changelog 生成做范围基线。
-            core.setOutput(
-              'latest_published_sha',
-              latestNightlyWithValidSha?.metadata.publishedSha || '',
-            );
-
             try {
               const { data } = await github.rest.repos.getReleaseByTag({
                 owner: context.repo.owner,
@@ -127,14 +102,8 @@ jobs:
                 throw error;
               }
 
-              const matchedRelease = nightlyReleases
-                .find(({ metadata }) => metadata.publishedSha === sourceCommit);
-
-              if (matchedRelease) {
-                setOutputs(matchedRelease.metadata);
-              } else {
-                setOutputs({ tag: lookupTag, publishedSha: '', publishedLabel: '' });
-              }
+              // 新月份必须创建自己的 Release，即使同一 SHA 曾在历史日版或上月发布。
+              setOutputs({ tag: '', publishedSha: '', publishedLabel: '' });
             }
 
       - name: Decide whether nightly should publish
@@ -463,16 +432,15 @@ jobs:
     needs: [prepare-nightly, sign-nightly]
     if: ${{ always() && needs.prepare-nightly.outputs.should_publish_release == 'true' && needs.sign-nightly.result == 'success' }}
     runs-on: ubuntu-latest
+    # 与异步 Loong64 补传串行更新同一 Release，避免旧说明覆盖新月份内的构建。
+    concurrency:
+      group: nightly-release-${{ github.repository }}
+      cancel-in-progress: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Configure git identity
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Download signed nightly assets
         uses: actions/download-artifact@v4
@@ -480,10 +448,36 @@ jobs:
           name: signed-nightly-assets
           path: nightly-artifacts
 
-      - name: Update nightly tag
-        run: |
-          git tag -f "${{ needs.prepare-nightly.outputs.nightly_tag }}" "${{ needs.prepare-nightly.outputs.source_commit }}"
-          git push origin "refs/tags/${{ needs.prepare-nightly.outputs.nightly_tag }}" --force
+      - name: Reject an older run after this month has advanced
+        uses: actions/github-script@v7
+        env:
+          NIGHTLY_TAG: ${{ needs.prepare-nightly.outputs.nightly_tag }}
+          SOURCE_COMMIT: ${{ needs.prepare-nightly.outputs.source_commit }}
+        with:
+          script: |
+            let release;
+            try {
+              ({ data: release } = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: process.env.NIGHTLY_TAG,
+              }));
+            } catch (error) {
+              if (error.status === 404) return;
+              throw error;
+            }
+            const publishedSha = (release.body || '').match(/^Nightly source commit:\s*([0-9a-f]{40})$/m)?.[1];
+            if (!publishedSha || publishedSha === process.env.SOURCE_COMMIT) return;
+            const { data: comparison } = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: process.env.SOURCE_COMMIT,
+              head: publishedSha,
+            });
+            // 同月手动重跑可能比新构建更晚结束；旧提交不得反向覆盖新资产与 AUR。
+            if (comparison.status === 'ahead') {
+              throw new Error(`This month's nightly already contains newer source ${publishedSha}.`);
+            }
 
       - name: Set up Dart SDK
         uses: dart-lang/setup-dart@v1
@@ -492,10 +486,9 @@ jobs:
         env:
           CLAUDE_CODE_SETTINGS_JSON: ${{ secrets['CLAUDE_CODE_SETTINGS_JSON'] }}
           LINGLONG_CLAUDE_CODE_VERSION: 2.1.126
-          LINGLONG_RELEASE_NOTES_START_REF: ${{ vars.LINGLONG_RELEASE_NOTES_START_REF }}
           LINGLONG_USE_SYSTEM_CLAUDE_CODE: '0'
         run: |
-          # Secret 为空时脚本会在 changelog 段回退到 deterministic/fallback 文案，不阻断 nightly 发布。
+          # 每次从最近正式版累计到当前源码，月内覆盖后仍能读到完整变更。
           cmd=(
             bash build/scripts/generate-nightly-release-notes.sh
             --nightly-label "${{ needs.prepare-nightly.outputs.nightly_label }}"
@@ -503,14 +496,6 @@ jobs:
             --source-commit "${{ needs.prepare-nightly.outputs.source_commit }}"
             --output nightly-release-notes.md
           )
-
-          # 只有拿到了上一版 nightly source commit 时才传递范围基线；首次 nightly 走脚本内的兜底文案。
-          if [[ -n "${{ needs.prepare-nightly.outputs.previous_nightly_source_commit }}" ]]; then
-            cmd+=(
-              --previous-source-commit
-              "${{ needs.prepare-nightly.outputs.previous_nightly_source_commit }}"
-            )
-          fi
 
           "${cmd[@]}"
 
@@ -535,11 +520,49 @@ jobs:
           files: |
             nightly-artifacts/*
 
+      - name: Remove superseded assets from this month
+        uses: actions/github-script@v7
+        env:
+          NIGHTLY_TAG: ${{ needs.prepare-nightly.outputs.nightly_tag }}
+        with:
+          script: |
+            const fs = require('fs');
+            const keepNames = new Set(fs.readdirSync('nightly-artifacts'));
+            const { data: release } = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: process.env.NIGHTLY_TAG,
+            });
+            const assets = await github.paginate(github.rest.repos.listReleaseAssets, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.id,
+              per_page: 100,
+            });
+            // 新资产全部上传成功后才清理旧文件，构建或上传失败时保留上次可下载版本。
+            for (const asset of assets) {
+              if (!keepNames.has(asset.name)) {
+                await github.rest.repos.deleteReleaseAsset({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  asset_id: asset.id,
+                });
+              }
+            }
+
+      - name: Move this month's nightly tag to the published source
+        run: |
+          git tag -f "${{ needs.prepare-nightly.outputs.nightly_tag }}" "${{ needs.prepare-nightly.outputs.source_commit }}"
+          git push origin "refs/tags/${{ needs.prepare-nightly.outputs.nightly_tag }}" --force
+
   publish-aur-nightly:
     name: Publish nightly AUR ${{ needs.prepare-nightly.outputs.nightly_label }}
     needs: [prepare-nightly, publish-nightly]
     if: ${{ always() && needs.prepare-nightly.outputs.should_publish_aur == 'true' && (needs.publish-nightly.result == 'success' || needs.prepare-nightly.outputs.aur_asset_source == 'release') }}
     runs-on: ubuntu-latest
+    env:
+      # 手动补发历史日版 AUR 时沿用原 tag；新发布默认使用月 tag。
+      LINGLONG_NIGHTLY_RELEASE_TAG: ${{ needs.prepare-nightly.outputs.aur_nightly_tag }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

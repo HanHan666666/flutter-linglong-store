@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 . "$ROOT_DIR/build/scripts/linux-arch-utils.sh"
 . "$ROOT_DIR/build/scripts/lib/application-identity.sh"
+. "$ROOT_DIR/build/scripts/lib/nightly-release-tag.sh"
 
 load_application_identity "$ROOT_DIR/config/application_identity.conf"
 
@@ -194,7 +195,8 @@ case "$channel" in
     if [[ "$release_version" =~ -nightly\.([0-9]{8})\+[0-9A-Fa-f]+$ ]]; then
       # AUR pkgver cannot preserve the nightly prerelease separators verbatim.
       aur_pkgver="$(bash "$ROOT_DIR/build/scripts/normalize-nightly-aur-version.sh" "$release_version")"
-      aur_source_tag_root="nightly-${BASH_REMATCH[1]}"
+      # AUR 源地址与 GitHub 发布 tag 使用同一规则，手动恢复历史日版时可显式覆盖。
+      aur_source_tag_root="$(nightly_release_tag_for_label "$release_version")"
     elif [[ "$should_render_aur" == "true" ]]; then
       echo "Nightly AUR rendering requires a version like <semver>-nightly.<YYYYMMDD>+<sha>, got: $release_version" >&2
       exit 64

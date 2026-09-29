@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 . "$ROOT_DIR/build/scripts/lib/application-identity.sh"
+. "$ROOT_DIR/build/scripts/lib/nightly-release-tag.sh"
 
 load_application_identity "$ROOT_DIR/config/application_identity.conf"
 
@@ -116,12 +117,8 @@ build_release_asset_url() {
       tag_root="v${release_version}"
       ;;
     nightly)
-      if [[ "$release_version" =~ -nightly\.([0-9]{8})\+[0-9A-Fa-f]+$ ]]; then
-        tag_root="nightly-${BASH_REMATCH[1]}"
-      else
-        echo "Nightly validation requires a version like <semver>-nightly.<YYYYMMDD>+<sha>, got: $release_version" >&2
-        exit 64
-      fi
+      # 在线校验需要与 AUR 模板相同的月 tag；旧版手动补发沿用显式历史日 tag。
+      tag_root="$(nightly_release_tag_for_label "$release_version")"
       ;;
   esac
 

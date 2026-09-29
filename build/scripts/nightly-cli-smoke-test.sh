@@ -11,6 +11,7 @@ FAKE_SOURCE_DIR="$TMP_ROOT/source"
 RENDER_OUTPUT_DIR="$TMP_ROOT/render"
 STABLE_AUR_OUTPUT_DIR="$TMP_ROOT/stable-aur-render"
 NIGHTLY_AUR_OUTPUT_DIR="$TMP_ROOT/nightly-aur-render"
+LEGACY_NIGHTLY_AUR_OUTPUT_DIR="$TMP_ROOT/legacy-nightly-aur-render"
 OUTPUT_DIR="$TMP_ROOT/output"
 NIGHTLY_ASSET_FIXTURE_DIR="$TMP_ROOT/nightly-assets"
 NIGHTLY_HASHES_OUTPUT_PATH="$NIGHTLY_ASSET_FIXTURE_DIR/hashes.sha256"
@@ -83,10 +84,20 @@ metadata_output="$(bash "$ROOT_DIR/build/scripts/resolve-nightly-metadata.sh")"
 base_version=""
 nightly_date=""
 nightly_label=""
+nightly_tag=""
 eval "$metadata_output"
 
 if [[ ! "$nightly_label" =~ ^[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]{8}\+[0-9a-f]+$ ]]; then
   echo "Unexpected nightly label: $nightly_label" >&2
+  exit 1
+fi
+# 月 tag 只由北京时间日期派生；展示用的版本标签仍保留日和源码 SHA。
+test "$nightly_tag" = "nightly-${nightly_date:0:6}"
+. "$ROOT_DIR/build/scripts/lib/nightly-release-tag.sh"
+test "$(nightly_release_tag_for_label "$nightly_label")" = "$nightly_tag"
+test "$(LINGLONG_NIGHTLY_RELEASE_TAG="nightly-$nightly_date" nightly_release_tag_for_label "$nightly_label")" = "nightly-$nightly_date"
+if LINGLONG_NIGHTLY_RELEASE_TAG=nightly-199901 nightly_release_tag_for_label "$nightly_label" >/dev/null 2>&1; then
+  echo "Nightly tag resolver accepted a tag from another month." >&2
   exit 1
 fi
 
@@ -159,10 +170,25 @@ grep -q '^pkgname=linglong-store-nightly-bin$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGB
 grep -q "^pkgver=${current_nightly_aur_version}$" "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
 grep -q "^arch=('x86_64' 'aarch64')$" "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
 grep -q '^conflicts=('"'linglong-store' 'linglong-store-bin'"')$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
-grep -q '/releases/tag/nightly-'"$nightly_date"'$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/linglong-store-nightly-bin.changelog"
+grep -q '/releases/tag/'"$nightly_tag"'$' "$NIGHTLY_AUR_OUTPUT_DIR/aur/linglong-store-nightly-bin.changelog"
 grep -q '^source_aarch64=(' "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
-grep -q 'linglong-store-'"$nightly_label"'-linux-arm64.tar.gz::https://github.com/HanHan666666/flutter-linglong-store/releases/download/nightly-'"$nightly_date"'/linglong-store-'"$nightly_label"'-linux-arm64.tar.gz' \
+grep -q 'linglong-store-'"$nightly_label"'-linux-arm64.tar.gz::https://github.com/HanHan666666/flutter-linglong-store/releases/download/'"$nightly_tag"'/linglong-store-'"$nightly_label"'-linux-arm64.tar.gz' \
   "$NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
+
+# 历史日版未清理，手动补发 AUR 必须继续引用它原来的日 tag。
+LINGLONG_NIGHTLY_RELEASE_TAG="nightly-$nightly_date" \
+  bash "$ROOT_DIR/build/scripts/render-packaging-templates.sh" \
+    --inner \
+    --version "$nightly_label" \
+    --arch amd64 \
+    --output-dir "$LEGACY_NIGHTLY_AUR_OUTPUT_DIR" \
+    --channel nightly \
+    --sha256-amd64 deadbeef \
+    --sha256-arm64 deadbeef \
+    --sha256-sig-amd64 deadbeef \
+    --sha256-sig-arm64 deadbeef \
+    --gpg-key-id TESTKEY
+grep -Fq "/releases/download/nightly-$nightly_date/" "$LEGACY_NIGHTLY_AUR_OUTPUT_DIR/aur/PKGBUILD"
 
 desktop_count="$(find "$RENDER_OUTPUT_DIR" -maxdepth 1 -type f -name '*.desktop' | awk 'END { print NR }')"
 test "$desktop_count" = "1"
@@ -229,8 +255,6 @@ test -f "$OUTPUT_DIR-arm64/linglong-store-${nightly_label}-arm64.AppImage"
 
 NOTES_FIXTURE_REPO="$TMP_ROOT/notes-repo"
 NOTES_OUTPUT_WITH_HISTORY="$TMP_ROOT/nightly-release-notes-with-history.md"
-NOTES_OUTPUT_FIRST_RELEASE="$TMP_ROOT/nightly-release-notes-first.md"
-NOTES_OUTPUT_INVALID_BASELINE="$TMP_ROOT/nightly-release-notes-invalid-baseline.md"
 NOTES_OUTPUT_WITH_LOONG64="$TMP_ROOT/nightly-release-notes-with-loong64.md"
 
 mkdir -p "$NOTES_FIXTURE_REPO"
@@ -244,12 +268,13 @@ EOF
 git -C "$NOTES_FIXTURE_REPO" add notes.txt
 git -C "$NOTES_FIXTURE_REPO" commit -m "feat: initial nightly baseline" >/dev/null 2>&1
 previous_source_commit="$(git -C "$NOTES_FIXTURE_REPO" rev-parse HEAD)"
+git -C "$NOTES_FIXTURE_REPO" tag v3.0.0
 
 cat > "$NOTES_FIXTURE_REPO/notes.txt" <<'EOF'
 current
 EOF
 git -C "$NOTES_FIXTURE_REPO" add notes.txt
-git -C "$NOTES_FIXTURE_REPO" commit -m "fix: append nightly changelog" >/dev/null 2>&1
+git -C "$NOTES_FIXTURE_REPO" commit -m "fix: improve nightly details" >/dev/null 2>&1
 current_source_commit="$(git -C "$NOTES_FIXTURE_REPO" rev-parse HEAD)"
 
 (
@@ -258,12 +283,11 @@ current_source_commit="$(git -C "$NOTES_FIXTURE_REPO" rev-parse HEAD)"
     --nightly-label "$nightly_label" \
     --nightly-date "$nightly_date" \
     --source-commit "$current_source_commit" \
-    --previous-source-commit "$previous_source_commit" \
     --output "$NOTES_OUTPUT_WITH_HISTORY"
 )
 
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Release Notes"
-assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "1、本次版本暂无需要特别说明的用户可见变化。"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "1、improve nightly details"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly source commit: $current_source_commit"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly source date: $nightly_date"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly version label: $nightly_label"
@@ -284,31 +308,6 @@ bash "$ROOT_DIR/build/scripts/augment-nightly-release-notes-loong64.sh" \
 assert_file_contains "$NOTES_OUTPUT_WITH_LOONG64" "- Architecture: amd64, arm64, loong64"
 assert_file_contains "$NOTES_OUTPUT_WITH_LOONG64" "- loong64: bundle / deb"
 test "$(grep -c '^- loong64: bundle / deb$' "$NOTES_OUTPUT_WITH_LOONG64")" = "1"
-
-(
-  cd "$NOTES_FIXTURE_REPO"
-  bash "$ROOT_DIR/build/scripts/generate-nightly-release-notes.sh" \
-    --nightly-label "$nightly_label" \
-    --nightly-date "$nightly_date" \
-    --source-commit "$current_source_commit" \
-    --output "$NOTES_OUTPUT_FIRST_RELEASE"
-)
-
-assert_file_contains "$NOTES_OUTPUT_FIRST_RELEASE" "## Release Notes"
-assert_file_contains "$NOTES_OUTPUT_FIRST_RELEASE" "1、这是首个 Nightly Release，后续 Nightly 将从上一版 Nightly source commit 自动生成变更日志。"
-
-(
-  cd "$NOTES_FIXTURE_REPO"
-  bash "$ROOT_DIR/build/scripts/generate-nightly-release-notes.sh" \
-    --nightly-label "$nightly_label" \
-    --nightly-date "$nightly_date" \
-    --source-commit "$current_source_commit" \
-    --previous-source-commit deadbeef \
-    --output "$NOTES_OUTPUT_INVALID_BASELINE"
-)
-
-assert_file_contains "$NOTES_OUTPUT_INVALID_BASELINE" "## Release Notes"
-assert_file_contains "$NOTES_OUTPUT_INVALID_BASELINE" "1、这是首个 Nightly Release，后续 Nightly 将从上一版 Nightly source commit 自动生成变更日志。"
 
 cat > "$FAKE_CLAUDE_SETTINGS_PATH" <<'EOF'
 {
@@ -370,7 +369,6 @@ NOTES_OUTPUT_WITH_AI="$TMP_ROOT/nightly-release-notes-with-ai.md"
     --nightly-label "$nightly_label" \
     --nightly-date "$nightly_date" \
     --source-commit "$current_source_commit" \
-    --previous-source-commit "$previous_source_commit" \
     --output "$NOTES_OUTPUT_WITH_AI"
 )
 
@@ -381,16 +379,16 @@ assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly version label: $nightly_la
 assert_file_contains "$NOTES_OUTPUT_WITH_AI" "## Nightly Build"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI" "## Download"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI" "## Requirements"
-assert_file_contains "$FAKE_CLAUDE_INPUT_PATH" "subject: fix: append nightly changelog"
+assert_file_contains "$FAKE_CLAUDE_INPUT_PATH" "subject: fix: improve nightly details"
 assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "--setting-sources user"
 assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "--tools"
 assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "请根据输入中的 release notes 范围和候选变更，为版本 ${nightly_label}（nightly）生成最终的 JSON 文案条目。"
 assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前版本：${nightly_label}"
 assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前构建类型：nightly"
-assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前基线引用：${previous_source_commit}"
+assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前基线引用：v3.0.0"
 assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前代码库根目录：${NOTES_FIXTURE_REPO}"
 assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前文档目录：${ROOT_DIR}/docs"
-assert_file_contains "$FAKE_CLAUDE_INPUT_PATH" "Start ref: ${previous_source_commit}"
+assert_file_contains "$FAKE_CLAUDE_INPUT_PATH" "Start ref: v3.0.0"
 if grep -Fq '特殊用户要求' "$FAKE_CLAUDE_PROMPT_PATH"; then
   echo "Expected nightly release notes prompt to avoid temporary special user requirements." >&2
   exit 1
@@ -415,12 +413,11 @@ NOTES_OUTPUT_WITH_AI_FALLBACK="$TMP_ROOT/nightly-release-notes-with-ai-fallback.
     --nightly-label "$nightly_label" \
     --nightly-date "$nightly_date" \
     --source-commit "$current_source_commit" \
-    --previous-source-commit "$previous_source_commit" \
     --output "$NOTES_OUTPUT_WITH_AI_FALLBACK"
 )
 
 assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "## Release Notes"
-assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "1、本次版本暂无需要特别说明的用户可见变化。"
+assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "1、improve nightly details"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "Nightly source commit: $current_source_commit"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "Nightly source date: $nightly_date"
 assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "Nightly version label: $nightly_label"

@@ -6,16 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 nightly_label=""
 nightly_date=""
 source_commit=""
-previous_source_commit=""
 output_path=""
-
-render_fallback_changelog() {
-  cat <<'EOF'
-## Release Notes
-
-1、这是首个 Nightly Release，后续 Nightly 将从上一版 Nightly source commit 自动生成变更日志。
-EOF
-}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -31,10 +22,6 @@ while [[ $# -gt 0 ]]; do
       source_commit="$2"
       shift 2
       ;;
-    --previous-source-commit)
-      previous_source_commit="$2"
-      shift 2
-      ;;
     --output)
       output_path="$2"
       shift 2
@@ -48,7 +35,7 @@ done
 
 # 强制要求显式输入，避免 workflow 或本地脚本默默回退到错误上下文。
 if [[ -z "$nightly_label" || -z "$nightly_date" || -z "$source_commit" || -z "$output_path" ]]; then
-  echo "Usage: generate-nightly-release-notes.sh --nightly-label <label> --nightly-date <YYYYMMDD> --source-commit <sha> [--previous-source-commit <sha>] --output <path>" >&2
+  echo "Usage: generate-nightly-release-notes.sh --nightly-label <label> --nightly-date <YYYYMMDD> --source-commit <sha> --output <path>" >&2
   exit 64
 fi
 
@@ -60,32 +47,16 @@ fi
 
 mkdir -p "$(dirname "$output_path")"
 
-if [[ -n "$previous_source_commit" ]]; then
-  effective_source_baseline="${LINGLONG_RELEASE_NOTES_START_REF:-$previous_source_commit}"
-
-  if [[ -n "${LINGLONG_RELEASE_NOTES_START_REF:-}" ]] \
-    && ! git -C "$PWD" rev-parse --verify "${effective_source_baseline}^{commit}" >/dev/null 2>&1; then
-    echo "Release notes start ref does not exist: $effective_source_baseline" >&2
-    exit 1
-  fi
-
-  # release body 里的历史 SHA 可能被人工编辑或因历史改写失效；不可用时降级为首版文案而不是直接炸掉 nightly。
-  if git -C "$PWD" rev-parse --verify "${effective_source_baseline}^{commit}" >/dev/null 2>&1 \
-    && git -C "$PWD" merge-base --is-ancestor "$effective_source_baseline" HEAD; then
-    # 直接复用正式 release 的 changelog 入口，这样 stable/nightly 可以共享同一条 AI fallback 链路。
-    changelog_content="$({
-      LINGLONG_CHANGELOG_CONTEXT_KIND=nightly \
-      LINGLONG_RELEASE_TOOL_ROOT="$PWD" \
-        bash "$ROOT_DIR/build/scripts/generate-changelog.sh" \
-        "$nightly_label" \
-        "$effective_source_baseline"
-    })"
-  else
-    changelog_content="$(render_fallback_changelog)"
-  fi
-else
-  changelog_content="$(render_fallback_changelog)"
-fi
+# 月度 Release 反复覆盖说明，因此起点固定为当前 HEAD 可达的最近正式版，展示累计变化。
+stable_baseline="$(git -C "$PWD" describe \
+  --tags --abbrev=0 --first-parent --match 'v[0-9]*.[0-9]*.[0-9]*' HEAD)"
+changelog_content="$({
+  LINGLONG_CHANGELOG_CONTEXT_KIND=nightly \
+  LINGLONG_RELEASE_TOOL_ROOT="$PWD" \
+    bash "$ROOT_DIR/build/scripts/generate-changelog.sh" \
+    "$nightly_label" \
+    "$stable_baseline"
+})"
 
 cat > "$output_path" <<EOF
 $changelog_content

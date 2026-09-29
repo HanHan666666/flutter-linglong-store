@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+. "$ROOT_DIR/build/scripts/lib/nightly-release-tag.sh"
 
 base_version="$(sed -n 's/^version: //p' "$ROOT_DIR/pubspec.yaml" | head -n1 | cut -d+ -f1)"
 if [[ -z "$base_version" ]]; then
@@ -17,8 +18,10 @@ fi
 
 nightly_date="$(TZ=Asia/Shanghai date +%Y%m%d)"
 nightly_label="${base_version}-nightly.${nightly_date}+${short_sha}"
+nightly_tag="$(nightly_release_tag_from_date "$nightly_date")"
 
 printf "base_version=%q\n" "$base_version"
 printf "nightly_date=%q\n" "$nightly_date"
 printf "short_sha=%q\n" "$short_sha"
 printf "nightly_label=%q\n" "$nightly_label"
+printf "nightly_tag=%q\n" "$nightly_tag"

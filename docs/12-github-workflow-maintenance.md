@@ -64,14 +64,14 @@
 运行约束：
 
 - 只允许默认分支真正发布 nightly
-- 如果默认分支 `HEAD` 与某个已存在 nightly prerelease 的 `Nightly source commit` 相同，则首轮执行跳过 prerelease；只有 `run_attempt > 1` 或手动 `force_aur_publish=true` 时，才允许复用那次 prerelease 资产补发 AUR
+- 如果默认分支 `HEAD` 与当月 nightly prerelease 的 `Nightly source commit` 相同，则首轮执行跳过 prerelease；新月份即使源码 SHA 与上月相同也必须创建本月快照；`run_attempt > 1` 或手动 `force_aur_publish=true` 可复用当月资产补发 AUR
 - 手动补发时可额外传 `aur_release_tag`，显式指定要复用的历史 nightly tag；这种恢复路径以该 tag 对应的 prerelease 为准，不要求它的 `Nightly source commit` 仍等于当前 `HEAD`
-- 如果手动补发未传 `aur_release_tag`，workflow 会回退到按 `Nightly source commit` 扫描现有 nightly prerelease
+- 如果手动补发未传 `aur_release_tag`，workflow 只查看当前月份的 tag，不按 SHA 误选上月或历史日版
 - `aur_release_tag` 指向的 prerelease 必须已经包含 `amd64 + arm64` nightly tarball 及其 `.asc`；对于历史单架构 nightly tag，当前策略是显式失败而不是回退发布一份缺失 arm64 的 Nightly AUR 元数据
 - 无论补发的是当前还是历史 prerelease，`publish-aur-nightly` 都必须继续使用触发本次 workflow 的当前代码版本执行渲染、校验与发布脚本；只允许资产下载 URL 与版本标签指向历史 prerelease
 - nightly 必须同时构建 `amd64` / `arm64`；`arm64` 优先走 `ubuntu-24.04-arm` 原生 runner，失败或取消时再回退到 QEMU
 - nightly Release notes 必须通过 `build/scripts/generate-nightly-release-notes.sh` 生成，禁止再把 changelog / 下载说明 / metadata 直接内联写回 workflow heredoc
-- nightly changelog 默认范围为“最近一次 nightly prerelease 的 `Nightly source commit` → 当前 `source_commit`”；如需临时扩大或收窄范围，只能通过仓库变量 `LINGLONG_RELEASE_NOTES_START_REF` 显式指定起点，禁止把起点写进 AI prompt 的自然语言特殊要求
+- nightly changelog 范围固定为“当前 HEAD 可达的最近正式版 tag → 当前 `source_commit`”，月内每天更新 Release body 时保留累计变化；没有可达正式版时直接报错
 - nightly AI changelog 只能输出 `{"items":["用户可读描述"]}` 结构化文案数组，Markdown 标题和 `1、2、3` 编号必须由 `build/scripts/claude-code-release-changelog.sh` 渲染；禁止让 AI 直接输出 release notes 编号列表、分类前缀或 Markdown，避免再次出现 `0、` 起始编号
 - nightly 发布前必须基于最终签名后的发布资产追加 `SHA256 Hashes of the release artifacts` 段落，并同时产出 `hashes.sha256`；禁止在 prepare/build 阶段对未签名产物提前固化哈希
 - nightly 的 build/sign/publish/AUR 阶段都必须消费合并后的多架构 artifact；不要再在签名后保留 `*-amd64` 这种误导性的单架构 artifact 名
@@ -90,8 +90,9 @@
 
 运行约束：
 
-- 只允许补传当前已有的 nightly prerelease，定位依据优先级为：`nightly_tag` 输入 → `workflow_run.head_sha` 对应的 `Nightly source commit` → 最新 nightly prerelease
+- 只允许补传当前已有的 nightly prerelease，定位依据优先级为：显式 `nightly_tag` 输入 → 月度 prerelease 中与 `workflow_run.head_sha` 对应的 `Nightly source commit` → 最新月度 prerelease；历史日版只能显式指定
 - 自动 `workflow_run` 路径如果找不到与 `workflow_run.head_sha` 匹配的 nightly prerelease，必须直接 skip；不要回退去补丁最新一版无关 nightly
+- 主发布与 Loong64 补传共用串行发布组；补传前再次核对 Release 的 `Nightly source commit`，旧任务不得覆盖同月较新构建
 - `nightly-loong64.yml` 只允许构建 `bundle + deb`；当前禁止擅自扩到 `rpm` / `AppImage` / `AUR`
 - Loong64 构建统一走 `build/scripts/build-loong64-in-container.sh`，使用外部 `Flutter-Dart-loong64/flutter-loong64-releases` SDK；不要复用 Debian 10 release image 试图硬做全格式 parity
 - 默认 Loong64 Flutter SDK 当前固定为 `v3.46.0-1.0.pre-327`（`flutter-sdk-linux-loong64-3.46.0-1.0.pre-327-69c87127a40b.tar.xz`，native UOS 25 构建，Dart `3.13.0-edge.2ea45c8966a8`，Flutter/Engine revision `69c87127a40b5c0d735611f9026c3b16a2c02369`，release 2026-06-29）
@@ -304,14 +305,14 @@ hashes.sha256                                  ← GitHub Release 页面附带�
 
 ## Nightly Release 规则
 
-nightly 当前按日期维护 prerelease：
+nightly 从新规则生效后按北京时间月份维护 prerelease：
 
-- tag: `nightly-<YYYYMMDD>`
+- tag: `nightly-<YYYYMM>`
 - prerelease title 前缀: `Nightly Build`
 - `prerelease: true`
 - `latest: false`
 
-同一天内重跑可以覆盖同一个 nightly tag 的 assets / body；不要再额外引入第二套固定 `nightly` tag 规则，以免 AUR 恢复与 changelog 基线判断出现歧义。
+当月有新提交时覆盖同一 tag 的 body 与资产；旧资产只在新资产成功上传后清理，最后才将 tag 指向当次源码。跨月创建新的 tag，上月最后一次成功发布保持为快照；若新月份尚无 tag，即使 SHA 未变也创建月度快照。已存在的 `nightly-<YYYYMMDD>` Release 与 tag 不迁移、不清理，自动查找也不能误选它们。AUR 手动恢复历史日版时须显式传入 `aur_release_tag`，渲染、校验和发布都沿用该原始 tag。
 
 nightly release body 必须保留以下元数据行，供下次执行判断是否需要发布：
 

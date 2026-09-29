@@ -50,7 +50,7 @@ final class InstalledAppsProvider
   }
 }
 
-String _$installedAppsHash() => r'1412659d0cbe0312386f45edebaf2fc064bddf4b';
+String _$installedAppsHash() => r'b3848484c208b95db6f1fdfb4d0242823d37919f';
 
 /// 已安装应用 Provider
 ///

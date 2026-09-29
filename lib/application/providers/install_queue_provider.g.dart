@@ -62,7 +62,7 @@ String _$installMessagesHash() => r'8879119de40b13dee84e68c669030c72d88bdcae';
 /// 2. XDG Journal：应用崩溃后可恢复完整操作状态
 /// 3. 持久化屏障：外部动作不得领先于可恢复事实
 /// 4. 错误恢复：重试机制
-/// 5. 取消状态管理：区分"用户取消"和"真正失败"
+/// 5. 取消状态管理：只有底层传输结束后才接受最终 cancelled 事实
 
 @ProviderFor(InstallQueue)
 final installQueueProvider = InstallQueueProvider._();
@@ -74,7 +74,7 @@ final installQueueProvider = InstallQueueProvider._();
 /// 2. XDG Journal：应用崩溃后可恢复完整操作状态
 /// 3. 持久化屏障：外部动作不得领先于可恢复事实
 /// 4. 错误恢复：重试机制
-/// 5. 取消状态管理：区分"用户取消"和"真正失败"
+/// 5. 取消状态管理：只有底层传输结束后才接受最终 cancelled 事实
 final class InstallQueueProvider
     extends $NotifierProvider<InstallQueue, InstallQueueState> {
   /// 安装队列状态机 Provider
@@ -84,7 +84,7 @@ final class InstallQueueProvider
   /// 2. XDG Journal：应用崩溃后可恢复完整操作状态
   /// 3. 持久化屏障：外部动作不得领先于可恢复事实
   /// 4. 错误恢复：重试机制
-  /// 5. 取消状态管理：区分"用户取消"和"真正失败"
+  /// 5. 取消状态管理：只有底层传输结束后才接受最终 cancelled 事实
   InstallQueueProvider._()
     : super(
         from: null,
@@ -112,7 +112,7 @@ final class InstallQueueProvider
   }
 }
 
-String _$installQueueHash() => r'bab7bd2be33dd15fb0a21643d10ba4cb083e313d';
+String _$installQueueHash() => r'7fd8428d19eda2045a928fd711324317793d6d50';
 
 /// 安装队列状态机 Provider
 ///
@@ -121,7 +121,7 @@ String _$installQueueHash() => r'bab7bd2be33dd15fb0a21643d10ba4cb083e313d';
 /// 2. XDG Journal：应用崩溃后可恢复完整操作状态
 /// 3. 持久化屏障：外部动作不得领先于可恢复事实
 /// 4. 错误恢复：重试机制
-/// 5. 取消状态管理：区分"用户取消"和"真正失败"
+/// 5. 取消状态管理：只有底层传输结束后才接受最终 cancelled 事实
 
 abstract class _$InstallQueue extends $Notifier<InstallQueueState> {
   InstallQueueState build();

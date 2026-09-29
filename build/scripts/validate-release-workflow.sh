@@ -120,6 +120,9 @@ require_line_before_after_anchor "update-uos-store:" "Checkout repository for UO
 require_line_before_after_anchor "update-uos-store:" "Download signed Debian packages" "Collect release Debian packages" .github/workflows/release.yml
 require_line_before_after_anchor "update-uos-store:" "Download release notes" "Prepare UOS Store note" .github/workflows/release.yml
 require_grep 'bash build/scripts/generate-changelog.sh "${{ steps.release-version.outputs.version }}" > release-notes.md' .github/workflows/release.yml
+require_grep 'DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}' .github/workflows/release.yml
+require_grep "Set up Node.js for Pi" .github/workflows/release.yml
+require_no_grep "CLAUDE_CODE_SETTINGS_JSON" .github/workflows/release.yml
 require_grep "artifacts/*.tar.gz.asc" .github/workflows/release.yml
 require_grep "for tarball in *.tar.gz; do" .github/workflows/release.yml
 require_grep "for rpm in *.rpm; do" .github/workflows/release.yml
@@ -168,6 +171,10 @@ require_grep "needs.prepare-nightly.outputs.should_publish_aur == 'true'" .githu
 require_grep "always() && needs.prepare-nightly.outputs.should_publish_release == 'true' && needs.sign-nightly.result == 'success'" .github/workflows/nightly.yml
 require_grep "needs.sign-nightly.result == 'success'" .github/workflows/nightly.yml
 require_grep "generate-nightly-release-notes.sh" .github/workflows/nightly.yml
+require_grep 'DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}' .github/workflows/nightly.yml
+require_grep "Set up Node.js for Pi" .github/workflows/nightly.yml
+require_no_grep "CLAUDE_CODE_SETTINGS_JSON" .github/workflows/nightly.yml
+require_grep "pi-release-notes-smoke-test.sh" build/scripts/release-cli-smoke-test.sh
 require_grep "append-release-asset-hashes.sh" .github/workflows/nightly.yml
 require_grep "nightly-artifacts/hashes.sha256" .github/workflows/nightly.yml
 require_grep "pattern: nightly-assets-*" .github/workflows/nightly.yml

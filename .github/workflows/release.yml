@@ -86,14 +86,17 @@ jobs:
           path: build/tmp/release-version-files
           if-no-files-found: error
 
+      # Pi 0.99.1 要求 Node >=22.19；setup-node 的 22 通道提供满足条件的最新补丁版。
+      - name: Set up Node.js for Pi
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Generate release notes
         env:
-          CLAUDE_CODE_SETTINGS_JSON: ${{ secrets['CLAUDE_CODE_SETTINGS_JSON'] }}
-          LINGLONG_CLAUDE_CODE_VERSION: 2.1.126
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           LINGLONG_RELEASE_NOTES_START_REF: ${{ vars.LINGLONG_RELEASE_NOTES_START_REF }}
-          LINGLONG_USE_SYSTEM_CLAUDE_CODE: '0'
         run: |
-          # Secret 为空时脚本会自动回退到 deterministic changelog，不阻断正式发版。
           bash build/scripts/generate-changelog.sh "${{ steps.release-version.outputs.version }}" > release-notes.md
           cat <<'EOF' >> release-notes.md
 

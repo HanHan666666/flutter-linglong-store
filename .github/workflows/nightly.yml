@@ -482,11 +482,15 @@ jobs:
       - name: Set up Dart SDK
         uses: dart-lang/setup-dart@v1
 
+      # Pi 0.99.1 要求 Node >=22.19；发布阶段单独配置，避免依赖其他 job 的环境。
+      - name: Set up Node.js for Pi
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Render nightly release notes
         env:
-          CLAUDE_CODE_SETTINGS_JSON: ${{ secrets['CLAUDE_CODE_SETTINGS_JSON'] }}
-          LINGLONG_CLAUDE_CODE_VERSION: 2.1.126
-          LINGLONG_USE_SYSTEM_CLAUDE_CODE: '0'
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: |
           # 每次从最近正式版累计到当前源码，月内覆盖后仍能读到完整变更。
           cmd=(

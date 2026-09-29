@@ -15,28 +15,15 @@ LEGACY_NIGHTLY_AUR_OUTPUT_DIR="$TMP_ROOT/legacy-nightly-aur-render"
 OUTPUT_DIR="$TMP_ROOT/output"
 NIGHTLY_ASSET_FIXTURE_DIR="$TMP_ROOT/nightly-assets"
 NIGHTLY_HASHES_OUTPUT_PATH="$NIGHTLY_ASSET_FIXTURE_DIR/hashes.sha256"
-FAKE_CLAUDE_SUCCESS_PATH="$TMP_ROOT/fake-claude-success.sh"
-FAKE_CLAUDE_FAILURE_PATH="$TMP_ROOT/fake-claude-failure.sh"
-FAKE_CLAUDE_INPUT_PATH="$TMP_ROOT/fake-claude-input.txt"
-FAKE_CLAUDE_ARGS_PATH="$TMP_ROOT/fake-claude-args.txt"
-FAKE_CLAUDE_SETTINGS_PATH="$TMP_ROOT/fake-claude-settings.json"
-FAKE_CLAUDE_HOME="$TMP_ROOT/fake-claude-home"
-FAKE_CLAUDE_PROMPT_PATH="$TMP_ROOT/fake-claude-prompt.md"
+FAKE_PI_PATH="$TMP_ROOT/fake-pi.sh"
+FAKE_PI_ARGS_PATH="$TMP_ROOT/fake-pi-args.txt"
 
 cleanup() {
   rm -rf "$TMP_ROOT"
 }
-
 trap cleanup EXIT
 
-unset \
-  CLAUDE_CODE_SETTINGS_JSON \
-  LINGLONG_CLAUDE_CODE_EXECUTABLE \
-  LINGLONG_CLAUDE_CODE_INSTALL_DIR \
-  LINGLONG_CLAUDE_CODE_VERSION \
-  LINGLONG_REINSTALL_CLAUDE_CODE \
-  LINGLONG_USE_SYSTEM_CLAUDE_CODE \
-  LINGLONG_RELEASE_NOTES_START_REF
+unset DEEPSEEK_API_KEY LINGLONG_PI_EXECUTABLE LINGLONG_RELEASE_NOTES_START_REF
 
 assert_no_template_placeholders() {
   local file_path="$1"
@@ -261,166 +248,77 @@ mkdir -p "$NOTES_FIXTURE_REPO"
 git init "$NOTES_FIXTURE_REPO" >/dev/null 2>&1
 git -C "$NOTES_FIXTURE_REPO" config user.name "Nightly Smoke"
 git -C "$NOTES_FIXTURE_REPO" config user.email "nightly-smoke@example.com"
-
-cat > "$NOTES_FIXTURE_REPO/notes.txt" <<'EOF'
-initial
-EOF
+printf 'initial\n' > "$NOTES_FIXTURE_REPO/notes.txt"
 git -C "$NOTES_FIXTURE_REPO" add notes.txt
 git -C "$NOTES_FIXTURE_REPO" commit -m "feat: initial nightly baseline" >/dev/null 2>&1
-previous_source_commit="$(git -C "$NOTES_FIXTURE_REPO" rev-parse HEAD)"
 git -C "$NOTES_FIXTURE_REPO" tag v3.0.0
-
-cat > "$NOTES_FIXTURE_REPO/notes.txt" <<'EOF'
-current
-EOF
-git -C "$NOTES_FIXTURE_REPO" add notes.txt
-git -C "$NOTES_FIXTURE_REPO" commit -m "fix: improve nightly details" >/dev/null 2>&1
+printf 'current\n' >> "$NOTES_FIXTURE_REPO/notes.txt"
+git -C "$NOTES_FIXTURE_REPO" commit -am "fix: improve nightly details" >/dev/null 2>&1
 current_source_commit="$(git -C "$NOTES_FIXTURE_REPO" rev-parse HEAD)"
+
+cat > "$FAKE_PI_PATH" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$@" > "$FAKE_PI_ARGS_PATH"
+printf 'Nightly 修复了安装进度显示。\n\n### 体验改进\n\n- 状态更及时。\n'
+EOF
+chmod +x "$FAKE_PI_PATH"
 
 (
   cd "$NOTES_FIXTURE_REPO"
-  bash "$ROOT_DIR/build/scripts/generate-nightly-release-notes.sh" \
-    --nightly-label "$nightly_label" \
-    --nightly-date "$nightly_date" \
-    --source-commit "$current_source_commit" \
-    --output "$NOTES_OUTPUT_WITH_HISTORY"
+  DEEPSEEK_API_KEY=test-key LINGLONG_PI_EXECUTABLE="$FAKE_PI_PATH" FAKE_PI_ARGS_PATH="$FAKE_PI_ARGS_PATH" \
+    bash "$ROOT_DIR/build/scripts/generate-nightly-release-notes.sh" \
+      --nightly-label "$nightly_label" \
+      --nightly-date "$nightly_date" \
+      --source-commit "$current_source_commit" \
+      --output "$NOTES_OUTPUT_WITH_HISTORY"
 )
 
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Release Notes"
-assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "1、improve nightly details"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly 修复了安装进度显示。"
+assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "### 体验改进"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly source commit: $current_source_commit"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly source date: $nightly_date"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "Nightly version label: $nightly_label"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- Architecture: amd64, arm64"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Download"
-assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- amd64: bundle / deb / rpm / AppImage"
-assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "- arm64: bundle / deb / rpm / AppImage"
-assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "paru -S linglong-store-nightly-bin"
-assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "yay -S linglong-store-nightly-bin"
 assert_file_contains "$NOTES_OUTPUT_WITH_HISTORY" "## Requirements"
+assert_file_contains "$FAKE_PI_ARGS_PATH" "起点：v3.0.0"
+assert_file_contains "$FAKE_PI_ARGS_PATH" "类型：nightly"
+assert_file_contains "$FAKE_PI_ARGS_PATH" "deepseek-flash"
+if grep -Eq '^--(no-tools|tools|exclude-tools|no-builtin-tools)$' "$FAKE_PI_ARGS_PATH"; then
+  echo "Pi tools must remain available in nightly Actions." >&2
+  exit 1
+fi
 
 cp "$NOTES_OUTPUT_WITH_HISTORY" "$NOTES_OUTPUT_WITH_LOONG64"
 bash "$ROOT_DIR/build/scripts/augment-nightly-release-notes-loong64.sh" \
   --notes-file "$NOTES_OUTPUT_WITH_LOONG64"
 bash "$ROOT_DIR/build/scripts/augment-nightly-release-notes-loong64.sh" \
   --notes-file "$NOTES_OUTPUT_WITH_LOONG64"
-
 assert_file_contains "$NOTES_OUTPUT_WITH_LOONG64" "- Architecture: amd64, arm64, loong64"
 assert_file_contains "$NOTES_OUTPUT_WITH_LOONG64" "- loong64: bundle / deb"
 test "$(grep -c '^- loong64: bundle / deb$' "$NOTES_OUTPUT_WITH_LOONG64")" = "1"
 
-cat > "$FAKE_CLAUDE_SETTINGS_PATH" <<'EOF'
-{
-  "env": {
-    "ANTHROPIC_AUTH_TOKEN": "nightly-token",
-    "ANTHROPIC_BASE_URL": "http://claude.example.test"
-  },
-  "model": "sonnet"
-}
-EOF
-
-cat > "$FAKE_CLAUDE_SUCCESS_PATH" <<'EOF'
+# 模型调用失败时不落地半份 Nightly 发布说明。
+cat > "$FAKE_PI_PATH" <<'EOF'
 #!/usr/bin/env bash
-set -euo pipefail
-
-printf '%s\n' "$*" > "$FAKE_CLAUDE_ARGS_PATH"
-previous_arg=""
-prompt_file=""
-for arg in "$@"; do
-  if [[ "$previous_arg" == "--append-system-prompt-file" ]]; then
-    prompt_file="$arg"
-    break
-  fi
-  previous_arg="$arg"
-done
-
-if [[ -n "${FAKE_CLAUDE_PROMPT_PATH:-}" && -n "$prompt_file" ]]; then
-  cat "$prompt_file" > "$FAKE_CLAUDE_PROMPT_PATH"
-fi
-
-cat > "$FAKE_CLAUDE_INPUT_PATH"
-test "$(jq -S . "$HOME/.claude/settings.json")" = "$(jq -S . "$FAKE_CLAUDE_SETTINGS_PATH")"
-cat <<'OUT'
-{"items":["修复 Nightly 构建中的更新日志展示问题。"]}
-OUT
-EOF
-chmod +x "$FAKE_CLAUDE_SUCCESS_PATH"
-
-cat > "$FAKE_CLAUDE_FAILURE_PATH" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
 exit 1
 EOF
-chmod +x "$FAKE_CLAUDE_FAILURE_PATH"
-
-NOTES_OUTPUT_WITH_AI="$TMP_ROOT/nightly-release-notes-with-ai.md"
-
-(
+chmod +x "$FAKE_PI_PATH"
+if (
   cd "$NOTES_FIXTURE_REPO"
-  HOME="$FAKE_CLAUDE_HOME" \
-  CLAUDE_CODE_SETTINGS_JSON="$(cat "$FAKE_CLAUDE_SETTINGS_PATH")" \
-  FAKE_CLAUDE_ARGS_PATH="$FAKE_CLAUDE_ARGS_PATH" \
-  FAKE_CLAUDE_INPUT_PATH="$FAKE_CLAUDE_INPUT_PATH" \
-  FAKE_CLAUDE_PROMPT_PATH="$FAKE_CLAUDE_PROMPT_PATH" \
-  FAKE_CLAUDE_SETTINGS_PATH="$FAKE_CLAUDE_SETTINGS_PATH" \
-  LINGLONG_CLAUDE_CODE_EXECUTABLE="$FAKE_CLAUDE_SUCCESS_PATH" \
-  LINGLONG_USE_SYSTEM_CLAUDE_CODE=0 \
-  bash "$ROOT_DIR/build/scripts/generate-nightly-release-notes.sh" \
-    --nightly-label "$nightly_label" \
-    --nightly-date "$nightly_date" \
-    --source-commit "$current_source_commit" \
-    --output "$NOTES_OUTPUT_WITH_AI"
-)
-
-assert_file_contains "$NOTES_OUTPUT_WITH_AI" "1、修复 Nightly 构建中的更新日志展示问题。"
-assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly source commit: $current_source_commit"
-assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly source date: $nightly_date"
-assert_file_contains "$NOTES_OUTPUT_WITH_AI" "Nightly version label: $nightly_label"
-assert_file_contains "$NOTES_OUTPUT_WITH_AI" "## Nightly Build"
-assert_file_contains "$NOTES_OUTPUT_WITH_AI" "## Download"
-assert_file_contains "$NOTES_OUTPUT_WITH_AI" "## Requirements"
-assert_file_contains "$FAKE_CLAUDE_INPUT_PATH" "subject: fix: improve nightly details"
-assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "--setting-sources user"
-assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "--tools"
-assert_file_contains "$FAKE_CLAUDE_ARGS_PATH" "请根据输入中的 release notes 范围和候选变更，为版本 ${nightly_label}（nightly）生成最终的 JSON 文案条目。"
-assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前版本：${nightly_label}"
-assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前构建类型：nightly"
-assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前基线引用：v3.0.0"
-assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前代码库根目录：${NOTES_FIXTURE_REPO}"
-assert_file_contains "$FAKE_CLAUDE_PROMPT_PATH" "当前文档目录：${ROOT_DIR}/docs"
-assert_file_contains "$FAKE_CLAUDE_INPUT_PATH" "Start ref: v3.0.0"
-if grep -Fq '特殊用户要求' "$FAKE_CLAUDE_PROMPT_PATH"; then
-  echo "Expected nightly release notes prompt to avoid temporary special user requirements." >&2
+  DEEPSEEK_API_KEY=test-key LINGLONG_PI_EXECUTABLE="$FAKE_PI_PATH" \
+    bash "$ROOT_DIR/build/scripts/generate-nightly-release-notes.sh" \
+      --nightly-label "$nightly_label" \
+      --nightly-date "$nightly_date" \
+      --source-commit "$current_source_commit" \
+      --output "$TMP_ROOT/failed-nightly-notes.md"
+); then
+  echo "Nightly notes unexpectedly succeeded after Pi failure." >&2
   exit 1
 fi
-if grep -Fq 'git提交' "$FAKE_CLAUDE_PROMPT_PATH"; then
-  echo "Expected nightly release notes prompt to avoid repository mutation instructions." >&2
-  exit 1
-fi
-
-NOTES_OUTPUT_WITH_AI_FALLBACK="$TMP_ROOT/nightly-release-notes-with-ai-fallback.md"
-
-(
-  cd "$NOTES_FIXTURE_REPO"
-  HOME="$FAKE_CLAUDE_HOME" \
-  CLAUDE_CODE_SETTINGS_JSON="$(cat "$FAKE_CLAUDE_SETTINGS_PATH")" \
-  FAKE_CLAUDE_ARGS_PATH="$FAKE_CLAUDE_ARGS_PATH" \
-  FAKE_CLAUDE_INPUT_PATH="$FAKE_CLAUDE_INPUT_PATH" \
-  FAKE_CLAUDE_SETTINGS_PATH="$FAKE_CLAUDE_SETTINGS_PATH" \
-  LINGLONG_CLAUDE_CODE_EXECUTABLE="$FAKE_CLAUDE_FAILURE_PATH" \
-  LINGLONG_USE_SYSTEM_CLAUDE_CODE=0 \
-  bash "$ROOT_DIR/build/scripts/generate-nightly-release-notes.sh" \
-    --nightly-label "$nightly_label" \
-    --nightly-date "$nightly_date" \
-    --source-commit "$current_source_commit" \
-    --output "$NOTES_OUTPUT_WITH_AI_FALLBACK"
-)
-
-assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "## Release Notes"
-assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "1、improve nightly details"
-assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "Nightly source commit: $current_source_commit"
-assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "Nightly source date: $nightly_date"
-assert_file_contains "$NOTES_OUTPUT_WITH_AI_FALLBACK" "Nightly version label: $nightly_label"
+test ! -e "$TMP_ROOT/failed-nightly-notes.md"
 
 mkdir -p "$NIGHTLY_ASSET_FIXTURE_DIR"
 

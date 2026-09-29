@@ -5,6 +5,10 @@
 
 ## 变更记录
 
+- 2026-09-30：正式版与 Nightly 发版说明改用 Pi Agent 的 `deepseek-flash`，
+  Nightly 始终从最近正式版累计到当前源码。模型可使用工作区读写与 shell 工具，
+  正文自由组织，不再强制 JSON、编号或条目数量；固定下载与哈希信息继续由
+  脚本追加。缺少 `DEEPSEEK_API_KEY` 或模型失败时发布任务直接失败（docs/58）。
 - 2026-09-29：Nightly 自此按北京时间月份复用 `nightly-YYYYMM` prerelease，
   月内以新资产和累计发版说明覆盖旧构建，跨月保留上月最后一次成功版本；
   既有日版 Release/tag 不迁移、不删除。Loong64 异步补传只自动处理月版并核对

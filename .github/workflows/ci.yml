@@ -1,9 +1,8 @@
 name: CI
 
 on:
+  # 默认分支由定时 Nightly 验证，提交时仅对 PR 执行轻量校验。
   pull_request:
-  push:
-    branches: [master]
 
 permissions:
   contents: read

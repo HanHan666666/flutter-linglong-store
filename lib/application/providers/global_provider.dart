@@ -1,3 +1,9 @@
+/// 全局应用状态与用户偏好恢复入口。
+///
+/// 首帧语言、主题和偏好在这里统一恢复，语言决策复用核心解析入口，避免
+/// 原生窗口标题与 Flutter 页面采用不同的启动或回退规则。
+library;
+
 import 'dart:convert';
 import 'dart:ui' show PlatformDispatcher;
 
@@ -90,8 +96,9 @@ sealed class UserPreferences with _$UserPreferences {
 
 /// 全局应用状态
 class GlobalAppState {
+  /// 未指定语言的状态也复用统一兜底，显式恢复的用户或系统语言仍由调用方传入。
   const GlobalAppState({
-    this.locale = const Locale('zh'),
+    this.locale = defaultAppLocale,
     this.themeMode = ThemeMode.system,
     this.userPreferences = const UserPreferences(),
     this.isInitialized = false,

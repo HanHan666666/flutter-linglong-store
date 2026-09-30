@@ -8,8 +8,11 @@ import 'dart:ui';
 
 import 'l10n/app_localizations.dart';
 
-/// 未命中用户选择或系统语言时使用的产品默认语言。
-const Locale defaultAppLocale = Locale('zh');
+/// 未命中用户选择或系统语言时统一回退英文，覆盖 C/POSIX 等国际发布环境。
+const Locale defaultAppLocale = Locale('en');
+
+/// 语言菜单沿用中文置顶的展示约定，避免运行时兜底调整改变已有菜单顺序。
+const Locale _firstSelectableAppLocale = Locale('zh');
 
 /// 中文地区到默认文字的提示表。
 ///
@@ -129,7 +132,8 @@ Locale resolveSupportedAppLocale(Object? localeOrString) {
 
 /// 根据持久化选择和系统首选语言解析应用首次显示语言。
 ///
-/// 合法的用户选择始终优先；没有合法选择时依次匹配系统 Locale，最终回退中文。
+/// 合法的用户选择始终优先；没有合法选择时依次匹配系统 Locale，最终回退英文。
+/// 中文和其他受支持系统语言仍使用各自资源，英文只作为无匹配项时的兜底。
 /// 该函数只处理纯数据，便于启动 Provider 与原生窗口标题共享相同决策。
 Locale resolveInitialAppLocale({
   required String? persistedLanguageCode,
@@ -149,14 +153,14 @@ Locale resolveInitialAppLocale({
   return defaultAppLocale;
 }
 
-/// 返回设置页使用的语言顺序，产品默认语言置顶，其余语言使用生成顺序。
+/// 返回设置页使用的语言顺序，中文置顶，其余语言沿用已有生成顺序。
 ///
 /// 列表仍完全来源于 `AppLocalizations.supportedLocales`；新增 ARB 后无需修改本文件。
 List<Locale> get selectableAppLocales {
   return <Locale>[
-    defaultAppLocale,
+    _firstSelectableAppLocale,
     for (final locale in AppLocalizations.supportedLocales)
-      if (locale.languageCode != defaultAppLocale.languageCode) locale,
+      if (locale.languageCode != _firstSelectableAppLocale.languageCode) locale,
   ];
 }
 

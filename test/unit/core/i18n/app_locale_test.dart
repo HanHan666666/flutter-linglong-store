@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linglong_store/core/i18n/app_locale.dart';
 
+/// 验证语言优先级和国际环境回退契约，不依赖测试机器的真实系统语言。
 void main() {
   group('app locale resolution', () {
     test('合法持久化语言优先于系统语言', () {
@@ -139,20 +140,73 @@ void main() {
       );
     });
 
-    test('没有受支持语言时回退产品默认语言', () {
+    // 英文兜底只用于无法命中的输入，避免覆盖中文系统的首次启动语言。
+    test('中文系统首次启动仍使用对应的简体或繁体资源', () {
+      expect(
+        resolveInitialAppLocale(
+          persistedLanguageCode: null,
+          platformLocales: const [Locale('zh', 'CN')],
+        ),
+        const Locale('zh'),
+      );
+      expect(
+        resolveInitialAppLocale(
+          persistedLanguageCode: null,
+          platformLocales: const [Locale('zh', 'TW')],
+        ),
+        const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
+      );
+    });
+
+    // AppImageHub 在 C locale 下启动应用；这里直接模拟 Flutter 提供的
+    // Locale 数据，独立验证决策规则，实际 LANG 解析由发布包验收覆盖。
+    test('C 和 POSIX 系统语言首次启动回退英文', () {
+      for (final platformLocale in const [Locale('C'), Locale('POSIX')]) {
+        expect(
+          resolveInitialAppLocale(
+            persistedLanguageCode: null,
+            platformLocales: [platformLocale],
+          ),
+          const Locale('en'),
+          reason: '$platformLocale 没有对应的发布资源，应使用英文',
+        );
+      }
+    });
+
+    test('系统没有提供语言且用户未设置语言时回退英文', () {
+      for (final persistedLanguageCode in [null, '', '   ']) {
+        expect(
+          resolveInitialAppLocale(
+            persistedLanguageCode: persistedLanguageCode,
+            platformLocales: const [],
+          ),
+          const Locale('en'),
+        );
+      }
+    });
+
+    test('没有受支持系统语言时回退英文', () {
       expect(
         resolveInitialAppLocale(
           persistedLanguageCode: null,
           // fr 与 de 已是正式发布语言，这里必须使用始终不支持的语言，
-          // 才能验证“无受支持语言时回退产品默认语言”的兜底分支。
+          // 才能验证国际用户没有匹配资源时的英文兜底。
           platformLocales: const [Locale('it'), Locale('nl')],
         ),
-        defaultAppLocale,
+        const Locale('en'),
       );
     });
 
-    test('语言选择顺序只把产品默认语言置顶且不产生重复项', () {
-      expect(selectableAppLocales.first, defaultAppLocale);
+    test('无上下文的窗口标题和通知也对未知或空语言使用英文资源', () {
+      for (final input in [null, '', '   ', 'C', 'C.UTF-8', 'POSIX', 'it']) {
+        expect(resolveSupportedAppLocale(input), const Locale('en'));
+        expect(appLocalizationsForLocale(input).languageSelfName, 'English');
+      }
+    });
+
+    // 菜单展示顺序是独立的 UI 约定，不能随运行时兜底语言变更而重排。
+    test('语言选择顺序仍把中文置顶且不产生重复项', () {
+      expect(selectableAppLocales.first, const Locale('zh'));
       // 必须用完整语言标签判重：zh 与 zh-Hant 共享 languageCode，
       // 按 languageCode 判重会把繁体误当重复项剔除。
       expect(

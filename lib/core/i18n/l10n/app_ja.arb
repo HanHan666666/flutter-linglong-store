@@ -801,6 +801,7 @@
   },
   "detailDescriptionHint": "遭遇した問題を詳しくご記入ください",
   "linglongCommunity": "Linyaps コミュニティ",
+  "appDeveloperAttribution": "このアプリは deepin コミュニティの開発者グループ {developerGroup} によって開発されています",
   "unknown": "不明",
   "copyPid": "PID をコピー",
   "copyContainerId": "コンテナ ID をコピー",

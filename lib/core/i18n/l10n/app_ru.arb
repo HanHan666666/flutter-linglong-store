@@ -801,6 +801,7 @@
   },
   "detailDescriptionHint": "Подробно опишите проблему",
   "linglongCommunity": "Сообщество Linyaps",
+  "appDeveloperAttribution": "Приложение разработано группой разработчиков сообщества deepin {developerGroup}",
   "unknown": "Неизвестный",
   "copyPid": "Копировать PID",
   "copyContainerId": "Копировать идентификатор контейнера",

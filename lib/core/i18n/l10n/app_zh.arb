@@ -844,6 +844,16 @@
   },
   "detailDescriptionHint": "请详细描述您遇到的问题",
   "linglongCommunity": "玲珑社区",
+  "appDeveloperAttribution": "本应用由 deepin 社区开发者 {developerGroup} 小组开发",
+  "@appDeveloperAttribution": {
+    "description": "关于页应用名称下方的开发小组署名；品牌和正式小组名称保留原文",
+    "placeholders": {
+      "developerGroup": {
+        "type": "String",
+        "example": "Linyaps Simple Store SIG"
+      }
+    }
+  },
   "unknown": "未知",
   "copyPid": "复制 PID",
   "copyContainerId": "复制容器 ID",

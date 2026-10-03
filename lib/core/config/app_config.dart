@@ -1,3 +1,8 @@
+/// 应用共享配置与品牌身份。
+///
+/// 为页面和服务提供统一常量，避免同一应用的开发者署名、版本和入口信息各自维护。
+library;
+
 /// 应用配置
 class AppConfig {
   AppConfig._();
@@ -13,6 +18,9 @@ class AppConfig {
 
   /// 应用版本
   static const String appVersion = '3.6.0';
+
+  /// 开发小组的正式名称，不随语言翻译；关于区署名和开发者信息共用此身份。
+  static const String appDeveloperGroup = 'Linyaps Simple Store SIG';
 
   /// 默认语言
   static const String defaultLocale = 'zh';

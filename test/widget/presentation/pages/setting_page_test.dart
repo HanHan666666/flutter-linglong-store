@@ -1,6 +1,12 @@
+/// 设置页面展示与入口回归测试。
+///
+/// 使用已隔离的设置状态检查品牌署名和既有入口，避免依赖桌面平台服务。
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:linglong_store/application/providers/application_dependency_providers.dart';
@@ -137,28 +143,49 @@ void main() {
     expect(find.text('容器内自动更新商店本体'), findsNothing);
   });
 
-  testWidgets('setting page about section renders community exchange link', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
+  testWidgets(
+    'setting page about section renders branding and community link',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-        child: MaterialApp(
-          theme: AppTheme.lightTheme,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('zh'),
-          home: const Scaffold(body: SettingPage()),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('zh'),
+            home: const Scaffold(body: SettingPage()),
+          ),
         ),
-      ),
-    );
-    await tester.pump();
+      );
+      await tester.pump();
 
-    expect(find.text('社区交流'), findsOneWidget);
-  });
+      // 关于区复用真实 Logo，并保留用户确认的完整署名，信息行使用同一小组身份。
+      final logo = tester.widget<SvgPicture>(find.byType(SvgPicture));
+      expect(
+        (logo.bytesLoader as SvgAssetLoader).assetName,
+        'assets/icons/logo.svg',
+      );
+      expect(find.byIcon(Icons.store), findsNothing);
+      final attribution = find.text(
+        '本应用由 deepin 社区开发者 Linyaps Simple Store SIG 小组开发',
+      );
+      expect(attribution, findsOneWidget);
+      expect(find.text('Linyaps Simple Store SIG'), findsOneWidget);
+      expect(find.text('玲珑社区'), findsNothing);
+      final attributionText = tester.widget<Text>(attribution);
+      final theme = Theme.of(tester.element(attribution));
+      expect(attributionText.style?.color, theme.colorScheme.onSurfaceVariant);
+      expect(
+        attributionText.style?.fontSize,
+        theme.textTheme.bodySmall?.fontSize,
+      );
+      expect(find.text('社区交流'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'setting page about section shows operating system from PRETTY_NAME',

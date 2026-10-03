@@ -801,6 +801,7 @@
   },
   "detailDescriptionHint": "Bitte beschreiben Sie das aufgetretene Problem ausführlich",
   "linglongCommunity": "Linyaps-Community",
+  "appDeveloperAttribution": "Diese Anwendung wird von {developerGroup}, einer Gruppe von Entwicklern der deepin-Community, entwickelt",
   "unknown": "Unbekannt",
   "copyPid": "PID kopieren",
   "copyContainerId": "Container-ID kopieren",

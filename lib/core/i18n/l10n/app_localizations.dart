@@ -2471,6 +2471,12 @@ abstract class AppLocalizations {
   /// **'玲珑社区'**
   String get linglongCommunity;
 
+  /// 关于页应用名称下方的开发小组署名；品牌和正式小组名称保留原文
+  ///
+  /// In zh, this message translates to:
+  /// **'本应用由 deepin 社区开发者 {developerGroup} 小组开发'**
+  String appDeveloperAttribution(String developerGroup);
+
   /// No description provided for @unknown.
   ///
   /// In zh, this message translates to:

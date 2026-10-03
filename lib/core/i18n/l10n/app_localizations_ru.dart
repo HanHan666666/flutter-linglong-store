@@ -1401,6 +1401,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get linglongCommunity => 'Сообщество Linyaps';
 
   @override
+  String appDeveloperAttribution(String developerGroup) {
+    return 'Приложение разработано группой разработчиков сообщества deepin $developerGroup';
+  }
+
+  @override
   String get unknown => 'Неизвестный';
 
   @override

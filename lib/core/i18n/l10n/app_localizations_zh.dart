@@ -1314,6 +1314,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get linglongCommunity => '玲珑社区';
 
   @override
+  String appDeveloperAttribution(String developerGroup) {
+    return '本应用由 deepin 社区开发者 $developerGroup 小组开发';
+  }
+
+  @override
   String get unknown => '未知';
 
   @override
@@ -3734,6 +3739,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get linglongCommunity => '玲瓏社群';
+
+  @override
+  String appDeveloperAttribution(String developerGroup) {
+    return '本應用由 deepin 社群開發者 $developerGroup 小組開發';
+  }
 
   @override
   String get unknown => '未知';

@@ -1386,6 +1386,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get linglongCommunity => 'Comunidad de Linyaps';
 
   @override
+  String appDeveloperAttribution(String developerGroup) {
+    return 'Esta aplicación está desarrollada por $developerGroup, un grupo de desarrolladores de la comunidad deepin';
+  }
+
+  @override
   String get unknown => 'Desconocido';
 
   @override

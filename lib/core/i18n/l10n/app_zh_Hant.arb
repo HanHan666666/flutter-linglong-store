@@ -801,6 +801,7 @@
   },
   "detailDescriptionHint": "請詳細描述您遇到的問題",
   "linglongCommunity": "玲瓏社群",
+  "appDeveloperAttribution": "本應用由 deepin 社群開發者 {developerGroup} 小組開發",
   "unknown": "未知",
   "copyPid": "複製 PID",
   "copyContainerId": "複製容器 ID",

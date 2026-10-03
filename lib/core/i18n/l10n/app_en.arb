@@ -802,6 +802,7 @@
   },
   "detailDescriptionHint": "Describe the issue in detail",
   "linglongCommunity": "Linyaps Community",
+  "appDeveloperAttribution": "This application is developed by {developerGroup}, a group of deepin community developers",
   "unknown": "Unknown",
   "copyPid": "Copy PID",
   "copyContainerId": "Copy Container ID",

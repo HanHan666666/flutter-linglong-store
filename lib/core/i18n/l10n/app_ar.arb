@@ -819,6 +819,7 @@
   },
   "detailDescriptionHint": "يرجى وصف المشكلة التي تواجهها بالتفصيل",
   "linglongCommunity": "مجتمع Linglong",
+  "appDeveloperAttribution": "طوّر هذا التطبيق فريق \u2068{developerGroup}\u2069 من مطوري مجتمع \u2066deepin\u2069",
   "unknown": "غير معروف",
   "copyPid": "نسخ PID",
   "copyContainerId": "نسخ معرّف الحاوية",

@@ -1332,6 +1332,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get linglongCommunity => 'Linyaps 커뮤니티';
 
   @override
+  String appDeveloperAttribution(String developerGroup) {
+    return '이 앱은 deepin 커뮤니티 개발자 그룹 $developerGroup에서 개발합니다';
+  }
+
+  @override
   String get unknown => '알 수 없음';
 
   @override

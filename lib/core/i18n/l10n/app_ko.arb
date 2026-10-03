@@ -801,6 +801,7 @@
   },
   "detailDescriptionHint": "겪은 문제를 자세히 설명해 주세요",
   "linglongCommunity": "Linyaps 커뮤니티",
+  "appDeveloperAttribution": "이 앱은 deepin 커뮤니티 개발자 그룹 {developerGroup}에서 개발합니다",
   "unknown": "알 수 없음",
   "copyPid": "PID 복사",
   "copyContainerId": "컨테이너 ID 복사",

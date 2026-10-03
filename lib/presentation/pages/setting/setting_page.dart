@@ -1,7 +1,13 @@
+/// 设置页面及应用关于信息。
+///
+/// 设置状态复用已有 Provider；关于区复用应用品牌资源并统一开发小组署名。
+library;
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -726,7 +732,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     }
   }
 
-  /// 构建关于部分
+  /// 展示应用品牌、开发小组署名与运行信息，开发者身份统一来自共享配置。
   Widget _buildAboutSection(
     BuildContext context,
     SettingState state,
@@ -746,21 +752,15 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // 应用图标和名称
+            // 与标题栏共用真实 Logo，排除装饰性图像语义，避免读屏重复朗读品牌。
             Center(
               child: Column(
                 children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(
-                      Icons.store,
-                      size: 32,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ExcludeSemantics(
+                    child: SvgPicture.asset(
+                      'assets/icons/logo.svg',
+                      width: 64,
+                      height: 64,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -768,6 +768,15 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                     l10n.appTitle,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: context.appFontWeight(FontWeight.w700),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  // 署名句参与国际化，正式小组名保留原文；次级颜色随明暗主题适配。
+                  Text(
+                    l10n.appDeveloperAttribution(AppConfig.appDeveloperGroup),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -784,11 +793,11 @@ class _SettingPageState extends ConsumerState<SettingPage> {
             ),
             _buildDivider(context),
 
-            // 开发者信息
+            // 与标题下署名共用小组名称，避免同一关于区出现互相冲突的开发者身份。
             _buildInfoRow(
               context,
               label: l10n.developer,
-              value: l10n.linglongCommunity,
+              value: AppConfig.appDeveloperGroup,
             ),
             _buildDivider(context),
 

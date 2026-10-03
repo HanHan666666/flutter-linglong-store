@@ -462,6 +462,20 @@ Seed 数据：构建期预生成 `allapps_default` 的前 3 页。
 3. 更新 `dayjs.locale`
 4. 无需刷新页面
 
+### 9.3 关于区品牌与开发小组署名
+
+关于区图标复用标题栏已有的 `assets/icons/logo.svg`，保持 `64 × 64px` 展示尺寸，
+不再使用通用商店图标或额外的主题底色；Logo 为装饰性品牌图像，排除读屏语义。
+
+应用名称下方间隔 `8px`，居中显示小字号署名。简体中文文案为用户确认的原文：
+「本应用由 deepin 社区开发者 Linyaps Simple Store SIG 小组开发」。使用主题
+`bodySmall` 与 `onSurfaceVariant`，随明暗主题和系统字体缩放适配，空间不足时自然换行。
+
+开发小组名称唯一来源为 `AppConfig.appDeveloperGroup`，正式名称
+`Linyaps Simple Store SIG` 保留原文。署名句通过国际化键 `appDeveloperAttribution`
+及 `developerGroup` 占位符生成，下方「开发者」信息行也读取同一名称，避免身份冲突。
+全部已支持语言提供署名翻译；阿拉伯语中的英文团队名和 deepin 品牌使用双向文本隔离。
+
 ---
 
 ## 十、进程管理页（ProcessPage）

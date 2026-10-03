@@ -1469,6 +1469,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get linglongCommunity => 'مجتمع Linglong';
 
   @override
+  String appDeveloperAttribution(String developerGroup) {
+    return 'طوّر هذا التطبيق فريق ⁨$developerGroup⁩ من مطوري مجتمع ⁦deepin⁩';
+  }
+
+  @override
   String get unknown => 'غير معروف';
 
   @override

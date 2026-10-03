@@ -1,3 +1,8 @@
+/// 详情页身份信息与操作入口的响应式展示。
+///
+/// 在页面层完成状态派生后，按头部真实可用宽度编排按钮，避免布局订阅业务状态。
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -16,6 +21,7 @@ import 'install_button.dart';
 /// 分享入口和安装状态条。安装态判断、队列入队、卸载流程和快捷方式创建都由页面层完成，
 /// 避免头部组件直接订阅全局 Provider 导致重建范围扩大。
 class AppDetailHeroHeader extends StatelessWidget {
+  /// 创建纯展示头部，所有副作用由页面层传入回调。
   const AppDetailHeroHeader({
     required this.app,
     required this.installSourceKey,
@@ -90,10 +96,22 @@ class AppDetailHeroHeader extends StatelessWidget {
   /// 分享回调。
   final VoidCallback onShare;
 
-  static const double _wideLayoutThreshold = 920;
+  /// 安装飞行动画锚点沿用原有图标尺寸。
   static const double _iconSize = 96;
-  static const double _panelWidth = 420;
 
+  /// 图标和身份信息的横向间距。
+  static const double _iconInfoSpacing = 20;
+
+  /// 信息与操作区之间的留白，防止文字紧贴主按钮。
+  static const double _infoActionSpacing = 24;
+
+  /// 信息区至少保留可阅读宽度；应用名字号较大，允许继续使用两行省略。
+  static const double _minInfoWidth = 240;
+
+  /// 覆盖 hero 主按钮的 184px 最大宽度，避免不同任务状态改变换行条件。
+  static const double _minActionWidth = 184;
+
+  /// 在头部内边距扣除后计算空间预算，不依赖窗口或侧栏的固定断点。
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -111,9 +129,22 @@ class AppDetailHeroHeader extends StatelessWidget {
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final useWideLayout = constraints.maxWidth >= _wideLayoutThreshold;
+            // 只计算常量空间预算，不测量整棵子树。字体缩放增加信息区预算，
+            // 操作区默认紧凑占位，悬浮展开时最多使用信息区之外的剩余空间。
+            final bodyFontSize =
+                Theme.of(context).textTheme.bodyMedium?.fontSize ?? 14;
+            final infoScale =
+                MediaQuery.textScalerOf(context).scale(bodyFontSize) /
+                bodyFontSize;
+            final maxActionWidth =
+                constraints.maxWidth -
+                _iconSize -
+                _iconInfoSpacing -
+                _minInfoWidth * infoScale -
+                _infoActionSpacing;
+            final useWideLayout = maxActionWidth >= _minActionWidth;
             final headerBody = useWideLayout
-                ? _buildWideLayout(context)
+                ? _buildWideLayout(context, maxActionWidth: maxActionWidth)
                 : _buildCompactLayout(context);
 
             return Column(
@@ -135,21 +166,30 @@ class AppDetailHeroHeader extends StatelessWidget {
   /// 是否存在需要展示的状态条文案。
   bool get _hasStatusMessage => statusMessage?.isNotEmpty == true;
 
-  /// 构建桌面宽屏布局。
-  Widget _buildWideLayout(BuildContext context) {
+  /// 将主操作保持在行尾，操作区按内容占位并限制悬浮展开的最大宽度。
+  Widget _buildWideLayout(
+    BuildContext context, {
+    required double maxActionWidth,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildIcon(),
-        const SizedBox(width: 20),
+        const SizedBox(width: _iconInfoSpacing),
         Expanded(child: _buildInfo(context)),
-        const SizedBox(width: 24),
-        SizedBox(width: _panelWidth, child: _buildActionPanel(context)),
+        const SizedBox(width: _infoActionSpacing),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            minWidth: _minActionWidth,
+            maxWidth: maxActionWidth,
+          ),
+          child: _buildActionPanel(context),
+        ),
       ],
     );
   }
 
-  /// 构建中窄宽度布局。
+  /// 剩余宽度不足以容纳主操作和可阅读信息时，将整个操作区移到下方。
   Widget _buildCompactLayout(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,7 +332,7 @@ class AppDetailHeroHeader extends StatelessWidget {
     );
   }
 
-  /// 构建右侧或换行后的操作面板。
+  /// 构建行尾或换行后的操作面板，次级操作沿用同一方向感知对齐方式。
   Widget _buildActionPanel(BuildContext context, {bool alignEnd = true}) {
     final crossAxisAlignment = alignEnd
         ? CrossAxisAlignment.end
@@ -317,6 +357,7 @@ class AppDetailHeroHeader extends StatelessWidget {
         const SizedBox(height: 12),
         AppDetailSecondaryActions(
           isVisible: showInstalledActions,
+          alignment: alignEnd ? WrapAlignment.end : WrapAlignment.start,
           onCreateShortcut: onCreateShortcut,
           onUninstall: onUninstall,
           onShare: onShare,

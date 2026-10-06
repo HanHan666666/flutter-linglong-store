@@ -17,7 +17,7 @@ class AppConfig {
   );
 
   /// 应用版本
-  static const String appVersion = '3.6.0';
+  static const String appVersion = '3.7.0';
 
   /// 开发小组的正式名称，不随语言翻译；关于区署名和开发者信息共用此身份。
   static const String appDeveloperGroup = 'Linyaps Simple Store SIG';
